@@ -71,6 +71,7 @@ func _ready() -> void:
 	hud.council_prep_button.pressed.connect(_open_council_preparation)
 	council_preparation.fields_requested.connect(_guide_public_harvest)
 	council_preparation.six_arts_requested.connect(_show_six_arts)
+	council_preparation.silk_requested.connect(_show_silk)
 	calendar.controls_blocked = _map_controls_blocked
 	hud.calendar_button.pressed.connect(calendar.open_map)
 	calendar.directions_requested.connect(_guide_calendar_event)
@@ -147,6 +148,10 @@ func _show_six_arts() -> void:
 	panel_manager.show_management_panel()
 	panel_manager.management_panel_instance.show_six_arts()
 
+func _show_silk() -> void:
+	panel_manager.show_management_panel()
+	panel_manager.management_panel_instance.show_silk()
+
 func _open_handover() -> void:
 	if not _map_controls_blocked():
 		handover.open_map()
@@ -156,8 +161,7 @@ func _on_route_goal_action(kind: Global.RouteGoal) -> void:
 		Global.RouteGoal.TRIBUTE, Global.RouteGoal.TAXED_HARVEST:
 			estate_map.open_fields()
 		Global.RouteGoal.OFFER_SILK, Global.RouteGoal.SELL_SILK:
-			panel_manager.show_management_panel()
-			panel_manager.management_panel_instance.show_silk()
+			_show_silk()
 		Global.RouteGoal.COPPER:
 			_show_market()
 		Global.RouteGoal.RAIDS:
@@ -231,6 +235,7 @@ func _connect_signals() -> void:
 	GameEvents.driving_practice_changed.connect(_show_driving_hud)
 	GameEvents.estate_room_changed.connect(hud.set_estate_room)
 	GameEvents.silk_shed_directions_requested.connect(_on_silk_shed_directions_requested)
+	GameEvents.mulberry_directions_requested.connect(_on_mulberry_directions_requested)
 	GameEvents.west_market_directions_requested.connect(_on_west_market_directions_requested)
 	GameEvents.ravine_trip_requested.connect(_on_ravine_trip_requested)
 
@@ -542,6 +547,16 @@ func _on_silk_shed_directions_requested() -> void:
 		panel_manager.hide_management_panel()
 		if Global.is_indoors():
 			hud.practice_label.text = "已标出蚕棚 · 从南门回封地"
+
+func _on_mulberry_directions_requested(route: int) -> void:
+	panel_manager.hide_management_panel()
+	if route < 0 or not directions.follow_field_route(route):
+		estate_map.open_fields()
+		return
+	if route == Global.MulberryRoute.PLANT:
+		world.select_seed("mulberry")
+	if Global.is_indoors():
+		hud.practice_label.text = "已标出桑田 · 从南门回田边"
 
 func _show_market() -> void:
 	panel_manager.show_management_panel()

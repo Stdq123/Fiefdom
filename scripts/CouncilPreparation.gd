@@ -2,6 +2,7 @@ extends "res://scripts/SurveyMap.gd"
 
 signal fields_requested()
 signal six_arts_requested()
+signal silk_requested()
 
 const READY := Color("#c5d592")
 const PENDING := Color("#f2bc85")
@@ -23,6 +24,8 @@ const PENDING := Color("#f2bc85")
 @onready var mixed_result: Label = %MixedResult
 @onready var field_button: Button = %FieldButton
 @onready var arts_button: Button = %ArtsButton
+@onready var silk_stock: Label = %SilkStock
+@onready var silk_button: Button = %SilkButton
 
 var world: Node2D
 
@@ -34,6 +37,9 @@ func _ready() -> void:
 	arts_button.pressed.connect(func():
 		close_map()
 		six_arts_requested.emit())
+	silk_button.pressed.connect(func():
+		close_map()
+		silk_requested.emit())
 
 func _map_available() -> bool:
 	return Global.tax_reform_choice == Global.TaxReformChoice.NONE and not Global.tax_council_waiting()
@@ -79,6 +85,12 @@ func _refresh_on_open() -> void:
 		mixed_preview.text = "纳贡 +%d · " % tribute + mixed_preview.text
 	_describe_projection(mixed_result, tribute, private_yield)
 	field_button.text = "指路收公田" if tribute > 0 else "查看井田"
+
+	var bolts := Global.silk_workshop.bolts
+	var silk_target := Global.balance.ending_silk_target
+	silk_stock.text = "备绸 · %d / %d 匹" % [bolts, silk_target]
+	silk_stock.modulate = READY if bolts >= silk_target else PENDING
+	silk_button.text = "查看蚕桑" if bolts >= silk_target else "准备丝绸"
 
 func _percentage(public_yield := 0, private_yield := 0) -> String:
 	return "%.2f%%" % (Global.public_contribution_ratio(public_yield, private_yield) * 100.0)

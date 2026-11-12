@@ -224,6 +224,38 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 
+[node name="Silk" type="PanelContainer" parent="MapModal/Center/Ledger/Stack"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("Card")
+
+[node name="Row" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack/Silk"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/Silk/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="SilkStock" type="Label" parent="MapModal/Center/Ledger/Stack/Silk/Row/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 19
+
+[node name="SilkNote" type="Label" parent="MapModal/Center/Ledger/Stack/Silk/Row/Details"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+text = "两案都用得上丝绸。可先织好，定案后再进献或出售。"
+
+[node name="SilkButton" type="Button" parent="MapModal/Center/Ledger/Stack/Silk/Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(136, 36)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+text = "准备丝绸"
+
 [node name="Actions" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack"]
 layout_mode = 2
 alignment = 2

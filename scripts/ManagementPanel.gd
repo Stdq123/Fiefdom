@@ -77,6 +77,7 @@ func _ready() -> void:
 	silk_panel.name = "蚕桑"
 	silk_panel.add_theme_constant_override("separation", 12)
 	$HBoxContainer/RightPanel.add_child(silk_panel)
+	silk_panel.study_requested.connect(show_six_arts)
 	var ravine_panel := ravine_panel_script.new() as VBoxContainer
 	ravine_panel.name = "溪行手记"
 	$HBoxContainer/RightPanel.add_child(ravine_panel)

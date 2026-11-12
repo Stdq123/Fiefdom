@@ -138,7 +138,9 @@ enum ChannelSite { AVAILABLE, LOCKED, BLOCKED, ALREADY_BUILT, NO_FUNDS, FOUNDATI
 enum ReclamationSite { OPEN, EDGE, NEAR_FIELD, SOURCE, CANAL, ROAD, LANDMARK }
 enum CropWater { DRY, BLOCKED, HAND, CANAL, RAIN }
 enum NightGrowth { READY, DRY, BLOCKED, GROW, RIPEN }
-const FIELD_ROUTE_STATES := [NightGrowth.READY, NightGrowth.DRY, NightGrowth.BLOCKED]
+enum MulberryRoute { PLANT = 5, WATER, HARVEST }
+const FIELD_ROUTE_STATES := [NightGrowth.READY, NightGrowth.DRY, NightGrowth.BLOCKED,
+	MulberryRoute.PLANT, MulberryRoute.WATER, MulberryRoute.HARVEST]
 enum Season { SPRING, SUMMER, AUTUMN, WINTER }
 const SEASON_NAMES := ["春", "夏", "秋", "冬"]
 

@@ -1,5 +1,7 @@
 extends VBoxContainer
 
+signal study_requested()
+
 var stock_label: Label
 var status_label: Label
 var buttons: Array[Button] = []
@@ -10,6 +12,12 @@ var night_reeling_button: CheckButton
 var night_status: Label
 var sample_status: Label
 var visit_button: Button
+var build_row: HBoxContainer
+var study_button: Button
+var mulberry_row: HBoxContainer
+var mulberry_note: Label
+var mulberry_button: Button
+var mulberry_route := -1
 
 func _ready() -> void:
 	stock_label = Label.new()
@@ -18,9 +26,31 @@ func _ready() -> void:
 	status_label = Label.new()
 	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(status_label)
+	mulberry_row = HBoxContainer.new()
+	mulberry_row.add_theme_constant_override("separation", 10)
+	mulberry_row.hide()
+	add_child(mulberry_row)
+	mulberry_note = Label.new()
+	mulberry_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	mulberry_note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mulberry_row.add_child(mulberry_note)
+	mulberry_button = Button.new()
+	mulberry_button.custom_minimum_size = Vector2(116, 36)
+	mulberry_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	mulberry_button.mouse_default_cursor_shape = CURSOR_POINTING_HAND
+	mulberry_button.pressed.connect(func(): GameEvents.mulberry_directions_requested.emit(mulberry_route))
+	mulberry_row.add_child(mulberry_button)
 
 	buttons.resize(SilkWorkshop.Action.size())
-	_add_action(self, SilkWorkshop.Action.BUILD)
+	build_row = HBoxContainer.new()
+	add_child(build_row)
+	_add_action(build_row, SilkWorkshop.Action.BUILD)
+	study_button = Button.new()
+	study_button.custom_minimum_size = Vector2(116, 36)
+	study_button.text = "去研读"
+	study_button.mouse_default_cursor_shape = CURSOR_POINTING_HAND
+	study_button.pressed.connect(study_requested.emit)
+	build_row.add_child(study_button)
 	stages = VBoxContainer.new()
 	stages.add_theme_constant_override("separation", 8)
 	add_child(stages)
@@ -59,6 +89,8 @@ func _ready() -> void:
 
 	visibility_changed.connect(_refresh)
 	GameEvents.silk_changed.connect(_refresh)
+	GameEvents.farm_state_changed.connect(_refresh_mulberry)
+	GameEvents.day_advanced.connect(_refresh_mulberry.unbind(1))
 	GameEvents.estate_room_changed.connect(_refresh.unbind(1))
 	GameEvents.well_field_added.connect(_refresh.unbind(1))
 	GameEvents.channels_changed.connect(_refresh)
@@ -107,7 +139,7 @@ func _refresh() -> void:
 	var shed := estate.get_node_or_null("World/SilkShed") as Node2D if estate else null
 	visit_button.visible = shed != null and shed.visible and Global.estate_room != Global.EstateRoom.SILK_SHED
 	if not workshop.built:
-		status_label.text = "在私田种桑取叶。书 %d/%d 级，建蚕室需 %d 铜钱。" % [
+		status_label.text = "建蚕室需书 %d/%d 级和 %d 铜钱。" % [
 			literacy, SilkWorkshop.LITERACY_LEVEL, balance.silk_workshop_cost]
 	elif workshop.nights_left > 0:
 		status_label.text = "蚕批剩余 %d 夜 · 每晚喂 %d 桑叶" % [workshop.nights_left, balance.silk_leaves_per_night]
@@ -117,7 +149,8 @@ func _refresh() -> void:
 		status_label.text = "空匾 · 一批养 %d 夜，共用 %d 片桑叶，得 %d 只茧。" % [
 			balance.silk_batch_nights, workshop.batch_leaf_cost(balance), balance.silk_cocoons_per_batch]
 
-	buttons[SilkWorkshop.Action.BUILD].visible = not workshop.built
+	build_row.visible = not workshop.built
+	study_button.visible = literacy < SilkWorkshop.LITERACY_LEVEL
 	stages.visible = workshop.built
 	buttons[SilkWorkshop.Action.BUILD].text = "建蚕室 · %d 铜钱" % balance.silk_workshop_cost
 	buttons[SilkWorkshop.Action.START_BATCH].text = "开养一批 · %d 夜" % balance.silk_batch_nights
@@ -135,6 +168,45 @@ func _refresh() -> void:
 			button.text = ("缫完 %d 茧" if action == SilkWorkshop.Action.REEL else "织完 %d 匹") % count
 		_refresh_night_work(workshop)
 	_refresh_sample(workshop)
+	_refresh_mulberry()
+
+func _refresh_mulberry() -> void:
+	if not is_visible_in_tree():
+		return
+	var estate := get_tree().current_scene
+	var world := estate.get_node_or_null("World") if estate else null
+	var workshop := Global.silk_workshop
+	var balance := Global.balance
+	var leaf_nights := workshop.nights_left if workshop.nights_left > 0 else balance.silk_batch_nights
+	var missing := leaf_nights * balance.silk_leaves_per_night - workshop.leaves
+	mulberry_row.visible = world != null and missing > 0 and workshop.cocoons == 0 and workshop.capacity(SilkWorkshop.Action.WEAVE, balance) == 0
+	if not mulberry_row.visible:
+		return
+	var note := ""
+	mulberry_route = -1
+	mulberry_button.show()
+	if world.find_field_task(Global.MulberryRoute.HARVEST) != null:
+		mulberry_route = Global.MulberryRoute.HARVEST
+		mulberry_button.text = "指路收桑"
+		note = "私田的桑叶可采"
+	elif world.find_field_task(Global.MulberryRoute.WATER) != null:
+		mulberry_route = Global.MulberryRoute.WATER
+		mulberry_button.text = "指路浇桑"
+		note = "私田的桑苗待浇水"
+	else:
+		var nights: int = world.mulberry_growth_remaining()
+		if nights > 0:
+			mulberry_button.hide()
+			note = "桑苗已得水 · 最快再供水 %d 夜" % nights
+		elif world.find_field_task(Global.MulberryRoute.PLANT) != null:
+			mulberry_route = Global.MulberryRoute.PLANT
+			mulberry_button.text = "标出私田"
+			note = "种桑后采叶"
+		else:
+			mulberry_button.text = "查看井田"
+			note = "腾出一格私田再播桑"
+	var batch := "养完本批" if workshop.nights_left > 0 else "开一批"
+	mulberry_note.text = "%s还缺 %d 片桑叶 · %s" % [batch, missing, note]
 
 func _refresh_night_work(workshop: SilkWorkshop) -> void:
 	repeat_button.set_pressed_no_signal(workshop.repeat_batches)

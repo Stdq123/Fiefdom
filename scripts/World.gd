@@ -300,12 +300,14 @@ func is_crop_dry(grid_pos: Vector2i) -> bool:
 	return Global.field_crop_is_dry(grid_pos)
 
 func find_field_task(status: int, public_only := false) -> Variant:
+	if status == Global.MulberryRoute.PLANT:
+		return _find_mulberry_planting_site()
 	var nearest: Variant = null
 	var distance := INF
 	var public_selected := false
 	var start := estate_player_point()
 	for cell: Vector2i in active_crops:
-		if Global.crop_night_status(cell) != status:
+		if not matches_field_route(cell, status):
 			continue
 		var is_public := Global.is_public_plot(cell)
 		if (public_only or public_selected) and not is_public:
@@ -316,6 +318,44 @@ func find_field_task(status: int, public_only := false) -> Variant:
 			distance = distance_to_crop
 			public_selected = is_public
 	return nearest
+
+func matches_field_route(cell: Vector2i, status: int) -> bool:
+	if status == Global.MulberryRoute.PLANT:
+		return (tile_map.get_cell_source_id(cell) >= 0 and not Global.is_public_plot(cell)
+			and not active_crops.has(cell) and not Global.field_seed_plans.has(cell))
+	if status in [Global.MulberryRoute.WATER, Global.MulberryRoute.HARVEST]:
+		var crop: Dictionary = active_crops.get(cell, {})
+		if crop.get("id") != "mulberry" or Global.is_public_plot(cell):
+			return false
+		status = Global.NightGrowth.DRY if status == Global.MulberryRoute.WATER else Global.NightGrowth.READY
+	return Global.crop_night_status(cell) == status
+
+func _find_mulberry_planting_site() -> Variant:
+	var start := estate_player_point()
+	var nearest: Variant = null
+	var distance := INF
+	var priority := -1
+	for cell: Vector2i in tile_map.get_used_cells():
+		if not matches_field_route(cell, Global.MulberryRoute.PLANT):
+			continue
+		var site_priority := 2 * int(Global.irrigation.supplies(cell)) + int(Global.tilled_cells.has(cell))
+		var walking := start.distance_squared_to(get_crop_world_pos(cell))
+		if site_priority > priority or (site_priority == priority and walking < distance):
+			nearest = cell
+			distance = walking
+			priority = site_priority
+	return nearest
+
+func mulberry_growth_remaining() -> int:
+	var soonest := 0
+	for cell: Vector2i in active_crops:
+		var crop: Dictionary = active_crops[cell]
+		if crop.id != "mulberry" or Global.is_public_plot(cell):
+			continue
+		var nights: int = crop.growth_nights - crop.age
+		if nights > 0 and (soonest == 0 or nights < soonest):
+			soonest = nights
+	return soonest
 
 func is_crop_ripe(grid_pos: Vector2i) -> bool:
 	return Global.field_crop_is_ripe(grid_pos)

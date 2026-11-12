@@ -52,7 +52,15 @@ func _add_goal(goal: Dictionary) -> void:
 	var guide: Dictionary = GUIDANCE[kind]
 	var complete: bool = goal.value >= goal.target
 	row.get_node("%GoalTitle").text = goal.label
-	row.get_node("%GoalDetail").text = guide.detail
+	var detail: String = guide.detail
+	if not complete and kind in [Global.RouteGoal.OFFER_SILK, Global.RouteGoal.SELL_SILK]:
+		var bolts := Global.silk_workshop.bolts
+		var action_text := "进献" if kind == Global.RouteGoal.OFFER_SILK else "出售"
+		if bolts > 0:
+			detail = "手中已有 %d 匹。到蚕桑页点「%s」，记入本案。" % [bolts, action_text]
+		else:
+			detail = "蚕桑页可查看现有蚕茧和生丝，缺叶时可标出桑田。织成后%s。" % action_text
+	row.get_node("%GoalDetail").text = detail
 	var count: Label = row.get_node("%GoalCount")
 	count.text = "%d / %d %s" % [goal.value, goal.target, guide.unit]
 	if complete:

@@ -10,6 +10,9 @@ const FIELD_ROUTES := {
 	Global.NightGrowth.READY: {"task": "收获", "plot": "可收"},
 	Global.NightGrowth.DRY: {"task": "浇水", "plot": "待浇"},
 	Global.NightGrowth.BLOCKED: {"task": "断水", "plot": "断水"},
+	Global.MulberryRoute.PLANT: {"task": "种桑"},
+	Global.MulberryRoute.WATER: {"task": "浇桑", "plot": "待浇"},
+	Global.MulberryRoute.HARVEST: {"task": "采桑叶", "plot": "可收"},
 }
 
 var world: Node2D
@@ -87,8 +90,12 @@ func _refresh_field_route() -> void:
 		if tracked_plot != null:
 			clear_tracking()
 		return
-	if tracked_plot != null and Global.crop_night_status(tracked_plot) == status:
-		return
+	if tracked_plot != null:
+		if world.matches_field_route(tracked_plot, status):
+			return
+		if status == Global.MulberryRoute.PLANT and Global.active_crops.get(tracked_plot, {}).get("id") == "mulberry":
+			clear_tracking()
+			return
 	var next: Variant = world.find_field_task(status, Global.field_route_public_only)
 	if next == null:
 		clear_tracking()
@@ -133,7 +140,7 @@ func destination() -> Dictionary:
 	var site := Global.get_well_field(tracked_site)
 	if not site.is_empty() and not site["is_unlocked"]:
 		return {"title": "井田 %d 工地" % (tracked_site + 1), "point": _cell_position(site["center_pos"])}
-	if tracked_plot != null and Global.field_route_status >= 0 and Global.crop_night_status(tracked_plot) == Global.field_route_status:
+	if tracked_plot != null and Global.field_route_status >= 0 and world.matches_field_route(tracked_plot, Global.field_route_status):
 		return {"title": _field_plot_label(tracked_plot), "point": _cell_position(tracked_plot)}
 	if not tracked_neighbor.is_empty():
 		var actor: Node2D = world.neighbor_actor(tracked_neighbor)
@@ -157,6 +164,10 @@ func _cell_position(cell: Vector2i) -> Vector2:
 	return world.to_local(tiles.to_global(tiles.map_to_local(cell)))
 
 func _field_plot_label(cell: Vector2i) -> String:
+	if Global.field_route_status == Global.MulberryRoute.PLANT:
+		if not Global.tilled_cells.has(cell):
+			return "私田 · 翻地种桑"
+		return "私田 · 播桑" if world.current_seed_id == "mulberry" else "私田 · 换桑种"
 	var land := "公田" if Global.is_public_plot(cell) else "私田"
 	var crop: CropData = Global.active_crops[cell].data
 	return "%s · %s%s" % [crop.crop_name, FIELD_ROUTES[Global.field_route_status].plot, land]
