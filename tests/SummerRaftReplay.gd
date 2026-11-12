@@ -259,15 +259,7 @@ func _ride() -> bool:
 
 func _return_to_estate() -> bool:
 	var ravine := tree.current_scene
-	var actor: Player = ravine.get_node("Player")
-	var guide := ravine.get_node("RavineDirections")
-	guide.follow("西门回封地", ravine.get_node("ExitArea").position)
-	var route: PackedVector2Array = guide.route.duplicate()
-	for point in route:
-		if point.x < -165.0:
-			break
-		await Campaign.walk_to(tree, actor, point)
-	await Campaign.walk_to(tree, actor, Vector2(-170, 3))
+	await Campaign.walk_to_ravine_exit(tree, ravine)
 	await _move(&"ui_left", 60)
 	return _expect(tree.current_scene.scene_file_path == state.ESTATE_SCENE, "Return through West Gate after the trial.")
 

@@ -40,8 +40,7 @@ func _enter_ravine() -> bool:
 	return true
 
 func _leave_ravine() -> bool:
-	var player: Node2D = tree.current_scene.get_node("Player")
-	await Campaign.walk_to(tree, player, Vector2(-161, 3))
+	await Campaign.walk_to_ravine_exit(tree, tree.current_scene)
 	await _move(&"ui_left", 23)
 	return _expect(tree.current_scene.name == "Main", "Walk through the west gate to return to the estate.")
 
@@ -51,7 +50,7 @@ func _sleep_on(target_term: String) -> void:
 	await tree.create_timer(1.15).timeout
 
 func _watch_frog(player: Node2D, frog: Node2D) -> void:
-	await Campaign.walk_to(tree, player, Vector2(12, 96))
+	await Campaign.walk_ravine_to(tree, tree.current_scene, frog.global_position + Vector2(-108, 0))
 	var record: AudioEffectRecord
 	var ambience := AudioServer.get_bus_index("Ambience")
 	var effect := AudioServer.get_bus_effect_count(ambience)
@@ -90,7 +89,7 @@ func _watch_frog(player: Node2D, frog: Node2D) -> void:
 	_expect(heard_call or DisplayServer.get_name() == "headless", "The real sound player croaks as the player nears the bank.")
 	await tree.create_timer(frog.HIDE_SECONDS).timeout
 	_expect(frog.phase == frog.Phase.WATER, "The frog stays hidden while the player waits at the bank.")
-	await Campaign.walk_to(tree, player, Vector2(28, 96))
+	await Campaign.walk_to(tree, player, frog.global_position + Vector2(-92, 0))
 	_expect(frog.phase == frog.Phase.BANK and frog.body.visible, "Leaving the bank lets the frog return after a pause.")
 	print("WILDLIFE_FROG leap=", saw_leap, " ripple=", saw_ripple, " positional_sound=", heard_call)
 
@@ -139,7 +138,7 @@ func run(game_tree: SceneTree) -> void:
 	actor = tree.current_scene.get_node("Player")
 	var grove: Node2D = tree.current_scene.get_node("Scenery/GroveButterfly")
 	_expect(grove.visible and grove.wings.frame_coords.y == 1, "The sunny grove uses the second butterfly art.")
-	await Campaign.walk_to(tree, actor, Vector2(-80, -37))
+	await Campaign.walk_ravine_to(tree, tree.current_scene, grove.global_position + Vector2(-3, 6))
 	if not capture_dir.is_empty():
 		for frame in 12:
 			if grove.wings.frame_coords.x == 0:

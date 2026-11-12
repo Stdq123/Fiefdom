@@ -156,6 +156,13 @@ func _run() -> void:
 			var replay = load("res://tests/FishingJourneyReplay.gd").new()
 			replay.legacy = arguments[0] == "fishing-journey-legacy"
 			await replay.run(tree)
+		"ravine-map":
+			var replay = load("res://tests/RavineMapReplay.gd").new()
+			replay.map_capture_dir = capture_directory
+			await replay.run(tree)
+		"creek-traps":
+			var replay = load("res://tests/CreekTrapReplay.gd").new()
+			await replay.run(tree)
 		"west-market":
 			var replay = load("res://tests/WestMarketReplay.gd").new()
 			await replay.run(tree)

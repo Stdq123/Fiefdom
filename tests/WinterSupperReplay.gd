@@ -132,9 +132,8 @@ func _recruit_and_fish() -> bool:
 	if not await _cross(&"ui_right", state.WILDERNESS_SCENE):
 		return false
 	var trail := tree.current_scene
-	var angler: Player = trail.get_node("Player")
 	var pool: Node2D = trail.get_node("WillowPool")
-	await _walk(angler, [Vector2(103, 1), pool.global_position + Vector2(0, 12)])
+	await Campaign.walk_ravine_to(tree, trail, pool.global_position + Vector2(0, 12))
 	await _key(KEY_E)
 	var panel := trail.get_node_or_null("FishingUI/FishingPanel")
 	if not _expect(panel != null, "Open the actual willow pool fishing encounter."):
@@ -156,7 +155,7 @@ func _recruit_and_fish() -> bool:
 	if not _expect(panel.phase == panel.Phase.DONE and panel.catch_icon.visible, "Land the ingredient by fishing and reeling."):
 		return false
 	await _key(KEY_ESCAPE)
-	await _walk(angler, [Vector2(103, 3), Vector2(-160, 3)])
+	await Campaign.walk_to_ravine_exit(tree, trail)
 	if not await _cross(&"ui_left", state.ESTATE_SCENE):
 		return false
 	_estate()

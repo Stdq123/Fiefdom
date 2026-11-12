@@ -34,7 +34,7 @@ func _ready() -> void:
 		CreekTrap.PLACES[CreekFish.Site.POOL]: $PoolTrap.position,
 		CreekTrap.PLACES[CreekFish.Site.SHOAL]: $ShoalTrap.position,
 	}
-	ravine_map.setup(directions, $Player, destinations)
+	ravine_map.setup(directions, $Player, $Landscape, destinations)
 	_setup_settings($CampaignHUD.view)
 	$FishingUI/CreekTrapPanel.route_requested.connect(ravine_map.follow_place)
 	var goal := Global.ravine_trip_target

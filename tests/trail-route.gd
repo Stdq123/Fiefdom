@@ -24,6 +24,9 @@ func _move(action: StringName, frames: int) -> void:
 func _walk(destination: Vector2) -> void:
 	await Campaign.walk_to(self, walker, destination)
 
+func _walk_trail(destination: Vector2) -> void:
+	await Campaign.walk_ravine_to(self, current_scene, destination)
+
 func _gather() -> void:
 	var key := InputEventKey.new()
 	key.keycode = KEY_E
@@ -44,11 +47,12 @@ func _enter_trail() -> bool:
 	# Combat is covered by combat-recovery. Keep these actors in place while measuring routes.
 	for enemy in get_nodes_in_group("enemies"):
 		enemy.set_physics_process(false)
-	_expect(walker.position.x < -120 and walker.position.x > -179, "The trail opens just inside its west gate.")
+	_expect(walker.position.distance_to(current_scene.get_node("WestArrival").position) < 3.0,
+		"The trail opens just inside its west gate.")
 	return true
 
 func _return_home() -> bool:
-	await _walk(Vector2(-161, 3))
+	await Campaign.walk_to_ravine_exit(self, current_scene)
 	await _move(&"ui_left", 24)
 	if current_scene.name != "Main":
 		push_error("The trail's west gate must return to the estate.")
@@ -79,12 +83,16 @@ func _run() -> void:
 	_expect(is_zero_approx(terrain.creek.volume_linear) and is_zero_approx(terrain.rain.volume_linear),
 		"No creek or rain is audible at the dry west entrance.")
 	var starting_food: int = state.food_storage
-	await _walk(Vector2(-59, -70))
+	var clock: float = state.day_progress
+	await _walk_trail(RavineLayout.FRUIT + Vector2(-8, 16))
+	var travel_seconds: float = (state.day_progress - clock) * state.balance.daylight_seconds
+	_expect(travel_seconds > 2.8, "The grove takes a distinct stretch of forest trail from the entrance.")
+	print("RAVINE_GROVE_WALK seconds=", snappedf(travel_seconds, 0.01), " foot=", walker.position)
 	_expect(terrain.birds.volume_linear > 0.2 and is_zero_approx(terrain.creek.volume_linear),
 		"The dry berry grove brings in birdsong before the creek comes into range.")
 	await _gather()
 	_expect(state.food_storage == starting_food + state.balance.wild_food_yield, "The west-side berry grove still provides food.")
-	await _walk(Vector2(89, -44))
+	await _walk_trail(Vector2(89, -44))
 	await _move(&"ui_right", 63)
 	_expect(walker.position.x < 125, "The deep creek stops walking between the crossings.")
 	_expect(terrain.creek.volume_linear > 0.1, "The creek gains volume near its bank.")
@@ -92,22 +100,22 @@ func _run() -> void:
 	await _move(&"ui_right", 25)
 	_expect(terrain.step_variant == steps_at_bank, "Pushing against the bank does not produce steps.")
 
-	await _walk(Vector2(109, 36))
+	await _walk_trail(Vector2(109, 36))
 	await _walk(Vector2(151, 36))
 	_expect(terrain.footsteps.stream.resource_path.get_file().begins_with("plank-"), "Walking across the bridge plays wood steps.")
 	await _walk(Vector2(208, 36))
 	_expect(walker.position.x > 202, "The bridge deck connects both banks.")
-	await _walk(Vector2(305, -24))
+	await _walk_trail(RavineLayout.HERBS + Vector2(0, 17))
 	state.hurt_player(17)
 	var injured: int = state.health
 	await _gather()
 	_expect(state.health == injured and "今日" in current_scene.get_node("WildHerbs").hint.text, "Food and medicine share the daily gathering slot.")
 
-	await _walk(Vector2(234, 119))
-	await _walk(Vector2(165, 119))
+	await _walk_trail(RavineLayout.FORD_EAST)
+	await _walk(RavineLayout.FORD)
 	_expect(terrain.footsteps.stream.resource_path.get_file().begins_with("water-"), "Wading in the ford plays water steps.")
-	await _walk(Vector2(117, 119))
-	_expect(walker.position.x < 122, "The shallow crossing provides an alternate way back.")
+	await _walk(RavineLayout.FORD_WEST)
+	_expect(walker.position.distance_to(RavineLayout.FORD_WEST) < 3.0, "The shallow crossing provides an alternate way back.")
 	if not await _return_home():
 		return
 	await create_timer(0.65).timeout
@@ -119,10 +127,10 @@ func _run() -> void:
 	if not await _enter_trail():
 		return
 
-	await _walk(Vector2(125, 119))
-	await _walk(Vector2(233, 119))
-	_expect(walker.position.x > 225, "The ford also works from west to east.")
-	await _walk(Vector2(305, -24))
+	await _walk_trail(RavineLayout.FORD_WEST)
+	await _walk(RavineLayout.FORD_EAST)
+	_expect(walker.position.distance_to(RavineLayout.FORD_EAST) < 3.0, "The ford also works from west to east.")
+	await _walk_trail(RavineLayout.HERBS + Vector2(0, 17))
 	var full_health: int = state.health
 	await _gather()
 	_expect(full_health == state.balance.player_max_health and state.last_forage_day != state.current_day,
@@ -133,8 +141,6 @@ func _run() -> void:
 	_expect(state.health == mini(injured + state.balance.wild_herb_healing, state.balance.player_max_health)
 		and state.last_forage_day == state.current_day, "Picking medicinal leaves heals and spends the slot.")
 
-	await _walk(Vector2(201, 36))
-	await _walk(Vector2(111, 36))
 	if not await _return_home():
 		return
 	var saved_health: int = state.health
@@ -154,7 +160,7 @@ func _run() -> void:
 		"Rain reaches the estate after sleeping into the right solar term.")
 	if not await _enter_trail():
 		return
-	await _walk(Vector2(-59, -70))
+	await _walk_trail(RavineLayout.FRUIT + Vector2(-8, 16))
 	_expect(is_zero_approx(terrain.birds.volume_linear) and terrain.rain.volume_linear > 0.1,
 		"In rain, the grove layers rain in place of the dry-weather birdsong.")
 	if not await _return_home():

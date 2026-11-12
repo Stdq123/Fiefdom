@@ -47,11 +47,8 @@ func _enter_trail() -> bool:
 		enemy.set_physics_process(false)
 	return true
 
-func _return_home(east_bank := false) -> bool:
-	if east_bank:
-		await Campaign.walk_to(self, walker, Vector2(243, 119))
-		await Campaign.walk_to(self, walker, Vector2(115, 119))
-	await Campaign.walk_to(self, walker, Vector2(-160, 3))
+func _return_home() -> bool:
+	await Campaign.walk_to_ravine_exit(self, current_scene)
 	await _move(&"ui_left", 26)
 	if not _expect(current_scene.name == "Main", "The trail exit returns fish and player to the estate."):
 		return false
@@ -63,7 +60,7 @@ func _night() -> void:
 	await create_timer(1.12).timeout
 
 func _open_fishing(spot: Node2D) -> Control:
-	await Campaign.walk_to(self, walker, spot.global_position + Vector2(0, 12))
+	await Campaign.walk_ravine_to(self, current_scene, spot.global_position + Vector2(0, 12))
 	_key(KEY_E)
 	await process_frame
 	return current_scene.get_node_or_null("FishingUI/FishingPanel") as Control
@@ -203,7 +200,7 @@ func _run() -> void:
 	var before: int = state.current_stamina
 	_expect(await _open_fishing(pool) == null and state.current_stamina == before, "A second catch on the same day is blocked before charging stamina.")
 	var food: int = state.food_storage
-	await Campaign.walk_to(self, walker, Vector2(-52, -73))
+	await Campaign.walk_ravine_to(self, current_scene, RavineLayout.FRUIT + Vector2(0, 17))
 	_key(KEY_E)
 	await process_frame
 	_expect(state.food_storage == food, "A catch shares the berry and herb gathering opportunity.")
@@ -244,10 +241,8 @@ func _run() -> void:
 	if not await _save_reload() or not await _enter_trail():
 		quit(1)
 		return
-	await Campaign.walk_to(self, walker, Vector2(109, 36))
-	await Campaign.walk_to(self, walker, Vector2(243, 36))
 	var shoal := current_scene.get_node("GravelShoal") as Node2D
-	if not await _catch(shoal, "perch") or not await _return_home(true) or not await _save_reload():
+	if not await _catch(shoal, "perch") or not await _return_home() or not await _save_reload():
 		quit(1)
 		return
 	ledger = await _fish_ledger()

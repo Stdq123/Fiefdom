@@ -4,13 +4,13 @@ class_name RavineJournal
 enum Site { BRIDGE, FORD, LOOKOUT }
 
 const SITES := [
-	{"name": "木桥西端", "position": Vector2(118, 27), "path": "沿西岸主路向东，到木桥前。",
+	{"name": "木桥西端", "position": RavineLayout.BRIDGE_JOURNAL, "path": "沿西岸主路向东，到木桥前。",
 		"dry": "桥柱留着深浅两道水痕，平水刚过下面一道。",
 		"rain": "雨水沿桥柱淌下，溪面已漫过平日那道水痕。"},
-	{"name": "浅滩东岸", "position": Vector2(212, 128), "path": "从木桥南侧岔路去浅滩，在东岸记下踏石。",
+	{"name": "浅滩东岸", "position": RavineLayout.FORD_JOURNAL, "path": "从西岸林径的岔口向南，在浅滩东岸记下踏石。",
 		"dry": "踏石朝上游的一侧被冲得发白，水退后便露出来。",
 		"rain": "浅滩的踏石还露着白边，石间的水比平日急。"},
-	{"name": "望溪台", "position": Vector2(268, -38), "path": "过木桥沿东岸北行，去望溪台背风处。",
+	{"name": "望溪台", "position": RavineLayout.LOOKOUT_JOURNAL, "path": "过木桥继续向东，沿山径拐向望溪台的背风处。",
 		"dry": "石台背阴的一侧还润着，药苗都长在这边。",
 		"rain": "台上竹叶挡住急雨，石沿慢慢滴水，根下的土还是松的。"},
 ]

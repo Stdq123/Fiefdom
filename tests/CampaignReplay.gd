@@ -66,6 +66,17 @@ static func walk_south_to(tree: SceneTree, world: Node2D, destination: Vector2) 
 	for foot in route.slice(1):
 		await walk_straight(tree, world.player, world.to_global(foot))
 
+static func walk_ravine_to(tree: SceneTree, ravine: Node2D, destination: Vector2) -> void:
+	var guide := ravine.get_node("RavineDirections") as Node2D
+	var walker := ravine.get_node("Player") as Node2D
+	var route: PackedVector2Array = guide.network.route_between(
+		guide.to_local(walker.global_position), guide.to_local(destination))
+	for foot in route.slice(1):
+		await walk_straight(tree, walker, guide.to_global(foot))
+
+static func walk_to_ravine_exit(tree: SceneTree, ravine: Node2D) -> void:
+	await walk_ravine_to(tree, ravine, ravine.get_node("WestArrival").global_position)
+
 static func wait_for_map_change(tree: SceneTree) -> void:
 	await tree.process_frame
 	var travel := tree.root.get_node_or_null("MapTravel")

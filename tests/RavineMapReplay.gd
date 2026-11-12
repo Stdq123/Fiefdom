@@ -11,6 +11,7 @@ var player: CharacterBody2D
 var map: Control
 var guide: Node2D
 var failures := 0
+var map_capture_dir := ""
 
 func _expect(condition: bool, detail: String) -> bool:
 	if not condition:
@@ -44,6 +45,15 @@ func _move(action: StringName, frames: int) -> void:
 		await tree.physics_frame
 	Input.action_release(action)
 	await Campaign.wait_for_map_change(tree)
+
+func _capture_map_frame(name: String) -> void:
+	if map_capture_dir.is_empty():
+		return
+	await tree.create_timer(0.2).timeout
+	await RenderingServer.frame_post_draw
+	var image := tree.root.get_texture().get_image()
+	_expect(image != null and not image.is_empty() and image.save_png(map_capture_dir.path_join(name + ".png")) == OK,
+		"Save the rendered ravine frame %s." % name)
 
 func _plan_from_estate() -> bool:
 	var ui: CanvasLayer = tree.current_scene.get_node("UI")
@@ -153,6 +163,7 @@ func _cross_the_ravine() -> bool:
 	if not _expect(guide.destination_name == "望溪台" and state.ravine_trip_target == "望溪台",
 		"The forest continues the planned route without selecting it again."):
 		return false
+	await _capture_map_frame("00-west-woods")
 	await _key(KEY_M)
 	_expect(guide.route[0].is_equal_approx(player.position) and guide.destination == ravine.get_node("WildHerbs").position,
 		"The chart joins the actual player location to the herb spot.")
@@ -162,12 +173,15 @@ func _cross_the_ravine() -> bool:
 	var start := player.position
 	await _move(&"ui_right", 10)
 	_expect(player.position == start, "Movement input cannot move the player while the chart is open.")
+	var original_size := tree.root.size
 	for resolution in [Vector2i(1280, 720), Vector2i(1024, 768)]:
 		tree.root.size = resolution
 		await tree.process_frame
 		await tree.process_frame
 		_expect(_layout_fits(), "Chart labels and the panel fit at %s." % resolution)
 		print("RAVINE_MAP_LAYOUT window=", tree.root.size, " panel=", map.modal.get_node("Center/Panel").size)
+	tree.root.size = original_size
+	await _capture_map_frame("01-ridge-route")
 	await _key(KEY_ESCAPE)
 	_expect(not map.modal.visible and not tree.paused and map.cancel_button.visible, "Esc returns to the trail and keeps directions.")
 	if not await _walk_route():
@@ -177,6 +191,7 @@ func _cross_the_ravine() -> bool:
 	_expect(state.last_forage_day != state.current_day, "Full health leaves the daily outing available.")
 	print("RAVINE_TRIP_HERBS arrival=", player.position, " used=", state.last_forage_day == state.current_day)
 	print("RAVINE_MAP_BRIDGE arrival=", player.position)
+	await _capture_map_frame("02-east-lookout")
 
 	if not await _select_place("砾滩"):
 		return false
@@ -187,6 +202,7 @@ func _cross_the_ravine() -> bool:
 		return false
 	_expect(guide.route.has(LANDSCAPE.FORD) and not guide.route.has(LANDSCAPE.BRIDGE) and map.route_status.text.contains("浅滩"),
 		"The shortest road home from the east shoal crosses the ford.")
+	await _capture_map_frame("03-ford-route")
 	await _key(KEY_M)
 	if not await _walk_route(true):
 		return false
@@ -253,11 +269,24 @@ func _check_journal() -> void:
 	_expect(guide.route.is_empty() and not map.cancel_button.visible, "The trail HUD can also clear directions.")
 	print("RAVINE_MAP_JOURNAL site=", site, " day=", state.current_day)
 
-	if not await _select_place("柳湾"):
+	if not await _select_place(SummerRaft.PLACE):
 		return
 	await _key(KEY_ESCAPE)
 	if not await _walk_route():
 		return
+	if not await _select_place("柳湾"):
+		return
+	_expect(guide.route.has(RavineLayout.DOCK_FORK) and guide.route.has(RavineLayout.WILLOW_FORK),
+		"The upstream route leaves the raft landing and takes the shore path to its own cove.")
+	await _capture_map_frame("04-upstream-route")
+	await _key(KEY_ESCAPE)
+	var clock: float = state.day_progress
+	if not await _walk_route():
+		return
+	var travel_seconds: float = (state.day_progress - clock) * state.balance.daylight_seconds
+	_expect(travel_seconds > 1.0, "The raft landing and fishing cove have a distinct stretch of shore between them.")
+	print("RAVINE_MAP_UPSTREAM seconds=", snappedf(travel_seconds, 0.01))
+	await _capture_map_frame("05-willow-cove")
 	await _key(KEY_E)
 	var fishing := ravine.get_node_or_null("FishingUI/FishingPanel")
 	if not _expect(fishing != null and tree.paused, "E opens fishing at the chart's Willow Pool marker."):
@@ -273,7 +302,8 @@ func run(game_tree: SceneTree) -> void:
 		tree.quit(1)
 		return
 	seed(650)
-	tree.root.size = Vector2i(1280, 720)
+	if map_capture_dir.is_empty():
+		tree.root.size = Vector2i(1280, 720)
 	tree.root.notify_mouse_entered()
 	state = tree.root.get_node("Global")
 	tree.change_scene_to_file(state.TITLE_SCENE)

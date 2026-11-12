@@ -33,12 +33,12 @@ wilderness = true
 y_sort_enabled = true
 
 [node name="GroveButterfly" type="Node2D" parent="Scenery"]
-position = Vector2(-77, -43)
+position = Vector2(-152, -103)
 script = ExtResource("9_butterfly")
 variety = 1
 
 [node name="CreekFrog" type="Node2D" parent="Scenery" node_paths=PackedStringArray("player")]
-position = Vector2(120, 96)
+position = Vector2(166, 165)
 script = ExtResource("10_frog")
 player = NodePath("../../Player")
 
@@ -46,11 +46,11 @@ player = NodePath("../../Player")
 position = Vector2(223, 1)
 
 [node name="Enemy2" parent="." instance=ExtResource("2_enemy")]
-position = Vector2(286, 199)
+position = Vector2(350, 245)
 type = 1
 
 [node name="ExitArea" type="Area2D" parent="."]
-position = Vector2(-200, 3)
+position = Vector2(-376, 20)
 collision_layer = 0
 collision_mask = 2
 script = ExtResource("11_gate")
@@ -62,17 +62,17 @@ player_path = NodePath("World/Player")
 shape = SubResource("RectangleShape2D_1")
 
 [node name="WestArrival" type="Marker2D" parent="."]
-position = Vector2(-164, 3)
+position = Vector2(-334, 20)
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
-position = Vector2(-164, 3)
+position = Vector2(-334, 20)
 
 [node name="WildFruit" type="Node2D" parent="." groups=["interactable"]]
-position = Vector2(-52, -90)
+position = Vector2(-139, -123)
 script = ExtResource("5_forage")
 
 [node name="WildHerbs" type="Node2D" parent="." groups=["interactable"]]
-position = Vector2(306, -46)
+position = Vector2(446, -106)
 script = ExtResource("5_forage")
 medicinal = true
 
@@ -80,24 +80,26 @@ medicinal = true
 script = ExtResource("7_journal")
 
 [node name="WillowPool" type="Node2D" parent="." groups=["interactable"]]
-position = Vector2(101, -51)
+position = Vector2(138, -180)
 script = ExtResource("8_fishing")
-water = Vector2(35, 0)
+water = Vector2(42, 0)
 
 [node name="GravelShoal" type="Node2D" parent="." groups=["interactable"]]
-position = Vector2(239, 171)
+position = Vector2(277, 229)
 script = ExtResource("8_fishing")
 site = 1
-water = Vector2(-31, 0)
+water = Vector2(-33, 0)
 
 [node name="PoolTrap" parent="." instance=ExtResource("12_trap_stand")]
-position = Vector2(84, -77)
+position = Vector2(126, -210)
+stake_offset = Vector2(22, -4)
+water_offset = Vector2(65, -2)
 
 [node name="ShoalTrap" parent="." instance=ExtResource("12_trap_stand")]
-position = Vector2(278, 234)
+position = Vector2(312, 283)
 site = 1
-stake_offset = Vector2(-12, -28)
-water_offset = Vector2(-46, -24)
+stake_offset = Vector2(-17, -9)
+water_offset = Vector2(-45, -7)
 
 [node name="RaftLanding" type="Node2D" parent="." groups=["interactable"]]
 script = ExtResource("14_raft_landing")

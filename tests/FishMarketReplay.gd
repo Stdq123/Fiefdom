@@ -66,17 +66,11 @@ func _fish_from_estate(site: CreekFish.Site, id: String, frame_name := "") -> bo
 		_expect(guide.destination_name == shore and guide.route.size() >= 2, "The estate directions continue on the ravine map.")
 	for enemy in tree.get_nodes_in_group("enemies"):
 		enemy.set_physics_process(false)
-	var angler := ravine.get_node("Player") as Player
 	var spot := ravine.get_node("WillowPool" if site == CreekFish.Site.POOL else "GravelShoal") as Node2D
-	if site == CreekFish.Site.SHOAL:
-		await _walk(angler, [Vector2(110, 36), Vector2(202, 36), Vector2(238, 158)])
-	else:
-		await _walk(angler, [Vector2(99, -39)])
+	await Campaign.walk_ravine_to(tree, ravine, spot.global_position + Vector2(0, 12))
 	if not await _catch_at(spot, id, frame_name):
 		return false
-	if site == CreekFish.Site.SHOAL:
-		await _walk(angler, [Vector2(243, 119), Vector2(115, 119)])
-	await _walk(angler, [Vector2(-160, 3)])
+	await Campaign.walk_to_ravine_exit(tree, ravine)
 	if not await _cross(&"ui_left", state.ESTATE_SCENE):
 		return false
 	await _estate()

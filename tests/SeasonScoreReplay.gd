@@ -137,7 +137,7 @@ func _ravine() -> void:
 		var position := ravine.get_playback_position()
 		_expect(ravine.playing and position > 0.05 and position < 1.2, "The ravine cue plays across its loop seam.")
 		print("SEASON_SCORE_LOOP ravine resumed_at=", snappedf(position, 0.01))
-	await Campaign.walk_to(tree, tree.current_scene.get_node("Player"), Vector2(-161, 3))
+	await Campaign.walk_to_ravine_exit(tree, tree.current_scene)
 	await _move(&"ui_left", 24)
 	if not _expect(tree.current_scene.name == "Main", "Walk back through West Gate."):
 		return

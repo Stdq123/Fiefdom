@@ -79,7 +79,7 @@ const BUILDING_FOOTPRINTS := {
 const ORCHARD_FRAMES := [Vector2(0, 1), Vector2(1, 0), Vector2(1, 1), Vector2(3, 1)]
 const MAP_BACKDROP := Rect2(-1650, -1400, 3350, 2800)
 const ESTATE_BOUNDS := EstateLayout.BOUNDS
-const WILD_BOUNDS := Rect2(-315, -220, 755, 540)
+const WILD_BOUNDS := RavineLayout.BOUNDS
 const HALL_FOOT := EstateLayout.HALL_FOOT
 const HALL_LANDING := EstateLayout.HALL_LANDING
 const SOUTH_PAVILION := EstateLayout.SOUTH_PAVILION
@@ -105,14 +105,12 @@ const LEAFY_PROPS := [Prop.OAK, Prop.BLOSSOM_TREE, Prop.GROVE_TREE, Prop.GROVE_C
 	Prop.FLOWERS, Prop.WILLOW, Prop.BANK_GRASS, Prop.TALL_BAMBOO, Prop.RAVINE_SHOOT, Prop.RAVINE_RUSH,
 	Prop.WHITE_BLOOM, Prop.PINK_BLOOM]
 const DORMANT_PROPS := [Prop.FLOWERS, Prop.FERN, Prop.RAVINE_SHOOT, Prop.RAVINE_RUSH, Prop.WHITE_BLOOM, Prop.PINK_BLOOM]
-const BERRY_GROVE := Vector2(-69, -82)
-const BRIDGE := Vector2(148, 36)
+const BERRY_GROVE := RavineLayout.FRUIT + Vector2(-17, 8)
+const BRIDGE := RavineLayout.BRIDGE
 const BRIDGE_DECK := Rect2(BRIDGE - Vector2(27, 13), Vector2(54, 26))
-const FORD := Vector2(177, 119)
+const FORD := RavineLayout.FORD
 const CROSSING_HALF_DEPTH := 16.0
 const WATER_HALF_WIDTH := 17.0
-const GROVE_FORK := Vector2(-113, 0)
-const WEST_FORK := Vector2(47, 14)
 const EAST_LANE_JUNCTION := EstateLayout.EAST_LANE_JUNCTION
 const ESTATE_SOUTH_LANE := EstateLayout.SOUTH_LANE
 const ESTATE_EAST_LANE := EstateLayout.EAST_LANE
@@ -120,24 +118,16 @@ const ESTATE_TRACKS := EstateLayout.ROADS + EstateLayout.SOUTH_ROADS + [
 	[EstateLayout.FREIGHT_STOP + Vector2(-21, 0), EstateLayout.FREIGHT_STOP + Vector2(32, 0)],
 	[EstateLayout.HEARTH_APPROACH + Vector2(-13, 0), EstateLayout.HEARTH_APPROACH + Vector2(23, 4)],
 ]
-const WILD_TRACKS := [
-	[Vector2(-245, 4), Vector2(-198, 3), Vector2(-151, 3), GROVE_FORK, Vector2(-44, -5), Vector2(14, 6),
-		WEST_FORK, Vector2(70, 20), Vector2(117, 36), BRIDGE, Vector2(183, 36), Vector2(218, 31), Vector2(256, 18), Vector2(311, 16)],
-	[GROVE_FORK, Vector2(-91, -22), Vector2(-70, -59), Vector2(-52, -90)],
-	[WEST_FORK, Vector2(42, 58), Vector2(72, 97), Vector2(115, 119),
-		Vector2(146, 119), FORD, Vector2(211, 119), Vector2(239, 92), Vector2(256, 57), Vector2(256, 18)],
-	[Vector2(256, 18), Vector2(273, -4), Vector2(286, -27), Vector2(303, -41)],
-	[WEST_FORK, Vector2(62, -13), Vector2(79, -38), Vector2(95, -63), SummerRaft.LANDING]
-]
+const WILD_TRACKS := RavineLayout.TRACKS
 const ESTATE_TRACK_WIDTHS: Array[float] = EstateLayout.ROAD_WIDTHS + [18.0, 13.0, 17.0, 14.0, 17.0, 15.0, 13.0, 41.0, 30.0]
 const GARDEN_TRACK := [Vector2(39, 252), Vector2(58, 258), Vector2(78, 263), Vector2(101, 264)]
 const ROAD_REST_TRACK := [Vector2(26, 282), Vector2(9, 288), Vector2(-7, 298)]
 const ROTATION_BOOK_TRACK := [Vector2(44, 241), Vector2(22, 236), Vector2(0, 233), Vector2(-21, 234), Vector2(-43, 238)]
-const WILD_TRACK_WIDTHS: Array[float] = [26.0, 13.0, 17.0, 13.0, 9.0]
-const CREEK := [
-	Vector2(237, -331), Vector2(203, -250), Vector2(177, -193), Vector2(151, -136), Vector2(132, -73),
-	Vector2(139, -19), Vector2(145, 17), BRIDGE, Vector2(149, 79), Vector2(161, 102), FORD, Vector2(192, 143),
-	Vector2(213, 182), Vector2(256, 246), Vector2(283, 338), Vector2(308, 412)
+const WILD_TRACK_WIDTHS := RavineLayout.TRACK_WIDTHS
+const CREEK := RavineLayout.CREEK
+const GRAVEL_BAR := [
+	Vector2(249, 197), Vector2(281, 202), Vector2(300, 218), Vector2(312, 249),
+	Vector2(298, 273), Vector2(265, 254), Vector2(238, 216),
 ]
 const ESTATE_PROPS := [
 	Vector3i(-407, -273, Prop.OAK), Vector3i(-365, -286, Prop.PINE),
@@ -222,39 +212,49 @@ const ESTATE_PROPS := [
 	Vector3i(-290, 513, Prop.TALL_BAMBOO), Vector3i(-319, 478, Prop.PINE),
 ]
 const WILD_PROPS := [
-	Vector3i(-308, -193, Prop.GROVE_CLUSTER), Vector3i(-291, -157, Prop.PINE),
-	Vector3i(-310, -36, Prop.GROVE_CLUSTER), Vector3i(-304, 40, Prop.OAK), Vector3i(-311, 108, Prop.PINE),
-	Vector3i(-306, 170, Prop.GROVE_CLUSTER), Vector3i(-300, 221, Prop.PINE), Vector3i(-307, 282, Prop.MOSS_STONE),
-	Vector3i(427, -178, Prop.PINE), Vector3i(419, -116, Prop.GROVE_CLUSTER), Vector3i(438, -35, Prop.PINE),
-	Vector3i(419, 51, Prop.GROVE_CLUSTER), Vector3i(432, 153, Prop.MOSS_STONE), Vector3i(428, 238, Prop.GROVE_CLUSTER),
-	Vector3i(-303, -108, Prop.PINE), Vector3i(-271, -73, Prop.GROVE_TREE), Vector3i(-236, -57, Prop.MOSS_STONE),
-	Vector3i(-215, -111, Prop.PINE), Vector3i(-179, -91, Prop.TALL_BAMBOO), Vector3i(-148, -128, Prop.BLOSSOM_TREE),
-	Vector3i(-158, -53, Prop.GROVE_CLUSTER), Vector3i(-112, -102, Prop.PINE),
-	Vector3i(-82, -78, Prop.MOSS_STONE), Vector3i(-44, -114, Prop.SHRUB),
-	Vector3i(-11, -112, Prop.OAK), Vector3i(36, -116, Prop.PINE), Vector3i(82, -102, Prop.TALL_BAMBOO),
-	Vector3i(110, -69, Prop.REEDS), Vector3i(157, -55, Prop.REEDS), Vector3i(193, -111, Prop.MOSS_STONE),
-	Vector3i(113, -38, Prop.RAVINE_RUSH), Vector3i(185, 12, Prop.RAVINE_RUSH),
-	Vector3i(-93, -31, Prop.RAVINE_SHOOT), Vector3i(-68, -50, Prop.RAVINE_SHOOT),
-	Vector3i(223, -40, Prop.WILLOW), Vector3i(251, -80, Prop.GROVE_TREE), Vector3i(283, -61, Prop.PINE),
-	Vector3i(325, -36, Prop.BOULDER), Vector3i(332, -66, Prop.TALL_BAMBOO), Vector3i(357, -26, Prop.BLOSSOM_TREE),
-	Vector3i(-187, -18, Prop.GATE_FAR), Vector3i(-213, 24, Prop.GATE),
-	Vector3i(-244, -17, Prop.FENCE), Vector3i(-254, 61, Prop.ROCK),
-	Vector3i(-242, -57, Prop.GROVE_TREE), Vector3i(-209, -43, Prop.TALL_BAMBOO), Vector3i(-154, -34, Prop.GROVE_TREE),
-	Vector3i(-126, 16, Prop.SIGNPOST), Vector3i(-100, -55, Prop.BLOSSOM_TREE), Vector3i(-28, -63, Prop.BAMBOO),
-	Vector3i(-68, -95, Prop.GROVE_TREE), Vector3i(-220, 89, Prop.PINE),
-	Vector3i(-185, 120, Prop.BAMBOO), Vector3i(-146, 115, Prop.GROVE_TREE), Vector3i(-118, 57, Prop.FLOWERS),
-	Vector3i(-91, 88, Prop.STUMP), Vector3i(-67, 122, Prop.OAK), Vector3i(-24, 137, Prop.PINE),
-	Vector3i(47, 137, Prop.OAK), Vector3i(41, 108, Prop.BOULDER), Vector3i(106, 115, Prop.FERN),
-	Vector3i(109, -23, Prop.BANK_GRASS), Vector3i(176, -7, Prop.BANK_GRASS),
-	Vector3i(93, 7, Prop.TALL_BAMBOO), Vector3i(201, 4, Prop.TALL_BAMBOO),
-	Vector3i(109, 58, Prop.PEBBLES), Vector3i(182, 64, Prop.PEBBLES), Vector3i(80, 41, Prop.SIGNPOST),
-	Vector3i(113, 80, Prop.RAVINE_ROCK), Vector3i(128, 71, Prop.RAVINE_RUSH),
-	Vector3i(193, 86, Prop.RAVINE_RUSH), Vector3i(216, 70, Prop.RAVINE_ROCK),
-	Vector3i(237, 88, Prop.RAVINE_SHOOT),
-	Vector3i(131, 106, Prop.REEDS), Vector3i(179, 102, Prop.REEDS), Vector3i(220, 108, Prop.SHRUB),
-	Vector3i(125, 143, Prop.SIGNPOST), Vector3i(224, 151, Prop.BANK_GRASS), Vector3i(253, 134, Prop.TALL_BAMBOO),
-	Vector3i(287, 116, Prop.BLOSSOM_TREE), Vector3i(317, 84, Prop.PINE), Vector3i(338, 134, Prop.BOULDER),
-	Vector3i(376, 87, Prop.BAMBOO), Vector3i(351, -48, Prop.GROVE_CLUSTER), Vector3i(384, -2, Prop.GROVE_TREE)
+	Vector3i(-363, -1, Prop.GATE_FAR), Vector3i(-389, 41, Prop.GATE),
+	Vector3i(-429, -4, Prop.FENCE), Vector3i(-417, 73, Prop.BOULDER), Vector3i(-406, -56, Prop.GROVE_CLUSTER),
+	Vector3i(-358, -32, Prop.PINE), Vector3i(-321, -15, Prop.TALL_BAMBOO), Vector3i(-285, 1, Prop.GROVE_TREE),
+	Vector3i(-263, -38, Prop.OAK), Vector3i(-243, -5, Prop.MOSS_STONE), Vector3i(-223, 66, Prop.TALL_BAMBOO),
+	Vector3i(-328, 84, Prop.GROVE_CLUSTER), Vector3i(-296, 66, Prop.PINE), Vector3i(-262, 100, Prop.GROVE_TREE),
+	Vector3i(-427, -136, Prop.PINE), Vector3i(-397, -202, Prop.GROVE_CLUSTER), Vector3i(-359, -148, Prop.TALL_BAMBOO),
+	Vector3i(-329, -209, Prop.PINE), Vector3i(-310, -97, Prop.PINE), Vector3i(-269, -151, Prop.GROVE_TREE),
+	Vector3i(-233, -111, Prop.TALL_BAMBOO), Vector3i(-213, -160, Prop.PINE), Vector3i(-162, -163, Prop.BLOSSOM_TREE),
+	Vector3i(-116, -155, Prop.GROVE_TREE), Vector3i(-107, -115, Prop.SHRUB), Vector3i(-138, -98, Prop.WHITE_BLOOM),
+	Vector3i(-158, -80, Prop.FERN), Vector3i(-174, 35, Prop.SIGNPOST), Vector3i(-120, -26, Prop.GROVE_CLUSTER),
+	Vector3i(-86, -32, Prop.RAVINE_SHOOT), Vector3i(-56, -22, Prop.PINE), Vector3i(-26, -63, Prop.BAMBOO),
+	Vector3i(-116, 57, Prop.FLOWERS), Vector3i(-94, 67, Prop.STUMP), Vector3i(-62, 14, Prop.SIGNPOST),
+	Vector3i(-20, 48, Prop.GROVE_TREE), Vector3i(18, 58, Prop.PINE), Vector3i(43, 88, Prop.BOULDER),
+	Vector3i(-131, 125, Prop.OAK), Vector3i(-88, 130, Prop.TALL_BAMBOO), Vector3i(-39, 138, Prop.PINE),
+	Vector3i(-206, 171, Prop.GROVE_CLUSTER), Vector3i(-314, 144, Prop.PINE), Vector3i(-381, 168, Prop.TALL_BAMBOO),
+	Vector3i(-350, 237, Prop.PINE), Vector3i(-283, 219, Prop.GROVE_TREE), Vector3i(-229, 264, Prop.PINE),
+	Vector3i(-156, 220, Prop.GROVE_TREE), Vector3i(-121, 290, Prop.PINE), Vector3i(-50, 220, Prop.OAK),
+	Vector3i(39, 198, Prop.PINE), Vector3i(83, 181, Prop.OAK), Vector3i(114, 191, Prop.MOSS_STONE),
+	Vector3i(143, 140, Prop.FERN), Vector3i(164, 142, Prop.RAVINE_RUSH), Vector3i(156, 208, Prop.REEDS),
+	Vector3i(177, 206, Prop.PEBBLES), Vector3i(204, 227, Prop.RAVINE_ROCK), Vector3i(181, 267, Prop.WILLOW),
+	Vector3i(153, 292, Prop.TALL_BAMBOO), Vector3i(110, 309, Prop.PINE), Vector3i(55, 302, Prop.GROVE_TREE),
+	Vector3i(41, -53, Prop.PINE), Vector3i(23, -100, Prop.OAK), Vector3i(-14, -142, Prop.GROVE_CLUSTER),
+	Vector3i(41, -165, Prop.GROVE_TREE), Vector3i(60, -135, Prop.TALL_BAMBOO), Vector3i(59, -208, Prop.PINE),
+	Vector3i(97, -222, Prop.WILLOW), Vector3i(125, -245, Prop.PINE), Vector3i(161, -234, Prop.REEDS),
+	Vector3i(149, -197, Prop.BANK_GRASS), Vector3i(152, -165, Prop.RAVINE_RUSH), Vector3i(111, -153, Prop.FERN),
+	Vector3i(117, -80, Prop.RAVINE_RUSH), Vector3i(157, -55, Prop.REEDS), Vector3i(92, 3, Prop.TALL_BAMBOO),
+	Vector3i(107, 60, Prop.PEBBLES), Vector3i(183, 58, Prop.PEBBLES), Vector3i(204, 6, Prop.TALL_BAMBOO),
+	Vector3i(225, -169, Prop.WILLOW), Vector3i(208, -108, Prop.MOSS_STONE), Vector3i(241, -88, Prop.GROVE_TREE),
+	Vector3i(269, -52, Prop.PINE), Vector3i(273, -103, Prop.TALL_BAMBOO), Vector3i(304, -132, Prop.GROVE_CLUSTER),
+	Vector3i(319, -46, Prop.BOULDER), Vector3i(348, -61, Prop.BAMBOO), Vector3i(370, -105, Prop.PINE),
+	Vector3i(383, -151, Prop.TALL_BAMBOO), Vector3i(420, -149, Prop.GROVE_TREE), Vector3i(467, -145, Prop.PINE),
+	Vector3i(483, -96, Prop.TALL_BAMBOO), Vector3i(499, -69, Prop.GROVE_TREE), Vector3i(452, -63, Prop.FERN),
+	Vector3i(482, -28, Prop.BOULDER), Vector3i(404, -28, Prop.MOSS_STONE), Vector3i(355, 33, Prop.SIGNPOST),
+	Vector3i(369, 73, Prop.TALL_BAMBOO), Vector3i(376, 121, Prop.PINE), Vector3i(433, 100, Prop.GROVE_CLUSTER),
+	Vector3i(486, 44, Prop.PINE), Vector3i(523, -16, Prop.TALL_BAMBOO), Vector3i(526, 99, Prop.GROVE_TREE),
+	Vector3i(253, 99, Prop.PINE), Vector3i(241, 143, Prop.RAVINE_RUSH), Vector3i(280, 132, Prop.SHRUB),
+	Vector3i(320, 164, Prop.BLOSSOM_TREE), Vector3i(310, 190, Prop.BOULDER), Vector3i(351, 201, Prop.OAK),
+	Vector3i(249, 215, Prop.PEBBLES), Vector3i(276, 242, Prop.PEBBLES), Vector3i(296, 218, Prop.MOSS_STONE),
+	Vector3i(297, 258, Prop.REEDS), Vector3i(328, 282, Prop.FERN), Vector3i(308, 305, Prop.PEBBLES),
+	Vector3i(357, 311, Prop.TALL_BAMBOO), Vector3i(397, 268, Prop.GROVE_TREE), Vector3i(432, 234, Prop.PINE),
+	Vector3i(488, 213, Prop.GROVE_CLUSTER), Vector3i(504, 299, Prop.PINE), Vector3i(436, 342, Prop.TALL_BAMBOO),
+	Vector3i(371, 365, Prop.GROVE_TREE), Vector3i(325, 369, Prop.PINE), Vector3i(219, 377, Prop.PINE),
+	Vector3i(148, 359, Prop.GROVE_TREE), Vector3i(71, 368, Prop.PINE), Vector3i(-7, 373, Prop.GROVE_CLUSTER),
 ]
 
 @export var wilderness := false
@@ -384,7 +384,7 @@ func _prepare_map() -> void:
 			_prop_bounds(Vector2.ZERO, placement.z).position, _prop_texture(placement.z))
 		scenery[sprite] = placement.z
 	if wilderness:
-		scenery[_place_sprite(props_layer, Vector2(265, -35), Vector2(-24, -38), LOOKOUT)] = SCENE_LANDMARK
+		scenery[_place_sprite(props_layer, RavineLayout.LOOKOUT, Vector2(-24, -38), LOOKOUT)] = SCENE_LANDMARK
 		creek_surface = Node2D.new()
 		creek_surface.draw.connect(_draw_surface)
 		add_child(creek_surface)
@@ -498,6 +498,8 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	_draw_ground()
 	if wilderness:
+		var gravel := _track_dust().lerp(Color("#939988"), 0.58)
+		draw_colored_polygon(PackedVector2Array(GRAVEL_BAR), gravel)
 		_draw_tracks()
 		_draw_creek()
 		_draw_crossings()
@@ -574,11 +576,13 @@ func _draw_pavilion_rest() -> void:
 
 func _add_landmark_labels() -> void:
 	if wilderness:
-		_label_at(Vector2(-200, -75), "← 西门 · 回封地")
-		_label_at(Vector2(-106, -33), "↑ 野果坳")
-		_label_at(Vector2(86, 7), "木桥 →")
-		_label_at(Vector2(122, 91), "浅滩 →")
-		_label_at(Vector2(265, -85), "望溪台")
+		_label_at(RavineLayout.WEST_GATE + Vector2(0, -79), "← 西门 · 回封地")
+		_label_at(RavineLayout.GROVE_FORK + Vector2(0, -42), "↑ 野果坳")
+		_label_at(RavineLayout.FORD_FORK + Vector2(-10, 23), "浅滩 ↘")
+		_label_at(RavineLayout.SHORE_FORK + Vector2(0, -31), "↑ 柳湾 · 埠头")
+		_label_at(BRIDGE + Vector2(-66, -31), "木桥 →")
+		_label_at(RavineLayout.RIDGE_FORK + Vector2(0, -34), "望溪台 ↗")
+		_label_at(RavineLayout.LOOKOUT + Vector2(0, -55), "望溪台")
 	else:
 		_label_at(Vector2(-305, -104), "← 西市")
 		_label_at(Vector2(-136, 37), "← 西市")
@@ -829,7 +833,7 @@ func _draw_creek() -> void:
 	draw_colored_polygon(_ribbon(line, 23), Color("#72837d") if winter else Color("#718375"))
 	draw_colored_polygon(_ribbon(line, WATER_HALF_WIDTH + 2), water.darkened(0.25))
 	draw_colored_polygon(_ribbon(line, 12), water)
-	for step in range(-228, 334, 9):
+	for step in range(floori(WILD_BOUNDS.position.y) - 16, ceili(WILD_BOUNDS.end.y) + 18, 9):
 		var mid := roundf(creek_x(step))
 		var offset := posmod(step * 3, 5)
 		draw_rect(Rect2(mid - 23 + offset, step, 4, 2), Color("#9cae9f") if winter else Color("#879576"))
@@ -838,8 +842,8 @@ func _draw_creek() -> void:
 		_draw_creek_rime()
 
 func _draw_creek_rime() -> void:
-	for index in 35:
-		var y := -229 + index * 16 + posmod(index * 11, 13)
+	for index in ceili(WILD_BOUNDS.size.y / 16.0) + 2:
+		var y := WILD_BOUNDS.position.y - 14 + index * 16 + posmod(index * 11, 13)
 		if absf(y - BRIDGE.y) <= CROSSING_HALF_DEPTH + 4.0 or absf(y - FORD.y) <= CROSSING_HALF_DEPTH + 4.0:
 			continue
 		var bank := -1 if index % 5 < 2 else 1
@@ -887,7 +891,7 @@ func _draw_crossings() -> void:
 func _draw_surface() -> void:
 	var water: Color = WATER_TINTS[season]
 	for i in 30:
-		var y := -234 + posmod(i * 23 + water_frame, 568)
+		var y := WILD_BOUNDS.position.y - 14 + posmod(i * 29 + water_frame, ceili(WILD_BOUNDS.size.y) + 28)
 		if absf(y - BRIDGE.y) <= CROSSING_HALF_DEPTH or absf(y - FORD.y) <= CROSSING_HALF_DEPTH:
 			continue
 		var x := roundf(creek_x(y)) + (i * 7) % 14 - 7

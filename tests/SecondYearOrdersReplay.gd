@@ -195,7 +195,6 @@ func _cross(action: StringName, path: String) -> bool:
 
 func _catch_minnow() -> bool:
 	var trail := tree.current_scene as Node2D
-	var angler: Player = trail.get_node("Player")
 	var spot := trail.get_node("WillowPool") as Node2D
 	var directions: Node2D = trail.get_node("RavineDirections")
 	var map: Control = trail.get_node("CampaignHUD").view.get_node("RavineMap")
@@ -206,7 +205,7 @@ func _catch_minnow() -> bool:
 		"The trail map gives the same catch and cost as the forecast.")
 	await _capture("02b-willow-route")
 	await _key(KEY_ESCAPE)
-	await _walk(angler, [spot.global_position + Vector2(0, 12)])
+	await Campaign.walk_ravine_to(tree, trail, spot.global_position + Vector2(0, 12))
 	_expect(state.ravine_trip_target.is_empty(), "The trip is complete once the fishing spot is in reach.")
 	var stamina: int = state.current_stamina
 	await _key(KEY_E)
@@ -240,7 +239,7 @@ func _catch_minnow() -> bool:
 		and "今日已有外出收获" in map.markers["望溪台"].tooltip_text,
 		"The catch consumes the single outing for both kinds of gathering.")
 	await _key(KEY_ESCAPE)
-	await _walk(angler, [Vector2(-163, 3)])
+	await Campaign.walk_to_ravine_exit(tree, trail)
 	return landed and await _cross(&"ui_left", state.ESTATE_SCENE)
 
 func _summer() -> void:

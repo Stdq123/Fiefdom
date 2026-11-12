@@ -129,17 +129,16 @@ func _run() -> void:
 	if current_scene.name != "Wilderness":
 		quit(1)
 		return
-	var walker := current_scene.get_node("Player") as Node2D
 	var fruit := current_scene.get_node("WildFruit") as Node2D
-	await Campaign.walk_to(self, walker, fruit.global_position + Vector2(-7, 19))
+	await Campaign.walk_ravine_to(self, current_scene, fruit.global_position + Vector2(-7, 19))
 	var food: int = state.food_storage
 	await _interact()
 	_expect(state.food_storage == food + state.balance.wild_food_yield and "采得野果" in current_scene.get_node("CampaignHUD").notice.text,
 		"Wild berries are visible and supply food through E.")
 	await _interact()
 	_expect(state.food_storage == food + state.balance.wild_food_yield, "The same bush cannot be harvested twice in a day.")
-	await Campaign.walk_to(self, walker, Vector2(-163, 3))
-	await _move(&"ui_left", 20)
+	await Campaign.walk_to_ravine_exit(self, current_scene)
+	await _move(&"ui_left", 26)
 	_expect(current_scene.name == "Main" and state.raids_defeated == 1 and state.last_forage_day == state.current_day,
 		"Returning preserves the defended estate and the forage limit.")
 	if not failed:

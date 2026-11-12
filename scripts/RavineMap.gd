@@ -20,6 +20,7 @@ const ESTATE_EXIT := "西门回封地"
 
 var guide: Node2D
 var player: Player
+var landscape: LANDSCAPE
 var places: Dictionary[String, Vector2] = {}
 var markers: Dictionary[String, Button] = {}
 
@@ -27,9 +28,10 @@ func _refresh_shortcuts() -> void:
 	super._refresh_shortcuts()
 	open_button.text = "竹涧舆图  %s" % ("Y" if GamepadInput.active else Preferences.key_label(KeyBindings.MAP))
 
-func setup(trail_guide: Node2D, walker: Player, destinations: Dictionary[String, Vector2]) -> void:
+func setup(trail_guide: Node2D, walker: Player, terrain: LANDSCAPE, destinations: Dictionary[String, Vector2]) -> void:
 	guide = trail_guide
 	player = walker
+	landscape = terrain
 	places = destinations
 	var trap_icon := CreekTrap.icon()
 	for place in places:
@@ -157,10 +159,14 @@ func _refresh_route() -> void:
 			route_status.text += "\n" + Global.ravine_place_detail(name)
 	paper.queue_redraw()
 
-func _map_point(point: Vector2) -> Vector2:
-	return MAP_MARGIN + (point - LANDSCAPE.WILD_BOUNDS.position) * (chart.size - MAP_MARGIN * 2.0) / LANDSCAPE.WILD_BOUNDS.size
+func _map_scale() -> float:
+	var usable := chart.size - MAP_MARGIN * 2.0
+	return minf(usable.x / LANDSCAPE.WILD_BOUNDS.size.x, usable.y / LANDSCAPE.WILD_BOUNDS.size.y)
 
-func _map_line(points: Array) -> PackedVector2Array:
+func _map_point(point: Vector2) -> Vector2:
+	return chart.size * 0.5 + (point - LANDSCAPE.WILD_BOUNDS.get_center()) * _map_scale()
+
+func _map_line(points: PackedVector2Array) -> PackedVector2Array:
 	var ink := PackedVector2Array()
 	for point: Vector2 in points:
 		ink.append(_map_point(point))
@@ -171,10 +177,17 @@ func _layout_markers() -> void:
 		var button := markers[place]
 		button.size = button.get_combined_minimum_size()
 		var offset := Vector2(-button.size.x / 2.0, 8)
-		if place in CreekTrap.PLACES:
-			offset = Vector2(12, -button.size.y - 4) if place == CreekTrap.PLACES[CreekFish.Site.POOL] else Vector2(12, 2)
-		elif place == SummerRaft.PLACE:
-			offset = Vector2(-button.size.x - 12, -button.size.y - 8)
+		match place:
+			"野果坳", "望溪台":
+				offset.y = -button.size.y - 9
+			"浅滩", SummerRaft.PLACE:
+				offset = Vector2(-button.size.x - 13, -button.size.y / 2.0)
+			CreekFish.PLACES[CreekFish.Site.POOL], CreekFish.PLACES[CreekFish.Site.SHOAL]:
+				offset = Vector2(14, -button.size.y / 2.0)
+			CreekTrap.PLACES[CreekFish.Site.POOL]:
+				offset = Vector2(14, -button.size.y - 5)
+			CreekTrap.PLACES[CreekFish.Site.SHOAL]:
+				offset = Vector2(14, 3)
 		button.position = (_map_point(places[place]) + offset).round()
 	paper.queue_redraw()
 
@@ -182,34 +195,31 @@ func _draw_chart() -> void:
 	var sheet := Rect2(Vector2.ZERO, chart.size)
 	paper.draw_rect(sheet, Color("#dbd0ae"))
 	for prop: Vector3i in LANDSCAPE.WILD_PROPS:
-		if prop.z in LANDSCAPE.LEAFY_PROPS:
-			var at := _map_point(Vector2(prop.x, prop.y))
+		var foot := Vector2(prop.x, prop.y)
+		if LANDSCAPE.WILD_BOUNDS.has_point(foot) and (prop.z in LANDSCAPE.LEAFY_PROPS or prop.z == LANDSCAPE.Prop.PINE):
+			var at := _map_point(foot)
 			paper.draw_circle(at, 6.0, Color("#a5ad85"))
 			paper.draw_circle(at + Vector2(0, -3), 4.5, Color("#89976f"))
-	var creek := _map_line(LANDSCAPE.CREEK)
-	paper.draw_polyline(creek, Color("#a7b19c"), 44.0, true)
-	paper.draw_polyline(creek, Color("#557e88"), 32.0, true)
+	paper.draw_colored_polygon(_map_line(PackedVector2Array(LANDSCAPE.GRAVEL_BAR)), Color("#b1ae92"))
+	var creek := _map_line(PackedVector2Array(LANDSCAPE.CREEK))
+	paper.draw_polyline(creek, Color("#a7b19c"), 51.0 * _map_scale(), true)
+	paper.draw_polyline(creek, Color("#557e88"), 35.0 * _map_scale(), true)
 	paper.draw_polyline(creek, Color("#90adb0"), 3.0, true)
-	for track in LANDSCAPE.WILD_TRACKS:
-		var line := _map_line(track)
-		paper.draw_polyline(line, Color("#9b865f"), 9.0, true)
-		paper.draw_polyline(line, Color("#c7b388"), 6.0, true)
-	var marked := PackedVector2Array()
-	for point: Vector2 in guide.route:
-		marked.append(_map_point(point))
+	for track in landscape.track_shapes:
+		paper.draw_colored_polygon(_map_line(track.shoulder), Color("#9b865f"))
+	for track in landscape.track_shapes:
+		paper.draw_colored_polygon(_map_line(track.surface), Color("#c7b388"))
+	var marked := _map_line(guide.route)
 	if marked.size() >= 2:
 		paper.draw_polyline(marked, Color("#f7df9f"), 7.0, true)
 		paper.draw_polyline(marked, PATH_INK, 4.0, true)
 	for place in places:
 		if markers[place].visible:
 			var pin := _map_point(places[place])
+			var button := markers[place]
+			var edge := pin.clamp(button.position, button.position + button.size)
+			paper.draw_line(pin, edge, INK, 1.0, true)
 			paper.draw_circle(pin, 4.0, INK)
-			if place in CreekTrap.PLACES:
-				var button := markers[place]
-				paper.draw_line(pin, button.position + Vector2(0, button.size.y * 0.5), INK, 1.0, true)
-			elif place == SummerRaft.PLACE:
-				var button := markers[place]
-				paper.draw_line(pin, button.position + Vector2(button.size.x, button.size.y * 0.5), INK, 1.0, true)
 	var site := Global.ravine_site_today()
 	if site >= 0:
 		paper.draw_arc(_map_point(RavineJournal.SITES[site].position), 6.0, 0.0, TAU, 18, PATH_INK, 2.0, true)

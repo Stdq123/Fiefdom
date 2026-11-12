@@ -37,8 +37,9 @@ func _catch_willow() -> bool:
 	var ravine := tree.current_scene as Node2D
 	for enemy in tree.get_nodes_in_group("enemies"):
 		enemy.set_physics_process(false)
-	await _walk(ravine.get_node("Player"), [Vector2(99, -39)])
-	return await _catch_at(ravine.get_node("WillowPool"), FISH, "", false)
+	var pool := ravine.get_node("WillowPool") as Node2D
+	await Campaign.walk_ravine_to(tree, ravine, pool.global_position + Vector2(0, 12))
+	return await _catch_at(pool, FISH, "", false)
 
 func _save_and_continue(settings: Control) -> bool:
 	var location: String = tree.current_scene.scene_file_path

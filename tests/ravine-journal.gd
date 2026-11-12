@@ -35,18 +35,14 @@ func _run() -> void:
 
 	if not await _depart():
 		return
-	await _walk(Vector2(-59, -70))
+	await _walk_trail(RavineLayout.FRUIT + Vector2(-7, 18))
 	await _gather()
 	_expect(state.food_storage == food_before + state.balance.wild_food_yield, "The old west-bank food stop still works.")
-	await _walk(Vector2(105, 119))
-	await _walk(Vector2(229, 119))
-	await _walk(Vector2(225, 140))
+	await _walk_trail(RavineLayout.FORD_JOURNAL + Vector2(12, 9))
 	await _record(FORD)
 	await _gather()
 	_expect(state.ravine_journal.count() == 1 and state.last_forage_day == 5,
 		"Surveying is separate from foraging and repeating the interaction adds no page.")
-	await _walk(Vector2(226, 119))
-	await _walk(Vector2(111, 119))
 	if not await _return_home() or not await _reload():
 		return
 	_expect(state.ravine_journal.recorded_days[FORD] == 5 and state.ravine_site_today() == -1,
@@ -56,7 +52,7 @@ func _run() -> void:
 	_expect(state.has_rain() and state.ravine_site_today() == BRIDGE, "Guyu rain directs the next trip to the bridge.")
 	if not await _depart():
 		return
-	await _walk(Vector2(109, 33))
+	await _walk_trail(RavineLayout.BRIDGE_JOURNAL + Vector2(-10, 9))
 	await _record(BRIDGE)
 	if not await _return_home():
 		return
@@ -65,13 +61,9 @@ func _run() -> void:
 
 	if not await _depart():
 		return
-	await _walk(Vector2(109, 36))
-	await _walk(Vector2(240, 36))
-	await _walk(Vector2(259, -24))
+	await _walk_trail(RavineLayout.LOOKOUT_JOURNAL + Vector2(-8, 11))
 	await _record(LOOKOUT)
 	_expect(state.ravine_handoff_ready(), "Three different dates complete the survey.")
-	await _walk(Vector2(235, 36))
-	await _walk(Vector2(112, 36))
 	if not await _return_home():
 		return
 	var estate := current_scene.get_node("World")

@@ -94,16 +94,16 @@ func _run() -> void:
 		enemy.set_physics_process(false)
 	var landscape := current_scene.get_node("Landscape")
 	var terrain := landscape.terrain_audio as TerrainAudio
-	var willow := _tree_at(landscape, Vector2(223, -40))
+	var willow := _tree_at(landscape, Vector2(225, -169))
 	_expect(willow != null and willow.texture.atlas.resource_path.get_file() == "winter-willow.svg",
 		"Winter replaces the green willow silhouette with bare branches.")
 	var snow_samples: Dictionary[String, bool] = {}
 	walker.footstep.connect(func(at: Vector2) -> void:
-		if absf(at.y - 64) < 3.0 and at.x >= -142 and at.x <= -93:
+		if absf(at.y - 97) < 3.0 and at.x >= -253 and at.x <= -208:
 			snow_samples[terrain.footsteps.stream.resource_path.get_file()] = true
 	)
-	await Campaign.walk_to(self, walker, Vector2(-150, 64))
-	await Campaign.walk_to(self, walker, Vector2(-79, 64))
+	await Campaign.walk_to(self, walker, Vector2(-251, 97))
+	await Campaign.walk_to(self, walker, Vector2(-210, 97))
 	_expect(snow_samples.size() == 2 and snow_samples.has("snow-1.wav") and snow_samples.has("snow-2.wav")
 		and not landscape.snow_footprints.prints.is_empty(), "Actual movement across snow plays two samples and leaves tracks.")
 	await create_timer(4.0).timeout
@@ -112,10 +112,10 @@ func _run() -> void:
 	await Campaign.walk_to(self, walker, Vector2(155, 36))
 	_expect(terrain.footsteps.stream.resource_path.get_file().begins_with("plank-"), "The winter bridge still sounds like wood.")
 	await Campaign.walk_to(self, walker, Vector2(226, 36))
-	await Campaign.walk_to(self, walker, Vector2(226, 119))
-	await Campaign.walk_to(self, walker, Vector2(167, 119))
+	await Campaign.walk_ravine_to(self, current_scene, RavineLayout.FORD_EAST)
+	await Campaign.walk_to(self, walker, RavineLayout.FORD)
 	_expect(terrain.footsteps.stream.resource_path.get_file().begins_with("water-"), "The winter ford still sounds like water.")
-	await Campaign.walk_to(self, walker, Vector2(-161, 3))
+	await Campaign.walk_to_ravine_exit(self, current_scene)
 	await _move(&"ui_left", 24)
 	if current_scene.name != "Main":
 		push_error("The winter path home must remain open.")

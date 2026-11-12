@@ -4,7 +4,6 @@ const Campaign := preload("res://tests/CampaignReplay.gd")
 const Terrain := preload("res://scripts/TerrainAudio.gd")
 const PUBLIC := Vector2i(5, 5)
 const FAST_DAY := 13.0
-const GROVE_PATH := [Vector2(-114, 3), Vector2(-90, -32), Vector2(-64, -75)]
 
 var tree: SceneTree
 var state: Node
@@ -181,9 +180,7 @@ func _cross_at_dusk() -> bool:
 		"The trail carries the same dusk and day across the gate.")
 	for enemy in tree.get_nodes_in_group("enemies"):
 		enemy.set_physics_process(false)
-	var player := ravine.get_node("Player") as Node2D
-	for point in GROVE_PATH:
-		await Campaign.walk_to(tree, player, point)
+	await Campaign.walk_ravine_to(tree, ravine, RavineLayout.FRUIT + Vector2(-8, 16))
 	var landscape := ravine.get_node("Landscape")
 	var terrain: Node = landscape.terrain_audio
 	state.balance.daylight_seconds = FAST_DAY
@@ -198,8 +195,7 @@ func _cross_at_dusk() -> bool:
 	await _capture("03-ravine-night")
 	await _capture_insects(terrain)
 	print("DAYLIGHT_RAVINE day=", state.current_day, " watch=", state.day_watch_label(), " insects=", snappedf(terrain.crickets.volume_linear, 0.01))
-	await Campaign.walk_to(tree, player, Vector2(-113, 3))
-	await Campaign.walk_to(tree, player, Vector2(-162, 3))
+	await Campaign.walk_to_ravine_exit(tree, ravine)
 	await _move(&"ui_left", 24)
 	return await _use_estate()
 
