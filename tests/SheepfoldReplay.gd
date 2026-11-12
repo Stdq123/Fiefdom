@@ -27,7 +27,7 @@ func _continue() -> void:
 
 func _open_sheep_trade() -> Control:
 	if world.player.global_position.y > 237.0:
-		await _walk(world.player, [Vector2(-210, 344), Vector2(-210, 54)])
+		await _walk(world.player, [Vector2(-182, 459), Vector2(-182, 54)])
 	if not await _enter_market(world, ui):
 		return null
 	var market := tree.current_scene
@@ -77,14 +77,8 @@ func _guide_pen() -> void:
 	await _key(KEY_ESCAPE)
 
 func _walk_to_pen() -> void:
-	var point: Vector2 = world.player.global_position
-	if point.distance_to(Vector2(-148, 344)) < 15.0:
-		return
-	if point.x < -190.0 and point.y < 120.0:
-		await _walk(world.player, [Vector2(-218, -18), Vector2(-218, 344), Vector2(-148, 344)])
-	else:
-		await _walk(world.player, [Vector2(32, 151), Vector2(47, 214), Vector2(27, 290),
-			Vector2(8, 313), Vector2(-63, 344), Vector2(-148, 344)])
+	var gate: Vector2 = world.get_node("SheepfoldPen").global_position
+	await Campaign.walk_south_to(tree, world, gate)
 
 func _open_pen() -> Control:
 	await _key(KEY_E)
@@ -96,11 +90,12 @@ func _test_pasture() -> void:
 	await _guide_pen()
 	await _walk_to_pen()
 	var pen: Node2D = world.get_node("SheepfoldPen")
-	await _walk(world.player, [Vector2(-180, 344), Vector2(-180, 319)])
-	_expect(world.player.global_position.y > 331.0, "The front rail blocks entry at %s." % world.player.global_position)
-	await _walk(world.player, [Vector2(-180, 344), Vector2(-148, 344), Vector2(-148, 322)])
-	_expect(world.player.global_position.y < 330.0, "The visible gate is wide enough to enter.")
-	await _walk(world.player, [Vector2(-148, 344)])
+	var gate := pen.global_position
+	await _walk(world.player, [gate + Vector2(-32, 0), gate + Vector2(-32, -25)])
+	_expect(world.player.global_position.y > gate.y - 13.0, "The front rail blocks entry at %s." % world.player.global_position)
+	await _walk(world.player, [gate + Vector2(-32, 0), gate, gate + Vector2(0, -22)])
+	_expect(world.player.global_position.y < gate.y - 14.0, "The visible gate is wide enough to enter.")
+	await _walk(world.player, [gate])
 	_watch(0.34)
 	await tree.create_timer(0.15).timeout
 	_expect(pen.visible and pen.animal.position.y > 24.0 and pen.hay.visible, "On a dry day the sheep moves out to pasture.")
@@ -120,7 +115,7 @@ func _plot(cell: Vector2i) -> void:
 	await _click(tiles.get_global_transform_with_canvas() * tiles.map_to_local(cell))
 
 func _winter_wheat() -> void:
-	await _walk(world.player, [Vector2(-68, 344), Vector2(-68, 238), Vector2(27, 238),
+	await _walk(world.player, [Vector2(-148, 458), Vector2(-148, 238), Vector2(27, 238),
 		Vector2(27, 146), Vector2(66, 146), Vector2(66, 98)])
 	await tree.create_timer(0.28).timeout
 	await _key(KEY_4)

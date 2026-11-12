@@ -218,8 +218,8 @@ func path_to_pavilion_seat(from: Vector2, seat: Vector2) -> Array[Vector2]:
 		elif start.x >= 80.0 and start.y < 205.0:
 			path.append_array(Array(_follow_lane(LANDSCAPE.ESTATE_EAST_LANE, start, LANDSCAPE.EAST_LANE_JUNCTION)))
 			start = LANDSCAPE.EAST_LANE_JUNCTION
-		path.append_array(Array(_follow_lane(LANDSCAPE.ESTATE_SOUTH_LANE, start, LANDSCAPE.PAVILION_TURN)))
-		path.append_array([Vector2(47, 264), Vector2(69, 282), table + Vector2(-32, 5)])
+		path.append_array(Array(_follow_lane(LANDSCAPE.ESTATE_SOUTH_LANE, start, EstateLayout.PAVILION_JUNCTION)))
+		path.append_array(EstateLayout.PAVILION_COURT.slice(0, -1))
 		if seat.y < table.y:
 			path.append(table + Vector2(-27, -14))
 		elif seat.x > table.x:

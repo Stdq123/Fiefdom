@@ -110,8 +110,8 @@ func _open_calendar() -> void:
 	await _button(ui.calendar.dates.get_child(3))
 
 func _walk_to_table() -> void:
-	await _walk(world.player, [Vector2(32, 151), Vector2(47, 214), Vector2(27, 290), Vector2(111, 325),
-		Vector2(240, 337), Vector2(291, 322), Vector2(319, 303), Vector2(319, 289)])
+	var approach := world.get_node("WinterSupper/Approach") as Marker2D
+	await Campaign.walk_south_to(tree, world, approach.global_position)
 
 func _recruit_and_fish() -> bool:
 	var guest: Node2D = world.neighbor_actor(VisitorData.RAVINE_GUIDE)

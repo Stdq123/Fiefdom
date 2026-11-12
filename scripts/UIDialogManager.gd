@@ -24,7 +24,7 @@ func setup(host: Control, estate_player: Player) -> void:
 	player = estate_player
 
 func show_freight_arrival(speech: String, portrait: Texture2D, guide_hearth: Callable) -> void:
-	var dialog := _open("申禾", "车夫 · 南路亭", speech + "\n亭东生着火。带点食材去，走远路前可以装一份吃的。",
+	var dialog := _open("申禾", "车夫 · 南路卸货场", speech + "\n沿南路往东有灶台。带点食材去，走远路前可以装一份吃的。",
 		["指路去灶台", "知道了"], [], portrait)
 	dialog.option_selected.connect(func(index: int):
 		if index == 0:
@@ -37,7 +37,7 @@ func show_winter_supper() -> void:
 	if not record.is_empty():
 		var dish: String = WinterSupper.RECIPES[record.recipe].name
 		_open(WinterSupper.HOST, WinterSupper.PLACE,
-			"这锅%s已经煮好。先给门客留 %d 份，余下的给路过亭子的人。坐近些，风就小了。" % [
+			"这锅%s已经煮好。先给门客留 %d 份，余下的留给来围炉的人。坐近些，风就小了。" % [
 				dish, mini(need, int(record.portions))], ["坐一会"], [], null)
 		return
 	var fish := Global.fish_for_travel_meal()
@@ -68,7 +68,7 @@ func show_travel_hearth(guide_market: Callable) -> void:
 	var place := "南路灶台"
 	var portrait := TRAVEL_HEARTH.PORTRAIT
 	if not Global.travel_hearth_open():
-		var dialog := _open(place, "南路亭东", "西市交过第一单后，这里就会有人照看灶火。",
+		var dialog := _open(place, "南路东段", "西市交过第一单后，这里就会有人照看灶火。",
 			["指路去西市", "离开"], [], portrait)
 		dialog.option_selected.connect(func(index: int):
 			if index == 0:
@@ -320,7 +320,7 @@ func _on_gathering_choice(index: int, day: int) -> void:
 
 func show_autumn_guest(guest: Node2D) -> void:
 	if not parent_node.has_node("DialoguePanel"):
-		_open(guest.speaker, "秋社 · 南路亭东", guest.remark(), ["离开"], [], guest.icon)
+		_open(guest.speaker, "秋社 · 东南空地", guest.remark(), ["离开"], [], guest.icon)
 
 func show_gathering_book() -> void:
 	if parent_node.has_node("DialoguePanel"):

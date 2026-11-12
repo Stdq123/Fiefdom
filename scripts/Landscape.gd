@@ -78,7 +78,7 @@ const BUILDING_FOOTPRINTS := {
 }
 const ORCHARD_FRAMES := [Vector2(0, 1), Vector2(1, 0), Vector2(1, 1), Vector2(3, 1)]
 const MAP_BACKDROP := Rect2(-1650, -1400, 3350, 2800)
-const ESTATE_BOUNDS := Rect2(-330, -205, 840, 560)
+const ESTATE_BOUNDS := EstateLayout.BOUNDS
 const WILD_BOUNDS := Rect2(-315, -220, 755, 540)
 const HALL_FOOT := EstateLayout.HALL_FOOT
 const HALL_LANDING := EstateLayout.HALL_LANDING
@@ -116,20 +116,9 @@ const WEST_FORK := Vector2(47, 14)
 const EAST_LANE_JUNCTION := EstateLayout.EAST_LANE_JUNCTION
 const ESTATE_SOUTH_LANE := EstateLayout.SOUTH_LANE
 const ESTATE_EAST_LANE := EstateLayout.EAST_LANE
-const PAVILION_APPROACH := [
-	Vector2(27, 282), Vector2(48, 286), Vector2(68, 282), Vector2(77, 267),
-	SOUTH_PAVILION + Vector2(0, 6),
-]
-const HEARTH_TRACK := [Vector2(34, 285), Vector2(68, 307), Vector2(111, 323),
-	Vector2(160, 332), Vector2(201, 335), Vector2(230, 333)]
-const PAVILION_EAST_TRACK := [Vector2(211, 334), Vector2(246, 338), Vector2(270, 333),
-	Vector2(292, 319), Vector2(312, 303), Vector2(319, 287)]
-const SHEEPFOLD_TRACK := [Vector2(23, 288), Vector2(7, 309), Vector2(-22, 322),
-	Vector2(-62, 333), Vector2(-111, 344), Vector2(-135, 345), Vector2(-145, 342), Vector2(-148, 335)]
-const ESTATE_TRACKS := EstateLayout.ROADS + [
-	PAVILION_APPROACH,
-	HEARTH_TRACK,
-	PAVILION_EAST_TRACK,
+const ESTATE_TRACKS := EstateLayout.ROADS + EstateLayout.SOUTH_ROADS + [
+	[EstateLayout.FREIGHT_STOP + Vector2(-21, 0), EstateLayout.FREIGHT_STOP + Vector2(32, 0)],
+	[EstateLayout.HEARTH_APPROACH + Vector2(-13, 0), EstateLayout.HEARTH_APPROACH + Vector2(23, 4)],
 ]
 const WILD_TRACKS := [
 	[Vector2(-245, 4), Vector2(-198, 3), Vector2(-151, 3), GROVE_FORK, Vector2(-44, -5), Vector2(14, 6),
@@ -140,7 +129,7 @@ const WILD_TRACKS := [
 	[Vector2(256, 18), Vector2(273, -4), Vector2(286, -27), Vector2(303, -41)],
 	[WEST_FORK, Vector2(62, -13), Vector2(79, -38), Vector2(95, -63), SummerRaft.LANDING]
 ]
-const ESTATE_TRACK_WIDTHS: Array[float] = EstateLayout.ROAD_WIDTHS + [18.0, 14.0, 12.0]
+const ESTATE_TRACK_WIDTHS: Array[float] = EstateLayout.ROAD_WIDTHS + [18.0, 13.0, 17.0, 14.0, 17.0, 15.0, 13.0, 41.0, 30.0]
 const GARDEN_TRACK := [Vector2(39, 252), Vector2(58, 258), Vector2(78, 263), Vector2(101, 264)]
 const ROAD_REST_TRACK := [Vector2(26, 282), Vector2(9, 288), Vector2(-7, 298)]
 const ROTATION_BOOK_TRACK := [Vector2(44, 241), Vector2(22, 236), Vector2(0, 233), Vector2(-21, 234), Vector2(-43, 238)]
@@ -210,7 +199,27 @@ const ESTATE_PROPS := [
 	Vector3i(286, 32, Prop.SIGNPOST), Vector3i(348, -24, Prop.GROVE_TREE), Vector3i(356, -17, Prop.FENCE),
 	Vector3i(413, -16, Prop.GATE_FAR), Vector3i(387, 32, Prop.GATE),
 	Vector3i(445, 25, Prop.FENCE), Vector3i(457, 53, Prop.PINE),
-	Vector3i(481, -21, Prop.GROVE_CLUSTER), Vector3i(478, 99, Prop.GROVE_TREE)
+	Vector3i(481, -21, Prop.GROVE_CLUSTER), Vector3i(478, 99, Prop.GROVE_TREE),
+	# Southern verges and groves between the pavilion, pasture and festival clearing.
+	Vector3i(-297, 310, Prop.TALL_BAMBOO), Vector3i(-267, 304, Prop.GROVE_TREE),
+	Vector3i(-217, 321, Prop.PINE), Vector3i(-188, 332, Prop.OAK), Vector3i(-150, 353, Prop.TALL_BAMBOO),
+	Vector3i(-140, 374, Prop.LOGS), Vector3i(-107, 352, Prop.GRAIN_SACK), Vector3i(-117, 359, Prop.OPEN_SACK),
+	Vector3i(-68, 344, Prop.LIDDED_JAR), Vector3i(-46, 329, Prop.GROVE_TREE), Vector3i(-5, 320, Prop.FERN),
+	Vector3i(-88, 416, Prop.MOSS_STONE), Vector3i(-107, 424, Prop.FLOWERS), Vector3i(-150, 425, Prop.SHRUB),
+	Vector3i(-294, 435, Prop.FENCE), Vector3i(-289, 460, Prop.FLOWERS), Vector3i(-200, 440, Prop.FLOWERS),
+	Vector3i(50, 319, Prop.SIGNPOST), Vector3i(101, 330, Prop.GROVE_TREE), Vector3i(122, 339, Prop.PINE),
+	Vector3i(172, 338, Prop.TALL_BAMBOO), Vector3i(191, 356, Prop.LOGS), Vector3i(253, 363, Prop.JAR),
+	Vector3i(112, 402, Prop.OAK), Vector3i(136, 429, Prop.PINE), Vector3i(172, 417, Prop.GROVE_TREE),
+	Vector3i(37, 408, Prop.BAMBOO), Vector3i(23, 444, Prop.FLOWERS), Vector3i(4, 486, Prop.TALL_BAMBOO),
+	Vector3i(244, 445, Prop.OAK), Vector3i(263, 464, Prop.TALL_BAMBOO), Vector3i(290, 480, Prop.ROCK),
+	Vector3i(306, 377, Prop.BAMBOO), Vector3i(335, 380, Prop.GROVE_TREE), Vector3i(401, 382, Prop.BLOSSOM_TREE),
+	Vector3i(459, 385, Prop.TALL_BAMBOO), Vector3i(489, 420, Prop.PINE), Vector3i(483, 472, Prop.OAK),
+	Vector3i(452, 513, Prop.GROVE_TREE), Vector3i(402, 519, Prop.TALL_BAMBOO),
+	Vector3i(357, 529, Prop.PINE), Vector3i(303, 530, Prop.OAK), Vector3i(258, 542, Prop.PINE),
+	Vector3i(201, 525, Prop.GROVE_TREE), Vector3i(153, 541, Prop.PINE), Vector3i(110, 518, Prop.TALL_BAMBOO),
+	Vector3i(55, 536, Prop.OAK), Vector3i(-41, 534, Prop.PINE), Vector3i(-100, 518, Prop.TALL_BAMBOO),
+	Vector3i(-148, 530, Prop.PINE), Vector3i(-192, 520, Prop.OAK), Vector3i(-241, 531, Prop.PINE),
+	Vector3i(-290, 513, Prop.TALL_BAMBOO), Vector3i(-319, 478, Prop.PINE),
 ]
 const WILD_PROPS := [
 	Vector3i(-308, -193, Prop.GROVE_CLUSTER), Vector3i(-291, -157, Prop.PINE),
@@ -361,9 +370,6 @@ func _refresh_estate_tracks() -> void:
 	if Global.field_rotation.signed_day > 0:
 		estate_tracks.append(ROTATION_BOOK_TRACK)
 		estate_track_widths.append(11.0)
-	if Global.sheepfold.owned():
-		estate_tracks.append(SHEEPFOLD_TRACK)
-		estate_track_widths.append(12.0)
 	_build_track_shapes(estate_tracks, estate_track_widths, field_approaches.size())
 	queue_redraw()
 
@@ -407,6 +413,8 @@ func _place_lanterns(layer: Node2D) -> void:
 		day_lighting.place_lamp(layer, Vector2(HALL_FOOT) + Vector2(-18, 8), 0.90)
 		day_lighting.place_lamp(layer, Vector2(HALL_FOOT) + Vector2(18, 8), 0.90)
 		day_lighting.place_lamp(layer, SOUTH_PAVILION + Vector2(27, 12))
+		day_lighting.place_lamp(layer, EstateLayout.SOUTH_FORK + Vector2(-15, -14), 0.76)
+		day_lighting.place_lamp(layer, EstateLayout.FREIGHT_STOP + Vector2(37, -19), 0.80)
 		day_lighting.place_lamp(layer, Vector2(415, 31))
 		day_lighting.place_lamp(layer, Vector2(-286, -4))
 	day_lighting.refresh()
@@ -579,6 +587,7 @@ func _add_landmark_labels() -> void:
 		_label_at(Vector2(400, -78), "东关")
 		_label_at(SOUTH_PAVILION + Vector2(0, -69), "南路亭")
 		_label_at(Vector2(12, 206), "南边竹径")
+		_label_at(EstateLayout.SOUTH_FORK + Vector2(22, -38), "西坡 ↙  ·  灶台 →")
 
 func _label_at(center: Vector2, text: String) -> void:
 	var label := Label.new()
@@ -930,7 +939,7 @@ func _install_boundaries() -> void:
 	camera.limit_left = floori(view.position.x)
 	camera.limit_right = ceili(view.end.x)
 	camera.limit_top = floori(view.position.y)
-	camera.limit_bottom = ceili(view.end.y)
+	camera.limit_bottom = ceili(view.end.y if wilderness else bounds.end.y + 62.0)
 	camera.force_update_scroll()
 
 func _add_edge(terrain: StaticBody2D, at: Vector2, size: Vector2) -> CollisionShape2D:

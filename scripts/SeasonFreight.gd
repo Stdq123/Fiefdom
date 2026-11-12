@@ -6,7 +6,6 @@ const CART_ART := preload("res://assets/world/season-order-cart.svg")
 const DRIVER_ART := preload("res://assets/characters/freight-driver.svg")
 const ROAD_STEP := preload("res://assets/audio/plank-1.wav")
 const WEST_MARKET := preload("res://scripts/WestMarketLayout.gd")
-const PAVILION_STOP := Vector2(112, 287)
 
 static var market_road := _curve(WEST_MARKET.freight_path())
 static var estate_road := _estate_curve()
@@ -37,7 +36,7 @@ var portrait := _frame(DRIVER_ART, Rect2(0, 96, 48, 48))
 static func _estate_curve() -> Curve2D:
 	var approach: Array = LANDSCAPE.ESTATE_TRACKS[0].slice(0, 9)
 	approach.append_array(LANDSCAPE.ESTATE_SOUTH_LANE.slice(1))
-	approach.append_array([Vector2(52, 292), Vector2(84, 290), PAVILION_STOP])
+	approach.append_array(EstateLayout.UNLOADING_LANE.slice(1))
 	return _curve(approach)
 
 static func _curve(points: Array) -> Curve2D:

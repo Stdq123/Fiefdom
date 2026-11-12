@@ -29,6 +29,7 @@ param(
     [switch]$FieldStroke,
     [switch]$FieldRoutes,
     [switch]$PavilionEvening,
+    [switch]$SouthRoad,
     [switch]$FishMarketOrders,
     [switch]$MarketWayfinding
 )
@@ -91,6 +92,9 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/CanalDoorReplay.gd'), (Join-Path $repo 'tests/CanalFlowReplay.gd'), (Join-Path $repo 'tests/EstateProgressReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ResearchRationsReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldStrokeReplay.gd') -Destination $testDirectory
+    foreach ($file in 'MarketOrderReplay.gd', 'AutumnExhibitReplay.gd', 'SheepfoldReplay.gd') {
+        Copy-Item -LiteralPath (Join-Path $repo "tests/$file") -Destination $testDirectory
+    }
     @'
 [application]
 run/main_scene="res://tests/ReleaseReplay.tscn"
@@ -179,6 +183,11 @@ try {
     }
     if ($PavilionEvening) {
         Start-VerifiedGame -Directory $release -Profile 'pavilion-evening' -Name 'pavilion-evening' -Replay 'pavilion-evening'
+    }
+    if ($SouthRoad) {
+        foreach ($name in 'market-orders', 'autumn-exhibit', 'sheepfold') {
+            Start-VerifiedGame -Directory $release -Profile $name -Name $name -Replay $name
+        }
     }
     if ($FishMarketOrders) {
         Start-VerifiedGame -Directory $release -Profile 'fish-market-orders' -Name 'fish-market-orders' -Replay 'fish-market-orders'

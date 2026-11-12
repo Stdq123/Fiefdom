@@ -152,12 +152,41 @@ func _calendar_preview() -> void:
 	_expect("第 16 天" in book.title.text and "三种不同的私田作物" in book.event_note.text and "稷 · 2 夜" in book.planting.text,
 		"On day one the almanac gives the date, crops and place needed for the autumn event.")
 	await _snapshot("01-almanac-autumn")
-	await _key(KEY_ESCAPE)
-	_expect(not tree.paused, "Closing the almanac restores play.")
+	await _button(book.guide)
+	var approach: Marker2D = world.get_node("AutumnExhibit/Approach")
+	_expect(not tree.paused and ui.directions.tracked_place == "秋社展台"
+		and ui.directions.tracked_place_point == world.to_local(approach.global_position),
+		"Before the festival the almanac guides players to the same clearing.")
+	ui.directions.clear_tracking()
 
 func _walk_to_exhibit() -> void:
-	await _walk(world.player, [Vector2(32, 151), Vector2(47, 214), Vector2(27, 290), Vector2(111, 325),
-		Vector2(240, 337), Vector2(291, 322), Vector2(319, 303), Vector2(319, 289)])
+	var approach := world.get_node("AutumnExhibit/Approach") as Marker2D
+	await Campaign.walk_south_to(tree, world, approach.global_position)
+
+func _verify_south_route() -> void:
+	var stand := world.get_node("AutumnExhibit") as Node2D
+	var approach := stand.get_node("Approach") as Marker2D
+	var landscape: Node2D = world.get_node("Landscape")
+	await _key(KEY_M)
+	var map: Control = ui.estate_map
+	_expect(map.modal.visible and map.south_path.has(Vector2(29, 344)) and map.south_path.has(Vector2(257, 394))
+		and map.target.point == approach.position + stand.position and map.captions.has("秋社展台"),
+		"The almanac route runs through the south fork and past the hearth to the exhibition ground.")
+	await _snapshot("01a-south-road-map")
+	await _key(KEY_ESCAPE)
+	await Campaign.walk_south_to(tree, world, Vector2(29, 344))
+	await _snapshot("01b-south-fork")
+	var travelled := 0.0
+	for point: Vector2 in [Vector2(76, 348), Vector2(131, 365), Vector2(178, 380), Vector2(215, 379),
+			Vector2(257, 394), Vector2(280, 411), Vector2(295, 446), Vector2(332, 468), Vector2(368, 470),
+			Vector2(368, 449), Vector2(353, 437)]:
+		travelled += world.player.position.distance_to(point)
+		await Campaign.walk_straight(tree, world.player, point)
+		_expect(world.player.position.distance_to(point) < 3.0
+			and landscape._surface_at(world.player.position) == landscape.TERRAIN_AUDIO.Surface.TRACK,
+			"Reach the successive road turns on foot before arriving at the exhibition table.")
+	_expect(travelled > 380.0 and world.player.interaction_target == stand, "The fork and festival ground are distinct places.")
+	print("SOUTH_FESTIVAL_WALK fork_to_stand=", roundi(travelled), " arrival=", world.player.position)
 
 func _open_and_select() -> bool:
 	await _key(KEY_E)
@@ -198,7 +227,9 @@ func _follow_harvester(guest: Node2D) -> void:
 	_expect(ui.directions.tracked_neighbor == guest.speaker and world.neighbor_actor(guest.speaker) == guest,
 		"The estate map points to the festival neighbor's current location.")
 	await _key(KEY_ESCAPE)
-	await _walk(world.player, [Vector2(319, 344), Vector2(guest.global_position.x, 344), guest.global_position + Vector2(0, 12)])
+	var south: float = world.get_node("AutumnExhibit").position.y + 76.0
+	await _walk(world.player, [Vector2(world.player.position.x, south), Vector2(guest.global_position.x, south),
+		guest.global_position + Vector2(0, 12)])
 	await _key(KEY_E)
 	var dialogue := ui.get_node_or_null("Control/DialoguePanel") as Control
 	if _expect(dialogue != null and dialogue.name_label.text == guest.speaker and "稷" in dialogue.text_label.text
@@ -217,7 +248,7 @@ func _festival() -> void:
 	await _button(ui.hud.calendar_button)
 	await _button(ui.calendar.guide)
 	_expect(ui.directions.tracked_place == "秋社展台", "The current event points to the actual approach.")
-	await _walk_to_exhibit()
+	await _verify_south_route()
 	_expect(ui.directions.tracked_place.is_empty(), "The waypoint clears at the front of the table.")
 	_set_clock(0.09)
 	await tree.create_timer(0.1).timeout

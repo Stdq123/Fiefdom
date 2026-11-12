@@ -178,10 +178,12 @@ func _freight_to_pavilion() -> void:
 		cart = estate.get_node("World/Freight") as SeasonFreight
 		_expect(cart.travelling and absf(cart.route_offset - checkpoint) < 12.0,
 			"Resuming mid-trip keeps the cart at the same place on the road.")
-		await Campaign.walk_to(tree, estate.get_node("World/Player"), Vector2(111, 313))
 		await _set_watch(SeasonOrders.EVENING_DISPATCH + SeasonOrders.TRAVEL_FRACTION + 0.01)
-		_expect(cart.arrived and cart.position.is_equal_approx(SeasonFreight.PAVILION_STOP),
-			"The cart stops at South Pavilion.")
+		var world := estate.get_node("World") as Node2D
+		await Campaign.walk_south_to(tree, world, EstateLayout.FREIGHT_APPROACH)
+		_expect(cart.arrived and cart.position.is_equal_approx(EstateLayout.FREIGHT_STOP)
+			and world.player.interaction_target == cart,
+			"The west-road shipment stops in the unloading yard, with room to approach the driver.")
 		await _key(KEY_E)
 		var dialog := estate.get_node("UI/Control/DialoguePanel") as Control
 		_expect(dialog.name_label.text == "申禾" and "来亭里就能领种" in dialog.text_label.text,
@@ -193,12 +195,11 @@ func _freight_to_pavilion() -> void:
 		_expect(estate.get_node("UI").directions.tracked_place == "南路灶台", "The driver can point to the new hearth.")
 		await _meal_from_harvest()
 
-func _open_hearth(approach: Array, frame := "") -> Control:
+func _open_hearth(frame := "") -> Control:
 	var estate := tree.current_scene
-	var actor := estate.get_node("World/Player") as Player
-	for point: Vector2 in approach:
-		await Campaign.walk_to(tree, actor, point)
-	await Campaign.walk_to(tree, actor, Vector2(218, 337))
+	var world := estate.get_node("World") as Node2D
+	var approach := world.get_node("TravelHearth/Approach") as Marker2D
+	await Campaign.walk_south_to(tree, world, approach.global_position)
 	_expect(estate.get_node("UI").directions.tracked_place != "南路灶台", "The stove's direction label clears at the front step.")
 	if not frame.is_empty():
 		await _snapshot(frame)
@@ -208,7 +209,7 @@ func _open_hearth(approach: Array, frame := "") -> Control:
 func _meal_from_harvest() -> void:
 	var estate := tree.current_scene
 	var hearth := estate.get_node("World/TravelHearth")
-	var dialogue := await _open_hearth([Vector2(111, 333)], "08-lit-hearth")
+	var dialogue := await _open_hearth("08-lit-hearth")
 	if not _expect(hearth.get_node("Glow").enabled and dialogue != null and dialogue.name_label.text == "南路灶台",
 		"The first order lights the accessible hearth east of the pavilion."):
 		return
@@ -253,7 +254,7 @@ func _fish_meal_on_trail() -> void:
 	if not _expect(state.load_game(path) == OK, "Load a prepared checkpoint with rice and two caught fish."):
 		return
 	await tree.scene_changed
-	var dialogue := await _open_hearth([Vector2(35, 158), Vector2(44, 290), Vector2(56, 333)])
+	var dialogue := await _open_hearth()
 	if not _expect(dialogue != null and dialogue.name_label.text == "南路灶台" and "鲫鱼 1/1" in dialogue.text_label.text,
 		"The summer hearth is still open and names the actual fish being used."):
 		return

@@ -138,6 +138,15 @@ func _run() -> void:
 			replay.legacy = arguments[0] == "pavilion-evening-legacy"
 			replay.capture_path = capture_directory
 			await replay.run(tree)
+		"market-orders":
+			var replay = load("res://tests/MarketOrderReplay.gd").new()
+			await replay.run(tree)
+		"autumn-exhibit":
+			var replay = load("res://tests/AutumnExhibitReplay.gd").new()
+			await replay.run(tree)
+		"sheepfold":
+			var replay = load("res://tests/SheepfoldReplay.gd").new()
+			await replay.run(tree)
 		"fish-market-orders", "fish-market-orders-legacy":
 			var replay = load("res://tests/FishMarketReplay.gd").new()
 			replay.legacy = arguments[0] == "fish-market-orders-legacy"

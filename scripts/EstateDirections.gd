@@ -3,6 +3,7 @@ extends Control
 enum Mark { PLOT, BUTTON, NEIGHBOR, EDGE, WORKSITE, PLACE }
 
 const CAMPAIGN_GUIDE := preload("res://scripts/CampaignGuide.gd")
+const ROAD_NETWORK := preload("res://scripts/RoadNetwork.gd")
 const GOLD := Color("#f1d38b")
 const SHADOW := Color("#24352b")
 const FIELD_ROUTES := {
@@ -25,11 +26,22 @@ var mark := Mark.PLOT
 var outline := Rect2()
 var plaque := Rect2()
 var edge_direction := Vector2.ZERO
+var south_network: ROAD_NETWORK
+var south_guide := Node2D.new()
+var south_path := PackedVector2Array()
+var south_origin := Vector2.INF
+var south_target := Vector2.INF
 
 func setup(estate_world: Node2D, estate_hud: Control) -> void:
 	world = estate_world
 	hud = estate_hud
 	hud.cancel_directions.pressed.connect(clear_tracking)
+	var connected_roads := [EstateLayout.ROADS[0], EstateLayout.SOUTH_LANE, EstateLayout.EAST_LANE] + EstateLayout.SOUTH_ROADS
+	south_network = ROAD_NETWORK.new(connected_roads, world, world.player)
+	south_guide.z_index = -2
+	south_guide.hide()
+	world.add_child(south_guide)
+	south_guide.draw.connect(_draw_south_guide)
 
 	plate.bg_color = Color("#203126f7")
 	plate.border_color = Color("#b8a26d")
@@ -163,12 +175,15 @@ func clear_tracking() -> void:
 	Global.ravine_trip_target = ""
 	Global.market_trip_target = ""
 	following_raid = false
+	south_guide.hide()
+	south_target = Vector2.INF
 	hud.cancel_directions.hide()
 
 func update_marker(blocked: bool) -> void:
 	if not MapTravel.active and Global.outcome == Global.Outcome.RUNNING:
 		_refresh_field_route()
 	if blocked or Global.outcome != Global.Outcome.RUNNING:
+		south_guide.hide()
 		hide()
 		return
 	caption.hide()
@@ -192,6 +207,7 @@ func update_marker(blocked: bool) -> void:
 	if not tracked_neighbor.is_empty():
 		var actor: Node2D = world.neighbor_actor(tracked_neighbor)
 		if is_instance_valid(actor):
+			south_guide.hide()
 			var portrait := actor.get_global_transform_with_canvas() * Rect2(-10, -23, 20, 25)
 			_mark_map(portrait, tracked_neighbor, Mark.NEIGHBOR, world.player.interaction_target == actor)
 			return
@@ -221,8 +237,26 @@ func update_marker(blocked: bool) -> void:
 			hide()
 
 func _mark_place(title: String, point: Vector2) -> void:
+	if point.y >= EstateLayout.PAVILION_TURN.y:
+		var foot := world.to_local(world.player.global_position)
+		if foot.distance_to(south_origin) > 10.0 or point != south_target:
+			south_path = south_route_between(foot, point)
+			south_origin = foot
+			south_target = point
+			south_guide.queue_redraw()
+		south_guide.visible = south_path.size() > 1
+	else:
+		south_guide.hide()
 	var at := world.get_global_transform_with_canvas() * point
 	_mark_map(Rect2(at - Vector2(8, 8), Vector2(16, 16)), title, Mark.PLACE, false)
+
+func south_route_between(foot: Vector2, point: Vector2) -> PackedVector2Array:
+	return south_network.route_between(foot, point) if point.y >= EstateLayout.PAVILION_TURN.y else PackedVector2Array()
+
+func _draw_south_guide() -> void:
+	for index in range(1, south_path.size()):
+		south_guide.draw_dashed_line(south_path[index - 1], south_path[index], SHADOW, 3.2, 6.0)
+		south_guide.draw_dashed_line(south_path[index - 1], south_path[index], GOLD, 1.6, 6.0)
 
 func _mark_plot(cell: Vector2i, title: String) -> void:
 	var tiles: TileMapLayer = world.tile_map

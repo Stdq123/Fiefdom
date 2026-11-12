@@ -5,11 +5,11 @@ const SHARING := "res://assets/world/autumn-sharing.svg"
 const HOST := 3
 const LANTERN_WATCH := 0.69
 const ROUTES := [
-	{"start": 0.025, "end": 0.145, "path": [Vector2(-158, 62), Vector2(-97, 69), Vector2(-60, 67), Vector2(-48, 52), Vector2(-40, 27)],
+	{"start": 0.025, "end": 0.145, "path": [Vector2(-40, 44), Vector2(-45, 34), Vector2(-40, 27)],
 		"rest": Vector2(47, 63), "table": Vector2(-26, 13)},
-	{"start": 0.065, "end": 0.187, "path": [Vector2(-146, 65), Vector2(-81, 73), Vector2(-32, 63), Vector2(30, 70), Vector2(53, 39)],
+	{"start": 0.065, "end": 0.187, "path": [Vector2(16, 51), Vector2(35, 48), Vector2(53, 39)],
 		"rest": Vector2(72, 71), "table": Vector2(22, 13)},
-	{"start": 0.103, "end": AutumnExhibit.LAST_ARRIVAL, "path": [Vector2(-127, 72), Vector2(-63, 75), Vector2(-16, 65), Vector2(44, 65), Vector2(101, 29)],
+	{"start": 0.103, "end": AutumnExhibit.LAST_ARRIVAL, "path": [Vector2(24, 53), Vector2(68, 52), Vector2(101, 29)],
 		"rest": Vector2(100, 63), "table": Vector2(43, 15)},
 	{"start": 0.0, "end": 0.05, "path": [Vector2(79, 9), Vector2(67, 8)],
 		"rest": Vector2(67, 8)},
@@ -37,6 +37,9 @@ var icon: Texture2D
 
 func _ready() -> void:
 	speaker = VisitorData.MUSIC_HOST if role == HOST else AutumnExhibit.GUESTS[role]
+	if role != HOST:
+		for point in EstateLayout.festival_entrance():
+			route.add_point(point)
 	for point: Vector2 in ROUTES[role].path:
 		route.add_point(point)
 	if role == HOST:

@@ -59,6 +59,13 @@ static func walk_market_to(tree: SceneTree, market: Node2D, destination: Vector2
 static func walk_to_market_exit(tree: SceneTree, market: Node2D) -> void:
 	await walk_market_to(tree, market, market.get_node("EstateRoadArrival").global_position)
 
+static func walk_south_to(tree: SceneTree, world: Node2D, destination: Vector2) -> void:
+	var guide: Control = tree.current_scene.get_node("UI").directions
+	var origin := world.to_local(world.player.global_position)
+	var route: PackedVector2Array = guide.south_route_between(origin, world.to_local(destination))
+	for foot in route.slice(1):
+		await walk_straight(tree, world.player, world.to_global(foot))
+
 static func wait_for_map_change(tree: SceneTree) -> void:
 	await tree.process_frame
 	var travel := tree.root.get_node_or_null("MapTravel")

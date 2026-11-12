@@ -2,8 +2,8 @@ extends Node2D
 
 const SERVING_SOUND := preload("res://assets/audio/water-2.wav")
 const ARRIVALS := [
-	{"start": 0.50, "end": 0.67, "path": [Vector2(-71, 61), Vector2(-38, 34), Vector2(-40, -8), Vector2(-30, -20)]},
-	{"start": 0.55, "end": 0.71, "path": [Vector2(-78, 70), Vector2(35, 34), Vector2(48, 9)]},
+	{"start": 0.50, "end": 0.67, "path": [Vector2(-38, 34), Vector2(-40, -8), Vector2(-30, -20)]},
+	{"start": 0.55, "end": 0.71, "path": [Vector2(25, 48), Vector2(42, 30), Vector2(48, 9)]},
 ]
 const FEET := [Vector2(-30, -20), Vector2(48, 9), Vector2(22, -17)]
 
@@ -31,6 +31,8 @@ func _ready() -> void:
 		motions.append(motion)
 	for arrival: Dictionary in ARRIVALS:
 		var route := Curve2D.new()
+		for point in EstateLayout.festival_entrance():
+			route.add_point(point)
 		for point: Vector2 in arrival.path:
 			route.add_point(point)
 		routes.append(route)

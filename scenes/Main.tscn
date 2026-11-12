@@ -295,8 +295,11 @@ rotation = 1.5707964
 position = Vector2(0, -1740)
 
 [node name="SeasonBoard" type="Node2D" parent="World" groups=["interactable"]]
-position = Vector2(56, 273)
+position = Vector2(-26, 352)
 script = ExtResource("15_season_board")
+
+[node name="Approach" type="Marker2D" parent="World/SeasonBoard"]
+position = Vector2(0, 21)
 
 [node name="Hint" type="Label" parent="World/SeasonBoard"]
 z_index = 6
@@ -314,16 +317,16 @@ horizontal_alignment = 1
 [node name="Freight" parent="World" instance=ExtResource("29_freight")]
 
 [node name="TravelHearth" parent="World" instance=ExtResource("30_hearth")]
-position = Vector2(230, 322)
+position = Vector2(221, 365)
 
 [node name="AutumnExhibit" parent="World" instance=ExtResource("32_autumn")]
-position = Vector2(319, 269)
+position = Vector2(353, 419)
 
 [node name="SheepfoldPen" parent="World" instance=ExtResource("38_sheep_pen")]
-position = Vector2(-148, 344)
+position = Vector2(-248, 458)
 
 [node name="WinterSupper" parent="World" instance=ExtResource("40_winter_supper")]
-position = Vector2(319, 269)
+position = Vector2(353, 419)
 
 [node name="RoadRest" type="Node2D" parent="World"]
 position = Vector2(-25, 302)
@@ -343,7 +346,7 @@ theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
 
 [node name="PavilionRest" type="Node2D" parent="World" groups=["interactable"]]
-position = Vector2(123, 278)
+position = Vector2(151, 292)
 script = ExtResource("41_pavilion_rest")
 
 [node name="Mats" type="Node2D" parent="World/PavilionRest"]

@@ -38,6 +38,7 @@ var people: Array[Dictionary] = []
 var row_buttons: Dictionary[Button, Dictionary] = {}
 var captions: Dictionary[String, Rect2] = {}
 var target: Dictionary = {}
+var south_path := PackedVector2Array()
 
 func setup(estate_world: Node2D, guide: Control, blocked: Callable) -> void:
 	world = estate_world
@@ -91,8 +92,8 @@ func _collect_places() -> void:
 		_entry(Category.PLACES, "南路亭", "往来旅人的歇脚处", LANDSCAPE.SOUTH_PAVILION, true, icons.get(LANDSCAPE.SCENE_LANDMARK)),
 		_entry(Category.PLACES, DrivingPractice.PLACE, "在田边上车 · 穿旗门并停稳", DrivingPractice.START_POINT),
 		_entry(Category.PLACES, "南路灶台", "带食材来做路餐" if Global.travel_hearth_open() else "西市交过第一单后开灶",
-			_node_point(world.get_node("TravelHearth/Approach"))),
-		_entry(Category.PLACES, "节令牌", "查看本季托付", _node_point(world.get_node("SeasonBoard")))
+			_node_point(world.get_node("TravelHearth/Approach")), true),
+		_entry(Category.PLACES, "交货簿", "到卸货场查看本季托付", _node_point(world.get_node("SeasonBoard/Approach")), true)
 	]
 	var hall := world.get_node("HallRest") as Node2D
 	if hall.visible:
@@ -111,21 +112,21 @@ func _collect_places() -> void:
 		places.push_front(_entry(Category.PLACES, record_stand.record_name, "%s · 翻看通关当天的账目" % record_stand.place_name,
 			_node_point(record_stand), false, record_stand.texture))
 	if Global.is_autumn_exhibit_day():
-		places.append(_entry(Category.PLACES, "秋社展台", "摆三种私田收成", _node_point(world.get_node("AutumnExhibit/Approach"))))
+		places.append(_entry(Category.PLACES, "秋社展台", "摆三种私田收成", _node_point(world.get_node("AutumnExhibit/Approach")), true))
 	if Global.is_winter_supper_day():
 		var detail := "用私仓麦备当晚的饭" if Global.winter_supper_record().is_empty() else "已备饭，可回亭东围坐"
-		places.append(_entry(Category.PLACES, WinterSupper.PLACE, detail, _node_point(world.get_node("WinterSupper/Approach"))))
+		places.append(_entry(Category.PLACES, WinterSupper.PLACE, detail, _node_point(world.get_node("WinterSupper/Approach")), true))
 	if Global.sheepfold.owned():
 		var sheepfold_detail := "可剪毛" if Global.can_use_sheepfold(Sheepfold.Action.SHEAR) else "查看羊毛长势与草料"
-		_add_built_place(Sheepfold.PLACE, sheepfold_detail, "SheepfoldPen")
+		_add_built_place(Sheepfold.PLACE, sheepfold_detail, "SheepfoldPen", true)
 	var shed := world.get_node("SilkShed") as Node2D
 	if shed.visible:
 		places.append(_entry(Category.PLACES, "蚕棚", "养蚕、缫丝与织绸", _node_point(shed.get_node("Yard")), true, icons.get(LANDSCAPE.Prop.SILK_SHED)))
 
-func _add_built_place(title: String, detail: String, path: NodePath) -> void:
+func _add_built_place(title: String, detail: String, path: NodePath, caption := false) -> void:
 	var site := world.get_node(path) as Node2D
 	if site.is_visible_in_tree():
-		places.append(_entry(Category.PLACES, title, detail, _node_point(site)))
+		places.append(_entry(Category.PLACES, title, detail, _node_point(site), caption))
 
 func _collect_fields() -> void:
 	fields.clear()
@@ -181,7 +182,7 @@ func _collect_people() -> void:
 		_add_visitor(guest)
 	for guest: Node2D in world.get_node("AutumnExhibit/Guests").get_children():
 		if guest.is_visible_in_tree():
-			_add_person(guest.speaker, "秋社 · 南路亭东", guest, guest.icon)
+			_add_person(guest.speaker, "秋社 · 东南空地", guest, guest.icon)
 	for resident: RetainerData in Global.retainers:
 		var actor := world.retainer_instances.get(resident) as Retainer
 		if is_instance_valid(actor):
@@ -336,6 +337,8 @@ func _clear_directions() -> void:
 
 func _refresh_destination() -> void:
 	target = directions.destination()
+	south_path = PackedVector2Array() if directions.tracked_place.is_empty() else \
+		directions.south_route_between(_player_point(), directions.tracked_place_point)
 	clear_button.disabled = target.is_empty()
 	if not target.is_empty():
 		status.text = "指路 · " + target.title
@@ -414,8 +417,10 @@ func _layout_chart() -> void:
 		for person in people:
 			occupied.append(Rect2(_map_point(person.point) - Vector2(8, 8), Vector2(16, 16)))
 	occupied.append(Rect2(_map_point(_player_point()) - Vector2(9, 9), Vector2(18, 18)))
+	var target_bounds := Rect2()
 	if not target.is_empty():
-		occupied.append(Rect2(_map_point(target.point) - Vector2(15, 15), Vector2(30, 30)))
+		target_bounds = Rect2(_map_point(target.point) - Vector2(15, 15), Vector2(30, 30))
+		occupied.append(target_bounds)
 
 	var font := chart.get_theme_default_font()
 	var safe := Rect2(Vector2.ZERO, chart.size).grow(-12.0)
@@ -425,6 +430,8 @@ func _layout_chart() -> void:
 		var width := font.get_string_size(place.title, HORIZONTAL_ALIGNMENT_LEFT, -1, CAPTION_SIZE).x + 8.0
 		var size := Vector2(width, 20.0)
 		var pin := _place_pin(place)
+		if not target.is_empty() and target.point == place.point:
+			pin = pin.merge(target_bounds)
 		var center := pin.get_center() - size * 0.5
 		var options := [
 			Rect2(Vector2(center.x, pin.position.y - size.y - 5.0), size),
@@ -450,6 +457,12 @@ func _draw_chart() -> void:
 			17 + (index * 179) % int(chart.size.y - 34.0))
 		chart.draw_rect(Rect2(point, Vector2(2, 1)), Color("#9c88563c"))
 	_draw_landscape()
+	if south_path.size() > 1:
+		var route := PackedVector2Array()
+		for point in south_path:
+			route.append(_map_point(point))
+		chart.draw_polyline(route, INK, 4.0, true)
+		chart.draw_polyline(route, GOLD, 2.0, true)
 	_draw_channels()
 	for field in fields:
 		_draw_field(field)
