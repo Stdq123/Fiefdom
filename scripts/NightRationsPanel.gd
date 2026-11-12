@@ -17,6 +17,7 @@ const SHORT := Color("#efbf8a")
 @onready var field_forecast: Label = %FieldForecast
 @onready var field_warning: Label = %FieldWarning
 @onready var sheep_note: Label = %SheepNote
+@onready var silk_note: Label = %SilkNote
 @onready var find_plot: Button = %FindPlot
 @onready var delegate: CheckButton = %Delegate
 @onready var budget: SpinBox = %Budget
@@ -29,6 +30,7 @@ const SHORT := Color("#efbf8a")
 @onready var last_card: PanelContainer = %LastCard
 @onready var receipt: Label = %Receipt
 @onready var field_receipt: Label = %FieldReceipt
+@onready var silk_receipt: Label = %SilkReceipt
 @onready var close_button: Button = %Close
 @onready var scroll: ScrollContainer = %Scroll
 @onready var body: VBoxContainer = %Body
@@ -57,6 +59,7 @@ func _ready() -> void:
 	)
 	GameEvents.night_rations_changed.connect(_refresh)
 	GameEvents.sheepfold_changed.connect(_refresh)
+	GameEvents.silk_changed.connect(_refresh)
 	GameEvents.food_changed.connect(_refresh.unbind(1))
 	GameEvents.money_changed.connect(_refresh.unbind(1))
 	GameEvents.inventory_changed.connect(_refresh.unbind(1))
@@ -89,6 +92,9 @@ func _refresh() -> void:
 		sheep_note.text = "羊棚 · " + Sheepfold.FEED_LABELS[feed]
 		sheep_note.modulate = SHORT if feed == Sheepfold.Feed.SHORTAGE else GOOD
 	var plan := Global.night_rations_plan()
+	var silk_forecast := Global.silk_night_summary(plan.fed)
+	silk_note.visible = not silk_forecast.is_empty()
+	silk_note.text = "蚕棚 · " + silk_forecast
 	var policy := Global.night_rations
 	grain.text = "粮仓\n%d 份" % Global.food_storage
 	need.text = "今夜所需\n%d 份" % plan.need
@@ -136,7 +142,10 @@ func _refresh() -> void:
 		if not departed.is_empty():
 			receipt.text += "\n已离任 · " + "、".join(departed)
 	_refresh_field_receipt()
-	last_card.visible = receipt.visible or field_receipt.visible
+	var last_silk := Global.silk_workshop.last_work_summary()
+	silk_receipt.visible = not last_silk.is_empty()
+	silk_receipt.text = "昨夜蚕棚 · " + last_silk
+	last_card.visible = receipt.visible or field_receipt.visible or silk_receipt.visible
 
 func _refresh_meal(plan: Dictionary) -> void:
 	var short: bool = not plan.missed.is_empty()

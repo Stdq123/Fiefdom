@@ -145,6 +145,11 @@ func _refresh_silk_stock() -> void:
 		summary = "还需 %d 夜 · 每夜用 %d 片桑叶" % [silk.nights_left, Global.balance.silk_leaves_per_night]
 		if silk.leaves < Global.balance.silk_leaves_per_night:
 			summary += " · 缺桑叶"
+	elif silk.repeat_batches:
+		summary = "空匾 · 已安排续养"
+		var missing := silk.batch_leaf_cost(Global.balance) - silk.leaves
+		if missing > 0:
+			summary += " · 还差 %d 片桑叶" % missing
 	if silk.last_reeled > 0:
 		summary += "　　上夜缫 %d 茧 · 生丝 +%d" % [silk.last_reeled, silk.last_reel_thread]
 	%WorkshopBatch.text = summary

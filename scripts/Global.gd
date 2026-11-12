@@ -1057,7 +1057,7 @@ func restore_stamina() -> void:
 	# Daily consumption
 	var fed := _serve_night_rations(maxi(1, current_day - 1))
 	_advance_lessons(fed)
-	var fed_reelers := _count_duty(fed, RetainerData.Duty.REEL) if silk_workshop.night_reeling else 0
+	var fed_reelers := _count_duty(fed, RetainerData.Duty.REEL)
 	if silk_workshop.advance_day(balance, fed_reelers):
 		GameEvents.silk_changed.emit()
 
@@ -1638,15 +1638,23 @@ func _count_duty(workers: Array[RetainerData], duty: RetainerData.Duty) -> int:
 func silk_thread_yield() -> int:
 	return SilkWorkshop.thread_yield(balance, silk_reelers())
 
+func silk_night_summary(fed: Array[RetainerData]) -> String:
+	return silk_workshop.describe_tonight(balance, _count_duty(fed, RetainerData.Duty.REEL))
+
+func set_repeat_silk_batches(enabled: bool) -> void:
+	if silk_workshop.built and silk_workshop.repeat_batches != enabled:
+		silk_workshop.repeat_batches = enabled
+		GameEvents.silk_changed.emit()
+
 func set_night_reeling(enabled: bool) -> void:
 	if silk_workshop.built and silk_workshop.night_reeling != enabled:
 		silk_workshop.night_reeling = enabled
 		GameEvents.silk_changed.emit()
 
-func use_workshop(action: SilkWorkshop.Action) -> bool:
-	if not can_use_workshop(action):
+func use_workshop(action: SilkWorkshop.Action, amount := 1) -> bool:
+	if not can_use_workshop(action) or amount < 1 or amount > silk_workshop.capacity(action, balance):
 		return false
-	silk_workshop.apply(action, balance, silk_thread_yield())
+	silk_workshop.apply(action, balance, silk_thread_yield(), amount)
 	match action:
 		SilkWorkshop.Action.BUILD:
 			money -= balance.silk_workshop_cost
@@ -2244,7 +2252,10 @@ func _save_snapshot(origin: String) -> Error:
 			"raw_silk": silk_workshop.raw_silk,
 			"bolts": silk_workshop.bolts,
 			"nights_left": silk_workshop.nights_left,
+			"repeat_batches": silk_workshop.repeat_batches,
 			"night_reeling": silk_workshop.night_reeling,
+			"last_leaves_used": silk_workshop.last_leaves_used,
+			"last_hatched": silk_workshop.last_hatched,
 			"last_reeled": silk_workshop.last_reeled,
 			"last_reel_thread": silk_workshop.last_reel_thread
 		},
@@ -2575,7 +2586,10 @@ func load_game(path := "") -> Error:
 	restored_workshop.bolts = maxi(0, _read_save_int(workshop_record.get("bolts"), 0))
 	if restored_workshop.built:
 		restored_workshop.nights_left = maxi(0, _read_save_int(workshop_record.get("nights_left"), 0))
+		restored_workshop.repeat_batches = workshop_record.get("repeat_batches", false) == true
 		restored_workshop.night_reeling = workshop_record.get("night_reeling", false) == true
+		restored_workshop.last_leaves_used = maxi(0, _read_save_int(workshop_record.get("last_leaves_used"), 0))
+		restored_workshop.last_hatched = maxi(0, _read_save_int(workshop_record.get("last_hatched"), 0))
 		restored_workshop.last_reeled = maxi(0, _read_save_int(workshop_record.get("last_reeled"), 0))
 		restored_workshop.last_reel_thread = maxi(0, _read_save_int(workshop_record.get("last_reel_thread"), 0))
 

@@ -152,7 +152,7 @@ func _run() -> void:
 	var notice: Label = current_scene.get_node("CampaignHUD").notice
 	_expect(state.raid_day == state.current_day and not notice.visible,
 		"The active raid's map notice clears the workshop controls while management is open.")
-	_expect(state.silk_workshop.raw_silk == 6 and "生丝 +3" in silk.night_status.text,
+	_expect(state.silk_workshop.raw_silk == 6 and "昨夜 · 缫 1 茧得 3 生丝" in silk.night_status.text,
 		"The morning receipt shows the work that made the bolt possible.")
 	silk.buttons[3].pressed.emit()
 	_expect(state.silk_workshop.bolts == 1 and "已备好" in silk.sample_status.text, "The woven sample is ready for delivery.")
