@@ -184,6 +184,7 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'fish-market-orders' -Name 'fish-market-orders' -Replay 'fish-market-orders'
     }
     if ($MarketWayfinding) {
+        Start-VerifiedGame -Directory $release -Profile 'west-market' -Name 'west-market' -Replay 'west-market'
         Start-VerifiedGame -Directory $release -Profile 'market-wayfinding' -Name 'market-wayfinding' -Replay 'market-wayfinding'
         Start-VerifiedGame -Directory $release -Profile 'fishing-journey' -Name 'fishing-journey' -Replay 'fishing-journey'
     }

@@ -138,11 +138,13 @@ func _trade_at_fish_stall() -> bool:
 	if not _expect(market.counter.fish.is_visible_in_tree() and state.market_trip_target.is_empty(),
 		"Opening the selected counter clears directions."):
 		return false
+	_expect("只要一尾" in market.counter.keeper_note.text, "The fish keeper explains the seasonal order before the trade.")
 	await _key(KEY_M)
 	_expect(not chart.modal.visible and not tree.paused, "The chart stays closed during a transaction.")
 	var copper: int = state.money
 	await _button(market.counter.fish.market_offer.copper_button)
-	_expect(state.money == copper + 13 and state.fish_count("minnow") == 1, "The guided trip can complete the advertised trade.")
+	_expect(state.money == copper + 13 and state.fish_count("minnow") == 1 and "收好了" in market.counter.keeper_note.text,
+		"The fish keeper acknowledges receipt as the advertised trade settles.")
 	print("MARKET_WAYFINDING_TRADE copper=", state.money - copper, " fish_left=", state.fish_count("minnow"))
 	await _key(KEY_ESCAPE)
 	return not failed
@@ -162,7 +164,8 @@ func _follow_to_cart_and_home() -> void:
 	await _walk(market.player, [Vector2(board.x, 34), board])
 	await gamepad._tap(JOY_BUTTON_X)
 	_expect(market.counter.orders.is_visible_in_tree() and state.market_trip_target.is_empty()
-		and market.counter.close_button.text.ends_with("  B"), "The controller opens the marked board and shows its return button.")
+		and market.counter.close_button.text.ends_with("  B") and not market.counter.keeper_card.visible,
+		"The controller opens the marked board with its own heading and return button.")
 	await _snapshot("05-delivery-board")
 	await gamepad._tap(JOY_BUTTON_B)
 	_expect(not market.counter.visible, "B leaves the delivery board and returns to the street.")

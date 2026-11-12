@@ -203,6 +203,9 @@ func _follow_harvester(guest: Node2D) -> void:
 	var dialogue := ui.get_node_or_null("Control/DialoguePanel") as Control
 	if _expect(dialogue != null and dialogue.name_label.text == guest.speaker and "稷" in dialogue.text_label.text
 		and ui.directions.tracked_neighbor.is_empty(), "The marked neighbor talks about the crop they received."):
+		var portrait := dialogue.portrait.texture as AtlasTexture
+		_expect(guest.speaker == WinterSupper.HOST and portrait != null and portrait.atlas.resource_path == CharacterArt.TOWN_PORTRAITS
+			and portrait.region == Rect2(48, 48, 48, 48), "He Bo has the same portrait at the harvest table and winter supper.")
 		await _snapshot("07-harvest-dialogue")
 		await _button(dialogue.options_container.get_child(0))
 

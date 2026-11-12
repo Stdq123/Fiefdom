@@ -4,6 +4,13 @@ class_name CharacterArt
 const CAST_PATH := "res://assets/characters/cast.svg"
 const NEIGHBOR_PORTRAITS := "res://assets/characters/neighbor-portraits.svg"
 const NEIGHBOR_MOTION := "res://assets/characters/neighbor-motion.svg"
+const TOWN_PORTRAITS := "res://assets/characters/town-portraits.png"
+const TOWN_REGIONS := {
+	"谷伯": Rect2(0, 0, 48, 48),
+	"渔生": Rect2(48, 0, 48, 48),
+	"蔡娘": Rect2(0, 48, 48, 48),
+	"禾伯": Rect2(48, 48, 48, 48),
+}
 const CELL_SIZE := 32
 const MOTION_COLUMNS := 4
 const MOTION_ROWS := 3
@@ -47,6 +54,8 @@ static func _neighbor_art(speaker: String, size: Vector2) -> AtlasTexture:
 	return _region(NEIGHBOR_MOTION, Rect2(Vector2(0, index * CELL_SIZE * MOTION_ROWS), size))
 
 static func dialogue_portrait(speaker: String, fallback: Texture2D, favor_done: bool) -> Texture2D:
+	if TOWN_REGIONS.has(speaker):
+		return _region(TOWN_PORTRAITS, TOWN_REGIONS[speaker])
 	var frame: int
 	match speaker:
 		VisitorData.FIELD_KEEPER: frame = 12 if favor_done else 0

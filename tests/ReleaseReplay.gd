@@ -147,6 +147,9 @@ func _run() -> void:
 			var replay = load("res://tests/FishingJourneyReplay.gd").new()
 			replay.legacy = arguments[0] == "fishing-journey-legacy"
 			await replay.run(tree)
+		"west-market":
+			var replay = load("res://tests/WestMarketReplay.gd").new()
+			await replay.run(tree)
 		"market-wayfinding", "market-wayfinding-legacy", "market-wayfinding-old-save":
 			var replay = load("res://tests/MarketWayfindingReplay.gd").new()
 			replay.legacy = arguments[0] == "market-wayfinding-legacy"

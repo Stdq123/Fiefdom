@@ -166,12 +166,34 @@ func _stall(market: Node2D, stall_name: String, capture: String) -> bool:
 	_expect(stall.focused and stall.keeper.frame != MarketStall.KeeperPose.TEND,
 		"The keeper looks up when the counter is in reach.")
 	await _key(KEY_E)
+	await tree.process_frame
 	return _expect(market.counter.visible and market.player.conversation_open,
 		"Press E on foot at " + stall_name)
+
+func _check_keeper(market: Node2D, stall_name: String, cell: Vector2) -> bool:
+	var stall := market.get_node("Stalls/" + stall_name) as MarketStall
+	var counter: Control = market.counter
+	var portrait := counter.get_node_or_null("%KeeperPortrait") as TextureRect
+	if not _expect(portrait != null and portrait.is_visible_in_tree(), "The counter shows the keeper who was approached."):
+		return false
+	var art := portrait.texture as AtlasTexture
+	var speaker: String = MarketStall.KEEPERS[stall.kind]
+	var shop: Control = [counter.grain, counter.fish, counter.silk][stall.kind]
+	var bounds: Rect2 = counter.card.get_global_rect()
+	var matched := _expect(art != null and art.atlas.resource_path == CharacterArt.TOWN_PORTRAITS
+		and art.region == Rect2(cell, Vector2(48, 48)) and speaker in stall.sign.text and speaker in counter.title.text
+		and tree.root.get_visible_rect().encloses(bounds) and bounds.encloses(portrait.get_global_rect())
+		and not counter.keeper_card.get_global_rect().intersects(shop.get_global_rect()) and not market.market_map.open_button.visible,
+		"The sign, portrait and counter identify the same keeper with room for the transaction controls.")
+	if matched:
+		print("MARKET_KEEPER speaker=", speaker, " atlas_cell=", cell, " card=", bounds.size)
+	return matched
 
 func _shop(market: Node2D, fish_id: String) -> bool:
 	var counter: Control = market.counter
 	if not await _stall(market, "GrainStall", "01-west-market"):
+		return false
+	if not _check_keeper(market, "GrainStall", Vector2.ZERO):
 		return false
 	var before_money: int = state.money
 	var before_food: int = state.food_storage
@@ -191,6 +213,8 @@ func _shop(market: Node2D, fish_id: String) -> bool:
 	await _key(KEY_ESCAPE)
 	if not await _stall(market, "FishStall", ""):
 		return false
+	if not _check_keeper(market, "FishStall", Vector2(48, 0)):
+		return false
 	before_money = state.money
 	await _button(counter.fish.rows[fish_id].sell)
 	_expect(state.fish_count(fish_id) == 0 and state.fish_collection.has(fish_id)
@@ -199,11 +223,19 @@ func _shop(market: Node2D, fish_id: String) -> bool:
 	await _button(counter.close_button)
 	if not await _stall(market, "SilkStall", ""):
 		return false
+	if not _check_keeper(market, "SilkStall", Vector2(0, 48)):
+		return false
 	before_money = state.money
 	await _button(counter.sell_silk)
 	_expect(state.silk_workshop.bolts == 0 and state.silk_bolts_sold == 1 and counter.sell_silk.disabled
 		and state.money == before_money + state.balance.silk_sell_price, "The silk stall credits the established price and campaign sale count.")
 	await _snapshot("04-silk-counter")
+	await _button(counter.get_node("%SheepTrade"))
+	_expect(counter.sheep.is_visible_in_tree() and "蔡娘" in counter.title.text
+		and (counter.keeper_portrait.texture as AtlasTexture).region.position == Vector2(0, 48),
+		"Cai Niang remains the speaker when switching to her wool offer.")
+	await _snapshot("04b-wool-counter")
+	await _button(counter.get_node("%BackToSilk"))
 	await _key(KEY_ESCAPE)
 	return true
 

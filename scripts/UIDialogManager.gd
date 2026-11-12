@@ -32,14 +32,13 @@ func show_freight_arrival(speech: String, portrait: Texture2D, guide_hearth: Cal
 	)
 
 func show_winter_supper() -> void:
-	var portrait := WinterSupper.guest_art(2, true)
 	var record := Global.winter_supper_record()
 	var need := Global.retainer_food_cost()
 	if not record.is_empty():
 		var dish: String = WinterSupper.RECIPES[record.recipe].name
 		_open(WinterSupper.HOST, WinterSupper.PLACE,
 			"这锅%s已经煮好。先给门客留 %d 份，余下的给路过亭子的人。坐近些，风就小了。" % [
-				dish, mini(need, int(record.portions))], ["坐一会"], [], portrait)
+				dish, mini(need, int(record.portions))], ["坐一会"], [], null)
 		return
 	var fish := Global.fish_for_travel_meal()
 	var fish_name: String = "溪鱼" if fish.is_empty() else CreekFish.SPECIES[fish].name
@@ -59,7 +58,7 @@ func show_winter_supper() -> void:
 	for index in WinterSupper.MENU.size():
 		if not Global.can_prepare_winter_supper(WinterSupper.MENU[index], fish):
 			disabled.append(index)
-	var dialog := _open(WinterSupper.HOST, context, speech, ["备麦菽粥", "备鱼麦羹", "坐一会"], disabled, portrait)
+	var dialog := _open(WinterSupper.HOST, context, speech, ["备麦菽粥", "备鱼麦羹", "坐一会"], disabled, null)
 	dialog.option_selected.connect(func(index: int):
 		if index < WinterSupper.MENU.size():
 			Global.prepare_winter_supper(WinterSupper.MENU[index], fish)

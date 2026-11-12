@@ -7,6 +7,7 @@ signal opened(kind: Kind)
 const ART := preload("res://assets/world/west-market-stalls.svg")
 const KEEPER_ART := preload("res://assets/characters/market-keepers.svg")
 const TITLES := ["粮摊", "鱼摊", "绸摊"]
+const KEEPERS := ["谷伯", "渔生", "蔡娘"]
 const APPROACH := Vector2(0, 24)
 const FRAME := Vector2(84, 60)
 const KEEPER_ROW := Vector2(72, 24)
@@ -53,7 +54,8 @@ func can_interact_from(foot: Vector2) -> bool:
 
 func set_interaction_focused(active: bool) -> void:
 	focused = active
-	sign.text = GamepadInput.interact_key() + "  " + TITLES[kind] if focused else TITLES[kind]
+	var caption := "%s · %s" % [KEEPERS[kind], TITLES[kind]]
+	sign.text = GamepadInput.interact_hint(caption) if focused else TITLES[kind]
 	sign.modulate = Color("#ffe4a1") if focused else Color("#e5d9af")
 	_update_keeper()
 

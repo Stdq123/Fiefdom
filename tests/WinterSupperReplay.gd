@@ -228,6 +228,9 @@ func _open_supper() -> Control:
 	await _key(KEY_E)
 	var dialog := ui.get_node_or_null("Control/DialoguePanel") as Control
 	if _expect(dialog != null and dialog.name_label.text == WinterSupper.HOST, "E at the table opens He Bo's supper dialogue."):
+		var portrait := dialog.portrait.texture as AtlasTexture
+		_expect(portrait != null and portrait.atlas.resource_path == CharacterArt.TOWN_PORTRAITS
+			and portrait.region == Rect2(48, 48, 48, 48), "The supper shows the host's own bust portrait.")
 		return dialog
 	return null
 

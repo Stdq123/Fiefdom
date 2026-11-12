@@ -63,7 +63,7 @@ func _refresh_on_open() -> void:
 
 func _process(_delta: float) -> void:
 	var available := _map_available()
-	open_button.disabled = not available
+	open_button.visible = available and not modal.visible
 	var place := _current_stop()
 	cancel_button.visible = available and not modal.visible and not place.is_empty()
 	pin.visible = cancel_button.visible
