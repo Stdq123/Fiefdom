@@ -42,12 +42,13 @@ func _click(point: Vector2) -> void:
 	await tree.process_frame
 
 func _key(code: Key) -> void:
-	var key := InputEventKey.new()
-	key.pressed = true
-	key.keycode = code
-	key.physical_keycode = code
-	tree.root.push_input(key, true)
-	await tree.process_frame
+	for pressed in [true, false]:
+		var key := InputEventKey.new()
+		key.pressed = pressed
+		key.keycode = code
+		key.physical_keycode = code
+		tree.root.push_input(key, true)
+		await tree.process_frame
 	await tree.process_frame
 
 func _scroll(button: MouseButton) -> void:
@@ -128,6 +129,63 @@ func _visit_while_crop_grows(speaker: String) -> Control:
 	var dialog := await _meet(speaker)
 	_expect(directions.tracked_neighbor.is_empty(), "Conversation clears the invitation's route.")
 	return dialog
+
+func _read_handover_dialogue(dialog: Control, gamepad: RefCounted) -> bool:
+	if not _expect(dialog != null, "The first-day visit opens the keeper's conversation."):
+		return false
+	_expect("采邑由你照管" in dialog.text_label.text and "四周的收成归你" in dialog.text_label.text,
+		"The keeper explains the handover and where both crops go.")
+	await _capture("04b-new-estate-conversation")
+	await _key(KEY_E)
+	if not _expect(not is_instance_valid(dialog) and not world.player.conversation_open,
+		"Pressing the interaction key again finishes the keeper's one-choice dialogue."):
+		return false
+	dialog = await _meet(KEEPER)
+	if not _expect(dialog != null and _button(dialog, "离开").has_focus(), "The conversation owns focus on open."):
+		return false
+	await _key(KEY_ENTER)
+	_expect(not is_instance_valid(dialog) and not world.player.conversation_open, "Enter activates the focused reply.")
+	await gamepad._tap(JOY_BUTTON_X)
+	dialog = ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(dialog != null and _button(dialog, "离开").has_focus(), "X opens the same conversation with its reply in focus."):
+		return false
+	await gamepad._tap(JOY_BUTTON_X)
+	return _expect(not is_instance_valid(dialog) and not world.player.conversation_open,
+		"X can finish the same conversation with the gamepad.")
+
+func _greet_first_visitor(dialog: Control, gamepad: RefCounted) -> bool:
+	if not _expect(dialog != null, "The day-two visitor can be met through E."):
+		return false
+	var greet := _button(dialog, "交谈")
+	var leave := _button(dialog, "离开")
+	_expect(leave.has_focus() and not greet.disabled and dialog.options_container.get_child(1).disabled
+		and dialog.options_container.get_child(2).disabled, "The visitor starts on Leave with unavailable actions disabled.")
+	var before: int = state.reputation
+	await _key(KEY_E)
+	_expect(is_instance_valid(dialog) and state.reputation == before, "The interaction key does not pick among multiple choices.")
+	await _key(KEY_LEFT)
+	_expect(greet.has_focus(), "Left skips both disabled visitor actions.")
+	var card: Control = dialog.get_node("Panel")
+	var speech: RichTextLabel = dialog.text_label
+	_expect(tree.root.get_visible_rect().encloses(card.get_global_rect())
+		and speech.size.y >= speech.get_content_height()
+		and not speech.get_global_rect().intersects(dialog.options_container.get_global_rect())
+		and card.get_global_rect().encloses(leave.get_global_rect()), "The portrait, speech and choices fit inside the dialogue card.")
+	await _capture("04d-visitor-keyboard-options")
+	await gamepad._tap(JOY_BUTTON_DPAD_RIGHT)
+	_expect(leave.has_focus(), "The D-pad moves focus to the next available choice.")
+	await gamepad._tap(JOY_BUTTON_X)
+	_expect(is_instance_valid(dialog) and state.reputation == before, "X leaves the multi-choice conversation open.")
+	await gamepad._tap(JOY_BUTTON_DPAD_LEFT)
+	_expect(greet.has_focus() and greet.get_global_rect().has_point(gamepad.pad.cursor.position),
+		"The D-pad selects the reply and puts the gamepad pointer on its button.")
+	await _capture("04e-visitor-gamepad-options")
+	await gamepad._tap(JOY_BUTTON_A)
+	_expect(not is_instance_valid(dialog) and not world.player.conversation_open
+		and state.reputation == before + state.balance.interaction_reputation_gain,
+		"A confirms the selected conversation exactly once and returns to the field.")
+	print("DIRECTION_DIALOGUE day=", state.current_day, " reputation=", before, "->", state.reputation)
+	return not failed
 
 func _private_crop_and_grain(spawn: Vector2) -> void:
 	await Campaign.walk_to(tree, world.player, spawn)
@@ -214,6 +272,11 @@ func _continue_old_handover() -> void:
 	_expect(ui.handover.modal.visible and tree.paused, "The handover opens from an old save.")
 	await _key(KEY_ESCAPE)
 	_expect(not ui.handover.modal.visible and not tree.paused, "Esc returns to the saved first day.")
+	var dialog := await _meet(KEEPER)
+	if _expect(dialog != null and dialog.controls_hint.text == "E 继续", "The keeper's new dialogue controls are available in the old save."):
+		await _key(KEY_E)
+		_expect(not is_instance_valid(dialog) and not world.player.conversation_open,
+			"The interaction key finishes the old save's conversation.")
 	print("DIRECTION_LEGACY day=", state.current_day, " watered=", state.active_crops[PUBLIC].watered)
 
 func run(game_tree: SceneTree) -> void:
@@ -262,12 +325,13 @@ func run(game_tree: SceneTree) -> void:
 	await _click(_point_on_field())
 	_expect(directions.mark == directions.Mark.BUTTON and "水已到田" in ui.hud.guide.text, "A watered crop points to the sleep button.")
 	await _capture("04-sleep-after-watering")
+	var gamepad = load("res://tests/GamepadReplay.gd").new()
+	gamepad.tree = tree
+	gamepad.pad = tree.root.get_node("GamepadInput")
 	var first_keeper_dialog := await _visit_while_crop_grows(KEEPER)
-	if _expect(first_keeper_dialog != null, "The first-day visit opens the keeper's conversation."):
-		_expect("采邑由你照管" in first_keeper_dialog.text_label.text and "四周的收成归你" in first_keeper_dialog.text_label.text,
-			"The keeper explains the handover and where both crops go.")
-		await _capture("04b-new-estate-conversation")
-		await _click(_button(first_keeper_dialog, "离开").get_global_rect().get_center())
+	if not await _read_handover_dialogue(first_keeper_dialog, gamepad):
+		await _finish()
+		return
 	await _save_and_continue()
 	_expect(state.current_day == 1 and state.active_crops[PUBLIC]["watered"] and directions.mark == directions.Mark.BUTTON
 		and directions.tracked_neighbor.is_empty() and ui.hud.opening_action.visible and ui.hud.handover_button.visible
@@ -278,8 +342,9 @@ func run(game_tree: SceneTree) -> void:
 		await _click(_point_on_field())
 	await _capture("04c-day-two-visitor")
 	var road_dialog := await _visit_while_crop_grows(ROAD_KEEPER)
-	if _expect(road_dialog != null, "The day-two visitor can be met through E."):
-		await _click(_button(road_dialog, "交谈").get_global_rect().get_center())
+	if not await _greet_first_visitor(road_dialog, gamepad):
+		await _finish()
+		return
 	var journal := await _journal()
 	if _expect(journal.roster.has_node(ROAD_KEEPER) and journal.roster.get_node(ROAD_KEEPER).visible, "The visit is recorded in the journal."):
 		await _click(journal.roster.get_node(ROAD_KEEPER).get_global_rect().get_center())

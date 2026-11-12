@@ -118,7 +118,12 @@ func _play() -> void:
 	_expect(not actor.conversation_open, "The old interaction key is released.")
 	await _key(KEY_G)
 	_expect(actor.conversation_open and ui.has_node("Control/DialoguePanel"), "The new key opens the resident's dialogue.")
-	await _key(KEY_ESCAPE)
+	var dialogue: Control = ui.get_node("Control/DialoguePanel")
+	_expect(dialogue.controls_hint.text == "G 继续", "The dialogue uses the reassigned interaction key in its hint.")
+	await _key(KEY_E)
+	_expect(actor.conversation_open, "The old key does not dismiss the resident's dialogue.")
+	await _key(KEY_G)
+	_expect(not actor.conversation_open, "The new interaction key also finishes the dialogue.")
 	await _key(KEY_1)
 	_expect(world.current_seed_id == world.SEED_ORDER[4] and ui.hud.seed_buttons[world.SEED_ORDER[4]].get_node("Shortcut").text == "1",
 		"A swapped seed key selects and labels the fifth seed.")

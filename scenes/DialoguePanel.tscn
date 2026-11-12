@@ -3,6 +3,10 @@
 [ext_resource type="Script" path="res://scripts/DialoguePanel.gd" id="1_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dialogue"]
+content_margin_left = 22.0
+content_margin_top = 16.0
+content_margin_right = 22.0
+content_margin_bottom = 15.0
 bg_color = Color(0.103, 0.158, 0.128, 0.99)
 border_width_left = 1
 border_width_top = 2
@@ -17,6 +21,10 @@ shadow_color = Color(0.04, 0.08, 0.05, 0.4)
 shadow_size = 9
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_portrait"]
+content_margin_left = 12.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
 bg_color = Color(0.19, 0.24, 0.17, 1)
 border_width_left = 1
 border_width_top = 1
@@ -28,7 +36,7 @@ corner_radius_top_right = 5
 corner_radius_bottom_right = 5
 corner_radius_bottom_left = 5
 
-[node name="DialoguePanel" type="Control"]
+[node name="DialoguePanel" type="Control" groups=["dialogue_panel"]]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -45,76 +53,86 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.08, 0.12, 0.09, 0.23)
+color = Color(0.08, 0.12, 0.09, 0.28)
 
-[node name="Panel" type="Panel" parent="."]
+[node name="Panel" type="PanelContainer" parent="."]
 layout_mode = 1
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 116.0
-offset_top = -238.0
+offset_top = -23.0
 offset_right = -116.0
 offset_bottom = -23.0
+grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_dialogue")
 
-[node name="PortraitFrame" type="Panel" parent="Panel"]
-offset_left = 24.0
-offset_top = 24.0
-offset_right = 146.0
-offset_bottom = 191.0
+[node name="Content" type="HBoxContainer" parent="Panel"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 22
+
+[node name="PortraitFrame" type="PanelContainer" parent="Panel/Content"]
+layout_mode = 2
+size_flags_vertical = 4
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_portrait")
 
-[node name="Portrait" type="TextureRect" parent="Panel"]
+[node name="Portrait" type="TextureRect" parent="Panel/Content/PortraitFrame"]
+unique_name_in_owner = true
 texture_filter = 1
-offset_left = 37.0
-offset_top = 60.0
-offset_right = 133.0
-offset_bottom = 156.0
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 2
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="NameLabel" type="Label" parent="Panel"]
-offset_left = 172.0
-offset_top = 17.0
-offset_right = 365.0
-offset_bottom = 57.0
+[node name="Body" type="VBoxContainer" parent="Panel/Content"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 9
+
+[node name="Identity" type="VBoxContainer" parent="Panel/Content/Body"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 1
+
+[node name="NameLabel" type="Label" parent="Panel/Content/Body/Identity"]
+unique_name_in_owner = true
+layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.95, 0.82, 0.55, 1)
 theme_override_font_sizes/font_size = 27
 
-[node name="ContextLabel" type="Label" parent="Panel"]
-offset_left = 173.0
-offset_top = 57.0
-offset_right = 575.0
-offset_bottom = 79.0
+[node name="ContextLabel" type="Label" parent="Panel/Content/Body/Identity"]
+unique_name_in_owner = true
+layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.71, 0.80, 0.66, 1)
 theme_override_font_sizes/font_size = 14
 
-[node name="TextLabel" type="RichTextLabel" parent="Panel"]
-layout_mode = 1
-anchor_right = 1.0
-offset_left = 173.0
-offset_top = 86.0
-offset_right = -25.0
-offset_bottom = 153.0
+[node name="TextLabel" type="RichTextLabel" parent="Panel/Content/Body"]
+unique_name_in_owner = true
+layout_mode = 2
 mouse_filter = 2
 theme_override_colors/default_color = Color(0.92, 0.90, 0.79, 1)
 theme_override_constants/line_separation = 4
 theme_override_font_sizes/normal_font_size = 18
+fit_content = true
 scroll_active = false
 
-[node name="OptionsContainer" type="HBoxContainer" parent="Panel"]
-layout_mode = 1
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 172.0
-offset_top = -60.0
-offset_right = -25.0
-offset_bottom = -21.0
+[node name="OptionsContainer" type="HFlowContainer" parent="Panel/Content/Body"]
+unique_name_in_owner = true
+layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 9
+theme_override_constants/h_separation = 9
+theme_override_constants/v_separation = 7
+
+[node name="ControlsHint" type="Label" parent="Panel/Content/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.76, 0.80, 0.67, 1)
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 2

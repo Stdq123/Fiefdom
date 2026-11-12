@@ -10,6 +10,10 @@ const ACTION_BUTTONS := {
 	JOY_BUTTON_BACK: KeyBindings.ALMANAC,
 	JOY_BUTTON_START: KeyBindings.ROTATE,
 }
+const DIALOGUE_MOVES := {
+	JOY_BUTTON_DPAD_LEFT: -1, JOY_BUTTON_DPAD_UP: -1,
+	JOY_BUTTON_DPAD_RIGHT: 1, JOY_BUTTON_DPAD_DOWN: 1,
+}
 
 class AimCursor extends Node2D:
 	func _draw() -> void:
@@ -44,7 +48,7 @@ func _ready() -> void:
 				InputMap.action_erase_event(action, binding)
 	window.window_input.connect(_window_input)
 	window.size_changed.connect(_clamp_pointer)
-	get_tree().scene_changed.connect(_refresh_pointer)
+	get_tree().scene_changed.connect(snap_pointer_to_focus)
 	Input.joy_connection_changed.connect(_joy_connection_changed)
 
 func _notification(what: int) -> void:
@@ -83,7 +87,7 @@ func _use_gamepad(id: int) -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 	cursor.visible = not pointer_suspended
 	set_process(true)
-	_refresh_pointer.call_deferred()
+	snap_pointer_to_focus.call_deferred()
 	changed.emit()
 
 func _use_mouse() -> void:
@@ -152,7 +156,7 @@ func _process(delta: float) -> void:
 		return
 	var direction := _stick(JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y)
 	if direction.is_zero_approx() and _menu_controls():
-		direction = _left_direction()
+		direction = _stick(JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y) if get_tree().has_group("dialogue_panel") else _left_direction()
 	if direction.is_zero_approx():
 		return
 	var previous := cursor.position
@@ -165,17 +169,28 @@ func _clamp_pointer() -> void:
 	var bounds := window.get_visible_rect()
 	cursor.position = cursor.position.clamp(bounds.position, bounds.end - Vector2.ONE)
 
-func _refresh_pointer() -> void:
+func snap_pointer_to_focus() -> void:
 	if not active or pointer_suspended:
 		return
 	var focus := window.gui_get_focus_owner()
-	cursor.position = focus.get_global_rect().get_center() if focus else window.get_visible_rect().get_center()
+	if focus:
+		var bounds := focus.get_global_rect()
+		cursor.position = bounds.get_center()
+		if get_tree().has_group("dialogue_panel"):
+			cursor.position.x = bounds.position.x + 10.0
+	else:
+		cursor.position = window.get_visible_rect().get_center()
 	_clamp_pointer()
-	window.notify_mouse_entered()
 	_motion(Vector2.ZERO)
 
 func _pad_button(id: int, button: JoyButton, pressed: bool) -> void:
 	if id != device_id or (pointer_suspended and button != JOY_BUTTON_B):
+		return
+	var dialogue := get_tree().get_first_node_in_group("dialogue_panel")
+	if dialogue and DIALOGUE_MOVES.has(button):
+		if pressed:
+			dialogue.move_choice(DIALOGUE_MOVES[button])
+			snap_pointer_to_focus()
 		return
 	match button:
 		JOY_BUTTON_A:
@@ -186,7 +201,7 @@ func _pad_button(id: int, button: JoyButton, pressed: bool) -> void:
 		JOY_BUTTON_X:
 			if get_tree().get_first_node_in_group("timed_practice"):
 				_action(KeyBindings.RHYTHM, pressed)
-			elif not _menu_controls():
+			elif dialogue or not _menu_controls():
 				_action(KeyBindings.INTERACT, pressed)
 		JOY_BUTTON_LEFT_SHOULDER, JOY_BUTTON_RIGHT_SHOULDER:
 			if pressed and not _menu_controls():
