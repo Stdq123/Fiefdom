@@ -136,8 +136,11 @@ func _on_route_goal_action(kind: Global.RouteGoal) -> void:
 			if Global.raid_day > 0 or Global.is_raid_day(Global.current_day + 1):
 				_on_raid_alert_pressed()
 			else:
-				panel_manager.show_management_panel()
-				panel_manager.management_panel_instance.show_estate()
+				_show_estate_management()
+
+func _show_estate_management() -> void:
+	panel_manager.show_management_panel()
+	panel_manager.management_panel_instance.show_estate()
 
 func _connect_signals() -> void:
 	GameEvents.day_advanced.connect(update_ui.unbind(1))
@@ -301,7 +304,7 @@ func _on_retainer_interacted(data: RetainerData) -> void:
 
 func _on_rotation_book_interacted() -> void:
 	world.set_channel_mode(false)
-	dialog_manager.show_rotation_book(world.irrigation_overlay.highlight_fertile_cells)
+	dialog_manager.show_rotation_book(world.irrigation_overlay.highlight_fertile_cells, _show_estate_management)
 
 func _on_tax_envoy_interacted() -> void:
 	world.set_channel_mode(false)

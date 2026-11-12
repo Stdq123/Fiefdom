@@ -25,14 +25,19 @@ func refresh_plot() -> void:
 	tooltip_text = "可安排续播" if tilled else "先到田里翻地"
 	if not crop.is_empty() and crop.data.is_perennial:
 		tooltip_text = "桑收后留根，可反复采叶"
-	var planned_id: String = Global.field_seed_plans.get(grid_pos, "")
-	var seed := ItemManager.get_crop(planned_id)
-	var display_crop: CropData = seed if crop.is_empty() else crop.data
+	var plan: String = Global.field_seed_plans.get(grid_pos, "")
+	var next_seed := ItemManager.get_crop(Global.next_seed_for_plan(grid_pos, plan))
+	var display_crop: CropData = next_seed if crop.is_empty() else crop.data
 	icon = ItemManager.crop_picture(display_crop).texture if display_crop else null
-	if seed:
-		var waiting := " · 待渠水" if seed.is_water_crop and not Global.irrigation.supplies(grid_pos) else ""
-		text += "\n续播 %s%s" % [seed.crop_name, waiting]
-		tooltip_text = "田间照料门客会在空畦上补播" if waiting.is_empty() else "接通水渠后才会补播稻种"
+	if next_seed:
+		var waiting := next_seed.is_water_crop and not Global.irrigation.supplies(grid_pos)
+		if FieldSeedPlan.is_rotation(plan):
+			var main_crop := ItemManager.get_crop(FieldSeedPlan.crop_id(plan))
+			var next_label := "待渠水" if waiting else "下茬%s" % next_seed.crop_name
+			text += "\n菽 ↔ %s · %s" % [main_crop.crop_name, next_label]
+		else:
+			text += "\n续播 %s%s" % [next_seed.crop_name, " · 待渠水" if waiting else ""]
+		tooltip_text = "接通水渠后才会补播稻种" if waiting else "田间照料门客会在空畦上补播"
 
 func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 	return data is RetainerData

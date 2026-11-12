@@ -80,6 +80,13 @@ layout_mode = 2
 size_flags_horizontal = 3
 tooltip_text = "按今天的节气估算生长夜数，实际以播种日为准。"
 
+[node name="RotateSeed" type="CheckBox" parent="HBoxContainer/RightPanel/封地概览/SeedPlan"]
+visible = false
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "与菽轮作"
+tooltip_text = "每茬交替种菽和所选作物。选黍、稷、稻、麦或麻可安排轮作。"
+
 [node name="ApplyPrivate" type="Button" parent="HBoxContainer/RightPanel/封地概览/SeedPlan"]
 custom_minimum_size = Vector2(145, 34)
 layout_mode = 2

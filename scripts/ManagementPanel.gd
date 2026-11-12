@@ -11,6 +11,7 @@ const MAP_GRID_ITEM := preload("res://scripts/MapGridItem.gd")
 @onready var map_grid_container: GridContainer = $HBoxContainer/RightPanel/封地概览/GridContainer
 @onready var well_field_selector: OptionButton = $HBoxContainer/RightPanel/封地概览/WellFieldSelector
 @onready var seed_plan_picker: OptionButton = $HBoxContainer/RightPanel/封地概览/SeedPlan/SeedPicker
+@onready var rotate_seed: CheckBox = $HBoxContainer/RightPanel/封地概览/SeedPlan/RotateSeed
 @onready var apply_private_plan: Button = $HBoxContainer/RightPanel/封地概览/SeedPlan/ApplyPrivate
 @onready var seed_timing: Label = $HBoxContainer/RightPanel/封地概览/SeedTiming
 @onready var seed_plan_note: Label = $HBoxContainer/RightPanel/封地概览/SeedPlanNote
@@ -54,6 +55,8 @@ func _ready() -> void:
 	seed_menu.add_theme_stylebox_override("hover", seed_plan_picker.get_theme_stylebox("hover", "Button"))
 	seed_menu.add_theme_color_override("font_color", seed_plan_picker.get_theme_color("font_color", "Button"))
 	seed_plan_picker.item_selected.connect(_refresh_seed_plan_preview.unbind(1))
+	rotate_seed.toggled.connect(_refresh_seed_plan_preview.unbind(1))
+	GameEvents.field_rotation_changed.connect(_refresh_seed_plan_preview)
 	apply_private_plan.pressed.connect(_apply_private_seed_plan)
 	_refresh_seed_choices()
 	refresh_well_fields()
@@ -301,9 +304,13 @@ func _refresh_field_tiles() -> void:
 func _apply_seed_plan(item: MAP_GRID_ITEM) -> void:
 	if seed_plan_picker.selected == 0:
 		return
-	Global.set_field_seed_plan(item.grid_pos, seed_plan_picker.get_selected_metadata())
+	Global.set_field_seed_plan(item.grid_pos, _selected_seed_plan())
 	item.refresh_plot()
 	_refresh_seed_plan_preview()
+
+func _selected_seed_plan() -> String:
+	var seed_id: String = seed_plan_picker.get_selected_metadata()
+	return FieldSeedPlan.with_beans(seed_id) if rotate_seed.button_pressed else seed_id
 
 func _refresh_seed_choices() -> void:
 	for index in range(1, seed_plan_picker.item_count - 1):
@@ -315,34 +322,45 @@ func _refresh_seed_choices() -> void:
 			label += " · 需渠水"
 		seed_plan_picker.set_item_text(index, label)
 
-func _private_plan_targets(seed_id: String) -> Array[Vector2i]:
+func _private_plan_targets(plan: String) -> Array[Vector2i]:
 	var targets: Array[Vector2i] = []
 	for item: MAP_GRID_ITEM in map_grid_container.get_children():
 		var cell := item.grid_pos
-		if not Global.is_public_plot(cell) and Global.can_plan_field_seed(cell) and Global.field_seed_plans.get(cell, "") != seed_id:
+		if not Global.is_public_plot(cell) and Global.can_plan_field_seed(cell) and Global.field_seed_plans.get(cell, "") != plan:
 			targets.append(cell)
 	return targets
 
 func _refresh_seed_plan_preview() -> void:
+	var seed_id: String = "" if seed_plan_picker.selected == 0 else seed_plan_picker.get_selected_metadata()
+	var crop := ItemManager.get_crop(seed_id)
+	rotate_seed.visible = Global.field_rotation.signed_day > 0
+	rotate_seed.disabled = not rotate_seed.visible or crop == null or not FieldSeedPlan.supports_rotation(crop)
+	if rotate_seed.disabled:
+		rotate_seed.set_pressed_no_signal(false)
 	seed_timing.hide()
 	if seed_plan_picker.selected == 0:
 		apply_private_plan.disabled = true
 		apply_private_plan.text = "安排私田"
 		seed_plan_note.text = "选种后点田格。也可一次安排当前井田的已翻私田。"
 		return
-	var seed_id: String = seed_plan_picker.get_selected_metadata()
-	var targets := _private_plan_targets(seed_id)
+	var plan := _selected_seed_plan()
+	var targets := _private_plan_targets(plan)
 	apply_private_plan.disabled = targets.is_empty()
 	if seed_id.is_empty():
 		apply_private_plan.text = "取消私田 · %d 格" % targets.size()
 		seed_plan_note.text = "清除后续的播种安排，田里的作物继续生长。"
 		return
 	apply_private_plan.text = "安排私田 · %d 格" % targets.size()
-	var crop := ItemManager.get_crop(seed_id)
 	var tomorrow := Global.current_day + 1
 	var nights := Global.sowing_nights(crop)
 	var next_nights := Global.sowing_nights(crop, tomorrow)
-	if nights != next_nights:
+	if FieldSeedPlan.is_rotation(plan):
+		var beans := ItemManager.get_crop(FieldSeedPlan.BEANS)
+		seed_timing.text = "菽 %d 夜 → %s %d 夜 · 收菽留肥，下茬多收一份" % [Global.sowing_nights(beans), crop.crop_name, nights]
+		if nights != next_nights:
+			seed_timing.text += "\n明日%s播%s需 %d 夜" % [Global.get_current_solar_term(tomorrow), crop.crop_name, next_nights]
+		seed_timing.show()
+	elif nights != next_nights:
 		seed_timing.text = "明日%s播种需 %d 夜" % [Global.get_current_solar_term(tomorrow), next_nights]
 		seed_timing.show()
 	if targets.is_empty():
@@ -356,7 +374,7 @@ func _refresh_seed_plan_preview() -> void:
 		var occupied := Global.active_crops.has(cell)
 		if occupied:
 			after_harvest += 1
-		if crop.is_water_crop and not Global.irrigation.supplies(cell):
+		if crop.is_water_crop and Global.next_seed_for_plan(cell, plan) == seed_id and not Global.irrigation.supplies(cell):
 			waiting_for_water += 1
 		elif not occupied:
 			open_plots += 1
@@ -374,12 +392,15 @@ func _refresh_seed_plan_preview() -> void:
 	seed_plan_note.text = " · ".join(details)
 
 func _apply_private_seed_plan() -> void:
-	var seed_id: String = seed_plan_picker.get_selected_metadata()
-	var targets := _private_plan_targets(seed_id)
+	var plan := _selected_seed_plan()
+	var targets := _private_plan_targets(plan)
 	for cell in targets:
-		Global.set_field_seed_plan(cell, seed_id)
+		Global.set_field_seed_plan(cell, plan)
 	_refresh_field_tiles()
-	seed_plan_note.text = ("已取消 %d 格私田的续播" if seed_id.is_empty() else "已安排 %d 格私田的续播") % targets.size()
+	if FieldSeedPlan.is_rotation(plan):
+		seed_plan_note.text = "已安排 %d 格私田轮作" % targets.size()
+	else:
+		seed_plan_note.text = ("已取消 %d 格私田的续播" if plan.is_empty() else "已安排 %d 格私田的续播") % targets.size()
 
 func _on_retainer_assigned(grid_pos: Vector2i, data: RetainerData) -> void:
 	print("Assigned ", data.name, " to ", grid_pos)

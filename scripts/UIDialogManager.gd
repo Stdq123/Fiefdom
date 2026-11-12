@@ -220,7 +220,7 @@ func _show_field_keeper(context: String, appearance: Texture2D, usual_line: Stri
 
 func _field_keeper_season_line() -> String:
 	if Global.field_rotation.signed_day == Global.current_day:
-		return "我把咱们的两茬收成记在田南。若后来的人想知道地怎样养出来，就叫他翻开轮作簿。"
+		return "我把咱们的两茬收成记在田南。往后哪一畦想这么种，翻开簿子指给我看，我照着接茬。"
 	if Global.has_rain():
 		return "今早雨落下来，我就把轮作簿往架里推了推。等雨小了，咱们再看豆茬里长了什么。"
 	match Global.season_index():
@@ -232,23 +232,25 @@ func _field_keeper_season_line() -> String:
 			return "霜沾在木架上，我今早用袖子抹了抹。冬麦还会长，留肥的格子都能从簿里查到。"
 	return "春土一松，我又想起那把菽种。去田南翻翻吧，地里哪一格有肥，簿上现在看得见。"
 
-func show_rotation_book(highlight_soil: Callable) -> void:
+func show_rotation_book(highlight_soil: Callable, open_plans: Callable) -> void:
 	if parent_node.has_node("DialoguePanel") or Global.field_rotation.signed_day == 0:
 		return
 	var story := Global.field_rotation
 	var note := "渠伯记 · 井田 %d" % story.field_number
 	var count := Global.fertile_cells.size()
-	var summary := "第 %d 天，先前种过菽的私田收下%s，多收一份。\n现在有 %d 格地留着豆茬的肥。" % [
+	var summary := "第 %d 天，先前种过菽的私田收下%s，多收一份。\n现在有 %d 格地留着豆茬的肥。可让照料门客交替播种菽和所选作物。" % [
 		story.harvest_day, Global.rotation_crop_name(), count]
 	var action := "标出肥地（%d 格）" % count if count > 0 else "标出肥地"
 	var disabled: Array[int] = []
 	if count == 0:
 		disabled.append(0)
-	var dialog := _open("轮作簿", note, summary, [action, "合上"], disabled, ROTATION_BOOK.ART)
+	var dialog := _open("轮作簿", note, summary, [action, "安排轮作", "合上"], disabled, ROTATION_BOOK.ART)
 	AudioManager.play_sfx(ROTATION_BOOK.TAP)
 	dialog.option_selected.connect(func(index: int):
 		if index == 0 and not Global.fertile_cells.is_empty():
 			highlight_soil.call()
+		elif index == 1:
+			open_plans.call()
 	)
 
 func show_east_watch() -> void:

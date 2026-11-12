@@ -727,17 +727,27 @@ func can_plan_field_seed(cell: Vector2i) -> bool:
 	var crop: Dictionary = active_crops.get(cell, {})
 	return crop.is_empty() or not crop.data.is_perennial
 
-func set_field_seed_plan(cell: Vector2i, seed_id: String) -> void:
+func set_field_seed_plan(cell: Vector2i, plan: String) -> void:
 	if not can_plan_field_seed(cell):
 		return
-	if seed_id.is_empty():
+	if plan.is_empty():
 		field_seed_plans.erase(cell)
-	elif CropData.IDS.has(seed_id):
-		field_seed_plans[cell] = seed_id
+	elif FieldSeedPlan.is_valid(plan) and (not FieldSeedPlan.is_rotation(plan) or field_rotation.signed_day > 0):
+		field_seed_plans[cell] = plan
+
+func next_seed_for_plan(cell: Vector2i, plan: String) -> String:
+	if not FieldSeedPlan.is_rotation(plan):
+		return plan
+	var crop: Dictionary = active_crops.get(cell, {})
+	# Preview the soil after harvest when a crop is still in the plot.
+	var prepared: bool = fertile_cells.has(cell) if crop.is_empty() else crop.data.restores_fertility
+	return FieldSeedPlan.crop_id(plan) if prepared else FieldSeedPlan.BEANS
 
 func planned_field_seed(cell: Vector2i) -> String:
-	var seed_id: String = field_seed_plans.get(cell, "")
-	if seed_id.is_empty() or active_crops.has(cell):
+	if active_crops.has(cell):
+		return ""
+	var seed_id := next_seed_for_plan(cell, field_seed_plans.get(cell, ""))
+	if seed_id.is_empty():
 		return ""
 	var seed := ItemManager.get_crop(seed_id)
 	return seed_id if not seed.is_water_crop or irrigation.supplies(cell) else ""
@@ -2575,13 +2585,6 @@ func load_game(path := "") -> Error:
 	days_without_contribution = maxi(0, _read_save_int(data.get("days_without_contribution"), 0))
 	active_crops = restored_crops
 	tilled_cells = restored_soil
-	field_seed_plans.clear()
-	var seed_plans: Variant = data.get("field_seed_plans")
-	if seed_plans is Dictionary:
-		for key in seed_plans:
-			var cell = _read_save_cell(key)
-			if restored_soil.has(cell) and CropData.IDS.has(seed_plans[key]):
-				field_seed_plans[cell] = seed_plans[key]
 	fertile_cells = restored_fertility
 	well_fields = restored_fields
 	irrigation.restore(water_source, restored_channels)
@@ -2638,6 +2641,14 @@ func load_game(path := "") -> Error:
 	hall_mat_id = saved_mat if _valid_hall_decor(saved_mat, HallDecor.Slot.MAT) else HallDecor.DEFAULT_MAT
 	hall_shelf_id = saved_shelf if _valid_hall_decor(saved_shelf, HallDecor.Slot.SHELF) else HallDecor.DEFAULT_SHELF
 	field_rotation = _restore_field_rotation(data.get("field_rotation"), saved_day)
+	field_seed_plans.clear()
+	var seed_plans: Variant = data.get("field_seed_plans")
+	if seed_plans is Dictionary:
+		for key in seed_plans:
+			var cell = _read_save_cell(key)
+			var plan: Variant = seed_plans[key]
+			if cell is Vector2i and plan is String:
+				set_field_seed_plan(cell, plan)
 	current_quest = "任务完成！获得 50 声望" if quest_completed else (
 		"目标：上缴 %d 份公田作物 (%d/%d)" % [quest_target, quest_progress, quest_target])
 	ending_record = _saved_ending_record(data)
