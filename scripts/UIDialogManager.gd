@@ -7,6 +7,7 @@ const MUSIC_PRACTICE := preload("res://scripts/MusicPractice.gd")
 const ROAD_REST := preload("res://scripts/RoadRest.gd")
 const ROTATION_BOOK := preload("res://scripts/FieldRotationBook.gd")
 const TRAVEL_HEARTH := preload("res://scripts/TravelHearth.gd")
+const WATER_SOURCE := preload("res://scripts/WaterSource.gd")
 const HUNGER_RETURN_LINES := {
 	VisitorData.FIELD_KEEPER: "那夜没分到饭，我只好去南边借住。今早路过，还是想看看咱们那块田。",
 	VisitorData.ROAD_KEEPER: "那晚我拎着空碗出了门，是过路人分了我一把炒菽。我记得这份情，也惦记亭西的人。",
@@ -282,6 +283,41 @@ func show_rotation_book(highlight_soil: Callable, open_plans: Callable) -> void:
 			highlight_soil.call()
 		elif index == 1:
 			open_plans.call()
+	)
+
+func show_water_source(starter_tiles: int, open_study: Callable, open_technology: Callable, begin_digging: Callable) -> void:
+	var context := "田边 · 水利"
+	var text := "通水渠能给相邻田格供水。稻要靠渠水才能播种。"
+	var choice := "去研读"
+	var action := open_study
+	if Global.tech_unlocked["irrigation"]:
+		var watered := 0
+		for field: Dictionary in Global.well_fields:
+			if field["is_unlocked"]:
+				watered += Global.irrigation.watered_footprint(field["center_pos"]).size()
+		context = "已有 %d 块井田接水" % Global.irrigated_well_fields()
+		text = "渠水供到 %d 格田。接水的作物过夜能长，断水的稻会停长。" % watered
+		choice = "进入挖渠"
+		action = begin_digging
+		if starter_tiles > 0:
+			var cost := starter_tiles * Global.channel_cost()
+			text += "\n沿泉口开 %d 格到田边，共需 %d 铜钱。" % [starter_tiles, cost]
+			if Global.money < cost:
+				text += "还差 %d 铜钱。" % (cost - Global.money)
+			choice = "标出引水位置"
+	else:
+		var level := Global.player_stats.get_level(PlayerStats.Art.LITERACY)
+		var needed := Irrigation.UNLOCK_LITERACY_LEVEL
+		if level >= needed:
+			text += "\n书艺已达 %d 级。现在可解锁水利。" % level
+			choice = "打开科技"
+			action = open_technology
+		else:
+			text += "\n书艺 %d/%d 级。每天可研读一次。" % [level, needed]
+	var dialog := _open("水源", context, text, [choice, "离开"], [], WATER_SOURCE.ART)
+	dialog.option_selected.connect(func(index: int):
+		if index == 0:
+			action.call()
 	)
 
 func show_east_watch() -> void:

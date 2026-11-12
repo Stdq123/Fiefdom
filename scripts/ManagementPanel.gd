@@ -168,6 +168,9 @@ func show_market() -> void:
 func show_six_arts() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(stats_container.get_parent())
 
+func show_technology() -> void:
+	tabs.current_tab = tabs.get_tab_idx_from_control(irrigation_button.get_parent().get_parent())
+
 func show_silk() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(silk_panel)
 

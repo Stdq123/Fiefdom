@@ -93,7 +93,7 @@ func _choose(dialog: Control, prefix: String) -> bool:
 			if option.text.begins_with(prefix) and not option.disabled:
 				await _button(option)
 				return true
-	_expect(false, "The dialogue must offer " + prefix)
+	_expect(false, "The dialogue for %s must offer %s." % [dialog.name_label.text if dialog else "the current target", prefix])
 	return false
 
 func _run() -> void:
@@ -162,7 +162,7 @@ func _run() -> void:
 		quit(1)
 		return
 	_expect(state.channel_survey_day == 6 and not ui.hud.survey_button.disabled
-		and "量水尺" in world.irrigation_overlay.source_label.text, "Reviewing the work adds the gauge and enables surveying.")
+		and "量水尺" in world.irrigation_overlay.water_source.hint.text, "Reviewing the work adds the gauge and enables surveying.")
 
 	await _button(ui.channel_button)
 	await _button(ui.hud.survey_button)

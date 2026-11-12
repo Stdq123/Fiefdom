@@ -86,7 +86,7 @@ func _collect_places() -> void:
 			icons[landscape.scenery[sprite]] = sprite.texture
 	places = [
 		_entry(Category.PLACES, "东关", "通往竹涧", _node_point(world.get_node("EastGate")), true, icons.get(LANDSCAPE.Prop.GATE)),
-		_entry(Category.PLACES, "水源", "封地的引水处", _cell_point(Global.irrigation.source_cell), true),
+		_entry(Category.PLACES, "水源", "到泉边可查看水利研习和渠水覆盖", _cell_point(Global.irrigation.source_cell), true),
 		_entry(Category.PLACES, DrivingPractice.PLACE, "东关前沿坡道下行，上车穿旗门", DrivingPractice.START_POINT, true),
 		_entry(Category.PLACES, "西廊", "西关内的歇脚处，陶辛在这里理绸", EstateLayout.WEST_COURT, true,
 			icons.get(LANDSCAPE.SCENE_WEST_COURT)),

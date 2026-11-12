@@ -1062,6 +1062,7 @@ func _apply_visitor_activity(visitor: Visitor, walk_in: bool) -> bool:
 			path.append(focus + Vector2(20, 11))
 		VisitorData.VisitActivity.MEASURE:
 			focus = get_crop_world_pos(Global.irrigation.source_cell)
+			path.append(focus + Vector2(24, 20))
 			path.append(focus + Vector2(18, -17))
 		VisitorData.VisitActivity.SILK:
 			focus = LANDSCAPE.SILK_SAMPLE_BOUNDS.get_center()

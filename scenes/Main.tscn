@@ -47,6 +47,7 @@
 [ext_resource type="PackedScene" path="res://scenes/TrainingCart.tscn" id="44_cart"]
 [ext_resource type="PackedScene" path="res://scenes/CouncilPreparation.tscn" id="45_council_prep"]
 [ext_resource type="PackedScene" path="res://scenes/RavineShortcutGate.tscn" id="46_ravine_trail"]
+[ext_resource type="Script" path="res://scripts/WaterSource.gd" id="47_water_source"]
 
 [sub_resource type="RectangleShape2D" id="Shape_east_gate"]
 size = Vector2(8, 20)
@@ -121,6 +122,22 @@ script = ExtResource("6_marker")
 [node name="IrrigationOverlay" type="Node2D" parent="World/TileMapLayer"]
 z_index = 1
 script = ExtResource("7_irrigation")
+
+[node name="WaterSource" type="Node2D" parent="World/TileMapLayer/IrrigationOverlay" groups=["interactable"]]
+texture_filter = 1
+script = ExtResource("47_water_source")
+
+[node name="Hint" type="Label" parent="World/TileMapLayer/IrrigationOverlay/WaterSource"]
+material = ExtResource("24_world_hint")
+offset_left = -64.0
+offset_top = -29.0
+offset_right = 64.0
+offset_bottom = -14.0
+mouse_filter = 2
+theme_override_colors/font_outline_color = Color(0.13, 0.22, 0.18, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
 
 [node name="FieldCursor" type="Node2D" parent="World/TileMapLayer"]
 script = ExtResource("12_field_cursor")

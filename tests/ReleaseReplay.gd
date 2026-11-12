@@ -128,6 +128,11 @@ func _run() -> void:
 			var replay = load("res://tests/CanalDoorReplay.gd").new()
 			replay.legacy = arguments[0] == "canal-doors-legacy"
 			await replay.run_doors(tree, false, capture_directory)
+		"irrigation-flow", "irrigation-flow-baseline", "irrigation-flow-legacy":
+			var replay = load("res://tests/IrrigationFlowReplay.gd").new()
+			replay.baseline = arguments[0] == "irrigation-flow-baseline"
+			replay.legacy = arguments[0] == "irrigation-flow-legacy"
+			await replay.run_irrigation(tree, capture_directory)
 		"estate-progress":
 			var replay = load("res://tests/EstateProgressReplay.gd").new()
 			await replay.run(tree)

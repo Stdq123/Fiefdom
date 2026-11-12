@@ -16,6 +16,7 @@ const FERTILITY_HIGHLIGHT_SECONDS := 12.0
 
 @onready var tile_map: TileMapLayer = get_parent()
 @onready var tile_size := Vector2(tile_map.tile_set.tile_size)
+@onready var water_source = $WaterSource
 
 var editing := false
 var cursor := Vector2i.ZERO
@@ -32,7 +33,7 @@ var planned_additions: Array[Vector2i] = []
 var future_water: Dictionary[Vector2i, int] = {}
 var preview_site: int = Global.ChannelSite.BLOCKED
 var blocked_cell := Vector2i.ZERO
-var source_label: Label
+var starter_canal: Array[Vector2i] = []
 @onready var flow_ink := Node2D.new()
 @onready var crop_icons := Node2D.new()
 @onready var plan_ink := Node2D.new()
@@ -43,15 +44,6 @@ var water_time := 0.0
 var water_frame := 0
 
 func _ready() -> void:
-	source_label = Label.new()
-	source_label.material = preload("res://resources/world_hint_material.tres")
-	source_label.text = "水源"
-	source_label.add_theme_font_size_override("font_size", 10)
-	source_label.add_theme_color_override("font_color", Color("#c4e2ce"))
-	source_label.add_theme_color_override("font_outline_color", Color("#21392d"))
-	source_label.add_theme_constant_override("outline_size", 3)
-	source_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(source_label)
 	flow_ink.draw.connect(_draw_flow)
 	add_child(flow_ink)
 	crop_icons.z_index = 2
@@ -80,10 +72,35 @@ func set_editing(enabled: bool) -> void:
 	pointer = get_viewport().get_mouse_position()
 	preview_fill = Input.is_action_pressed(KeyBindings.FILL) or GamepadInput.filling
 	cursor = _pointer_cell()
-	if not editing and survey_mode:
-		cancel_survey()
+	if not editing:
+		starter_canal.clear()
+		if survey_mode:
+			cancel_survey()
 	_refresh_tiles()
 	_refresh_plan()
+
+func starter_canal_cells() -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	var network := Global.irrigation
+	var field: Vector2i = Global.well_fields[0]["center_pos"]
+	var offset := field - network.source_cell
+	if (offset.x != 0 and offset.y != 0) or not network.watered_footprint(field).is_empty():
+		return cells
+	var axis := offset.sign()
+	# The field edge is one tile from its center. The canal ends just outside it.
+	for step in range(1, maxi(absi(offset.x), absi(offset.y)) - 1):
+		var cell := network.source_cell + axis * step
+		if not network.channels.has(cell):
+			cells.append(cell)
+	var plan := Global.channel_build_plan(cells)
+	if plan.site not in [Global.ChannelSite.AVAILABLE, Global.ChannelSite.NO_FUNDS]:
+		cells.clear()
+	return cells
+
+func show_starter_canal(cells: Array[Vector2i]) -> void:
+	starter_canal = cells
+	flow_ink.queue_redraw()
+	preview_changed.emit("引水需挖 %d 格 · 共 %d 铜钱" % [cells.size(), cells.size() * Global.channel_cost()])
 
 func track_pointer(at: Vector2, fill: bool) -> void:
 	pointer = at
@@ -169,6 +186,7 @@ func _refresh_plan() -> void:
 	affected_fields.clear()
 	affected_channels.clear()
 	plan_ink.queue_redraw()
+	flow_ink.queue_redraw()
 	if not editing:
 		return
 	if cursor != Global.irrigation.source_cell and not Global.RECLAMATION_BOUNDS.has_point(cursor):
@@ -244,8 +262,9 @@ func _compare_flow(next: Dictionary[Vector2i, int]) -> void:
 			affected_fields[cell] = supplied
 
 func _refresh_network() -> void:
-	source_label.text = "水源 · 量水尺" if Global.channel_survey_day > 0 else "水源"
-	source_label.position = tile_map.map_to_local(Global.irrigation.source_cell) + Vector2(-source_label.get_minimum_size().x / 2.0, -22)
+	water_source.refresh(tile_map.map_to_local(Global.irrigation.source_cell))
+	if not starter_canal.is_empty():
+		starter_canal = starter_canal_cells()
 	culverts.clear()
 	for cell in Global.irrigation.channels:
 		if EstateLayout.is_foundation(cell):
@@ -398,7 +417,6 @@ func _draw() -> void:
 			var corner := _cell_rect(cell).position + Vector2(2, 12)
 			draw_rect(Rect2(corner, Vector2(4, 2)), Color("#dbb773"))
 
-	_draw_source(_cell_rect(network.source_cell).position)
 	_draw_footbridges()
 
 func _channel_shape(cell: Vector2i, width: float, ink: Color, offset := Vector2.ZERO) -> void:
@@ -444,6 +462,11 @@ func _draw_flow() -> void:
 				continue
 			var streak := Vector2(3, 1) if direction.x != 0 else Vector2(1, 3)
 			flow_ink.draw_rect(Rect2(point - (streak * 0.5).floor(), streak), WATER_LIGHT)
+	if editing and not preview_fill and not survey_mode:
+		for cell in starter_canal:
+			var bed := _cell_rect(cell).grow(-2)
+			flow_ink.draw_rect(bed, Color("#b590544d"))
+			flow_ink.draw_rect(bed, Color("#f3cd7a"), false, 1.3)
 
 func _draw_footbridges() -> void:
 	for deck in footbridges:
@@ -455,28 +478,6 @@ func _draw_footbridges() -> void:
 			var seam := Vector2(deck.size.x, 1) if across_x else Vector2(1, deck.size.y)
 			draw_rect(Rect2(deck.position + offset, seam), Color("#7f603e"))
 		draw_rect(Rect2(deck.position + Vector2(1, 1), Vector2(deck.size.x - 2, 1)), Color("#d6b783"))
-
-func _draw_source(origin: Vector2) -> void:
-	draw_rect(Rect2(origin + Vector2(1, 2), Vector2(14, 13)), BANK_SHADOW)
-	draw_rect(Rect2(origin + Vector2(1, 4), Vector2(14, 8)), Color("#969477"))
-	draw_rect(Rect2(origin + Vector2(3, 2), Vector2(10, 12)), Color("#969477"))
-	draw_rect(Rect2(origin + Vector2(3, 3), Vector2(10, 1)), Color("#c1bb96"))
-	draw_rect(Rect2(origin + Vector2(3, 12), Vector2(10, 2)), Color("#686d58"))
-	draw_rect(Rect2(origin + Vector2(3, 4), Vector2(10, 8)), Color("#355a54"))
-	draw_rect(Rect2(origin + Vector2(4, 5), Vector2(8, 6)), WATER)
-	draw_rect(Rect2(origin + Vector2(7, 9), Vector2(4, 1)), Color("#81b7a7"))
-	var center := origin + tile_size * 0.5
-	for direction: Vector2i in Irrigation.NEIGHBORS:
-		if Global.irrigation.channels.has(Global.irrigation.source_cell + direction):
-			var inlet := center + Vector2(direction) * 3.0
-			var edge := center + Vector2(direction) * (tile_size * 0.5 + Vector2.ONE)
-			draw_line(inlet, edge, Color("#405c51"), 7.0)
-			draw_line(inlet, edge, WATER, 5.0)
-	if Global.channel_survey_day > 0:
-		draw_rect(Rect2(origin + Vector2(11, 0), Vector2(4, 13)), Color("#44392e"))
-		draw_rect(Rect2(origin + Vector2(12, 0), Vector2(2, 12)), Color("#d8b276"))
-		for mark in [3, 6, 9]:
-			draw_rect(Rect2(origin + Vector2(12, mark), Vector2(2, 1)), Color("#73583b"))
 
 func _cell_rect(cell: Vector2i) -> Rect2:
 	return Rect2(tile_map.map_to_local(cell) - tile_size / 2.0, tile_size)

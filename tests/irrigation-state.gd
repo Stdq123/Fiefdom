@@ -24,6 +24,9 @@ func _run() -> void:
 	_expect(state.check_channel_site(near) == state.ChannelSite.LOCKED, "The technology gates channel placement.")
 	state.tech_unlocked["irrigation"] = true
 	_expect(state.check_channel_site(near) == state.ChannelSite.NO_FUNDS, "An empty purse prevents construction.")
+	var overlay = current_scene.get_node("World").irrigation_overlay
+	_expect(overlay.starter_canal_cells() == [near, far] and state.money == 0 and state.irrigation.channels.is_empty(),
+		"The first route can be priced before the estate can afford it.")
 	state.balance.irrigation_channel_cost = 6
 	state.money = 18
 	_expect(state.build_channel(far) == state.ChannelSite.AVAILABLE, "A dry section can be placed.")
@@ -54,6 +57,9 @@ func _run() -> void:
 	_expect(state.load_game(state.SAVE_PATH) == OK, "The old save loads with its existing rice.")
 	await scene_changed
 	_expect(state.irrigation.channels.is_empty() and state.irrigation.source_cell == Vector2i(5, 1), "The source respects existing fields in legacy saves.")
+	overlay = current_scene.get_node("World").irrigation_overlay
+	_expect(overlay.water_source.position == overlay.tile_map.map_to_local(state.irrigation.source_cell),
+		"The spring art and interaction follow the alternate legacy source cell.")
 	_expect(state.active_crops[Vector2i(1, 5)]["watered"] and not state.active_crops[Vector2i(1, 5)]["requires_channel"], "Existing rice keeps manual watering.")
 	_expect(state.active_crops[Vector2i(1, 5)]["growth_nights"] == 4, "Legacy crops receive their original unmodified growth target.")
 	var ui := current_scene.get_node("UI")

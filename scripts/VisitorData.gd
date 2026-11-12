@@ -144,7 +144,7 @@ static func from_persona(persona: Dictionary) -> VisitorData:
 
 func meeting_point(water_source: Vector2) -> Vector2:
 	match meeting_place:
-		"水源旁": return water_source + Vector2(-5, 21)
+		"水源旁": return water_source + Vector2(26, 26)
 		"西廊": return EstateLayout.WEST_COURT
 		"南边竹径": return BAMBOO_PATH
 		"东路岗": return EAST_POST

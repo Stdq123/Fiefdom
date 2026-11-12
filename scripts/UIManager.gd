@@ -203,6 +203,7 @@ func _connect_signals() -> void:
 	GameEvents.winter_supper_prepared.connect(update_ui)
 	GameEvents.road_rest_interacted.connect(_on_road_rest_interacted)
 	GameEvents.rotation_book_interacted.connect(_on_rotation_book_interacted)
+	GameEvents.water_source_interacted.connect(_on_water_source_interacted)
 	GameEvents.east_watch_read_requested.connect(dialog_manager.show_east_watch)
 	GameEvents.east_watch_built.connect(update_ui)
 	GameEvents.tax_reform_triggered.connect(_on_council_invitation)
@@ -341,6 +342,23 @@ func _on_retainer_interacted(data: RetainerData) -> void:
 func _on_rotation_book_interacted() -> void:
 	world.set_channel_mode(false)
 	dialog_manager.show_rotation_book(world.irrigation_overlay.highlight_fertile_cells, _show_estate_management)
+
+func _on_water_source_interacted() -> void:
+	if directions.tracked_place == "水源":
+		directions.clear_tracking()
+	world.set_channel_mode(false)
+	var starter: Array[Vector2i] = world.irrigation_overlay.starter_canal_cells()
+	dialog_manager.show_water_source(starter.size(), _show_six_arts, _show_water_technology, _dig_from_water_source.bind(starter))
+
+func _show_water_technology() -> void:
+	panel_manager.show_management_panel()
+	panel_manager.management_panel_instance.show_technology()
+
+func _dig_from_water_source(starter: Array[Vector2i]) -> void:
+	world.set_channel_mode(true)
+	if not starter.is_empty():
+		world.irrigation_overlay.show_starter_canal(starter)
+		hud.show_channel_help("从泉口沿金框挖到田边")
 
 func _on_tax_envoy_interacted() -> void:
 	world.set_channel_mode(false)
