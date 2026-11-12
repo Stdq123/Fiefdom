@@ -45,14 +45,7 @@ func _walk(actor: Player, points: Array) -> void:
 		await Campaign.walk_to(tree, actor, point)
 
 func _cross(action: StringName, path: String) -> bool:
-	Input.action_press(action)
-	for frame in 48:
-		await tree.physics_frame
-		if tree.root.get_node("MapTravel").active:
-			break
-	Input.action_release(action)
-	await Campaign.wait_for_map_change(tree)
-	return _expect(tree.current_scene.scene_file_path == path, "Walking along the road opens " + path)
+	return _expect(await Campaign.walk_through_gates(tree, action, path), "Walking along the road opens " + path)
 
 func _snapshot(name: String) -> void:
 	if capture_dir.is_empty() or DisplayServer.get_name() == "headless":

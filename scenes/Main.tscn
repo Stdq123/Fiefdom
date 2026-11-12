@@ -182,8 +182,8 @@ position = Vector2(-308, -24)
 collision_layer = 0
 collision_mask = 2
 script = ExtResource("25_gate")
-destination = "res://scenes/WestMarket.tscn"
-arrival_path = NodePath("EstateRoadArrival")
+destination = "res://scenes/WestRoad.tscn"
+arrival_path = NodePath("EstateArrival")
 player_path = NodePath("Player")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="World/WestMarketGate"]

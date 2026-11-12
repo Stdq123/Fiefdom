@@ -183,15 +183,9 @@ func _walk(actor: Node2D, stops: Array) -> void:
 		await Campaign.walk_to(tree, actor, point)
 
 func _cross(action: StringName, path: String) -> bool:
-	Input.action_press(action)
-	for frame in 52:
-		await tree.physics_frame
-		if tree.root.get_node("MapTravel").active:
-			break
-	Input.action_release(action)
-	await Campaign.wait_for_map_change(tree)
+	var crossed := await Campaign.walk_through_gates(tree, action, path, 52)
 	await tree.process_frame
-	return _expect(tree.current_scene.scene_file_path == path, "Walk through the road to " + path)
+	return _expect(crossed, "Walk through the road to " + path)
 
 func _catch_minnow() -> bool:
 	var trail := tree.current_scene as Node2D

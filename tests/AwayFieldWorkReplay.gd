@@ -114,15 +114,9 @@ func _walk(actor: Node2D, stops: Array) -> void:
 		await Campaign.walk_to(tree, actor, point)
 
 func _cross(action: StringName, destination: String) -> bool:
-	Input.action_press(action)
-	for frame in 52:
-		await tree.physics_frame
-		if tree.root.get_node("MapTravel").active:
-			break
-	Input.action_release(action)
-	await Campaign.wait_for_map_change(tree)
+	var crossed := await Campaign.walk_through_gates(tree, action, destination, 52)
 	await tree.process_frame
-	return _expect(tree.current_scene.scene_file_path == destination, "Walk through the gate to " + destination)
+	return _expect(crossed, "Walk through the gate to " + destination)
 
 func _public_plot_untouched() -> bool:
 	return state.active_crops.has(PUBLIC) and state.king_storage == 0 and not state.active_crops[YOUNG].watered
@@ -133,13 +127,15 @@ func _market_round_trip() -> void:
 	var stamina: int = state.current_stamina
 	await _walk(world.player, [Vector2(-181, 60), Vector2(-181, 0), Vector2(-270, -21)])
 	await _assign_at_gate()
-	if not await _cross(&"ui_left", state.WEST_MARKET_SCENE):
+	var road_scene := "res://scenes/WestRoad.tscn"
+	var first_stop: String = road_scene if ResourceLoader.exists(road_scene) else state.WEST_MARKET_SCENE
+	if not await _cross(&"ui_left", first_stop):
 		return
-	var market := tree.current_scene as Node2D
+	var first_map := tree.current_scene as Node2D
 	await _key(KEY_ESCAPE)
 	var time: float = state.day_progress
 	await tree.create_timer(3.6).timeout
-	_expect(market.settings.visible and state.day_progress == time and _public_plot_untouched(),
+	_expect(first_map.settings.visible and state.day_progress == time and _public_plot_untouched(),
 		"Settings hold the clock and keep both jobs pending.")
 	await _key(KEY_ESCAPE)
 	await tree.create_timer(3.3).timeout
@@ -153,7 +149,11 @@ func _market_round_trip() -> void:
 		return
 	_expect(state.away_field_report.watered == 1 and state.away_field_report.harvested == 1,
 		"The first settled jobs appear in the field record.")
+	if first_stop == road_scene and not await _cross(&"ui_left", state.WEST_MARKET_SCENE):
+		return
+	var market := tree.current_scene as Node2D
 	await _key(KEY_ESCAPE)
+	var completed: Dictionary = state.away_field_report.duplicate()
 	for button: Button in market.settings.find_children("*", "Button", true, false):
 		if button.text == "保存游戏":
 			await _button(button)
@@ -166,8 +166,8 @@ func _market_round_trip() -> void:
 	if tree.current_scene == null:
 		await tree.scene_changed
 	market = tree.current_scene as Node2D
-	if not _expect(market.scene_file_path == state.WEST_MARKET_SCENE and state.away_field_report.harvested == 1
-		and state.away_field_report.watered == 1 and state.king_storage == 1 and state.active_crops[YOUNG].watered,
+	if not _expect(market.scene_file_path == state.WEST_MARKET_SCENE and state.away_field_report.harvested == completed.harvested
+		and state.away_field_report.watered == completed.watered and state.king_storage == 1 and state.active_crops[YOUNG].watered,
 		"Continue in the market with the completed work and report."):
 		return
 	await Campaign.walk_market_to(tree, market, Vector2(134, 76))

@@ -85,6 +85,23 @@ static func wait_for_map_change(tree: SceneTree) -> void:
 	elif tree.current_scene == null:
 		await tree.scene_changed
 
+static func walk_through_gate(tree: SceneTree, action: StringName, frames: int) -> void:
+	var travel := tree.root.get_node("MapTravel")
+	Input.action_press(action)
+	for frame in frames:
+		await tree.physics_frame
+		if travel.active:
+			break
+	Input.action_release(action)
+	await wait_for_map_change(tree)
+
+static func walk_through_gates(tree: SceneTree, action: StringName, destination: String, frames := 48) -> bool:
+	await walk_through_gate(tree, action, frames)
+	var scene := tree.current_scene
+	if scene.scene_file_path == "res://scenes/WestRoad.tscn" and scene.scene_file_path != destination:
+		await walk_through_gate(tree, action, 340)
+	return tree.current_scene.scene_file_path == destination
+
 static func meet_tax_envoy(tree: SceneTree) -> Control:
 	var estate := tree.current_scene
 	var world := estate.get_node("World")

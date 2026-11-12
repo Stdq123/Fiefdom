@@ -52,14 +52,7 @@ func _snapshot(name: String) -> void:
 func _cross(actor: Player, waypoints: Array, action: StringName, path: String) -> bool:
 	for at: Vector2 in waypoints:
 		await Campaign.walk_to(tree, actor, at)
-	Input.action_press(action)
-	for frame in 48:
-		await tree.physics_frame
-		if tree.root.get_node("MapTravel").active:
-			break
-	Input.action_release(action)
-	await Campaign.wait_for_map_change(tree)
-	return _expect(tree.current_scene.scene_file_path == path, "Walk through the road to " + path)
+	return _expect(await Campaign.walk_through_gates(tree, action, path), "Walk through the road to " + path)
 
 func _to_market() -> bool:
 	var actor := tree.current_scene.get_node("World/Player") as Player
@@ -161,23 +154,37 @@ func _freight_to_pavilion() -> void:
 	_expect(market_cart.travelling and market_cart.driver.walking and market_cart.route_offset > 0.0,
 		"The driver and loaded cart move along the market road at the advertised watch.")
 	await _snapshot("05-market-departure")
-	if await _to_estate():
+	var market := tree.current_scene as Node2D
+	await Campaign.walk_to_market_exit(tree, market)
+	if not await _cross(market.player, [], &"ui_right", state.WEST_ROAD_SCENE):
+		return
+	var road := tree.current_scene as Node2D
+	var bridge_progress := (SeasonFreight.west_road_start + SeasonFreight.west_road.get_baked_length() * 0.5) / SeasonFreight.route_length
+	await _set_watch(SeasonOrders.EVENING_DISPATCH + SeasonOrders.TRAVEL_FRACTION * bridge_progress)
+	var road_cart := road.get_node("Freight") as SeasonFreight
+	_expect(road_cart.travelling and road_cart.cargo.is_visible_in_tree() and road.ground.LAYOUT.BRIDGE.has_point(road_cart.position),
+		"The same loaded cart passes over the bridge between the market and the estate.")
+	print("WEST_ROAD_FREIGHT at=", road_cart.position, " cargo=", road_cart.cargo.is_visible_in_tree())
+	await _snapshot("05a-bridge-shipment")
+	if await _cross(road.player, [], &"ui_right", state.ESTATE_SCENE):
 		var estate := tree.current_scene
 		_expect(estate.get_node("World/SeasonBoard").delivered and not estate.get_node("UI").hud.pinned_order.visible,
 			"The pavilion uses the same receipt and the farm tracker clears.")
-		var market_length := SeasonFreight.market_road.get_baked_length()
-		var route_length := market_length + SeasonFreight.estate_road.get_baked_length()
-		await _set_watch(SeasonOrders.EVENING_DISPATCH + SeasonOrders.TRAVEL_FRACTION * (market_length + 115.0) / route_length)
+		var travel := (SeasonFreight.estate_start + 115.0) / SeasonFreight.route_length
+		await _set_watch(SeasonOrders.EVENING_DISPATCH + SeasonOrders.TRAVEL_FRACTION * travel)
 		var cart := estate.get_node("World/Freight") as SeasonFreight
 		_expect(cart.travelling and cart.cargo.is_visible_in_tree(), "The same load enters the estate by the west road.")
 		await _snapshot("06-estate-road")
 		var checkpoint := cart.route_offset
+		var saved_watch: float = state.day_progress
 		if not await _continue(state.ESTATE_SCENE):
 			return
 		estate = tree.current_scene
 		cart = estate.get_node("World/Freight") as SeasonFreight
-		_expect(cart.travelling and absf(cart.route_offset - checkpoint) < 12.0,
-			"Resuming mid-trip keeps the cart at the same place on the road.")
+		var advanced: float = state.day_progress - saved_watch
+		var expected := checkpoint + advanced * SeasonFreight.route_length / SeasonOrders.TRAVEL_FRACTION
+		_expect(cart.travelling and absf(advanced) < 0.01 and absf(cart.route_offset - expected) < 8.0,
+			"The resumed cart's position matches the restored clock and the time since resuming.")
 		await _set_watch(SeasonOrders.EVENING_DISPATCH + SeasonOrders.TRAVEL_FRACTION + 0.01)
 		var world := estate.get_node("World") as Node2D
 		await Campaign.walk_estate_road_to(tree, world, EstateLayout.FREIGHT_APPROACH)

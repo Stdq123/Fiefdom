@@ -65,6 +65,7 @@ func _rain_cross(direction: StringName, destination: String, clip: String) -> bo
 	var record := _start_recording() if not clip.is_empty() else null
 	await tree.create_timer(0.36).timeout
 	var position_before := source.get_playback_position()
+	var start := Time.get_ticks_msec()
 	if not await _cross(direction, destination):
 		_finish_recording(record, clip)
 		return false
@@ -78,8 +79,10 @@ func _rain_cross(direction: StringName, destination: String, clip: String) -> bo
 	else:
 		_expect(same_player and is_equal_approx(arriving_gain, 0.39), "The same rain stream and level persist through the gate.")
 		if DisplayServer.get_name() != "headless":
-			var elapsed := fposmod(position_after - position_before, arrived.stream.get_length())
-			_expect(arrived.playing and elapsed > 0.2 and elapsed < 2.0, "The rain waveform advances continuously through the crossing.")
+			var length := arrived.stream.get_length()
+			var seconds := (Time.get_ticks_msec() - start) / 1000.0
+			var drift := wrapf(position_after - position_before - seconds, -length * 0.5, length * 0.5)
+			_expect(arrived.playing and absf(drift) < 0.8, "The rain waveform advances continuously through the crossing.")
 	print("AMBIENCE_CROSS destination=", destination.get_file(), " same_player=", same_player,
 		" gain=", snappedf(arriving_gain, 0.001), " playback=", snappedf(position_before, 0.01), "->", snappedf(position_after, 0.01))
 	await tree.create_timer(0.54).timeout

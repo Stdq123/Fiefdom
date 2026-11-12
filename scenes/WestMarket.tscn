@@ -82,7 +82,7 @@ script = ExtResource("19_dialog")
 position = Vector2(-262, 180)
 
 [node name="Freight" parent="." instance=ExtResource("14_freight")]
-at_market = true
+route_section = 0
 
 [node name="Porter" type="Node2D" parent="."]
 script = ExtResource("16_porter")
@@ -96,9 +96,9 @@ position = Vector2(392, 36)
 collision_layer = 0
 collision_mask = 2
 script = ExtResource("5_gate")
-destination = "res://scenes/Main.tscn"
-arrival_path = NodePath("World/WestMarketArrival")
-player_path = NodePath("World/Player")
+destination = "res://scenes/WestRoad.tscn"
+arrival_path = NodePath("MarketArrival")
+player_path = NodePath("Player")
 
 [node name="Mouth" type="CollisionShape2D" parent="EstateRoad"]
 shape = SubResource("GateMouth")

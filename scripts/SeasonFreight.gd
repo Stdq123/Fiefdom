@@ -1,16 +1,24 @@
 extends Node2D
 class_name SeasonFreight
 
+enum RouteSection { MARKET, WEST_ROAD, ESTATE }
+
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const CART_ART := preload("res://assets/world/season-order-cart.svg")
 const DRIVER_ART := preload("res://assets/characters/freight-driver.svg")
 const ROAD_STEP := preload("res://assets/audio/plank-1.wav")
 const WEST_MARKET := preload("res://scripts/WestMarketLayout.gd")
+const WEST_ROAD := preload("res://scripts/WestRoadLayout.gd")
 
 static var market_road := _curve(WEST_MARKET.freight_path())
+static var west_road := _curve(WEST_ROAD.ROAD)
 static var estate_road := _estate_curve()
+static var roads: Array[Curve2D] = [market_road, west_road, estate_road]
+static var west_road_start := market_road.get_baked_length()
+static var estate_start := west_road_start + west_road.get_baked_length()
+static var route_length := estate_start + estate_road.get_baked_length()
 
-@export var at_market := false
+@export var route_section := RouteSection.ESTATE
 
 @onready var cart: Sprite2D = $Cart
 @onready var cargo: Sprite2D = $Cargo
@@ -90,12 +98,16 @@ func _sync_position() -> void:
 		lot = previous_lot
 	var progress := _progress(lot)
 	var delivery_day: int = lot.receipt.dispatch_day if not lot.is_empty() else -1
-	var market_length := market_road.get_baked_length()
-	var distance := clampf(progress, 0.0, 1.0) * (market_length + estate_road.get_baked_length())
-	var at_origin := at_market and (progress < 0.0 or delivery_day < Global.current_day)
-	var on_this_map := delivery_day == Global.current_day and progress >= 0.0 and (distance < market_length) == at_market
+	var distance := clampf(progress, 0.0, 1.0) * route_length
+	var section := RouteSection.MARKET
+	if distance >= estate_start:
+		section = RouteSection.ESTATE
+	elif distance >= west_road_start:
+		section = RouteSection.WEST_ROAD
+	var at_origin := route_section == RouteSection.MARKET and (progress < 0.0 or delivery_day < Global.current_day)
+	var on_this_map := delivery_day == Global.current_day and progress >= 0.0 and section == route_section
 	visible = at_origin or on_this_map
-	arrived = visible and not at_market and progress >= 1.0
+	arrived = visible and route_section == RouteSection.ESTATE and progress >= 1.0
 	_set_parked(visible and (at_origin or arrived))
 	if not visible:
 		travelling = false
@@ -104,9 +116,8 @@ func _sync_position() -> void:
 	if has_cargo and shown_order != lot.order.id:
 		_load_cargo(lot.order)
 	cargo.visible = has_cargo
-	var road := market_road if at_market else estate_road
-	var offset := (0.0 if at_origin else distance) if at_market else distance - market_length
-	_pose(road, offset, not parked)
+	var start: float = [0.0, west_road_start, estate_start][route_section]
+	_pose(roads[route_section], 0.0 if at_origin else distance - start, not parked)
 
 func _set_parked(active: bool) -> void:
 	if parked != active:
@@ -146,7 +157,7 @@ func _pose(road: Curve2D, offset: float, moving: bool) -> void:
 			AudioManager.play_world_sfx(ROAD_STEP, self, -18.0, 110.0)
 	else:
 		driver.stand()
-		driver.face(Vector2.LEFT if at_market else Vector2.DOWN)
+		driver.face(Vector2.LEFT if route_section == RouteSection.MARKET else Vector2.DOWN)
 	cart.texture = side_cart if horizontal else front_cart
 	cart.position.y = -19.0 + bob
 	cargo.texture = side_cargo if horizontal else front_cargo

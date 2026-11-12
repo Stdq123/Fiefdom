@@ -92,14 +92,7 @@ func _walk(actor: Player, stops: Array) -> void:
 		await Campaign.walk_to(tree, actor, point)
 
 func _cross(action: StringName, destination: String) -> bool:
-	Input.action_press(action)
-	for frame in 52:
-		await tree.physics_frame
-		if tree.root.get_node("MapTravel").active:
-			break
-	Input.action_release(action)
-	await Campaign.wait_for_map_change(tree)
-	return _expect(tree.current_scene.scene_file_path == destination, "Take the west road to " + destination)
+	return _expect(await Campaign.walk_through_gates(tree, action, destination, 52), "Take the west road to " + destination)
 
 func _deliver_spring() -> bool:
 	await _walk(world.player, [Vector2(-181, 60), Vector2(-181, 0), Vector2(-270, -21)])

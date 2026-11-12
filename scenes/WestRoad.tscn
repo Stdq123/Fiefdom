@@ -1,0 +1,179 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/WestRoad.gd" id="1_road"]
+[ext_resource type="Script" path="res://scripts/WestRoadGround.gd" id="2_ground"]
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="3_player"]
+[ext_resource type="Script" path="res://scripts/MapGate.gd" id="4_gate"]
+[ext_resource type="Script" path="res://scripts/DayLighting.gd" id="5_light"]
+[ext_resource type="Script" path="res://scripts/RainVeil.gd" id="6_rain"]
+[ext_resource type="Script" path="res://scripts/SettingsPanel.gd" id="7_settings"]
+[ext_resource type="Theme" path="res://resources/game_theme.tres" id="8_theme"]
+[ext_resource type="PackedScene" path="res://scenes/SeasonFreight.tscn" id="9_freight"]
+[ext_resource type="Script" path="res://scripts/CampaignHUD.gd" id="10_campaign"]
+
+[sub_resource type="RectangleShape2D" id="GateMouth"]
+size = Vector2(8, 34)
+
+[sub_resource type="RectangleShape2D" id="Side"]
+size = Vector2(24, 374)
+
+[sub_resource type="RectangleShape2D" id="End"]
+size = Vector2(612, 24)
+
+[node name="WestRoad" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_road")
+
+[node name="Ground" type="Node2D" parent="."]
+z_index = -4
+texture_repeat = 2
+script = ExtResource("2_ground")
+
+[node name="Current" type="Node2D" parent="Ground"]
+
+[node name="Waypoint" type="Node2D" parent="."]
+z_index = -2
+
+[node name="Scenery" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Freight" parent="." instance=ExtResource("9_freight")]
+route_section = 1
+
+[node name="MarketGate" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("4_gate")
+destination = "res://scenes/WestMarket.tscn"
+arrival_path = NodePath("EstateRoadArrival")
+player_path = NodePath("Player")
+
+[node name="Mouth" type="CollisionShape2D" parent="MarketGate"]
+shape = SubResource("GateMouth")
+
+[node name="EstateGate" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("4_gate")
+destination = "res://scenes/Main.tscn"
+arrival_path = NodePath("World/WestMarketArrival")
+player_path = NodePath("World/Player")
+
+[node name="Mouth" type="CollisionShape2D" parent="EstateGate"]
+shape = SubResource("GateMouth")
+
+[node name="MarketArrival" type="Marker2D" parent="."]
+
+[node name="EstateArrival" type="Marker2D" parent="."]
+rotation = 3.1415927
+
+[node name="Edges" type="StaticBody2D" parent="."]
+collision_mask = 0
+
+[node name="West" type="CollisionShape2D" parent="Edges"]
+position = Vector2(-294, 21)
+shape = SubResource("Side")
+
+[node name="East" type="CollisionShape2D" parent="Edges"]
+position = Vector2(294, 21)
+shape = SubResource("Side")
+
+[node name="North" type="CollisionShape2D" parent="Edges"]
+position = Vector2(0, -154)
+shape = SubResource("End")
+
+[node name="South" type="CollisionShape2D" parent="Edges"]
+position = Vector2(0, 196)
+shape = SubResource("End")
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+
+[node name="Camera2D" parent="Player" index="4"]
+limit_left = -386
+limit_top = -184
+limit_right = 386
+limit_bottom = 224
+
+[node name="DayLighting" type="CanvasModulate" parent="."]
+script = ExtResource("5_light")
+
+[node name="Rain" type="Node2D" parent="."]
+z_index = 11
+script = ExtResource("6_rain")
+
+[node name="CampaignHUD" type="CanvasLayer" parent="."]
+layer = 8
+script = ExtResource("10_campaign")
+show_field_status = false
+
+[node name="UI" type="CanvasLayer" parent="."]
+layer = 9
+
+[node name="Control" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("8_theme")
+
+[node name="RoadName" type="PanelContainer" parent="UI/Control"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 240.0
+offset_bottom = 87.0
+mouse_filter = 2
+
+[node name="Stack" type="VBoxContainer" parent="UI/Control/RoadName"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Name" type="Label" parent="UI/Control/RoadName/Stack"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.82, 0.55, 1)
+theme_override_font_sizes/font_size = 24
+text = "溪桥道"
+
+[node name="Date" type="Label" parent="UI/Control/RoadName/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Route" type="Label" parent="UI/Control/RoadName/Stack"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.82, 0.55, 1)
+
+[node name="SettingsButton" type="Button" parent="UI/Control"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -97.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 56.0
+mouse_default_cursor_shape = 2
+text = "设置"
+
+[node name="SettingsShade" type="ColorRect" parent="UI/Control"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.064, 0.101, 0.083, 0.68)
+
+[node name="Settings" type="Panel" parent="UI/Control"]
+unique_name_in_owner = true
+visible = false
+script = ExtResource("7_settings")
+
+[editable path="Player"]

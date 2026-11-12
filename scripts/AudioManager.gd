@@ -94,7 +94,7 @@ func _sync_score() -> void:
 		Global.TITLE_SCENE:
 			terrain_audio.fade_out()
 			path = TITLE_SCORE
-		Global.ESTATE_SCENE, Global.WEST_MARKET_SCENE:
+		Global.ESTATE_SCENE, Global.WEST_ROAD_SCENE, Global.WEST_MARKET_SCENE:
 			path = SEASON_SCORES[Global.season_index()]
 		Global.WILDERNESS_SCENE:
 			path = RAVINE_SCORE

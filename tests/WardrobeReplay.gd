@@ -61,14 +61,7 @@ func _resume_outfit() -> bool:
 func _west_road() -> bool:
 	for point in [Vector2(-181, 54), Vector2(-181, 0), Vector2(-270, -21)]:
 		await Campaign.walk_to(tree, player, point)
-	Input.action_press(&"ui_left")
-	for frame in 48:
-		await tree.physics_frame
-		if tree.root.get_node("MapTravel").active:
-			break
-	Input.action_release(&"ui_left")
-	await Campaign.wait_for_map_change(tree)
-	if not _expect(tree.current_scene.scene_file_path == state.WEST_MARKET_SCENE, "Walk across the real west road gate."):
+	if not _expect(await Campaign.walk_through_gates(tree, &"ui_left", state.WEST_MARKET_SCENE), "Walk across the real west road gate."):
 		return false
 	player = tree.current_scene.get_node("Player")
 	return _check_outfit("hemp")

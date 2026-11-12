@@ -8,9 +8,11 @@ const SAVE_TIME_SCALE := 1000000
 const TITLE_SCENE := "res://scenes/Title.tscn"
 const ESTATE_SCENE := "res://scenes/Main.tscn"
 const WILDERNESS_SCENE := "res://scenes/Wilderness.tscn"
+const WEST_ROAD_SCENE := "res://scenes/WestRoad.tscn"
 const WEST_MARKET_SCENE := "res://scenes/WestMarket.tscn"
-const SAVE_SCENES := {"estate": ESTATE_SCENE, "ravine": WILDERNESS_SCENE, "west_market": WEST_MARKET_SCENE}
-const SAVE_LOCATION_NAMES := {"ravine": "竹涧", "west_market": "西市"}
+const SAVE_SCENES := {"estate": ESTATE_SCENE, "ravine": WILDERNESS_SCENE,
+	"west_market": WEST_MARKET_SCENE, "west_road": WEST_ROAD_SCENE}
+const SAVE_LOCATION_NAMES := {"ravine": "竹涧", "west_market": "西市", "west_road": "溪桥道"}
 const RAVINE_TRIP_PLACES := ["野果坳", "望溪台", "柳湾", "砾滩", SummerRaft.PLACE]
 const MARKET_ORDERS := "收货牌"
 const MARKET_RETURN := "回封地"
@@ -83,6 +85,7 @@ var ravine_trip_target := ""
 var market_trip_target := ""
 var restored_ravine_waypoint := ""
 var restored_ravine_south := false
+var restored_west_road_from_market := false
 var fish_collection: Dictionary[String, Dictionary] = {}
 var fish_order_receipt: Dictionary = {}
 var creek_trap: Dictionary = {}
@@ -261,6 +264,7 @@ func _reset_campaign() -> void:
 	market_trip_target = ""
 	restored_ravine_waypoint = ""
 	restored_ravine_south = false
+	restored_west_road_from_market = false
 	creek_trap.clear()
 	fish_collection.clear()
 	fish_order_receipt.clear()
@@ -2368,6 +2372,7 @@ func _save_snapshot(origin: String) -> Error:
 		"location": "estate" if location == null else location,
 		"ravine_waypoint": scene.active_waypoint() if location == "ravine" else "",
 		"ravine_south_arrival": scene.resume_from_south_trail() if location == "ravine" else false,
+		"west_road_from_market": scene.resume_from_market() if location == "west_road" else false,
 		"selected_seed": selected_seed_id,
 		"field_route_status": field_route_status,
 		"field_route_public_only": field_route_public_only,
@@ -2873,6 +2878,7 @@ func load_game(path := "") -> Error:
 	ravine_journal = _restore_ravine_journal(data.get("ravine_journal"), saved_day)
 	restored_ravine_south = (resume_scene == WILDERNESS_SCENE and ravine_shortcut_open()
 		and data.get("ravine_south_arrival", false) == true)
+	restored_west_road_from_market = resume_scene == WEST_ROAD_SCENE and data.get("west_road_from_market", false) == true
 	money = maxi(0, _read_save_int(data.get("money"), 0))
 	_restore_crop_stock(data.get("crop_stock"), maxi(0, _read_save_int(data.get("player_inventory"), 0)))
 	_restore_season_order_receipts(data.get("season_order_receipts"), saved_day)

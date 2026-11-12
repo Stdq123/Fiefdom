@@ -30,11 +30,10 @@ func _opening() -> void:
 	await _walk(Vector2(-181, -21))
 	await _walk(Vector2(-270, -21))
 	await _snapshot("01-west-road")
-	await _move(&"ui_left")
-	if not _expect(tree.current_scene.scene_file_path == state.WEST_MARKET_SCENE,
+	if not _expect(await Campaign.walk_through_gates(tree, &"ui_left", state.WEST_MARKET_SCENE),
 			"The newly extended road still leads through the west gate."):
 		return
-	await _move(&"ui_right")
+	await Campaign.walk_through_gates(tree, &"ui_right", state.ESTATE_SCENE)
 	if not await _estate():
 		return
 	_expect(state.active_crops.has(PUBLIC) and state.active_crops[PUBLIC].watered,

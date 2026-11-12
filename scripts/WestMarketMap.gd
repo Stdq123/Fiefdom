@@ -169,7 +169,7 @@ func _service(place: String) -> String:
 		MERCHANT:
 			return _merchant_note()
 		Global.MARKET_RETURN:
-			return "向东回封地，再经东关进竹涧" if not Global.ravine_trip_target.is_empty() else "沿石板街向东出关"
+			return "经溪桥道回封地，再从东关进竹涧" if not Global.ravine_trip_target.is_empty() else "沿石板街向东，经溪桥道回封地"
 		Global.MARKET_ORDERS:
 			return "查看时令单、交货"
 	return STALL_SERVICES[MarketStall.TITLES.find(place)]

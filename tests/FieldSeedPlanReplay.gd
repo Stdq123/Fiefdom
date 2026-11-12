@@ -175,15 +175,9 @@ func _at_estate() -> bool:
 	return not failed
 
 func _cross(action: StringName, destination: String) -> bool:
-	Input.action_press(action)
-	for frame in 52:
-		await tree.physics_frame
-		if tree.root.get_node("MapTravel").active:
-			break
-	Input.action_release(action)
-	await Campaign.wait_for_map_change(tree)
+	var crossed := await Campaign.walk_through_gates(tree, action, destination, 52)
 	await tree.process_frame
-	return _expect(tree.current_scene.scene_file_path == destination, "Walk through the gate to " + destination)
+	return _expect(crossed, "Walk through the gate to " + destination)
 
 func _market() -> bool:
 	for point: Vector2 in [Vector2(66, 67), Vector2(-181, 67), Vector2(-181, 0), Vector2(-270, -21)]:
