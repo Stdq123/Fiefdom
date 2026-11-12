@@ -75,6 +75,7 @@ var east_watch_day := 0
 var last_forage_day := 0
 var ravine_trip_target := ""
 var fish_collection: Dictionary[String, Dictionary] = {}
+var fish_order_receipt: Dictionary = {}
 var creek_trap: Dictionary = {}
 var ravine_journal: RavineJournal
 
@@ -240,6 +241,7 @@ func _reset_campaign() -> void:
 	ravine_trip_target = ""
 	creek_trap.clear()
 	fish_collection.clear()
+	fish_order_receipt.clear()
 	ravine_journal = RavineJournal.new()
 	food_storage = 10
 	days_without_contribution = 0
@@ -1323,19 +1325,39 @@ func _store_creek_fish(id: String, site: int, amount: int) -> void:
 func fish_count(id: String) -> int:
 	return fish_collection.get(id, {}).get("stock", 0)
 
+func fish_market_offer() -> Dictionary:
+	var window := SeasonOrders.window(current_day, balance.days_per_solar_term)
+	var request: Dictionary = CreekFish.MARKET_ORDERS[season_index()]
+	var fish: Dictionary = CreekFish.SPECIES[request.fish]
+	return {"start": window.start, "end": window.end, "fish": request.fish, "request": request.request,
+		"thanks": request.thanks, "receipt": fish_order_receipt if fish_order_receipt.get("day", 0) >= window.start else {},
+		"food": fish.food + balance.fish_order_food_bonus, "copper": fish.copper + balance.fish_order_copper_bonus}
+
+func deliver_fish_order(start_day: int, for_food: bool) -> bool:
+	var offer := fish_market_offer()
+	if outcome != Outcome.RUNNING or offer.start != start_day or not offer.receipt.is_empty() or fish_count(offer.fish) < 1:
+		return false
+	var amount: int = offer.food if for_food else offer.copper
+	fish_order_receipt = {"day": current_day, "fish": offer.fish, "for_food": for_food, "amount": amount}
+	_settle_fish_exchange(offer.fish, for_food, amount)
+	return true
+
 func exchange_creek_fish(id: String, for_food: bool) -> bool:
 	if outcome != Outcome.RUNNING or not CreekFish.SPECIES.has(id) or fish_count(id) < 1:
 		return false
 	var fish: Dictionary = CreekFish.SPECIES[id]
+	_settle_fish_exchange(id, for_food, fish.food if for_food else fish.copper)
+	return true
+
+func _settle_fish_exchange(id: String, for_food: bool, amount: int) -> void:
 	fish_collection[id].stock -= 1
 	if for_food:
-		food_storage += fish.food
+		food_storage += amount
 		GameEvents.food_changed.emit(food_storage)
 	else:
-		money += fish.copper
+		money += amount
 		GameEvents.money_changed.emit(money)
 	GameEvents.fish_changed.emit()
-	return true
 
 func forage_herbs() -> void:
 	if last_forage_day != current_day and health >= balance.player_max_health:
@@ -2064,6 +2086,7 @@ func _save_snapshot(origin: String) -> Error:
 		"last_forage_day": last_forage_day,
 		"ravine_trip_target": ravine_trip_target,
 		"fish_collection": fish_collection,
+		"fish_order_receipt": fish_order_receipt,
 		"creek_trap": creek_trap,
 		"ravine_journal": {
 			"recorded_days": ravine_journal.recorded_days,
@@ -2521,6 +2544,7 @@ func load_game(path := "") -> Error:
 	east_watch_day = clampi(_read_save_int(data.get("east_watch_day"), 0), 0, saved_day) if not last_defense.is_empty() else 0
 	last_forage_day = clampi(_read_save_int(data.get("last_forage_day"), 0), 0, saved_day)
 	_restore_fish_collection(data.get("fish_collection"), saved_day)
+	fish_order_receipt = _restore_fish_order_receipt(data.get("fish_order_receipt"), saved_day)
 	creek_trap = _restore_creek_trap(data.get("creek_trap"), saved_day)
 	var saved_trip: Variant = data.get("ravine_trip_target")
 	ravine_trip_target = saved_trip if saved_trip is String and saved_trip in ravine_trip_places() else ""
@@ -2714,6 +2738,16 @@ func _restore_fish_collection(record: Variant, saved_day: int) -> void:
 		var site := _read_save_int(entry.get("first_site"), -1)
 		if first_day > 0 and first_day <= saved_day and site >= 0 and site < CreekFish.PLACES.size():
 			fish_collection[id] = {"first_day": first_day, "first_site": site, "stock": maxi(0, _read_save_int(entry.get("stock"), 0))}
+
+func _restore_fish_order_receipt(record: Variant, saved_day: int) -> Dictionary:
+	if not record is Dictionary:
+		return {}
+	var day := _read_save_int(record.get("day"), 0)
+	var amount := _read_save_int(record.get("amount"), 0)
+	var fish: Variant = record.get("fish")
+	if day > 0 and day <= saved_day and amount > 0 and CreekFish.SPECIES.has(fish):
+		return {"day": day, "fish": fish, "for_food": record.get("for_food") == true, "amount": amount}
+	return {}
 
 func _restore_creek_trap(record: Variant, saved_day: int) -> Dictionary:
 	if not record is Dictionary or not creek_traps_unlocked():

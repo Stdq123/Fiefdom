@@ -1,9 +1,12 @@
 extends VBoxContainer
 
+const MARKET_OFFER := preload("res://scenes/FishMarketOffer.tscn")
+
 @export var at_stall := false
 
 var summary: Label
 var receipt: Label
+var market_offer: PanelContainer
 var rows: Dictionary[String, Dictionary] = {}
 
 func _ready() -> void:
@@ -17,16 +20,25 @@ func _ready() -> void:
 	summary = Label.new()
 	summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(summary)
+	market_offer = MARKET_OFFER.instantiate()
+	market_offer.at_stall = at_stall
+	add_child(market_offer)
 	for id: String in CreekFish.IDS:
 		_add_fish_row(id)
 	receipt = Label.new()
 	receipt.add_theme_color_override("font_color", Color("#bfd59f"))
+	receipt.hide()
 	add_child(receipt)
 	GameEvents.fish_changed.connect(_refresh)
 	GameEvents.creek_trap_changed.connect(_refresh)
+	GameEvents.forage_taken.connect(_refresh)
 	GameEvents.day_advanced.connect(_refresh.unbind(1))
 	visibility_changed.connect(_refresh)
 	_refresh()
+
+func clear_receipt() -> void:
+	receipt.text = ""
+	receipt.hide()
 
 func _add_fish_row(id: String) -> void:
 	var fish: Dictionary = CreekFish.SPECIES[id]
@@ -68,6 +80,7 @@ func _add_fish_row(id: String) -> void:
 	rows[id] = {"icon": icon, "label": label, "history": history, "food": food, "sell": sell}
 
 func _refresh() -> void:
+	market_offer.refresh()
 	if not Global.knows_ravine_journal():
 		summary.text = "先到南边竹径找蒲宁。他知道竹涧哪里可以抛竿。"
 	else:
@@ -100,3 +113,4 @@ func _exchange(id: String, for_food: bool) -> void:
 	var fish: Dictionary = CreekFish.SPECIES[id]
 	receipt.text = ("%s留作口粮 · 粮食 +%d" % [fish.name, fish.food] if for_food
 		else "已售一尾%s · 铜钱 +%d" % [fish.name, fish.copper])
+	receipt.show()

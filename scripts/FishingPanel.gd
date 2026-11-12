@@ -204,7 +204,9 @@ func _finish(message: String, caught := "") -> void:
 	else:
 		catch_icon.texture = CreekFish.portrait(caught)
 		catch_icon.show()
-		detail.text = "回封地的市集打开溪鱼簿，可添口粮或换铜钱。"
+		var offer := Global.fish_market_offer()
+		detail.text = ("渔生正在收这种鱼。溪鱼簿可看报价并指路去西市。"
+			if offer.fish == caught and offer.receipt.is_empty() else "打开溪鱼簿，可添口粮或换铜钱。")
 
 func _splash(volume_db: float, pitch: float) -> void:
 	if sound:

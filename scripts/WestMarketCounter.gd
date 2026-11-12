@@ -13,6 +13,8 @@ const HEADINGS := ["粮摊 · 谷伯", "鱼摊 · 渔生", "绸摊 · 蔡娘"]
 @onready var silk_sample: Label = %Sample
 @onready var sell_silk: Button = %SellSilk
 @onready var silk_receipt: Label = %SilkReceipt
+@onready var card: PanelContainer = $Center/Card
+@onready var usual_width := card.custom_minimum_size.x
 
 func _ready() -> void:
 	close_button.pressed.connect(hide)
@@ -23,7 +25,7 @@ func _ready() -> void:
 
 func open_for(kind: MarketStall.Kind) -> void:
 	grain.receipt.text = ""
-	fish.receipt.text = ""
+	fish.clear_receipt()
 	silk_receipt.text = ""
 	if kind == MarketStall.Kind.SILK:
 		_refresh_silk()
@@ -38,6 +40,7 @@ func _open_sheep() -> void:
 
 func _open_view(heading: String, active_view: Control) -> void:
 	title.text = heading
+	card.custom_minimum_size.x = 744.0 if active_view == fish else usual_width
 	for view: Control in [grain, fish, silk, orders, sheep]:
 		view.visible = view == active_view
 	show()

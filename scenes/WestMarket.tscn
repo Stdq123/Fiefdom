@@ -53,6 +53,13 @@ position = Vector2(-104, 4)
 position = Vector2(0, -1)
 kind = 1
 
+[node name="FishOrderSign" type="Node2D" parent="Stalls/FishStall"]
+visible = false
+position = Vector2(27, -8)
+
+[node name="FishIcon" type="Sprite2D" parent="Stalls/FishStall/FishOrderSign"]
+texture_filter = 1
+
 [node name="SilkStall" parent="Stalls" instance=ExtResource("4_stall")]
 position = Vector2(106, 4)
 kind = 2

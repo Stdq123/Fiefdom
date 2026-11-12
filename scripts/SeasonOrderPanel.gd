@@ -86,6 +86,11 @@ func _refresh() -> void:
 		status.text = "已备齐 · 任选一种报酬，并记 %d 声望" % Global.balance.interaction_reputation_gain
 	else:
 		status.text = _preparation_notes(schedule)
+	if delivered_on == 0 and not fish.is_empty() and Global.fish_count(fish) == 1:
+		var offer := Global.fish_market_offer()
+		if offer.fish == fish and offer.receipt.is_empty():
+			var warning := "交出这尾%s后，鱼摊留鱼单会缺鱼。" % CreekFish.SPECIES[fish].name
+			status.text = warning if status.text.is_empty() else status.text + "\n" + warning
 	status.add_theme_color_override("font_color", READY_INK if ready or delivered_on > 0 else WAIT_INK)
 	var upcoming := Global.season_order(schedule.end + 1)
 	next_heading.text = "下季预告 · 第 %d–%d 天" % [upcoming.start, upcoming.end]

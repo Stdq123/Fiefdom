@@ -14,9 +14,12 @@ const SILK_STALL_PATH := [Vector2(231, 31), Vector2(190, 28), Vector2(166, 34), 
 @onready var date: Label = %Date
 @onready var stock: Label = %Stock
 @onready var sample: Sprite2D = $Stalls/SilkStall/MarketSample
+@onready var fish_sign: Node2D = $Stalls/FishStall/FishOrderSign
+@onready var fish_icon: Sprite2D = $Stalls/FishStall/FishOrderSign/FishIcon
 
 var silk_guest: Visitor
 var guest_returning := false
+var fish_reserved := false
 
 func _ready() -> void:
 	ground.place_scenery($Scenery)
@@ -38,10 +41,13 @@ func _ready() -> void:
 	GameEvents.money_changed.connect(_refresh_stock.unbind(1))
 	GameEvents.food_changed.connect(_refresh_stock.unbind(1))
 	GameEvents.crop_harvested.connect(_refresh_stock.unbind(1))
+	GameEvents.fish_changed.connect(_refresh_fish_sign)
+	fish_sign.draw.connect(_draw_fish_sign)
 	_refresh_date()
 	_refresh_stock()
 	sample.visible = VisitorData.silk_sample_on_display(Global.current_day)
 	_refresh_silk_guest()
+	_refresh_fish_sign()
 
 func _process(delta: float) -> void:
 	if not player.conversation_open and not MapTravel.active:
@@ -74,6 +80,22 @@ func _refresh_date() -> void:
 
 func _refresh_stock() -> void:
 	stock.text = "%d 铜钱   ·   %d 粮食" % [Global.money, Global.food_storage]
+
+func _refresh_fish_sign() -> void:
+	fish_sign.visible = Global.knows_ravine_journal() or not Global.fish_collection.is_empty()
+	if fish_sign.visible:
+		var offer := Global.fish_market_offer()
+		fish_reserved = not offer.receipt.is_empty()
+		fish_icon.texture = CreekFish.portrait(offer.receipt.fish if fish_reserved else offer.fish)
+		fish_icon.modulate = Color.WHITE if fish_reserved else Color("#a9af9e")
+		fish_sign.queue_redraw()
+
+func _draw_fish_sign() -> void:
+	fish_sign.draw_rect(Rect2(-11, -7, 22, 15), Color("#49382c"))
+	var board := Color("#d1a668") if fish_reserved else Color("#a88d65")
+	fish_sign.draw_rect(Rect2(-10, -6, 20, 12), board)
+	fish_sign.draw_rect(Rect2(-9, -5, 1, 2), Color("#5c523f"))
+	fish_sign.draw_rect(Rect2(8, -5, 1, 2), Color("#5c523f"))
 
 func _refresh_silk_guest() -> void:
 	if not sample.visible:

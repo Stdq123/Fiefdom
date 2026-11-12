@@ -8,6 +8,7 @@ var focused := false
 
 func _ready() -> void:
 	GameEvents.inventory_changed.connect(_refresh.unbind(1))
+	GameEvents.fish_changed.connect(_refresh)
 	_refresh()
 
 func can_interact_from(foot: Vector2) -> bool:

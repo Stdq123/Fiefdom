@@ -19,6 +19,16 @@ const SEASON_CATCH := [
 	["crucian", "minnow", "crucian", "crucian"],
 	["carp", "carp", "perch", "crucian"],
 ]
+const MARKET_ORDERS := [
+	{"fish": "carp", "request": "西路上有人刚修完渠，托我留一尾鲤鱼，下工时好煮汤。",
+		"thanks": "鲤鱼我留好了，等修渠的人下工来取。"},
+	{"fish": "minnow", "request": "夏天的白鲦要趁鲜。亭前有人买了新稻，想搭一尾下锅。",
+		"thanks": "这尾白鲦够配一锅新稻，我给亭前来买鱼的人留着。"},
+	{"fish": "perch", "request": "东路几户来换新谷，临走想带一尾砾滩的鳜鱼回家。",
+		"thanks": "鳜鱼我先装进篓里，东路的人换好新谷就来取。"},
+	{"fish": "crucian", "request": "北街的小灶要留一尾鲫鱼。天一冷，有碗汤才好下饭。",
+		"thanks": "这尾我留给北街的小灶。等日头下去，汤就该煮好了。"},
+]
 
 static func at(site: int, season: int, raining: bool) -> String:
 	if site < 0 or site >= PLACES.size() or season < 0 or season >= SEASON_CATCH[0].size():
