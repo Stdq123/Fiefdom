@@ -51,6 +51,7 @@ func setup(estate_world: Node2D, previous_site: Variant = null) -> void:
 		changed.connect(_refresh.unbind(1))
 	GameEvents.channels_changed.connect(_refresh)
 	GameEvents.campaign_ended.connect(queue_free.unbind(1))
+	GameEvents.daylight_changed.connect(_refresh_ledger)
 	world.visitor_changed.connect(_refresh.unbind(1))
 	_refresh()
 	if previous_site != null and plan.has_space:
@@ -121,20 +122,21 @@ func _refresh_ledger() -> void:
 		_show_check(workers_label, "%d/%d 人" % [Global.retainers.size(), Global.RECLAMATION_RETAINERS], plan.workers_needed == 0)
 		_show_check(copper_label, "%d/%d 枚" % [Global.money, plan.copper], Global.money >= plan.copper)
 		_show_check(grain_label, "%d/%d 份" % [Global.food_storage, plan.grain], Global.food_storage >= plan.grain)
-	var visitor: VisitorData = world.current_visitor()
-	visitor_name = visitor.name if visitor and not receipt and plan.possible and plan.workers_needed > 0 else ""
+	var seeking_workers: bool = not receipt and plan.possible and plan.workers_needed > 0
+	var candidate: Dictionary = world.recruitment_candidate() if seeking_workers and Global.last_recruit_day != Global.current_day else {}
+	visitor_name = candidate.guest.name if not candidate.is_empty() else ""
 	visitor_button.visible = not visitor_name.is_empty()
 	visitor_button.text = "去找" + visitor_name
 	market_button.visible = (not receipt and plan.possible
 		and (Global.money < plan.copper or Global.food_storage < plan.grain + plan.crew_food))
 	worksite_button.visible = receipt
-	info_label.text = _instructions(visitor)
+	info_label.text = _instructions(candidate)
 
 func _show_check(label: Label, value: String, ready: bool) -> void:
 	label.text = value
 	label.modulate = READY_INK if ready else SHORT_INK
 
-func _instructions(visitor: VisitorData) -> String:
+func _instructions(candidate: Dictionary) -> String:
 	if commissioned_site >= 0:
 		return "%d 夜后可耕种。余粮 %d 份，施工期间门客共需 %d 份。" % [
 			Global.RECLAMATION_NIGHTS, Global.food_storage, plan.crew_food]
@@ -147,13 +149,36 @@ func _instructions(visitor: VisitorData) -> String:
 		return instruction + "立桩后余粮 %d 份，%d 夜口粮需 %d 份。" % [
 			Global.food_storage - plan.grain, Global.RECLAMATION_NIGHTS, plan.crew_food]
 	if plan.workers_needed > 0:
-		if visitor:
-			var actor: Visitor = world.current_visitor_actor()
-			var whereabouts := actor.visit_note() if actor.walking_to_stop else "在" + actor.visit_location()
-			return "%s%s。交谈可增声望，招募花 %d 声望。" % [
-				visitor.name, whereabouts, Global.balance.recruit_reputation_requirement]
-		return "还需 %d 名门客。今日暂无可招募来客，可先收私田备粮钱。" % plan.workers_needed
+		return _recruitment_instructions(candidate)
 	return "立桩用粮 %d 份，施工期间口粮另需 %d 份。可从市集按计划备粮。" % [plan.grain, plan.crew_food]
+
+func _recruitment_instructions(candidate: Dictionary) -> String:
+	if candidate.is_empty():
+		var today := "今日已留一位门客。" if Global.last_recruit_day == Global.current_day else "今日没有可拜访的来客。"
+		return today + "\n" + _next_visit_note()
+	var guest: VisitorData = candidate.guest
+	var block := Global.recruitment_block(guest)
+	var cost := "招募需 %d 声望" % Global.balance.recruit_reputation_requirement
+	if block != Global.RecruitmentBlock.NONE:
+		cost = Global.recruitment_block_note(guest, block)
+		if block == Global.RecruitmentBlock.REPUTATION and guest.name != VisitorData.FIELD_KEEPER and not guest.talked_today():
+			cost += "，今日交谈可得 %d" % Global.balance.interaction_reputation_gain
+	return "%s%s。\n%s。" % [guest.name, candidate.location, cost]
+
+func _next_visit_note() -> String:
+	var keeper_retained := Global.retainers.any(func(resident: RetainerData): return resident.name == VisitorData.FIELD_KEEPER)
+	var keeper_day := Global.next_field_keeper_visit()
+	if keeper_day == Global.current_day:
+		keeper_day += FieldRotation.VISIT_INTERVAL
+	# The regular round includes two rest days in a seven-day cycle.
+	for day in range(Global.current_day + 1, Global.current_day + 8):
+		var guest := Global.visitor_for_day(day)
+		if guest:
+			return "预计第 %d 天 · %s · %s" % [
+				day, guest.name, VisitorData.scheduled_stop(guest.name, guest.meeting_place, day)]
+		if not keeper_retained and day == keeper_day:
+			return "预计第 %d 天 · 渠伯 · 井田西南" % day
+	return "可先照料田地，筹措开垦所需的粮钱。"
 
 func _show_preview(center: Vector2i) -> void:
 	preview_center = center

@@ -109,17 +109,18 @@ func show_visitor_dialog(data: VisitorData, place: String, at_pavilion := false)
 		return
 	var balance := Global.balance
 	var returning := not Global.pending_neighbor_return(data.name).is_empty()
+	var block := Global.recruitment_block(data)
 	var options: Array[String] = [
 		"已交谈" if data.talked_today() else "交谈",
 		"交易（%d 铜钱）" % balance.trade_base_price,
-		_return_option() if returning else "招募（%d 声望）" % balance.recruit_reputation_requirement,
+		_recruit_option(data, block, returning),
 	]
 	var disabled: Array[int] = []
 	if data.talked_today():
 		disabled.append(0)
 	if Global.money < balance.trade_base_price:
 		disabled.append(1)
-	if not Global.can_recruit_visitor(data):
+	if block != Global.RecruitmentBlock.NONE:
 		disabled.append(2)
 	var favor_index := options.size()
 	var favor := _add_favor_option(data.name, options, disabled)
@@ -129,7 +130,8 @@ func show_visitor_dialog(data: VisitorData, place: String, at_pavilion := false)
 		speech = VisitorData.silk_market_line()
 	if returning:
 		speech = _return_speech(data.name, speech if favor.is_valid() else "")
-	var dialog = _open(data.name, data.get_school_name() + " · " + place,
+	var context := _recruitment_context(data.get_school_name() + " · " + place, block)
+	var dialog = _open(data.name, context,
 		speech, options, disabled, data.get_appearance_texture())
 	dialog.option_selected.connect(_on_visitor_choice.bind(data, favor_index, favor))
 
@@ -152,8 +154,18 @@ func _on_visitor_choice(index: int, data: VisitorData, favor_index: int, favor: 
 		2:
 			Global.recruit_visitor(data)
 
-func _return_option() -> String:
-	return "请回来（%d 声望）" % Global.balance.recruit_reputation_requirement
+func _recruit_option(guest: VisitorData, block: Global.RecruitmentBlock, returning: bool) -> String:
+	var action := "请回来" if returning else "招募"
+	var detail := "%d 声望" % Global.balance.recruit_reputation_requirement if block == Global.RecruitmentBlock.NONE \
+		else Global.recruitment_block_note(guest, block)
+	return "%s（%s）" % [action, detail]
+
+func _recruitment_context(context: String, block: Global.RecruitmentBlock) -> String:
+	if block == Global.RecruitmentBlock.NONE and Global.current_rank == Global.Rank.XIA_SHI and Global.eligible_for_promotion():
+		var remaining := Global.reputation - Global.balance.recruit_reputation_requirement
+		if remaining < Global.promotion_reputation():
+			return context + "\n留任后声望 %d/%d。补足后过夜可晋升中士。" % [remaining, Global.promotion_reputation()]
+	return context
 
 func _return_speech(speaker: String, following: String) -> String:
 	var departure := Global.pending_neighbor_return(speaker)
@@ -219,9 +231,11 @@ func _show_field_keeper(context: String, appearance: Texture2D, usual_line: Stri
 	var disabled: Array[int] = []
 	if guest:
 		return_index = options.size() - 1
-		options.insert(return_index, _return_option())
-		if not Global.can_recruit_visitor(guest):
+		var block := Global.recruitment_block(guest)
+		options.insert(return_index, _recruit_option(guest, block, true))
+		if block != Global.RecruitmentBlock.NONE:
 			disabled.append(return_index)
+		context = _recruitment_context(context, block)
 		text = _return_speech(guest.name, text if text != usual_line else "")
 	var dialog := _open(VisitorData.FIELD_KEEPER, context, text, options, disabled, appearance)
 	if follow_up.is_valid() or guest:

@@ -823,6 +823,22 @@ func handoff_visitor() -> Visitor:
 			return visitor
 	return null
 
+func recruitment_candidate() -> Dictionary:
+	var visitors := active_visitors.duplicate()
+	if is_instance_valid(field_guest):
+		visitors.append(field_guest as Visitor)
+	var candidates: Array[Dictionary] = []
+	for actor: Visitor in visitors:
+		var location := actor.visit_note() if actor.walking_to_stop else "在" + actor.visit_location()
+		candidates.append({"guest": actor.data, "location": location})
+	var trip := silk_trip_stop()
+	if not trip.is_empty() and not _scheduled_visitor_actor():
+		candidates.append({"guest": scheduled_visitor, "location": trip.note})
+	for candidate in candidates:
+		if Global.can_recruit_visitor(candidate.guest):
+			return candidate
+	return candidates.front() if not candidates.is_empty() else {}
+
 func silk_trip_note() -> String:
 	return silk_trip_stop().get("note", "")
 

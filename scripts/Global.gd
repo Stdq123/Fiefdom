@@ -101,6 +101,7 @@ var days_without_contribution: int
 var visitor_encounters: Dictionary[String, int] = {}
 var neighbor_met_days: Dictionary[String, int] = {}
 enum DepartureReason { UNRECORDED, HUNGER, REFORM }
+enum RecruitmentBlock { NONE, UNAVAILABLE, DAILY_LIMIT, JUST_LEFT, REPUTATION, FOOD }
 var neighbor_departures: Dictionary[String, Dictionary] = {}
 var last_recruit_day := 0
 var last_recruit_outside_rotation := false
@@ -1611,12 +1612,31 @@ func recruitment_food_requirement(speaker: String) -> int:
 		return retainer_food_cost() + 1
 	return 0
 
+func recruitment_block(guest: VisitorData) -> RecruitmentBlock:
+	if outcome != Outcome.RUNNING or guest.is_recruited \
+			or retainers.any(func(resident: RetainerData) -> bool: return resident.name == guest.name):
+		return RecruitmentBlock.UNAVAILABLE
+	if last_recruit_day == current_day:
+		return RecruitmentBlock.DAILY_LIMIT
+	if pending_neighbor_return(guest.name).get("day", 0) >= current_day:
+		return RecruitmentBlock.JUST_LEFT
+	if reputation < balance.recruit_reputation_requirement:
+		return RecruitmentBlock.REPUTATION
+	if food_storage < recruitment_food_requirement(guest.name):
+		return RecruitmentBlock.FOOD
+	return RecruitmentBlock.NONE
+
+func recruitment_block_note(guest: VisitorData, block: RecruitmentBlock) -> String:
+	match block:
+		RecruitmentBlock.UNAVAILABLE: return "暂不能留任"
+		RecruitmentBlock.DAILY_LIMIT: return "今日已留一人"
+		RecruitmentBlock.JUST_LEFT: return "今日刚离任"
+		RecruitmentBlock.REPUTATION: return "还差 %d 声望" % (balance.recruit_reputation_requirement - reputation)
+		RecruitmentBlock.FOOD: return "还差 %d 份口粮" % (recruitment_food_requirement(guest.name) - food_storage)
+	return ""
+
 func can_recruit_visitor(guest: VisitorData) -> bool:
-	return (outcome == Outcome.RUNNING and not guest.is_recruited
-		and last_recruit_day != current_day and reputation >= balance.recruit_reputation_requirement
-		and pending_neighbor_return(guest.name).get("day", 0) < current_day
-		and food_storage >= recruitment_food_requirement(guest.name)
-		and not retainers.any(func(resident: RetainerData) -> bool: return resident.name == guest.name))
+	return recruitment_block(guest) == RecruitmentBlock.NONE
 
 func recruit_visitor(guest: VisitorData) -> void:
 	if not can_recruit_visitor(guest):

@@ -131,6 +131,11 @@ func _run() -> void:
 		"estate-progress":
 			var replay = load("res://tests/EstateProgressReplay.gd").new()
 			await replay.run(tree)
+		"recruitment-ledger", "recruitment-ledger-legacy":
+			var replay = load("res://tests/RecruitmentLedgerReplay.gd").new()
+			replay.legacy = arguments[0] == "recruitment-ledger-legacy"
+			replay.capture_path = capture_directory
+			await replay.run(tree)
 		"field-worksites", "field-worksites-legacy":
 			var replay = load("res://tests/FieldWorksiteReplay.gd").new()
 			replay.legacy = arguments[0] == "field-worksites-legacy"

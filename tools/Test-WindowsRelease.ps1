@@ -97,6 +97,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ResearchRationsReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldStrokeReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ManagementNavigationReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/RecruitmentLedgerReplay.gd') -Destination $testDirectory
     foreach ($file in 'MarketOrderReplay.gd', 'AutumnExhibitReplay.gd', 'SheepfoldReplay.gd', 'RavineMapReplay.gd', 'CreekTrapReplay.gd', 'FieldNightReplay.gd', 'CouncilSilkReplay.gd') {
         Copy-Item -LiteralPath (Join-Path $repo "tests/$file") -Destination $testDirectory
     }
@@ -158,6 +159,7 @@ try {
     if ($Opening) {
         Start-VerifiedGame -Directory $release -Profile 'opening' -Name 'opening' -Replay 'estate-directions'
         Start-VerifiedGame -Directory $release -Profile 'estate-progress' -Name 'estate-progress' -Replay 'estate-progress'
+        Start-VerifiedGame -Directory $release -Profile 'recruitment-ledger' -Name 'recruitment-ledger' -Replay 'recruitment-ledger'
     }
     if ($FieldPlanning) {
         Start-VerifiedGame -Directory $release -Profile 'field-planning' -Name 'field-planning' -Replay 'field-planning'
