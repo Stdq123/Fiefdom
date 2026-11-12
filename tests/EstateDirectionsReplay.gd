@@ -12,6 +12,7 @@ var ui: Node
 var directions: Control
 var capture_dir := ""
 var failed := false
+var legacy := false
 
 func _expect(condition: bool, detail: String) -> bool:
 	if not condition:
@@ -185,6 +186,36 @@ func _finish() -> void:
 		print("SCENARIO_OK")
 	tree.quit(1 if failed else 0)
 
+func _check_handover() -> void:
+	_expect(ui.hud.arrival.visible and ui.hud.handover_button.visible and not tree.paused,
+		"New Game shows the handover notice and leaves the first field playable.")
+	var before: float = state.day_progress
+	await _click(ui.hud.handover_button.get_global_rect().get_center())
+	var handover: Control = ui.handover
+	_expect(handover.modal.visible and tree.paused and state.day_progress - before < 0.01
+		and handover.sketch.get_child_count() == 9 and handover.sketch.get_child(4).get_child(0).text == "公田",
+		"The letter pauses daylight and places the public plot at the center.")
+	await _capture("01b-handover-note")
+	await _click(handover.find_keeper.get_global_rect().get_center())
+	_expect(not handover.modal.visible and not tree.paused and directions.tracked_neighbor == KEEPER,
+		"The letter can guide to the keeper before any work on the field.")
+	await _capture("01c-meet-keeper-before-farming")
+	await _click(ui.hud.cancel_directions.get_global_rect().get_center())
+	_expect(directions.tracked_neighbor.is_empty() and directions.mark == directions.Mark.PLOT and state.active_crops.is_empty(),
+		"Cancelling returns to the untouched public plot.")
+	print("DIRECTION_HANDOVER day=", state.current_day, " keeper=true tiles=", handover.sketch.get_child_count())
+
+func _continue_old_handover() -> void:
+	await _click(tree.current_scene.continue_button.get_global_rect().get_center())
+	await _use_estate()
+	_expect(state.current_day == 1 and state.active_crops[PUBLIC].watered and ui.hud.handover_button.visible
+		and not ui.hud.arrival.visible, "An old day-one save keeps its plot and can read the note without replaying arrival.")
+	await _click(ui.hud.handover_button.get_global_rect().get_center())
+	_expect(ui.handover.modal.visible and tree.paused, "The handover opens from an old save.")
+	await _key(KEY_ESCAPE)
+	_expect(not ui.handover.modal.visible and not tree.paused, "Esc returns to the saved first day.")
+	print("DIRECTION_LEGACY day=", state.current_day, " watered=", state.active_crops[PUBLIC].watered)
+
 func run(game_tree: SceneTree) -> void:
 	tree = game_tree
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Isolate the directions replay's save directory."):
@@ -196,6 +227,10 @@ func run(game_tree: SceneTree) -> void:
 	tree.change_scene_to_file("res://scenes/Title.tscn")
 	await tree.scene_changed
 	await tree.process_frame
+	if legacy:
+		await _continue_old_handover()
+		await _finish()
+		return
 	await _click(tree.current_scene.new_button.get_global_rect().get_center())
 	await _use_estate()
 	var spawn: Vector2 = world.player.global_position
@@ -205,6 +240,7 @@ func run(game_tree: SceneTree) -> void:
 	_expect(directions.plaque.position.y > directions.outline.end.y + directions.outline.size.y - 2.0,
 		"The first caption leaves the adjacent private plot visible.")
 	await _capture("01-first-public-plot")
+	await _check_handover()
 	var initial_outline: Vector2 = directions.outline.size
 	await _scroll(MOUSE_BUTTON_WHEEL_UP)
 	_expect(directions.mark == directions.Mark.PLOT and directions.outline.size.x > initial_outline.x
@@ -234,8 +270,8 @@ func run(game_tree: SceneTree) -> void:
 		await _click(_button(first_keeper_dialog, "离开").get_global_rect().get_center())
 	await _save_and_continue()
 	_expect(state.current_day == 1 and state.active_crops[PUBLIC]["watered"] and directions.mark == directions.Mark.BUTTON
-		and directions.tracked_neighbor.is_empty() and ui.hud.opening_action.visible,
-		"Continue restores the watered plot, bedtime cue and optional visit.")
+		and directions.tracked_neighbor.is_empty() and ui.hud.opening_action.visible and ui.hud.handover_button.visible
+		and not ui.hud.arrival.visible, "Continue keeps the watered plot, bedtime cue and optional visit.")
 	await _night()
 
 	if world.is_crop_dry(PUBLIC):
@@ -262,10 +298,14 @@ func run(game_tree: SceneTree) -> void:
 	await _click(ui.panel_manager.management_panel_instance.get_node("CloseButton").get_global_rect().get_center())
 
 	await _click(_point_on_field())
-	_expect(state.king_storage == 1 and directions.tracked_neighbor == KEEPER and ui.hud.quest_label.visible
-		and ui.hud.guide.heading.text == "第一茬私田",
-		"The first public harvest credits the treasury, points to the keeper and explains the next private crop.")
+	_expect(state.king_storage == 1 and directions.tracked_neighbor.is_empty() and ui.hud.quest_label.visible
+		and ui.hud.guide.heading.text == "第一茬私田" and directions.mark == directions.Mark.PLOT and directions.caption.text == "私田"
+		and not ui.hud.handover_button.visible and ui.hud.opening_action.text == "找渠伯谈轮作",
+		"The treasury receives the public harvest while the next cue stays on the private plot.")
 	await _capture("05-first-tribute-and-keeper")
+	await _click(ui.hud.opening_action.get_global_rect().get_center())
+	_expect(directions.tracked_neighbor == KEEPER and directions.mark == directions.Mark.NEIGHBOR,
+		"Choosing the rotation invitation directs the player to the keeper.")
 	await _click(ui.hud.cancel_directions.get_global_rect().get_center())
 	_expect(directions.tracked_neighbor.is_empty() and directions.mark == directions.Mark.PLOT and directions.caption.text == "私田",
 		"Cancelling the optional visit returns the map to the private plot cue.")

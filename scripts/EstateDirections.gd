@@ -14,7 +14,6 @@ var tracked_site := -1
 var tracked_place := ""
 var tracked_place_point := Vector2.ZERO
 var following_raid := false
-var awaiting_tribute := false
 var covers: Array[Control] = []
 var caption: Label
 var plate := StyleBoxFlat.new()
@@ -28,8 +27,6 @@ func setup(estate_world: Node2D, estate_hud: Control) -> void:
 	hud = estate_hud
 	for panel_name in ["Journal", "Calendar", "SeedBelt", "Vitals", "Tools", "Actions", "RationsButton"]:
 		covers.append(hud.get_node(panel_name) as Control)
-	awaiting_tribute = not Global.first_tribute_delivered()
-	GameEvents.crop_harvested.connect(_on_harvested)
 	hud.cancel_directions.pressed.connect(clear_tracking)
 
 	plate.bg_color = Color("#203126f7")
@@ -123,13 +120,6 @@ func clear_tracking() -> void:
 	Global.ravine_trip_target = ""
 	following_raid = false
 	hud.cancel_directions.hide()
-
-func _on_harvested(is_public: bool) -> void:
-	if awaiting_tribute and is_public and Global.first_tribute_delivered():
-		awaiting_tribute = false
-		if (tracked_neighbor.is_empty() and tracked_plot == null and tracked_site < 0
-			and tracked_place.is_empty() and not following_raid and Global.rotation_offer_ready()):
-			follow_neighbor(VisitorData.FIELD_KEEPER)
 
 func update_marker(blocked: bool) -> void:
 	if blocked or Global.outcome != Global.Outcome.RUNNING:

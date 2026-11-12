@@ -14,7 +14,8 @@ param(
     [switch]$SummerRaft,
     [switch]$TitlePresentation,
     [switch]$HallDecor,
-    [switch]$RouteGoals
+    [switch]$RouteGoals,
+    [switch]$Opening
 )
 
 $ErrorActionPreference = 'Stop'
@@ -61,7 +62,7 @@ function Start-VerifiedGame {
     }
     $lines = Get-Content -LiteralPath $log -Encoding utf8
     $marker = if ($Replay) { 'SCENARIO_OK' } else { 'Fiefdom title ready' }
-    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|GAMEPAD_|WINTER_|BINDING_|RAFT_|TITLE_|DECOR_|ROUTE_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
+    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|GAMEPAD_|WINTER_|BINDING_|RAFT_|TITLE_|DECOR_|ROUTE_|DIRECTION_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
     if ($process.ExitCode -ne 0 -or $lines -cnotcontains $marker -or $lines -cmatch '^\s*(?:SCRIPT ERROR|USER ERROR|ERROR|WARNING):') {
         throw "$Name failed (exit $($process.ExitCode)). See $log"
     }
@@ -69,7 +70,7 @@ function Start-VerifiedGame {
 
 function Install-Replay([string]$Directory) {
     $testDirectory = (New-Item -ItemType Directory -Path (Join-Path $Directory 'tests')).FullName
-    foreach ($file in 'ReleaseReplay.tscn', 'ReleaseReplay.gd', 'CampaignReplay.gd', 'NightRationsReplay.gd', 'GamepadReplay.gd', 'WinterSupperReplay.gd', 'KeyBindingsReplay.gd', 'SummerRaftReplay.gd', 'TitlePresentationReplay.gd', 'HallInteriorReplay.gd', 'HallDecorReplay.gd', 'TaxCouncilReplay.gd', 'RouteGoalsReplay.gd') {
+    foreach ($file in 'ReleaseReplay.tscn', 'ReleaseReplay.gd', 'CampaignReplay.gd', 'NightRationsReplay.gd', 'GamepadReplay.gd', 'WinterSupperReplay.gd', 'KeyBindingsReplay.gd', 'SummerRaftReplay.gd', 'TitlePresentationReplay.gd', 'HallInteriorReplay.gd', 'HallDecorReplay.gd', 'TaxCouncilReplay.gd', 'RouteGoalsReplay.gd', 'EstateDirectionsReplay.gd') {
         Copy-Item -LiteralPath (Join-Path $repo "tests/$file") -Destination $testDirectory
     }
     @'
@@ -115,6 +116,9 @@ try {
     }
     if ($RouteGoals) {
         Start-VerifiedGame -Directory $release -Profile 'route-goals' -Name 'route-goals' -Replay 'route-goals'
+    }
+    if ($Opening) {
+        Start-VerifiedGame -Directory $release -Profile 'opening' -Name 'opening' -Replay 'estate-directions'
     }
     if ($KeyBindings) {
         Start-VerifiedGame -Directory $release -Profile 'key-bindings' -Name 'key-bindings' -Replay 'key-bindings'

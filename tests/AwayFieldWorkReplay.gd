@@ -190,7 +190,8 @@ func _market_round_trip() -> void:
 	_estate()
 	var notice: Label = tree.current_scene.get_node("CampaignHUD").notice
 	_expect(notice.visible and "今日外出田务" in notice.text
-		and ui.directions.tracked_neighbor == "渠伯", "Returning shows the work and restores first tribute directions.")
+		and "可找渠伯谈轮作" in notice.text and ui.directions.tracked_neighbor.is_empty(),
+		"Returning shows the work and keeps the rotation conversation available.")
 	await _snapshot("02-return-to-estate")
 	await _walk(world.player, [Vector2(-181, 0), Vector2(-181, 65), Vector2(31, 65), Vector2(66, 98)])
 	await _button(ui.hud.rations_button)

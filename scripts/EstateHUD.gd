@@ -15,6 +15,8 @@ extends Control
 @onready var quest_label: Label = %QuestLabel
 @onready var visitor_label: Label = %VisitorLabel
 @onready var opening_action: Button = %OpeningAction
+@onready var handover_button: Button = %HandoverButton
+@onready var arrival: Label = %Arrival
 @onready var route_progress: Button = %RouteProgress
 @onready var neighbors_button: Button = %NeighborsButton
 @onready var raid_alert: Button = %RaidAlert
@@ -73,6 +75,7 @@ func _refresh_sections() -> void:
 	sleep_button.visible = not indoors
 
 func _ready() -> void:
+	GameEvents.estate_arrived.connect(_show_arrival)
 	GamepadInput.changed.connect(_refresh_shortcuts)
 	Preferences.bindings_changed.connect(_refresh_shortcuts)
 	_refresh_shortcuts()
@@ -95,6 +98,13 @@ func _ready() -> void:
 	_update_health(Global.health)
 	_refresh_pinned_order()
 	_refresh_raid_alert()
+
+func _show_arrival() -> void:
+	arrival.show()
+	var fade := create_tween()
+	fade.tween_interval(4.8)
+	fade.tween_property(arrival, "modulate:a", 0.0, 0.35)
+	fade.tween_callback(arrival.hide)
 
 func _refresh_raid_alert() -> void:
 	var tomorrow := Global.current_day + 1

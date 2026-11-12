@@ -7,6 +7,7 @@ signal visitor_changed(data: VisitorData)
 
 const SEED_ORDER := CropData.IDS
 const FIELD_IMPACTS := preload("res://assets/farming/field-impacts.svg")
+const HARVEST_TEXT_OFFSET := -4.0
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const DUTY_STATIONS := {
 	RetainerData.Duty.FIELD: {"anchor": Vector2(136, 154), "place": "田边"},
@@ -629,7 +630,7 @@ func harvest_crop(grid_pos: Vector2i, worker: Retainer = null) -> bool:
 	else:
 		crops_layer.erase_cell(grid_pos)
 	if worker:
-		spawn_floating_text(grid_pos, worker.data.name + "收割 · " + message, tone)
+		spawn_floating_text(grid_pos, worker.data.name + "收割 · " + message, tone, HARVEST_TEXT_OFFSET)
 	elif sweep_action == FieldAction.HARVEST:
 		sweep_harvests += 1
 		sweep_gains += Vector4i(harvest.tribute, harvest.stock, harvest.copper, harvest.leaves)
@@ -642,24 +643,27 @@ func harvest_crop(grid_pos: Vector2i, worker: Retainer = null) -> bool:
 				if sweep_gains[i] > 0:
 					totals.append("%s +%d" % [names[i], sweep_gains[i]])
 			message = " · ".join(totals)
-		sweep_popup = spawn_floating_text(grid_pos, message, tone)
+		sweep_popup = spawn_floating_text(grid_pos, message, tone, HARVEST_TEXT_OFFSET)
 	else:
-		spawn_floating_text(grid_pos, message, tone)
+		spawn_floating_text(grid_pos, message, tone, HARVEST_TEXT_OFFSET)
 	_show_field_impact(grid_pos, Player.Action.HARVEST)
 	if not worker:
 		player.show_action(Player.Action.HARVEST, to_global(get_crop_world_pos(grid_pos)))
-	if harvest.first_tribute and Global.rotation_offer_ready() and neighbor_actor(VisitorData.FIELD_KEEPER):
-		GameEvents.world_notice.emit("首份纳贡已入库 · 可找渠伯谈轮作")
+	if harvest.first_tribute:
+		var receipt := "首份纳贡已入库"
+		if Global.rotation_offer_ready() and neighbor_actor(VisitorData.FIELD_KEEPER):
+			receipt += " · 可找渠伯谈轮作"
+		GameEvents.world_notice.emit(receipt)
 	return true
 
-func spawn_floating_text(grid_pos: Vector2i, text: String, color: Color) -> Label:
+func spawn_floating_text(grid_pos: Vector2i, text: String, color: Color, offset_y := 13.0) -> Label:
 	var instance := floating_text_scene.instantiate() as Label
 	instance.text = text
 	instance.modulate = color
 	instance.scale = Vector2.ONE / player.camera.zoom
 	var center := get_crop_world_pos(grid_pos)
 	var half_width := instance.get_combined_minimum_size().x * instance.scale.x / 2
-	instance.position = center + Vector2(-half_width, 13)
+	instance.position = center + Vector2(-half_width, offset_y)
 	add_child(instance)
 	return instance
 

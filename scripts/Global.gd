@@ -196,7 +196,11 @@ func start_new_game(estate_name := "") -> Error:
 	if result == OK:
 		_reset_campaign()
 		campaign_name = chosen_name.left(16)
+		get_tree().scene_changed.connect(_announce_arrival, CONNECT_ONE_SHOT)
 	return result
+
+func _announce_arrival() -> void:
+	GameEvents.estate_arrived.emit()
 
 func _reset_campaign() -> void:
 	campaign_id = "%d-%d-%d" % [int(Time.get_unix_time_from_system()), OS.get_process_id(), Time.get_ticks_usec()]

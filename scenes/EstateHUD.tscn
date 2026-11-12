@@ -126,6 +126,24 @@ mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 14
 text = "邻里手记"
 
+[node name="HandoverButton" type="Button" parent="Journal/Stack/JournalHeader"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(75, 28)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 14
+text = "交接简"
+
+[node name="Arrival" type="Label" parent="Journal/Stack"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.93, 0.8, 0.55, 1)
+theme_override_font_sizes/font_size = 14
+text = "新领采邑 · 渠伯留下了交接简"
+
 [node name="RaidAlert" type="Button" parent="Journal/Stack"]
 unique_name_in_owner = true
 visible = false

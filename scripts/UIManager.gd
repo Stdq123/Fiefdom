@@ -15,6 +15,7 @@ const NIGHT_RATIONS_PANEL := preload("res://scenes/NightRationsPanel.tscn")
 @onready var directions = $Control/EstateDirections
 @onready var estate_map = $Control/EstateMap
 @onready var route_goals = $Control/RouteGoals
+@onready var handover = $Control/EstateHandover
 @onready var calendar = $Control/SeasonCalendar
 @onready var autumn_exhibit_panel = $Control/AutumnExhibitPanel
 @onready var sheepfold_panel = $Control/SheepfoldPanel
@@ -51,6 +52,8 @@ func _ready() -> void:
 		directions.follow_ravine(Global.ravine_trip_target)
 	estate_map.setup(world, directions, _map_controls_blocked)
 	hud.map_button.pressed.connect(estate_map.open_map)
+	hud.handover_button.pressed.connect(_open_handover)
+	handover.find_keeper_requested.connect(_on_neighbor_directions_requested.bind(VisitorData.FIELD_KEEPER))
 	hud.route_progress.pressed.connect(_open_route_goals)
 	route_goals.action_requested.connect(_on_route_goal_action)
 	calendar.controls_blocked = _map_controls_blocked
@@ -77,7 +80,7 @@ func _show_away_field_report() -> void:
 	var notice := "今日外出田务 · " + Global.away_field_summary(Global.AWAY_FIELD_JOBS)
 	if report.first_tribute:
 		report.first_tribute = false
-		if Global.rotation_offer_ready() and directions.destination().is_empty() and directions.follow_neighbor(VisitorData.FIELD_KEEPER):
+		if Global.rotation_offer_ready() and world.neighbor_actor(VisitorData.FIELD_KEEPER):
 			notice += " · 可找渠伯谈轮作"
 	GameEvents.world_notice.emit(notice)
 
@@ -88,6 +91,7 @@ func _process(_delta: float) -> void:
 	hud.map_button.disabled = blocked or world.player.training_cart.visible or Global.outcome != Global.Outcome.RUNNING
 	hud.calendar_button.disabled = hud.map_button.disabled
 	hud.route_progress.disabled = hud.map_button.disabled
+	hud.handover_button.disabled = hud.map_button.disabled
 	hud.raid_alert.disabled = blocked
 	directions.update_marker(blocked or Global.is_indoors())
 
@@ -107,6 +111,10 @@ func _map_controls_blocked() -> bool:
 func _open_route_goals() -> void:
 	if not _map_controls_blocked():
 		route_goals.open_map()
+
+func _open_handover() -> void:
+	if not _map_controls_blocked():
+		handover.open_map()
 
 func _on_route_goal_action(kind: Global.RouteGoal) -> void:
 	match kind:
@@ -130,6 +138,7 @@ func _connect_signals() -> void:
 	GameEvents.save_finished.connect(_on_save_finished)
 	GameEvents.farm_state_changed.connect(hud.refresh_farm_status)
 	GameEvents.farm_state_changed.connect(_refresh_opening_action)
+	GameEvents.field_rotation_changed.connect(_refresh_opening_action)
 	GameEvents.crop_harvested.connect(hud.refresh_farm_status.unbind(1))
 	GameEvents.channels_changed.connect(hud.refresh_farm_status)
 	GameEvents.channels_changed.connect(_refresh_opening_action)
@@ -293,6 +302,8 @@ func _on_tax_envoy_interacted() -> void:
 func _opening_neighbor() -> String:
 	if Global.tax_council_waiting():
 		return Global.TAX_ENVOY
+	if Global.private_harvest_total == 0 and Global.rotation_offer_ready() and world.neighbor_actor(VisitorData.FIELD_KEEPER):
+		return VisitorData.FIELD_KEEPER
 	if not hud.guide.waiting_for_tribute_crop:
 		return ""
 	var visitor: VisitorData = world.current_visitor()
@@ -302,12 +313,14 @@ func _opening_neighbor() -> String:
 
 func _refresh_opening_action() -> void:
 	var speaker := _opening_neighbor()
+	var can_discuss_rotation := speaker == VisitorData.FIELD_KEEPER and Global.rotation_offer_ready()
 	var can_trade := (Global.current_rank == Global.Rank.XIA_SHI and Global.first_tribute_delivered()
 		and Global.private_harvest_total > 0 and Global.player_inventory > 0 and not Global.retainers.is_empty())
 	var action: Button = hud.opening_action
+	hud.handover_button.visible = Global.outcome == Global.Outcome.RUNNING and not Global.first_tribute_delivered()
 	action.visible = (Global.outcome == Global.Outcome.RUNNING and not hud.cancel_directions.visible
 		and (not speaker.is_empty() or can_trade))
-	hud.visitor_label.visible = speaker.is_empty() or not action.visible
+	hud.visitor_label.visible = speaker.is_empty() or not action.visible or can_discuss_rotation
 	if not action.visible:
 		return
 	if speaker.is_empty():
@@ -316,6 +329,9 @@ func _refresh_opening_action() -> void:
 	elif speaker == Global.TAX_ENVOY:
 		action.text = "去见召简 · 堂前"
 		action.tooltip_text = "走到堂前，按 %s 议税。" % GamepadInput.interact_key()
+	elif can_discuss_rotation:
+		action.text = "找渠伯谈轮作"
+		action.tooltip_text = "沿标记走到渠伯身边，按 %s 交谈。" % GamepadInput.interact_key()
 	else:
 		var visitor: Visitor = world.current_visitor_actor()
 		action.text = "去见%s · %s" % [speaker, visitor.visit_note() if visitor else "田边"]
