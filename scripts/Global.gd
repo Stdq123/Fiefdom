@@ -1851,9 +1851,21 @@ func season_order_delivered_at(schedule: Dictionary) -> int:
 func is_season_order_pinned(schedule: Dictionary) -> bool:
 	return outcome == Outcome.RUNNING and pinned_season_start == schedule.start and season_order_delivered_at(schedule) == 0
 
-func pin_season_order(pinned: bool) -> void:
-	pinned_season_start = int(season_order().start) if pinned else 0
+func pin_season_order(pinned: bool, upcoming := false) -> void:
+	var schedule := season_order()
+	var start: int = schedule.end + 1 if upcoming else schedule.start
+	pinned_season_start = start if pinned else 0
 	GameEvents.season_order_pin_changed.emit()
+
+func pinned_season_order() -> Dictionary:
+	var schedule := season_order()
+	return schedule if is_season_order_pinned(schedule) else _pinned_order_after(schedule)
+
+func _pinned_order_after(schedule: Dictionary) -> Dictionary:
+	if pinned_season_start != schedule.end + 1:
+		return {}
+	var upcoming := season_order(pinned_season_start)
+	return upcoming if is_season_order_pinned(upcoming) else {}
 
 func season_order_rewards(schedule: Dictionary) -> Dictionary:
 	var units := 0
@@ -1872,6 +1884,15 @@ func season_order_stock(id: String) -> int:
 	if CreekFish.SPECIES.has(id):
 		return fish_count(id)
 	return crop_stock.count(id)
+
+func season_order_stock_for(schedule: Dictionary, id: String) -> int:
+	var stock := season_order_stock(id)
+	if schedule.start <= current_day:
+		return stock
+	var current := season_order()
+	if season_order_delivered_at(current) == 0:
+		stock -= int(SeasonOrders.cargo(current.order).get(id, 0))
+	return maxi(0, stock)
 
 func can_deliver_season_order(schedule: Dictionary) -> bool:
 	if (outcome != Outcome.RUNNING or current_day < schedule.start or current_day > schedule.end
@@ -1915,7 +1936,11 @@ func deliver_season_order(start_day: int, paid_in_food: bool) -> bool:
 	return true
 
 func market_crop_plan(amount: int, crop_id := "") -> Dictionary[String, int]:
-	return crop_stock.plan(amount, crop_id, _order_stock_to_keep(season_order()))
+	return crop_stock.plan(amount, crop_id, season_order_crops_to_keep())
+
+func season_order_crops_to_keep() -> Dictionary:
+	var schedule := season_order()
+	return _order_stock_to_keep(schedule, _pinned_order_after(schedule))
 
 func travel_hearth_open() -> bool:
 	return not season_order_receipts.is_empty()
@@ -1962,8 +1987,12 @@ func eat_travel_meal() -> bool:
 	GameEvents.world_notice.emit("吃了%s · %s" % [dish, TravelMeal.describe_recovery(gain)])
 	return true
 
-func _order_stock_to_keep(schedule: Dictionary) -> Dictionary:
-	return schedule.order.need if season_order_delivered_at(schedule) == 0 else {}
+func _order_stock_to_keep(schedule: Dictionary, upcoming: Dictionary) -> Dictionary:
+	var keep: Dictionary = schedule.order.need.duplicate() if season_order_delivered_at(schedule) == 0 else {}
+	if not upcoming.is_empty():
+		for id: String in upcoming.order.need:
+			keep[id] = int(keep.get(id, 0)) + int(upcoming.order.need[id])
+	return keep
 
 func set_night_rations(enabled: bool, copper_limit: int, partial_meals := false) -> void:
 	var limit := clampi(copper_limit, 0, NightRations.MAX_COPPER_LIMIT)
@@ -1988,17 +2017,29 @@ func night_rations_plan(finished_day := 0) -> Dictionary:
 
 func _night_rations_supply_plan(evening: int) -> Dictionary:
 	var schedule := season_order(evening + 1)
+	var upcoming := _pinned_order_after(schedule)
 	var need := retainer_food_cost()
 	var supper := mini(need, int(winter_supper_record(evening).get("portions", 0)))
 	var fee := research_fee_due(evening + 1)
 	var reserved := fee if money >= fee else 0
 	var plan := night_rations.plan(need, food_storage + supper, money - reserved, crop_stock,
-		_order_stock_to_keep(schedule), balance.market_food_price, _night_meal)
+		_order_stock_to_keep(schedule, upcoming), balance.market_food_price, _night_meal)
 	plan.supper = supper
 	plan.research_fee = fee
 	plan.research_reserve = reserved
+	var current_open := season_order_delivered_at(schedule) == 0
 	plan.order_name = schedule.order.title
+	plan.upcoming_order_name = upcoming.order.title if not upcoming.is_empty() else ""
 	plan.new_order = schedule.start == evening + 1
+	plan.current_reserved = {}
+	plan.upcoming_reserved = {}
+	for id: String in plan.reserved:
+		var total: int = plan.reserved[id]
+		var current := mini(total, int(schedule.order.need.get(id, 0))) if current_open else 0
+		if current > 0:
+			plan.current_reserved[id] = current
+		if total > current:
+			plan.upcoming_reserved[id] = total - current
 	return plan
 
 func sell_crops(amount: int, crop_id := "") -> bool:

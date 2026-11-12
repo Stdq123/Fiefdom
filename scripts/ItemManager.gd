@@ -133,3 +133,11 @@ func describe_season_order(order: Dictionary) -> String:
 	for id: String in goods:
 		amounts.append("%s %d" % [season_item_label(id), goods[id]])
 	return "、".join(amounts)
+
+func describe_season_order_progress(schedule: Dictionary) -> String:
+	var amounts := PackedStringArray()
+	var goods := SeasonOrders.cargo(schedule.order)
+	for id: String in goods:
+		var required: int = goods[id]
+		amounts.append("%s %d/%d" % [season_item_label(id), mini(Global.season_order_stock_for(schedule, id), required), required])
+	return "、".join(amounts)

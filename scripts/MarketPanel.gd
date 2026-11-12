@@ -54,6 +54,7 @@ func _ready() -> void:
 	GameEvents.money_changed.connect(_refresh.unbind(1))
 	GameEvents.food_changed.connect(_refresh.unbind(1))
 	GameEvents.night_rations_changed.connect(_refresh)
+	GameEvents.season_order_pin_changed.connect(_refresh)
 	GameEvents.retainer_duty_changed.connect(_refresh.unbind(1))
 	GameEvents.retainer_recruited.connect(_refresh.unbind(1))
 	GameEvents.retainer_departed.connect(_refresh.unbind(1))
@@ -149,11 +150,23 @@ func _selected_crop() -> String:
 
 func _order_stock_note(use: Dictionary) -> String:
 	var schedule := Global.season_order()
-	if Global.season_order_delivered_at(schedule) > 0:
-		return ""
+	var current: Dictionary = schedule.order.need if Global.season_order_delivered_at(schedule) == 0 else {}
+	var planned := Global.season_order_crops_to_keep()
+	var uses_current := false
+	var uses_upcoming := false
 	for id in use:
-		if schedule.order.need.has(id) and Global.crop_stock.count(id) - use[id] < schedule.order.need[id]:
-			return " · 含本季交货作物"
+		var stock := Global.crop_stock.count(id)
+		var remainder: int = stock - use[id]
+		var kept_now := mini(stock, int(current.get(id, 0)))
+		var kept_total := mini(stock, int(planned.get(id, 0)))
+		uses_current = uses_current or remainder < kept_now
+		uses_upcoming = uses_upcoming or (kept_total > kept_now and remainder < kept_total)
+	if uses_current and uses_upcoming:
+		return " · 含本季和下季留货"
+	if uses_upcoming:
+		return " · 含下季留货"
+	if uses_current:
+		return " · 含本季交货作物"
 	return ""
 
 func _refresh_reserve(nightly: int) -> void:

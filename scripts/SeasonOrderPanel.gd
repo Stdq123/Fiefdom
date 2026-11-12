@@ -1,5 +1,7 @@
 extends VBoxContainer
 
+signal silk_requested
+
 const READY_INK := Color("#b8d29a")
 const WAIT_INK := Color("#e3c289")
 
@@ -14,7 +16,10 @@ const WAIT_INK := Color("#e3c289")
 @onready var food_button: Button = $Current/Content/Rewards/Food
 @onready var pin_button: Button = $Current/Content/Actions/Pin
 @onready var fish_route_button: Button = $Current/Content/Actions/FishRoute
-@onready var next_heading: Label = $Next/Content/Heading
+@onready var silk_button: Button = $Current/Content/Actions/Silk
+@onready var next_heading: Label = $Next/Content/HeadingRow/Heading
+@onready var next_plan_button: Button = $Next/Content/HeadingRow/Plan
+@onready var next_silk_button: Button = $Next/Content/HeadingRow/Silk
 @onready var next_details: Label = $Next/Content/Details
 @onready var last_receipt: Label = $LastReceipt
 
@@ -26,7 +31,10 @@ func _ready() -> void:
 	copper_button.pressed.connect(_deliver.bind(false))
 	food_button.pressed.connect(_deliver.bind(true))
 	pin_button.toggled.connect(Global.pin_season_order)
+	next_plan_button.toggled.connect(Global.pin_season_order.bind(true))
 	fish_route_button.pressed.connect(func(): GameEvents.ravine_trip_requested.emit(fish_route_target))
+	silk_button.pressed.connect(silk_requested.emit)
+	next_silk_button.pressed.connect(silk_requested.emit)
 	visibility_changed.connect(_refresh)
 	GameEvents.season_order_pin_changed.connect(_refresh)
 	GameEvents.daylight_changed.connect(_refresh)
@@ -62,6 +70,8 @@ func _refresh() -> void:
 	var pinned := Global.is_season_order_pinned(schedule)
 	pin_button.set_pressed_no_signal(pinned)
 	pin_button.text = "取消田边跟踪" if pinned else "在田边跟踪此单"
+	silk_button.visible = not at_market and delivered_on == 0 and Global.outcome == Global.Outcome.RUNNING \
+		and int(order.get("silk", 0)) > Global.silk_workshop.bolts
 	var fish: String = order.get("fish", "")
 	fish_route_target = Global.fishing_spot_today(fish) if not fish.is_empty() and Global.fish_count(fish) == 0 else ""
 	fish_route_button.visible = (pin_button.visible and Global.knows_ravine_journal()
@@ -94,10 +104,16 @@ func _refresh() -> void:
 	status.add_theme_color_override("font_color", READY_INK if ready or delivered_on > 0 else WAIT_INK)
 	var upcoming := Global.season_order(schedule.end + 1)
 	next_heading.text = "下季预告 · 第 %d–%d 天" % [upcoming.start, upcoming.end]
-	next_details.text = "%s · %s   %s" % [
-		upcoming.order.speaker, upcoming.order.title, ItemManager.describe_season_order(upcoming.order)]
+	next_details.text = "%s · %s   可留 %s" % [
+		upcoming.order.speaker, upcoming.order.title, ItemManager.describe_season_order_progress(upcoming)]
 	if upcoming.order.need.has("rice"):
 		next_details.text += " · 稻须接通水渠"
+	var planning := Global.is_season_order_pinned(upcoming)
+	next_plan_button.set_pressed_no_signal(planning)
+	next_plan_button.text = "取消下季备货" if planning else "跟踪下季备货"
+	next_plan_button.visible = Global.outcome == Global.Outcome.RUNNING
+	next_silk_button.visible = next_plan_button.visible and not at_market \
+		and int(upcoming.order.get("silk", 0)) > Global.season_order_stock_for(upcoming, SeasonOrders.SILK_ITEM)
 	last_receipt.visible = delivered_on == 0 and not receipt.is_empty()
 	if last_receipt.visible:
 		last_receipt.text = "上次这张单在第 %d 天交齐。" % receipt.day

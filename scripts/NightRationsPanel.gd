@@ -83,6 +83,7 @@ func _ready() -> void:
 		sleep_requested.emit()
 	)
 	GameEvents.night_rations_changed.connect(_refresh)
+	GameEvents.season_order_pin_changed.connect(_refresh)
 	GameEvents.sheepfold_changed.connect(_refresh)
 	GameEvents.silk_changed.connect(_refresh)
 	GameEvents.food_changed.connect(_refresh.unbind(1))
@@ -171,12 +172,17 @@ func _refresh() -> void:
 		forecast.text = "今夜还差 %d 份。%s" % [plan.uncovered, rule]
 	if plan.supper > 0 and plan.supper < plan.need:
 		forecast.text = "围炉供 %d 份。%s" % [plan.supper, forecast.text]
-	var reserved := ItemManager.describe_crops(plan.reserved)
-	keep.visible = policy.enabled and (not reserved.is_empty() or plan.new_order)
-	if not reserved.is_empty():
-		keep.text = "%s「%s」留货 · %s" % ["明日" if plan.new_order else "", plan.order_name, reserved]
-	else:
-		keep.text = "明日换季，按「%s」留货。" % plan.order_name
+	var reservations := PackedStringArray()
+	if not plan.current_reserved.is_empty():
+		reservations.append("%s「%s」留货 · %s" % ["明日" if plan.new_order else "", plan.order_name,
+			ItemManager.describe_crops(plan.current_reserved)])
+	elif plan.new_order:
+		reservations.append("明日换季，按「%s」留货。" % plan.order_name)
+	if not plan.upcoming_reserved.is_empty():
+		reservations.append("下季「%s」留货 · %s" % [plan.upcoming_order_name,
+			ItemManager.describe_crops(plan.upcoming_reserved)])
+	keep.text = "\n".join(reservations)
+	keep.visible = policy.enabled and not reservations.is_empty()
 	_refresh_meal(plan)
 	var meal := policy.last
 	receipt.visible = not meal.is_empty()

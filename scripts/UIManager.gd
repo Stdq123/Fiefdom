@@ -613,7 +613,8 @@ func _on_ravine_trip_requested(place: String) -> void:
 		hud.practice_label.text = "已标出东关 · 从南门回封地"
 
 func _on_pinned_order_pressed() -> void:
-	if Global.can_deliver_season_order(Global.season_order()):
+	var current := Global.season_order()
+	if Global.is_season_order_pinned(current) and Global.can_deliver_season_order(current):
 		_on_west_market_directions_requested(Global.MARKET_ORDERS)
 	else:
 		_on_season_board_interacted()

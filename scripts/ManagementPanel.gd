@@ -88,6 +88,7 @@ func _ready() -> void:
 	tabs.add_child(ravine_panel)
 	season_order_panel = SEASON_ORDER_PANEL.instantiate()
 	tabs.add_child(season_order_panel)
+	season_order_panel.silk_requested.connect(show_silk)
 	neighbor_journal = NEIGHBOR_JOURNAL.instantiate()
 	tabs.add_child(neighbor_journal)
 	fish_ledger = FISH_LEDGER.new()

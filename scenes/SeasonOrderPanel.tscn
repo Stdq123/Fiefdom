@@ -30,7 +30,7 @@ text = "南路亭交货簿"
 [node name="Lead" type="Label" parent="."]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.73, 0.8, 0.66, 1)
-text = "每季可交一单。提前看下季所需，再安排田地和预留收成。"
+text = "每季可交一单。跟踪下季备货后，夜间备粮也会留出下季所需的作物。"
 autowrap_mode = 3
 
 [node name="Current" type="PanelContainer" parent="."]
@@ -101,6 +101,13 @@ custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 
+[node name="Silk" type="Button" parent="Current/Content/Actions"]
+visible = false
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "去蚕桑备绸"
+
 [node name="Next" type="PanelContainer" parent="."]
 layout_mode = 2
 theme_override_styles/panel = SubResource("Card")
@@ -109,13 +116,34 @@ theme_override_styles/panel = SubResource("Card")
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="Heading" type="Label" parent="Next/Content"]
+[node name="HeadingRow" type="HBoxContainer" parent="Next/Content"]
 layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Heading" type="Label" parent="Next/Content/HeadingRow"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.76, 0.84, 0.65, 1)
 theme_override_font_sizes/font_size = 18
 
+[node name="Silk" type="Button" parent="Next/Content/HeadingRow"]
+visible = false
+custom_minimum_size = Vector2(120, 36)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "去蚕桑备绸"
+
+[node name="Plan" type="Button" parent="Next/Content/HeadingRow"]
+custom_minimum_size = Vector2(124, 36)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+toggle_mode = true
+text = "跟踪下季备货"
+
 [node name="Details" type="Label" parent="Next/Content"]
 layout_mode = 2
+tooltip_text = "可留的数量已扣除本季尚未交付的货物。"
+mouse_filter = 1
 autowrap_mode = 3
 
 [node name="LastReceipt" type="Label" parent="."]

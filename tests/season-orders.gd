@@ -174,7 +174,7 @@ func _run() -> void:
 	state.balance.raid_first_day = 10000
 	var panel := await _open_board()
 	var book: Control = panel.season_order_panel
-	_expect("亭前备种" in book.order_title.text and "余 6 天" in book.deadline.text and "稻 2" in book.next_details.text and book.food_button.disabled,
+	_expect("亭前备种" in book.order_title.text and "余 6 天" in book.deadline.text and "稻 0/2" in book.next_details.text and book.food_button.disabled,
 		"A new estate can plan spring beans and see the summer rice requirement before planting.")
 	var spring_money: int = state.money
 	book.copper_button.pressed.emit()

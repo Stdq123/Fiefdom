@@ -110,6 +110,8 @@ func _show_date(index: int) -> void:
 	var delivered := Global.season_order_delivered_at(schedule)
 	var due := "第 %d 天已交齐" % delivered if delivered > 0 else "第 %d 天截止" % schedule.end
 	order_note.text = "本季托付  %s\n%s · %s" % [schedule.order.title, ItemManager.describe_season_order(schedule.order), due]
+	if schedule.start > Global.current_day and Global.is_season_order_pinned(schedule):
+		order_note.text += " · 已跟踪备货"
 	var special := _event_name(day)
 	event_note.visible = not special.is_empty()
 	guide.visible = not special.is_empty() and not past

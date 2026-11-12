@@ -161,7 +161,7 @@ func _spring() -> void:
 	for cell: Vector2i in PLOTS:
 		await _plot(cell)
 	var book := await _orders()
-	_expect("冬路粮与麻" in book.order_title.text and "南路续种" in book.next_details.text and "麦 1" in book.next_details.text,
+	_expect("冬路粮与麻" in book.order_title.text and "南路续种" in book.next_details.text and "麦 0/1" in book.next_details.text,
 		"The first winter previews keeping wheat for the next spring.")
 	await _capture("01-next-spring")
 	await _close_management()
@@ -259,7 +259,7 @@ func _summer() -> void:
 	await _key(KEY_ESCAPE)
 	var book := await _orders()
 	_expect("柳湾夏鲜" in book.order_title.text and "白鲦 缺 1 尾" in book.status.text and "柳湾" in book.status.text
-		and "东岗换防" in book.next_details.text and "麻 1" in book.next_details.text and book.food_button.disabled,
+		and "东岗换防" in book.next_details.text and "麻 0/1" in book.next_details.text and book.food_button.disabled,
 		"The book names the fishing place and previews autumn's hemp.")
 	_expect(not state.deliver_season_order(31, true) and state.crop_stock.count("rice") == 2,
 		"An incomplete mixed order leaves the harvested rice in stock.")

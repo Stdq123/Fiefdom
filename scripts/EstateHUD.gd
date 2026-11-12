@@ -152,18 +152,16 @@ func _refresh_raid_alert() -> void:
 		raid_alert.tooltip_text = "打开今夜安排，查看守田准备。"
 
 func _refresh_pinned_order() -> void:
-	var schedule := Global.season_order()
-	pinned_order.visible = Global.is_season_order_pinned(schedule)
+	var schedule := Global.pinned_season_order()
+	pinned_order.visible = not schedule.is_empty()
 	if not pinned_order.visible:
 		return
-	var amounts := PackedStringArray()
-	var goods := SeasonOrders.cargo(schedule.order)
-	for id: String in goods:
-		var required: int = goods[id]
-		amounts.append("%s %d/%d" % [
-			ItemManager.season_item_label(id), mini(Global.season_order_stock(id), required), required])
+	var amounts := ItemManager.describe_season_order_progress(schedule)
+	if schedule.start > Global.current_day:
+		pinned_order.text = "下季备货   %s   ·   第 %d 天开收" % [amounts, schedule.start]
+		return
 	var action := "去西市交货" if Global.can_deliver_season_order(schedule) else "第 %d 天截止" % schedule.end
-	pinned_order.text = "时令单   %s   ·   %s" % ["、".join(amounts), action]
+	pinned_order.text = "时令单   %s   ·   %s" % [amounts, action]
 
 func _refresh_silk_stock() -> void:
 	if not $WorkshopStatus.visible:
