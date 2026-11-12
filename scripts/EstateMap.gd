@@ -411,20 +411,26 @@ func _draw_chart() -> void:
 func _draw_landscape() -> void:
 	for sprite: Sprite2D in landscape.scenery:
 		var prop: int = landscape.scenery[sprite]
-		if sprite.visible and (prop in LANDSCAPE.LEAFY_PROPS or prop in [LANDSCAPE.Prop.PINE, LANDSCAPE.Prop.BAMBOO]):
-			var at := _map_point(_node_point(sprite))
+		var foot := _node_point(sprite)
+		if (sprite.visible and LANDSCAPE.ESTATE_BOUNDS.has_point(foot)
+				and (prop in LANDSCAPE.LEAFY_PROPS or prop in [LANDSCAPE.Prop.PINE, LANDSCAPE.Prop.BAMBOO])):
+			var at := _map_point(foot)
 			chart.draw_circle(at, 6.8, Color("#a4aa7b"), true, -1.0, true)
 			chart.draw_circle(at + Vector2(-1, -2), 4.8, Color("#8f9a6d"), true, -1.0, true)
+	var bounds := LANDSCAPE.ESTATE_BOUNDS
+	var land := PackedVector2Array([bounds.position, Vector2(bounds.end.x, bounds.position.y),
+		bounds.end, Vector2(bounds.position.x, bounds.end.y)])
 	for track in landscape.track_shapes:
-		_draw_road_shape(track.shoulder, Color("#ad996b"))
+		_draw_road_shape(track.shoulder, land, Color("#ad996b"))
 	for track in landscape.track_shapes:
-		_draw_road_shape(track.surface, Color("#c6ac7e"))
+		_draw_road_shape(track.surface, land, Color("#c6ac7e"))
 
-func _draw_road_shape(outline: PackedVector2Array, ink: Color) -> void:
-	var points := PackedVector2Array()
-	for point in outline:
-		points.append(_map_point(point))
-	chart.draw_colored_polygon(points, ink)
+func _draw_road_shape(outline: PackedVector2Array, land: PackedVector2Array, ink: Color) -> void:
+	for segment in Geometry2D.intersect_polygons(outline, land):
+		var points := PackedVector2Array()
+		for point in segment:
+			points.append(_map_point(point))
+		chart.draw_colored_polygon(points, ink)
 
 func _draw_channels() -> void:
 	var network := Global.irrigation

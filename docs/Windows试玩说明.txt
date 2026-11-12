@@ -166,6 +166,8 @@
   部分林木、苔石、蕨草、碎石和树桩来自 Pixel-Boy 与 AAA 的 Ninja Adventure Asset Pack（CC0 1.0）。新井田清草阶段沿用其中的碎石。
   发布页 https://pixel-boy.itch.io/ninja-adventure-asset-pack
   原图 https://github.com/pixel-boy/NinjaAdventure/blob/6ac78232d5aedcc85ce5f27d060ea92366f7c24a/content/map/tileset_village_abandoned.png
+  封地土路和草丛也使用该素材包。土纹取自 tileset_floor.png 的 (16,128)、(128,128)、(80,176)、(96,176) 四块 16×16 图块，去色后拼接。草丛取自 (16,192) 起的四块 16×16 图块，去底色后随季节调色。
+  地表原图 https://github.com/pixel-boy/NinjaAdventure/blob/main/content/map/tileset_floor.png
   竹涧春到秋的垂柳与岸草来自 ACTG 的 Swamp Tileset（CC0 1.0）。游戏取用原图中的对应区域，配合季节和天气调色。
   发布页 https://actg.itch.io/swamp
   试筏的无帆筏身和水纹取自 Sevarihk 的 Animated Pixel Art Raft Sprite（CC BY 4.0）。取用原图顺流朝向的停泊和移动帧，在游戏中裁切显示并缩小。

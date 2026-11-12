@@ -67,6 +67,11 @@ func _run() -> void:
 			replay.legacy = arguments[0] == "silk-market-legacy"
 			replay.capture_path = capture_directory
 			await replay.run(tree)
+		"estate-terrain", "estate-terrain-art":
+			var replay = load("res://tests/EstateTerrainReplay.gd").new()
+			replay.title_art = arguments[0] == "estate-terrain-art"
+			replay.capture_path = capture_directory
+			await replay.run(tree)
 		"key-bindings", "key-bindings-reload":
 			var replay = load("res://tests/KeyBindingsReplay.gd").new()
 			await replay.run(tree, capture_directory, arguments[0] == "key-bindings-reload")
