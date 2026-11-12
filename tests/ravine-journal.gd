@@ -38,10 +38,12 @@ func _run() -> void:
 	await _walk_trail(RavineLayout.FRUIT + Vector2(-7, 18))
 	await _gather()
 	_expect(state.food_storage == food_before + state.balance.wild_food_yield, "The old west-bank food stop still works.")
-	await _walk_trail(RavineLayout.FORD_JOURNAL + Vector2(12, 9))
+	var ford_stand := RavineLayout.FORD_JOURNAL + Vector2(24, -53)
+	await _walk_trail(ford_stand)
 	await _record(FORD)
+	# The upstream approach is in reach of the marker and clear of the shoal's fishing interaction.
 	await _gather()
-	_expect(state.ravine_journal.count() == 1 and state.last_forage_day == 5,
+	_expect(state.ravine_journal.count() == 1 and state.last_forage_day == 5 and not paused,
 		"Surveying is separate from foraging and repeating the interaction adds no page.")
 	if not await _return_home() or not await _reload():
 		return

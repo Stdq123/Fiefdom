@@ -113,7 +113,8 @@ func _ravine_checkpoint(gamepad: RefCounted) -> bool:
 	_expect(player.position.is_equal_approx(ravine.get_node("WestArrival").position)
 		and player.facing_direction() == Vector2.RIGHT, "Continue starts facing the trail at the authored west arrival.")
 	_expect(state.current_day == 35 and absf(state.day_progress - progress) < 0.01
-		and state.current_stamina == stamina and state.health == health and state.last_forage_day == 35,
+		and state.current_stamina == stamina and state.health == health
+		and state.last_fishing_day == 35 and state.last_forage_day != 35,
 		"Continue restores the saved time, vitals and daily catch (time=%f/%f, stamina=%d/%d, health=%d/%d)." % [
 			state.day_progress, progress, state.current_stamina, stamina, state.health, health])
 	_expect(state.fish_count(FISH) == 1 and state.crop_stock.count("rice") == 2
@@ -122,6 +123,27 @@ func _ravine_checkpoint(gamepad: RefCounted) -> bool:
 	await _snapshot("06c-ravine-west-arrival")
 	print("FISH_JOURNEY_RAVINE_RESUME day=", state.current_day, " position=", player.position,
 		" route=", state.market_trip_target, " fish=", state.fish_count(FISH))
+	return not failed
+
+func _gather_on_the_way_back() -> bool:
+	var ravine := tree.current_scene as Node2D
+	var hud := ravine.get_node("CampaignHUD")
+	_expect(hud.outing_label.text == "可采一处 · 垂钓已用", "Continuing after the catch leaves today's gathering available.")
+	for enemy in tree.get_nodes_in_group("enemies"):
+		enemy.set_physics_process(false)
+	var fruit := ravine.get_node("WildFruit") as Node2D
+	var food: int = state.food_storage
+	await Campaign.walk_ravine_to(tree, ravine, fruit.global_position + Vector2(0, 16))
+	_expect("粮食" in fruit.hint.text, "The real fruit bush still shows its yield after continuing with a fish.")
+	await _snapshot("06d-fruit-after-fishing")
+	await _key(KEY_E)
+	_expect(state.food_storage == food + state.balance.wild_food_yield and state.last_forage_day == state.current_day
+		and state.fish_count(FISH) == 1 and hud.outing_label.text == "采集已用 · 垂钓已用",
+		"The player picks the berries, keeps the fish and sees both activities marked as spent.")
+	await _snapshot("06e-both-harvests")
+	print("FISH_JOURNEY_GATHER day=", state.current_day, " fish=", state.fish_count(FISH),
+		" berry_food=", state.food_storage - food)
+	await Campaign.walk_to_ravine_exit(tree, ravine)
 	return not failed
 
 func _start_from_market() -> bool:
@@ -167,6 +189,12 @@ func _choose_return() -> bool:
 	_expect(ui.directions.tracked_place == "竹涧 · 柳湾" and state.ravine_trip_target == WILLOW,
 		"The first crossing carries the route to the estate's east gate.")
 	await _snapshot("04-east-gate-route")
+	await _key(KEY_M)
+	var estate_chart: Control = ui.estate_map
+	_expect(estate_chart.modal.visible and "可采一处 · 可钓一尾" in estate_chart.ravine_note.text,
+		"The estate chart shows both activities before leaving for the ravine.")
+	await _snapshot("04a-outing-forecast")
+	await _key(KEY_ESCAPE)
 	if not await _to_ravine():
 		return false
 	await tree.process_frame
@@ -204,7 +232,7 @@ func _choose_return() -> bool:
 	_expect(gamepad.failures == 0, "The new chart action works with the gamepad cursor.")
 	_expect(not map.modal.visible and not tree.paused and state.market_trip_target == state.MARKET_ORDERS
 		and "西市 · 收货牌" in map.cancel_button.text, "The chart can restart the trip for the other destination.")
-	if not await _ravine_checkpoint(gamepad):
+	if not await _ravine_checkpoint(gamepad) or not await _gather_on_the_way_back():
 		return false
 	if not await _cross(&"ui_left", state.ESTATE_SCENE):
 		return false

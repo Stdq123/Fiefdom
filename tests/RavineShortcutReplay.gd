@@ -140,7 +140,7 @@ func _legacy_route() -> void:
 		and ravine.get_node("Player").position == ravine.get_node("WestArrival").position,
 		"A save from the older package still resumes at the west arrival."):
 		return
-	_expect(state.ravine_journal.garden_day == 7 and state.last_forage_day == 7 and ravine.active_waypoint() == "柳湾"
+	_expect(state.ravine_journal.garden_day == 7 and state.last_forage_day == 7 and state.last_fishing_day == 7 and ravine.active_waypoint() == "柳湾"
 		and not ravine.ravine_map.markers[SOUTH_PATH].disabled, "The old survey, catch and wayfinding survive and the shortcut is open.")
 	for enemy in tree.get_nodes_in_group("enemies"):
 		enemy.set_physics_process(false)
@@ -182,7 +182,8 @@ func _play() -> void:
 		"The new save continues at the south entrance."):
 		return
 	_expect(state.current_stamina == stamina and state.health == health and absf(state.day_progress - time) < 0.01
-		and state.fish_count(fish_id) == 1 and state.last_forage_day == 7 and ravine.active_waypoint() == SOUTH_PATH,
+		and state.fish_count(fish_id) == 1 and state.last_fishing_day == 7 and state.last_forage_day != 7
+		and ravine.active_waypoint() == SOUTH_PATH,
 		"Continue preserves clock, vitals, catch and the selected exit.")
 	await _snapshot("06-south-resume")
 	await _walk_back(ravine)

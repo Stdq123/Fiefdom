@@ -42,7 +42,6 @@ func _ready() -> void:
 	GameEvents.inventory_changed.connect(_refresh.unbind(1))
 	GameEvents.crop_harvested.connect(_refresh.unbind(1))
 	GameEvents.fish_changed.connect(_refresh)
-	GameEvents.forage_taken.connect(_refresh)
 	GameEvents.stamina_changed.connect(_refresh.unbind(1))
 	GameEvents.silk_changed.connect(_refresh)
 	GameEvents.campaign_ended.connect(_refresh.unbind(1))

@@ -10,7 +10,7 @@ var health_label: Label
 var health_bar: ProgressBar
 var trail_stamina: Label
 var trail_date: Label
-var forage_label: Label
+var outing_label: Label
 var ravine_label: Label
 var camera_hint: Label
 var notice: Label
@@ -82,11 +82,12 @@ func _build_status() -> void:
 	trail_text.add_child(trail_date)
 	GameEvents.daylight_changed.connect(_refresh_trail_date)
 	_refresh_trail_date()
-	forage_label = Label.new()
-	forage_label.add_theme_font_size_override("font_size", 14)
-	trail_text.add_child(forage_label)
-	GameEvents.forage_taken.connect(_refresh_forage)
-	_refresh_forage()
+	outing_label = Label.new()
+	outing_label.add_theme_font_size_override("font_size", 14)
+	trail_text.add_child(outing_label)
+	GameEvents.forage_taken.connect(_refresh_outing)
+	GameEvents.fish_changed.connect(_refresh_outing)
+	GameEvents.day_advanced.connect(_refresh_outing.unbind(1))
 	ravine_label = Label.new()
 	ravine_label.add_theme_font_size_override("font_size", 14)
 	ravine_label.add_theme_color_override("font_color", Color("#ebcf8d"))
@@ -147,17 +148,15 @@ func _refresh_trail_date() -> void:
 
 func _update_trail_stamina(amount: int) -> void:
 	trail_stamina.text = "体力 %d/%d" % [amount, Global.max_stamina]
+	_refresh_outing()
 
 func _update_health(health: int) -> void:
 	health_label.text = "气血 %d/%d" % [health, Global.balance.player_max_health]
 	health_label.modulate = Color("#f19279") if health * 3 < Global.balance.player_max_health else Color.WHITE
 	health_bar.value = health
 
-func _refresh_forage() -> void:
-	if Global.last_forage_day == Global.current_day:
-		forage_label.text = "今日采集与垂钓机会已用"
-	else:
-		forage_label.text = "今日可采集或垂钓一次" if Global.knows_ravine_journal() else "今日可采野果或野药"
+func _refresh_outing() -> void:
+	outing_label.text = Global.ravine_outing_status()
 
 func _refresh_camera_hint() -> void:
 	camera_hint.text = ("RT 射箭 · 见地面预警就横移\n按下左/右摇杆缩小/放大" if GamepadInput.active

@@ -31,7 +31,6 @@ func _ready() -> void:
 	add_child(receipt)
 	GameEvents.fish_changed.connect(_refresh)
 	GameEvents.creek_trap_changed.connect(_refresh)
-	GameEvents.forage_taken.connect(_refresh)
 	GameEvents.day_advanced.connect(_refresh.unbind(1))
 	visibility_changed.connect(_refresh)
 	_refresh()

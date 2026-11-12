@@ -158,7 +158,7 @@ func _reel(step: float) -> void:
 	if reeled >= fish.reel:
 		var id := Global.land_creek_fish(spot.site, cast_day)
 		if id.is_empty():
-			_finish("今天已带回外出收获。")
+			_finish("这次垂钓已结束。")
 		else:
 			_splash(-10.0, 0.93)
 			_finish("钓到%s · 已收入鱼篓" % fish.name, id)

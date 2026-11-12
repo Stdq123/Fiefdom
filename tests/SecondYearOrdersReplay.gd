@@ -223,15 +223,16 @@ func _catch_minnow() -> bool:
 			_key_event(KEY_SPACE, true)
 	_key_event(KEY_SPACE, false)
 	var landed := _expect(panel.phase == panel.Phase.DONE and panel.catch_icon.visible
-		and state.fish_count("minnow") == 1 and state.last_forage_day == state.current_day
+		and state.fish_count("minnow") == 1 and state.last_fishing_day == state.current_day
+		and state.last_forage_day != state.current_day
 		and state.current_stamina == stamina - state.balance.fishing_stamina_cost,
 		"Land one minnow using the fishing controls.")
 	await _capture("03-willow-catch")
 	await _key(KEY_ESCAPE)
 	await _button(map.open_button)
-	_expect("今日已有外出收获" in map.markers["野果坳"].tooltip_text
-		and "今日已有外出收获" in map.markers["望溪台"].tooltip_text,
-		"The catch consumes the single outing for both kinds of gathering.")
+	_expect("粮食" in map.markers["野果坳"].tooltip_text and "野药" in map.markers["望溪台"].tooltip_text
+		and "今日垂钓机会已用" in map.markers["砾滩"].tooltip_text,
+		"After the catch the map still offers both plants and shows that fishing is spent at both banks.")
 	await _key(KEY_ESCAPE)
 	await Campaign.walk_to_ravine_exit(tree, trail)
 	return landed and await _cross(&"ui_left", state.ESTATE_SCENE)

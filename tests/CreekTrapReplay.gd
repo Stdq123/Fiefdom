@@ -57,7 +57,7 @@ func _first_fish() -> bool:
 		elif not rod.holding and rod.tension < 0.43:
 			_line(true)
 	_line(false)
-	var landed := _expect(state.fish_count("minnow") == 1 and state.last_forage_day == 35 and state.creek_traps_unlocked(),
+	var landed := _expect(state.fish_count("minnow") == 1 and state.last_fishing_day == 35 and state.creek_traps_unlocked(),
 		"A real second-year catch opens both bank stakes.")
 	await _key(KEY_ESCAPE)
 	return landed
@@ -164,7 +164,7 @@ func _collect_after_fruit() -> bool:
 	await _capture("04-ready-to-collect")
 	await _click(panel.take_button)
 	if not _expect(panel.receipt.visible and panel.baits.beans.button.disabled and state.fish_count("perch") == 2 and state.last_forage_day == 37
-		and state.creek_trap_site() == -1 and state.take_creek_trap(SHOAL).is_empty(),
+		and state.last_fishing_day == 35 and state.creek_trap_site() == -1 and state.take_creek_trap(SHOAL).is_empty(),
 		"The catch is paid once, even after that day's fruit is gathered."):
 		return false
 	await _capture("05-perch-collected")
@@ -191,8 +191,8 @@ func _try_other_bank() -> void:
 	if panel == null:
 		return
 	await _click(panel.take_button)
-	_expect(state.current_day == 38 and state.fish_count("crucian") == 1 and state.last_forage_day == 37,
-		"One night of millet bait yields one fish without taking the new day's forage slot.")
+	_expect(state.current_day == 38 and state.fish_count("crucian") == 1 and state.last_forage_day == 37 and state.last_fishing_day == 35,
+		"One night of millet bait yields one fish and leaves both of the new day's activities available.")
 	print("TRAP_REUSE day=", state.current_day, " crucian=", state.fish_count("crucian"), " forage_day=", state.last_forage_day)
 	await _key(KEY_ESCAPE)
 	if await _home():

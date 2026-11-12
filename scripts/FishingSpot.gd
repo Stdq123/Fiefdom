@@ -22,7 +22,7 @@ func _ready() -> void:
 	hint.add_theme_color_override("font_outline_color", Color("#26372c"))
 	hint.add_theme_constant_override("outline_size", 3)
 	add_child(hint)
-	GameEvents.forage_taken.connect(_refresh)
+	GameEvents.fish_changed.connect(_refresh)
 	GameEvents.stamina_changed.connect(_refresh.unbind(1))
 	_refresh()
 

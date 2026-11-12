@@ -147,7 +147,8 @@ func _run() -> void:
 	var saved_day: int = state.current_day
 	_expect(state.save_game() == OK and state.load_game() == OK, "The day after a trail trip saves and reloads.")
 	await scene_changed
-	_expect(state.current_day == saved_day and state.last_forage_day == saved_day and state.health == saved_health
+	_expect(state.current_day == saved_day and state.last_forage_day == saved_day and state.last_fishing_day == 0
+		and state.health == saved_health
 		and state.active_crops.has(planted) and state.active_crops[planted]["age"] == 1,
 		"The save preserves the gathering limit, health and crop growth.")
 

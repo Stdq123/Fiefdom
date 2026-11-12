@@ -44,9 +44,11 @@ func _catch_at(spot: Node2D, id: String, frame_name: String, close_result := tru
 		elif not panel.holding and panel.tension <= 0.43:
 			_line(true)
 	_line(false)
+	var fishing_day: Variant = state.get("last_fishing_day")
 	var landed := _expect(state.fish_count(id) == held + 1 and panel.catch_icon.visible
 		and state.current_stamina == stamina - state.balance.fishing_stamina_cost
-		and state.last_forage_day == state.current_day, "Catch the intended fish and pay the normal casting cost.")
+		and (fishing_day if fishing_day != null else state.last_forage_day) == state.current_day,
+		"Catch the intended fish and pay the normal casting cost.")
 	if not frame_name.is_empty():
 		_expect("渔生正在收这种鱼" in panel.detail.text, "The landed fish points to the current offer.")
 		await _snapshot(frame_name)

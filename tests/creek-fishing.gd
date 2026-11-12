@@ -106,7 +106,7 @@ func _catch(spot: Node2D, id: String, mouse := false) -> bool:
 		await process_frame
 	_hold(panel, mouse, false)
 	var caught := _expect(panel.phase == panel.Phase.DONE and panel.catch_icon.visible
-		and state.fish_count(id) == held + 1 and state.last_forage_day == state.current_day,
+		and state.fish_count(id) == held + 1 and state.last_fishing_day == state.current_day,
 		"The expected fish is landed once when tension stays in the safe band.")
 	await _close_fishing()
 	_expect(not spot.line_visible, "The float and line disappear on close.")
@@ -178,13 +178,13 @@ func _run() -> void:
 		quit(1)
 		return
 	await _close_fishing()
-	_expect(state.fish_collection.is_empty() and state.last_forage_day == 0 and not pool.line_visible, "Cancelling does not claim a catch.")
+	_expect(state.fish_collection.is_empty() and state.last_fishing_day == 0 and not pool.line_visible, "Cancelling does not claim a catch.")
 	panel = await _open_fishing(pool)
 	_key(KEY_SPACE)
 	await process_frame
 	_key(KEY_SPACE, false)
-	_expect(panel.phase == panel.Phase.DONE and "太早" in panel.status.text and state.last_forage_day == 0,
-		"Early pulling costs the attempt but leaves the day's outing available.")
+	_expect(panel.phase == panel.Phase.DONE and "太早" in panel.status.text and state.last_fishing_day == 0,
+		"Early pulling spends stamina and leaves the day's catch available.")
 	await _close_fishing()
 	panel = await _open_fishing(pool)
 	await _wait_for_bite(panel)
@@ -192,7 +192,7 @@ func _run() -> void:
 	while panel.phase != panel.Phase.DONE:
 		await process_frame
 	_key(KEY_SPACE, false)
-	_expect("太紧" in panel.status.text and state.last_forage_day == 0, "Holding continuously makes a fish escape.")
+	_expect("太紧" in panel.status.text and state.last_fishing_day == 0, "Holding continuously makes a fish escape.")
 	await _close_fishing()
 	if not await _catch(pool, "crucian"):
 		quit(1)
@@ -200,17 +200,23 @@ func _run() -> void:
 	var before: int = state.current_stamina
 	_expect(await _open_fishing(pool) == null and state.current_stamina == before, "A second catch on the same day is blocked before charging stamina.")
 	var food: int = state.food_storage
+	var berries: int = state.balance.wild_food_yield
 	await Campaign.walk_ravine_to(self, current_scene, RavineLayout.FRUIT + Vector2(0, 17))
 	_key(KEY_E)
 	await process_frame
-	_expect(state.food_storage == food, "A catch shares the berry and herb gathering opportunity.")
+	_expect(state.food_storage == food + berries and state.last_forage_day == state.current_day,
+		"The wild fruit remains available after landing a fish.")
+	_key(KEY_E)
+	await process_frame
+	_expect(state.food_storage == food + berries, "Returning to the same fruit only yields one harvest for the day.")
 	if not await _return_home() or not await _save_reload():
 		quit(1)
 		return
 	var ledger := await _fish_ledger()
 	_expect(state.fish_count("crucian") == 1 and "第 5 天" in ledger.rows.crucian.history.text, "Fish stock and first-catch notes survive saving.")
+	_expect(state.last_forage_day == 5 and state.last_fishing_day == 5, "Save both daily limits after gathering and fishing.")
 	ledger.rows.crucian.food.pressed.emit()
-	_expect(state.fish_count("crucian") == 0 and state.food_storage == food + 4 and "柳湾" in ledger.rows.crucian.history.text,
+	_expect(state.fish_count("crucian") == 0 and state.food_storage == food + berries + 4 and "柳湾" in ledger.rows.crucian.history.text,
 		"Converting fish supplies food without losing the record.")
 	await _close_ledger()
 	await _night()
@@ -219,6 +225,22 @@ func _run() -> void:
 		return
 	pool = current_scene.get_node("WillowPool")
 	_expect(state.has_rain(), "The next outing falls on Grain Rain.")
+	_expect(current_scene.get_node("CampaignHUD").outing_label.text == "可采一处 · 可钓一尾",
+		"Both daily opportunities are available again after sleeping.")
+	await Campaign.walk_ravine_to(self, current_scene, RavineLayout.HERBS + Vector2(0, 17))
+	state.hurt_player(27)
+	var injured: int = state.health
+	_key(KEY_E)
+	await process_frame
+	_expect(state.health == injured + state.balance.wild_herb_healing and state.last_forage_day == state.current_day
+		and state.fishing_block_reason().is_empty(), "Medicine on the east bank spends only the gathering opportunity.")
+	await Campaign.walk_ravine_to(self, current_scene, RavineLayout.FORD_WEST)
+	_expect(walker.position.distance_to(RavineLayout.FORD_WEST) < 3.0, "Return to the west bank across the ford.")
+	await Campaign.walk_ravine_to(self, current_scene, RavineLayout.FRUIT + Vector2(0, 17))
+	food = state.food_storage
+	_key(KEY_E)
+	await process_frame
+	_expect(state.food_storage == food, "Taking the herbs uses the same gathering opportunity as the fruit.")
 	if not await _catch(pool, "carp", true) or not await _return_home():
 		quit(1)
 		return

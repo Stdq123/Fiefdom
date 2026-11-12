@@ -81,6 +81,7 @@ var raid_crop_losses := 0
 var last_defense: Dictionary = {}
 var east_watch_day := 0
 var last_forage_day := 0
+var last_fishing_day := 0
 var ravine_trip_target := ""
 var market_trip_target := ""
 var restored_ravine_waypoint := ""
@@ -260,6 +261,7 @@ func _reset_campaign() -> void:
 	last_defense.clear()
 	east_watch_day = 0
 	last_forage_day = 0
+	last_fishing_day = 0
 	ravine_trip_target = ""
 	market_trip_target = ""
 	restored_ravine_waypoint = ""
@@ -1359,14 +1361,19 @@ func forage_food() -> void:
 	GameEvents.food_changed.emit(food_storage)
 	GameEvents.world_notice.emit("采得野果 · 粮食 +%d" % balance.wild_food_yield)
 
+func ravine_outing_status() -> String:
+	var forage := "采集已用" if last_forage_day == current_day else "可采一处"
+	var blocked := fishing_block_reason(true)
+	return "%s · %s" % [forage, "可钓一尾" if blocked.is_empty() else blocked]
+
 func ravine_place_detail(place: String) -> String:
 	if place == SummerRaft.PLACE:
 		return "今日开筏 · 顺流穿过竹标" if is_summer_raft_day() else "夏至首日开放 · 可看往年成绩"
 	var trap_site := CreekTrap.PLACES.find(place)
 	if trap_site >= 0:
 		return creek_trap_detail(trap_site)
-	if last_forage_day == current_day:
-		return "今日已有外出收获"
+	if place in ["野果坳", "望溪台"] and last_forage_day == current_day:
+		return "今日采集已用"
 	match place:
 		"野果坳":
 			return "野果 · 粮食 +%d" % balance.wild_food_yield
@@ -1447,13 +1454,13 @@ func fishing_spot_today(id: String) -> String:
 			return CreekFish.PLACES[site]
 	return ""
 
-func fishing_block_reason() -> String:
+func fishing_block_reason(compact := false) -> String:
 	if not knows_ravine_journal():
-		return "先到南边竹径与蒲宁交谈"
-	if last_forage_day == current_day:
-		return "今日已有外出收获"
+		return "垂钓待学" if compact else "先到南边竹径与蒲宁交谈"
+	if last_fishing_day == current_day:
+		return "垂钓已用" if compact else "今日垂钓机会已用"
 	if current_stamina < balance.fishing_stamina_cost:
-		return "体力不足 · 抛竿需要 %d" % balance.fishing_stamina_cost
+		return "抛竿缺体力" if compact else "体力不足 · 抛竿需要 %d" % balance.fishing_stamina_cost
 	return ""
 
 func cast_fishing_line() -> bool:
@@ -1468,14 +1475,14 @@ func cast_fishing_line() -> bool:
 	return true
 
 func land_creek_fish(site: int, cast_day: int) -> String:
-	if outcome != Outcome.RUNNING or cast_day != current_day or last_forage_day == current_day or not knows_ravine_journal():
+	if outcome != Outcome.RUNNING or cast_day != current_day or last_fishing_day == current_day or not knows_ravine_journal():
 		return ""
 	var id := fish_at_today(site)
 	if id.is_empty():
 		return ""
 	var first_catch := fish_collection.is_empty()
 	_store_creek_fish(id, site, 1)
-	_take_forage_slot()
+	last_fishing_day = current_day
 	GameEvents.fish_changed.emit()
 	if first_catch and creek_traps_unlocked():
 		GameEvents.world_notice.emit("两岸可下竹笼 · 用黍或菽作饵")
@@ -2445,6 +2452,7 @@ func _save_snapshot(origin: String) -> Error:
 		"last_defense": last_defense,
 		"east_watch_day": east_watch_day,
 		"last_forage_day": last_forage_day,
+		"last_fishing_day": last_fishing_day,
 		"ravine_trip_target": ravine_trip_target,
 		"market_trip_target": market_trip_target,
 		"fish_collection": fish_collection,
@@ -2919,6 +2927,8 @@ func load_game(path := "") -> Error:
 	last_defense = _restore_defense(data.get("last_defense"), saved_day)
 	east_watch_day = clampi(_read_save_int(data.get("east_watch_day"), 0), 0, saved_day) if not last_defense.is_empty() else 0
 	last_forage_day = clampi(_read_save_int(data.get("last_forage_day"), 0), 0, saved_day)
+	# Old saves used one daily record for both activities.
+	last_fishing_day = clampi(_read_save_int(data.get("last_fishing_day"), last_forage_day), 0, saved_day)
 	_restore_fish_collection(data.get("fish_collection"), saved_day)
 	fish_order_receipt = _restore_fish_order_receipt(data.get("fish_order_receipt"), saved_day)
 	creek_trap = _restore_creek_trap(data.get("creek_trap"), saved_day)

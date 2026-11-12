@@ -30,7 +30,7 @@ func _refresh() -> void:
 	hint.text = name_on_map
 	if focused:
 		if Global.last_forage_day == Global.current_day:
-			hint.text += " · 今日已采集"
+			hint.text += " · 今日采集已用"
 		elif medicinal and Global.wild_herb_recovery() == 0:
 			hint.text += " · 气血充足"
 		else:

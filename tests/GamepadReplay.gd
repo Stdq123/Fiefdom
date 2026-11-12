@@ -273,7 +273,7 @@ func _fishing() -> void:
 	await _snapshot("06-fishing")
 	await _tap(JOY_BUTTON_B)
 	_expect(not tree.paused and not trail.has_node("FishingUI/FishingPanel"), "B ends fishing and resumes the trail.")
-	print("GAMEPAD_FISH caught=", state.last_forage_day == state.current_day)
+	print("GAMEPAD_FISH caught=", state.last_fishing_day == state.current_day)
 
 func _mouse_handoff() -> void:
 	var motion := InputEventMouseMotion.new()

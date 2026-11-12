@@ -250,8 +250,7 @@ func _show_category(next: Category) -> void:
 		_update_field_button(canal_route, "× 断水", report.blocked)
 	ravine_note.visible = category == Category.RAVINE
 	if ravine_note.visible:
-		var quota := "今日已有外出收获" if Global.last_forage_day == Global.current_day else "今日可带回一份外出收获"
-		ravine_note.text = quota + "\n东岸一带有野狗和斥候。"
+		ravine_note.text = Global.ravine_outing_status() + "\n东岸一带有野狗和斥候。"
 	if entries.is_empty():
 		var empty := Label.new()
 		empty.text = "封地此刻没有来客或门客。" if category == Category.PEOPLE else "这里还没有井田。"
