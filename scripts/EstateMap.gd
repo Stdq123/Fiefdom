@@ -96,6 +96,10 @@ func _collect_places() -> void:
 	var hall := world.get_node("HallRest") as Node2D
 	if hall.visible:
 		places.insert(2, _entry(Category.PLACES, "堂前", "进屋可研读、歇息和更衣", _node_point(hall), true, icons.get(LANDSCAPE.Prop.HALL)))
+	var pavilion: PavilionRest = world.pavilion_rest
+	if pavilion.visible:
+		var approach := world.to_local(pavilion.to_global(PavilionRest.APPROACH))
+		places.append(_entry(Category.PLACES, PavilionRest.PLACE, "与门客说话、查看今夜口粮", approach))
 	_add_built_place("药圃", "采药处", "HerbGarden")
 	_add_built_place("东路岗", "查看守备口信", "Scenery/EastWatch")
 	_add_built_place("轮作簿", "查看轮作约定", "FieldRotationBook")
@@ -177,9 +181,11 @@ func _collect_people() -> void:
 		if guest.is_visible_in_tree():
 			_add_person(guest.speaker, "秋社 · 南路亭东", guest, guest.icon)
 	for resident: RetainerData in Global.retainers:
-		var actor: Node2D = world.retainer_instances.get(resident)
+		var actor := world.retainer_instances.get(resident) as Retainer
 		if is_instance_valid(actor):
-			_add_person(resident.name, "门客 · " + resident.duty_name(), actor, resident.get_appearance_texture())
+			var rest := actor.pavilion_note()
+			_add_person(resident.name, "门客 · " + resident.duty_name() if rest.is_empty() else rest,
+				actor, resident.get_appearance_texture())
 
 func _ravine_places() -> Array[Dictionary]:
 	var gate := _node_point(world.get_node("EastGate"))

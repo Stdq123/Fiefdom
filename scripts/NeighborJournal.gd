@@ -45,6 +45,7 @@ func _ready() -> void:
 	GameEvents.day_advanced.connect(refresh.unbind(1))
 	get_tree().current_scene.get_node("World").visitor_changed.connect(refresh.unbind(1))
 	GameEvents.retainer_duty_changed.connect(refresh.unbind(1))
+	GameEvents.retainer_location_changed.connect(refresh)
 	GameEvents.retainer_recruited.connect(refresh.unbind(1))
 	GameEvents.retainer_departed.connect(refresh.unbind(1))
 	GameEvents.road_rest_changed.connect(refresh)
@@ -92,6 +93,9 @@ func _location(speaker: String) -> String:
 	var world := get_tree().current_scene.get_node("World")
 	for resident in Global.retainers:
 		if resident.name == speaker:
+			var actor := world.retainer_instances.get(resident) as Retainer
+			if actor and not actor.pavilion_note().is_empty():
+				return actor.pavilion_note() + " · 留任门客"
 			return "%s · 留任门客 · %s" % [world.duty_place(resident), resident.duty_name()]
 	var guest: VisitorData = world.current_visitor()
 	if guest and guest.name == speaker:

@@ -77,6 +77,11 @@ func _run() -> void:
 			replay.legacy = arguments[0] == "field-routes-legacy"
 			replay.capture_path = capture_directory
 			await replay.run(tree)
+		"pavilion-evening", "pavilion-evening-legacy":
+			var replay = load("res://tests/PavilionEveningReplay.gd").new()
+			replay.legacy = arguments[0] == "pavilion-evening-legacy"
+			replay.capture_path = capture_directory
+			await replay.run(tree)
 		"key-bindings", "key-bindings-reload":
 			var replay = load("res://tests/KeyBindingsReplay.gd").new()
 			await replay.run(tree, capture_directory, arguments[0] == "key-bindings-reload")

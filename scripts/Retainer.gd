@@ -28,7 +28,9 @@ var guard_cooldown := 0.0
 var work_left := 0.0
 var field_job := Global.FieldJob.NONE
 var last_heading := Vector2.LEFT
-var observer: Node2D
+var observer: Player
+var evening_seat := Vector2.INF
+var evening_path: Array[Vector2] = []
 
 func _ready() -> void:
 	if data == null:
@@ -41,7 +43,7 @@ func set_interaction_focused(focused: bool) -> void:
 	hint.visible = focused
 	if focused:
 		hint.text = "%s · %s" % [data.name, GamepadInput.interact_key()]
-	observer = get_tree().get_first_node_in_group("player") as Node2D if focused else null
+	observer = get_tree().get_first_node_in_group("player") as Player if focused else null
 
 func interact() -> void:
 	GameEvents.retainer_interacted.emit(data)
@@ -49,6 +51,13 @@ func interact() -> void:
 func _physics_process(delta: float) -> void:
 	if is_queued_for_deletion():
 		return
+	if evening_seat.is_finite():
+		if not get_parent().pavilion_rest.visible:
+			set_state(State.IDLE)
+		elif is_instance_valid(observer) and observer.conversation_open:
+			velocity = Vector2.ZERO
+			_stand_at_stop()
+			return
 	match current_state:
 		State.IDLE:
 			if Engine.get_physics_frames() % 60 == 0:
@@ -63,9 +72,35 @@ func _physics_process(delta: float) -> void:
 	if data.duty == RetainerData.Duty.GUARD:
 		_guard(delta)
 	if current_state != State.MOVE:
-		if current_state == State.IDLE and not tool_gesture.visible and is_instance_valid(observer):
-			sprite.face(observer.global_position - global_position)
-		sprite.stand(tool_gesture.body_lean)
+		_stand_at_stop()
+
+func _stand_at_stop() -> void:
+	if current_state != State.WORK and not tool_gesture.visible and is_instance_valid(observer):
+		sprite.face(observer.global_position - global_position)
+	elif resting_at_pavilion():
+		var table: Node2D = get_parent().pavilion_rest
+		sprite.face(table.global_position - global_position)
+	sprite.stand(Vector2(0, 2) if resting_at_pavilion() else tool_gesture.body_lean)
+
+func resting_at_pavilion() -> bool:
+	return evening_seat.is_finite() and current_state == State.IDLE
+
+func pavilion_note() -> String:
+	if not evening_seat.is_finite():
+		return ""
+	return "南路亭 · 灯下歇脚" if resting_at_pavilion() else "正往南路亭"
+
+func restore_evening() -> void:
+	var seat: Vector2 = get_parent().pavilion_rest.seat_for(data)
+	if seat.is_finite() and VisitorData.seconds_since(PavilionRest.START) >= 6.0 and _field_target() == NO_CELL:
+		position = seat
+		evening_seat = seat
+		_stand_at_stop()
+
+func resume_duty_at_dawn() -> void:
+	if evening_seat.is_finite():
+		global_position = home_position
+		set_state(State.IDLE)
 
 func _guard(delta: float) -> void:
 	guard_cooldown = maxf(0.0, guard_cooldown - delta)
@@ -130,13 +165,36 @@ func find_work() -> void:
 	var world := get_parent()
 	if not world.has_method("find_work_crop"):
 		return
-	target_grid_pos = NO_CELL
-	if data.duty in [RetainerData.Duty.FIELD, RetainerData.Duty.HARVEST]:
-		target_grid_pos = world.find_work_crop(self)
+	target_grid_pos = _field_target()
 	if target_grid_pos != NO_CELL:
+		_leave_pavilion()
 		_walk_to(world.to_global(world.get_crop_world_pos(target_grid_pos)))
-	elif global_position.distance_to(home_position) > navigation_agent.target_desired_distance:
+		return
+	var seat: Vector2 = world.pavilion_rest.seat_for(data)
+	if seat.is_finite():
+		if evening_seat != seat or not position.is_equal_approx(seat):
+			evening_seat = seat
+			evening_path = world.path_to_pavilion_seat(position, seat)
+			_walk_next_pavilion_step()
+			GameEvents.retainer_location_changed.emit()
+		return
+	_leave_pavilion()
+	if global_position.distance_to(home_position) > navigation_agent.target_desired_distance:
 		_walk_to(home_position)
+
+func _field_target() -> Vector2i:
+	if data.duty in [RetainerData.Duty.FIELD, RetainerData.Duty.HARVEST]:
+		return get_parent().find_work_crop(self)
+	return NO_CELL
+
+func _leave_pavilion() -> void:
+	if evening_seat.is_finite():
+		evening_seat = Vector2.INF
+		evening_path.clear()
+		GameEvents.retainer_location_changed.emit()
+
+func _walk_next_pavilion_step() -> void:
+	_walk_to(get_parent().to_global(evening_path.pop_front()))
 
 func _walk_to(destination: Vector2) -> void:
 	navigation_agent.target_position = destination
@@ -145,11 +203,19 @@ func _walk_to(destination: Vector2) -> void:
 func _walk() -> void:
 	var next_step := navigation_agent.get_next_path_position()
 	if navigation_agent.is_navigation_finished():
+		if not evening_path.is_empty():
+			_walk_next_pavilion_step()
+			return
+		var arrived_at_pavilion := evening_seat.is_finite()
+		if arrived_at_pavilion:
+			position = evening_seat
 		field_job = get_parent().crop_job(self, target_grid_pos) if target_grid_pos != NO_CELL else Global.FieldJob.NONE
 		if field_job != Global.FieldJob.NONE:
 			set_state(State.WORK)
 		else:
 			set_state(State.IDLE)
+			if arrived_at_pavilion and resting_at_pavilion():
+				GameEvents.retainer_location_changed.emit()
 		return
 	last_heading = global_position.direction_to(next_step)
 	velocity = last_heading * move_speed

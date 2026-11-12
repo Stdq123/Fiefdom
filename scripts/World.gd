@@ -26,6 +26,7 @@ const FIELD_COSTS := {
 @onready var player: Player = $Player
 @onready var tax_envoy: Node2D = $TaxEnvoy
 @onready var irrigation_overlay = $TileMapLayer/IrrigationOverlay
+@onready var pavilion_rest: PavilionRest = $PavilionRest
 
 var channel_mode: bool:
 	get: return irrigation_overlay.editing
@@ -95,7 +96,7 @@ func _ready() -> void:
 
 	# Spawn retainers from Global
 	for r_data in Global.retainers:
-		spawn_retainer(r_data)
+		spawn_retainer(r_data, true)
 
 	_refresh_visitor()
 	_refresh_field_keeper_visit()
@@ -181,12 +182,14 @@ func setup_navigation() -> void:
 	add_child(nav_region)
 	print("Navigation Setup Complete")
 
-func spawn_retainer(data: RetainerData) -> void:
-	var retainer = retainer_scene.instantiate()
+func spawn_retainer(data: RetainerData, restoring := false) -> void:
+	var retainer := retainer_scene.instantiate() as Retainer
 	retainer.data = data
 	retainer.position = _duty_station(data)
 	add_child(retainer)
 	retainer_instances[data] = retainer
+	if restoring:
+		retainer.restore_evening()
 
 func _duty_station(data: RetainerData) -> Vector2:
 	var slot := 0
@@ -198,7 +201,30 @@ func _duty_station(data: RetainerData) -> Vector2:
 	return DUTY_STATIONS[data.duty]["anchor"] + Vector2(19 * (slot % 3), 17 * floori(float(slot) / 3))
 
 func duty_place(data: RetainerData) -> String:
+	var retainer := retainer_instances.get(data) as Retainer
+	if retainer and not retainer.pavilion_note().is_empty():
+		return "南路亭"
 	return DUTY_STATIONS[data.duty]["place"]
+
+func path_to_pavilion_seat(from: Vector2, seat: Vector2) -> Array[Vector2]:
+	var table := pavilion_rest.position
+	var path: Array[Vector2] = []
+	if from.distance_to(table) > 56.0:
+		var start := from
+		if start.x < 0.0 and start.y < 146.0:
+			start.x = 17.0 # Pass the east side of the silk shed.
+			path.append(start)
+		elif start.x >= 80.0 and start.y < 205.0:
+			path.append_array(Array(_follow_lane(LANDSCAPE.ESTATE_EAST_LANE, start, LANDSCAPE.EAST_LANE_JUNCTION)))
+			start = LANDSCAPE.EAST_LANE_JUNCTION
+		path.append_array(Array(_follow_lane(LANDSCAPE.ESTATE_SOUTH_LANE, start, LANDSCAPE.PAVILION_TURN)))
+		path.append_array([Vector2(47, 264), Vector2(69, 282), table + Vector2(-32, 5)])
+		if seat.y < table.y:
+			path.append(table + Vector2(-27, -14))
+		elif seat.x > table.x:
+			path.append(table + Vector2(25, 15))
+	path.append(seat)
+	return path
 
 func _refresh_duty_stations() -> void:
 	for data in retainer_instances:
@@ -688,6 +714,8 @@ func _on_day_advanced(new_day: int) -> void:
 			_draw_crop(pos)
 		crop["watered"] = false
 	Global.last_field_night = overnight
+	for retainer: Retainer in retainer_instances.values():
+		retainer.resume_duty_at_dawn()
 	_refresh_visitor(true)
 	_refresh_field_keeper_visit()
 	if Global.begin_raid(new_day):

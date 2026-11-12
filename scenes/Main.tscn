@@ -18,6 +18,7 @@
 [ext_resource type="Script" path="res://scripts/SpringGathering.gd" id="16_spring_gathering"]
 [ext_resource type="Texture2D" path="res://assets/world/gathering-bell-rack.svg" id="17_bell_rack"]
 [ext_resource type="Script" path="res://scripts/RoadRest.gd" id="18_road_rest"]
+[ext_resource type="Script" path="res://scripts/PavilionRest.gd" id="41_pavilion_rest"]
 [ext_resource type="Script" path="res://scripts/FieldRotationBook.gd" id="19_rotation_book"]
 [ext_resource type="Script" path="res://scripts/MeadowButterfly.gd" id="20_butterfly"]
 [ext_resource type="Script" path="res://scripts/EstateDirections.gd" id="21_directions"]
@@ -335,6 +336,28 @@ offset_right = 56.0
 offset_bottom = -36.0
 mouse_filter = 2
 theme_override_colors/font_outline_color = Color(0.13, 0.21, 0.16, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
+[node name="PavilionRest" type="Node2D" parent="World" groups=["interactable"]]
+position = Vector2(123, 278)
+script = ExtResource("41_pavilion_rest")
+
+[node name="Mats" type="Node2D" parent="World/PavilionRest"]
+z_index = -1
+
+[node name="Hint" type="Label" parent="World/PavilionRest"]
+visible = false
+z_index = 6
+material = ExtResource("24_world_hint")
+offset_left = -48.0
+offset_top = -32.0
+offset_right = 48.0
+offset_bottom = -19.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.98, 0.86, 0.64, 1)
+theme_override_colors/font_outline_color = Color(0.17, 0.18, 0.14, 1)
 theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1

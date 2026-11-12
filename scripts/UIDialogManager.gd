@@ -165,17 +165,22 @@ func _recruit(data: VisitorData) -> void:
 	GameEvents.retainer_recruited.emit(retainer)
 	GameEvents.reputation_changed.emit(Global.reputation)
 
-func show_retainer_dialog(data: RetainerData) -> void:
+func show_retainer_dialog(data: RetainerData, at_pavilion := false) -> void:
 	if parent_node.has_node("DialoguePanel") or not Global.retainers.has(data):
 		return
+	var context := "门客 · 南路亭" if at_pavilion else "门客 · " + data.duty_name()
+	var evening := data.evening_line() if at_pavilion else ""
 	if data.name == VisitorData.FIELD_KEEPER:
-		_show_field_keeper("门客 · " + data.duty_name(), data.get_appearance_texture(), data.resident_line())
+		_show_field_keeper(context, data.get_appearance_texture(), data.resident_line(), evening)
 		return
 	var options: Array[String] = []
 	var disabled: Array[int] = []
 	var favor := _add_favor_option(data.name, options, disabled)
 	options.append("离开")
-	var dialog = _open(data.name, "门客 · " + data.duty_name(), data.resident_line(),
+	var speech := data.resident_line()
+	if at_pavilion:
+		speech = evening + "\n" + speech if favor.is_valid() else evening
+	var dialog = _open(data.name, context, speech,
 		options, disabled, data.get_appearance_texture())
 	if favor.is_valid():
 		dialog.option_selected.connect(func(index: int):
@@ -183,13 +188,14 @@ func show_retainer_dialog(data: RetainerData) -> void:
 				favor.call()
 		)
 
-func _show_field_keeper(context: String, appearance: Texture2D, usual_line: String) -> void:
+func _show_field_keeper(context: String, appearance: Texture2D, usual_line: String, evening := "") -> void:
 	var story := Global.field_rotation
-	var text := usual_line
+	var text := usual_line if evening.is_empty() else evening
 	var options: Array[String] = ["离开"]
 	var follow_up: Callable
 	if story.signed_day > 0:
-		text = _field_keeper_season_line()
+		if evening.is_empty() or story.signed_day == Global.current_day:
+			text = _field_keeper_season_line()
 	elif story.ready_to_sign():
 		text = "那年教我种菽的人没留下名字，只在田埂上插了根木签。\n今儿收的%s，咱们也记下来。日后换人管田，还有个凭据。" % Global.rotation_crop_name()
 		options.push_front("一起记进轮作簿")
@@ -202,6 +208,8 @@ func _show_field_keeper(context: String, appearance: Texture2D, usual_line: Stri
 		text = "荒年我只敢种黍。邻人分我一把菽种，说这地也该喘口气。\n你肯留一格私田，先收菽，再在原地收一茬吗？"
 		options.push_front("约定试一回轮作")
 		follow_up = Global.agree_to_rotation
+	if not evening.is_empty() and text != evening:
+		text = evening + "\n" + text
 	var dialog := _open(VisitorData.FIELD_KEEPER, context, text, options, [], appearance)
 	if follow_up.is_valid():
 		var day := Global.current_day

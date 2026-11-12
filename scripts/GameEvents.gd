@@ -45,6 +45,7 @@ signal herb_garden_feedback(message: String)
 # Phase 2 Signals
 signal retainer_assigned(data: RetainerData, grid_pos: Vector2i)
 signal retainer_duty_changed(data: RetainerData)
+signal retainer_location_changed()
 signal health_changed(health: int)
 signal campaign_ended(outcome: Global.Outcome)
 signal ending_record_requested()

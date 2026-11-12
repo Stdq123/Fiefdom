@@ -177,6 +177,7 @@ func _connect_signals() -> void:
 	GameEvents.channel_survey_learned.connect(update_ui)
 	GameEvents.raid_defeated.connect(update_ui)
 	GameEvents.retainer_duty_changed.connect(update_ui.unbind(1))
+	GameEvents.retainer_location_changed.connect(_refresh_visitor_note)
 	GameEvents.retainer_recruited.connect(update_ui.unbind(1))
 	GameEvents.retainer_departed.connect(update_ui.unbind(1))
 	GameEvents.reputation_changed.connect(update_ui.unbind(1))
@@ -295,7 +296,8 @@ func _on_gathering_book_requested() -> void:
 func _on_retainer_interacted(data: RetainerData) -> void:
 	directions.arrive_at(data.name)
 	world.set_channel_mode(false)
-	dialog_manager.show_retainer_dialog(data)
+	var actor := world.retainer_instances.get(data) as Retainer
+	dialog_manager.show_retainer_dialog(data, actor != null and actor.resting_at_pavilion())
 
 func _on_rotation_book_interacted() -> void:
 	world.set_channel_mode(false)
@@ -340,8 +342,13 @@ func _refresh_opening_action() -> void:
 		action.text = "找渠伯谈轮作"
 		action.tooltip_text = "沿标记走到渠伯身边，按 %s 交谈。" % GamepadInput.interact_key()
 	else:
-		var visitor: Visitor = world.current_visitor_actor()
-		action.text = "去见%s · %s" % [speaker, visitor.visit_note() if visitor else "田边"]
+		var actor: Node2D = world.neighbor_actor(speaker)
+		var place := "田边"
+		if actor is Visitor:
+			place = actor.visit_note()
+		elif actor is Retainer:
+			place = world.duty_place(actor.data)
+		action.text = "去见%s · %s" % [speaker, place]
 		action.tooltip_text = "按地图标记走到近处，按 %s 交谈。" % GamepadInput.interact_key()
 
 func _on_opening_action() -> void:
@@ -353,6 +360,9 @@ func _on_opening_action() -> void:
 		panel_manager.management_panel_instance.market_panel.focus_crop_conversion()
 	else:
 		_on_neighbor_directions_requested(speaker)
+
+func _refresh_visitor_note() -> void:
+	_update_visitor_note(world.current_visitor())
 
 func _update_visitor_note(data: VisitorData) -> void:
 	_refresh_opening_action()
@@ -369,7 +379,10 @@ func _update_visitor_note(data: VisitorData) -> void:
 	elif Global.field_keeper_visiting():
 		hud.visitor_label.text = "渠伯今天回到井田西南。"
 	elif Global.current_day == 1 and not Global.retainers.is_empty() and Global.retainers[0].name == VisitorData.FIELD_KEEPER:
-		hud.visitor_label.text = "渠伯在田边，靠近按 %s。" % interact_key
+		var keeper := world.neighbor_actor(VisitorData.FIELD_KEEPER) as Retainer
+		var place := keeper.pavilion_note() if keeper else ""
+		hud.visitor_label.text = ("渠伯在田边，靠近按 %s。" % interact_key if place.is_empty()
+			else "渠伯 · %s，靠近按 %s。" % [place, interact_key])
 	elif Global.last_recruit_day == Global.current_day and not Global.retainers.is_empty():
 		var resident: RetainerData = Global.retainers.back()
 		hud.visitor_label.text = "%s已留下，可到%s找他。" % [resident.name, world.duty_place(resident)]
