@@ -48,6 +48,7 @@ func _ready() -> void:
 	GamepadInput.changed.connect(_refresh_control_hints)
 	Preferences.bindings_changed.connect(_refresh_control_hints)
 	hud.refresh_farm_status()
+	world.tile_map.get_node("FieldCursor").hud = hud
 	directions.setup(world, hud)
 	if not Global.ravine_trip_target.is_empty():
 		directions.follow_ravine(Global.ravine_trip_target)

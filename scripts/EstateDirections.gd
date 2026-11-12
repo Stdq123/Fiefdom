@@ -19,7 +19,6 @@ var tracked_site := -1
 var tracked_place := ""
 var tracked_place_point := Vector2.ZERO
 var following_raid := false
-var covers: Array[Control] = []
 var caption: Label
 var plate := StyleBoxFlat.new()
 var mark := Mark.PLOT
@@ -30,8 +29,6 @@ var edge_direction := Vector2.ZERO
 func setup(estate_world: Node2D, estate_hud: Control) -> void:
 	world = estate_world
 	hud = estate_hud
-	for panel_name in ["Journal", "Calendar", "SeedBelt", "Vitals", "Tools", "Actions", "RationsButton"]:
-		covers.append(hud.get_node(panel_name) as Control)
 	hud.cancel_directions.pressed.connect(clear_tracking)
 
 	plate.bg_color = Color("#203126f7")
@@ -252,14 +249,14 @@ func _mark_map(bounds: Rect2, label_text: String, style: Mark, near: bool) -> vo
 	caption.text = label_text
 	var text_size := caption.get_combined_minimum_size()
 	caption.size = text_size
-	if _clear_map_space(bounds):
+	if hud.map_space_clear(bounds):
 		mark = style
 		outline = bounds.grow(1.0) if style in [Mark.PLOT, Mark.WORKSITE] else bounds
 		if not near:
 			var badge_size := text_size + Vector2(16, 6)
 			var clearance := bounds.size.y + 6.0 if style == Mark.PLOT else 7.0
 			plaque = Rect2(Vector2(bounds.get_center().x - badge_size.x / 2.0, bounds.end.y + clearance), badge_size)
-			if _clear_map_space(plaque):
+			if hud.map_space_clear(plaque):
 				caption.position = plaque.position + Vector2(8, 3)
 				caption.show()
 	else:
@@ -272,7 +269,7 @@ func _mark_map(bounds: Rect2, label_text: String, style: Mark, near: bool) -> vo
 			half.y / maxf(0.001, absf(edge_direction.y)))
 		while true:
 			plaque = Rect2((safe.get_center() + edge_direction * distance - badge_size / 2.0).round(), badge_size)
-			if _clear_map_space(plaque):
+			if hud.map_space_clear(plaque):
 				break
 			if distance <= 0.0:
 				hide()
@@ -282,14 +279,6 @@ func _mark_map(bounds: Rect2, label_text: String, style: Mark, near: bool) -> vo
 		caption.show()
 	show()
 	queue_redraw()
-
-func _clear_map_space(box: Rect2) -> bool:
-	if not get_viewport_rect().grow(-8).encloses(box):
-		return false
-	for cover in covers:
-		if cover.is_visible_in_tree() and cover.get_global_rect().grow(4).intersects(box):
-			return false
-	return true
 
 func _draw() -> void:
 	if caption and caption.visible:

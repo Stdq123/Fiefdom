@@ -26,6 +26,7 @@ param(
     [switch]$EstateTerrain,
     [switch]$CanalDoors,
     [switch]$FieldWorksites,
+    [switch]$FieldStroke,
     [switch]$FieldRoutes,
     [switch]$PavilionEvening,
     [switch]$FishMarketOrders,
@@ -76,7 +77,7 @@ function Start-VerifiedGame {
     }
     $lines = Get-Content -LiteralPath $log -Encoding utf8
     $marker = if ($Replay) { 'SCENARIO_OK' } else { 'Fiefdom title ready' }
-    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|RESEARCH_RATIONS_|GAMEPAD_|DRIVING_|BOW_AIM_|WINTER_|BINDING_|RAFT_|TITLE_|DECOR_|ROUTE_|COUNCIL_PREP_|DIRECTION_|PLAN_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|CANAL_DOOR_|ESTATE_PROGRESS_|ESTATE_PROVISIONS|FIELD_ACCESS_|WORKSITE_|FIELD_ROUTE_|PAVILION_EVENING_|FISH_MARKET_|MARKET_WAYFINDING_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
+    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|RESEARCH_RATIONS_|GAMEPAD_|DRIVING_|BOW_AIM_|WINTER_|BINDING_|RAFT_|TITLE_|DECOR_|ROUTE_|COUNCIL_PREP_|DIRECTION_|PLAN_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|CANAL_DOOR_|ESTATE_PROGRESS_|ESTATE_PROVISIONS|FIELD_ACCESS_|FIELD_STROKE_|WORKSITE_|FIELD_ROUTE_|PAVILION_EVENING_|FISH_MARKET_|MARKET_WAYFINDING_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
     if ($process.ExitCode -ne 0 -or $lines -cnotcontains $marker -or $lines -cmatch '^\s*(?:SCRIPT ERROR|USER ERROR|ERROR|WARNING):') {
         throw "$Name failed (exit $($process.ExitCode)). See $log"
     }
@@ -89,6 +90,7 @@ function Install-Replay([string]$Directory) {
     }
     Copy-Item -LiteralPath (Join-Path $repo 'tests/CanalDoorReplay.gd'), (Join-Path $repo 'tests/CanalFlowReplay.gd'), (Join-Path $repo 'tests/EstateProgressReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ResearchRationsReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldStrokeReplay.gd') -Destination $testDirectory
     @'
 [application]
 run/main_scene="res://tests/ReleaseReplay.tscn"
@@ -168,6 +170,9 @@ try {
     }
     if ($FieldWorksites) {
         Start-VerifiedGame -Directory $release -Profile 'field-worksites' -Name 'field-worksites' -Replay 'field-worksites'
+    }
+    if ($FieldStroke) {
+        Start-VerifiedGame -Directory $release -Profile 'field-stroke' -Name 'field-stroke' -Replay 'field-stroke'
     }
     if ($FieldRoutes) {
         Start-VerifiedGame -Directory $release -Profile 'field-routes' -Name 'field-routes' -Replay 'field-routes'

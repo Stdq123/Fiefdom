@@ -675,3 +675,9 @@
 - 新版睡前先预留次日应缴经费，再按每夜上限购粮。开启「缺粮时先供足份口粮」后可选择优先门客。专项选择季青，预览转一份麻、花 5 铜钱买一份粮，并为时令单留一份菽。过夜实缴 100 铜钱研究费，季青领足两份并教习，石墨缺餐离任。另验证一份余粮凑不齐专职门客的整份口粮时留在私仓。第 53 天实际缺 94 铜钱时，召简再次来访。 [窄窗口睡前报价](../build/polish-research-rations/final-frames/1024x768/02-partial-meal-and-fee.png) · [晨间实缴](../build/polish-research-rations/final-frames/1280x720/03-fee-paid-at-dawn.png)
 - 睡前存档恢复备粮方式与优先人选，晨间存档恢复实耗、缺餐名单及研究进度。用上一版实写的预算档验证了读档、选择新方式、实缴与后续缺额，原件与验证副本的校验值一致。 [旧预算档回放](../build/polish-research-rations/legacy-final-frames/1280x720/render.log)
 - 导入、脚本加载、标题启动、24 项 Godot 回归和 30 项 Windows 回放通过。传统与改革都以手动、委派两种方式从新档通关；经费充足的回放走满 24 天研究期，按日程共缴 1,200 铜钱。两种窗口尺寸均在不可见的隔离桌面验证。首次独立试玩和完整人工通关验收待完成。 [Godot 回归](../build/polish-research-rations/godot-research-rations.log) · [发行验证](../build/polish-research-rations/windows-release-check.log) · [Windows 试玩包](../build/polish-research-rations/Fiefdom-research-rations-preview-Windows-x64.zip)
+
+## 拖耕经过的田格与近景提示
+
+- 专项预置第 18 天的两块井田和成熟黍。同一条快速斜划经过四格私田。旧包按起止田格的中心插值，误收中央公田并漏收两格私田。新版依照指针路径收四份私田作物和 20 铜钱，耗 12 点体力。单独点击中央公田才收下一份纳贡。沿格角经过时，采样停在格角只处理划过的两个田格内部。 [旧版斜划](../build/polish-field-stroke/baseline-frames/1280x720/01-diagonal-harvest.png) · [新版合计](../build/polish-field-stroke/final-frames/1280x720/01-diagonal-harvest.png)
+- 按住左键走动时，旧包把镜头扫过的中间田格也算进下一次鼠标移动。新版短划只收指针经过的田格，中间作物仍成熟待收。近景下靠近历书的悬停提示会换到田边空位，与指路共用界面遮挡范围。 [镜头跟随回放](../build/polish-field-stroke/final-frames/1280x720/02-camera-during-stroke.png) · [窄窗口近景](../build/polish-field-stroke/final-frames/1024x768/03-hover-at-calendar.png)
+- 上一版实际保存的双井田档能继续耕作，原档和验证副本校验值一致。资源导入、脚本加载、启动、25 项 Godot 回归和 31 项 Windows 回放通过，覆盖键鼠、手柄、两条结局及旧档。两种窗口尺寸在不可见的隔离桌面复核。首次独立试玩和完整人工通关验收待完成。 [旧档回放](../build/polish-field-stroke/legacy-final-frames/1280x720/render.log) · [Godot 回归](../build/polish-field-stroke/godot-field-stroke.log) · [发行验证](../build/polish-field-stroke/windows-release-check.log) · [Windows 试玩包](../build/polish-field-stroke/Fiefdom-field-stroke-preview-Windows-x64.zip)

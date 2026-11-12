@@ -48,6 +48,7 @@ extends Control
 @onready var worksite_button: Button = %WorksiteButton
 @onready var cancel_directions: Button = %CancelDirections
 @onready var save_notice: Label = %SaveNotice
+@onready var map_overlays: Array[Control] = [$Journal, $Calendar, $SeedBelt, $Vitals, $Tools, $Actions, $RationsButton]
 
 var seed_buttons: Dictionary = {}
 var save_notice_tween: Tween
@@ -56,6 +57,14 @@ var reclamation_mode := false
 var indoors := false
 var driving := false
 var channel_message := ""
+
+func map_space_clear(area: Rect2) -> bool:
+	if not get_viewport_rect().grow(-8.0).encloses(area):
+		return false
+	for overlay in map_overlays:
+		if overlay.is_visible_in_tree() and overlay.get_global_rect().grow(4.0).intersects(area):
+			return false
+	return true
 
 func set_reclamation_mode(active: bool) -> void:
 	reclamation_mode = active

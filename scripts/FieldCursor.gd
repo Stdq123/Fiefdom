@@ -8,6 +8,7 @@ extends Node2D
 var pointer := Vector2.ZERO
 var pointer_seen := false
 var ink := Color("#edce88")
+var hud: Control
 
 func _ready() -> void:
 	z_index = 52
@@ -96,24 +97,27 @@ func _place_caption(cell: Vector2i, text: String, tone: Color) -> void:
 		caption.size = caption.get_combined_minimum_size()
 	label.modulate = ink
 	position = tile_map.map_to_local(cell)
-	var bounds := get_viewport().get_visible_rect()
+	var bounds := get_viewport().get_visible_rect().grow(-8.0)
 	var transform := tile_map.get_global_transform_with_canvas()
 	var scale_in_view := transform.get_scale()
-	var half_cell := Vector2(tile_map.tile_set.tile_size) / 2
+	var margin := Vector2(tile_map.tile_set.tile_size) * scale_in_view * 0.5 + Vector2(4, 4)
 	var at := transform * position
-	var width := caption.size.x
-	var height := caption.size.y
-	var y := at.y - half_cell.y * scale_in_view.y - height - 4
-	var below := at.y + half_cell.y * scale_in_view.y + 4
+	var centered := (at - caption.size * 0.5).clamp(bounds.position, bounds.end - caption.size)
+	var above := Vector2(centered.x, at.y - margin.y - caption.size.y)
+	var below := Vector2(centered.x, at.y + margin.y)
 	var has_worker: bool = world.retainer_instances.values().any(func(worker: Retainer) -> bool:
 		return worker.current_state == Retainer.State.WORK and worker.target_grid_pos == cell
 	)
-	if y < bounds.position.y + 4 or (has_worker and below + height <= bounds.end.y - 4):
-		y = below
-	var screen_position := Vector2(clampf(at.x - width / 2, bounds.position.x + 4, bounds.end.x - width - 4), y)
 	caption.scale = Vector2.ONE / scale_in_view
-	caption.position = transform.affine_inverse() * screen_position.round() - position
 	show()
+	for placement: Vector2 in [below if has_worker else above, above if has_worker else below,
+			Vector2(at.x + margin.x, centered.y), Vector2(at.x - margin.x - caption.size.x, centered.y)]:
+		var screen_position := placement.round()
+		if hud.map_space_clear(Rect2(screen_position, caption.size)):
+			caption.position = transform.affine_inverse() * screen_position - position
+			caption.show()
+			return
+	caption.hide()
 
 func _draw() -> void:
 	var half_cell := Vector2(tile_map.tile_set.tile_size) / 2 - Vector2.ONE

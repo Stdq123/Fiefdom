@@ -51,7 +51,7 @@ var scheduled_visitor: VisitorData
 var field_guest: Node2D
 var sweep_action := FieldAction.NONE
 var sweep_field := Rect2i()
-var sweep_cell := Vector2i.ZERO
+var sweep_pointer := Vector2.ZERO
 var swept_cells: Dictionary[Vector2i, bool] = {}
 var sweep_harvests := 0
 var sweep_gains := Vector4i.ZERO
@@ -80,6 +80,7 @@ func _ready() -> void:
 	GameEvents.estate_room_changed.connect(_on_estate_room_changed)
 	get_window().focus_exited.connect(_end_sweep)
 	get_window().mouse_exited.connect(_end_sweep)
+	get_viewport().size_changed.connect(_end_sweep)
 	# Initialize first well field if none exists
 	if Global.well_fields.is_empty():
 		Global.add_well_field(Global.FIRST_FIELD_CENTER)
@@ -425,21 +426,21 @@ func _unhandled_input(event: InputEvent) -> void:
 			_edit_channel(grid_pos, _fill_held(event))
 			get_viewport().set_input_as_handled()
 		else:
-			_begin_sweep(grid_pos)
+			_begin_sweep(grid_pos, event.position)
 			if handle_interaction(grid_pos):
 				get_viewport().set_input_as_handled()
 	elif event is InputEventMouseMotion and sweep_action != FieldAction.NONE:
 		if player.conversation_open or channel_mode:
 			_end_sweep()
 			return
-		_sweep_to(field_at(event.position))
+		_sweep_to(event.position)
 		get_viewport().set_input_as_handled()
 
 func _fill_held(event: InputEventMouse) -> bool:
 	return (GamepadInput.filling or Input.is_action_pressed(KeyBindings.FILL)
 		or (Preferences.binding(KeyBindings.FILL) == KEY_SHIFT and event.shift_pressed))
 
-func _begin_sweep(cell: Vector2i) -> void:
+func _begin_sweep(cell: Vector2i, pointer: Vector2) -> void:
 	var action := field_action(cell)
 	var cost := field_cost(action)
 	if cost == 0 or cost > Global.current_stamina:
@@ -448,16 +449,29 @@ func _begin_sweep(cell: Vector2i) -> void:
 		var bounds := Rect2i(field["center_pos"] - Vector2i.ONE, Vector2i(3, 3))
 		if field["is_unlocked"] and bounds.has_point(cell):
 			sweep_field = bounds
-			sweep_cell = cell
+			sweep_pointer = pointer
 			sweep_action = action
 			swept_cells[cell] = true
 			return
 
-func _sweep_to(cell: Vector2i) -> void:
-	var offset := cell - sweep_cell
-	var steps := maxi(absi(offset.x), absi(offset.y))
-	for step in range(1, steps + 1):
-		var crossed := sweep_cell + Vector2i((Vector2(offset) * (float(step) / steps)).round())
+func _sweep_to(pointer: Vector2) -> void:
+	if pointer == sweep_pointer:
+		return
+	var tile_size := Vector2(tile_map.tile_set.tile_size)
+	var origin := tile_map.map_to_local(Vector2i.ZERO) - tile_size * 0.5
+	# Project both ends through the current view to measure pointer travel.
+	var to_grid := tile_map.get_global_transform_with_canvas().affine_inverse()
+	var precision := Vector2(0.0001, 0.0001)
+	var from := ((to_grid * sweep_pointer - origin) / tile_size).snapped(precision)
+	var to := ((to_grid * pointer - origin) / tile_size).snapped(precision)
+	sweep_pointer = pointer
+	var travel := to - from
+	if travel == Vector2.ZERO:
+		return
+	var step := Vector2i(travel.sign())
+	var crossed := _stroke_cell(from, step)
+	var destination := _stroke_cell(to, -step)
+	while true:
 		if not sweep_field.has_point(crossed):
 			_end_sweep()
 			return
@@ -469,7 +483,21 @@ func _sweep_to(cell: Vector2i) -> void:
 				if not enough:
 					_end_sweep()
 					return
-	sweep_cell = cell
+		if crossed == destination:
+			return
+		var next_x := (crossed.x + int(step.x > 0) - from.x) / travel.x if crossed.x != destination.x else INF
+		var next_y := (crossed.y + int(step.y > 0) - from.y) / travel.y if crossed.y != destination.y else INF
+		if is_equal_approx(next_x, next_y):
+			crossed += step
+		elif next_x < next_y:
+			crossed.x += step.x
+		else:
+			crossed.y += step.y
+
+func _stroke_cell(point: Vector2, inward: Vector2i) -> Vector2i:
+	# At a boundary, choose the tile toward the interior of the segment.
+	return Vector2i(ceili(point.x) - 1 if inward.x < 0 else floori(point.x),
+		ceili(point.y) - 1 if inward.y < 0 else floori(point.y))
 
 func _end_sweep() -> void:
 	sweep_action = FieldAction.NONE
