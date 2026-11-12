@@ -661,3 +661,10 @@
 - 专项预置第 2 天的开垦费用和三名门客。正常立桩后，两块新田各过四夜完工。东田 `(12, 5)` 向南接东路，南田 `(8, 11)` 向北接东路，田口各一格宽。马车和驾御路牌移到东田田口以东，南田田名放到田口对边。公私田分别收获，续档后封地与舆图上的短径、田埂缺口一致。 [封地实景](../build/polish-field-access/release-frames/1280x720/06-field-entrances-reloaded.png) · [封地舆图](../build/polish-field-access/release-frames/1280x720/07-estate-field-approaches.png)
 - 上一版实际保存的第 10 天旧档，在原址 `(1, 11)` 恢复已完工的井田和两格熟黍。公田纳贡一份，私仓进一份，到账 5 铜钱。原档和验证副本的校验值一致。 [旧档收割](../build/polish-field-access/legacy-field-access.log)
 - Godot 导入、脚本加载、标题启动和 25 项回归通过。最终 Windows 包通过解压启动和 22 个回放，覆盖两条结局、续营、开垦、渠水、六艺与旧档。1280×720 和 1024×768 两种窗口尺寸在不可见的隔离桌面复核。首次独立试玩与完整人工长线试玩待验收。 [Godot 回归](../build/polish-field-access/godot-field-access.log) · [发行验证](../build/polish-field-access/windows-release-check.log) · [Windows 试玩包](../build/polish-field-access/Fiefdom-field-access-preview-Windows-x64.zip)
+
+## 水渠绕开堂屋与蚕棚
+
+- 上一版从第 13 天的双井田档出发，通过放样挖出 17 格连通渠。北田得到供水，堂屋和蚕棚的入口消失。用上一版程序的设置菜单保存了这张地图。 [旧版实景](../build/polish-canal-doors/baseline-frames/1280x720/02-old-doors-missing.png)
+- 单格挖渠与放样现在共用屋基检查。触及堂屋、台阶或蚕棚用地时标红，整段保留起点并提示换弯。专项用 R 转弯后沿屋外通渠，穿过主路的渠段有过路木板。实际走进堂屋和蚕棚，再过夜核对稻苗生长和公私田收割。 [屋基提示](../build/polish-canal-doors/release-frames/1024x768/03-survey-blocked.png) · [通水与木板](../build/polish-canal-doors/release-frames/1280x720/04-road-and-open-doors.png)
+- 旧版实写的档在新版恢复两处入口，17 格渠水继续通到北田。经过屋基的渠段加石板，挖渠模式可查暗渠填平会让一格稻停长。用真实移动进出两屋，过夜后稻苗增长一阶。旧档原件与验证副本的校验值一致。 [旧档实景](../build/polish-canal-doors/legacy-frames/1280x720/07-legacy-open-doors.png) · [暗渠填平预览](../build/polish-canal-doors/legacy-frames/1280x720/08-legacy-culvert-preview.png)
+- 资源导入、脚本加载、标题启动、24 项 Godot 回归和 24 项 Windows 回放通过。两种尺寸在不可见的隔离桌面复核。最终包从空档回放到第 17 天，验证晋升、三人立桩、施工备粮、夜间进度和续档播种。首次独立试玩和完整人工通关验收待完成。 [新档扩田](../build/polish-canal-doors/release-verification/estate-progress.log) · [Godot 回归](../build/polish-canal-doors/godot-canal-doors.log) · [发行验证](../build/polish-canal-doors/windows-release-check.log) · [Windows 试玩包](../build/polish-canal-doors/Fiefdom-canal-doors-preview-Windows-x64.zip)

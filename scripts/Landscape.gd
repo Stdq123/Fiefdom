@@ -439,14 +439,16 @@ func _refresh_scenery() -> void:
 		var prop: int = scenery[sprite]
 		if seasonal_textures.has(prop):
 			sprite.texture = seasonal_textures[prop]
-		if prop >= 0:
-			sprite.visible = wilderness or _ground_clear(_ground_bounds(sprite.position, prop))
-			if prop == Prop.SILK_SHED:
-				sprite.visible = sprite.visible and Global.silk_workshop.built
-				if silk_shed:
-					silk_shed.set_available(sprite.visible)
-			elif prop == Prop.HALL and hall_rest:
+		match prop:
+			Prop.HALL:
+				sprite.visible = _fields_clear(_ground_bounds(sprite.position, prop))
 				hall_rest.set_available(sprite.visible)
+			Prop.SILK_SHED:
+				sprite.visible = Global.silk_workshop.built and _fields_clear(_ground_bounds(sprite.position, prop))
+				silk_shed.set_available(sprite.visible)
+			_:
+				if prop >= 0:
+					sprite.visible = wilderness or _ground_clear(_ground_bounds(sprite.position, prop))
 		var tint := _prop_tint(prop)
 		if not wilderness and sprite.position.y < ESTATE_BOUNDS.position.y - 48.0:
 			tint *= Color("#b8c4ba")
@@ -729,7 +731,7 @@ func _draw_tracks() -> void:
 		_track_gravel(track.gravel_path, track.width, dust)
 
 func _hall_landing_visible() -> bool:
-	return hall_rest != null and hall_rest.visible and _ground_clear(HALL_LANDING)
+	return hall_rest != null and hall_rest.visible and _fields_clear(HALL_LANDING)
 
 func _draw_hall_landing() -> void:
 	if not _hall_landing_visible():
@@ -1039,11 +1041,16 @@ func _prop_tint(index: int) -> Color:
 		tint *= Color(0.88, 0.94, 0.99)
 	return tint
 
-func _ground_clear(artwork: Rect2) -> bool:
-	var half_tile := Vector2(tile_map.tile_set.tile_size) / 2.0
+func _fields_clear(artwork: Rect2) -> bool:
 	for field in Global.well_fields:
 		if artwork.intersects(_field_bounds(field["center_pos"])):
 			return false
+	return true
+
+func _ground_clear(artwork: Rect2) -> bool:
+	if not _fields_clear(artwork):
+		return false
+	var half_tile := Vector2(tile_map.tile_set.tile_size) / 2.0
 	for cell in Global.irrigation.channels:
 		if artwork.grow(half_tile.x).has_point(_tile_point(cell)):
 			return false

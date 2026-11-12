@@ -521,6 +521,8 @@ func _edit_channel(cell: Vector2i, fill: bool) -> void:
 			channel_feedback.emit("水渠已通水" if Global.irrigation.is_channel_wet(cell) else "已挖渠，等待接通水源")
 		Global.ChannelSite.BLOCKED:
 			channel_feedback.emit("请选择封地内的空地")
+		Global.ChannelSite.FOUNDATION:
+			channel_feedback.emit("这里是屋基 · 请从屋外引渠")
 		Global.ChannelSite.ALREADY_BUILT:
 			channel_feedback.emit("这里已有水渠")
 		Global.ChannelSite.NO_FUNDS:

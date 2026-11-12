@@ -9,6 +9,7 @@ const BED := Color("#584e39")
 const WATER := Color("#568e87")
 const WATER_LIGHT := Color("#a5d4bc")
 const DRY := Color("#8b6949")
+const CULVERT_STONE := Color("#898475")
 const RIPPLE_SPACING := 23.0
 const RIPPLE_SPEED := 11.0
 const FERTILITY_HIGHLIGHT_SECONDS := 12.0
@@ -37,6 +38,7 @@ var source_label: Label
 @onready var plan_ink := Node2D.new()
 var fertility_highlight: Tween
 var footbridges: Array[Rect2] = []
+var culverts: Dictionary[Vector2i, bool] = {}
 var water_time := 0.0
 var water_frame := 0
 
@@ -128,8 +130,9 @@ func select_survey_cell(cell: Vector2i) -> String:
 	if cell != Global.irrigation.source_cell and not Global.RECLAMATION_BOUNDS.has_point(cell):
 		return "请在封地内放样"
 	if survey_start == null:
-		if Global.channel_build_plan([cell], true)["site"] == Global.ChannelSite.BLOCKED:
-			return "起点需避开井田"
+		match Global.channel_build_plan([cell], true)["site"]:
+			Global.ChannelSite.BLOCKED: return "起点需避开井田"
+			Global.ChannelSite.FOUNDATION: return "起点需避开屋基"
 		survey_start = cell
 		_refresh_plan()
 		return "起点已定 · 选渠尾"
@@ -140,9 +143,10 @@ func select_survey_cell(cell: Vector2i) -> String:
 			cancel_survey()
 			return "已挖 %d 格 · 支出 %d 铜钱" % [plan["additions"].size(), plan["cost"]]
 		Global.ChannelSite.NO_FUNDS: return "铜钱不足 · 放样保留"
-		Global.ChannelSite.BLOCKED:
+		Global.ChannelSite.BLOCKED, Global.ChannelSite.FOUNDATION:
 			var key := "Menu" if GamepadInput.active else Preferences.key_label(KeyBindings.ROTATE)
-			return "渠线压到井田 · 可用 %s 换弯" % key
+			var obstacle := "屋基" if plan["site"] == Global.ChannelSite.FOUNDATION else "井田"
+			return "渠线压到%s · 可用 %s 换弯" % [obstacle, key]
 		_: return "这条渠线上已有水源或水渠"
 
 func _survey_route(end: Vector2i) -> Array[Vector2i]:
@@ -189,8 +193,9 @@ func _preview_fill() -> void:
 		var crop: Dictionary = Global.active_crops.get(cell, {})
 		if crop.get("requires_channel", false) and crop["age"] < crop["growth_nights"]:
 			stalled += 1
-	preview_changed.emit("填渠 · 失水 %d 格%s" % [
-		affected_fields.size(), " · %d 格稻暂停" % stalled if stalled > 0 else ""])
+	var action := "填暗渠" if culverts.has(cursor) else "填渠"
+	preview_changed.emit("%s · 失水 %d 格%s" % [
+		action, affected_fields.size(), " · %d 格稻暂停" % stalled if stalled > 0 else ""])
 
 func _preview_dig() -> void:
 	if not survey_mode and cursor == Global.irrigation.source_cell:
@@ -201,16 +206,21 @@ func _preview_dig() -> void:
 			if Global.check_channel_site(gap) in [Global.ChannelSite.AVAILABLE, Global.ChannelSite.NO_FUNDS]:
 				repair_cells.append(gap)
 		if Global.irrigation.is_channel_wet(cursor):
-			preview_changed.emit("通水渠 · 按 %s 查看填渠影响" % ("LT" if GamepadInput.active else Preferences.key_label(KeyBindings.FILL)))
+			var kind := "通水暗渠" if culverts.has(cursor) else "通水渠"
+			var key := "LT" if GamepadInput.active else Preferences.key_label(KeyBindings.FILL)
+			preview_changed.emit("%s · 按 %s 查看填渠影响" % [kind, key])
 		else:
-			preview_changed.emit("断渠 · " + ("金框处可补接" if not repair_cells.is_empty() else "与水源之间还有缺口"))
+			var kind := "暗渠断水" if culverts.has(cursor) else "断渠"
+			preview_changed.emit(kind + " · " + ("金框处可补接" if not repair_cells.is_empty() else "与水源之间还有缺口"))
 		return
 	preview_route = _survey_route(cursor)
 	var plan := Global.channel_build_plan(preview_route, survey_mode)
 	preview_site = plan["site"]
 	blocked_cell = plan["blocked_cell"]
 	planned_additions.assign(plan["additions"])
-	if preview_site == Global.ChannelSite.BLOCKED:
+	if preview_site == Global.ChannelSite.FOUNDATION:
+		preview_changed.emit("红框处是屋基，请从屋外引渠")
+	elif preview_site == Global.ChannelSite.BLOCKED:
 		preview_changed.emit("红框处是井田，请绕开")
 	elif planned_additions.is_empty():
 		preview_changed.emit("可从水源或已有水渠起步" if survey_start == null else "这段已有水渠")
@@ -236,6 +246,10 @@ func _compare_flow(next: Dictionary[Vector2i, int]) -> void:
 func _refresh_network() -> void:
 	source_label.text = "水源 · 量水尺" if Global.channel_survey_day > 0 else "水源"
 	source_label.position = tile_map.map_to_local(Global.irrigation.source_cell) + Vector2(-source_label.get_minimum_size().x / 2.0, -22)
+	culverts.clear()
+	for cell in Global.irrigation.channels:
+		if EstateLayout.is_foundation(cell):
+			culverts[cell] = true
 	_refresh_footbridges()
 	flow_ink.queue_redraw()
 	_refresh_tiles()
@@ -246,9 +260,13 @@ func _refresh_footbridges() -> void:
 	var landscape: Node2D = tile_map.get_parent().get_node("Landscape")
 	var network := Global.irrigation
 	for cell in network.channels:
+		if culverts.has(cell):
+			continue
 		var center := tile_map.map_to_local(cell)
 		for direction: Vector2i in Irrigation.NEIGHBORS:
 			var neighbor := cell + direction
+			if culverts.has(neighbor):
+				continue
 			if neighbor != network.source_cell and (not network.channels.has(neighbor) or direction in [Vector2i.LEFT, Vector2i.UP]):
 				continue
 			var other := tile_map.map_to_local(neighbor)
@@ -275,6 +293,10 @@ func _draw_plan() -> void:
 		return
 	var gain := Color("#a0e4d3")
 	var loss := Color("#edaa83")
+	for cell in culverts:
+		var cover := _cell_rect(cell).grow(-2)
+		plan_ink.draw_rect(cover, Color("#ad9b7650"))
+		plan_ink.draw_rect(cover, Color("#c9b78c"), false, 1.0)
 	for cell in affected_fields:
 		var ink := gain if affected_fields[cell] else loss
 		plan_ink.draw_rect(_cell_rect(cell).grow(-1), Color(ink, 0.24))
@@ -291,7 +313,7 @@ func _draw_plan() -> void:
 	if not preview_route.is_empty():
 		var outline := gain if preview_site == Global.ChannelSite.AVAILABLE else loss
 		plan_ink.draw_rect(_cell_rect(cursor).grow(-1), outline, false, 1.3)
-		if preview_site == Global.ChannelSite.BLOCKED:
+		if preview_site in [Global.ChannelSite.BLOCKED, Global.ChannelSite.FOUNDATION]:
 			plan_ink.draw_rect(_cell_rect(blocked_cell).grow(-1), Color("#ee9073"), false, 1.5)
 	if survey_mode and survey_start != null:
 		plan_ink.draw_rect(_cell_rect(survey_start).grow(-1), Color("#f2cc78"), false, 1.5)
@@ -353,6 +375,10 @@ func _draw() -> void:
 		_channel_shape(cell, 7.0, BED)
 	for cell in network.channels:
 		var center := tile_map.map_to_local(cell)
+		if culverts.has(cell):
+			_channel_shape(cell, 9.0, CULVERT_STONE)
+			draw_rect(Rect2(center + Vector2(-3, -1), Vector2(6, 1)), CULVERT_STONE.lightened(0.2))
+			continue
 		var wet := network.is_channel_wet(cell)
 		_channel_shape(cell, 5.0, WATER if wet else DRY)
 		if not wet:
@@ -402,12 +428,12 @@ func _draw_flow() -> void:
 	flow_ink.draw_rect(Rect2(source + Vector2(posmod(water_frame, 5) - 3, -2), Vector2(3, 1)), WATER_LIGHT)
 	for cell in network.channels:
 		var distance := network.flow_distance(cell)
-		if distance <= 0:
+		if distance <= 0 or culverts.has(cell):
 			continue
 		var center := tile_map.map_to_local(cell)
 		for direction: Vector2i in Irrigation.NEIGHBORS:
 			var upstream := cell + direction
-			if network.flow_distance(upstream) != distance - 1:
+			if network.flow_distance(upstream) != distance - 1 or culverts.has(upstream):
 				continue
 			var length := tile_size.x if direction.x != 0 else tile_size.y
 			var traveled := fposmod(water_frame - float(distance - 1) * length, RIPPLE_SPACING)

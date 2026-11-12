@@ -17,10 +17,12 @@ const PAVILION_BOUNDS := Rect2(SOUTH_PAVILION + Vector2(-36, -56), PAVILION_SIZE
 const DRIVING_START := Vector2(279, 152)
 const DRIVING_BAY := Rect2(DRIVING_START - Vector2(38, 28), Vector2(57, 41))
 const DRIVING_PARKING := Rect2(30, 229, 28, 24)
-const LANDMARKS := [
+const BUILDING_GROUND := [
 	Rect2(Vector2(HALL_FOOT) + HALL_BASE.position, HALL_BASE.size),
 	HALL_LANDING,
 	Rect2(SILK_SHED_FOOT + SILK_SHED_BASE.position, SILK_SHED_BASE.size),
+]
+const LANDMARKS := BUILDING_GROUND + [
 	PAVILION_BOUNDS,
 	DRIVING_BAY,
 	DRIVING_PARKING,
@@ -53,10 +55,18 @@ const ROAD_SHOULDER := 2.5
 
 static var road_lines: Array[PackedVector2Array] = _bake_roads()
 
+static func tile_bounds(cell: Vector2i) -> Rect2:
+	return Rect2(TILE_ORIGIN + Vector2(cell) * TILE_SIZE, Vector2.ONE * TILE_SIZE)
+
 static func field_bounds(cell: Vector2i) -> Rect2:
-	var size := Vector2.ONE * TILE_SIZE * 3.0
-	var center := TILE_ORIGIN + (Vector2(cell) + Vector2(0.5, 0.5)) * TILE_SIZE
-	return Rect2(center - size * 0.5, size)
+	return tile_bounds(cell).grow(TILE_SIZE)
+
+static func is_foundation(cell: Vector2i) -> bool:
+	var tile := tile_bounds(cell)
+	for ground: Rect2 in BUILDING_GROUND:
+		if ground.intersects(tile):
+			return true
+	return false
 
 static func corners(area: Rect2) -> PackedVector2Array:
 	return PackedVector2Array([area.position, Vector2(area.end.x, area.position.y),

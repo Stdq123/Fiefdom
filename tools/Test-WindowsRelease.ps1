@@ -24,6 +24,7 @@ param(
     [switch]$NeighborHandoff,
     [switch]$AmbienceTravel,
     [switch]$EstateTerrain,
+    [switch]$CanalDoors,
     [switch]$FieldWorksites,
     [switch]$FieldRoutes,
     [switch]$PavilionEvening,
@@ -75,7 +76,7 @@ function Start-VerifiedGame {
     }
     $lines = Get-Content -LiteralPath $log -Encoding utf8
     $marker = if ($Replay) { 'SCENARIO_OK' } else { 'Fiefdom title ready' }
-    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|GAMEPAD_|DRIVING_|BOW_AIM_|WINTER_|BINDING_|RAFT_|TITLE_|DECOR_|ROUTE_|COUNCIL_PREP_|DIRECTION_|PLAN_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|FIELD_ACCESS_|WORKSITE_|FIELD_ROUTE_|PAVILION_EVENING_|FISH_MARKET_|MARKET_WAYFINDING_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
+    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|GAMEPAD_|DRIVING_|BOW_AIM_|WINTER_|BINDING_|RAFT_|TITLE_|DECOR_|ROUTE_|COUNCIL_PREP_|DIRECTION_|PLAN_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|CANAL_DOOR_|ESTATE_PROGRESS_|ESTATE_PROVISIONS|FIELD_ACCESS_|WORKSITE_|FIELD_ROUTE_|PAVILION_EVENING_|FISH_MARKET_|MARKET_WAYFINDING_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
     if ($process.ExitCode -ne 0 -or $lines -cnotcontains $marker -or $lines -cmatch '^\s*(?:SCRIPT ERROR|USER ERROR|ERROR|WARNING):') {
         throw "$Name failed (exit $($process.ExitCode)). See $log"
     }
@@ -86,6 +87,7 @@ function Install-Replay([string]$Directory) {
     foreach ($file in 'ReleaseReplay.tscn', 'ReleaseReplay.gd', 'CampaignReplay.gd', 'NightRationsReplay.gd', 'RationPriorityReplay.gd', 'RetainerReturnReplay.gd', 'GamepadReplay.gd', 'SixArtsReplay.gd', 'BowAimReplay.gd', 'WinterSupperReplay.gd', 'KeyBindingsReplay.gd', 'SummerRaftReplay.gd', 'TitlePresentationReplay.gd', 'HallInteriorReplay.gd', 'HallDecorReplay.gd', 'TaxCouncilReplay.gd', 'RouteGoalsReplay.gd', 'CouncilPrepReplay.gd', 'EstateDirectionsReplay.gd', 'FieldSeedPlanReplay.gd', 'FieldPlanningReplay.gd', 'FieldRotationPlanReplay.gd', 'WestMarketReplay.gd', 'SilkMarketReplay.gd', 'SilkBatchReplay.gd', 'NeighborHandoffReplay.gd', 'AmbienceTravelReplay.gd', 'BuildingScaleReplay.gd', 'EstateTerrainReplay.gd', 'FieldWorksiteReplay.gd', 'FieldRoutesReplay.gd', 'PavilionEveningReplay.gd', 'FishMarketReplay.gd', 'FishingJourneyReplay.gd', 'MarketWayfindingReplay.gd') {
         Copy-Item -LiteralPath (Join-Path $repo "tests/$file") -Destination $testDirectory
     }
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/CanalDoorReplay.gd'), (Join-Path $repo 'tests/CanalFlowReplay.gd'), (Join-Path $repo 'tests/EstateProgressReplay.gd') -Destination $testDirectory
     @'
 [application]
 run/main_scene="res://tests/ReleaseReplay.tscn"
@@ -139,6 +141,7 @@ try {
     }
     if ($Opening) {
         Start-VerifiedGame -Directory $release -Profile 'opening' -Name 'opening' -Replay 'estate-directions'
+        Start-VerifiedGame -Directory $release -Profile 'estate-progress' -Name 'estate-progress' -Replay 'estate-progress'
     }
     if ($FieldPlanning) {
         Start-VerifiedGame -Directory $release -Profile 'field-planning' -Name 'field-planning' -Replay 'field-planning'
@@ -158,6 +161,9 @@ try {
     }
     if ($EstateTerrain) {
         Start-VerifiedGame -Directory $release -Profile 'estate-terrain' -Name 'estate-terrain' -Replay 'estate-terrain'
+    }
+    if ($CanalDoors) {
+        Start-VerifiedGame -Directory $release -Profile 'canal-doors' -Name 'canal-doors' -Replay 'canal-doors'
     }
     if ($FieldWorksites) {
         Start-VerifiedGame -Directory $release -Profile 'field-worksites' -Name 'field-worksites' -Replay 'field-worksites'

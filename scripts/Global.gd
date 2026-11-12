@@ -130,7 +130,7 @@ var silk_bolts_sold := 0
 var silk_bolts_offered := 0
 var sheepfold := Sheepfold.new()
 
-enum ChannelSite { AVAILABLE, LOCKED, BLOCKED, ALREADY_BUILT, NO_FUNDS }
+enum ChannelSite { AVAILABLE, LOCKED, BLOCKED, ALREADY_BUILT, NO_FUNDS, FOUNDATION }
 enum ReclamationSite { OPEN, EDGE, NEAR_FIELD, SOURCE, CANAL, ROAD, LANDMARK }
 enum CropWater { DRY, BLOCKED, HAND, CANAL, RAIN }
 enum NightGrowth { READY, DRY, BLOCKED, GROW, RIPEN }
@@ -2067,6 +2067,8 @@ func check_channel_site(cell: Vector2i) -> ChannelSite:
 		return ChannelSite.BLOCKED
 	if irrigation.channels.has(cell):
 		return ChannelSite.ALREADY_BUILT
+	if EstateLayout.is_foundation(cell):
+		return ChannelSite.FOUNDATION
 	if money < channel_cost():
 		return ChannelSite.NO_FUNDS
 	return ChannelSite.AVAILABLE
@@ -2084,7 +2086,7 @@ func channel_build_plan(route: Array[Vector2i], survey := false) -> Dictionary:
 		if survey and (cell == irrigation.source_cell or irrigation.channels.has(cell)):
 			continue
 		var site := check_channel_site(cell)
-		if site in [ChannelSite.BLOCKED, ChannelSite.ALREADY_BUILT]:
+		if site in [ChannelSite.BLOCKED, ChannelSite.ALREADY_BUILT, ChannelSite.FOUNDATION]:
 			result["site"] = site
 			result["blocked_cell"] = cell
 			additions.clear()

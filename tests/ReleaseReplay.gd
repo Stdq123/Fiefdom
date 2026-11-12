@@ -109,6 +109,13 @@ func _run() -> void:
 			replay.title_art = arguments[0] == "estate-terrain-art"
 			replay.capture_path = capture_directory
 			await replay.run(tree)
+		"canal-doors", "canal-doors-legacy":
+			var replay = load("res://tests/CanalDoorReplay.gd").new()
+			replay.legacy = arguments[0] == "canal-doors-legacy"
+			await replay.run_doors(tree, false, capture_directory)
+		"estate-progress":
+			var replay = load("res://tests/EstateProgressReplay.gd").new()
+			await replay.run(tree)
 		"field-worksites", "field-worksites-legacy":
 			var replay = load("res://tests/FieldWorksiteReplay.gd").new()
 			replay.legacy = arguments[0] == "field-worksites-legacy"
