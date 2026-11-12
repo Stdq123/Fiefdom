@@ -9,6 +9,7 @@ param(
     [switch]$Soak,
     [switch]$Rations,
     [switch]$Gamepad,
+    [switch]$ManagementNavigation,
     [switch]$SixArts,
     [switch]$BowAim,
     [switch]$WinterSupper,
@@ -95,6 +96,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/CanalDoorReplay.gd'), (Join-Path $repo 'tests/CanalFlowReplay.gd'), (Join-Path $repo 'tests/EstateProgressReplay.gd'), (Join-Path $repo 'tests/SilkInteriorReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ResearchRationsReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldStrokeReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/ManagementNavigationReplay.gd') -Destination $testDirectory
     foreach ($file in 'MarketOrderReplay.gd', 'AutumnExhibitReplay.gd', 'SheepfoldReplay.gd', 'RavineMapReplay.gd', 'CreekTrapReplay.gd', 'FieldNightReplay.gd', 'CouncilSilkReplay.gd') {
         Copy-Item -LiteralPath (Join-Path $repo "tests/$file") -Destination $testDirectory
     }
@@ -126,6 +128,9 @@ try {
     Start-VerifiedGame -Directory $release -Profile 'research' -Name 'research' -Replay 'research'
     if ($Gamepad) {
         Start-VerifiedGame -Directory $release -Profile 'gamepad' -Name 'gamepad' -Replay 'gamepad'
+    }
+    if ($ManagementNavigation) {
+        Start-VerifiedGame -Directory $release -Profile 'management-navigation' -Name 'management-navigation' -Replay 'management-navigation'
     }
     if ($SixArts) {
         Start-VerifiedGame -Directory $release -Profile 'six-arts' -Name 'six-arts' -Replay 'six-arts'

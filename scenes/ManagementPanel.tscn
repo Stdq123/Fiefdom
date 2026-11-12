@@ -1,7 +1,22 @@
-[gd_scene load_steps=3 format=3 uid="uid://management_panel_uid"]
+[gd_scene load_steps=4 format=3 uid="uid://management_panel_uid"]
 
 [ext_resource type="Script" path="res://scripts/ManagementPanel.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/MarketPanel.tscn" id="2_market"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_frame"]
+bg_color = Color(0.116, 0.172, 0.135, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.62, 0.53, 0.34, 1)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+shadow_color = Color(0.04, 0.06, 0.04, 0.45)
+shadow_size = 9
+shadow_offset = Vector2(0, 3)
 
 [node name="ManagementPanel" type="Control"]
 layout_mode = 3
@@ -19,42 +34,93 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.083, 0.128, 0.107, 0.98)
+color = Color(0.041, 0.063, 0.049, 0.78)
+
+[node name="Frame" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 28.0
+offset_top = 22.0
+offset_right = -28.0
+offset_bottom = -22.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_frame")
+
+[node name="Sections" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 48.0
+offset_top = 38.0
+offset_right = -176.0
+offset_bottom = 82.0
+grow_horizontal = 2
+theme_override_constants/separation = 6
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 50.0
-offset_top = 50.0
-offset_right = -50.0
-offset_bottom = -50.0
+offset_left = 48.0
+offset_top = 98.0
+offset_right = -48.0
+offset_bottom = -40.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 50
+theme_override_constants/separation = 16
 
 [node name="LeftPanel" type="VBoxContainer" parent="HBoxContainer"]
+custom_minimum_size = Vector2(336, 0)
+layout_mode = 2
+theme_override_constants/separation = 9
+
+[node name="RosterHeader" type="HBoxContainer" parent="HBoxContainer/LeftPanel"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HBoxContainer/LeftPanel/RosterHeader"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.95, 0.82, 0.57, 1)
+theme_override_font_sizes/font_size = 22
+text = "门客"
 
-[node name="Label" type="Label" parent="HBoxContainer/LeftPanel"]
+[node name="RetainerCount" type="Label" parent="HBoxContainer/LeftPanel/RosterHeader"]
+unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "门客列表"
+theme_override_colors/font_color = Color(0.73, 0.80, 0.66, 1)
+theme_override_font_sizes/font_size = 15
+
+[node name="RosterDivider" type="HSeparator" parent="HBoxContainer/LeftPanel"]
+layout_mode = 2
+
+[node name="EmptyRoster" type="Label" parent="HBoxContainer/LeftPanel"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.73, 0.80, 0.66, 1)
+text = "暂无可分派的门客"
 
 [node name="ScrollContainer" type="ScrollContainer" parent="HBoxContainer/LeftPanel"]
 layout_mode = 2
 size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/LeftPanel/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
 [node name="RightPanel" type="TabContainer" parent="HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+tabs_visible = false
 
 [node name="封地概览" type="VBoxContainer" parent="HBoxContainer/RightPanel"]
 layout_mode = 2
@@ -118,6 +184,7 @@ columns = 3
 [node name="市场" parent="HBoxContainer/RightPanel" instance=ExtResource("2_market")]
 visible = false
 layout_mode = 2
+theme_override_constants/separation = 8
 
 [node name="君子六艺" type="VBoxContainer" parent="HBoxContainer/RightPanel"]
 visible = false
@@ -187,14 +254,35 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 
+[node name="SectionHint" type="Label" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -280.0
+offset_top = -40.0
+offset_right = -48.0
+offset_bottom = -22.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.73, 0.80, 0.66, 1)
+theme_override_font_sizes/font_size = 13
+text = "LB / RB 切换栏目"
+horizontal_alignment = 2
+
 [node name="CloseButton" type="Button" parent="."]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -40.0
-offset_top = 10.0
-offset_right = -10.0
-offset_bottom = 41.0
+offset_left = -160.0
+offset_top = 38.0
+offset_right = -48.0
+offset_bottom = 82.0
 grow_horizontal = 0
-text = "X"
+mouse_default_cursor_shape = 2
+text = "返回  Esc"

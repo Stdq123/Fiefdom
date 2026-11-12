@@ -22,9 +22,7 @@ func _enter_estate(resume: bool) -> void:
 func _open_arts() -> Control:
 	await _button(ui.manage_button)
 	var management: Control = ui.panel_manager.management_panel_instance
-	var tabs: TabContainer = management.get_node("HBoxContainer/RightPanel")
-	var bar := tabs.get_tab_bar()
-	await _click(bar.get_global_transform_with_canvas() * bar.get_tab_rect(2).get_center())
+	await _button(management.sections.get_node("君子六艺"))
 	return management
 
 func _cross_room(point: Vector2, room: int) -> void:

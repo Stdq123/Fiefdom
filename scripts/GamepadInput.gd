@@ -87,7 +87,7 @@ func _use_gamepad(id: int) -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 	cursor.visible = not pointer_suspended
 	set_process(true)
-	snap_pointer_to_focus.call_deferred()
+	snap_pointer_to_focus.call_deferred(_menu_controls())
 	changed.emit()
 
 func _use_mouse() -> void:
@@ -169,10 +169,10 @@ func _clamp_pointer() -> void:
 	var bounds := window.get_visible_rect()
 	cursor.position = cursor.position.clamp(bounds.position, bounds.end - Vector2.ONE)
 
-func snap_pointer_to_focus() -> void:
+func snap_pointer_to_focus(use_focus := true) -> void:
 	if not active or pointer_suspended:
 		return
-	var focus := window.gui_get_focus_owner()
+	var focus := window.gui_get_focus_owner() if use_focus else null
 	if focus:
 		var bounds := focus.get_global_rect()
 		cursor.position = bounds.get_center()
@@ -204,8 +204,12 @@ func _pad_button(id: int, button: JoyButton, pressed: bool) -> void:
 			elif dialogue or not _menu_controls():
 				_action(KeyBindings.INTERACT, pressed)
 		JOY_BUTTON_LEFT_SHOULDER, JOY_BUTTON_RIGHT_SHOULDER:
-			if pressed and not _menu_controls():
-				GameEvents.seed_cycle_requested.emit(-1 if button == JOY_BUTTON_LEFT_SHOULDER else 1)
+			if pressed:
+				var step := -1 if button == JOY_BUTTON_LEFT_SHOULDER else 1
+				if not _menu_controls():
+					GameEvents.seed_cycle_requested.emit(step)
+				elif not left_down:
+					GameEvents.management_section_requested.emit(step)
 		JOY_BUTTON_LEFT_STICK, JOY_BUTTON_RIGHT_STICK:
 			if pressed:
 				var wheel := MOUSE_BUTTON_WHEEL_UP if button == JOY_BUTTON_RIGHT_STICK else MOUSE_BUTTON_WHEEL_DOWN

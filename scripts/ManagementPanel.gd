@@ -6,8 +6,13 @@ const NEIGHBOR_JOURNAL := preload("res://scenes/NeighborJournal.tscn")
 const FISH_LEDGER := preload("res://scripts/FishLedger.gd")
 const MAP_GRID_ITEM := preload("res://scripts/MapGridItem.gd")
 
+@onready var sections: HBoxContainer = %Sections
+@onready var section_hint: Label = %SectionHint
+@onready var close_button: Button = $CloseButton
+@onready var retainer_panel: VBoxContainer = $HBoxContainer/LeftPanel
+@onready var retainer_count: Label = %RetainerCount
+@onready var empty_roster: Label = %EmptyRoster
 @onready var retainer_list_container: VBoxContainer = $HBoxContainer/LeftPanel/ScrollContainer/VBoxContainer
-# Updated path due to TabContainer
 @onready var map_grid_container: GridContainer = $HBoxContainer/RightPanel/封地概览/GridContainer
 @onready var well_field_selector: OptionButton = $HBoxContainer/RightPanel/封地概览/WellFieldSelector
 @onready var seed_plan_picker: OptionButton = $HBoxContainer/RightPanel/封地概览/SeedPlan/SeedPicker
@@ -21,6 +26,8 @@ const MAP_GRID_ITEM := preload("res://scripts/MapGridItem.gd")
 @onready var bow_button: Button = $HBoxContainer/RightPanel/科技/TechContainer/BowButton
 @onready var rank_progress_label: Label = $HBoxContainer/RightPanel/科技/RankLabel
 @onready var tabs: TabContainer = $HBoxContainer/RightPanel
+var section_buttons: Array[Button] = []
+var previous_focus: Control
 var season_order_panel: Control
 var neighbor_journal: Control
 var fish_ledger: Control
@@ -40,8 +47,6 @@ var music_practice_script = preload("res://scripts/MusicPractice.gd")
 @onready var driving_button: Button = $HBoxContainer/RightPanel/君子六艺/Actions/DrivingButton
 
 func _ready() -> void:
-	visibility_changed.connect(_announce_visibility)
-	_announce_visibility()
 	refresh_retainers()
 	well_field_selector.item_selected.connect(_show_well_field)
 	seed_plan_picker.add_item("选种后点田格")
@@ -76,11 +81,11 @@ func _ready() -> void:
 	silk_panel = silk_panel_script.new()
 	silk_panel.name = "蚕桑"
 	silk_panel.add_theme_constant_override("separation", 12)
-	$HBoxContainer/RightPanel.add_child(silk_panel)
+	tabs.add_child(silk_panel)
 	silk_panel.study_requested.connect(show_six_arts)
 	var ravine_panel := ravine_panel_script.new() as VBoxContainer
 	ravine_panel.name = "溪行手记"
-	$HBoxContainer/RightPanel.add_child(ravine_panel)
+	tabs.add_child(ravine_panel)
 	season_order_panel = SEASON_ORDER_PANEL.instantiate()
 	tabs.add_child(season_order_panel)
 	neighbor_journal = NEIGHBOR_JOURNAL.instantiate()
@@ -89,9 +94,70 @@ func _ready() -> void:
 	fish_ledger.name = "溪鱼簿"
 	tabs.add_child(fish_ledger)
 	market_panel.fish_book_button.pressed.connect(show_fish_ledger)
-	tabs.tab_changed.connect(func(index: int):
-		$HBoxContainer/LeftPanel.visible = tabs.get_tab_control(index) not in [neighbor_journal, fish_ledger]
-	)
+	_build_sections()
+	tabs.tab_changed.connect(_refresh_section)
+	GameEvents.management_section_requested.connect(_cycle_section)
+	GamepadInput.changed.connect(_refresh_input_hints)
+	visibility_changed.connect(_announce_visibility)
+	_refresh_section(tabs.current_tab)
+	_refresh_input_hints()
+	_announce_visibility()
+
+func _build_sections() -> void:
+	var selection := ButtonGroup.new()
+	var inactive := tabs.get_theme_stylebox("tab_unselected")
+	var selected := tabs.get_theme_stylebox("tab_selected")
+	for index in tabs.get_tab_count():
+		var button := Button.new()
+		button.name = tabs.get_tab_control(index).name
+		button.text = tabs.get_tab_title(index)
+		button.toggle_mode = true
+		button.button_group = selection
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		button.add_theme_font_size_override("font_size", 17)
+		button.add_theme_stylebox_override("normal", inactive)
+		button.add_theme_stylebox_override("pressed", selected)
+		button.add_theme_stylebox_override("hover_pressed", selected)
+		button.add_theme_color_override("font_color", Color("#d4dec7"))
+		button.add_theme_color_override("font_pressed_color", Color("#ffdfa0"))
+		button.add_theme_color_override("font_hover_pressed_color", Color("#ffdfa0"))
+		button.pressed.connect(func(): tabs.current_tab = index)
+		sections.add_child(button)
+		section_buttons.append(button)
+	var count := section_buttons.size()
+	for index in count:
+		var button := section_buttons[index]
+		button.focus_neighbor_left = button.get_path_to(section_buttons[posmod(index - 1, count)])
+		button.focus_neighbor_right = button.get_path_to(section_buttons[(index + 1) % count])
+		button.focus_neighbor_top = NodePath(".")
+	close_button.focus_next = close_button.get_path_to(section_buttons[0])
+	section_buttons[0].focus_previous = section_buttons[0].get_path_to(close_button)
+
+func _refresh_section(index: int) -> void:
+	var focus := get_viewport().gui_get_focus_owner()
+	var page := tabs.get_tab_control(index)
+	retainer_panel.visible = page not in [neighbor_journal, fish_ledger]
+	section_buttons[index].button_pressed = true
+	if is_visible_in_tree() and (focus == null or focus in section_buttons):
+		section_buttons[index].grab_focus()
+
+func _cycle_section(step: int) -> void:
+	if not is_visible_in_tree() or get_tree().paused:
+		return
+	var viewport := get_viewport()
+	var focus := viewport.gui_get_focus_owner()
+	if focus != null and not is_ancestor_of(focus):
+		return
+	if viewport.get_embedded_subwindows().any(func(window: Window): return not window.unfocusable):
+		return
+	tabs.current_tab = posmod(tabs.current_tab + step, section_buttons.size())
+	section_buttons[tabs.current_tab].grab_focus()
+	GamepadInput.snap_pointer_to_focus()
+
+func _refresh_input_hints() -> void:
+	section_hint.visible = GamepadInput.active
+	close_button.text = "返回  B" if GamepadInput.active else "返回  Esc"
 
 func show_season_orders() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(season_order_panel)
@@ -115,7 +181,14 @@ func show_fish_ledger() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(fish_ledger)
 
 func _announce_visibility() -> void:
-	GameEvents.management_visibility_changed.emit(is_visible_in_tree())
+	var opened := is_visible_in_tree()
+	GameEvents.management_visibility_changed.emit(opened)
+	if opened:
+		previous_focus = get_viewport().gui_get_focus_owner()
+		section_buttons[tabs.current_tab].grab_focus()
+		GamepadInput.snap_pointer_to_focus.call_deferred()
+	elif is_instance_valid(previous_focus) and previous_focus.is_visible_in_tree():
+		previous_focus.grab_focus()
 
 func setup_tech() -> void:
 	irrigation_button.pressed.connect(_on_unlock_irrigation)
@@ -262,17 +335,18 @@ func _start_driving_practice() -> void:
 		GameEvents.driving_practice_requested.emit()
 
 func refresh_retainers() -> void:
-	# Clear existing
 	for child in retainer_list_container.get_children():
 		retainer_list_container.remove_child(child)
 		child.queue_free()
-		
-	# Add from Global
+
+	retainer_count.text = "%d 人" % Global.retainers.size()
+	retainer_count.visible = not Global.retainers.is_empty()
+	empty_roster.visible = Global.retainers.is_empty()
 	for r in Global.retainers:
 		var item = retainer_item_scene.instantiate()
 		retainer_list_container.add_child(item)
 		item.setup(r)
-	
+
 func refresh_well_fields() -> void:
 	var previous_id := well_field_selector.get_selected_id()
 	well_field_selector.clear()

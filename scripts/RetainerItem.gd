@@ -21,7 +21,7 @@ func setup(p_data: RetainerData) -> void:
 	data = p_data
 	name_label.text = data.name
 	job_label.text = "%s · %s · 效率 %.2f" % [data.profession, data.get_school_name(), data.get_work_efficiency()]
-	tooltip_text = "%s\n忠诚度 %.0f" % [data.get_school_ability(), data.loyalty]
+	tooltip_text = "%s\n%s\n%s\n忠诚度 %.0f" % [data.name, job_label.text, data.get_school_ability(), data.loyalty]
 	icon.texture = data.portrait if data.portrait else data.get_appearance_texture()
 	_refresh_duty()
 
@@ -43,12 +43,8 @@ func _on_duty_changed(retainer: RetainerData) -> void:
 	if data == retainer:
 		_refresh_duty()
 
-func _get_drag_data(at_position: Vector2) -> Variant:
-	print("Dragging retainer: ", data.name)
-	
-	# Create preview
-	var preview = Label.new()
+func _get_drag_data(_at_position: Vector2) -> Variant:
+	var preview := Label.new()
 	preview.text = data.name
 	set_drag_preview(preview)
-	
 	return data
