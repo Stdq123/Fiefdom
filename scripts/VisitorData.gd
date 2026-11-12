@@ -306,7 +306,7 @@ static func ravine_guide_line() -> String:
 			return "药圃还要 %d 夜长回新叶。缺药时，可以先去望溪台看看。" % wait
 		return "药圃已经长出新叶。" + _return_line(RAVINE_GUIDE)
 	if Global.ravine_handoff_ready():
-		return "桥柱、踏石和背阴的石台，你都记下了。照着台边的土性，我在竹径东侧育了一畦药苗，正好交给你照料。"
+		return "桥柱、踏石和背阴的石台，你都记下了。竹径东侧的药苗交给你照料。我也把浅滩西岸的旧路清开了，从那里就能走回南路。"
 	if not Global.knows_ravine_journal():
 		return "我叫蒲宁。想托你记下竹涧三处水迹，每天记一处。柳湾和砾滩也能垂钓，浮标沉了再提竿。记齐水迹就来竹径找我。"
 	var site := Global.ravine_site_today()

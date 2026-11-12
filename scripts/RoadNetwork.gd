@@ -69,3 +69,11 @@ func route_between(origin: Vector2, target: Vector2) -> PackedVector2Array:
 		if not points[-1].is_equal_approx(point):
 			points.append(point)
 	return points
+
+static func route_length(path: PackedVector2Array) -> float:
+	if path.is_empty():
+		return INF
+	var length := 0.0
+	for index in range(1, path.size()):
+		length += path[index - 1].distance_to(path[index])
+	return length

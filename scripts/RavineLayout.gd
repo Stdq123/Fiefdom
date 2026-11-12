@@ -15,6 +15,9 @@ const FORD := Vector2(213, 182)
 const FORD_WEST := FORD + Vector2(-35, 0)
 const FORD_EAST := FORD + Vector2(35, 0)
 const RIDGE_FORK := Vector2(330, 19)
+const SOUTH_TRAIL_GATE := Vector2(205, 347)
+const SOUTH_TRAIL_ARRIVAL := Vector2(203, 310)
+const SOUTH_TRAIL_NAME := "南路小径"
 
 const FRUIT := Vector2(-139, -123)
 const HERBS := Vector2(446, -106)
@@ -54,8 +57,12 @@ const SHOAL_LANE := [
 const RIDGE_LANE := [
 	RIDGE_FORK, Vector2(348, -17), Vector2(376, -51), LOOKOUT_JOURNAL, Vector2(430, -90), HERBS,
 ]
-const TRACKS := [MAIN_TRAIL, BERRY_LANE, WEST_SHORE, DOCK_LANE, POOL_TRAP_LANE, FORD_TRAIL, SHOAL_LANE, RIDGE_LANE]
-const TRACK_WIDTHS: Array[float] = [26.0, 13.0, 16.0, 12.0, 10.0, 17.0, 13.0, 15.0]
+const SOUTH_TRAIL := [
+	FORD_WEST, Vector2(169, 223), Vector2(183, 263), SOUTH_TRAIL_ARRIVAL,
+	SOUTH_TRAIL_GATE, Vector2(190, 392), Vector2(184, 453), Vector2(184, 518),
+]
+const TRACKS := [MAIN_TRAIL, BERRY_LANE, WEST_SHORE, DOCK_LANE, POOL_TRAP_LANE, FORD_TRAIL, SHOAL_LANE, RIDGE_LANE, SOUTH_TRAIL]
+const TRACK_WIDTHS: Array[float] = [26.0, 13.0, 16.0, 12.0, 10.0, 17.0, 13.0, 15.0, 14.0]
 
 const CREEK := [
 	Vector2(275, -452), Vector2(237, -331), Vector2(203, -250), Vector2(177, -193), Vector2(151, -136), Vector2(132, -73),

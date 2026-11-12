@@ -5,8 +5,13 @@ const SAVE_ARCHIVE := preload("res://scenes/SaveArchive.tscn")
 const BINDINGS_PANEL := preload("res://scripts/KeyboardBindingsPanel.gd")
 
 var session_controls := true
-var save_resume_hint := ""
+var save_resume_hint := "":
+	set(value):
+		save_resume_hint = value
+		if is_instance_valid(save_button):
+			save_button.tooltip_text = value
 var save_status: Label
+var save_button: Button
 var preferences_status: Label
 var contents: VBoxContainer
 var heading: Label
@@ -118,11 +123,11 @@ func _add_volume_control(vbox: VBoxContainer, control_name: StringName, text: St
 	vbox.add_child(slider)
 
 func _add_session_controls(vbox: VBoxContainer) -> void:
-	var save_btn := Button.new()
-	save_btn.text = "保存游戏"
-	save_btn.tooltip_text = save_resume_hint
-	save_btn.pressed.connect(_on_save_pressed)
-	vbox.add_child(save_btn)
+	save_button = Button.new()
+	save_button.text = "保存游戏"
+	save_button.tooltip_text = save_resume_hint
+	save_button.pressed.connect(_on_save_pressed)
+	vbox.add_child(save_button)
 
 	var load_btn := Button.new()
 	load_btn.text = "读取游戏"

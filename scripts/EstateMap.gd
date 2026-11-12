@@ -96,6 +96,9 @@ func _collect_places() -> void:
 			_node_point(world.get_node("TravelHearth/Approach")), true),
 		_entry(Category.PLACES, "交货簿", "到卸货场查看本季托付", _node_point(world.get_node("SeasonBoard/Approach")), true)
 	]
+	if Global.ravine_shortcut_open():
+		places.append(_entry(Category.PLACES, EstateLayout.RAVINE_TRAIL_NAME, "过南路灶台向东，通竹涧浅滩西岸",
+			_node_point(world.get_node("RavineTrailGate")), true))
 	var hall := world.get_node("HallRest") as Node2D
 	if hall.visible:
 		places.insert(2, _entry(Category.PLACES, "堂前", "进屋可研读、歇息和更衣", _node_point(hall), true, icons.get(LANDSCAPE.Prop.HALL)))
@@ -193,12 +196,11 @@ func _collect_people() -> void:
 				actor, resident.get_appearance_texture())
 
 func _ravine_places() -> Array[Dictionary]:
-	var gate := _node_point(world.get_node("EastGate"))
 	var destinations: Array[Dictionary] = []
 	var deployed := Global.creek_trap_site()
 	var basket: String = CreekTrap.PLACES[deployed] if deployed >= 0 else ""
 	for place: String in Global.ravine_trip_places():
-		var entry := _entry(Category.RAVINE, place, Global.ravine_place_detail(place), gate)
+		var entry := _entry(Category.RAVINE, place, Global.ravine_place_detail(place), directions.ravine_gate_point(place))
 		if place == basket:
 			destinations.push_front(entry)
 		else:
@@ -344,10 +346,12 @@ func _refresh_destination() -> void:
 	clear_button.disabled = target.is_empty()
 	if not target.is_empty():
 		status.text = "指路 · " + target.title
+		if not Global.ravine_trip_target.is_empty() and target.point == EstateLayout.RAVINE_TRAIL_GATE:
+			status.text += " · 经竹涧小径"
 	else:
 		match category:
 			Category.FIELDS: status.text = "选一类田务，做完一格会标出下一格。"
-			Category.RAVINE: status.text = "选个去处，沿金色标记走东关。"
+			Category.RAVINE: status.text = "选个去处，沿金色标记进竹涧。"
 			_: status.text = "点选目的地，回到封地后沿金色标记走。"
 	for row in row_buttons:
 		var entry: Dictionary = row_buttons[row]

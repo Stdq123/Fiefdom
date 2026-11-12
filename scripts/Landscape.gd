@@ -121,7 +121,7 @@ const ESTATE_TRACKS := EstateLayout.ROADS + EstateLayout.SOUTH_ROADS + [
 ] + EstateLayout.DRIVING_ROADS
 const WILD_TRACKS := RavineLayout.TRACKS
 const ESTATE_TRACK_WIDTHS: Array[float] = EstateLayout.ROAD_WIDTHS + [
-	18.0, 13.0, 17.0, 14.0, 17.0, 15.0, 13.0, 41.0, 30.0, 19.0, 34.0,
+	18.0, 13.0, 17.0, 14.0, 17.0, 15.0, 13.0, 16.0, 41.0, 30.0, 19.0, 34.0,
 ]
 const GARDEN_TRACK := [EstateLayout.PAVILION_TURN, Vector2(39, 396), Vector2(58, 402), Vector2(78, 407), Vector2(101, 408)]
 const ROAD_REST_TRACK := [EstateLayout.PAVILION_JUNCTION, Vector2(9, 432), Vector2(-7, 442)]
@@ -235,8 +235,9 @@ const ESTATE_PROPS := [
 	Vector3i(112, 594, Prop.OAK), Vector3i(136, 621, Prop.PINE), Vector3i(172, 609, Prop.GROVE_TREE),
 	Vector3i(37, 600, Prop.BAMBOO), Vector3i(23, 636, Prop.FLOWERS), Vector3i(4, 678, Prop.TALL_BAMBOO),
 	Vector3i(244, 637, Prop.OAK), Vector3i(263, 656, Prop.TALL_BAMBOO), Vector3i(290, 672, Prop.ROCK),
-	Vector3i(306, 569, Prop.BAMBOO), Vector3i(335, 572, Prop.GROVE_TREE), Vector3i(401, 574, Prop.BLOSSOM_TREE),
-	Vector3i(459, 577, Prop.TALL_BAMBOO), Vector3i(489, 612, Prop.PINE), Vector3i(483, 664, Prop.OAK),
+	Vector3i(278, 553, Prop.SIGNPOST), Vector3i(306, 545, Prop.BAMBOO), Vector3i(341, 539, Prop.GROVE_TREE),
+	Vector3i(400, 603, Prop.BLOSSOM_TREE), Vector3i(463, 539, Prop.PINE), Vector3i(457, 608, Prop.TALL_BAMBOO),
+	Vector3i(489, 612, Prop.PINE), Vector3i(483, 664, Prop.OAK),
 	Vector3i(452, 705, Prop.GROVE_TREE), Vector3i(402, 711, Prop.TALL_BAMBOO),
 	Vector3i(357, 721, Prop.PINE), Vector3i(303, 722, Prop.OAK), Vector3i(258, 734, Prop.PINE),
 	Vector3i(201, 717, Prop.GROVE_TREE), Vector3i(153, 733, Prop.PINE), Vector3i(110, 710, Prop.TALL_BAMBOO),
@@ -264,7 +265,9 @@ const WILD_PROPS := [
 	Vector3i(-156, 220, Prop.GROVE_TREE), Vector3i(-121, 290, Prop.PINE), Vector3i(-50, 220, Prop.OAK),
 	Vector3i(39, 198, Prop.PINE), Vector3i(83, 181, Prop.OAK), Vector3i(114, 191, Prop.MOSS_STONE),
 	Vector3i(143, 140, Prop.FERN), Vector3i(164, 142, Prop.RAVINE_RUSH), Vector3i(156, 208, Prop.REEDS),
-	Vector3i(177, 206, Prop.PEBBLES), Vector3i(204, 227, Prop.RAVINE_ROCK), Vector3i(181, 267, Prop.WILLOW),
+	Vector3i(191, 209, Prop.PEBBLES), Vector3i(204, 227, Prop.RAVINE_ROCK), Vector3i(72, 276, Prop.WILLOW),
+	Vector3i(141, 228, Prop.SIGNPOST), Vector3i(234, 307, Prop.TALL_BAMBOO),
+	Vector3i(173, 321, Prop.BAMBOO), Vector3i(167, 356, Prop.GROVE_TREE), Vector3i(235, 352, Prop.RAVINE_ROCK),
 	Vector3i(153, 292, Prop.TALL_BAMBOO), Vector3i(110, 309, Prop.PINE), Vector3i(55, 302, Prop.GROVE_TREE),
 	Vector3i(41, -53, Prop.PINE), Vector3i(23, -100, Prop.OAK), Vector3i(-14, -142, Prop.GROVE_CLUSTER),
 	Vector3i(41, -165, Prop.GROVE_TREE), Vector3i(60, -135, Prop.TALL_BAMBOO), Vector3i(59, -208, Prop.PINE),
@@ -286,7 +289,7 @@ const WILD_PROPS := [
 	Vector3i(297, 258, Prop.REEDS), Vector3i(328, 282, Prop.FERN), Vector3i(308, 305, Prop.PEBBLES),
 	Vector3i(357, 311, Prop.TALL_BAMBOO), Vector3i(397, 268, Prop.GROVE_TREE), Vector3i(432, 234, Prop.PINE),
 	Vector3i(488, 213, Prop.GROVE_CLUSTER), Vector3i(504, 299, Prop.PINE), Vector3i(436, 342, Prop.TALL_BAMBOO),
-	Vector3i(371, 365, Prop.GROVE_TREE), Vector3i(325, 369, Prop.PINE), Vector3i(219, 377, Prop.PINE),
+	Vector3i(371, 365, Prop.GROVE_TREE), Vector3i(325, 369, Prop.PINE), Vector3i(244, 394, Prop.PINE),
 	Vector3i(148, 359, Prop.GROVE_TREE), Vector3i(71, 368, Prop.PINE), Vector3i(-7, 373, Prop.GROVE_CLUSTER),
 ]
 
@@ -448,6 +451,7 @@ func _place_lanterns(layer: Node2D) -> void:
 		day_lighting.place_lamp(layer, Vector2(-181, 20))
 		day_lighting.place_lamp(layer, BRIDGE + Vector2(-29, 15), 0.83)
 		day_lighting.place_lamp(layer, BRIDGE + Vector2(30, -12), 0.83)
+		day_lighting.place_lamp(layer, RavineLayout.SOUTH_TRAIL_GATE + Vector2(-22, -10), 0.72)
 	else:
 		day_lighting.place_lamp(layer, Vector2(HALL_FOOT) + Vector2(-18, 8), 0.90)
 		day_lighting.place_lamp(layer, Vector2(HALL_FOOT) + Vector2(18, 8), 0.90)
@@ -456,6 +460,7 @@ func _place_lanterns(layer: Node2D) -> void:
 		day_lighting.place_lamp(layer, EstateLayout.FREIGHT_STOP + Vector2(37, -19), 0.80)
 		day_lighting.place_lamp(layer, EstateLayout.DRIVING_START + Vector2(28, -14), 0.78)
 		day_lighting.place_lamp(layer, EstateLayout.DRIVING_FINISH + Vector2(-2, -27), 0.76)
+		day_lighting.place_lamp(layer, EstateLayout.RAVINE_TRAIL_GATE + Vector2(-16, -17), 0.72)
 		day_lighting.place_lamp(layer, Vector2(415, 31))
 		day_lighting.place_lamp(layer, Vector2(-286, -4))
 		day_lighting.place_lamp(layer, EstateLayout.WEST_COURT + Vector2(-31, -9), 0.78)
@@ -621,6 +626,7 @@ func _add_landmark_labels() -> void:
 		_label_at(RavineLayout.WEST_GATE + Vector2(0, -79), "← 西门 · 回封地")
 		_label_at(RavineLayout.GROVE_FORK + Vector2(0, -42), "↑ 野果坳")
 		_label_at(RavineLayout.FORD_FORK + Vector2(-10, 23), "浅滩 ↘")
+		_label_at(Vector2(140, 186), "南路小径 ↓")
 		_label_at(RavineLayout.SHORE_FORK + Vector2(0, -31), "↑ 柳湾 · 埠头")
 		_label_at(BRIDGE + Vector2(-66, -31), "木桥 →")
 		_label_at(RavineLayout.RIDGE_FORK + Vector2(0, -34), "望溪台 ↗")
@@ -637,6 +643,7 @@ func _add_landmark_labels() -> void:
 		_label_at(SOUTH_PAVILION + Vector2(0, -69), "南路亭")
 		_label_at(Vector2(12, 181), "南路亭 ↓")
 		_label_at(EstateLayout.SOUTH_FORK + Vector2(22, -38), "西坡 ↙  ·  灶台 →")
+		_label_at(Vector2(278, 510), "竹涧小径 →")
 
 func _label_at(center: Vector2, text: String) -> void:
 	var label := Label.new()

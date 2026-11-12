@@ -117,7 +117,8 @@ func _layout_fits() -> bool:
 			if prior.intersects(rect):
 				return false
 		labels.append(rect)
-	return map.markers.has(SummerRaft.PLACE) and labels.size() == (10 if state.creek_traps_unlocked() else 8)
+	return (map.markers.has(SummerRaft.PLACE) and map.markers[RavineLayout.SOUTH_TRAIL_NAME].disabled
+		and labels.size() == (11 if state.creek_traps_unlocked() else 9))
 
 func _select_place(place: String) -> bool:
 	await _key(KEY_M)

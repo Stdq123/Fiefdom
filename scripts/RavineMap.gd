@@ -42,6 +42,9 @@ func setup(trail_guide: Node2D, walker: Player, terrain: LANDSCAPE, destinations
 			button.accessibility_name = place
 		else:
 			button.text = place
+		if place == RavineLayout.SOUTH_TRAIL_NAME:
+			button.disabled = not Global.ravine_shortcut_open()
+			button.tooltip_text = "交完三处水迹后通封地南路" if button.disabled else "回封地南路灶台附近"
 		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		button.toggle_mode = true
 		button.pressed.connect(_select_place.bind(place, places[place]))
@@ -83,6 +86,8 @@ func _on_campaign_ended(outcome: Global.Outcome) -> void:
 	guide.clear()
 
 func _select_place(place: String, point: Vector2) -> void:
+	if place == RavineLayout.SOUTH_TRAIL_NAME and not Global.ravine_shortcut_open():
+		return
 	if not guide.follow(place, point):
 		_refresh_route()
 		route_status.text = "这里接不上山路，靠近一条路后再选。"
@@ -151,6 +156,8 @@ func _refresh_route() -> void:
 		route_status.text = "前往" + destination
 		if going_to_market:
 			route_status.text += " · 经西门回封地"
+		elif name == RavineLayout.SOUTH_TRAIL_NAME:
+			route_status.text += " · 回封地南路"
 		if guide.route.has(LANDSCAPE.BRIDGE):
 			route_status.text += " · 经木桥"
 		elif guide.route.has(LANDSCAPE.FORD):
@@ -182,6 +189,8 @@ func _layout_markers() -> void:
 				offset.y = -button.size.y - 9
 			"浅滩", SummerRaft.PLACE:
 				offset = Vector2(-button.size.x - 13, -button.size.y / 2.0)
+			RavineLayout.SOUTH_TRAIL_NAME:
+				offset = Vector2(-button.size.x - 12, -button.size.y / 2.0)
 			CreekFish.PLACES[CreekFish.Site.POOL], CreekFish.PLACES[CreekFish.Site.SHOAL]:
 				offset = Vector2(14, -button.size.y / 2.0)
 			CreekTrap.PLACES[CreekFish.Site.POOL]:

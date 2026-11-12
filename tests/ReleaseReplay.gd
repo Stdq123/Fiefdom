@@ -179,6 +179,12 @@ func _run() -> void:
 			var replay = load("res://tests/RavineMapReplay.gd").new()
 			replay.map_capture_dir = capture_directory
 			await replay.run(tree)
+		"ravine-shortcut", "ravine-shortcut-legacy", "ravine-shortcut-baseline":
+			var replay = load("res://tests/RavineShortcutReplay.gd").new()
+			replay.legacy = arguments[0] == "ravine-shortcut-legacy"
+			replay.baseline = arguments[0] == "ravine-shortcut-baseline"
+			replay.capture_path = capture_directory
+			await replay.run(tree)
 		"creek-traps":
 			var replay = load("res://tests/CreekTrapReplay.gd").new()
 			await replay.run(tree)

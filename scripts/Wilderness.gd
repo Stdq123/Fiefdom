@@ -3,6 +3,7 @@ extends Node2D
 const FISHING_PANEL := preload("res://scripts/FishingPanel.gd")
 const RAVINE_DIRECTIONS := preload("res://scripts/RavineDirections.gd")
 const RAVINE_MAP := preload("res://scenes/RavineMap.tscn")
+const ROAD_NETWORK := preload("res://scripts/RoadNetwork.gd")
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const RAFT_TRIAL := preload("res://scenes/RaftTrial.tscn")
 const SETTINGS_PANEL := preload("res://scripts/SettingsPanel.gd")
@@ -13,7 +14,8 @@ var settings: Panel
 
 func _ready() -> void:
 	if not MapTravel.active:
-		$Player.arrive_at($WestArrival)
+		$Player.arrive_at($SouthTrailArrival if Global.restored_ravine_south else $WestArrival)
+	Global.restored_ravine_south = false
 	GameEvents.fishing_requested.connect(_on_fishing_requested)
 	raft_landing.trial_requested.connect(_open_raft_trial)
 	var directions := RAVINE_DIRECTIONS.new()
@@ -24,6 +26,7 @@ func _ready() -> void:
 	$CampaignHUD.view.add_child(ravine_map)
 	var destinations: Dictionary[String, Vector2] = {
 		"西门回封地": $ExitArea.position,
+		RavineLayout.SOUTH_TRAIL_NAME: $SouthTrailGate.position,
 		"野果坳": $WildFruit.position,
 		"木桥": LANDSCAPE.BRIDGE,
 		"浅滩": LANDSCAPE.FORD,
@@ -56,6 +59,14 @@ func _ready() -> void:
 func active_waypoint() -> String:
 	return ravine_map.guide.destination_name
 
+func resume_from_south_trail() -> bool:
+	if not Global.ravine_shortcut_open():
+		return false
+	var network: ROAD_NETWORK = ravine_map.guide.network
+	var foot: Vector2 = $Player.position
+	return ROAD_NETWORK.route_length(network.route_between(foot, $SouthTrailArrival.position)) \
+		< ROAD_NETWORK.route_length(network.route_between(foot, $WestArrival.position))
+
 func _setup_settings(view: Control) -> void:
 	var button := Button.new()
 	button.name = "SettingsButton"
@@ -78,7 +89,6 @@ func _setup_settings(view: Control) -> void:
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	settings = SETTINGS_PANEL.new()
 	settings.name = "Settings"
-	settings.save_resume_hint = "从竹涧西门继续"
 	settings.hide()
 	view.add_child(settings)
 	settings.visibility_changed.connect(func():
@@ -92,6 +102,7 @@ func _setup_settings(view: Control) -> void:
 
 func _open_settings() -> void:
 	if not get_tree().paused and not MapTravel.active and Global.outcome == Global.Outcome.RUNNING:
+		settings.save_resume_hint = "从竹涧南路小径继续" if resume_from_south_trail() else "从竹涧西门继续"
 		settings.show()
 
 func _unhandled_key_input(event: InputEvent) -> void:

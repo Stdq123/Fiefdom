@@ -82,6 +82,7 @@ var last_forage_day := 0
 var ravine_trip_target := ""
 var market_trip_target := ""
 var restored_ravine_waypoint := ""
+var restored_ravine_south := false
 var fish_collection: Dictionary[String, Dictionary] = {}
 var fish_order_receipt: Dictionary = {}
 var creek_trap: Dictionary = {}
@@ -258,6 +259,7 @@ func _reset_campaign() -> void:
 	ravine_trip_target = ""
 	market_trip_target = ""
 	restored_ravine_waypoint = ""
+	restored_ravine_south = false
 	creek_trap.clear()
 	fish_collection.clear()
 	fish_order_receipt.clear()
@@ -977,6 +979,9 @@ func ravine_site_today() -> int:
 func ravine_handoff_ready() -> bool:
 	return ravine_journal.complete() and ravine_journal.garden_day == 0
 
+func ravine_shortcut_open() -> bool:
+	return ravine_journal.garden_day > 0
+
 func ravine_handoff_visit_today() -> bool:
 	return ((ravine_handoff_ready() or ravine_journal.garden_day == current_day)
 		and not retainers.any(func(resident: RetainerData) -> bool: return resident.name == VisitorData.RAVINE_GUIDE))
@@ -1004,7 +1009,7 @@ func deliver_ravine_journal() -> bool:
 		return false
 	ravine_journal.garden_day = current_day
 	GameEvents.ravine_journal_changed.emit()
-	GameEvents.herb_garden_feedback.emit("竹径药圃已备好")
+	GameEvents.herb_garden_feedback.emit("竹径药圃已备好 · 南路小径已开")
 	return true
 
 func herb_garden_wait() -> int:
@@ -2301,6 +2306,7 @@ func _save_snapshot(origin: String) -> Error:
 		"estate_room": estate_room,
 		"location": "estate" if location == null else location,
 		"ravine_waypoint": scene.active_waypoint() if location == "ravine" else "",
+		"ravine_south_arrival": scene.resume_from_south_trail() if location == "ravine" else false,
 		"selected_seed": selected_seed_id,
 		"field_route_status": field_route_status,
 		"field_route_public_only": field_route_public_only,
@@ -2804,6 +2810,8 @@ func load_game(path := "") -> Error:
 	field_route_status = saved_route if saved_route in FIELD_ROUTE_STATES else -1
 	field_route_public_only = field_route_status == NightGrowth.READY and data.get("field_route_public_only", false) == true
 	ravine_journal = _restore_ravine_journal(data.get("ravine_journal"), saved_day)
+	restored_ravine_south = (resume_scene == WILDERNESS_SCENE and ravine_shortcut_open()
+		and data.get("ravine_south_arrival", false) == true)
 	money = maxi(0, _read_save_int(data.get("money"), 0))
 	_restore_crop_stock(data.get("crop_stock"), maxi(0, _read_save_int(data.get("player_inventory"), 0)))
 	_restore_season_order_receipts(data.get("season_order_receipts"), saved_day)

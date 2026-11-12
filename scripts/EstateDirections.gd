@@ -119,9 +119,14 @@ func follow_place(title: String, point: Vector2) -> void:
 	hud.cancel_directions.show()
 
 func follow_ravine(place: String) -> void:
-	var gate := world.get_node("EastGate") as Node2D
-	follow_place("竹涧 · " + place, world.to_local(gate.global_position))
+	follow_place("竹涧 · " + place, ravine_gate_point(place))
 	Global.ravine_trip_target = place
+
+func ravine_gate_point(place: String) -> Vector2:
+	var south: bool = (Global.ravine_shortcut_open() and world.estate_player_point().y >= EstateLayout.BAMBOO_BEND.y
+		and place in [CreekFish.PLACES[CreekFish.Site.SHOAL], CreekTrap.PLACES[CreekFish.Site.SHOAL]])
+	var gate := world.get_node("RavineTrailGate" if south else "EastGate") as Node2D
+	return world.to_local(gate.global_position)
 
 func follow_market(place: String) -> void:
 	var gate := world.get_node("WestMarketGate") as Node2D

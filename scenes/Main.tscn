@@ -46,6 +46,7 @@
 [ext_resource type="PackedScene" path="res://scenes/EstateHandover.tscn" id="43_handover"]
 [ext_resource type="PackedScene" path="res://scenes/TrainingCart.tscn" id="44_cart"]
 [ext_resource type="PackedScene" path="res://scenes/CouncilPreparation.tscn" id="45_council_prep"]
+[ext_resource type="PackedScene" path="res://scenes/RavineShortcutGate.tscn" id="46_ravine_trail"]
 
 [sub_resource type="RectangleShape2D" id="Shape_east_gate"]
 size = Vector2(8, 20)
@@ -146,6 +147,17 @@ shape = SubResource("Shape_east_gate")
 
 [node name="EastArrival" type="Marker2D" parent="World"]
 position = Vector2(360, 4)
+rotation = 3.1415927
+
+[node name="RavineTrailGate" parent="World" instance=ExtResource("46_ravine_trail")]
+position = Vector2(477, 568)
+destination = "res://scenes/Wilderness.tscn"
+arrival_path = NodePath("SouthTrailArrival")
+player_path = NodePath("Player")
+gate_name = "竹涧小径"
+
+[node name="RavineTrailArrival" type="Marker2D" parent="World"]
+position = Vector2(437, 574)
 rotation = 3.1415927
 
 [node name="WestMarketGate" type="Area2D" parent="World"]

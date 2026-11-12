@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://wilderness_scene_uid"]
+[gd_scene load_steps=18 format=3 uid="uid://wilderness_scene_uid"]
 
 [ext_resource type="Script" path="res://scripts/Wilderness.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="2_enemy"]
@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" path="res://scenes/CreekTrapPanel.tscn" id="13_trap_panel"]
 [ext_resource type="Script" path="res://scripts/RaftLanding.gd" id="14_raft_landing"]
 [ext_resource type="Material" path="res://resources/world_hint_material.tres" id="15_hint"]
+[ext_resource type="PackedScene" path="res://scenes/RavineShortcutGate.tscn" id="16_south_trail"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(8, 14)
@@ -63,6 +64,18 @@ shape = SubResource("RectangleShape2D_1")
 
 [node name="WestArrival" type="Marker2D" parent="."]
 position = Vector2(-334, 20)
+
+[node name="SouthTrailGate" parent="." instance=ExtResource("16_south_trail")]
+position = Vector2(205, 347)
+destination = "res://scenes/Main.tscn"
+arrival_path = NodePath("World/RavineTrailArrival")
+player_path = NodePath("World/Player")
+gate_name = "南路小径"
+southbound = true
+
+[node name="SouthTrailArrival" type="Marker2D" parent="."]
+position = Vector2(203, 310)
+rotation = -1.5707964
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
 position = Vector2(-334, 20)

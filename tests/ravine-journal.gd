@@ -63,7 +63,8 @@ func _run() -> void:
 		return
 	await _walk_trail(RavineLayout.LOOKOUT_JOURNAL + Vector2(-8, 11))
 	await _record(LOOKOUT)
-	_expect(state.ravine_handoff_ready(), "Three different dates complete the survey.")
+	_expect(state.ravine_handoff_ready() and not state.ravine_shortcut_open(),
+		"Three different dates complete the survey. The gate waits for the handoff.")
 	if not await _return_home():
 		return
 	var estate := current_scene.get_node("World")
@@ -87,8 +88,8 @@ func _run() -> void:
 		return
 	await _choose(dialog, "交溪行手记")
 	var garden := current_scene.get_node("World/HerbGarden") as Node2D
-	_expect(garden.visible and state.ravine_journal.garden_day == 7 and not state.deliver_ravine_journal(),
-		"The handoff establishes one visible garden and cannot be awarded again.")
+	_expect(garden.visible and state.ravine_journal.garden_day == 7 and state.ravine_shortcut_open()
+		and not state.deliver_ravine_journal(), "The handoff opens the gate and establishes one visible garden.")
 	dialog = await _visit_guide()
 	if dialog == null:
 		quit(1)
