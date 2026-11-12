@@ -52,6 +52,77 @@ func _save_and_continue(settings: Control) -> bool:
 	await _continue()
 	return _expect(tree.current_scene.scene_file_path == location, "Continue on the map where the route was saved.")
 
+func _ravine_checkpoint(gamepad: RefCounted) -> bool:
+	var ravine := tree.current_scene as Node2D
+	var hud := ravine.get_node("CampaignHUD")
+	var button := hud.view.get_node_or_null("SettingsButton") as Button
+	var chart: Control = ravine.ravine_map
+	await _snapshot("06-trail-return")
+	if not _expect(button != null and button.is_visible_in_tree()
+		and not button.get_global_rect().intersects(chart.open_button.get_global_rect()),
+		"The ravine offers a settings button beside the chart."):
+		return false
+	await _key(KEY_ESCAPE)
+	var settings: Panel = ravine.settings
+	if not _expect(settings.visible and tree.paused, "Escape opens settings and pauses the ravine."):
+		return false
+	var progress: float = state.day_progress
+	var stamina: int = state.current_stamina
+	var health: int = state.health
+	await _key(KEY_M)
+	_expect(not chart.modal.visible, "The map shortcut leaves settings in control.")
+	var controls := {}
+	for action: Button in settings.general.find_children("*", "Button", true, false):
+		controls[action.text] = action
+	await _button(controls["保存游戏"])
+	var latest: Dictionary = state.latest_saved_game()
+	_expect(settings.save_status.text == "游戏已保存 · 从竹涧西门继续" and latest.get("location") == "竹涧"
+		and is_equal_approx(state.day_progress, progress), "The save names the checkpoint and holds the day clock.")
+	await _snapshot("06a-ravine-save")
+	await _button(controls["读取游戏"])
+	var archive := settings.get_parent().get_node_or_null("SaveArchive") as Control
+	if not _expect(archive != null and "竹涧" in archive.records.get_child(0).text, "The archive names the saved map."):
+		return false
+	await _key(KEY_ESCAPE)
+	_expect(not is_instance_valid(archive) and settings.visible and tree.paused, "Closing the archive returns to paused settings.")
+	await gamepad._tap(JOY_BUTTON_B)
+	_expect(not settings.visible and not tree.paused, "B closes settings and resumes the trail.")
+	await gamepad._click(button)
+	if not _expect(gamepad.failures == 0 and settings.visible and tree.paused, "The settings button works with the gamepad pointer."):
+		return false
+	await _button(controls["返回标题"])
+	var confirmation := settings.get_node("TitleConfirmation") as ConfirmationDialog
+	if not _expect(confirmation.visible, "Use the normal return to title confirmation from the ravine."):
+		return false
+	await gamepad._confirm(confirmation, "ravine-return-confirmation")
+	if tree.current_scene == null:
+		await tree.scene_changed
+	if not _expect(tree.current_scene.scene_file_path == state.TITLE_SCENE and not tree.paused
+		and "竹涧" in tree.current_scene.status.text, "The title is active and Continue names the ravine."):
+		return false
+	await _snapshot("06b-continue-ravine")
+	await _button(tree.current_scene.continue_button)
+	if tree.current_scene == null:
+		await tree.scene_changed
+	ravine = tree.current_scene as Node2D
+	if not _expect(ravine.scene_file_path == state.WILDERNESS_SCENE, "Continue reopens the ravine scene."):
+		return false
+	var player := ravine.get_node("Player") as Player
+	var guide := ravine.get_node("RavineDirections")
+	_expect(player.position.is_equal_approx(ravine.get_node("WestArrival").position)
+		and player.facing_direction() == Vector2.RIGHT, "Continue starts facing the trail at the authored west arrival.")
+	_expect(state.current_day == 35 and absf(state.day_progress - progress) < 0.01
+		and state.current_stamina == stamina and state.health == health and state.last_forage_day == 35,
+		"Continue restores the saved time, vitals and daily catch (time=%f/%f, stamina=%d/%d, health=%d/%d)." % [
+			state.day_progress, progress, state.current_stamina, stamina, state.health, health])
+	_expect(state.fish_count(FISH) == 1 and state.crop_stock.count("rice") == 2
+		and state.market_trip_target == state.MARKET_ORDERS and guide.destination_name == "西门回封地"
+		and "西市 · 收货牌" in ravine.ravine_map.cancel_button.text, "Resume with the catch and the route to the receiving board.")
+	await _snapshot("06c-ravine-west-arrival")
+	print("FISH_JOURNEY_RAVINE_RESUME day=", state.current_day, " position=", player.position,
+		" route=", state.market_trip_target, " fish=", state.fish_count(FISH))
+	return not failed
+
 func _start_from_market() -> bool:
 	if not await _open_cart():
 		return false
@@ -132,7 +203,8 @@ func _choose_return() -> bool:
 	_expect(gamepad.failures == 0, "The new chart action works with the gamepad cursor.")
 	_expect(not map.modal.visible and not tree.paused and state.market_trip_target == state.MARKET_ORDERS
 		and "西市 · 收货牌" in map.cancel_button.text, "The chart can restart the trip for the other destination.")
-	await _walk(ravine.get_node("Player"), [Vector2(-160, 3)])
+	if not await _ravine_checkpoint(gamepad):
+		return false
 	if not await _cross(&"ui_left", state.ESTATE_SCENE):
 		return false
 	await _estate()

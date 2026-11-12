@@ -9,6 +9,8 @@ const TITLE_SCENE := "res://scenes/Title.tscn"
 const ESTATE_SCENE := "res://scenes/Main.tscn"
 const WILDERNESS_SCENE := "res://scenes/Wilderness.tscn"
 const WEST_MARKET_SCENE := "res://scenes/WestMarket.tscn"
+const SAVE_SCENES := {"estate": ESTATE_SCENE, "ravine": WILDERNESS_SCENE, "west_market": WEST_MARKET_SCENE}
+const SAVE_LOCATION_NAMES := {"ravine": "竹涧", "west_market": "西市"}
 const RAVINE_TRIP_PLACES := ["野果坳", "望溪台", "柳湾", "砾滩", SummerRaft.PLACE]
 const MARKET_ORDERS := "收货牌"
 const MARKET_RETURN := "回封地"
@@ -78,6 +80,7 @@ var east_watch_day := 0
 var last_forage_day := 0
 var ravine_trip_target := ""
 var market_trip_target := ""
+var restored_ravine_waypoint := ""
 var fish_collection: Dictionary[String, Dictionary] = {}
 var fish_order_receipt: Dictionary = {}
 var creek_trap: Dictionary = {}
@@ -249,6 +252,7 @@ func _reset_campaign() -> void:
 	last_forage_day = 0
 	ravine_trip_target = ""
 	market_trip_target = ""
+	restored_ravine_waypoint = ""
 	creek_trap.clear()
 	fish_collection.clear()
 	fish_order_receipt.clear()
@@ -2226,6 +2230,8 @@ func _save_snapshot(origin: String) -> Error:
 			"assigned_area": _cell_key(retainer.assigned_area)
 		})
 
+	var scene := get_tree().current_scene
+	var location: Variant = SAVE_SCENES.find_key(scene.scene_file_path) if scene != null else null
 	var data := {
 		"save_version": SAVE_VERSION,
 		"save_sequence": sequence,
@@ -2235,7 +2241,8 @@ func _save_snapshot(origin: String) -> Error:
 		"current_day": current_day,
 		"day_progress": day_progress,
 		"estate_room": estate_room,
-		"location": "west_market" if get_tree().current_scene and get_tree().current_scene.scene_file_path == WEST_MARKET_SCENE else "estate",
+		"location": "estate" if location == null else location,
+		"ravine_waypoint": scene.active_waypoint() if location == "ravine" else "",
 		"selected_seed": selected_seed_id,
 		"field_route_status": field_route_status,
 		"field_route_public_only": field_route_public_only,
@@ -2440,7 +2447,7 @@ func saved_games() -> Array[Dictionary]:
 			"sequence": sequence,
 			"day": _read_save_int(data.get("current_day"), 0),
 			"watch": DAY_WATCHES[_day_watch_index(_saved_day_progress(data))] + "时",
-			"location": "西市" if data.get("location") == "west_market" else "",
+			"location": SAVE_LOCATION_NAMES.get(data.get("location"), ""),
 			"rank": clampi(_read_save_int(data.get("current_rank"), Rank.XIA_SHI), Rank.XIA_SHI, Rank.QING),
 			"campaign": campaign,
 			"campaign_key": campaign_key,
@@ -2693,9 +2700,11 @@ func load_game(path := "") -> Error:
 	var saved_outcome := clampi(_read_save_int(data.get("outcome"), Outcome.RUNNING), Outcome.RUNNING, Outcome.REFORMED) as Outcome
 	if saved_health == 0 and saved_outcome == Outcome.RUNNING:
 		saved_outcome = Outcome.DEFEAT_COMBAT
-	var at_west_market: bool = saved_outcome == Outcome.RUNNING and data.get("location") == "west_market"
+	var resume_scene: String = ESTATE_SCENE
+	if saved_outcome == Outcome.RUNNING:
+		resume_scene = SAVE_SCENES.get(data.get("location"), ESTATE_SCENE)
 	# The replacement scene enters the tree at the end of the frame.
-	var reload_error := get_tree().change_scene_to_file(WEST_MARKET_SCENE if at_west_market else ESTATE_SCENE)
+	var reload_error := get_tree().change_scene_to_file(resume_scene)
 	if reload_error != OK:
 		return reload_error
 
@@ -2712,7 +2721,7 @@ func load_game(path := "") -> Error:
 	outcome = saved_outcome
 	var legacy_room := EstateRoom.HALL if data.get("inside_hall", false) == true else EstateRoom.OUTDOORS
 	var saved_room := _read_save_int(data.get("estate_room"), legacy_room)
-	estate_room = (saved_room as EstateRoom if outcome == Outcome.RUNNING and not at_west_market
+	estate_room = (saved_room as EstateRoom if outcome == Outcome.RUNNING and resume_scene == ESTATE_SCENE
 		and saved_room in EstateRoom.values() else EstateRoom.OUTDOORS)
 	raid_day = clampi(_read_save_int(data.get("raid_day"), 0), 0, saved_day)
 	raid_kind = clampi(_read_save_int(data.get("raid_kind"), 0), 0, 1)
@@ -2727,6 +2736,8 @@ func load_game(path := "") -> Error:
 	creek_trap = _restore_creek_trap(data.get("creek_trap"), saved_day)
 	var saved_trip: Variant = data.get("ravine_trip_target")
 	ravine_trip_target = saved_trip if saved_trip is String and saved_trip in ravine_trip_places() else ""
+	var saved_waypoint: Variant = data.get("ravine_waypoint")
+	restored_ravine_waypoint = saved_waypoint if resume_scene == WILDERNESS_SCENE and saved_waypoint is String else ""
 	var saved_market_trip: Variant = data.get("market_trip_target")
 	var market_places := MarketStall.TITLES + [MARKET_ORDERS, MARKET_RETURN, VisitorData.SILK_MERCHANT]
 	market_trip_target = saved_market_trip if saved_market_trip is String and saved_market_trip in market_places else ""

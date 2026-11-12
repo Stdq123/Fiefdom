@@ -566,7 +566,7 @@ func _draw_pavilion_rest() -> void:
 
 func _add_landmark_labels() -> void:
 	if wilderness:
-		_label_at(Vector2(-200, -75), "← 东关 · 封地")
+		_label_at(Vector2(-200, -75), "← 西门 · 回封地")
 		_label_at(Vector2(-106, -33), "↑ 野果坳")
 		_label_at(Vector2(86, 7), "木桥 →")
 		_label_at(Vector2(122, 91), "浅滩 →")

@@ -195,6 +195,34 @@ func _cross_the_ravine() -> bool:
 	print("RAVINE_MAP_FORD home=", home)
 	return true
 
+func _load_journal_waypoint(location: Dictionary) -> bool:
+	await _click(map.journal_button)
+	await _key(KEY_ESCAPE)
+	await _click(map.get_parent().get_node("SettingsButton"))
+	var settings: Panel = ravine.settings
+	if not _expect(settings.visible and tree.paused, "The settings button pauses the trail after closing the chart."):
+		return false
+	var controls := {}
+	for action: Button in settings.general.find_children("*", "Button", true, false):
+		controls[action.text] = action
+	await _click(controls["保存游戏"])
+	await _click(controls["读取游戏"])
+	var archive := settings.get_parent().get_node_or_null("SaveArchive") as Control
+	if not _expect(archive != null and archive.preferred_campaign == state.campaign_id,
+		"The archive opens this estate's records from the ravine."):
+		return false
+	await _click(archive.records.get_child(0))
+	if tree.current_scene == null:
+		await tree.scene_changed
+	if not _bind_ravine():
+		return false
+	var restored := _expect(not tree.paused and guide.destination == location.position
+		and guide.destination_name == location.name + "水迹" and guide.route.size() > 1,
+		"Loading from the ravine restores the local water-mark route.")
+	if restored:
+		print("RAVINE_MAP_JOURNAL_RESUME waypoint=", guide.destination_name, " day=", state.current_day)
+	return restored
+
 func _check_journal() -> void:
 	state.talk_to_visitor(VisitorData.RAVINE_GUIDE)
 	await _move(&"ui_right", 36)
@@ -210,8 +238,8 @@ func _check_journal() -> void:
 		"The journal shortcut points to the actual sign, with its own route label.")
 	await _click(map.clear_button)
 	_expect(guide.route.is_empty() and map.clear_button.disabled, "Clearing from inside the chart resets the highlighted route.")
-	await _click(map.journal_button)
-	await _key(KEY_ESCAPE)
+	if not await _load_journal_waypoint(location):
+		return
 	if not await _walk_route():
 		return
 	if not await _select_place("望溪台"):
@@ -237,7 +265,7 @@ func _check_journal() -> void:
 	await _key(KEY_M)
 	_expect(is_instance_valid(fishing) and tree.paused and not map.modal.visible, "M leaves the active fishing panel in control.")
 	await _key(KEY_ESCAPE)
-	_expect(not tree.paused, "Leaving fishing resumes the ravine.")
+	_expect(not tree.paused and not ravine.settings.visible, "Escape returns directly from fishing to the trail.")
 
 func run(game_tree: SceneTree) -> void:
 	tree = game_tree

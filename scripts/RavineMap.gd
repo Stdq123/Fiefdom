@@ -88,6 +88,14 @@ func _select_place(place: String, point: Vector2) -> void:
 func follow_place(place: String) -> void:
 	_select_place(place, places[place])
 
+func restore_waypoint(place: String) -> void:
+	if places.has(place):
+		follow_place(place)
+	elif place.ends_with(JOURNAL_SUFFIX):
+		var site := Global.ravine_site_today()
+		if site >= 0 and place == RavineJournal.SITES[site].name + JOURNAL_SUFFIX:
+			_select_journal_site()
+
 func follow_market(place: String) -> bool:
 	return guide.follow(ESTATE_EXIT, places[ESTATE_EXIT], place)
 
