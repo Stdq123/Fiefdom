@@ -88,7 +88,8 @@ func _enter_market(world: Node2D, ui: CanvasLayer) -> bool:
 	management.show_market()
 	await tree.process_frame
 	await _button(management.market_panel.get_node("MarketHeader/MarketDirections"))
-	_expect(ui.directions.tracked_place == "西市" and not management.visible, "The market shortcut points to the west road.")
+	_expect(ui.directions.tracked_place == "西市 · 粮摊" and state.market_trip_target == "粮摊" and not management.visible,
+		"The market shortcut marks the west road and the grain stall.")
 	await _walk(world.player, [Vector2(-181, 54), Vector2(-181, 0), Vector2(-270, -21)])
 	return await _cross(&"ui_left", state.WEST_MARKET_SCENE)
 

@@ -41,6 +41,7 @@ func follow(place: String, point: Vector2) -> bool:
 		return false
 	destination = point
 	destination_name = place
+	Global.market_trip_target = ""
 	if place != Global.ravine_trip_target:
 		Global.ravine_trip_target = ""
 	_update_route(next)

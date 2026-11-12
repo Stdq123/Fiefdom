@@ -102,6 +102,11 @@ func follow_ravine(place: String) -> void:
 	follow_place("竹涧 · " + place, world.to_local(gate.global_position))
 	Global.ravine_trip_target = place
 
+func follow_market(place: String) -> void:
+	var gate := world.get_node("WestMarketGate") as Node2D
+	follow_place("西市 · " + place, world.to_local(gate.global_position))
+	Global.market_trip_target = place
+
 func follow_raid() -> void:
 	clear_tracking()
 	following_raid = true
@@ -158,6 +163,7 @@ func clear_tracking() -> void:
 	tracked_site = -1
 	tracked_place = ""
 	Global.ravine_trip_target = ""
+	Global.market_trip_target = ""
 	following_raid = false
 	hud.cancel_directions.hide()
 
@@ -203,7 +209,7 @@ func update_marker(blocked: bool) -> void:
 			var at := world.get_global_transform_with_canvas() * tracked_place_point
 			_mark_map(Rect2(at - Vector2(8, 8), Vector2(16, 16)), tracked_place, Mark.PLACE, false)
 			return
-		if not Global.ravine_trip_target.is_empty():
+		if not Global.ravine_trip_target.is_empty() or not Global.market_trip_target.is_empty():
 			hide()
 			return
 		clear_tracking()

@@ -18,6 +18,7 @@
 [ext_resource type="Script" path="res://scripts/NeighborMotion.gd" id="17_motion"]
 [ext_resource type="Texture2D" path="res://assets/world/west-court-sample.svg" id="18_sample"]
 [ext_resource type="Script" path="res://scripts/UIDialogManager.gd" id="19_dialog"]
+[ext_resource type="PackedScene" path="res://scenes/WestMarketMap.tscn" id="20_map"]
 
 [sub_resource type="RectangleShape2D" id="GateMouth"]
 size = Vector2(8, 20)
@@ -38,6 +39,10 @@ script = ExtResource("1_market")
 [node name="Ground" type="Node2D" parent="."]
 z_index = -4
 script = ExtResource("2_ground")
+
+[node name="MarketWaypoint" type="Node2D" parent="."]
+visible = false
+z_index = -2
 
 [node name="Scenery" type="Node2D" parent="."]
 y_sort_enabled = true
@@ -242,6 +247,8 @@ script = ExtResource("12_settings")
 
 [node name="Counter" parent="UI/Control" instance=ExtResource("11_counter")]
 unique_name_in_owner = true
+
+[node name="WestMarketMap" parent="UI/Control" instance=ExtResource("20_map")]
 
 [node name="CampaignHUD" type="CanvasLayer" parent="."]
 layer = 8

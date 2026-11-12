@@ -9,6 +9,7 @@ const SILK_STALL_PATH := [Vector2(231, 31), Vector2(190, 28), Vector2(166, 34), 
 @onready var lighting: CanvasModulate = $DayLighting
 @onready var audio: TRACK_AUDIO = AudioManager.terrain_audio
 @onready var counter: Control = %Counter
+@onready var market_map: Control = $UI/Control/WestMarketMap
 @onready var settings: Panel = %Settings
 @onready var settings_shade: ColorRect = %SettingsShade
 @onready var date: Label = %Date
@@ -23,13 +24,18 @@ var fish_reserved := false
 
 func _ready() -> void:
 	ground.place_scenery($Scenery)
+	var destinations: Dictionary[String, Vector2] = {}
 	for stall: MarketStall in $Stalls.get_children():
-		stall.opened.connect(counter.open_for)
-	$OrderCart.opened.connect(counter.open_orders)
+		stall.opened.connect(_open_stall)
+		destinations[MarketStall.TITLES[stall.kind]] = ground.to_local(stall.to_global(MarketStall.APPROACH))
+	destinations[Global.MARKET_ORDERS] = ground.to_local($OrderCart.to_global(Vector2(0, -16)))
+	destinations[Global.MARKET_RETURN] = ground.to_local($EstateRoad.global_position)
+	$OrderCart.opened.connect(_open_orders)
 	for foot: Vector2 in [Vector2(-62, 6), Vector2(54, 4), Vector2(154, 13), Vector2(181, 55), Vector2(-148, 75)]:
 		lighting.place_lamp($Scenery, foot, 0.82)
 	player.arrive_at($EstateRoadArrival)
 	player.footstep.connect(_step)
+	market_map.setup(player, ground, destinations, $MarketWaypoint)
 	$DialogManager.setup($UI/Control, player)
 	%SettingsButton.pressed.connect(settings.show)
 	counter.visibility_changed.connect(_update_modal)
@@ -48,6 +54,14 @@ func _ready() -> void:
 	sample.visible = VisitorData.silk_sample_on_display(Global.current_day)
 	_refresh_silk_guest()
 	_refresh_fish_sign()
+
+func _open_stall(kind: MarketStall.Kind) -> void:
+	market_map.arrive_at(MarketStall.TITLES[kind])
+	counter.open_for(kind)
+
+func _open_orders() -> void:
+	market_map.arrive_at(Global.MARKET_ORDERS)
+	counter.open_orders()
 
 func _process(delta: float) -> void:
 	if not player.conversation_open and not MapTravel.active:

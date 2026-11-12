@@ -7,6 +7,7 @@ signal opened(kind: Kind)
 const ART := preload("res://assets/world/west-market-stalls.svg")
 const KEEPER_ART := preload("res://assets/characters/market-keepers.svg")
 const TITLES := ["粮摊", "鱼摊", "绸摊"]
+const APPROACH := Vector2(0, 24)
 const FRAME := Vector2(84, 60)
 const KEEPER_ROW := Vector2(72, 24)
 const WORK_CYCLE := 6.4

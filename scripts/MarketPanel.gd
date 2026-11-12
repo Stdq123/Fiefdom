@@ -45,7 +45,8 @@ func _ready() -> void:
 	reserve_button.pressed.connect(_reserve)
 	survey_button.pressed.connect(func(): return_to_survey.call())
 	$MarketHeader/NightRations.pressed.connect(GameEvents.night_rations_requested.emit)
-	$MarketHeader/MarketDirections.pressed.connect(GameEvents.west_market_directions_requested.emit)
+	var grain_stall: String = MarketStall.TITLES[MarketStall.Kind.GRAIN]
+	$MarketHeader/MarketDirections.pressed.connect(GameEvents.west_market_directions_requested.emit.bind(grain_stall))
 	$MarketHeader.visible = not at_stall
 	visibility_changed.connect(_on_visibility_changed)
 	GameEvents.crop_harvested.connect(_refresh.unbind(1))

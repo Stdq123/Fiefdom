@@ -64,7 +64,7 @@ func refresh() -> void:
 
 func _follow_offer() -> void:
 	if shore.is_empty():
-		GameEvents.west_market_directions_requested.emit()
+		GameEvents.west_market_directions_requested.emit(MarketStall.TITLES[MarketStall.Kind.FISH])
 	else:
 		GameEvents.ravine_trip_requested.emit(shore)
 

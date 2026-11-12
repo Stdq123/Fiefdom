@@ -126,7 +126,8 @@ func _grow_and_harvest() -> bool:
 		"The order and the meal use real private harvests, with one public unit in the treasury.")
 	_expect("去西市交货" in tracked.text, "The tracker turns into a delivery direction after harvest.")
 	await _button(tracked)
-	return _expect(ui.directions.tracked_place == "西市", "The delivery button points to the west road.")
+	return _expect(ui.directions.tracked_place == "西市 · 收货牌" and state.market_trip_target == "收货牌",
+		"The delivery button points through the west gate to the order board.")
 
 func _deliver() -> void:
 	var market := tree.current_scene as Node2D

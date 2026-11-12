@@ -50,6 +50,10 @@ func _ready() -> void:
 	directions.setup(world, hud)
 	if not Global.ravine_trip_target.is_empty():
 		directions.follow_ravine(Global.ravine_trip_target)
+	elif Global.market_trip_target == Global.MARKET_RETURN:
+		Global.market_trip_target = ""
+	elif not Global.market_trip_target.is_empty():
+		directions.follow_market(Global.market_trip_target)
 	estate_map.setup(world, directions, _map_controls_blocked)
 	hud.map_button.pressed.connect(estate_map.open_map)
 	hud.farm_status.pressed.connect(estate_map.open_fields)
@@ -499,12 +503,12 @@ func _show_reclamation_market(site: Variant) -> void:
 	_show_market()
 	panel_manager.management_panel_instance.market_panel.show_reclamation_reserve(_on_reclaim_pressed.bind(site))
 
-func _on_west_market_directions_requested() -> void:
+func _on_west_market_directions_requested(place: String) -> void:
 	world.set_channel_mode(false)
-	directions.follow_place("西市", world.get_node("WestMarketGate").position)
+	directions.follow_market(place)
 	panel_manager.hide_management_panel()
 	if Global.is_indoors():
-		hud.practice_label.text = "已标出西市 · 从南门回封地"
+		hud.practice_label.text = "已标出西市%s · 从南门回封地" % place
 
 func _on_ravine_trip_requested(place: String) -> void:
 	world.set_channel_mode(false)
@@ -515,7 +519,7 @@ func _on_ravine_trip_requested(place: String) -> void:
 
 func _on_pinned_order_pressed() -> void:
 	if Global.can_deliver_season_order(Global.season_order()):
-		_on_west_market_directions_requested()
+		_on_west_market_directions_requested(Global.MARKET_ORDERS)
 	else:
 		_on_season_board_interacted()
 
@@ -574,7 +578,7 @@ func _on_travel_hearth_interacted() -> void:
 	world.set_channel_mode(false)
 	if directions.tracked_place == "南路灶台":
 		directions.clear_tracking()
-	dialog_manager.show_travel_hearth(_on_west_market_directions_requested)
+	dialog_manager.show_travel_hearth(_on_west_market_directions_requested.bind(Global.MARKET_ORDERS))
 
 func _on_neighbors_pressed() -> void:
 	world.set_channel_mode(false)

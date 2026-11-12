@@ -87,7 +87,8 @@ func _market_from_book() -> bool:
 		"The home ledger guides the player to the stall."):
 		return false
 	await _button(card.directions)
-	_expect(ui.directions.tracked_place == "西市", "The western road is marked from the offer card.")
+	_expect(ui.directions.tracked_place == "西市 · 鱼摊" and state.market_trip_target == "鱼摊",
+		"The offer card marks the western road for the fish stall.")
 	await _walk(world.player, [Vector2(world.player.position.x, 62), Vector2(-181, 62), Vector2(-181, 0), Vector2(-270, -21)])
 	if not await _cross(&"ui_left", state.WEST_MARKET_SCENE):
 		return false

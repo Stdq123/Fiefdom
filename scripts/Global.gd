@@ -10,6 +10,8 @@ const ESTATE_SCENE := "res://scenes/Main.tscn"
 const WILDERNESS_SCENE := "res://scenes/Wilderness.tscn"
 const WEST_MARKET_SCENE := "res://scenes/WestMarket.tscn"
 const RAVINE_TRIP_PLACES := ["野果坳", "望溪台", "柳湾", "砾滩", SummerRaft.PLACE]
+const MARKET_ORDERS := "收货牌"
+const MARKET_RETURN := "回封地"
 const TAX_ENVOY := "召简"
 const RECLAMATION_BOUNDS := Rect2i(-16, -10, 36, 23)
 const FIRST_FIELD_CENTER := Vector2i(5, 5)
@@ -74,6 +76,7 @@ var last_defense: Dictionary = {}
 var east_watch_day := 0
 var last_forage_day := 0
 var ravine_trip_target := ""
+var market_trip_target := ""
 var fish_collection: Dictionary[String, Dictionary] = {}
 var fish_order_receipt: Dictionary = {}
 var creek_trap: Dictionary = {}
@@ -240,6 +243,7 @@ func _reset_campaign() -> void:
 	east_watch_day = 0
 	last_forage_day = 0
 	ravine_trip_target = ""
+	market_trip_target = ""
 	creek_trap.clear()
 	fish_collection.clear()
 	fish_order_receipt.clear()
@@ -2098,6 +2102,7 @@ func _save_snapshot(origin: String) -> Error:
 		"east_watch_day": east_watch_day,
 		"last_forage_day": last_forage_day,
 		"ravine_trip_target": ravine_trip_target,
+		"market_trip_target": market_trip_target,
 		"fish_collection": fish_collection,
 		"fish_order_receipt": fish_order_receipt,
 		"creek_trap": creek_trap,
@@ -2562,6 +2567,9 @@ func load_game(path := "") -> Error:
 	creek_trap = _restore_creek_trap(data.get("creek_trap"), saved_day)
 	var saved_trip: Variant = data.get("ravine_trip_target")
 	ravine_trip_target = saved_trip if saved_trip is String and saved_trip in ravine_trip_places() else ""
+	var saved_market_trip: Variant = data.get("market_trip_target")
+	var market_places := MarketStall.TITLES + [MARKET_ORDERS, MARKET_RETURN]
+	market_trip_target = saved_market_trip if saved_market_trip is String and saved_market_trip in market_places else ""
 	var saved_route := _read_save_int(data.get("field_route_status"), -1)
 	field_route_status = saved_route if saved_route in FIELD_ROUTE_STATES else -1
 	ravine_journal = _restore_ravine_journal(data.get("ravine_journal"), saved_day)

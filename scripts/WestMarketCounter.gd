@@ -18,10 +18,15 @@ const HEADINGS := ["粮摊 · 谷伯", "鱼摊 · 渔生", "绸摊 · 蔡娘"]
 
 func _ready() -> void:
 	close_button.pressed.connect(hide)
+	GamepadInput.changed.connect(_refresh_close_hint)
+	_refresh_close_hint()
 	sell_silk.pressed.connect(_sell_silk)
 	%SheepTrade.pressed.connect(_open_sheep)
 	sheep.silk_requested.connect(open_for.bind(MarketStall.Kind.SILK))
 	GameEvents.silk_changed.connect(_refresh_silk)
+
+func _refresh_close_hint() -> void:
+	close_button.text = "离开  B" if GamepadInput.active else "离开  Esc"
 
 func open_for(kind: MarketStall.Kind) -> void:
 	grain.receipt.text = ""

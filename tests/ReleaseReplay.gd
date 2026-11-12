@@ -104,6 +104,12 @@ func _run() -> void:
 			replay.legacy = arguments[0] == "fish-market-orders-legacy"
 			replay.capture_path = capture_directory
 			await replay.run(tree)
+		"market-wayfinding", "market-wayfinding-legacy", "market-wayfinding-old-save":
+			var replay = load("res://tests/MarketWayfindingReplay.gd").new()
+			replay.legacy = arguments[0] == "market-wayfinding-legacy"
+			replay.from_older_save = arguments[0] == "market-wayfinding-old-save"
+			replay.capture_path = capture_directory
+			await replay.run(tree)
 		"key-bindings", "key-bindings-reload":
 			var replay = load("res://tests/KeyBindingsReplay.gd").new()
 			await replay.run(tree, capture_directory, arguments[0] == "key-bindings-reload")
