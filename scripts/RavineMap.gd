@@ -5,6 +5,7 @@ const INK := Color("#403b29")
 const PATH_INK := Color("#934b2e")
 const MAP_MARGIN := Vector2(20, 20)
 const JOURNAL_SUFFIX := "水迹"
+const ESTATE_EXIT := "西门回封地"
 
 @onready var chart: Control = %Chart
 @onready var paper: Control = %MapInk
@@ -14,6 +15,8 @@ const JOURNAL_SUFFIX := "水迹"
 @onready var cancel_button: Button = %CancelDirections
 @onready var clear_button: Button = %ClearRoute
 @onready var route_status: Label = %RouteStatus
+@onready var fish_delivery: Button = %FishDelivery
+@onready var season_delivery: Button = %SeasonDelivery
 
 var guide: Node2D
 var player: Player
@@ -47,6 +50,8 @@ func setup(trail_guide: Node2D, walker: Player, destinations: Dictionary[String,
 	trap_button.pressed.connect(_select_deployed_trap)
 	cancel_button.pressed.connect(guide.clear)
 	clear_button.pressed.connect(guide.clear)
+	fish_delivery.pressed.connect(_select_market.bind(MarketStall.TITLES[MarketStall.Kind.FISH]))
+	season_delivery.pressed.connect(_select_market.bind(Global.MARKET_ORDERS))
 	chart.resized.connect(_layout_markers)
 	paper.draw.connect(_draw_chart)
 	guide.changed.connect(_refresh_route)
@@ -64,6 +69,10 @@ func _refresh_on_open() -> void:
 	for place: String in Global.ravine_trip_places():
 		var detail := Global.ravine_place_detail(place)
 		markers[place].tooltip_text = place + "\n" + detail if place in CreekTrap.PLACES else detail
+	var deliveries := Global.fish_delivery_places()
+	fish_delivery.visible = MarketStall.TITLES[MarketStall.Kind.FISH] in deliveries
+	season_delivery.visible = Global.MARKET_ORDERS in deliveries
+	fish_delivery.get_parent().visible = not deliveries.is_empty()
 	_refresh_route()
 	_layout_markers()
 
@@ -78,6 +87,15 @@ func _select_place(place: String, point: Vector2) -> void:
 
 func follow_place(place: String) -> void:
 	_select_place(place, places[place])
+
+func follow_market(place: String) -> bool:
+	return guide.follow(ESTATE_EXIT, places[ESTATE_EXIT], place)
+
+func _select_market(place: String) -> void:
+	if follow_market(place):
+		close_map()
+	else:
+		route_status.text = "这里接不上山路，靠近一条路后再选。"
 
 func _select_deployed_trap() -> void:
 	follow_place(CreekTrap.PLACES[Global.creek_trap_site()])
@@ -110,15 +128,19 @@ func _refresh_journal() -> void:
 
 func _refresh_route() -> void:
 	var name: String = guide.destination_name
+	var going_to_market := name == ESTATE_EXIT and not Global.market_trip_target.is_empty()
+	var destination := "西市 · " + Global.market_trip_target if going_to_market else name
 	cancel_button.visible = not name.is_empty()
-	cancel_button.text = name + " · 清除指路"
+	cancel_button.text = destination + " · 清除指路"
 	clear_button.disabled = name.is_empty()
 	for place in markers:
 		markers[place].set_pressed_no_signal(place == name)
 	if name.is_empty():
 		route_status.text = "选一处地点，回到山路后沿标记走。"
 	else:
-		route_status.text = "前往" + name
+		route_status.text = "前往" + destination
+		if going_to_market:
+			route_status.text += " · 经西门回封地"
 		if guide.route.has(LANDSCAPE.BRIDGE):
 			route_status.text += " · 经木桥"
 		elif guide.route.has(LANDSCAPE.FORD):

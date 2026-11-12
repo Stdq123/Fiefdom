@@ -81,7 +81,7 @@ function Start-VerifiedGame {
 
 function Install-Replay([string]$Directory) {
     $testDirectory = (New-Item -ItemType Directory -Path (Join-Path $Directory 'tests')).FullName
-    foreach ($file in 'ReleaseReplay.tscn', 'ReleaseReplay.gd', 'CampaignReplay.gd', 'NightRationsReplay.gd', 'RationPriorityReplay.gd', 'RetainerReturnReplay.gd', 'GamepadReplay.gd', 'BowAimReplay.gd', 'WinterSupperReplay.gd', 'KeyBindingsReplay.gd', 'SummerRaftReplay.gd', 'TitlePresentationReplay.gd', 'HallInteriorReplay.gd', 'HallDecorReplay.gd', 'TaxCouncilReplay.gd', 'RouteGoalsReplay.gd', 'EstateDirectionsReplay.gd', 'FieldSeedPlanReplay.gd', 'FieldPlanningReplay.gd', 'FieldRotationPlanReplay.gd', 'WestMarketReplay.gd', 'SilkMarketReplay.gd', 'NeighborHandoffReplay.gd', 'AmbienceTravelReplay.gd', 'BuildingScaleReplay.gd', 'EstateTerrainReplay.gd', 'FieldRoutesReplay.gd', 'PavilionEveningReplay.gd', 'FishMarketReplay.gd', 'MarketWayfindingReplay.gd') {
+    foreach ($file in 'ReleaseReplay.tscn', 'ReleaseReplay.gd', 'CampaignReplay.gd', 'NightRationsReplay.gd', 'RationPriorityReplay.gd', 'RetainerReturnReplay.gd', 'GamepadReplay.gd', 'BowAimReplay.gd', 'WinterSupperReplay.gd', 'KeyBindingsReplay.gd', 'SummerRaftReplay.gd', 'TitlePresentationReplay.gd', 'HallInteriorReplay.gd', 'HallDecorReplay.gd', 'TaxCouncilReplay.gd', 'RouteGoalsReplay.gd', 'EstateDirectionsReplay.gd', 'FieldSeedPlanReplay.gd', 'FieldPlanningReplay.gd', 'FieldRotationPlanReplay.gd', 'WestMarketReplay.gd', 'SilkMarketReplay.gd', 'NeighborHandoffReplay.gd', 'AmbienceTravelReplay.gd', 'BuildingScaleReplay.gd', 'EstateTerrainReplay.gd', 'FieldRoutesReplay.gd', 'PavilionEveningReplay.gd', 'FishMarketReplay.gd', 'FishingJourneyReplay.gd', 'MarketWayfindingReplay.gd') {
         Copy-Item -LiteralPath (Join-Path $repo "tests/$file") -Destination $testDirectory
     }
     @'
@@ -163,6 +163,7 @@ try {
     }
     if ($MarketWayfinding) {
         Start-VerifiedGame -Directory $release -Profile 'market-wayfinding' -Name 'market-wayfinding' -Replay 'market-wayfinding'
+        Start-VerifiedGame -Directory $release -Profile 'fishing-journey' -Name 'fishing-journey' -Replay 'fishing-journey'
     }
     if ($KeyBindings) {
         Start-VerifiedGame -Directory $release -Profile 'key-bindings' -Name 'key-bindings' -Replay 'key-bindings'

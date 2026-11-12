@@ -35,13 +35,13 @@ func _ready() -> void:
 	clearance.exclude = [player.get_rid()]
 	set_physics_process(false)
 
-func follow(place: String, point: Vector2) -> bool:
+func follow(place: String, point: Vector2, market_destination := "") -> bool:
 	var next := _route_between(to_local(player.global_position), point)
 	if next.is_empty():
 		return false
 	destination = point
 	destination_name = place
-	Global.market_trip_target = ""
+	Global.market_trip_target = market_destination
 	if place != Global.ravine_trip_target:
 		Global.ravine_trip_target = ""
 	_update_route(next)
@@ -51,6 +51,7 @@ func follow(place: String, point: Vector2) -> bool:
 func clear() -> void:
 	destination_name = ""
 	Global.ravine_trip_target = ""
+	Global.market_trip_target = ""
 	route.clear()
 	set_physics_process(false)
 	queue_redraw()
@@ -61,7 +62,7 @@ func _physics_process(_delta: float) -> void:
 	var actor := player.interaction_target
 	var trip_in_reach := ((Global.ravine_trip_target == destination_name or destination_name in CreekTrap.PLACES) and is_instance_valid(actor)
 		and to_local(actor.global_position).is_equal_approx(destination))
-	if origin.distance_to(destination) <= ARRIVAL_DISTANCE or trip_in_reach:
+	if (origin.distance_to(destination) <= ARRIVAL_DISTANCE or trip_in_reach) and Global.market_trip_target.is_empty():
 		clear()
 	elif origin.distance_to(route[0]) >= REJOIN_DISTANCE:
 		var next := _route_between(origin, destination)

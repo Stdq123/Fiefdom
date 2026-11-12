@@ -1353,6 +1353,18 @@ func fish_market_offer() -> Dictionary:
 		"thanks": request.thanks, "receipt": fish_order_receipt if fish_order_receipt.get("day", 0) >= window.start else {},
 		"food": fish.food + balance.fish_order_food_bonus, "copper": fish.copper + balance.fish_order_copper_bonus}
 
+func fish_delivery_places(caught := "") -> Array[String]:
+	var places: Array[String] = []
+	var offer := fish_market_offer()
+	if (offer.receipt.is_empty() and fish_count(offer.fish) > 0
+		and (caught.is_empty() or caught == offer.fish)):
+		places.append(MarketStall.TITLES[MarketStall.Kind.FISH])
+	var schedule := season_order()
+	var order_fish: String = schedule.order.get("fish", "")
+	if not order_fish.is_empty() and (caught.is_empty() or caught == order_fish) and can_deliver_season_order(schedule):
+		places.append(MARKET_ORDERS)
+	return places
+
 func deliver_fish_order(start_day: int, for_food: bool) -> bool:
 	var offer := fish_market_offer()
 	if outcome != Outcome.RUNNING or offer.start != start_day or not offer.receipt.is_empty() or fish_count(offer.fish) < 1:

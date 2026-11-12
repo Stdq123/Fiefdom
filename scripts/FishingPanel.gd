@@ -9,6 +9,7 @@ const SAFE_HIGH := 0.79
 
 var spot: Node2D
 var angler: Node2D
+var market_route: Callable
 var phase := Phase.WAITING
 var phase_time := 0.0
 var float_time := 0.0
@@ -26,6 +27,7 @@ var line_meter: ProgressBar
 var tension_band: ColorRect
 var catch_icon: TextureRect
 var pull_button: Button
+var actions: HBoxContainer
 var sound: AudioStreamPlayer
 
 func _ready() -> void:
@@ -40,6 +42,7 @@ func _ready() -> void:
 	if owns_pause:
 		get_tree().paused = true
 	_build_layout()
+	GameEvents.modal_visibility_changed.emit(true)
 	GamepadInput.changed.connect(_refresh_shortcut)
 	Preferences.bindings_changed.connect(_refresh_shortcut)
 	_refresh_shortcut()
@@ -86,6 +89,7 @@ func _build_layout() -> void:
 	detail = Label.new()
 	detail.text = "浮标轻晃时先等一等。"
 	detail.add_theme_font_size_override("font_size", 15)
+	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	layout.add_child(detail)
 	line_meter = ProgressBar.new()
 	line_meter.max_value = 1.0
@@ -100,7 +104,7 @@ func _build_layout() -> void:
 	tension_band.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tension_band.hide()
 	line_meter.add_child(tension_band)
-	var actions := HBoxContainer.new()
+	actions = HBoxContainer.new()
 	layout.add_child(actions)
 	pull_button = Button.new()
 	pull_button.focus_mode = Control.FOCUS_NONE
@@ -197,6 +201,8 @@ func _finish(message: String, caught := "") -> void:
 	set_process(false)
 	spot.clear_line()
 	pull_button.disabled = true
+	pull_button.hide()
+	actions.alignment = BoxContainer.ALIGNMENT_END
 	line_meter.hide()
 	status.text = message
 	if caught.is_empty():
@@ -204,9 +210,36 @@ func _finish(message: String, caught := "") -> void:
 	else:
 		catch_icon.texture = CreekFish.portrait(caught)
 		catch_icon.show()
-		var offer := Global.fish_market_offer()
-		detail.text = ("渔生正在收这种鱼。溪鱼簿可看报价并指路去西市。"
-			if offer.fish == caught and offer.receipt.is_empty() else "打开溪鱼簿，可添口粮或换铜钱。")
+		_show_delivery_routes(caught)
+
+func _show_delivery_routes(caught: String) -> void:
+	var places := Global.fish_delivery_places(caught)
+	var fish_stall: String = MarketStall.TITLES[MarketStall.Kind.FISH]
+	var seasonal := Global.MARKET_ORDERS in places
+	if fish_stall in places:
+		detail.text = "渔生正在收这种鱼。"
+		if seasonal:
+			detail.text += "这尾鱼也可交时令单。" if Global.fish_count(caught) == 1 else "时令单也已备齐。"
+	elif seasonal:
+		detail.text = "时令单已备齐，可以回西市交货。"
+	else:
+		detail.text = "打开溪鱼簿，可添口粮或换铜钱。"
+	for place in places:
+		var button := Button.new()
+		button.name = "SeasonDelivery" if place == Global.MARKET_ORDERS else "FishDelivery"
+		button.text = "去西市交时令单" if place == Global.MARKET_ORDERS else "去西市交留鱼"
+		button.custom_minimum_size.y = 36
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		button.pressed.connect(_follow_market.bind(place))
+		actions.add_child(button)
+		actions.move_child(button, actions.get_child_count() - 2)
+
+func _follow_market(place: String) -> void:
+	if market_route.call(place):
+		queue_free()
+	else:
+		detail.text = "先靠近山路，再从竹涧舆图指路去西市。"
 
 func _splash(volume_db: float, pitch: float) -> void:
 	if sound:
@@ -219,3 +252,4 @@ func _exit_tree() -> void:
 		spot.clear_line()
 	if owns_pause:
 		get_tree().paused = false
+	GameEvents.modal_visibility_changed.emit(false)

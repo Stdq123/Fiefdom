@@ -7,6 +7,7 @@ const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const RAFT_TRIAL := preload("res://scenes/RaftTrial.tscn")
 
 @onready var raft_landing: RaftLanding = $RaftLanding
+var ravine_map: Control
 
 func _ready() -> void:
 	GameEvents.fishing_requested.connect(_on_fishing_requested)
@@ -15,8 +16,8 @@ func _ready() -> void:
 	directions.name = "RavineDirections"
 	directions.player = $Player
 	add_child(directions)
-	var map := RAVINE_MAP.instantiate()
-	$CampaignHUD.view.add_child(map)
+	ravine_map = RAVINE_MAP.instantiate()
+	$CampaignHUD.view.add_child(ravine_map)
 	var destinations: Dictionary[String, Vector2] = {
 		"西门回封地": $ExitArea.position,
 		"野果坳": $WildFruit.position,
@@ -29,11 +30,15 @@ func _ready() -> void:
 		CreekTrap.PLACES[CreekFish.Site.POOL]: $PoolTrap.position,
 		CreekTrap.PLACES[CreekFish.Site.SHOAL]: $ShoalTrap.position,
 	}
-	map.setup(directions, $Player, destinations)
-	$FishingUI/CreekTrapPanel.route_requested.connect(map.follow_place)
+	ravine_map.setup(directions, $Player, destinations)
+	$FishingUI/CreekTrapPanel.route_requested.connect(ravine_map.follow_place)
 	var goal := Global.ravine_trip_target
+	var continue_route := Callable()
 	if destinations.has(goal):
-		var continue_route := directions.follow.bind(goal, destinations[goal])
+		continue_route = directions.follow.bind(goal, destinations[goal])
+	elif not Global.market_trip_target.is_empty():
+		continue_route = ravine_map.follow_market.bind(Global.market_trip_target)
+	if continue_route.is_valid():
 		if MapTravel.active:
 			MapTravel.finished.connect(continue_route, CONNECT_ONE_SHOT)
 		else:
@@ -46,6 +51,7 @@ func _on_fishing_requested(spot: Node2D) -> void:
 	panel.name = "FishingPanel"
 	panel.spot = spot
 	panel.angler = $Player
+	panel.market_route = ravine_map.follow_market
 	$FishingUI.add_child(panel)
 
 func _open_raft_trial() -> void:

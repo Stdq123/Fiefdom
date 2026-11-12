@@ -64,7 +64,7 @@ func _refresh() -> void:
 	pin_button.text = "取消田边跟踪" if pinned else "在田边跟踪此单"
 	var fish: String = order.get("fish", "")
 	fish_route_target = Global.fishing_spot_today(fish) if not fish.is_empty() and Global.fish_count(fish) == 0 else ""
-	fish_route_button.visible = (pin_button.visible and not at_market and Global.knows_ravine_journal()
+	fish_route_button.visible = (pin_button.visible and Global.knows_ravine_journal()
 		and not fish_route_target.is_empty())
 	if fish_route_button.visible:
 		var reason := Global.fishing_block_reason()

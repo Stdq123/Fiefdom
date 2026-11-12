@@ -25,7 +25,7 @@ func _line(pressed: bool) -> void:
 	event.pressed = pressed
 	tree.root.push_input(event, true)
 
-func _catch_at(spot: Node2D, id: String, frame_name: String) -> bool:
+func _catch_at(spot: Node2D, id: String, frame_name: String, close_result := true) -> bool:
 	var stamina: int = state.current_stamina
 	var held: int = state.fish_count(id)
 	await _key(KEY_E)
@@ -50,7 +50,8 @@ func _catch_at(spot: Node2D, id: String, frame_name: String) -> bool:
 	if not frame_name.is_empty():
 		_expect("渔生正在收这种鱼" in panel.detail.text, "The landed fish points to the current offer.")
 		await _snapshot(frame_name)
-	await _key(KEY_ESCAPE)
+	if close_result:
+		await _key(KEY_ESCAPE)
 	return landed
 
 func _fish_from_estate(site: CreekFish.Site, id: String, frame_name := "") -> bool:

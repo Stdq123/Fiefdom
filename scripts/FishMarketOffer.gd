@@ -32,11 +32,11 @@ func refresh() -> void:
 	icon.texture = CreekFish.portrait(fish)
 	title.text = "渔生留鱼 · 一尾%s" % species.name if pending else "渔生留鱼 · 已交"
 	note.text = offer.request if pending else offer.thanks
-	copper_button.visible = at_stall and pending
+	copper_button.visible = at_stall and pending and count > 0
 	food_button.visible = copper_button.visible
-	directions.visible = not at_stall and pending and Global.outcome == Global.Outcome.RUNNING
 	tradeoff.hide()
 	if not pending:
+		directions.hide()
 		status.text = "第 %d 天 · %s一尾 · %s +%d" % [receipt.day, species.name,
 			"粮食" if receipt.for_food else "铜钱", receipt.amount]
 		return
@@ -46,21 +46,24 @@ func refresh() -> void:
 	copper_button.disabled = count < 1 or Global.outcome != Global.Outcome.RUNNING
 	food_button.disabled = copper_button.disabled
 	status.text = "第 %d 天截止 · 鱼篓 %d 尾" % [offer.end, count]
-	if not at_stall:
+	if not at_stall or count == 0:
 		status.text += " · 可换 %d 铜钱或 %d 份粮" % [offer.copper, offer.food]
 	shore = Global.fishing_spot_today(fish) if count == 0 else ""
 	var delivery := Global.season_order()
 	if count == 1 and delivery.order.get("fish", "") == fish and Global.season_order_delivered_at(delivery) == 0:
 		tradeoff.text = "交出这尾后，「%s」也会缺鱼。" % delivery.order.title
 		tradeoff.show()
+	directions.visible = (Global.outcome == Global.Outcome.RUNNING and
+		((count > 0 and not at_stall) or (not shore.is_empty() and Global.knows_ravine_journal())))
 	if directions.visible:
 		directions.text = "去西市交鱼" if count > 0 else "去%s钓鱼" % shore
-		directions.visible = count > 0 or not shore.is_empty()
 		var blocked := Global.fishing_block_reason() if count == 0 else ""
 		directions.disabled = not blocked.is_empty()
 		directions.tooltip_text = blocked
-		if directions.visible and directions.disabled:
+		if directions.disabled:
 			status.text += "\n" + blocked
+	elif count == 0 and Global.knows_ravine_journal() and shore.is_empty():
+		status.text += "\n今日两处钓点都没有%s。" % species.name
 
 func _follow_offer() -> void:
 	if shore.is_empty():

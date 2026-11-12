@@ -44,6 +44,7 @@ func _ready() -> void:
 	GameEvents.daylight_changed.connect(_refresh_date)
 	GameEvents.daylight_changed.connect(_refresh_silk_guest)
 	GameEvents.visitor_interacted.connect(_talk_to_silk_guest)
+	GameEvents.ravine_trip_requested.connect(_follow_ravine_trip)
 	GameEvents.retainer_recruited.connect(_refresh_silk_guest.unbind(1))
 	GameEvents.money_changed.connect(_refresh_stock.unbind(1))
 	GameEvents.food_changed.connect(_refresh_stock.unbind(1))
@@ -63,6 +64,10 @@ func _open_stall(kind: MarketStall.Kind) -> void:
 func _open_orders() -> void:
 	market_map.arrive_at(Global.MARKET_ORDERS)
 	counter.open_orders()
+
+func _follow_ravine_trip(place: String) -> void:
+	market_map.follow_ravine(place)
+	counter.hide()
 
 func _process(delta: float) -> void:
 	if not player.conversation_open and not MapTravel.active:

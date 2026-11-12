@@ -64,12 +64,12 @@ func _refresh_on_open() -> void:
 func _process(_delta: float) -> void:
 	var available := _map_available()
 	open_button.disabled = not available
-	var place := Global.market_trip_target
+	var place := _current_stop()
 	cancel_button.visible = available and not modal.visible and not place.is_empty()
 	pin.visible = cancel_button.visible
 	if not pin.visible:
 		return
-	var label := place
+	var label := _destination_label(place)
 	var point: Vector2
 	if place == MERCHANT and market.silk_guest:
 		point = ground.to_local(market.silk_guest.global_position)
@@ -99,6 +99,12 @@ func _merchant_note() -> String:
 			return "已回封地，去南路亭"
 	return "回封地后按邻里手记找他"
 
+func follow_ravine(place: String) -> void:
+	Global.market_trip_target = ""
+	Global.ravine_trip_target = place
+	Global.field_route_status = -1
+	_refresh_destination()
+
 func _select_place(place: String) -> void:
 	Global.market_trip_target = place
 	Global.ravine_trip_target = ""
@@ -111,23 +117,32 @@ func arrive_at(place: String) -> void:
 
 func _clear() -> void:
 	Global.market_trip_target = ""
+	Global.ravine_trip_target = ""
 	_refresh_destination()
 
 func _refresh_destination() -> void:
-	var place := Global.market_trip_target
+	var place := _current_stop()
 	clear_button.disabled = place.is_empty()
 	for name in markers:
 		markers[name].set_pressed_no_signal(name == place)
 	merchant_button.set_pressed_no_signal(place == MERCHANT)
-	route_status.text = "点选去处，回到街上后看金色标记。" if place.is_empty() else "%s · %s" % [place, _service(place)]
+	route_status.text = "点选去处，回到街上后看金色标记。" if place.is_empty() else "%s · %s" % [_destination_label(place), _service(place)]
 	paper.queue_redraw()
+
+func _current_stop() -> String:
+	return Global.MARKET_RETURN if not Global.ravine_trip_target.is_empty() else Global.market_trip_target
+
+func _destination_label(place: String) -> String:
+	if place == Global.MARKET_RETURN and not Global.ravine_trip_target.is_empty():
+		return "竹涧 · " + Global.ravine_trip_target
+	return place
 
 func _service(place: String) -> String:
 	match place:
 		MERCHANT:
 			return _merchant_note()
 		Global.MARKET_RETURN:
-			return "沿石板街向东出关"
+			return "向东回封地，再经东关进竹涧" if not Global.ravine_trip_target.is_empty() else "沿石板街向东出关"
 		Global.MARKET_ORDERS:
 			return "查看时令单、交货"
 	return STALL_SERVICES[MarketStall.TITLES.find(place)]
@@ -171,7 +186,7 @@ func _draw_chart() -> void:
 			var width := canopy.size.x / 7.0
 			var segment := Rect2(canopy.position + Vector2(width * stripe, 0), Vector2(width, canopy.size.y))
 			paper.draw_rect(segment, STALL_COLORS[index].lightened(0.24))
-	var destination := Global.market_trip_target
+	var destination := _current_stop()
 	if destination == MERCHANT and not market.silk_guest:
 		destination = _merchant_waiting_stop()
 	for place in places:
