@@ -114,7 +114,7 @@ func resident_line() -> String:
 	match duty:
 		Duty.REEL:
 			if Global.silk_workshop.night_reeling:
-				if Global.food_storage < Global.retainer_food_cost():
+				if not Global.night_rations_plan().fed.has(self):
 					return "蚕吃过桑叶了，咱们的晚饭还没着落。劳你先去看看粮仓，饭后我再把茧放进盆里。"
 				return "水和篾片都备好了。饭后我会挑一只茧引线，明早来桑棚看看有多少丝。"
 			return "你来缫丝时，我帮你守着水温。若想让我晚上接着做，在蚕桑页交代一声就行。"

@@ -175,12 +175,13 @@ func run(game_tree: SceneTree) -> void:
 	last = state.night_rations.last
 	_expect(state.current_day == 8 and state.money == 2 and state.crop_stock.count("hemp") == 1
 		and state.crop_stock.count("rice") == 2 and last.used.is_empty() and last.bought == 0
-		and last.served == 1 and last.need == 4 and state.food_storage == 0,
-		"An unfillable plan spends no crops or copper and the normal meal records its actual deficit.")
+		and last.served == 0 and last.need == 4 and state.food_storage == 1,
+		"The unfillable plan spends no crops or copper and one ration stays in the granary when both portions cost two.")
 	_expect(state.silk_workshop.last_reeled == 0 and state.reputation == reputation,
 		"An incomplete meal cannot start nighttime specialist work.")
 	panel = await _open()
-	_expect(panel != null and "缺 3 份" in panel.receipt.text, "The receipt records the actual shortage rather than an unexecuted plan.")
+	_expect(panel != null and "缺 4 份" in panel.receipt.text and "渠伯、季青" in panel.receipt.text,
+		"The receipt records the actual portions and the two missed meals.")
 	await _capture("06-actual-shortage-receipt")
 	await _click(panel.close_button)
 	print("RATIONS_REPLAY protected_rice=", state.crop_stock.count("rice"), " spent=10 last_meal=", last.served, "/", last.need)

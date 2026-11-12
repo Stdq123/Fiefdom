@@ -1,6 +1,7 @@
 extends Control
 
 signal market_requested
+signal duties_requested
 signal dry_plot_requested
 signal sleep_requested
 
@@ -21,21 +22,34 @@ const SHORT := Color("#efbf8a")
 @onready var budget: SpinBox = %Budget
 @onready var forecast: Label = %Forecast
 @onready var keep: Label = %Keep
+@onready var priority_row: HBoxContainer = %PriorityRow
+@onready var priority_picker: OptionButton = %Priority
+@onready var meal_forecast: Label = %MealForecast
+@onready var duties_button: Button = %Duties
 @onready var last_card: PanelContainer = %LastCard
 @onready var receipt: Label = %Receipt
 @onready var field_receipt: Label = %FieldReceipt
 @onready var close_button: Button = %Close
+@onready var scroll: ScrollContainer = %Scroll
+@onready var body: VBoxContainer = %Body
 
 func _ready() -> void:
 	budget.max_value = NightRations.MAX_COPPER_LIMIT
 	budget.get_line_edit().max_length = 10
 	delegate.toggled.connect(func(enabled: bool): Global.set_night_rations(enabled, int(budget.value)))
 	budget.value_changed.connect(func(limit: float): Global.set_night_rations(delegate.button_pressed, int(limit)))
+	priority_picker.item_selected.connect(_select_priority)
+	body.minimum_size_changed.connect(_fit_body)
+	get_viewport().size_changed.connect(_fit_body)
 	close_button.pressed.connect(queue_free)
 	find_plot.pressed.connect(dry_plot_requested.emit)
 	%Market.pressed.connect(func():
 		queue_free()
 		market_requested.emit()
+	)
+	duties_button.pressed.connect(func():
+		queue_free()
+		duties_requested.emit()
 	)
 	%Sleep.pressed.connect(func():
 		queue_free()
@@ -56,7 +70,15 @@ func _ready() -> void:
 	GameEvents.raid_started.connect(_refresh_raid_plan)
 	GameEvents.raid_defeated.connect(_refresh_raid_plan)
 	_refresh()
+	_fit_body.call_deferred()
 	close_button.grab_focus()
+
+func _fit_body() -> void:
+	var height := get_viewport_rect().size.y - 160.0
+	scroll.custom_minimum_size.y = minf(body.get_combined_minimum_size().y, height)
+
+func _select_priority(index: int) -> void:
+	Global.set_ration_priority(priority_picker.get_item_metadata(index) as RetainerData)
 
 func _refresh() -> void:
 	_refresh_raid_plan()
@@ -84,7 +106,7 @@ func _refresh() -> void:
 	elif not policy.enabled:
 		forecast.text = "今夜缺 %d 份。可到市集备粮，或开启夜间备粮。" % plan.missing
 	elif plan.uncovered > 0:
-		forecast.text = "余粮与可用铜钱还差 %d 份。现在过夜会缺 %d 份。" % [plan.uncovered, plan.missing]
+		forecast.text = "余粮与可用铜钱还差 %d 份。凑齐才执行夜间备粮。" % plan.uncovered
 	else:
 		forecast.text = "今夜补足 %d 份 · %s" % [plan.missing, _describe_exchange(plan)]
 	if plan.supper > 0 and plan.supper < plan.need:
@@ -95,6 +117,7 @@ func _refresh() -> void:
 		keep.text = "%s「%s」留货 · %s" % ["明日" if plan.new_order else "", plan.order_name, reserved]
 	else:
 		keep.text = "明日换季，按「%s」留货。" % plan.order_name
+	_refresh_meal(plan)
 	var meal := policy.last
 	receipt.visible = not meal.is_empty()
 	if receipt.visible:
@@ -106,8 +129,57 @@ func _refresh() -> void:
 			receipt.text += "\n" + exchange
 		elif meal.served < meal.need:
 			receipt.text += " · 缺 %d 份" % (meal.need - meal.served)
+		var missed: PackedStringArray = meal.get("missed", PackedStringArray())
+		var departed: PackedStringArray = meal.get("departed", PackedStringArray())
+		if not missed.is_empty():
+			receipt.text += "\n缺餐 · " + "、".join(missed)
+		if not departed.is_empty():
+			receipt.text += "\n已离任 · " + "、".join(departed)
 	_refresh_field_receipt()
 	last_card.visible = receipt.visible or field_receipt.visible
+
+func _refresh_meal(plan: Dictionary) -> void:
+	var short: bool = not plan.missed.is_empty()
+	var preferred := Global.night_rations.priority
+	priority_row.visible = preferred != null or (short and plan.served > 0 and Global.retainers.size() > 1)
+	if priority_row.visible:
+		priority_picker.clear()
+		priority_picker.add_item("按留任顺序")
+		priority_picker.select(0)
+		for worker in Global.retainers:
+			var index := priority_picker.item_count
+			priority_picker.add_item("%s · %d 份" % [worker.name, Global.retainer_night_ration(worker)])
+			priority_picker.set_item_metadata(index, worker)
+			if worker == preferred:
+				priority_picker.select(index)
+	duties_button.visible = short and plan.need > Global.retainers.size()
+	meal_forecast.visible = short
+	if not short:
+		return
+	var lines := PackedStringArray(["预计用粮 %d/%d 份" % [plan.served, plan.need]])
+	if not plan.fed.is_empty():
+		lines[0] += " · 领足 " + _retainer_names(plan.fed)
+	lines.append("缺餐 · %s · 忠诚 −%d" % [_retainer_names(plan.missed), int(NightRations.MISSED_MEAL_LOYALTY)])
+	var leaving: Array = plan.missed.filter(func(worker: RetainerData) -> bool:
+		return worker.loyalty <= NightRations.MISSED_MEAL_LOYALTY
+	)
+	if not leaving.is_empty():
+		lines.append("预计离任 · " + _retainer_names(leaving))
+	var grain_left := Global.food_storage - maxi(0, int(plan.served) - int(plan.supper))
+	if grain_left > 0:
+		lines.append("粮仓将余 %d 份，留待下次分餐。" % grain_left)
+	var work := PackedStringArray()
+	for worker: RetainerData in plan.fed:
+		if worker.duty == RetainerData.Duty.TEACH:
+			work.append(worker.name + "可教习")
+		elif worker.duty == RetainerData.Duty.REEL and Global.silk_workshop.night_reeling:
+			work.append(worker.name + "可夜缫丝")
+	if not work.is_empty():
+		lines.append(" · ".join(work))
+	meal_forecast.text = "\n".join(lines)
+
+func _retainer_names(roster: Array) -> String:
+	return "、".join(PackedStringArray(roster.map(func(worker: RetainerData) -> String: return worker.name)))
 
 func _refresh_raid_plan() -> void:
 	var tomorrow := Global.current_day + 1

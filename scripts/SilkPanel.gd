@@ -47,6 +47,8 @@ func _ready() -> void:
 	GameEvents.channels_changed.connect(_refresh)
 	GameEvents.money_changed.connect(_refresh.unbind(1))
 	GameEvents.food_changed.connect(_refresh.unbind(1))
+	GameEvents.inventory_changed.connect(_refresh.unbind(1))
+	GameEvents.night_rations_changed.connect(_refresh)
 	GameEvents.retainer_duty_changed.connect(_refresh.unbind(1))
 	GameEvents.retainer_departed.connect(_refresh.unbind(1))
 	Global.player_stats.level_up.connect(_refresh.unbind(2))
@@ -97,8 +99,11 @@ func _refresh_night_work(workshop: SilkWorkshop) -> void:
 	else:
 		night_status.text = "%d 名缫丝门客 · 供粮后每夜最多缫 %d 茧，每茧出 %d 生丝。" % [
 			workers, workers, Global.silk_thread_yield()]
-		if workshop.night_reeling and Global.food_storage < Global.retainer_food_cost():
-			night_status.text += " 今夜粮食不足。"
+		if workshop.night_reeling:
+			var fed: Array = Global.night_rations_plan().fed
+			var ready := fed.filter(func(worker: RetainerData) -> bool: return worker.duty == RetainerData.Duty.REEL).size()
+			if ready < workers:
+				night_status.text += " 按今夜分餐，可供 %d 名开工。" % ready
 	if workshop.last_reeled > 0:
 		night_status.text += "\n上夜缫了 %d 茧 · 生丝 +%d" % [workshop.last_reeled, workshop.last_reel_thread]
 

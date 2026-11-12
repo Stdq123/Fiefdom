@@ -471,6 +471,7 @@ func _show_night_rations() -> void:
 	$Control.add_child(panel)
 	GameEvents.modal_visibility_changed.emit(true)
 	panel.market_requested.connect(_show_market)
+	panel.duties_requested.connect(panel_manager.show_management_panel)
 	panel.dry_plot_requested.connect(_on_dry_plot_requested.bind(panel))
 	panel.sleep_requested.connect(func():
 		panel_manager.hide_management_panel()
@@ -682,7 +683,10 @@ func _on_sleep_pressed() -> void:
 			dawn_caption.text += "\n新熟 %d 格" % newly_ripe
 		var meal := Global.night_rations.last
 		if meal.served < meal.need:
-			dawn_caption.text += "\n昨夜缺粮 %d 份" % (meal.need - meal.served)
+			dawn_caption.text += "\n昨夜用粮 %d/%d 份" % [meal.served, meal.need]
+			var departed: PackedStringArray = meal.get("departed", PackedStringArray())
+			if not departed.is_empty():
+				dawn_caption.text += "\n已离任 · " + "、".join(departed)
 		else:
 			var prepared := NightRations.stock_count(meal.used) + int(meal.bought)
 			if prepared > 0:

@@ -1052,9 +1052,8 @@ func restore_stamina() -> void:
 
 	# Daily consumption
 	var fed := _serve_night_rations(maxi(1, current_day - 1))
-	if fed:
-		_advance_lessons()
-	var fed_reelers := silk_reelers() if fed and silk_workshop.night_reeling else 0
+	_advance_lessons(fed)
+	var fed_reelers := _count_duty(fed, RetainerData.Duty.REEL) if silk_workshop.night_reeling else 0
 	if silk_workshop.advance_day(balance, fed_reelers):
 		GameEvents.silk_changed.emit()
 
@@ -1424,8 +1423,25 @@ func retainer_food_cost() -> int:
 func retainer_night_ration(retainer: RetainerData) -> int:
 	return 1 + (0 if retainer.duty == RetainerData.Duty.FIELD else balance.specialist_food_per_night)
 
-func _serve_night_rations(finished_day: int) -> bool:
-	var plan := night_rations_plan(finished_day)
+func _night_meal(available: int) -> Dictionary:
+	var order := retainers.duplicate()
+	if night_rations.priority:
+		order.erase(night_rations.priority)
+		order.push_front(night_rations.priority)
+	var fed: Array[RetainerData] = []
+	var missed: Array[RetainerData] = []
+	var served := 0
+	for retainer in order:
+		var portions := retainer_night_ration(retainer)
+		if portions <= available - served:
+			served += portions
+			fed.append(retainer)
+		else:
+			missed.append(retainer)
+	return {"served": served, "fed": fed, "missed": missed}
+
+func _serve_night_rations(finished_day: int) -> Array[RetainerData]:
+	var plan := _night_rations_supply_plan(finished_day)
 	var used: Dictionary = {}
 	var bought := 0
 	var copper := 0
@@ -1433,40 +1449,39 @@ func _serve_night_rations(finished_day: int) -> bool:
 		used = plan.used
 		bought = plan.bought
 		copper = plan.copper
-	var supper: int = plan.supper
-	var served := mini(food_storage + supper, int(plan.need))
-	var fed := consume_food(supper)
+	var meal := _night_meal(food_storage + int(plan.supper))
+	var served: int = meal.served
+	var supper := mini(served, int(plan.supper))
+	var grain := served - supper
+	if grain > 0:
+		food_storage -= grain
+		GameEvents.food_changed.emit(food_storage)
+	var missed := PackedStringArray()
+	var departed := PackedStringArray()
+	for retainer: RetainerData in meal.missed:
+		missed.append(retainer.name)
+		retainer.loyalty = maxf(0.0, retainer.loyalty - NightRations.MISSED_MEAL_LOYALTY)
+		if retainer.loyalty == 0.0:
+			departed.append(retainer.name)
+			dismiss_retainer(retainer)
 	night_rations.last = {
 		"day": finished_day, "need": plan.need, "served": served,
 		"used": used, "bought": bought, "copper": copper,
 	}
+	if not missed.is_empty():
+		night_rations.last["missed"] = missed
+		print("Rations short: ", served, "/", plan.need, ". Missed: ", "、".join(missed))
+	else:
+		print("Food consumed: ", grain, ". Remaining: ", food_storage)
+	if not departed.is_empty():
+		night_rations.last["departed"] = departed
 	if supper > 0:
 		night_rations.last["supper"] = supper
 	GameEvents.night_rations_changed.emit()
-	return fed
+	return meal.fed
 
-func consume_food(supper := 0) -> bool:
-	var consumption := retainer_food_cost() - supper
-	var fed := food_storage >= consumption
-	var remaining := maxi(0, food_storage - consumption)
-	if remaining != food_storage:
-		food_storage = remaining
-		GameEvents.food_changed.emit(food_storage)
-	if fed:
-		print("Food consumed: ", consumption, ". Remaining: ", food_storage)
-		return true
-	print("Not enough food! Retainers are starving.")
-	for retainer in retainers.duplicate():
-		retainer.loyalty = maxf(0.0, retainer.loyalty - 20.0)
-		if retainer.loyalty == 0.0:
-			dismiss_retainer(retainer)
-	return false
-
-func _advance_lessons() -> void:
-	var teachers := 0
-	for retainer in retainers:
-		if retainer.duty == RetainerData.Duty.TEACH:
-			teachers += 1
+func _advance_lessons(fed: Array[RetainerData]) -> void:
+	var teachers := _count_duty(fed, RetainerData.Duty.TEACH)
 	if teachers > 0:
 		player_stats.add_xp(PlayerStats.Art.RITES, teachers * balance.confucian_teaching_rites_xp)
 		reputation += teachers * balance.confucian_teaching_reputation
@@ -1487,6 +1502,8 @@ func assign_duty(retainer: RetainerData, duty: RetainerData.Duty) -> bool:
 func dismiss_retainer(retainer: RetainerData) -> void:
 	if retainers.has(retainer):
 		retainers.erase(retainer)
+		if night_rations.priority == retainer:
+			night_rations.priority = null
 		GameEvents.retainer_departed.emit(retainer)
 
 func harvest_proceeds(is_public: bool, unit_price: int, extra_yield: int,
@@ -1543,11 +1560,14 @@ func can_use_workshop(action: SilkWorkshop.Action) -> bool:
 	return silk_workshop.can_act(action, balance, player_stats.get_level(PlayerStats.Art.LITERACY), money)
 
 func silk_reelers() -> int:
-	var workers := 0
-	for retainer in retainers:
-		if retainer.duty == RetainerData.Duty.REEL:
-			workers += 1
-	return workers
+	return _count_duty(retainers, RetainerData.Duty.REEL)
+
+func _count_duty(workers: Array[RetainerData], duty: RetainerData.Duty) -> int:
+	var count := 0
+	for retainer in workers:
+		if retainer.duty == duty:
+			count += 1
+	return count
 
 func silk_thread_yield() -> int:
 	return SilkWorkshop.thread_yield(balance, silk_reelers())
@@ -1715,8 +1735,18 @@ func set_night_rations(enabled: bool, copper_limit: int) -> void:
 	night_rations.copper_limit = limit
 	GameEvents.night_rations_changed.emit()
 
+func set_ration_priority(retainer: RetainerData) -> void:
+	if outcome != Outcome.RUNNING or (retainer and not retainers.has(retainer)) or night_rations.priority == retainer:
+		return
+	night_rations.priority = retainer
+	GameEvents.night_rations_changed.emit()
+
 func night_rations_plan(finished_day := 0) -> Dictionary:
-	var evening := finished_day if finished_day > 0 else current_day
+	var plan := _night_rations_supply_plan(finished_day if finished_day > 0 else current_day)
+	plan.merge(_night_meal(food_storage + int(plan.supper) + int(plan.converted) + int(plan.bought)))
+	return plan
+
+func _night_rations_supply_plan(evening: int) -> Dictionary:
 	var schedule := season_order(evening + 1)
 	var need := retainer_food_cost()
 	var supper := mini(need, int(winter_supper_record(evening).get("portions", 0)))
@@ -2127,6 +2157,7 @@ func _save_snapshot(origin: String) -> Error:
 		"night_rations": {
 			"enabled": night_rations.enabled,
 			"copper_limit": night_rations.copper_limit,
+			"priority": retainers.find(night_rations.priority),
 			"last": night_rations.last,
 		},
 		"last_field_night": last_field_night,
@@ -2589,7 +2620,7 @@ func load_game(path := "") -> Error:
 	silk_bolts_offered = maxi(0, _read_save_int(data.get("silk_bolts_offered"), 0))
 	silk_sample_day = clampi(_read_save_int(data.get("silk_sample_day"), 0), 0, saved_day)
 	food_storage = maxi(0, _read_save_int(data.get("food_storage"), 10))
-	night_rations = _restore_night_rations(data.get("night_rations"), saved_day)
+	night_rations = _restore_night_rations(data.get("night_rations"), saved_day, restored_retainers)
 	last_field_night = _restore_field_night(data.get("last_field_night"), saved_day)
 	away_field_report = _restore_away_field_report(data.get("away_field_report"), saved_day)
 	_away_work_elapsed.clear()
@@ -2719,12 +2750,15 @@ func _restore_away_field_report(record: Variant, saved_day: int) -> Dictionary:
 		report[key] = maxi(0, _read_save_int(record.get(key), 0))
 	return report
 
-func _restore_night_rations(record: Variant, saved_day: int) -> NightRations:
+func _restore_night_rations(record: Variant, saved_day: int, roster: Array[RetainerData]) -> NightRations:
 	var restored := NightRations.new()
 	if not record is Dictionary:
 		return restored
 	restored.enabled = record.get("enabled", false) == true
 	restored.copper_limit = clampi(_read_save_int(record.get("copper_limit"), 0), 0, NightRations.MAX_COPPER_LIMIT)
+	var priority := _read_save_int(record.get("priority"), -1)
+	if priority >= 0 and priority < roster.size():
+		restored.priority = roster[priority]
 	var meal: Variant = record.get("last")
 	if not meal is Dictionary:
 		return restored
@@ -2748,6 +2782,10 @@ func _restore_night_rations(record: Variant, saved_day: int) -> NightRations:
 	restored.last = {"day": day, "need": need, "served": served, "used": used, "bought": bought, "copper": copper}
 	if supper > 0:
 		restored.last["supper"] = supper
+	for key in ["missed", "departed"]:
+		var names: Variant = meal.get(key)
+		if names is Array:
+			restored.last[key] = PackedStringArray(names.filter(func(value: Variant) -> bool: return value is String))
 	return restored
 
 func _restore_fish_collection(record: Variant, saved_day: int) -> void:

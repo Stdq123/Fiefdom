@@ -108,50 +108,62 @@ mouse_default_cursor_shape = 2
 text = "关闭"
 tooltip_text = "Esc"
 
-[node name="RaidPlan" type="PanelContainer" parent="Center/Window/Content"]
+[node name="Scroll" type="ScrollContainer" parent="Center/Window/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_scroll_mode = 0
+follow_focus = true
+
+[node name="Body" type="VBoxContainer" parent="Center/Window/Content/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="RaidPlan" type="PanelContainer" parent="Center/Window/Content/Scroll/Body"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_styles/panel = SubResource("Ledger")
 
-[node name="Brief" type="VBoxContainer" parent="Center/Window/Content/RaidPlan"]
+[node name="Brief" type="VBoxContainer" parent="Center/Window/Content/Scroll/Body/RaidPlan"]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="RaidHeading" type="Label" parent="Center/Window/Content/RaidPlan/Brief"]
+[node name="RaidHeading" type="Label" parent="Center/Window/Content/Scroll/Body/RaidPlan/Brief"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.98, 0.73, 0.52, 1)
 theme_override_font_sizes/font_size = 18
 
-[node name="RaidInstructions" type="Label" parent="Center/Window/Content/RaidPlan/Brief"]
+[node name="RaidInstructions" type="Label" parent="Center/Window/Content/Scroll/Body/RaidPlan/Brief"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.87, 0.84, 0.71, 1)
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 
-[node name="FieldPlan" type="PanelContainer" parent="Center/Window/Content"]
+[node name="FieldPlan" type="PanelContainer" parent="Center/Window/Content/Scroll/Body"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("Ledger")
 
-[node name="Row" type="HBoxContainer" parent="Center/Window/Content/FieldPlan"]
+[node name="Row" type="HBoxContainer" parent="Center/Window/Content/Scroll/Body/FieldPlan"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Details" type="VBoxContainer" parent="Center/Window/Content/FieldPlan/Row"]
+[node name="Details" type="VBoxContainer" parent="Center/Window/Content/Scroll/Body/FieldPlan/Row"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="FieldForecast" type="Label" parent="Center/Window/Content/FieldPlan/Row/Details"]
+[node name="FieldForecast" type="Label" parent="Center/Window/Content/Scroll/Body/FieldPlan/Row/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 17
 theme_override_colors/font_color = Color(0.87, 0.91, 0.73, 1)
 autowrap_mode = 3
 
-[node name="FieldWarning" type="Label" parent="Center/Window/Content/FieldPlan/Row/Details"]
+[node name="FieldWarning" type="Label" parent="Center/Window/Content/Scroll/Body/FieldPlan/Row/Details"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -159,14 +171,14 @@ theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(0.94, 0.75, 0.54, 1)
 autowrap_mode = 3
 
-[node name="SheepNote" type="Label" parent="Center/Window/Content/FieldPlan/Row/Details"]
+[node name="SheepNote" type="Label" parent="Center/Window/Content/Scroll/Body/FieldPlan/Row/Details"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 
-[node name="FindPlot" type="Button" parent="Center/Window/Content/FieldPlan/Row"]
+[node name="FindPlot" type="Button" parent="Center/Window/Content/Scroll/Body/FieldPlan/Row"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(108, 34)
@@ -175,44 +187,44 @@ size_flags_vertical = 4
 mouse_default_cursor_shape = 2
 text = "找待浇田"
 
-[node name="Stock" type="PanelContainer" parent="Center/Window/Content"]
+[node name="Stock" type="PanelContainer" parent="Center/Window/Content/Scroll/Body"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("Ledger")
 
-[node name="Values" type="HBoxContainer" parent="Center/Window/Content/Stock"]
+[node name="Values" type="HBoxContainer" parent="Center/Window/Content/Scroll/Body/Stock"]
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="Grain" type="Label" parent="Center/Window/Content/Stock/Values"]
+[node name="Grain" type="Label" parent="Center/Window/Content/Scroll/Body/Stock/Values"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 17
 horizontal_alignment = 1
 
-[node name="Need" type="Label" parent="Center/Window/Content/Stock/Values"]
+[node name="Need" type="Label" parent="Center/Window/Content/Scroll/Body/Stock/Values"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 17
 horizontal_alignment = 1
 
-[node name="Money" type="Label" parent="Center/Window/Content/Stock/Values"]
+[node name="Money" type="Label" parent="Center/Window/Content/Scroll/Body/Stock/Values"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 17
 horizontal_alignment = 1
 
-[node name="Policy" type="VBoxContainer" parent="Center/Window/Content"]
+[node name="Policy" type="VBoxContainer" parent="Center/Window/Content/Scroll/Body"]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="Controls" type="HBoxContainer" parent="Center/Window/Content/Policy"]
+[node name="Controls" type="HBoxContainer" parent="Center/Window/Content/Scroll/Body/Policy"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Delegate" type="CheckButton" parent="Center/Window/Content/Policy/Controls"]
+[node name="Delegate" type="CheckButton" parent="Center/Window/Content/Scroll/Body/Policy/Controls"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(155, 38)
 layout_mode = 2
@@ -220,13 +232,13 @@ mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 18
 text = "夜间备粮"
 
-[node name="BudgetLabel" type="Label" parent="Center/Window/Content/Policy/Controls"]
+[node name="BudgetLabel" type="Label" parent="Center/Window/Content/Scroll/Body/Policy/Controls"]
 layout_mode = 2
 size_flags_horizontal = 3
 horizontal_alignment = 2
 text = "每夜购粮上限"
 
-[node name="Budget" type="SpinBox" parent="Center/Window/Content/Policy/Controls"]
+[node name="Budget" type="SpinBox" parent="Center/Window/Content/Scroll/Body/Policy/Controls"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(150, 36)
 layout_mode = 2
@@ -234,40 +246,65 @@ step = 1.0
 rounded = true
 suffix = "铜钱"
 
-[node name="Rule" type="Label" parent="Center/Window/Content/Policy"]
+[node name="Rule" type="Label" parent="Center/Window/Content/Scroll/Body/Policy"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.73, 0.81, 0.68, 1)
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 text = "只补今夜所需，优先用时令单之外的作物。购粮上限填 0 时只用余粮。"
 
-[node name="Preview" type="VBoxContainer" parent="Center/Window/Content"]
+[node name="Preview" type="VBoxContainer" parent="Center/Window/Content/Scroll/Body"]
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="Forecast" type="Label" parent="Center/Window/Content/Preview"]
+[node name="Forecast" type="Label" parent="Center/Window/Content/Scroll/Body/Preview"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 autowrap_mode = 3
 
-[node name="Keep" type="Label" parent="Center/Window/Content/Preview"]
+[node name="Keep" type="Label" parent="Center/Window/Content/Scroll/Body/Preview"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.80, 0.77, 0.58, 1)
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 
-[node name="LastCard" type="PanelContainer" parent="Center/Window/Content"]
+[node name="PriorityRow" type="HBoxContainer" parent="Center/Window/Content/Scroll/Body/Preview"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="PriorityLabel" type="Label" parent="Center/Window/Content/Scroll/Body/Preview/PriorityRow"]
+layout_mode = 2
+text = "缺粮时先供"
+
+[node name="Priority" type="OptionButton" parent="Center/Window/Content/Scroll/Body/Preview/PriorityRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(196, 34)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+tooltip_text = "每人领足份额后才用粮，余下按留任顺序分餐。"
+
+[node name="MealForecast" type="Label" parent="Center/Window/Content/Scroll/Body/Preview"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.75, 0.54, 1)
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+
+[node name="LastCard" type="PanelContainer" parent="Center/Window/Content/Scroll/Body"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_styles/panel = SubResource("Ledger")
 
-[node name="Results" type="VBoxContainer" parent="Center/Window/Content/LastCard"]
+[node name="Results" type="VBoxContainer" parent="Center/Window/Content/Scroll/Body/LastCard"]
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="FieldReceipt" type="Label" parent="Center/Window/Content/LastCard/Results"]
+[node name="FieldReceipt" type="Label" parent="Center/Window/Content/Scroll/Body/LastCard/Results"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -275,7 +312,7 @@ theme_override_colors/font_color = Color(0.87, 0.91, 0.73, 1)
 theme_override_font_sizes/font_size = 16
 autowrap_mode = 3
 
-[node name="Receipt" type="Label" parent="Center/Window/Content/LastCard/Results"]
+[node name="Receipt" type="Label" parent="Center/Window/Content/Scroll/Body/LastCard/Results"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.83, 0.85, 0.72, 1)
@@ -284,6 +321,7 @@ autowrap_mode = 3
 
 [node name="Footer" type="HBoxContainer" parent="Center/Window/Content"]
 layout_mode = 2
+theme_override_constants/separation = 10
 
 [node name="Market" type="Button" parent="Center/Window/Content/Footer"]
 unique_name_in_owner = true
@@ -291,6 +329,14 @@ custom_minimum_size = Vector2(128, 35)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 text = "打开市场备粮"
+
+[node name="Duties" type="Button" parent="Center/Window/Content/Footer"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(118, 35)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "调整门客分工"
 
 [node name="Sleep" type="Button" parent="Center/Window/Content/Footer"]
 unique_name_in_owner = true

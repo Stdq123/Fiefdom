@@ -2,9 +2,11 @@ extends RefCounted
 class_name NightRations
 
 const MAX_COPPER_LIMIT := 2147483647
+const MISSED_MEAL_LOYALTY := 20.0
 
 var enabled := false
 var copper_limit := 0
+var priority: RetainerData
 var last: Dictionary = {}
 
 func plan(need: int, food: int, money: int, stock: CropStock, keep: Dictionary, unit_price: int) -> Dictionary:
@@ -25,7 +27,7 @@ func plan(need: int, food: int, money: int, stock: CropStock, keep: Dictionary, 
 	var affordable := floori(float(mini(copper_limit, maxi(0, money))) / price)
 	var bought := mini(missing - converted, affordable)
 	result.uncovered = missing - converted - bought
-	# A partial exchange cannot prevent the normal missed meal.
+	# Nightly delegation trades only when it can cover the whole table.
 	if result.uncovered == 0:
 		result.used = stock.plan(converted, "", keep)
 		result.converted = converted
