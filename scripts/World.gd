@@ -1073,6 +1073,6 @@ func _apply_visitor_activity(visitor: Visitor, walk_in: bool) -> bool:
 			path.append(focus + Vector2(-14, 24))
 		VisitorData.VisitActivity.WATCH:
 			focus = $Scenery/EastWatch.position
-			path = PackedVector2Array([Vector2(302, 153), focus + Vector2(-18, 13)])
+			path = PackedVector2Array([EstateLayout.EAST_LANE[-2], focus + Vector2(-18, 13)])
 	visitor.go_to_activity(work, path, focus, walk_in)
 	return true

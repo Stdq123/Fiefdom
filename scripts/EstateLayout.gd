@@ -20,9 +20,10 @@ const WEST_COURT_SHELTER := WEST_COURT + Vector2(-22, -14)
 const SOUTH_PAVILION := Vector2(77, 391)
 const PAVILION_SIZE := Vector2(72, 60)
 const PAVILION_BOUNDS := Rect2(SOUTH_PAVILION + Vector2(-36, -56), PAVILION_SIZE)
-const DRIVING_START := Vector2(279, 152)
-const DRIVING_BAY := Rect2(DRIVING_START - Vector2(38, 28), Vector2(57, 41))
-const DRIVING_PARKING := Rect2(30, 229, 28, 24)
+const DRIVING_START := Vector2(392, 229)
+const DRIVING_BAY := Rect2(DRIVING_START - Vector2(28, 19), Vector2(41, 57))
+const DRIVING_FINISH := Vector2(481, 464)
+const DRIVING_PARKING := Rect2(DRIVING_FINISH - Vector2(12, 14), Vector2(24, 28))
 const BUILDING_GROUND := [
 	Rect2(Vector2(HALL_FOOT) + HALL_BASE.position, HALL_BASE.size),
 	HALL_LANDING,
@@ -36,6 +37,8 @@ const LANDMARKS := BUILDING_GROUND + [
 
 const FIELD_TURN := Vector2(107, 165)
 const EAST_LANE_JUNCTION := Vector2(29, 152)
+const DRIVING_FORK := Vector2(345, 7)
+const EAST_WATCH := Vector2(336, 151)
 const FIELD_LANE_TURN := Vector2(44, 241)
 const BAMBOO_BEND := Vector2(19, 321)
 const PAVILION_TURN := Vector2(44, 385)
@@ -57,8 +60,18 @@ const SOUTH_LANE := [
 ]
 const EAST_LANE := [
 	EAST_LANE_JUNCTION, Vector2(62, 162), FIELD_TURN, Vector2(150, 164), Vector2(194, 160),
-	Vector2(243, 153), Vector2(293, 150), Vector2(336, 151),
+	Vector2(243, 153), Vector2(293, 150), EAST_WATCH,
 ]
+const DRIVING_APPROACH := [
+	DRIVING_FORK, Vector2(363, 30), Vector2(378, 59), Vector2(388, 91), Vector2(388, 127),
+	Vector2(382, 161), Vector2(386, 195), DRIVING_START,
+]
+const DRIVING_GATES := [Vector2(400, 314), Vector2(405, 401), Vector2(406, 449), Vector2(450, 460)]
+const DRIVING_LANE := [
+	DRIVING_START, DRIVING_GATES[0], DRIVING_GATES[1], Vector2(403, 429),
+	DRIVING_GATES[2], Vector2(425, 458), DRIVING_GATES[3], DRIVING_FINISH + Vector2(7, 0),
+]
+const DRIVING_ROADS := [DRIVING_APPROACH, DRIVING_LANE]
 const WEST_LANE := [
 	WEST_FORK, Vector2(-268, 7), Vector2(-259, 34), WEST_COURT_TURN,
 	Vector2(-265, 97), Vector2(-257, 124), Vector2(-251, 150), Vector2(-251, 176),
@@ -70,7 +83,7 @@ const ROADS := [
 	[Vector2(-504, -33), Vector2(-397, -31), Vector2(-343, -28), Vector2(-308, -24), WEST_FORK, Vector2(-249, -19),
 		Vector2(-205, 0), Vector2(-140, 16), Vector2(-90, 28), Vector2(-40, 41),
 		Vector2(4, 43), Vector2(39, 38), Vector2(91, 32), Vector2(148, 27), Vector2(213, 20),
-		Vector2(283, 12), Vector2(345, 7), Vector2(400, 8), Vector2(460, 0), Vector2(516, 0),
+		Vector2(283, 12), DRIVING_FORK, Vector2(400, 8), Vector2(460, 0), Vector2(516, 0),
 		Vector2(579, -3), Vector2(676, 6)],
 	SOUTH_LANE,
 	EAST_LANE,

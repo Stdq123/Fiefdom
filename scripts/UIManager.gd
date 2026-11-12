@@ -531,7 +531,7 @@ func _guide_driving_practice() -> void:
 	if world.player.training_cart.visible:
 		return
 	directions.follow_place(DrivingPractice.PLACE, DrivingPractice.START_POINT)
-	var on_arrival := "到田边马车旁按 %s 上车" % GamepadInput.interact_key()
+	var on_arrival := "到坡下马车旁按 %s 上车" % GamepadInput.interact_key()
 	hud.practice_label.text = "从南门回封地 · " + on_arrival if Global.is_indoors() else on_arrival
 
 func _show_driving_hud(active: bool) -> void:

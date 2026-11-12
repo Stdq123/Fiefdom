@@ -3,7 +3,7 @@ class_name DrivingPractice
 
 const PLACE := "驾御场"
 const START_POINT := EstateLayout.DRIVING_START
-const ROUTE := [Vector2(194, 160), Vector2(107, 165), Vector2(59, 166), Vector2(48, 210)]
+const ROUTE := EstateLayout.DRIVING_GATES
 const PARKING := EstateLayout.DRIVING_PARKING
 const LIMIT := 25.0
 const REWARD := 30
@@ -43,7 +43,7 @@ func interact() -> void:
 	next_marker = 0
 	last_second = -1
 	parked_cart.hide()
-	player.arrive_at_position(get_parent().to_global(START_POINT), Vector2.LEFT)
+	player.arrive_at_position(get_parent().to_global(START_POINT), Vector2.DOWN)
 	player.set_training_cart(true)
 	set_process(true)
 	GameEvents.driving_practice_changed.emit(true)
@@ -116,7 +116,7 @@ func _finish(message: String, leave_cart := false) -> void:
 		parked_cart.global_position = player.global_position
 		parked_cart.face(player.facing_direction())
 		parked_cart.show()
-		player.arrive_at_position(player.global_position + Vector2(-19, 5), Vector2.DOWN)
+		player.arrive_at_position(player.global_position + Vector2(5, 19), Vector2.DOWN)
 	else:
 		_park_at_start()
 	player.set_training_cart(false)
@@ -126,7 +126,7 @@ func _finish(message: String, leave_cart := false) -> void:
 
 func _park_at_start() -> void:
 	parked_cart.position = START_POINT - position
-	parked_cart.face(Vector2.LEFT)
+	parked_cart.face(Vector2.DOWN)
 	parked_cart.show()
 
 func _draw() -> void:
@@ -157,8 +157,8 @@ func _draw_course() -> void:
 	var parking_color := FLAG_GOLD if next_marker == ROUTE.size() else FLAG_LINEN
 	marks.draw_rect(PARKING, Color(parking_color, 0.20))
 	marks.draw_rect(PARKING.grow(-1.0), parking_color, false, 1.0)
-	for x in [PARKING.position.x + 4.0, PARKING.end.x - 4.0]:
-		marks.draw_line(Vector2(x, PARKING.position.y + 4.0), Vector2(x, PARKING.end.y - 4.0),
+	for y in [PARKING.position.y + 4.0, PARKING.end.y - 4.0]:
+		marks.draw_line(Vector2(PARKING.position.x + 4.0, y), Vector2(PARKING.end.x - 4.0, y),
 			Color(parking_color, 0.6), 1.0)
 
 func _draw_flag(foot: Vector2, forward: Vector2, color: Color) -> void:

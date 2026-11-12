@@ -40,7 +40,7 @@ func setup(estate_world: Node2D, estate_hud: Control) -> void:
 	hud = estate_hud
 	hud.cancel_directions.pressed.connect(clear_tracking)
 	var connected_roads := [EstateLayout.ROADS[0], EstateLayout.SOUTH_LANE, EstateLayout.EAST_LANE] \
-		+ EstateLayout.WEST_ROADS + EstateLayout.SOUTH_ROADS
+		+ EstateLayout.WEST_ROADS + EstateLayout.SOUTH_ROADS + EstateLayout.DRIVING_ROADS
 	road_network = ROAD_NETWORK.new(connected_roads, world, world.player)
 	road_guide.z_index = -2
 	road_guide.hide()
@@ -267,7 +267,8 @@ func _show_road_route(point: Vector2) -> void:
 	road_guide.visible = road_path.size() > 1
 
 func road_route_between(foot: Vector2, point: Vector2) -> PackedVector2Array:
-	if point.y >= EstateLayout.FIELD_LANE_TURN.y or point.x <= EstateLayout.WEST_FORK.x:
+	if (point.y >= EstateLayout.FIELD_LANE_TURN.y or point.x <= EstateLayout.WEST_FORK.x
+		or point.x >= EstateLayout.EAST_WATCH.x):
 		return road_network.route_between(foot, point)
 	return PackedVector2Array()
 

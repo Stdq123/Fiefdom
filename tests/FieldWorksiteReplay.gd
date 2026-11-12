@@ -105,16 +105,20 @@ func _check_obstructed_sites() -> void:
 	await _click(_point(south_lane))
 	_expect(panel.selected_cell == south_lane and panel.reclaim_button.disabled
 		and panel.preview_site == Global.ReclamationSite.ROAD and "路肩" in panel.validity_label.text,
-		"Selecting a field across the driving lane shows the road conflict.")
+		"Selecting a field across the south lane shows the road conflict.")
 	await _capture("00-road-conflict")
 	_expect(state.reclaim_well_field(south_lane).is_empty() and state.reclaim_well_field(OLD_ROAD_SITE).is_empty()
 		and state.well_fields.size() == 1
 		and state.money == money and state.food_storage == food, "The order also checks the road before charging.")
 	_expect(state.reclamation_site(Vector2i(12, 6)) == Global.ReclamationSite.ROAD,
 		"A field reaching the east shoulder is unavailable even when its center is off the road.")
-	for site in [Vector2i(-3, -1), Vector2i(16, 5), OLD_ROAD_SITE]:
-		_expect(state.reclamation_site(site) == Global.ReclamationSite.LANDMARK,
-			"Reserve the hall and both driving areas.")
+	_expect(state.reclamation_site(Vector2i(-3, -1)) == Global.ReclamationSite.LANDMARK
+		and state.reclamation_site(OLD_ROAD_SITE) == Global.ReclamationSite.ROAD,
+		"Reserve the hall and the south lane after moving the parking area.")
+	var driving_cell := tiles.local_to_map(tiles.to_local(world.to_global(EstateLayout.DRIVING_START)))
+	_expect(state.reclamation_site(Vector2i(16, 5)) == Global.ReclamationSite.OPEN
+		and state.reclamation_site(driving_cell) == Global.ReclamationSite.EDGE,
+		"The new driving yard is beyond the fields and the old cart bay can be reclaimed.")
 	var pavilion_cell := tiles.local_to_map(tiles.to_local(world.to_global(EstateLayout.SOUTH_PAVILION)))
 	_expect(state.reclamation_site(pavilion_cell) == Global.ReclamationSite.EDGE,
 		"The pavilion stands south of the cultivable land.")

@@ -52,9 +52,32 @@ func _play_music(management: Control) -> void:
 	_expect(not tree.paused and management.music_button.disabled, "Closing the exercise resumes the estate.")
 
 func _reach_cart() -> void:
-	await _walk(player, [Vector2(33, 70), Vector2(33, 128), Vector2(59, 166), Vector2(107, 165),
-		Vector2(194, 160), course.START_POINT + Vector2(-6, 3)])
+	await Campaign.walk_estate_road_to(tree, world, course.START_POINT + Vector2(-8, -8))
 	_expect(player.interaction_target == course, "Follow the lane to the parked cart's interaction prompt.")
+
+func _survey_course() -> void:
+	await _key(KEY_M)
+	var map: Control = ui.estate_map
+	_expect(map.modal.visible and map.road_path.has(EstateLayout.DRIVING_FORK)
+		and map.target.point == course.START_POINT and map.captions.has(course.PLACE),
+		"The chart connects the gate-road fork to the driving yard.")
+	var shown := false
+	for row: Button in map.row_buttons:
+		if map.row_buttons[row].title == course.PLACE:
+			shown = row.button_pressed and map.scroll.get_global_rect().encloses(row.get_global_rect())
+			break
+	_expect(shown, "The selected driving yard is visible in the places list when the chart opens.")
+	await _snapshot("01a-course-map")
+	await _key(KEY_ESCAPE)
+	var approach: Vector2 = EstateLayout.DRIVING_APPROACH[3]
+	await Campaign.walk_estate_road_to(tree, world, approach)
+	_expect(player.position.distance_to(approach) < 4.0 and ui.directions.road_guide.visible,
+		"The gold route continues down the branch on foot.")
+	await _snapshot("01b-pine-approach")
+	var terrain: Node2D = world.get_node("Landscape")
+	for point: Vector2 in course.ROUTE + [course.PARKING.get_center()]:
+		_expect(terrain._surface_at(point) == terrain.TERRAIN_AUDIO.Surface.TRACK,
+			"Each flag and the parking pad sit on the painted track.")
 
 func _stick(direction: Vector2) -> void:
 	controller._axis(JOY_AXIS_LEFT_X, direction.x)
@@ -84,20 +107,20 @@ func _try_controls() -> void:
 	var tile: TileMapLayer = world.tile_map
 	await _click(tile.get_global_transform_with_canvas() * tile.map_to_local(PUBLIC))
 	_expect(state.current_stamina == stamina, "The mounted player cannot work a field with the cart controls.")
-	Input.action_press(&"ui_left")
+	Input.action_press(&"ui_down")
 	for frame in 12:
 		await tree.physics_frame
 	var moving := player.position
 	var speed := player.velocity.length()
-	Input.action_release(&"ui_left")
+	Input.action_release(&"ui_down")
 	for frame in 5:
 		await tree.physics_frame
 	_expect(speed > 30.0 and speed < Player.CART_SPEED and player.velocity.length() < speed
-		and player.position.x < moving.x - 2.0 and course.elapsed > 0.0, "The cart gathers speed and rolls a little after release.")
+		and player.position.y > moving.y + 2.0 and course.elapsed > 0.0, "The cart gathers speed and rolls a little after release.")
 	print("DRIVING_INERTIA speed=", snappedf(speed, 0.1), " released=", snappedf(player.velocity.length(), 0.1))
 	tree.root.notify_mouse_exited()
-	await _steer_to(Vector2(222, 195))
-	await _steer_to(Vector2(107, 195))
+	await _steer_to(Vector2(435, 286))
+	await _steer_to(Vector2(435, 401))
 	await _steer_to(course.ROUTE[1])
 	_expect(course.next_marker == 0, "Reaching the second gate first does not skip the first flag.")
 	await controller._tap(JOY_BUTTON_B)
@@ -124,11 +147,11 @@ func _finish_recording(record: AudioEffectRecord) -> void:
 		"Record the game sound bus while driving the course.")
 
 func _drive_course() -> void:
-	await _walk(player, [Vector2(194, 160), course.START_POINT + Vector2(-6, 3)])
+	await _reach_cart()
 	await controller._tap(JOY_BUTTON_X)
 	_expect(player.training_cart.visible and course.elapsed == 0.0, "Start again using the controller's interaction button.")
 	var recording := _record_hooves()
-	_stick(Vector2.LEFT)
+	_stick(Vector2.DOWN)
 	for frame in 12:
 		await tree.physics_frame
 	await _snapshot("03-first-gate")
@@ -139,15 +162,15 @@ func _drive_course() -> void:
 	_expect(course.next_marker == course.ROUTE.size() and "停稳" in ui.hud.driving_hint.text,
 		"Cross every flag in order and get the parking instruction.")
 	_finish_recording(recording)
-	await _steer_to(Vector2(44, 217))
+	await _steer_to(EstateLayout.DRIVING_FINISH + Vector2(-24, 0))
 	await _snapshot("04-parking")
-	_stick(Vector2.DOWN)
+	_stick(Vector2.RIGHT)
 	var crossed_at_speed := false
 	for frame in 70:
 		await tree.physics_frame
 		if course.PARKING.has_point(player.position) and player.velocity.length() > 55.0:
 			crossed_at_speed = true
-		if player.position.y > course.PARKING.end.y + 4.0:
+		if player.position.x > course.PARKING.end.x + 4.0:
 			break
 	_stick(Vector2.ZERO)
 	_expect(crossed_at_speed and course.is_processing() and state.best_driving_ms == 0,
@@ -195,20 +218,28 @@ func _save_and_resume() -> void:
 func _old_save() -> void:
 	await _enter_estate(true)
 	var management := await _open_arts()
-	_expect(state.current_day == 1 and state.player_stats.stats.DRIVING.xp == 30 and state.best_driving_ms == 0
-		and management.driving_button.disabled and not management.driving_record.visible,
-		"The genuine old save keeps the already-earned reward with no recorded time.")
+	var best: int = state.best_driving_ms
+	var original_run: bool = state.current_day == 1 and best == 0
+	var previous_run: bool = state.current_day == 3 and best > 0 and state.king_storage == 1 and state.player_inventory == 2
+	_expect((original_run or previous_run) and state.player_stats.stats.DRIVING.xp == 30
+		and management.driving_button.disabled and management.driving_record.visible == (best > 0),
+		"The old save preserves the practice reward, recorded time and the already-used daily attempt.")
+	await _snapshot("00-legacy-record")
+	var tomorrow: int = state.current_day + 1
 	await _button(management.get_node("CloseButton"))
 	await _button(ui.sleep_button)
 	await tree.create_timer(1.12).timeout
-	_expect(state.current_day == 2 and not management.driving_button.disabled, "The old campaign can start the new course the following day.")
+	_expect(state.current_day == tomorrow and not management.driving_button.disabled,
+		"The old campaign can start the relocated course the following day.")
 	await _reach_cart()
 	await _key(KEY_E)
-	_expect(course.is_processing() and course.elapsed == 0.0, "The resumed campaign mounts the new cart.")
+	_expect(course.is_processing() and course.elapsed == 0.0 and player.position.distance_to(course.START_POINT) < 1.0,
+		"The resumed campaign mounts at the relocated start.")
+	await _snapshot("01-legacy-at-the-yard")
 	await _button(ui.hud.leave_cart)
-	_expect(not course.is_processing() and state.player_stats.stats.DRIVING.xp == 30,
-		"The mouse dismount control leaves the old experience intact.")
-	print("DRIVING_OLD_SAVE day=", state.current_day, " xp=", state.player_stats.stats.DRIVING.xp)
+	_expect(not course.is_processing() and state.player_stats.stats.DRIVING.xp == 30 and state.best_driving_ms == best,
+		"The mouse dismount control leaves the old experience and time intact.")
+	print("DRIVING_OLD_SAVE day=", state.current_day, " xp=", state.player_stats.stats.DRIVING.xp, " best=", best)
 
 func _play() -> void:
 	await _enter_estate(false)
@@ -225,6 +256,7 @@ func _play() -> void:
 	await _snapshot("01-hall-wayfinding")
 	var room := world.get_node("HallInterior") as Node2D
 	await _cross_room(room.get_node("Exit").global_position + Vector2(0, 5), state.EstateRoom.OUTDOORS)
+	await _survey_course()
 	await _reach_cart()
 	controller = load("res://tests/GamepadReplay.gd").new()
 	controller.tree = tree

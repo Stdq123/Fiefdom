@@ -87,11 +87,11 @@ func _collect_places() -> void:
 	places = [
 		_entry(Category.PLACES, "东关", "通往竹涧", _node_point(world.get_node("EastGate")), true, icons.get(LANDSCAPE.Prop.GATE)),
 		_entry(Category.PLACES, "水源", "封地的引水处", _cell_point(Global.irrigation.source_cell), true),
+		_entry(Category.PLACES, DrivingPractice.PLACE, "东关前沿坡道下行，上车穿旗门", DrivingPractice.START_POINT, true),
 		_entry(Category.PLACES, "西廊", "西关内的歇脚处，陶辛在这里理绸", EstateLayout.WEST_COURT, true,
 			icons.get(LANDSCAPE.SCENE_WEST_COURT)),
 		_entry(Category.PLACES, "西市", "沿西路去粮摊、鱼摊和绸摊", _node_point(world.get_node("WestMarketGate")), true),
 		_entry(Category.PLACES, "南路亭", "穿过田南竹径，到亭前歇脚", LANDSCAPE.SOUTH_PAVILION, true, icons.get(LANDSCAPE.SCENE_LANDMARK)),
-		_entry(Category.PLACES, DrivingPractice.PLACE, "在田边上车 · 穿旗门并停稳", DrivingPractice.START_POINT),
 		_entry(Category.PLACES, "南路灶台", "带食材来做路餐" if Global.travel_hearth_open() else "西市交过第一单后开灶",
 			_node_point(world.get_node("TravelHearth/Approach")), true),
 		_entry(Category.PLACES, "交货簿", "到卸货场查看本季托付", _node_point(world.get_node("SeasonBoard/Approach")), true)
