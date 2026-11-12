@@ -131,7 +131,7 @@ var silk_bolts_offered := 0
 var sheepfold := Sheepfold.new()
 
 enum ChannelSite { AVAILABLE, LOCKED, BLOCKED, ALREADY_BUILT, NO_FUNDS }
-enum ReclamationSite { OPEN, EDGE, NEAR_FIELD, SOURCE, CANAL }
+enum ReclamationSite { OPEN, EDGE, NEAR_FIELD, SOURCE, CANAL, ROAD, LANDMARK }
 enum CropWater { DRY, BLOCKED, HAND, CANAL, RAIN }
 enum NightGrowth { READY, DRY, BLOCKED, GROW, RIPEN }
 const FIELD_ROUTE_STATES := [NightGrowth.READY, NightGrowth.DRY, NightGrowth.BLOCKED]
@@ -2014,6 +2014,12 @@ func reclamation_site(center_pos: Vector2i) -> ReclamationSite:
 		for x in range(-1, 2):
 			if irrigation.channels.has(center_pos + Vector2i(x, y)):
 				return ReclamationSite.CANAL
+	var area := EstateLayout.field_bounds(center_pos)
+	for landmark: Rect2 in EstateLayout.LANDMARKS:
+		if area.intersects(landmark):
+			return ReclamationSite.LANDMARK
+	if EstateLayout.overlaps_road(area):
+		return ReclamationSite.ROAD
 	return ReclamationSite.OPEN
 
 func add_well_field(center_pos: Vector2i) -> bool:

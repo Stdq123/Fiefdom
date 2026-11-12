@@ -186,6 +186,8 @@ func _update_validity() -> void:
 		Global.ReclamationSite.NEAR_FIELD: validity_label.text = "离已有井田太近。请在田埂外多留几格。"
 		Global.ReclamationSite.SOURCE: validity_label.text = "田界会盖住水源。请挪开一格再看。"
 		Global.ReclamationSite.CANAL: validity_label.text = "田界会盖住水渠。可在渠边另选田址。"
+		Global.ReclamationSite.ROAD: validity_label.text = "田界会占用道路或路肩。请在路旁另选田址。"
+		Global.ReclamationSite.LANDMARK: validity_label.text = "田界会占用建筑或驾御场。请移到旁边空地。"
 		Global.ReclamationSite.OPEN:
 			var status := "已选田址" if has_selection else "此处可用"
 			validity_label.text = "%s · 可接现有渠水 %d/9 格" % [status, preview_watered.size()]

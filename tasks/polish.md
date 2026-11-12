@@ -654,3 +654,10 @@
 - 两版到第 49 天均有 29 份纳贡、68 份累计私田收成。新版明确显示 29.90% 和还差 1 份。按眼下熟田估算，只收公田达到 30.61%。若先收五份熟私田再收公田，铜钱增加 37，公田占比为 29.13%，还差两份纳贡。指路只找成熟公田，没有成熟公田时可打开井田舆图。 [收获对照](../build/polish-council-prep/final-frames/1024x768/03-first-third-year.png)
 - 专项预置第 47 天、两块已开井田、书 2 级并推迟敌袭。实际研读至 3 级，过两夜晋升大夫。先收三份私田作物后，保存并恢复公田指路。首收公田后标记停止，附近仍有成熟私田。再过夜正常发一份粮，手柄可指向第二格成熟公田。补收后见到召简，定传统，标题续档后打开结局目标。旧包实写的第 49 天档也能补一份纳贡请来召简，原档与验证副本的校验值一致。 [续档指路](../build/polish-council-prep/final-frames/1280x720/04-public-route-reloaded.png) · [堂前指引](../build/polish-council-prep/final-frames/1024x768/06-envoy-arrival.png) · [旧档接续](../build/polish-council-prep/legacy-council-save.log)
 - Godot 导入、脚本加载、标题启动和 25 项回归通过。最终 Windows 包通过解压启动和 23 个回放，包含双结局、续营、战败恢复、研究期限、六艺、井田、蚕桑和旧档接续。1280×720 与 1024×768 窗口均在不可见的隔离桌面复核。首次独立试玩和完整人工长线试玩待验收。 [Godot 回归](../build/polish-council-prep/godot-council-prep.log) · [发行验证](../build/polish-council-prep/windows-release-check.log) · [Windows 试玩包](../build/polish-council-prep/Fiefdom-council-prep-preview-Windows-x64.zip)
+
+## 井田田口与道路选址
+
+- 上一版可在驾御旗门和南路亭之间立桩，第 7 天完工的田块盖住南行道。现在勘地与立桩共用九格占地检查，预览指出道路、路肩和设施冲突。预留堂屋门前、蚕棚用地、南路亭檐下及驾御的上车和停车区。 [旧版压路田](../build/polish-field-access/baseline-frames/1280x720/07-old-road-field.png) · [新版选址](../build/polish-field-access/release-frames/1024x768/00-road-conflict.png)
+- 专项预置第 2 天的开垦费用和三名门客。正常立桩后，两块新田各过四夜完工。东田 `(12, 5)` 向南接东路，南田 `(8, 11)` 向北接东路，田口各一格宽。马车和驾御路牌移到东田田口以东，南田田名放到田口对边。公私田分别收获，续档后封地与舆图上的短径、田埂缺口一致。 [封地实景](../build/polish-field-access/release-frames/1280x720/06-field-entrances-reloaded.png) · [封地舆图](../build/polish-field-access/release-frames/1280x720/07-estate-field-approaches.png)
+- 上一版实际保存的第 10 天旧档，在原址 `(1, 11)` 恢复已完工的井田和两格熟黍。公田纳贡一份，私仓进一份，到账 5 铜钱。原档和验证副本的校验值一致。 [旧档收割](../build/polish-field-access/legacy-field-access.log)
+- Godot 导入、脚本加载、标题启动和 25 项回归通过。最终 Windows 包通过解压启动和 22 个回放，覆盖两条结局、续营、开垦、渠水、六艺与旧档。1280×720 和 1024×768 两种窗口尺寸在不可见的隔离桌面复核。首次独立试玩与完整人工长线试玩待验收。 [Godot 回归](../build/polish-field-access/godot-field-access.log) · [发行验证](../build/polish-field-access/windows-release-check.log) · [Windows 试玩包](../build/polish-field-access/Fiefdom-field-access-preview-Windows-x64.zip)

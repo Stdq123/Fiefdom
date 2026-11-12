@@ -2,9 +2,9 @@ extends Node2D
 class_name DrivingPractice
 
 const PLACE := "驾御场"
-const START_POINT := Vector2(237, 154)
+const START_POINT := EstateLayout.DRIVING_START
 const ROUTE := [Vector2(194, 160), Vector2(107, 165), Vector2(59, 166), Vector2(48, 210)]
-const PARKING := Rect2(30, 229, 28, 24)
+const PARKING := EstateLayout.DRIVING_PARKING
 const LIMIT := 25.0
 const REWARD := 30
 const FLAG_GOLD := Color("#f3cc78")

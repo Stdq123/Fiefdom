@@ -382,7 +382,7 @@ theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
 
 [node name="DrivingPractice" type="Node2D" parent="World" groups=["interactable"]]
-position = Vector2(241, 138)
+position = Vector2(306, 152)
 y_sort_enabled = true
 script = ExtResource("9_drive")
 
@@ -395,9 +395,9 @@ z_index = -1
 z_index = 6
 material = ExtResource("24_world_hint")
 offset_left = -63.0
-offset_top = -36.0
+offset_top = 2.0
 offset_right = 63.0
-offset_bottom = -22.0
+offset_bottom = 16.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.8863, 0.8235, 0.6627, 1)
 theme_override_colors/font_outline_color = Color(0.13, 0.18, 0.15, 1)

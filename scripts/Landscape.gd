@@ -69,10 +69,10 @@ const BUILDING_REGIONS := {
 	Prop.GATE: Rect2(312, 0, 32, 48),
 	Prop.GATE_FAR: Rect2(280, 0, 32, 48),
 }
-const PAVILION_REGION := Rect2(208, 0, 72, 60)
+const PAVILION_REGION := Rect2(Vector2(208, 0), EstateLayout.PAVILION_SIZE)
 const BUILDING_FOOTPRINTS := {
-	Prop.HALL: Rect2(-51, -21, 102, 23),
-	Prop.SILK_SHED: Rect2(-31, -14, 62, 14),
+	Prop.HALL: EstateLayout.HALL_BASE,
+	Prop.SILK_SHED: EstateLayout.SILK_SHED_BASE,
 	Prop.GATE: Rect2(-12, -5, 24, 7),
 	Prop.GATE_FAR: Rect2(-12, -5, 24, 7),
 }
@@ -80,13 +80,13 @@ const ORCHARD_FRAMES := [Vector2(0, 1), Vector2(1, 0), Vector2(1, 1), Vector2(3,
 const MAP_BACKDROP := Rect2(-1650, -1400, 3350, 2800)
 const ESTATE_BOUNDS := Rect2(-330, -205, 840, 560)
 const WILD_BOUNDS := Rect2(-315, -220, 755, 540)
-const HALL_FOOT := Vector2i(-12, 26)
-const HALL_LANDING := Rect2(Vector2(HALL_FOOT) + Vector2(-22, 1), Vector2(44, 15))
-const SOUTH_PAVILION := VisitorData.SOUTH_POST + Vector2(27, 33)
-const PAVILION_TURN := Vector2(44, 241)
+const HALL_FOOT := EstateLayout.HALL_FOOT
+const HALL_LANDING := EstateLayout.HALL_LANDING
+const SOUTH_PAVILION := EstateLayout.SOUTH_PAVILION
+const PAVILION_TURN := EstateLayout.PAVILION_TURN
 const PAVILION_REST_FOOT := SOUTH_PAVILION + Vector2(5, 5)
 const PAVILION_WATER := PAVILION_REST_FOOT + Vector2(10, -4)
-const SILK_SHED_FOOT := Vector2(-29, 120)
+const SILK_SHED_FOOT := EstateLayout.SILK_SHED_FOOT
 const SCENE_LANDMARK := -1
 # Meadow, shade, sunny patches, and road for spring through winter.
 const SEASON_PALETTES := [
@@ -113,17 +113,9 @@ const CROSSING_HALF_DEPTH := 16.0
 const WATER_HALF_WIDTH := 17.0
 const GROVE_FORK := Vector2(-113, 0)
 const WEST_FORK := Vector2(47, 14)
-const FIELD_TURN := Vector2(107, 165)
-const EAST_LANE_JUNCTION := Vector2(29, 152)
-const ESTATE_SOUTH_LANE := [
-	Vector2(4, 43), Vector2(1, 72), Vector2(0, 101), Vector2(8, 128), EAST_LANE_JUNCTION,
-	Vector2(46, 177), Vector2(50, 205), PAVILION_TURN, Vector2(23, 288),
-]
-const ESTATE_EAST_LANE := [
-	EAST_LANE_JUNCTION, Vector2(62, 162), FIELD_TURN, Vector2(150, 164), Vector2(194, 160),
-	Vector2(243, 153), Vector2(293, 150), Vector2(336, 151),
-]
-const HALL_APPROACH := [Vector2(HALL_FOOT) + Vector2(0, 17), Vector2(HALL_FOOT) + Vector2(0, 9)]
+const EAST_LANE_JUNCTION := EstateLayout.EAST_LANE_JUNCTION
+const ESTATE_SOUTH_LANE := EstateLayout.SOUTH_LANE
+const ESTATE_EAST_LANE := EstateLayout.EAST_LANE
 const PAVILION_APPROACH := [
 	Vector2(27, 282), Vector2(48, 286), Vector2(68, 282), Vector2(77, 267),
 	SOUTH_PAVILION + Vector2(0, 6),
@@ -134,16 +126,7 @@ const PAVILION_EAST_TRACK := [Vector2(211, 334), Vector2(246, 338), Vector2(270,
 	Vector2(292, 319), Vector2(312, 303), Vector2(319, 287)]
 const SHEEPFOLD_TRACK := [Vector2(23, 288), Vector2(7, 309), Vector2(-22, 322),
 	Vector2(-62, 333), Vector2(-111, 344), Vector2(-135, 345), Vector2(-145, 342), Vector2(-148, 335)]
-const ESTATE_TRACKS := [
-	[Vector2(-504, -33), Vector2(-397, -31), Vector2(-343, -28), Vector2(-308, -24), Vector2(-273, -21), Vector2(-249, -19),
-		Vector2(-205, 0), Vector2(-140, 16), Vector2(-90, 28), Vector2(-40, 41),
-		Vector2(4, 43), Vector2(39, 38), Vector2(91, 32), Vector2(148, 27), Vector2(213, 20),
-		Vector2(283, 12), Vector2(345, 7), Vector2(400, 8), Vector2(460, 0), Vector2(516, 0),
-		Vector2(579, -3), Vector2(676, 6)],
-	ESTATE_SOUTH_LANE,
-	ESTATE_EAST_LANE,
-	[Vector2(-45, 127), Vector2(-18, 128), Vector2(8, 128)],
-	HALL_APPROACH,
+const ESTATE_TRACKS := EstateLayout.ROADS + [
 	PAVILION_APPROACH,
 	HEARTH_TRACK,
 	PAVILION_EAST_TRACK,
@@ -157,7 +140,7 @@ const WILD_TRACKS := [
 	[Vector2(256, 18), Vector2(273, -4), Vector2(286, -27), Vector2(303, -41)],
 	[WEST_FORK, Vector2(62, -13), Vector2(79, -38), Vector2(95, -63), SummerRaft.LANDING]
 ]
-const ESTATE_TRACK_WIDTHS: Array[float] = [32.0, 22.0, 18.0, 16.0, 30.0, 18.0, 14.0, 12.0]
+const ESTATE_TRACK_WIDTHS: Array[float] = EstateLayout.ROAD_WIDTHS + [18.0, 14.0, 12.0]
 const GARDEN_TRACK := [Vector2(39, 252), Vector2(58, 258), Vector2(78, 263), Vector2(101, 264)]
 const ROAD_REST_TRACK := [Vector2(26, 282), Vector2(9, 288), Vector2(-7, 298)]
 const ROTATION_BOOK_TRACK := [Vector2(44, 241), Vector2(22, 236), Vector2(0, 233), Vector2(-21, 234), Vector2(-43, 238)]
@@ -287,8 +270,9 @@ var raining := false
 var water_time := 0.0
 var water_frame := 0
 var estate_tracks := ESTATE_TRACKS.duplicate()
-var estate_track_widths := ESTATE_TRACK_WIDTHS.duplicate()
+var estate_track_widths: Array[float] = []
 var track_shapes: Array[Dictionary] = []
+var field_approaches: Dictionary[int, PackedVector2Array] = {}
 
 func _ready() -> void:
 	ground_cover = SEASONAL_GROUND.new(wilderness)
@@ -308,26 +292,66 @@ func _ready() -> void:
 	GameEvents.day_advanced.connect(_update_weather.unbind(1))
 	if not wilderness:
 		get_parent().visitor_changed.connect(queue_redraw.unbind(1))
-		GameEvents.well_field_added.connect(_refresh_scenery.unbind(1))
-		GameEvents.well_field_reclaimed.connect(_refresh_scenery.unbind(2))
+		GameEvents.well_field_added.connect(_refresh_field_layout.unbind(1))
+		GameEvents.well_field_reclaimed.connect(_refresh_field_layout.unbind(2))
 		GameEvents.silk_changed.connect(_refresh_scenery)
 		GameEvents.channels_changed.connect(_refresh_scenery)
 		GameEvents.road_provisions_delivered.connect(queue_redraw)
 		GameEvents.silk_sample_delivered.connect(queue_redraw)
 		GameEvents.ravine_journal_changed.connect(_refresh_estate_tracks)
 		GameEvents.field_rotation_changed.connect(_refresh_estate_tracks)
+		_layout_field_approaches()
 	else:
 		_build_track_shapes(WILD_TRACKS, WILD_TRACK_WIDTHS)
 	_update_weather()
 	_prepare_map.call_deferred()
 
+func _layout_field_approaches() -> void:
+	field_approaches.clear()
+	var fields: Array[Rect2] = []
+	for field in Global.well_fields:
+		fields.append(_field_bounds(field["center_pos"]))
+	# The first scene builds its roads before World initializes the starter field.
+	if fields.is_empty():
+		field_approaches[0] = _starter_approach(_field_bounds(Global.FIRST_FIELD_CENTER))
+	for field in Global.well_fields:
+		if not field["is_unlocked"]:
+			continue
+		var id: int = field["field_id"]
+		var area := fields[id]
+		if field["center_pos"] == Global.FIRST_FIELD_CENTER:
+			field_approaches[id] = _starter_approach(area)
+			continue
+		var occupied: Array[Rect2] = []
+		occupied.assign(EstateLayout.LANDMARKS)
+		occupied.append_array(fields)
+		occupied.erase(area)
+		var approach := EstateLayout.field_approach(area, occupied)
+		if not approach.is_empty():
+			field_approaches[id] = approach
+
+func _starter_approach(area: Rect2) -> PackedVector2Array:
+	var entry := Vector2(area.get_center().x, area.end.y)
+	return PackedVector2Array([EstateLayout.FIELD_TURN, entry + Vector2(1, 14), entry + Vector2(0, 6), entry])
+
+func _refresh_field_layout() -> void:
+	_layout_field_approaches()
+	_refresh_estate_tracks()
+	(tile_map.get_node("WellFieldMarker") as WellFieldMarker).refresh_markers()
+	_refresh_scenery()
+
+func field_entrance(field_id: int) -> Vector2:
+	if not field_approaches.has(field_id):
+		return Vector2.ZERO
+	var approach := field_approaches[field_id]
+	return approach[-1].direction_to(approach[-2])
+
 func _refresh_estate_tracks() -> void:
 	estate_tracks.assign(ESTATE_TRACKS)
 	estate_track_widths.assign(ESTATE_TRACK_WIDTHS)
-	var field := _field_bounds(Global.FIRST_FIELD_CENTER)
-	var entry := Vector2(field.get_center().x, field.end.y)
-	estate_tracks.append([FIELD_TURN, entry + Vector2(1, 14), entry + Vector2(0, 6), entry])
-	estate_track_widths.append(WellFieldMarker.ENTRANCE_WIDTH)
+	for approach in field_approaches.values():
+		estate_tracks.append(approach)
+		estate_track_widths.append(EstateLayout.FIELD_ENTRANCE_WIDTH)
 	if Global.ravine_journal.garden_day > 0:
 		estate_tracks.append(GARDEN_TRACK)
 		estate_track_widths.append(11.0)
@@ -340,7 +364,7 @@ func _refresh_estate_tracks() -> void:
 	if Global.sheepfold.owned():
 		estate_tracks.append(SHEEPFOLD_TRACK)
 		estate_track_widths.append(12.0)
-	_build_track_shapes(estate_tracks, estate_track_widths, ESTATE_TRACKS.size())
+	_build_track_shapes(estate_tracks, estate_track_widths, field_approaches.size())
 	queue_redraw()
 
 func _prepare_map() -> void:
@@ -608,17 +632,19 @@ func _track_dust() -> Color:
 		dust = dust.darkened(0.18)
 	return dust
 
-func _build_track_shapes(tracks: Array, widths: Array[float], field_entry_index := -1) -> void:
+func _build_track_shapes(tracks: Array, widths: Array[float], field_count := 0) -> void:
 	track_shapes.clear()
 	for index in range(tracks.size()):
 		var points := PackedVector2Array(tracks[index])
 		var samples := _sample_track(points)
 		var radius := widths[index] * 0.5
-		var field_entry := index == field_entry_index
+		var entrance := Vector2.ZERO
+		if index >= ESTATE_TRACKS.size() and index < ESTATE_TRACKS.size() + field_count:
+			entrance = points[-2].direction_to(points[-1])
 		track_shapes.append({
-			"shoulder": _track_outline(samples, radius + 2.5, index, field_entry),
-			"edge": _track_outline(samples, radius + 1.0, index, field_entry),
-			"surface": _track_outline(samples, radius, index, field_entry),
+			"shoulder": _track_outline(samples, radius + EstateLayout.ROAD_SHOULDER, index, entrance),
+			"edge": _track_outline(samples, radius + 1.0, index, entrance),
+			"surface": _track_outline(samples, radius, index, entrance),
 			"gravel_path": points if wilderness else samples,
 			"width": widths[index],
 		})
@@ -639,15 +665,7 @@ func track_crossing(start: Vector2, finish: Vector2) -> Variant:
 
 func _sample_track(points: PackedVector2Array) -> PackedVector2Array:
 	if not wilderness:
-		var curve := Curve2D.new()
-		curve.bake_interval = 6.0
-		for index in points.size():
-			var at := points[index]
-			var previous := points[maxi(0, index - 1)]
-			var following := points[mini(points.size() - 1, index + 1)]
-			var handle := previous.direction_to(following) * minf(at.distance_to(previous), at.distance_to(following)) * 0.28
-			curve.add_point(at, -handle, handle)
-		return curve.get_baked_points()
+		return EstateLayout.sample_road(points)
 	var samples := PackedVector2Array()
 	for index in range(points.size() - 1):
 		var start := points[index]
@@ -658,7 +676,7 @@ func _sample_track(points: PackedVector2Array) -> PackedVector2Array:
 	samples.append(points[-1])
 	return samples
 
-func _track_outline(samples: PackedVector2Array, radius: float, seed_offset: int, field_entry: bool) -> PackedVector2Array:
+func _track_outline(samples: PackedVector2Array, radius: float, seed_offset: int, entrance: Vector2) -> PackedVector2Array:
 	var left := PackedVector2Array()
 	var right := PackedVector2Array()
 	var end := samples.size() - 1
@@ -666,16 +684,16 @@ func _track_outline(samples: PackedVector2Array, radius: float, seed_offset: int
 	for index in samples.size():
 		var point := samples[index]
 		var direction := samples[maxi(0, index - 1)].direction_to(samples[mini(end, index + 1)])
-		var at_field := field_entry and index == end
+		var at_field := entrance != Vector2.ZERO and index == end
 		if at_field:
-			direction = Vector2.UP
+			direction = entrance
 		var normal := direction.orthogonal()
 		var taper := lerpf(0.39, 1.0, smoothstep(0.0, 3.0, mini(index, end - index))) if wilderness else 1.0
 		var left_edge := 0.0 if at_field else 0.79 * sin(index * 0.49 + phase) + 0.37 * sin(index * 1.37 + phase * 0.73)
 		var right_edge := 0.0 if at_field else 0.83 * sin(index * 0.42 - phase + 1.6) + 0.37 * sin(index * 1.25 + phase)
 		left.append(point + normal * (radius + left_edge) * taper)
 		right.append(point - normal * (radius + right_edge) * taper)
-	if not wilderness and not field_entry:
+	if not wilderness and entrance == Vector2.ZERO:
 		_append_track_cap(left, samples[end], left[-1], right[-1], samples[end - 1].direction_to(samples[end]))
 	right.reverse()
 	left.append_array(right)
@@ -749,8 +767,8 @@ func _draw_field_verges() -> void:
 		verge = verge.lerp(Color("#344c4c"), 0.34)
 	for field in Global.well_fields:
 		var area := _field_bounds(field["center_pos"])
-		var entrance: bool = field["is_unlocked"] and field["center_pos"] == Global.FIRST_FIELD_CENTER
-		_draw_field_edge(area.grow(5.0), verge.lerp(dust, 0.27), 5.0 if entrance else 0.0, true)
+		var entrance := field_entrance(field["field_id"])
+		_draw_field_edge(area.grow(5.0), verge.lerp(dust, 0.27), entrance, 5.0, true)
 
 func _draw_field_banks() -> void:
 	var dust := _track_dust()
@@ -758,24 +776,35 @@ func _draw_field_banks() -> void:
 		if not field["is_unlocked"]:
 			continue
 		var area := _field_bounds(field["center_pos"])
-		var entrance: bool = field["center_pos"] == Global.FIRST_FIELD_CENTER
+		var entrance := field_entrance(field["field_id"])
 		var bank := area.grow(2.0)
-		bank.size.y += 2.0
-		_draw_field_edge(bank, dust.darkened(0.25), 4.0 if entrance else 0.0)
-		draw_rect(Rect2(area.position + Vector2(2, -2), Vector2(area.size.x - 4.0, 1)), dust.lightened(0.13))
+		if entrance.x == 0.0:
+			bank.size.y += 2.0
+		_draw_field_edge(bank, dust.darkened(0.25), entrance, 4.0)
+		var highlight := Rect2(area.position + Vector2(2, -2), Vector2(area.size.x - 4.0, 1))
+		if entrance == Vector2.UP:
+			var length := (highlight.size.x - EstateLayout.FIELD_ENTRANCE_WIDTH) * 0.5
+			draw_rect(Rect2(highlight.position, Vector2(length, 1)), dust.lightened(0.13))
+			highlight.position.x = highlight.end.x - length
+			highlight.size.x = length
+		draw_rect(highlight, dust.lightened(0.13))
 
-func _draw_field_edge(area: Rect2, color: Color, entrance_depth: float, loam := false) -> void:
-	var a := area.position
-	var b := area.end
-	var outline := PackedVector2Array([a + Vector2(3, 0), Vector2(b.x - 3, a.y), Vector2(b.x, a.y + 3),
-		b - Vector2(0, 3), b - Vector2(3, 0)])
-	if entrance_depth > 0.0:
-		var middle := area.get_center().x
-		var right := middle + WellFieldMarker.ENTRANCE_WIDTH * 0.5
-		var left := middle - WellFieldMarker.ENTRANCE_WIDTH * 0.5
-		outline.append_array(PackedVector2Array([Vector2(right, b.y), Vector2(right, b.y - entrance_depth),
-			Vector2(left, b.y - entrance_depth), Vector2(left, b.y)]))
-	outline.append_array(PackedVector2Array([Vector2(a.x + 3, b.y), Vector2(a.x, b.y - 3), a + Vector2(0, 3)]))
+func _draw_field_edge(area: Rect2, color: Color, entrance: Vector2, depth: float, loam := false) -> void:
+	var corners := EstateLayout.corners(area)
+	var outline := PackedVector2Array()
+	for side in 4:
+		var start := corners[side]
+		var finish := corners[(side + 1) % 4]
+		var along := start.direction_to(finish)
+		outline.append(start + along * 3.0)
+		if EstateLayout.EDGE_NORMALS[side] == entrance:
+			var middle := start.lerp(finish, 0.5)
+			var half_opening := along * EstateLayout.FIELD_ENTRANCE_WIDTH * 0.5
+			var lip := middle - half_opening
+			var far_lip := middle + half_opening
+			outline.append_array(PackedVector2Array([lip, lip - entrance * depth,
+				far_lip - entrance * depth, far_lip]))
+		outline.append(finish - along * 3.0)
 	if loam:
 		ESTATE_TERRAIN.draw_loam(self, outline, color)
 	else:
@@ -1021,8 +1050,7 @@ func _ground_clear(artwork: Rect2) -> bool:
 	return not artwork.grow(half_tile.x).has_point(_tile_point(Global.irrigation.source_cell))
 
 func _field_bounds(center: Vector2i) -> Rect2:
-	var size := Vector2(tile_map.tile_set.tile_size) * 3.0
-	return Rect2(_tile_point(center) - size * 0.5, size)
+	return EstateLayout.field_bounds(center)
 
 func _tile_point(cell: Vector2i) -> Vector2:
 	return to_local(tile_map.to_global(tile_map.map_to_local(cell)))

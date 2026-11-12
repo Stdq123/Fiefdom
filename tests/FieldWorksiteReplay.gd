@@ -1,7 +1,8 @@
 extends RefCounted
 
 const FIRST_SITE := Vector2i(12, 5)
-const SECOND_SITE := Vector2i(1, 11)
+const SECOND_SITE := Vector2i(8, 11)
+const OLD_ROAD_SITE := Vector2i(1, 11)
 
 var tree: SceneTree
 var state: Node
@@ -11,6 +12,7 @@ var tiles: TileMapLayer
 var markers: Node
 var failures := 0
 var capture_dir := ""
+var legacy := false
 
 func _expect(condition: bool, detail: String) -> bool:
 	if not condition:
@@ -94,6 +96,27 @@ func _book(center: Vector2i) -> bool:
 	return _expect(state.well_fields.size() == size + 1 and state.money == funds - price and state.food_storage == food - grain,
 		"Book the well field and pay the regular cost once.")
 
+func _check_obstructed_sites() -> void:
+	var money: int = state.money
+	var food: int = state.food_storage
+	var south_lane := Vector2i(1, 8)
+	await _button(ui.reclaim_button)
+	var panel: Control = ui.get_node("Control/ReclamationPanel")
+	await _click(_point(south_lane))
+	_expect(panel.selected_cell == south_lane and panel.reclaim_button.disabled
+		and panel.preview_site == Global.ReclamationSite.ROAD and "路肩" in panel.validity_label.text,
+		"Selecting a field across the driving lane shows the road conflict.")
+	await _capture("00-road-conflict")
+	_expect(state.reclaim_well_field(south_lane).is_empty() and state.reclaim_well_field(OLD_ROAD_SITE).is_empty()
+		and state.well_fields.size() == 1
+		and state.money == money and state.food_storage == food, "The order also checks the road before charging.")
+	_expect(state.reclamation_site(Vector2i(12, 6)) == Global.ReclamationSite.ROAD,
+		"A field reaching the east shoulder is unavailable even when its center is off the road.")
+	for site in [Vector2i(-3, -1), Vector2i(-4, 5), Vector2i(4, 11), Vector2i(16, 5), OLD_ROAD_SITE]:
+		_expect(state.reclamation_site(site) == Global.ReclamationSite.LANDMARK,
+			"Reserve the hall, future silk shed, pavilion, and both driving areas.")
+	await _button(panel.get_node("Panel/CloseButton"))
+
 func _check_site(field_id: int, stage: int) -> bool:
 	var field: Dictionary = state.get_well_field(field_id)
 	var marker: Node2D = markers.marker_nodes.get(field_id)
@@ -122,6 +145,24 @@ func _check_completed(field_id: int) -> void:
 			var tile := tiles.get_cell_tile_data(cell)
 			_expect(tile != null and tile.get_custom_data("is_public_field") == (x == 0 and y == 0),
 				"The finished footprint has one public center and eight private tiles.")
+	var landscape: Node2D = world.get_node("Landscape")
+	var area: Rect2 = landscape._field_bounds(field.center_pos)
+	var center := tiles.to_global(tiles.map_to_local(field.center_pos))
+	var normal: Vector2 = landscape.field_entrance(field_id)
+	var expected := Vector2.DOWN if field_id == 1 else Vector2.UP
+	_expect(center == area.get_center() and normal == expected,
+		"The field uses the live grid and opens on the side facing the nearest clear lane.")
+	var boundary := marker.get_node("Boundary") as Line2D
+	var mouth := center + normal * 24.0
+	_expect(boundary.to_global((boundary.points[0] + boundary.points[-1]) * 0.5) == mouth
+		and boundary.points[0].distance_to(boundary.points[-1]) == 16.0, "The cut in the field edge is one tile wide.")
+	var path: Dictionary = landscape.track_shapes[landscape.ESTATE_TRACKS.size() + field_id]
+	for offset in [-6.0, 6.0]:
+		_expect(Geometry2D.is_point_in_polygon(mouth + normal * 2.0 + normal.orthogonal() * offset, path.surface),
+			"The track reaches both sides of the opening.")
+	_expect(Geometry2D.is_point_in_polygon(path.gravel_path[0], landscape.track_shapes[2].surface),
+		"The spur begins inside the east lane.")
+	print("FIELD_ACCESS_ENTRY field=", field_id + 1, " mouth=", mouth, " side=", normal)
 
 func _continue_latest() -> void:
 	tree.change_scene_to_file(state.TITLE_SCENE)
@@ -198,30 +239,63 @@ func _farm_new_field() -> void:
 	_expect(state.king_storage == 2 and state.player_inventory == 1 and state.money == money + ItemManager.get_crop("millet").sell_price,
 		"Harvest on the new field credits public and private production exactly once.")
 	print("WORKSITE_HARVEST day=", state.current_day, " treasury=", state.king_storage, " private=", state.player_inventory)
+	await _continue_latest()
+	_check_completed(1)
+	_check_completed(2)
+	await _move(&"ui_down", 40)
+	await tree.create_timer(0.35).timeout
+	await _capture("06-field-entrances-reloaded")
+	await _button(ui.hud.map_button)
+	_expect(ui.estate_map.modal.visible, "The survey opens with both completed field approaches.")
+	await _capture("07-estate-field-approaches")
 
-func run(game_tree: SceneTree) -> void:
+func _harvest_legacy_site() -> void:
+	var old_field: Dictionary = state.get_well_field(2)
+	var private_cell := OLD_ROAD_SITE + Vector2i.RIGHT
+	if not _expect(old_field.get("center_pos") == OLD_ROAD_SITE and old_field.is_unlocked
+		and state.active_crops.has(OLD_ROAD_SITE) and state.active_crops.has(private_cell),
+		"Continue the actual prior release's paid field and mature crops at the original coordinates."):
+		return
+	var treasury: int = state.king_storage
+	var inventory: int = state.player_inventory
+	var money: int = state.money
+	await _capture("08-old-road-field-reloaded")
+	for cell in [OLD_ROAD_SITE, private_cell]:
+		await _click(_point(cell))
+	_expect(state.king_storage == treasury + 1 and state.player_inventory == inventory + 1
+		and state.money == money + ItemManager.get_crop("millet").sell_price,
+		"Both harvest destinations still receive the crops grown on the legacy road field.")
+	print("FIELD_ACCESS_LEGACY day=", state.current_day, " site=", OLD_ROAD_SITE,
+		" tribute=", state.king_storage - treasury, " private=", state.player_inventory - inventory)
+
+func run(game_tree: SceneTree, captures := "") -> void:
 	tree = game_tree
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Isolate the worksite replay's profile."):
 		tree.quit(1)
 		return
 	seed(982)
-	capture_dir = OS.get_environment("FIEFDOM_WORKSITE_CAPTURES")
+	capture_dir = captures if not captures.is_empty() else OS.get_environment("FIEFDOM_WORKSITE_CAPTURES")
 	if tree.root.size.x < 900:
 		tree.root.size = Vector2i(1280, 720)
 	tree.root.notify_mouse_entered()
 	state = tree.root.get_node("Global")
-	# Use a funded expansion save so both sites can be ordered through the normal UI.
-	var file := FileAccess.open("user://savegame.json", FileAccess.WRITE)
-	file.store_string(JSON.stringify({
-		"current_day": 2, "current_rank": state.Rank.SHANG_SHI, "king_storage": 1, "reputation": 150,
-		"money": 620, "food_storage": 260,
-		"retainers": [{"name": "渠伯"}, {"name": "季青"}, {"name": "石墨"}],
-	}))
-	file.close()
+	if not legacy:
+		# Fund two expansions to exercise both sites through the regular survey.
+		var file := FileAccess.open("user://savegame.json", FileAccess.WRITE)
+		file.store_string(JSON.stringify({
+			"current_day": 2, "current_rank": state.Rank.SHANG_SHI, "king_storage": 1, "reputation": 150,
+			"money": 620, "food_storage": 260,
+			"retainers": [{"name": "渠伯"}, {"name": "季青"}, {"name": "石墨"}],
+		}))
+		file.close()
 	await _continue_latest()
-	_expect(not ui.hud.worksite_button.visible, "The shortcut appears after commissioning a site.")
-	if await _develop_sites():
-		await _farm_new_field()
+	if legacy:
+		await _harvest_legacy_site()
+	else:
+		_expect(not ui.hud.worksite_button.visible, "The shortcut appears after commissioning a site.")
+		await _check_obstructed_sites()
+		if await _develop_sites():
+			await _farm_new_field()
 	tree.unload_current_scene()
 	for stream in tree.root.get_node("AudioManager").get_children():
 		if stream is AudioStreamPlayer:

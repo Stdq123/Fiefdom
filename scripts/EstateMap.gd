@@ -512,6 +512,7 @@ func _draw_field(field: Dictionary) -> void:
 	var area := _field_rect(field.point)
 	var at := area.get_center()
 	var cell := area.size / 3.0
+	var entrance: Vector2 = landscape.field_entrance(field.field_id)
 	if field.worksite:
 		chart.draw_rect(area, Color("#c2a574"))
 		for index in range(1, 6):
@@ -531,8 +532,10 @@ func _draw_field(field: Dictionary) -> void:
 			chart.draw_line(area.position + Vector2(0, cell.y * offset),
 				area.position + Vector2(area.size.x, cell.y * offset), Color("#6e7859"))
 		chart.draw_rect(Rect2(at - cell * 0.5, cell), Color("#6e5734"), false, 1.4)
-		chart.draw_rect(area, Color("#576345"), false, 1.6)
-	var number_at := Vector2(at.x, area.position.y - 8.0) if category == Category.FIELDS else at
+		var boundary := EstateLayout.field_boundary(area, entrance, cell.x)
+		chart.draw_polyline(boundary, Color("#576345"), 1.6, true)
+	var number_y := area.end.y + 8.0 if entrance == Vector2.UP else area.position.y - 8.0
+	var number_at := Vector2(at.x, number_y) if category == Category.FIELDS else at
 	_draw_text(str(field.field_id + 1), number_at, 12, INK)
 
 func _draw_field_task(cell: Vector2i, task: int) -> void:

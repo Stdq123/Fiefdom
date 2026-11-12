@@ -2,19 +2,12 @@ extends Node2D
 class_name WellFieldMarker
 
 const WORKSITE := preload("res://scripts/FieldWorksite.gd")
-const ENTRANCE_WIDTH := 16.0
+const ENTRANCE_WIDTH := EstateLayout.FIELD_ENTRANCE_WIDTH
 
 @onready var tile_map: TileMapLayer = get_parent()
+@onready var landscape: Node2D = tile_map.get_parent().get_node("Landscape")
 
 var marker_nodes: Dictionary[int, Node2D] = {}
-
-func _ready() -> void:
-	if not tile_map:
-		push_error("WellFieldMarker must be a child of TileMapLayer.")
-		return
-
-	GameEvents.well_field_added.connect(_update_marker)
-	GameEvents.well_field_reclaimed.connect(_update_marker.unbind(1))
 
 func refresh_markers() -> void:
 	for field_data in Global.well_fields:
@@ -36,17 +29,12 @@ func _update_marker(field_id: int) -> void:
 
 	var cell_size := Vector2(tile_map.tile_set.tile_size)
 	var half_span := cell_size * 1.5
+	var entrance: Vector2 = landscape.field_entrance(field_id)
 	var title := "井田 %d" % (field_id + 1)
 	if field["is_unlocked"]:
 		var line := Line2D.new()
 		line.name = "Boundary"
-		var bottom_left := Vector2(-half_span.x, half_span.y)
-		line.points = PackedVector2Array([bottom_left, -half_span, Vector2(half_span.x, -half_span.y), half_span])
-		if field["center_pos"] == Global.FIRST_FIELD_CENTER:
-			line.add_point(Vector2(-ENTRANCE_WIDTH * 0.5, half_span.y), 0)
-			line.add_point(Vector2(ENTRANCE_WIDTH * 0.5, half_span.y))
-		else:
-			line.closed = true
+		line.points = EstateLayout.field_boundary(Rect2(-half_span, half_span * 2.0), entrance, ENTRANCE_WIDTH)
 		line.width = 1.0
 		line.default_color = Color("#a29467")
 		line.z_index = 50
@@ -66,6 +54,8 @@ func _update_marker(field_id: int) -> void:
 	label.name = "Status"
 	label.text = title
 	label.position = -half_span + Vector2(0, -15)
+	if entrance == Vector2.UP:
+		label.position.y = half_span.y + 2.0
 	label.add_theme_font_size_override("font_size", 11)
 	label.add_theme_color_override("font_color", Color("#e1ddbb"))
 	label.add_theme_color_override("font_outline_color", Color("#263d2e"))

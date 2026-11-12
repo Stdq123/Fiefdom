@@ -59,7 +59,7 @@ func _silk_and_gates() -> void:
 	state.day_progress = 0.35
 	state.silk_workshop.built = true
 	state.max_well_fields = 2
-	_expect(state.add_well_field(Vector2i(12, 6)), "Prepare a second field beside the east road.")
+	_expect(state.add_well_field(Vector2i(12, 5)), "Prepare a second field beside the east road.")
 	var second: Dictionary = state.well_fields.back()
 	second.is_unlocked = true
 	second.reclamation_progress = state.RECLAMATION_NIGHTS
