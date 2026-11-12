@@ -261,9 +261,26 @@ theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 text = "只补今夜所需，优先用时令单之外的作物。购粮上限填 0 时只用余粮。"
 
+[node name="PartialMeals" type="CheckButton" parent="Center/Window/Content/Scroll/Body/Policy"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(230, 32)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+text = "缺粮时先供足份口粮"
+tooltip_text = "按分餐顺序补粮，凑够一人所需的整份口粮才支出。"
+
 [node name="Preview" type="VBoxContainer" parent="Center/Window/Content/Scroll/Body"]
 layout_mode = 2
 theme_override_constants/separation = 5
+
+[node name="ResearchFee" type="Label" parent="Center/Window/Content/Scroll/Body/Preview"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
 
 [node name="Forecast" type="Label" parent="Center/Window/Content/Scroll/Body/Preview"]
 unique_name_in_owner = true

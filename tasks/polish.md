@@ -668,3 +668,10 @@
 - 单格挖渠与放样现在共用屋基检查。触及堂屋、台阶或蚕棚用地时标红，整段保留起点并提示换弯。专项用 R 转弯后沿屋外通渠，穿过主路的渠段有过路木板。实际走进堂屋和蚕棚，再过夜核对稻苗生长和公私田收割。 [屋基提示](../build/polish-canal-doors/release-frames/1024x768/03-survey-blocked.png) · [通水与木板](../build/polish-canal-doors/release-frames/1280x720/04-road-and-open-doors.png)
 - 旧版实写的档在新版恢复两处入口，17 格渠水继续通到北田。经过屋基的渠段加石板，挖渠模式可查暗渠填平会让一格稻停长。用真实移动进出两屋，过夜后稻苗增长一阶。旧档原件与验证副本的校验值一致。 [旧档实景](../build/polish-canal-doors/legacy-frames/1280x720/07-legacy-open-doors.png) · [暗渠填平预览](../build/polish-canal-doors/legacy-frames/1280x720/08-legacy-culvert-preview.png)
 - 资源导入、脚本加载、标题启动、24 项 Godot 回归和 24 项 Windows 回放通过。两种尺寸在不可见的隔离桌面复核。最终包从空档回放到第 17 天，验证晋升、三人立桩、施工备粮、夜间进度和续档播种。首次独立试玩和完整人工通关验收待完成。 [新档扩田](../build/polish-canal-doors/release-verification/estate-progress.log) · [Godot 回归](../build/polish-canal-doors/godot-canal-doors.log) · [发行验证](../build/polish-canal-doors/windows-release-check.log) · [Windows 试玩包](../build/polish-canal-doors/Fiefdom-canal-doors-preview-Windows-x64.zip)
+
+## 研究缴费与缺粮分餐
+
+- 专项预置第 50 天、两名各需两份口粮的门客、105 铜钱和次日应缴的 100 铜钱研究费。上一版自动备粮用一份麻并购入三份粮，花 15 铜钱。第 51 天经费不足，召简要求定案。 [旧版报价](../build/polish-research-rations/baseline-frames/1280x720/01-old-meal-quote.png) · [旧版晨间](../build/polish-research-rations/baseline-frames/1280x720/02-old-unpaid-fee.png)
+- 新版睡前先预留次日应缴经费，再按每夜上限购粮。开启「缺粮时先供足份口粮」后可选择优先门客。专项选择季青，预览转一份麻、花 5 铜钱买一份粮，并为时令单留一份菽。过夜实缴 100 铜钱研究费，季青领足两份并教习，石墨缺餐离任。另验证一份余粮凑不齐专职门客的整份口粮时留在私仓。第 53 天实际缺 94 铜钱时，召简再次来访。 [窄窗口睡前报价](../build/polish-research-rations/final-frames/1024x768/02-partial-meal-and-fee.png) · [晨间实缴](../build/polish-research-rations/final-frames/1280x720/03-fee-paid-at-dawn.png)
+- 睡前存档恢复备粮方式与优先人选，晨间存档恢复实耗、缺餐名单及研究进度。用上一版实写的预算档验证了读档、选择新方式、实缴与后续缺额，原件与验证副本的校验值一致。 [旧预算档回放](../build/polish-research-rations/legacy-final-frames/1280x720/render.log)
+- 导入、脚本加载、标题启动、24 项 Godot 回归和 30 项 Windows 回放通过。传统与改革都以手动、委派两种方式从新档通关；经费充足的回放走满 24 天研究期，按日程共缴 1,200 铜钱。两种窗口尺寸均在不可见的隔离桌面验证。首次独立试玩和完整人工通关验收待完成。 [Godot 回归](../build/polish-research-rations/godot-research-rations.log) · [发行验证](../build/polish-research-rations/windows-release-check.log) · [Windows 试玩包](../build/polish-research-rations/Fiefdom-research-rations-preview-Windows-x64.zip)

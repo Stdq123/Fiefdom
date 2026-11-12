@@ -696,6 +696,7 @@ func _on_sleep_pressed() -> void:
 		if Global.outcome != Global.Outcome.RUNNING:
 			_clear_fader()
 			return
+		var research_fee := Global.research_fee_due(Global.current_day + 1)
 		Global.begin_next_day()
 		Global.restore_stamina()
 		if Global.outcome != Global.Outcome.RUNNING:
@@ -721,17 +722,20 @@ func _on_sleep_pressed() -> void:
 		if newly_ripe > 0:
 			dawn_caption.text += "\n新熟 %d 格" % newly_ripe
 		var meal := Global.night_rations.last
+		var prepared := NightRations.stock_count(meal.used) + int(meal.bought)
+		var purchase := " · 用 %d 铜钱" % meal.copper if meal.copper > 0 else ""
 		if meal.served < meal.need:
 			dawn_caption.text += "\n昨夜用粮 %d/%d 份" % [meal.served, meal.need]
+			if prepared > 0:
+				dawn_caption.text += " · 备粮 %d 份%s" % [prepared, purchase]
 			var departed: PackedStringArray = meal.get("departed", PackedStringArray())
 			if not departed.is_empty():
 				dawn_caption.text += "\n已离任 · " + "、".join(departed)
-		else:
-			var prepared := NightRations.stock_count(meal.used) + int(meal.bought)
-			if prepared > 0:
-				dawn_caption.text += "\n昨夜备粮 %d 份" % prepared
-				if meal.copper > 0:
-					dawn_caption.text += " · 用 %d 铜钱" % meal.copper
+		elif prepared > 0:
+			dawn_caption.text += "\n昨夜备粮 %d 份%s" % [prepared, purchase]
+		if research_fee > 0:
+			dawn_caption.text += ("\n研究经费还差 %d 铜钱" % (research_fee - Global.money) if Global.research_choice_pending
+				else "\n研究经费已缴 %d 铜钱" % research_fee)
 		if meal.has("supper"):
 			dawn_caption.text += "\n围炉供饭 %d 份" % meal.supper
 		dawn_caption.modulate.a = 1.0

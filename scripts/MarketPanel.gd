@@ -100,12 +100,15 @@ func _refresh() -> void:
 		crop_choice.set_item_text(index + 1, "%s · %d" % [ItemManager.crop_label(id), Global.crop_stock.count(id)])
 	var tonight := Global.night_rations_plan()
 	var nightly: int = tonight.need
+	var supplement: int = tonight.converted + tonight.bought
 	if nightly == 0:
 		food_label.text = "暂无门客，今夜无需备粮。"
-	elif tonight.missing > 0 and tonight.uncovered == 0:
-		food_label.text = "每夜耗粮 %d · 今夜会自动补 %d 份" % [nightly, tonight.missing]
+	elif supplement > 0:
+		food_label.text = "每夜耗粮 %d · 今夜会自动补 %d 份" % [nightly, supplement]
+		if tonight.served < nightly:
+			food_label.text += " · 仍缺 %d 份" % (nightly - int(tonight.served))
 	elif tonight.missing > 0:
-		food_label.text = "每夜耗粮 %d · 今夜还差 %d 份" % [nightly, nightly - Global.food_storage]
+		food_label.text = "每夜耗粮 %d · 今夜还差 %d 份" % [nightly, tonight.missing]
 	else:
 		food_label.text = "每夜耗粮 %d · 现有口粮可用 %d 夜" % [nightly, floori(float(Global.food_storage) / nightly)]
 	if tonight.uncovered > 0:

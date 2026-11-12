@@ -34,6 +34,10 @@ func _run() -> void:
 		"night-rations":
 			var replay = load("res://tests/NightRationsReplay.gd").new()
 			await replay.run(tree)
+		"research-rations", "research-rations-legacy":
+			var replay = load("res://tests/ResearchRationsReplay.gd").new()
+			replay.legacy = arguments[0] == "research-rations-legacy"
+			await replay.run_research_rations(tree, false, capture_directory)
 		"ration-priority", "ration-priority-legacy":
 			var replay = load("res://tests/RationPriorityReplay.gd").new()
 			replay.legacy = arguments[0] == "ration-priority-legacy"

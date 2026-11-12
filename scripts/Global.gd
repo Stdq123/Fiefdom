@@ -1037,6 +1037,14 @@ func research_days_until_payment() -> int:
 	var elapsed := maxi(0, current_day - tax_reform_day)
 	return research_payment_interval() - elapsed % research_payment_interval()
 
+func research_fee_due(day: int) -> int:
+	if tax_reform_choice != TaxReformChoice.DELAYED or research_choice_pending:
+		return 0
+	var elapsed := day - tax_reform_day
+	if elapsed <= 0 or elapsed > maxi(1, balance.days_per_year) or elapsed % research_payment_interval() != 0:
+		return 0
+	return maxi(0, balance.research_monthly_cost)
+
 func set_route_baseline(saved: Dictionary = {}) -> void:
 	route_baseline = {
 		"tribute": clampi(_read_save_int(saved.get("tribute"), king_storage), 0, king_storage),
@@ -1484,7 +1492,8 @@ func _serve_night_rations(finished_day: int) -> Array[RetainerData]:
 	var used: Dictionary = {}
 	var bought := 0
 	var copper := 0
-	if plan.converted + plan.bought > 0 and _market_exchange(plan.used, plan.copper, plan.missing):
+	var supplement: int = plan.converted + plan.bought
+	if supplement > 0 and _market_exchange(plan.used, plan.copper, supplement):
 		used = plan.used
 		bought = plan.bought
 		copper = plan.copper
@@ -1824,12 +1833,14 @@ func eat_travel_meal() -> bool:
 func _order_stock_to_keep(schedule: Dictionary) -> Dictionary:
 	return schedule.order.need if season_order_delivered_at(schedule) == 0 else {}
 
-func set_night_rations(enabled: bool, copper_limit: int) -> void:
+func set_night_rations(enabled: bool, copper_limit: int, partial_meals := false) -> void:
 	var limit := clampi(copper_limit, 0, NightRations.MAX_COPPER_LIMIT)
-	if outcome != Outcome.RUNNING or (night_rations.enabled == enabled and night_rations.copper_limit == limit):
+	if outcome != Outcome.RUNNING or (night_rations.enabled == enabled and night_rations.copper_limit == limit
+			and night_rations.partial_meals == partial_meals):
 		return
 	night_rations.enabled = enabled
 	night_rations.copper_limit = limit
+	night_rations.partial_meals = partial_meals
 	GameEvents.night_rations_changed.emit()
 
 func set_ration_priority(retainer: RetainerData) -> void:
@@ -1847,9 +1858,13 @@ func _night_rations_supply_plan(evening: int) -> Dictionary:
 	var schedule := season_order(evening + 1)
 	var need := retainer_food_cost()
 	var supper := mini(need, int(winter_supper_record(evening).get("portions", 0)))
-	var plan := night_rations.plan(need, food_storage + supper, money, crop_stock,
-		_order_stock_to_keep(schedule), balance.market_food_price)
+	var fee := research_fee_due(evening + 1)
+	var reserved := fee if money >= fee else 0
+	var plan := night_rations.plan(need, food_storage + supper, money - reserved, crop_stock,
+		_order_stock_to_keep(schedule), balance.market_food_price, _night_meal)
 	plan.supper = supper
+	plan.research_fee = fee
+	plan.research_reserve = reserved
 	plan.order_name = schedule.order.title
 	plan.new_order = schedule.start == evening + 1
 	return plan
@@ -2261,6 +2276,7 @@ func _save_snapshot(origin: String) -> Error:
 		"food_storage": food_storage,
 		"night_rations": {
 			"enabled": night_rations.enabled,
+			"partial_meals": night_rations.partial_meals,
 			"copper_limit": night_rations.copper_limit,
 			"priority": retainers.find(night_rations.priority),
 			"last": night_rations.last,
@@ -2891,6 +2907,7 @@ func _restore_night_rations(record: Variant, saved_day: int, roster: Array[Retai
 	if not record is Dictionary:
 		return restored
 	restored.enabled = record.get("enabled", false) == true
+	restored.partial_meals = record.get("partial_meals", false) == true
 	restored.copper_limit = clampi(_read_save_int(record.get("copper_limit"), 0), 0, NightRations.MAX_COPPER_LIMIT)
 	var priority := _read_save_int(record.get("priority"), -1)
 	if priority >= 0 and priority < roster.size():

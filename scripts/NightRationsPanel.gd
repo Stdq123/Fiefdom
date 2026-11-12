@@ -21,6 +21,8 @@ const SHORT := Color("#efbf8a")
 @onready var find_plot: Button = %FindPlot
 @onready var delegate: CheckButton = %Delegate
 @onready var budget: SpinBox = %Budget
+@onready var partial_meals: CheckButton = %PartialMeals
+@onready var research_fee: Label = %ResearchFee
 @onready var forecast: Label = %Forecast
 @onready var keep: Label = %Keep
 @onready var priority_row: HBoxContainer = %PriorityRow
@@ -38,8 +40,9 @@ const SHORT := Color("#efbf8a")
 func _ready() -> void:
 	budget.max_value = NightRations.MAX_COPPER_LIMIT
 	budget.get_line_edit().max_length = 10
-	delegate.toggled.connect(func(enabled: bool): Global.set_night_rations(enabled, int(budget.value)))
-	budget.value_changed.connect(func(limit: float): Global.set_night_rations(delegate.button_pressed, int(limit)))
+	delegate.toggled.connect(_change_policy.unbind(1))
+	budget.value_changed.connect(_change_policy.unbind(1))
+	partial_meals.toggled.connect(_change_policy.unbind(1))
 	priority_picker.item_selected.connect(_select_priority)
 	body.minimum_size_changed.connect(_fit_body)
 	get_viewport().size_changed.connect(_fit_body)
@@ -80,6 +83,9 @@ func _fit_body() -> void:
 	var height := get_viewport_rect().size.y - 160.0
 	scroll.custom_minimum_size.y = minf(body.get_combined_minimum_size().y, height)
 
+func _change_policy() -> void:
+	Global.set_night_rations(delegate.button_pressed, int(budget.value), partial_meals.button_pressed)
+
 func _select_priority(index: int) -> void:
 	Global.set_ration_priority(priority_picker.get_item_metadata(index) as RetainerData)
 
@@ -102,7 +108,16 @@ func _refresh() -> void:
 	delegate.set_pressed_no_signal(policy.enabled)
 	budget.set_value_no_signal(policy.copper_limit)
 	budget.editable = policy.enabled
+	partial_meals.visible = policy.enabled
+	partial_meals.set_pressed_no_signal(policy.partial_meals)
+	research_fee.visible = plan.research_fee > 0
+	if research_fee.visible:
+		var due: int = plan.research_fee
+		research_fee.modulate = GOOD if plan.research_reserve > 0 else SHORT
+		research_fee.text = ("明早预留 %d 铜钱缴研究费。" % due if plan.research_reserve > 0
+			else "明早研究费 %d 铜钱 · 备粮后还差 %d" % [due, due - Global.money + int(plan.copper)])
 	forecast.add_theme_color_override("font_color", SHORT if plan.uncovered > 0 else GOOD)
+	var supplement: int = plan.converted + plan.bought
 	if plan.need == 0:
 		forecast.text = "今夜暂无门客用粮。"
 	elif plan.supper == plan.need:
@@ -111,10 +126,12 @@ func _refresh() -> void:
 		forecast.text = "粮仓够用，今夜从粮仓取 %d 份。" % (plan.need - plan.supper)
 	elif not policy.enabled:
 		forecast.text = "今夜缺 %d 份。可到市集备粮，或开启夜间备粮。" % plan.missing
-	elif plan.uncovered > 0:
-		forecast.text = "余粮与可用铜钱还差 %d 份。凑齐才执行夜间备粮。" % plan.uncovered
+	elif supplement > 0:
+		var action := "先补" if plan.uncovered > 0 else "补足"
+		forecast.text = "今夜%s %d 份 · %s" % [action, supplement, _describe_exchange(plan)]
 	else:
-		forecast.text = "今夜补足 %d 份 · %s" % [plan.missing, _describe_exchange(plan)]
+		var rule := "补粮按门客整份口粮结算。" if policy.partial_meals else "凑齐才执行夜间备粮。"
+		forecast.text = "今夜还差 %d 份。%s" % [plan.uncovered, rule]
 	if plan.supper > 0 and plan.supper < plan.need:
 		forecast.text = "围炉供 %d 份。%s" % [plan.supper, forecast.text]
 	var reserved := ItemManager.describe_crops(plan.reserved)
@@ -174,7 +191,7 @@ func _refresh_meal(plan: Dictionary) -> void:
 	)
 	if not leaving.is_empty():
 		lines.append("预计离任 · " + _retainer_names(leaving))
-	var grain_left := Global.food_storage - maxi(0, int(plan.served) - int(plan.supper))
+	var grain_left := Global.food_storage + int(plan.converted) + int(plan.bought) - maxi(0, int(plan.served) - int(plan.supper))
 	if grain_left > 0:
 		lines.append("粮仓将余 %d 份，留待下次分餐。" % grain_left)
 	var work := PackedStringArray()

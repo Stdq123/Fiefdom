@@ -5,11 +5,13 @@ const MAX_COPPER_LIMIT := 2147483647
 const MISSED_MEAL_LOYALTY := 20.0
 
 var enabled := false
+var partial_meals := false
 var copper_limit := 0
 var priority: RetainerData
 var last: Dictionary = {}
 
-func plan(need: int, food: int, money: int, stock: CropStock, keep: Dictionary, unit_price: int) -> Dictionary:
+func plan(need: int, food: int, money: int, stock: CropStock, keep: Dictionary, unit_price: int,
+		allocate_meals: Callable) -> Dictionary:
 	var missing := maxi(0, need - food)
 	var reserved: Dictionary[String, int] = {}
 	for id: String in keep:
@@ -26,13 +28,18 @@ func plan(need: int, food: int, money: int, stock: CropStock, keep: Dictionary, 
 	var price := maxi(1, unit_price)
 	var affordable := floori(float(mini(copper_limit, maxi(0, money))) / price)
 	var bought := mini(missing - converted, affordable)
-	result.uncovered = missing - converted - bought
-	# Nightly delegation trades only when it can cover the whole table.
-	if result.uncovered == 0:
-		result.used = stock.plan(converted, "", keep)
-		result.converted = converted
-		result.bought = bought
-		result.copper = bought * price
+	var supplement := converted + bought
+	result.uncovered = missing - supplement
+	if result.uncovered > 0:
+		if not partial_meals:
+			return result
+		var meal: Dictionary = allocate_meals.call(food + supplement)
+		supplement = maxi(0, int(meal.served) - food)
+		result.uncovered = missing - supplement
+	result.converted = mini(converted, supplement)
+	result.bought = supplement - int(result.converted)
+	result.used = stock.plan(result.converted, "", keep)
+	result.copper = result.bought * price
 	return result
 
 static func stock_count(lots: Dictionary) -> int:

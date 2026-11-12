@@ -47,11 +47,10 @@ func invite_if_eligible() -> void:
 		GameEvents.tax_reform_triggered.emit()
 
 func _process_research() -> void:
-	var elapsed := Global.current_day - Global.tax_reform_day
-	if elapsed <= 0 or Global.research_choice_pending:
+	if Global.current_day <= Global.tax_reform_day or Global.research_choice_pending:
 		return
-	if elapsed % Global.research_payment_interval() == 0:
-		var cost := Global.balance.research_monthly_cost
+	var cost := Global.research_fee_due(Global.current_day)
+	if cost > 0:
 		if Global.money < cost:
 			Global.research_choice_pending = true
 			GameEvents.tax_reform_triggered.emit()
