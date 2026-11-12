@@ -23,7 +23,7 @@ func _continue() -> void:
 	await tree.process_frame
 
 func _to_estate() -> bool:
-	await _walk(market.player, [Vector2(176, 34)])
+	await Campaign.walk_to_market_exit(tree, market)
 	if not await _cross(&"ui_right", state.ESTATE_SCENE):
 		return false
 	await _estate()

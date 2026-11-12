@@ -1,25 +1,25 @@
 extends Node2D
 
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
-const STREET := [
-	Vector2(-183, 12), Vector2(-170, -11), Vector2(-148, -22), Vector2(-91, -19),
-	Vector2(-51, -23), Vector2(26, -25), Vector2(74, -18), Vector2(138, -20),
-	Vector2(169, -2), Vector2(196, 12), Vector2(231, 17), Vector2(422, 17),
-	Vector2(422, 50), Vector2(226, 49), Vector2(190, 55), Vector2(145, 68),
-	Vector2(87, 76), Vector2(5, 79), Vector2(-59, 76), Vector2(-82, 84),
-	Vector2(-122, 85), Vector2(-145, 73),
-	Vector2(-167, 54), Vector2(-188, 32),
+const LAYOUT := preload("res://scripts/WestMarketLayout.gd")
+const BACKDROP := Rect2(-1600, -1300, 3200, 2600)
+const GRAIN_YARD := [
+	Vector2(-395, 116), Vector2(-364, 103), Vector2(-309, 108), Vector2(-260, 121),
+	Vector2(-205, 117), Vector2(-196, 153), Vector2(-207, 188), Vector2(-248, 200),
+	Vector2(-311, 195), Vector2(-364, 183), Vector2(-389, 163),
 ]
-const PAVEMENT := [
-	Vector2(-170, 33), Vector2(-156, 20), Vector2(-124, 12), Vector2(-71, 10),
-	Vector2(56, 11), Vector2(113, 13), Vector2(155, 19), Vector2(194, 23),
-	Vector2(422, 23), Vector2(422, 45), Vector2(210, 45), Vector2(175, 52),
-	Vector2(127, 60), Vector2(55, 63), Vector2(-38, 65), Vector2(-104, 62),
-	Vector2(-144, 54), Vector2(-164, 43),
+const FISH_YARD := [
+	Vector2(-263, -134), Vector2(-239, -158), Vector2(-179, -154), Vector2(-145, -131),
+	Vector2(-111, -97), Vector2(-137, -82), Vector2(-187, -89), Vector2(-229, -94), Vector2(-261, -110),
+]
+const SILK_YARD := [
+	Vector2(126, 165), Vector2(152, 148), Vector2(208, 148), Vector2(250, 155), Vector2(265, 176),
+	Vector2(245, 194), Vector2(180, 200), Vector2(140, 190),
 ]
 const GROVES := [
-	Rect2(-320, -141, 154, 188), Rect2(-167, -156, 125, 81), Rect2(-26, -159, 155, 77),
-	Rect2(139, -147, 194, 130), Rect2(-285, 82, 185, 113), Rect2(102, 101, 217, 99),
+	Rect2(-505, -225, 166, 457), Rect2(-349, -233, 283, 65), Rect2(-48, -238, 244, 126),
+	Rect2(264, -222, 238, 205), Rect2(-327, -65, 206, 148), Rect2(-3, -62, 151, 100),
+	Rect2(-494, 211, 610, 78), Rect2(28, 133, 239, 130), Rect2(274, 85, 230, 150),
 ]
 const GROVE_EDGE := [
 	Vector2(0.02, 0.37), Vector2(0.13, 0.13), Vector2(0.32, 0.04), Vector2(0.56, 0.12),
@@ -28,35 +28,79 @@ const GROVE_EDGE := [
 	Vector2(0.05, 0.77), Vector2(0, 0.56),
 ]
 const TREE_FEET := [
-	Vector2(-229, -88), Vector2(-191, -49), Vector2(-168, -91), Vector2(-124, -87),
-	Vector2(-72, -103), Vector2(-30, -82), Vector2(24, -96), Vector2(65, -81),
-	Vector2(104, -101), Vector2(152, -71), Vector2(195, -49), Vector2(244, -37),
-	Vector2(-241, 9), Vector2(-211, 56), Vector2(-156, 104), Vector2(-214, 129),
-	Vector2(-116, 145), Vector2(-48, 156), Vector2(88, 146), Vector2(144, 112),
-	Vector2(205, 106), Vector2(260, 76), Vector2(268, 135),
+	Vector2(-436, -153), Vector2(-382, -137), Vector2(-410, -94), Vector2(-371, -45),
+	Vector2(-443, -24), Vector2(-412, 29), Vector2(-442, 76), Vector2(-411, 124), Vector2(-445, 171),
+	Vector2(-371, -173), Vector2(-309, -153), Vector2(-283, -173), Vector2(-221, -173), Vector2(-157, -177),
+	Vector2(-95, -147), Vector2(-40, -156), Vector2(12, -129), Vector2(70, -162), Vector2(129, -143),
+	Vector2(205, -151), Vector2(260, -148), Vector2(287, -113), Vector2(341, -135),
+	Vector2(390, -103), Vector2(442, -119), Vector2(421, -58), Vector2(345, -45), Vector2(303, -25),
+	Vector2(-327, -27), Vector2(-282, -11), Vector2(-244, -33), Vector2(-195, -8), Vector2(-165, 20),
+	Vector2(7, -25), Vector2(49, -38), Vector2(86, -10), Vector2(36, 15),
+	Vector2(-400, 215), Vector2(-346, 226), Vector2(-295, 235), Vector2(-198, 222), Vector2(-151, 202),
+	Vector2(-99, 228), Vector2(-57, 197), Vector2(-12, 219), Vector2(44, 176), Vector2(106, 191),
+	Vector2(108, 140), Vector2(185, 220), Vector2(258, 220), Vector2(299, 132),
+	Vector2(348, 164), Vector2(383, 116), Vector2(426, 144), Vector2(448, 91),
 ]
 const STORAGE := [
-	Vector3i(-161, 0, 0), Vector3i(-151, 4, 1), Vector3i(-168, 9, 0),
-	Vector3i(-50, 2, 3), Vector3i(48, 1, 2), Vector3i(153, 13, 3),
-	Vector3i(162, 18, 2), Vector3i(-91, 104, 3),
+	Vector3i(-381, 97, 0), Vector3i(-370, 103, 1), Vector3i(-390, 108, 0), Vector3i(-218, 194, 3),
+	Vector3i(-178, -101, 2), Vector3i(-267, -112, 2), Vector3i(-259, -103, 3),
+	Vector3i(130, 154, 3), Vector3i(133, 165, 2), Vector3i(256, 175, 3),
 ]
 const STORAGE_PROPS := [LANDSCAPE.Prop.GRAIN_SACK, LANDSCAPE.Prop.OPEN_SACK, LANDSCAPE.Prop.JAR, LANDSCAPE.Prop.LIDDED_JAR]
-const FENCE_FEET := [Vector2(-192, -23), Vector2(-177, 71), Vector2(183, -18), Vector2(241, 65)]
-const PROP_DETAILS := [
-	Vector3i(-124, 98, LANDSCAPE.Prop.LOGS), Vector3i(122, 96, LANDSCAPE.Prop.LOGS),
-	Vector3i(-171, 83, LANDSCAPE.Prop.FLOWERS), Vector3i(97, 90, LANDSCAPE.Prop.FLOWERS),
-	Vector3i(169, 88, LANDSCAPE.Prop.SHRUB), Vector3i(-208, -21, LANDSCAPE.Prop.ROCK),
+const FENCE_FEET := [
+	Vector2(-384, 164), Vector2(-353, 184), Vector2(-319, 195), Vector2(-243, -153),
+	Vector2(137, 145), Vector2(217, 149), Vector2(333, -5), Vector2(429, 67),
 ]
-const BACKDROP := Rect2(-1600, -1300, 3200, 2600)
+const PROP_DETAILS := [
+	Vector3i(-377, 190, LANDSCAPE.Prop.LOGS), Vector3i(-211, 98, LANDSCAPE.Prop.LOGS),
+	Vector3i(-147, 114, LANDSCAPE.Prop.FLOWERS), Vector3i(-143, -39, LANDSCAPE.Prop.FLOWERS),
+	Vector3i(-255, -152, LANDSCAPE.Prop.REEDS), Vector3i(-190, -150, LANDSCAPE.Prop.REEDS),
+	Vector3i(77, -28, LANDSCAPE.Prop.SHRUB), Vector3i(84, 37, LANDSCAPE.Prop.FLOWERS),
+	Vector3i(206, 108, LANDSCAPE.Prop.ROCK), Vector3i(290, 77, LANDSCAPE.Prop.FLOWERS),
+	Vector3i(324, -14, LANDSCAPE.Prop.SHRUB), Vector3i(369, 80, LANDSCAPE.Prop.ROCK),
+]
 
-var street := PackedVector2Array(STREET)
-var paving := PackedVector2Array(PAVEMENT)
+var street: Array[PackedVector2Array] = []
+var paving: PackedVector2Array
+
+func _ready() -> void:
+	var avenue := EstateLayout.sample_road(PackedVector2Array(LAYOUT.MAIN_ROAD + [LAYOUT.EAST_OUTSIDE]))
+	paving = _road_outline(avenue, 12.0)
+	street.append(_road_outline(avenue, 22.0))
+	for lane: Array in [LAYOUT.FISH_LANE, LAYOUT.SILK_LANE, LAYOUT.CART_DRIVE]:
+		street.append(_road_outline(EstateLayout.sample_road(PackedVector2Array(lane)), 14.0))
+	for yard: Array in [GRAIN_YARD, FISH_YARD, SILK_YARD]:
+		street.append(PackedVector2Array(yard))
+
+	var basin := StaticBody2D.new()
+	basin.position = LAYOUT.BASIN.get_center()
+	basin.collision_mask = 0
+	var collider := CollisionShape2D.new()
+	var rim := RectangleShape2D.new()
+	rim.size = LAYOUT.BASIN.size
+	collider.shape = rim
+	basin.add_child(collider)
+	add_child(basin)
+
+func _road_outline(points: PackedVector2Array, radius: float) -> PackedVector2Array:
+	return Geometry2D.offset_polyline(points, radius, Geometry2D.JOIN_ROUND, Geometry2D.END_ROUND)[0]
 
 func is_on_street(foot: Vector2) -> bool:
-	return Geometry2D.is_point_in_polygon(to_local(foot), street)
+	var at := to_local(foot)
+	for surface in street:
+		if Geometry2D.is_point_in_polygon(at, surface):
+			return true
+	return false
 
 func is_on_paving(foot: Vector2) -> bool:
 	return Geometry2D.is_point_in_polygon(to_local(foot), paving)
+
+func distance_to_trees(foot: Vector2) -> float:
+	var at := to_local(foot)
+	var nearest := INF
+	for tree: Vector2 in TREE_FEET:
+		nearest = minf(nearest, at.distance_squared_to(tree))
+	return sqrt(nearest)
 
 func _draw() -> void:
 	var palette: Array = LANDSCAPE.SEASON_PALETTES[Global.season_index()]
@@ -76,18 +120,30 @@ func _draw() -> void:
 	for foot: Vector2 in TREE_FEET:
 		draw_rect(Rect2(foot - Vector2(14, 1), Vector2(30, 4)), meadow.lerp(shade, 0.72))
 	draw_set_transform(Vector2(0, 3))
-	draw_colored_polygon(street, dirt.lerp(meadow, 0.48))
+	for surface in street:
+		draw_colored_polygon(surface, dirt.lerp(meadow, 0.52))
 	draw_set_transform(Vector2.ZERO)
-	draw_colored_polygon(street, dirt)
+	for surface in street:
+		draw_colored_polygon(surface, dirt)
+	var extent := Vector2i(LAYOUT.BOUNDS.size)
+	for mark in 620:
+		var foot := LAYOUT.BOUNDS.position + Vector2(posmod(mark * 127, extent.x), posmod(mark * 61, extent.y))
+		if is_on_street(to_global(foot)):
+			var ink := dirt.lightened(0.16) if mark % 2 == 0 else dirt.darkened(0.13)
+			draw_rect(Rect2(foot, Vector2(1 + mark % 4, 1)), ink)
 	_draw_paving(dirt)
+	_draw_basin()
 
 func _draw_paving(dirt: Color) -> void:
 	var grout := dirt.lerp(Color("#606357"), 0.58)
 	draw_colored_polygon(paving, grout)
-	for row in 7:
-		for column in 41:
-			var x := -175 + column * 15 + (row % 2) * 7
-			var y := 10 + row * 8
+	var bounds := Rect2(paving[0], Vector2.ZERO)
+	for point in paving:
+		bounds = bounds.expand(point)
+	for row in range(floori(bounds.position.y / 8.0), ceili(bounds.end.y / 8.0)):
+		for column in range(floori(bounds.position.x / 15.0), ceili(bounds.end.x / 15.0)):
+			var x := column * 15 + posmod(row, 2) * 7
+			var y := row * 8
 			var grain := posmod(column * 7 + row * 17, 13)
 			var slab := Rect2(x, y, 13 + grain % 2, 6)
 			var corners := [slab.position, Vector2(slab.end.x, slab.position.y),
@@ -98,10 +154,20 @@ func _draw_paving(dirt: Color) -> void:
 			draw_rect(slab, stone.darkened(0.14))
 			draw_rect(Rect2(slab.position, slab.size - Vector2(1, 2)), stone)
 			draw_rect(Rect2(slab.position + Vector2(1, 1), Vector2(4 + grain % 5, 1)), stone.lightened(0.13))
-	for mark in 73:
-		var foot := Vector2(-198 + posmod(mark * 97, 491), -16 + posmod(mark * 37, 96))
-		if Geometry2D.is_point_in_polygon(foot, street) and not Geometry2D.is_point_in_polygon(foot, paving):
-			draw_rect(Rect2(foot, Vector2(1 + mark % 4, 1)), dirt.lightened(0.16) if mark % 2 == 0 else dirt.darkened(0.10))
+
+func _draw_basin() -> void:
+	var rim := LAYOUT.BASIN
+	draw_rect(Rect2(rim.position + Vector2(1, 3), rim.size + Vector2(1, 1)), Color("#5a5949"))
+	draw_rect(rim, Color("#9d9b80"))
+	draw_rect(rim.grow(-3.0), Color("#414f49"))
+	var water := rim.grow(-5.0)
+	draw_rect(water, Color("#527d79"))
+	draw_rect(Rect2(water.position, Vector2(water.size.x, 5)), Color("#476663"))
+	for offset: Vector2 in [Vector2(4, 10), Vector2(22, 8), Vector2(30, 16), Vector2(13, 20), Vector2(38, 23)]:
+		draw_rect(Rect2(water.position + offset, Vector2(7, 1)), Color("#8aaba0"))
+	for step in 5:
+		var x := rim.position.x + 5 + step * 10
+		draw_rect(Rect2(x, rim.end.y - 2, 8, 1), Color("#c3bfa4"))
 
 func place_scenery(layer: Node2D) -> void:
 	var season := Global.season_index()
@@ -121,8 +187,8 @@ func place_scenery(layer: Node2D) -> void:
 	for jar: Vector3i in STORAGE:
 		var tint: Color = LANDSCAPE.STORAGE_TINTS[STORAGE_PROPS[jar.z]]
 		_prop(layer, Vector2(jar.x, jar.y), LANDSCAPE.ESTATE_STORAGE, Rect2(jar.z * 16, 0, 16, 16), 14.0, tint)
-	_prop(layer, Vector2(230, 11), LANDSCAPE.ESTATE_BUILDINGS, LANDSCAPE.BUILDING_REGIONS[LANDSCAPE.Prop.GATE_FAR], 44.0)
-	_prop(layer, Vector2(207, 57), LANDSCAPE.ESTATE_BUILDINGS, LANDSCAPE.BUILDING_REGIONS[LANDSCAPE.Prop.GATE], 44.0)
+	_prop(layer, LAYOUT.EAST_GATE + Vector2(9, -23), LANDSCAPE.ESTATE_BUILDINGS, LANDSCAPE.BUILDING_REGIONS[LANDSCAPE.Prop.GATE_FAR], 44.0)
+	_prop(layer, LAYOUT.EAST_GATE + Vector2(-14, 23), LANDSCAPE.ESTATE_BUILDINGS, LANDSCAPE.BUILDING_REGIONS[LANDSCAPE.Prop.GATE], 44.0)
 
 func _prop(layer: Node2D, foot: Vector2, sheet: Texture2D, region: Rect2, baseline: float, tint := Color.WHITE) -> void:
 	var texture := AtlasTexture.new()

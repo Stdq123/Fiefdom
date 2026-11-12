@@ -166,7 +166,7 @@ func _connect_water_and_visit_market() -> bool:
 		"The away report counts one sowing using summer rice growth.")
 	print("FIELD_ROTATION_AWAY day=", state.current_day, " sown=", state.away_field_report.sown,
 		" crop=", _seed_at(RICE), " nights=", state.active_crops[RICE].growth_nights)
-	await Campaign.walk_to(tree, tree.current_scene.player, Vector2(176, 34))
+	await Campaign.walk_to_market_exit(tree, tree.current_scene)
 	if not await _cross(&"ui_right", state.ESTATE_SCENE):
 		return false
 	_estate()

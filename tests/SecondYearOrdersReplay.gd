@@ -285,7 +285,7 @@ func _summer() -> void:
 	if not await _cross(&"ui_left", state.WEST_MARKET_SCENE):
 		return
 	var market := tree.current_scene as Node2D
-	await _walk(market.player, [Vector2(-65, 70)])
+	await Campaign.walk_market_to(tree, market, market.market_map.places["收货牌"])
 	await _key(KEY_E)
 	book = market.counter.orders
 	var food: int = state.food_storage
@@ -318,7 +318,7 @@ func _follow_summer_shipment() -> void:
 	var arrival := SeasonOrders.EVENING_DISPATCH + SeasonOrders.TRAVEL_FRACTION + 0.01
 	state.advance_daylight((arrival - state.day_progress) * state.balance.daylight_seconds)
 	var market := tree.current_scene as Node2D
-	await _walk(market.player, [Vector2(176, 34)])
+	await Campaign.walk_to_market_exit(tree, market)
 	if not await _cross(&"ui_right", state.ESTATE_SCENE):
 		return
 	_estate()

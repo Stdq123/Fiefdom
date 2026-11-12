@@ -107,7 +107,7 @@ text = "回到街上  Esc"
 [node name="Chart" type="Control" parent="MapModal/Center/Panel/Layout"]
 unique_name_in_owner = true
 clip_contents = true
-custom_minimum_size = Vector2(748, 332)
+custom_minimum_size = Vector2(748, 382)
 layout_mode = 2
 mouse_filter = 2
 

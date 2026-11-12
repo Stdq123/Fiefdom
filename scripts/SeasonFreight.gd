@@ -5,13 +5,10 @@ const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const CART_ART := preload("res://assets/world/season-order-cart.svg")
 const DRIVER_ART := preload("res://assets/characters/freight-driver.svg")
 const ROAD_STEP := preload("res://assets/audio/plank-1.wav")
-const MARKET_PATH := [
-	Vector2(-104, 77), Vector2(-72, 60), Vector2(-24, 48), Vector2(36, 40), Vector2(121, 39),
-	Vector2(183, 36), Vector2(223, 34), Vector2(305, 34), Vector2(390, 34),
-]
+const WEST_MARKET := preload("res://scripts/WestMarketLayout.gd")
 const PAVILION_STOP := Vector2(112, 287)
 
-static var market_road := _curve(MARKET_PATH)
+static var market_road := _curve(WEST_MARKET.freight_path())
 static var estate_road := _estate_curve()
 
 @export var at_market := false

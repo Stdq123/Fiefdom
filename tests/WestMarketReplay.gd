@@ -96,10 +96,12 @@ func _enter_market(world: Node2D, ui: CanvasLayer) -> bool:
 func _walk_street(market: Node2D) -> void:
 	var porter: Node2D = market.get_node("Porter")
 	var grain := market.get_node("Stalls/GrainStall") as MarketStall
-	_expect(porter.visible and porter.position.distance_to(Vector2(-162, 36)) < 3.0,
+	_expect(porter.visible and porter.position.distance_to(porter.GRAIN_STOP) < 3.0,
 		"The porter is at the grain end when the player reaches the morning market.")
-	for x in [-125, -20, 90, 176, 221]:
-		_expect(market.ground.is_on_paving(Vector2(x, 34)), "Paving follows the street through the return gate.")
+	for point: Vector2 in market.ground.LAYOUT.MAIN_ROAD:
+		_expect(market.ground.is_on_paving(point), "Paving follows the street through the return gate.")
+	var camera_x: float = market.player.get_node("Camera2D").get_screen_center_position().x
+	await _snapshot("00-east-gate")
 	var bus := AudioServer.get_bus_index("Ambience")
 	var slot := AudioServer.get_bus_effect_count(bus)
 	var recorder: AudioEffectRecord
@@ -108,9 +110,9 @@ func _walk_street(market: Node2D) -> void:
 		recorder.format = AudioStreamWAV.FORMAT_16_BITS
 		AudioServer.add_bus_effect(bus, recorder)
 		recorder.set_recording_active(true)
-	await _walk(market.player, [Vector2(84, 34)])
+	await _walk(market.player, [Vector2(293, 36)])
 	var stone: String = market.audio.footsteps.stream.resource_path.get_file()
-	await _walk(market.player, [Vector2(84, 70), Vector2(14, 70)])
+	await _walk(market.player, [Vector2(293, 52), Vector2(342, 52)])
 	var dirt: String = market.audio.footsteps.stream.resource_path.get_file()
 	_expect(stone.begins_with("stone-") and dirt.begins_with("track-"),
 		"Walking on the paving and the apron chooses different sounds.")
@@ -122,6 +124,9 @@ func _walk_street(market: Node2D) -> void:
 		_expect(mix != null and mix.get_length() > 1.2 and mix.save_to_wav(capture_dir.path_join("stone-and-dirt")) == OK,
 			"Save the live stone and dirt footsteps.")
 	print("MARKET_SURFACES stone=", stone, " dirt=", dirt)
+	await Campaign.walk_market_to(tree, market, Vector2(-312, 143))
+	_expect(camera_x - market.player.get_node("Camera2D").get_screen_center_position().x > 280.0,
+		"At the usual zoom the camera scrolls from the east gate to the grain courtyard.")
 	for frame in 400:
 		if grain.keeper.frame == MarketStall.KeeperPose.TEND and grain.pose_time < 0.65:
 			break
@@ -136,12 +141,15 @@ func _time_at(progress: float) -> void:
 	await tree.physics_frame
 
 func _dusk(market: Node2D) -> void:
+	await Campaign.walk_market_to(tree, market, Vector2(-42, 18))
 	await _time_at(0.700)
 	var porter: Node2D = market.get_node("Porter")
 	var from := porter.position
 	await tree.create_timer(0.36).timeout
-	_expect(porter.visible and porter.position.x > from.x + 4.0 and porter.body.walking,
-		"At dusk the porter walks east down the paved street.")
+	var fork: Vector2 = market.ground.LAYOUT.FISH_JUNCTION
+	_expect(porter.visible and porter.position.distance_to(fork) < from.distance_to(fork) - 4.0
+		and market.ground.is_on_street(porter.position) and porter.body.walking,
+		"At dusk the porter takes the fish lane back toward the eastbound street.")
 	print("MARKET_PORTER_DUSK ", from, " -> ", porter.position)
 	await _snapshot("06-porter-at-dusk")
 
@@ -150,17 +158,17 @@ func _night(market: Node2D) -> bool:
 	var porter: Node2D = market.get_node("Porter")
 	_expect(not porter.visible and market.lighting.lamps[2].glow.enabled and market.lighting.color != Color.WHITE,
 		"The porter has gone through the gate and the silk stall lamp lights the late market.")
-	await _walk(market.player, [Vector2(52, 48)])
+	await Campaign.walk_market_to(tree, market, Vector2(234, 103))
 	await _snapshot("07-market-lanterns")
 	if not await _stall(market, "SilkStall", ""):
 		return false
 	await _key(KEY_ESCAPE)
-	await _walk(market.player, [Vector2(176, 34)])
+	await Campaign.walk_to_market_exit(tree, market)
 	return true
 
 func _stall(market: Node2D, stall_name: String, capture: String) -> bool:
 	var stall := market.get_node("Stalls/" + stall_name) as MarketStall
-	await _walk(market.player, [Vector2(stall.position.x, 28)])
+	await Campaign.walk_market_to(tree, market, stall.to_global(MarketStall.APPROACH))
 	if not capture.is_empty():
 		await _snapshot(capture)
 	_expect(stall.focused and stall.keeper.frame != MarketStall.KeeperPose.TEND,
@@ -211,7 +219,7 @@ func _shop(market: Node2D, fish_id: String) -> bool:
 		and not counter.grain.survey_button.visible, "The grain stall can quote the same future field without an estate survey to return to.")
 	await _snapshot("05-stall-provisions")
 	await _key(KEY_ESCAPE)
-	if not await _stall(market, "FishStall", ""):
+	if not await _stall(market, "FishStall", "03a-fish-lane"):
 		return false
 	if not _check_keeper(market, "FishStall", Vector2(48, 0)):
 		return false
@@ -221,7 +229,7 @@ func _shop(market: Node2D, fish_id: String) -> bool:
 		and state.money == before_money + CreekFish.SPECIES[fish_id].copper, "Selling the fish preserves its first-catch entry.")
 	await _snapshot("03-fish-counter")
 	await _button(counter.close_button)
-	if not await _stall(market, "SilkStall", ""):
+	if not await _stall(market, "SilkStall", "04a-silk-court"):
 		return false
 	if not _check_keeper(market, "SilkStall", Vector2(0, 48)):
 		return false

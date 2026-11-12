@@ -97,7 +97,7 @@ func _market_from_book() -> bool:
 	return true
 
 func _open_cart() -> bool:
-	await _walk(market.player, [Vector2(-76, 40), Vector2(-77, 65)])
+	await Campaign.walk_market_to(tree, market, market.market_map.places["收货牌"])
 	await _key(KEY_E)
 	return _expect(market.counter.visible and market.counter.orders.visible, "Open the seasonal orders at the cart.")
 
@@ -153,7 +153,7 @@ func _continue_market() -> bool:
 		and state.fish_count("minnow") == 0, "The counter and plaque show the saved delivery after Continue.")
 	print("FISH_MARKET_CONTINUE receipt_day=", state.fish_order_receipt.day, " amount=", state.fish_order_receipt.amount)
 	await _key(KEY_ESCAPE)
-	await _walk(market.player, [Vector2(176, 34)])
+	await Campaign.walk_to_market_exit(tree, market)
 	if not await _cross(&"ui_right", state.ESTATE_SCENE):
 		return false
 	await _estate()

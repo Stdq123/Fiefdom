@@ -106,7 +106,7 @@ func _deliver_spring() -> bool:
 	if not await _cross(&"ui_left", state.WEST_MARKET_SCENE):
 		return false
 	var market := tree.current_scene as Node2D
-	await _walk(market.player, [Vector2(-65, 70)])
+	await Campaign.walk_market_to(tree, market, market.market_map.places["收货牌"])
 	await _key(KEY_E)
 	if not _expect(market.counter.orders.is_visible_in_tree(), "Open the spring order at its market stand."):
 		return false
@@ -114,7 +114,7 @@ func _deliver_spring() -> bool:
 	_expect(state.player_inventory == 3 and state.food_storage == 13 and state.king_storage == 1,
 		"The order feeds the estate for autumn preparation and leaves three varieties in private stock.")
 	await _key(KEY_ESCAPE)
-	await _walk(market.player, [Vector2(176, 34)])
+	await Campaign.walk_to_market_exit(tree, market)
 	if not await _cross(&"ui_right", state.ESTATE_SCENE):
 		return false
 	_estate()

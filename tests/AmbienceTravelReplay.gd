@@ -55,7 +55,8 @@ func _rainy_trip() -> bool:
 		return false
 	_expect(music.bgm_player == score, "The estate and market keep their shared seasonal score.")
 	var market := tree.current_scene
-	await _walk(market.player, [Vector2(176, 34)])
+	if not legacy:
+		await Campaign.walk_to_market_exit(tree, market)
 	return await _rain_cross(&"ui_right", state.ESTATE_SCENE, "")
 
 func _rain_cross(direction: StringName, destination: String, clip: String) -> bool:
@@ -135,7 +136,10 @@ func _market_at_night() -> void:
 	tree.change_scene_to_file(state.WEST_MARKET_SCENE)
 	await tree.scene_changed
 	var market := tree.current_scene
-	await _walk(market.player, [Vector2(-174, 34)])
+	if legacy:
+		await _walk(market.player, [Vector2(-174, 34)])
+	else:
+		await Campaign.walk_market_to(tree, market, Vector2(-171, 27))
 	state.current_day = 7
 	await _time_at(1.0)
 	await tree.create_timer(0.55).timeout

@@ -170,7 +170,7 @@ func _market_round_trip() -> void:
 		and state.away_field_report.watered == 1 and state.king_storage == 1 and state.active_crops[YOUNG].watered,
 		"Continue in the market with the completed work and report."):
 		return
-	await _walk(market.player, [Vector2(62, 34)])
+	await Campaign.walk_market_to(tree, market, Vector2(134, 76))
 	await tree.create_timer(7.0).timeout
 	var report: Dictionary = state.away_field_report
 	var items := tree.root.get_node("ItemManager")
@@ -184,7 +184,7 @@ func _market_round_trip() -> void:
 		and market.stock.text.begins_with(str(copper) + " 铜钱"), "Market totals refresh, with stamina and rice rules intact.")
 	print("AWAY_MARKET ", state.away_field_summary(), " stamina=", stamina)
 	await _snapshot("01-west-market")
-	await _walk(market.player, [Vector2(176, 34)])
+	await Campaign.walk_to_market_exit(tree, market)
 	if not await _cross(&"ui_right", state.ESTATE_SCENE):
 		return
 	_estate()

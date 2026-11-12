@@ -224,7 +224,7 @@ func _market_work() -> bool:
 		and state.active_crops[PUBLIC].watered, "Continue in the market with the plans and the completed work.")
 
 func _dawn() -> void:
-	await Campaign.walk_to(tree, tree.current_scene.player, Vector2(176, 34))
+	await Campaign.walk_to_market_exit(tree, tree.current_scene)
 	if not await _cross(&"ui_right", state.ESTATE_SCENE):
 		return
 	_estate()

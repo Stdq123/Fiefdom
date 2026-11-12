@@ -120,6 +120,9 @@ func _follow_merchant() -> bool:
 		"The selected merchant survives Continue before the crossing.")
 	return await _road_to_market()
 
+func _approach_tao(market: Node2D) -> void:
+	await Campaign.walk_market_to(tree, market, market.ground.LAYOUT.TAO_STOP + Vector2(0, 22))
+
 func _market_visit() -> bool:
 	var market := tree.current_scene
 	_expect(market.sample.visible and market.silk_guest == null, "Find the sample and wait for the merchant at the market.")
@@ -130,7 +133,7 @@ func _market_visit() -> bool:
 		"The route leads to the meeting spot while the merchant is still on the road.")
 	print("SILK_MARKET_ROUTE_WAIT day=", state.current_day, " point=", chart.pin.global_position)
 	await _snapshot("01a-wait-at-the-silk-stall")
-	await _walk(market.player, [Vector2(151, 63)])
+	await _approach_tao(market)
 	await _time_at(VisitorData.SILK_MARKET_ARRIVE - 0.002)
 	await tree.create_timer(0.70).timeout
 	if not _expect(market.silk_guest != null and market.silk_guest.walking_to_stop, "At noon Tao Xin walks in from the east gate."):
@@ -141,7 +144,7 @@ func _market_visit() -> bool:
 		and chart.pin.global_position.distance_to(market.silk_guest.position) < 2.0,
 		"The world marker follows the moving merchant.")
 	await _snapshot("02-market-arrival")
-	await tree.create_timer(1.65).timeout
+	await tree.create_timer(6.0).timeout
 	var tao: Visitor = market.silk_guest
 	_expect(tao != null and not tao.walking_to_stop, "The merchant reaches Cai Niang's stall.")
 	await _key(KEY_M)
@@ -151,7 +154,7 @@ func _market_visit() -> bool:
 		"The market chart shows the current appointment and selected merchant.")
 	await _snapshot("02a-merchant-on-market-chart")
 	await _key(KEY_ESCAPE)
-	await _walk(market.player, [Vector2(151, 63)])
+	await _approach_tao(market)
 	if not await _talk(market, "交谈", "03-market-conversation"):
 		return false
 	_expect(state.market_trip_target.is_empty(), "Opening the merchant's dialogue completes the route.")
@@ -189,7 +192,7 @@ func _back_to_pavilion() -> bool:
 	await tree.create_timer(0.72).timeout
 	_expect(market.silk_guest != null and market.silk_guest.walking_to_stop and market.silk_guest.position.x > 150,
 		"At 申时 Tao Xin walks back to the gate.")
-	await tree.create_timer(2.0).timeout
+	await tree.create_timer(6.0).timeout
 	_expect(market.silk_guest == null and chart.pin.visible and "回封地找陶辛" in chart.cancel_button.text
 		and chart.pin.global_position.is_equal_approx(market.get_node("EstateRoad").position),
 		"After the merchant leaves, the guide switches to the return gate.")
@@ -256,11 +259,11 @@ func _rain_and_recruit() -> void:
 	tree.change_scene_to_file(state.WEST_MARKET_SCENE)
 	await tree.scene_changed
 	market = tree.current_scene
-	await _walk(market.player, [Vector2(151, 63)])
+	await _approach_tao(market)
 	if not await _talk(market, "招募"):
 		return
 	_expect(market.silk_guest == null and market.sample.visible, "Recruitment ends the trip and leaves the sample on display.")
-	await _walk(market.player, [Vector2(176, 34)])
+	await Campaign.walk_to_market_exit(tree, market)
 	if await _cross(&"ui_right", state.ESTATE_SCENE):
 		_estate()
 		_expect(world.neighbor_actor(TAO) is Retainer and world.current_visitor() == null

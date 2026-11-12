@@ -1,5 +1,7 @@
 extends Node2D
 
+const APPROACH := Vector2(-18, -23)
+
 signal opened()
 
 @onready var sign: Label = $Sign

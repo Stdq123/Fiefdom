@@ -80,11 +80,11 @@ func _see_market_trip() -> bool:
 	var market := tree.current_scene
 	if not _expect(market.silk_guest != null and market.sample.visible, "Find Tao Xin and the displayed sample in the market."):
 		return false
-	await _walk(market.player, [Vector2(151, 63)])
+	await _approach_tao(market)
 	if not await _talk(market, "离开", "04-market-visit"):
 		return false
 	print("HANDOFF_MARKET day=", state.current_day, " clock=", state.day_watch_label(), " pending=", state.ravine_handoff_ready())
-	await _walk(market.player, [Vector2(176, 34)])
+	await Campaign.walk_to_market_exit(tree, market)
 	if not await _cross(&"ui_right", state.ESTATE_SCENE):
 		return false
 	_estate()

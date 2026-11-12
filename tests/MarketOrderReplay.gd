@@ -3,7 +3,6 @@ extends RefCounted
 const Campaign := preload("res://tests/CampaignReplay.gd")
 const BEANS := [Vector2i(4, 4), Vector2i(4, 5), Vector2i(5, 4)]
 const MILLET := [Vector2i(4, 6), Vector2i(5, 5), Vector2i(6, 5)]
-const CART_APPROACH := Vector2(-65, 70)
 
 var tree: SceneTree
 var state: Node
@@ -68,12 +67,13 @@ func _to_market() -> bool:
 		&"ui_left", state.WEST_MARKET_SCENE)
 
 func _to_estate() -> bool:
-	var actor := tree.current_scene.get_node("Player") as Player
-	return await _cross(actor, [Vector2(176, 34)], &"ui_right", state.ESTATE_SCENE)
+	var market := tree.current_scene
+	await Campaign.walk_to_market_exit(tree, market)
+	return await _cross(market.player, [], &"ui_right", state.ESTATE_SCENE)
 
 func _open_cart() -> bool:
 	var market := tree.current_scene as Node2D
-	await Campaign.walk_to(tree, market.player, CART_APPROACH)
+	await Campaign.walk_market_to(tree, market, market.market_map.places["收货牌"])
 	await _key(KEY_E)
 	return _expect(market.counter.orders.is_visible_in_tree() and market.player.conversation_open,
 		"The cart opens the order book on foot at %s." % market.player.position)

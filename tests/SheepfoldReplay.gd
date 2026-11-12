@@ -31,7 +31,7 @@ func _open_sheep_trade() -> Control:
 	if not await _enter_market(world, ui):
 		return null
 	var market := tree.current_scene
-	await _walk(market.player, [Vector2(106, 24)])
+	await Campaign.walk_market_to(tree, market, market.market_map.places["绸摊"])
 	await _key(KEY_E)
 	var counter: Control = market.counter
 	if not _expect(counter.silk.is_visible_in_tree(), "E at the textile stall opens Cai Niang's counter."):
@@ -42,7 +42,7 @@ func _open_sheep_trade() -> Control:
 func _return_from_market() -> bool:
 	var market := tree.current_scene
 	await _key(KEY_ESCAPE)
-	await _walk(market.player, [Vector2(176, 34)])
+	await Campaign.walk_to_market_exit(tree, market)
 	if not await _cross(&"ui_right", state.ESTATE_SCENE):
 		return false
 	_estate()

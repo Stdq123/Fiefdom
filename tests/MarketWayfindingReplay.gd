@@ -51,6 +51,9 @@ func _play() -> void:
 	if not _expect(chart != null and chart.cancel_button.visible and state.market_trip_target == "鱼摊",
 		"The west-gate errand continues at the actual fish stall on entry."):
 		return
+	_expect(chart.cancel_button.text.begins_with("←") and chart.route.has(Vector2(-38, 61))
+		and chart.route[-1].is_equal_approx(chart.places["鱼摊"]),
+		"The route starts along the main street and turns into the fish lane.")
 	await _snapshot("02-market-arrival")
 	await _key(KEY_M)
 	if not _expect(chart.modal.visible and tree.paused and chart.markers["鱼摊"].button_pressed and _chart_fits(),
@@ -130,7 +133,19 @@ func _save_continue(settings: Control) -> bool:
 		"Continue preserves the save location and the fish awaiting delivery.")
 
 func _trade_at_fish_stall() -> bool:
-	await _walk(market.player, [Vector2(0, 34), chart.places["鱼摊"]])
+	var approach := [Vector2(273, 36), Vector2(206, 57), Vector2(134, 76), Vector2(48, 74), Vector2(-38, 61),
+		Vector2(-41, 18), Vector2(-61, -32), Vector2(-96, -70), Vector2(-161, -112)]
+	var walked := 0.0
+	var start_time: float = state.day_progress
+	for point: Vector2 in approach:
+		walked += market.player.position.distance_to(point)
+		await Campaign.walk_straight(tree, market.player, point)
+		_expect(market.player.position.distance_to(point) < 3.0 and market.ground.is_on_street(market.player.position),
+			"Walk through the paved turns and up the fish lane.")
+	var seconds: float = (state.day_progress - start_time) * state.balance.daylight_seconds
+	_expect(walked > 540.0 and seconds > 5.0 and market.player.position.distance_to(chart.places["鱼摊"]) < 3.0,
+		"The fish counter is a distinct walk from the eastern gate at normal speed.")
+	print("MARKET_FISH_WALK distance=", roundi(walked), " seconds=", snappedf(seconds, 0.01))
 	_expect(state.market_trip_target == "鱼摊" and market.player.interaction_target == market.get_node("Stalls/FishStall"),
 		"The guide lands at the open side of the actual counter and stays until interaction.")
 	await _snapshot("04-fish-counter-approach")
@@ -161,7 +176,7 @@ func _follow_to_cart_and_home() -> void:
 	await gamepad._tap(JOY_BUTTON_B)
 	_expect(not chart.modal.visible and not tree.paused and state.market_trip_target == "收货牌", "B returns to the chosen delivery errand.")
 	var board: Vector2 = chart.places["收货牌"]
-	await _walk(market.player, [Vector2(board.x, 34), board])
+	await Campaign.walk_market_to(tree, market, board)
 	await gamepad._tap(JOY_BUTTON_X)
 	_expect(market.counter.orders.is_visible_in_tree() and state.market_trip_target.is_empty()
 		and market.counter.close_button.text.ends_with("  B") and not market.counter.keeper_card.visible,
@@ -172,7 +187,7 @@ func _follow_to_cart_and_home() -> void:
 	await _button(chart.open_button)
 	await _button(chart.markers["回封地"])
 	await _key(KEY_M)
-	await _walk(market.player, [Vector2(board.x, 34), Vector2(176, 34)])
+	await Campaign.walk_to_market_exit(tree, market)
 	if await _cross(&"ui_right", state.ESTATE_SCENE):
 		await _estate()
 		_expect(state.market_trip_target.is_empty() and ui.directions.tracked_place.is_empty()

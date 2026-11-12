@@ -1,36 +1,46 @@
 extends Node2D
 
 const ART := preload("res://assets/characters/market-porter.svg")
-# Map position followed by the fraction of the day. Repeated positions are work stops.
-const ROUTE := [
-	Vector3(-199, 42, 0.0), Vector3(-178, 43, 0.006),
-	Vector3(-162, 36, 0.014), Vector3(-162, 36, 0.235),
-	Vector3(-130, 41, 0.242), Vector3(-78, 48, 0.254),
-	Vector3(-16, 59, 0.266), Vector3(-16, 59, 0.670),
-	Vector3(46, 60, 0.684), Vector3(103, 59, 0.698),
-	Vector3(154, 49, 0.710), Vector3(216, 35, 0.725),
-	Vector3(425, 35, 0.774),
-]
+const LAYOUT := preload("res://scripts/WestMarketLayout.gd")
+const GRAIN_STOP := Vector2(-355, 134)
+const FISH_STOP := Vector2(-129, -90)
 
 @onready var body: NeighborMotion = $Body
 
+var route := PackedVector3Array()
+
 func _ready() -> void:
 	body.set_motion_sheet(ART)
+	var fork := LAYOUT.MAIN_ROAD.find(LAYOUT.FISH_JUNCTION)
+	var fish_lane := LAYOUT.FISH_LANE.slice(1, -1)
+	_append_leg([Vector2(-396, 145), GRAIN_STOP], 0.0, 0.014)
+	_append_leg([GRAIN_STOP] + LAYOUT.MAIN_ROAD.slice(0, fork + 1) + fish_lane + [FISH_STOP], 0.235, 0.324)
+	fish_lane.reverse()
+	_append_leg([FISH_STOP] + fish_lane + LAYOUT.MAIN_ROAD.slice(fork) + [LAYOUT.EAST_OUTSIDE], 0.670, 0.810)
 	_follow_clock(false)
+
+func _append_leg(points: Array, start: float, finish: float) -> void:
+	var distances := PackedFloat32Array([0.0])
+	for index in range(1, points.size()):
+		distances.append(distances[-1] + points[index - 1].distance_to(points[index]))
+	for index in points.size():
+		var foot: Vector2 = points[index]
+		var watch := lerpf(start, finish, distances[index] / distances[-1])
+		route.append(Vector3(foot.x, foot.y, watch))
 
 func _process(_delta: float) -> void:
 	_follow_clock(true)
 
 func _follow_clock(animate: bool) -> void:
 	var progress := Global.day_progress
-	visible = progress <= ROUTE.back().z
+	visible = progress <= route[-1].z
 	if not visible:
 		return
 	var segment := 1
-	while progress > ROUTE[segment].z:
+	while progress > route[segment].z:
 		segment += 1
-	var start: Vector3 = ROUTE[segment - 1]
-	var finish: Vector3 = ROUTE[segment]
+	var start := route[segment - 1]
+	var finish := route[segment]
 	var from := Vector2(start.x, start.y)
 	var to := Vector2(finish.x, finish.y)
 	var point := from.lerp(to, inverse_lerp(start.z, finish.z, progress))

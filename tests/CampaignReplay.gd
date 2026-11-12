@@ -34,6 +34,31 @@ static func walk_to(tree: SceneTree, actor: Node2D, destination: Vector2) -> voi
 		Input.action_release(action)
 	await tree.process_frame
 
+static func walk_straight(tree: SceneTree, actor: Node2D, destination: Vector2) -> void:
+	var distance := destination - actor.global_position
+	var speed: float = actor.SPEED
+	var frames := roundi(distance.length() * Engine.physics_ticks_per_second / speed)
+	var direction := distance.normalized()
+	var horizontal := &"ui_left" if direction.x < 0.0 else &"ui_right"
+	var vertical := &"ui_up" if direction.y < 0.0 else &"ui_down"
+	Input.action_press(horizontal, absf(direction.x))
+	Input.action_press(vertical, absf(direction.y))
+	for frame in frames:
+		await tree.physics_frame
+	Input.action_release(horizontal)
+	Input.action_release(vertical)
+	await tree.process_frame
+
+static func walk_market_to(tree: SceneTree, market: Node2D, destination: Vector2) -> void:
+	var ground: Node2D = market.ground
+	var route: PackedVector2Array = market.market_map.network.route_between(
+		ground.to_local(market.player.global_position), ground.to_local(destination))
+	for point in route.slice(1):
+		await walk_straight(tree, market.player, ground.to_global(point))
+
+static func walk_to_market_exit(tree: SceneTree, market: Node2D) -> void:
+	await walk_market_to(tree, market, market.get_node("EstateRoadArrival").global_position)
+
 static func wait_for_map_change(tree: SceneTree) -> void:
 	await tree.process_frame
 	var travel := tree.root.get_node_or_null("MapTravel")

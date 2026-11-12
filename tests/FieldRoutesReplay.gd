@@ -126,7 +126,7 @@ func _save_and_leave() -> bool:
 	await tree.create_timer(3.6).timeout
 	_expect(state.field_route_status == state.NightGrowth.DRY and state.active_crops[SECOND_DRY].watered
 		and state.away_field_report.get("watered", 0) == 1, "The last watering job is completed by the retainer while away.")
-	await _walk(market.player, [Vector2(176, 34)])
+	await Campaign.walk_to_market_exit(tree, market)
 	if not await _cross(&"ui_right", state.ESTATE_SCENE):
 		return false
 	await _use_estate()

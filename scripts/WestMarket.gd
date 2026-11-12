@@ -2,7 +2,8 @@ extends Node2D
 
 const TRACK_AUDIO := preload("res://scripts/TerrainAudio.gd")
 const VISITOR := preload("res://scenes/Visitor.tscn")
-const SILK_STALL_PATH := [Vector2(231, 31), Vector2(190, 28), Vector2(166, 34), Vector2(153, 43)]
+const LAYOUT := preload("res://scripts/WestMarketLayout.gd")
+const ORDER_CART := preload("res://scripts/SeasonOrderCart.gd")
 
 @onready var player: Player = $Player
 @onready var ground: Node2D = $Ground
@@ -29,10 +30,11 @@ func _ready() -> void:
 	for stall: MarketStall in $Stalls.get_children():
 		stall.opened.connect(_open_stall)
 		destinations[MarketStall.TITLES[stall.kind]] = ground.to_local(stall.to_global(MarketStall.APPROACH))
-	destinations[Global.MARKET_ORDERS] = ground.to_local($OrderCart.to_global(Vector2(0, -16)))
+	destinations[Global.MARKET_ORDERS] = ground.to_local($OrderCart.to_global(ORDER_CART.APPROACH))
 	destinations[Global.MARKET_RETURN] = ground.to_local($EstateRoad.global_position)
 	$OrderCart.opened.connect(_open_orders)
-	for foot: Vector2 in [Vector2(-62, 6), Vector2(54, 4), Vector2(154, 13), Vector2(181, 55), Vector2(-148, 75)]:
+	for foot: Vector2 in [Vector2(-379, 112), Vector2(-118, -98), Vector2(208, 168),
+			Vector2(264, 55), Vector2(-163, 110), Vector2(-53, 81), Vector2(379, 56)]:
 		lighting.place_lamp($Scenery, foot, 0.82)
 	player.arrive_at($EstateRoadArrival)
 	player.footstep.connect(_step)
@@ -74,8 +76,7 @@ func _process(delta: float) -> void:
 		Global.advance_daylight(delta)
 		Global.advance_away_field_work(delta)
 	lighting.refresh(delta)
-	var tree_line := Vector2(-183, -35)
-	var distance := player.position.distance_to(tree_line)
+	var distance: float = ground.distance_to_trees(player.global_position)
 	AudioManager.set_world_ambience(INF, distance, distance)
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -128,7 +129,7 @@ func _refresh_silk_guest() -> void:
 	var returning := silk_trip == VisitorData.SilkTrip.RETURN_ROAD
 	if silk_guest and returning == guest_returning:
 		return
-	var path := PackedVector2Array(SILK_STALL_PATH)
+	var path := LAYOUT.silk_guest_path()
 	if returning:
 		path.reverse()
 	if not silk_guest:

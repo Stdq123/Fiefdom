@@ -24,10 +24,10 @@
 size = Vector2(8, 20)
 
 [sub_resource type="RectangleShape2D" id="VerticalEdge"]
-size = Vector2(24, 310)
+size = Vector2(24, 462)
 
 [sub_resource type="RectangleShape2D" id="HorizontalEdge"]
-size = Vector2(536, 24)
+size = Vector2(918, 24)
 
 [sub_resource type="RectangleShape2D" id="Pier"]
 size = Vector2(24, 7)
@@ -51,10 +51,10 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="GrainStall" parent="Stalls" instance=ExtResource("4_stall")]
-position = Vector2(-104, 4)
+position = Vector2(-340, 98)
 
 [node name="FishStall" parent="Stalls" instance=ExtResource("4_stall")]
-position = Vector2(0, -1)
+position = Vector2(-161, -136)
 kind = 1
 
 [node name="FishOrderSign" type="Node2D" parent="Stalls/FishStall"]
@@ -65,7 +65,7 @@ position = Vector2(27, -8)
 texture_filter = 1
 
 [node name="SilkStall" parent="Stalls" instance=ExtResource("4_stall")]
-position = Vector2(106, 4)
+position = Vector2(180, 151)
 kind = 2
 
 [node name="MarketSample" type="Sprite2D" parent="Stalls/SilkStall"]
@@ -79,7 +79,7 @@ texture = ExtResource("18_sample")
 script = ExtResource("19_dialog")
 
 [node name="OrderCart" parent="." instance=ExtResource("13_order_cart")]
-position = Vector2(-104, 77)
+position = Vector2(-262, 180)
 
 [node name="Freight" parent="." instance=ExtResource("14_freight")]
 at_market = true
@@ -92,7 +92,7 @@ offset = Vector2(0, -13)
 script = ExtResource("17_motion")
 
 [node name="EstateRoad" type="Area2D" parent="."]
-position = Vector2(221, 34)
+position = Vector2(392, 36)
 collision_layer = 0
 collision_mask = 2
 script = ExtResource("5_gate")
@@ -119,44 +119,44 @@ text = "封地 →"
 horizontal_alignment = 1
 
 [node name="EstateRoadArrival" type="Marker2D" parent="."]
-position = Vector2(176, 34)
+position = Vector2(345, 36)
 rotation = 3.1415927
 
 [node name="Edges" type="StaticBody2D" parent="."]
 collision_mask = 0
 
 [node name="West" type="CollisionShape2D" parent="Edges"]
-position = Vector2(-247, 4)
+position = Vector2(-447, 13)
 shape = SubResource("VerticalEdge")
 
 [node name="East" type="CollisionShape2D" parent="Edges"]
-position = Vector2(267, 4)
+position = Vector2(447, 13)
 shape = SubResource("VerticalEdge")
 
 [node name="North" type="CollisionShape2D" parent="Edges"]
-position = Vector2(10, -144)
+position = Vector2(0, -212)
 shape = SubResource("HorizontalEdge")
 
 [node name="South" type="CollisionShape2D" parent="Edges"]
-position = Vector2(10, 152)
+position = Vector2(0, 238)
 shape = SubResource("HorizontalEdge")
 
 [node name="FarPier" type="CollisionShape2D" parent="Edges"]
-position = Vector2(230, 10)
+position = Vector2(401, 12)
 shape = SubResource("Pier")
 
 [node name="NearPier" type="CollisionShape2D" parent="Edges"]
-position = Vector2(207, 56)
+position = Vector2(378, 58)
 shape = SubResource("Pier")
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
-position = Vector2(176, 34)
+position = Vector2(345, 36)
 
 [node name="Camera2D" parent="Player" index="4"]
-limit_left = -326
-limit_top = -192
-limit_right = 344
-limit_bottom = 197
+limit_left = -501
+limit_top = -251
+limit_right = 501
+limit_bottom = 282
 
 [node name="DayLighting" type="CanvasModulate" parent="."]
 script = ExtResource("6_light")

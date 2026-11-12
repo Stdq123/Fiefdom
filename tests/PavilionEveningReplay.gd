@@ -178,7 +178,7 @@ func _resume_and_travel() -> void:
 	if not await _cross(&"ui_left", state.WEST_MARKET_SCENE):
 		return
 	var market := tree.current_scene as Node2D
-	await _walk(market.player, [Vector2(176, 34)])
+	await Campaign.walk_to_market_exit(tree, market)
 	if not await _cross(&"ui_right", state.ESTATE_SCENE) or not await _bind_estate():
 		return
 	teacher = world.neighbor_actor(VisitorData.ROAD_KEEPER) as Retainer
