@@ -78,6 +78,28 @@ text = "续播安排"
 [node name="SeedPicker" type="OptionButton" parent="HBoxContainer/RightPanel/封地概览/SeedPlan"]
 layout_mode = 2
 size_flags_horizontal = 3
+tooltip_text = "按今天的节气估算生长夜数，实际以播种日为准。"
+
+[node name="ApplyPrivate" type="Button" parent="HBoxContainer/RightPanel/封地概览/SeedPlan"]
+custom_minimum_size = Vector2(145, 34)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+disabled = true
+text = "安排私田"
+tooltip_text = "批量安排当前井田的已翻私田。现有单茬作物收获后再播。"
+
+[node name="SeedTiming" type="Label" parent="HBoxContainer/RightPanel/封地概览"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.82, 0.57, 1)
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="SeedPlanNote" type="Label" parent="HBoxContainer/RightPanel/封地概览"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.79, 0.82, 0.70, 1)
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
 
 [node name="GridContainer" type="GridContainer" parent="HBoxContainer/RightPanel/封地概览"]
 layout_mode = 2

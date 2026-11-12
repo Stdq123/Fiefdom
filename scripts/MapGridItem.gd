@@ -7,6 +7,9 @@ var grid_pos: Vector2i
 func _ready() -> void:
 	custom_minimum_size = Vector2(92, 62)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	add_theme_constant_override("icon_max_width", 19)
+	add_theme_constant_override("h_separation", 6)
 	add_theme_font_size_override("font_size", 16)
 	refresh_plot()
 
@@ -23,8 +26,10 @@ func refresh_plot() -> void:
 	if not crop.is_empty() and crop.data.is_perennial:
 		tooltip_text = "桑收后留根，可反复采叶"
 	var planned_id: String = Global.field_seed_plans.get(grid_pos, "")
-	if not planned_id.is_empty():
-		var seed := ItemManager.get_crop(planned_id)
+	var seed := ItemManager.get_crop(planned_id)
+	var display_crop: CropData = seed if crop.is_empty() else crop.data
+	icon = ItemManager.crop_picture(display_crop).texture if display_crop else null
+	if seed:
 		var waiting := " · 待渠水" if seed.is_water_crop and not Global.irrigation.supplies(grid_pos) else ""
 		text += "\n续播 %s%s" % [seed.crop_name, waiting]
 		tooltip_text = "田间照料门客会在空畦上补播" if waiting.is_empty() else "接通水渠后才会补播稻种"

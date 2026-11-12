@@ -58,6 +58,10 @@ func _run() -> void:
 			var replay = load("res://tests/EstateDirectionsReplay.gd").new()
 			replay.legacy = arguments[0] == "estate-directions-legacy"
 			await replay.run(tree)
+		"field-planning", "field-planning-legacy":
+			var replay = load("res://tests/FieldPlanningReplay.gd").new()
+			replay.legacy = arguments[0] == "field-planning-legacy"
+			await replay.run(tree)
 		"key-bindings", "key-bindings-reload":
 			var replay = load("res://tests/KeyBindingsReplay.gd").new()
 			await replay.run(tree, capture_directory, arguments[0] == "key-bindings-reload")

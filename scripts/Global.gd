@@ -715,11 +715,14 @@ func water_field_crop(cell: Vector2i) -> bool:
 	GameEvents.farm_state_changed.emit()
 	return true
 
-func set_field_seed_plan(cell: Vector2i, seed_id: String) -> void:
+func can_plan_field_seed(cell: Vector2i) -> bool:
 	if not tilled_cells.has(cell):
-		return
+		return false
 	var crop: Dictionary = active_crops.get(cell, {})
-	if not crop.is_empty() and crop.data.is_perennial:
+	return crop.is_empty() or not crop.data.is_perennial
+
+func set_field_seed_plan(cell: Vector2i, seed_id: String) -> void:
+	if not can_plan_field_seed(cell):
 		return
 	if seed_id.is_empty():
 		field_seed_plans.erase(cell)
