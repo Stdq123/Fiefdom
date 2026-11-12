@@ -2,7 +2,8 @@ extends Resource
 class_name VisitorData
 
 enum School { CONFUCIAN, MOHIST, TAOIST, MERCHANT, MILITARY }
-enum VisitActivity { NONE, ROAD_REST, MEASURE, SILK, HERBS, WATCH, PAVILION_REST }
+enum VisitActivity { NONE, ROAD_REST, MEASURE, SILK, HERBS, WATCH, PAVILION_REST, TO_SILK_MARKET, SILK_MARKET }
+enum SilkTrip { NONE, WEST_ROAD, STALL, RETURN_ROAD, PAVILION }
 
 const FIELD_KEEPER := "渠伯"
 const ROAD_KEEPER := "季青"
@@ -11,6 +12,12 @@ const RAVINE_GUIDE := "蒲宁"
 const EAST_WATCHER := "弋戎"
 const WATER_GUIDE := "石墨"
 const MUSIC_HOST := "商音"
+const SILK_MARKET_PLACE := "西市绸摊"
+const SILK_MARKET_PLAN := "晴天午、未时在西市绸摊，酉时到南路亭"
+const SILK_MARKET_DEPART := (9.0 - Global.DAY_START_HOUR) / (Global.DAY_END_HOUR - Global.DAY_START_HOUR)
+const SILK_MARKET_ARRIVE := (11.0 - Global.DAY_START_HOUR) / (Global.DAY_END_HOUR - Global.DAY_START_HOUR)
+const SILK_MARKET_LEAVE := (15.0 - Global.DAY_START_HOUR) / (Global.DAY_END_HOUR - Global.DAY_START_HOUR)
+const SILK_MARKET_RETURN := (17.0 - Global.DAY_START_HOUR) / (Global.DAY_END_HOUR - Global.DAY_START_HOUR)
 const NEIGHBORS := [FIELD_KEEPER, ROAD_KEEPER, WATER_GUIDE, SILK_MERCHANT, RAVINE_GUIDE, EAST_WATCHER, MUSIC_HOST]
 const SOUTH_POST := Vector2(50, 214)
 const WEST_COURT := Vector2(-56, 81)
@@ -30,6 +37,8 @@ const ACTIVITY_STOPS := {
 	VisitActivity.ROAD_REST: {"place": "亭西歇脚处", "task": "照看水瓮"},
 	VisitActivity.MEASURE: {"place": "水源旁", "task": "看量水尺"},
 	VisitActivity.SILK: {"place": "西廊绸架", "task": "整理样绸"},
+	VisitActivity.TO_SILK_MARKET: {"place": SILK_MARKET_PLACE, "task": "沿西路赶集"},
+	VisitActivity.SILK_MARKET: {"place": SILK_MARKET_PLACE, "task": "同蔡娘理绸"},
 	VisitActivity.HERBS: {"place": "竹径药圃", "task": "查看药苗"},
 	VisitActivity.WATCH: {"place": "东岗守备牌", "task": "查看守备"},
 	VisitActivity.PAVILION_REST: {"place": "南路亭", "task": "灯下歇脚"},
@@ -165,6 +174,28 @@ static func scheduled_stop(speaker: String, meeting: String, day: int) -> String
 	var activity := activity_on(speaker, day)
 	return meeting if activity == VisitActivity.NONE else ACTIVITY_STOPS[activity].place
 
+static func silk_sample_on_display(day: int) -> bool:
+	return Global.silk_sample_day > 0 and day > Global.silk_sample_day
+
+static func silk_market_day(day: int) -> bool:
+	return silk_sample_on_display(day) and not Global.has_rain(day)
+
+func silk_trip() -> SilkTrip:
+	if name != SILK_MERCHANT or is_recruited or not silk_market_day(Global.current_day):
+		return SilkTrip.NONE
+	if Global.day_progress < SILK_MARKET_DEPART:
+		return SilkTrip.NONE
+	if Global.day_progress < SILK_MARKET_ARRIVE:
+		return SilkTrip.WEST_ROAD
+	if Global.day_progress < SILK_MARKET_LEAVE:
+		return SilkTrip.STALL
+	if Global.day_progress < SILK_MARKET_RETURN:
+		return SilkTrip.RETURN_ROAD
+	return SilkTrip.PAVILION
+
+static func seconds_since(progress: float) -> float:
+	return maxf(0.0, (Global.day_progress - progress) * maxf(1.0, Global.balance.daylight_seconds))
+
 func has_pavilion_rest() -> bool:
 	if (not PAVILION_LINES.has(name) or Global.raid_day > 0
 		or Global.last_defense.get("day", 0) == Global.current_day):
@@ -254,7 +285,7 @@ static func road_keeper_line(resident := false) -> String:
 static func silk_merchant_line(resident := false) -> String:
 	if Global.silk_sample_day > 0:
 		if Global.silk_sample_day == Global.current_day:
-			return "这匹绸的边织得平。我付你约好的钱，再剪一小段挂在西廊。我带来的纹衣送你，已经放在堂屋衣架上。"
+			return "这匹绸的边织得平。留一角在西廊，余下的明早托蔡娘挂在西市。那件纹衣是给你的，就在堂屋衣架上。"
 		var note := "西廊的绸样还在。" if resident else "又到西廊了，你织的样绸我还收着。"
 		return note + _return_line(SILK_MERCHANT)
 	if Global.silk_sample_requested():
@@ -262,6 +293,11 @@ static func silk_merchant_line(resident := false) -> String:
 			return "这一匹我想带去南路给人瞧瞧。你若肯匀给我，我按约好的价收，再留一角在西廊。"
 		return "我想让南路的人看看这里织的绸。等你织好一匹，留给我作样。我下回到西廊，按样绸的价收。"
 	return "我是陶辛，沿南路收绸。你在私田收下的桑叶能养蚕。等你有空，来西廊谈谈织绸的事。"
+
+static func silk_market_line() -> String:
+	if Global.attire_id == PlayerAttire.SAMPLE:
+		return "蔡娘刚问谁织的这匹绸。你往这儿一站，衣上的纹和摊前的一照面，她就认出来了。"
+	return "蔡娘特意把你的绸挂在朝街的一面。今早有人捻着布边问是谁家织的，我指了指东边的路。"
 
 static func ravine_guide_line() -> String:
 	if Global.ravine_journal.garden_day > 0:

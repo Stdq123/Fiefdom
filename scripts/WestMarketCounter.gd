@@ -48,7 +48,13 @@ func _refresh_silk() -> void:
 	silk_stock.text = "丝绸库存   %d 匹" % Global.silk_workshop.bolts
 	sell_silk.text = "售出一匹丝绸   +%d 铜钱" % Global.balance.silk_sell_price
 	sell_silk.disabled = not Global.can_use_workshop(SilkWorkshop.Action.SELL)
-	silk_sample.visible = Global.silk_sample_requested()
+	silk_sample.visible = Global.silk_sample_requested() or Global.silk_sample_day > 0
+	if VisitorData.silk_sample_on_display(Global.current_day):
+		silk_sample.text = "蔡娘在摊前挂出了「%s」织成的样绸。" % Global.campaign_name
+	elif Global.silk_sample_day > 0:
+		silk_sample.text = "陶辛已收样绸，蔡娘明日挂到摊前。"
+	else:
+		silk_sample.text = "陶辛在西廊等一匹样绸。"
 	%SheepTrade.visible = Global.first_tribute_delivered()
 
 func _sell_silk() -> void:

@@ -35,7 +35,7 @@ func set_interaction_focused(focused: bool) -> void:
 	_update_pose_processing()
 	_update_hint()
 
-func go_to_activity(next: VisitorData.VisitActivity, path: PackedVector2Array, look_at: Vector2, walk_in: bool) -> void:
+func go_to_activity(next: VisitorData.VisitActivity, path: PackedVector2Array, look_at: Vector2, walk_in: bool, elapsed := 0.0) -> void:
 	activity = next
 	visit_path = path
 	activity_focus = look_at
@@ -44,6 +44,17 @@ func go_to_activity(next: VisitorData.VisitActivity, path: PackedVector2Array, l
 	if not walk_in:
 		position = path[-1]
 		next_stop = path.size()
+	elif elapsed > 0.0:
+		var distance := elapsed * WALK_SPEED
+		while walking_to_stop:
+			var length := position.distance_to(path[next_stop])
+			if distance < length:
+				position = position.move_toward(path[next_stop], distance)
+				break
+			position = path[next_stop]
+			distance -= length
+			next_stop += 1
+	if not walking_to_stop:
 		_face_stop()
 	_update_pose_processing()
 	_update_hint()

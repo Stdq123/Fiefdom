@@ -117,6 +117,8 @@ func show_visitor_dialog(data: VisitorData, place: String, at_pavilion := false)
 	var favor := _add_favor_option(data.name, options, disabled)
 	options.append("离开")
 	var speech := data.pavilion_greeting() if at_pavilion else data.greeting()
+	if place == VisitorData.SILK_MARKET_PLACE:
+		speech = VisitorData.silk_market_line()
 	var dialog = _open(data.name, data.get_school_name() + " · " + place,
 		speech, options, disabled, data.get_appearance_texture())
 	dialog.option_selected.connect(_on_visitor_choice.bind(data, favor_index, favor))

@@ -46,6 +46,7 @@ var retainer_scene = preload("res://scenes/Retainer.tscn")
 var visitor_scene = preload("res://scenes/Visitor.tscn")
 var enemy_scene = preload("res://scenes/Enemy.tscn")
 var active_visitors: Array[Visitor] = []
+var scheduled_visitor: VisitorData
 var field_guest: Node2D
 var sweep_action := FieldAction.NONE
 var sweep_field := Rect2i()
@@ -72,7 +73,7 @@ func _ready() -> void:
 	for milestone in [GameEvents.road_rest_changed, GameEvents.channel_survey_learned, GameEvents.silk_sample_delivered,
 			GameEvents.ravine_journal_changed, GameEvents.east_watch_built]:
 		milestone.connect(_update_visitor_activity)
-	GameEvents.daylight_changed.connect(_update_pavilion_visit)
+	GameEvents.daylight_changed.connect(_update_visitor_clock)
 	GameEvents.tax_reform_choice_made.connect(_on_tax_reform_choice_made)
 	GameEvents.management_visibility_changed.connect(_end_sweep.unbind(1))
 	GameEvents.estate_room_changed.connect(_on_estate_room_changed)
@@ -699,6 +700,15 @@ func current_visitor() -> VisitorData:
 func current_visitor_actor() -> Visitor:
 	return active_visitors.front() if not active_visitors.is_empty() else null
 
+func silk_trip_note() -> String:
+	if not scheduled_visitor:
+		return ""
+	match scheduled_visitor.silk_trip():
+		VisitorData.SilkTrip.WEST_ROAD: return "正沿西路去西市"
+		VisitorData.SilkTrip.STALL: return "在西市绸摊，酉时到南路亭"
+		VisitorData.SilkTrip.RETURN_ROAD: return "正沿西路返程，酉时到南路亭"
+	return ""
+
 func neighbor_actor(speaker: String) -> Node2D:
 	if speaker == Global.TAX_ENVOY and Global.tax_council_waiting():
 		return tax_envoy
@@ -739,49 +749,105 @@ func _refresh_visitor(walk_in := false) -> void:
 	var names: Array[String] = []
 	for retainer in Global.retainers:
 		names.append(retainer.name)
-	var data := Global.visitor_for_day(Global.current_day)
-	if data:
-		var visitor := visitor_scene.instantiate() as Visitor
-		visitor.data = data
-		visitor.position = data.meeting_point(get_crop_world_pos(Global.irrigation.source_cell))
-		add_child(visitor)
-		active_visitors.append(visitor)
-		visitor.activity_reached.connect(_report_visitor_activity)
-		_apply_visitor_activity(visitor, walk_in)
-		_apply_pavilion_visit(visitor, walk_in)
-	$SpringGathering.refresh(data, names)
-	visitor_changed.emit(data)
+	scheduled_visitor = Global.visitor_for_day(Global.current_day)
+	_place_scheduled_visitor(walk_in)
+	$SpringGathering.refresh(scheduled_visitor, names)
+	_report_visitor_activity()
+
+func _place_scheduled_visitor(walk_in: bool) -> void:
+	if not scheduled_visitor:
+		return
+	var trip := scheduled_visitor.silk_trip()
+	if trip in [VisitorData.SilkTrip.STALL, VisitorData.SilkTrip.RETURN_ROAD]:
+		return
+	var visitor := visitor_scene.instantiate() as Visitor
+	visitor.data = scheduled_visitor
+	visitor.position = ($WestMarketArrival.position if trip == VisitorData.SilkTrip.PAVILION
+		else scheduled_visitor.meeting_point(get_crop_world_pos(Global.irrigation.source_cell)))
+	add_child(visitor)
+	active_visitors.append(visitor)
+	visitor.activity_reached.connect(_visitor_arrived.bind(visitor))
+	if trip == VisitorData.SilkTrip.PAVILION:
+		_apply_pavilion_visit(visitor, false)
+	else:
+		_apply_visitor_activity(visitor, walk_in and trip == VisitorData.SilkTrip.NONE)
+		if trip == VisitorData.SilkTrip.WEST_ROAD:
+			_send_visitor_to_market(visitor)
+		else:
+			_apply_pavilion_visit(visitor, walk_in)
+
+func _send_visitor_to_market(visitor: Visitor) -> void:
+	var gate: Vector2 = $WestMarketGate.position
+	var path := PackedVector2Array([Vector2(-92, 61)])
+	path.append_array(_follow_lane(LANDSCAPE.ESTATE_TRACKS[0], Vector2(-90, 28), gate))
+	visitor.go_to_activity(VisitorData.VisitActivity.TO_SILK_MARKET, path, gate + Vector2.LEFT,
+		true, VisitorData.seconds_since(VisitorData.SILK_MARKET_DEPART))
+	if not visitor.walking_to_stop:
+		_remove_scheduled_visitor(visitor)
+
+func _remove_scheduled_visitor(visitor: Visitor) -> void:
+	active_visitors.erase(visitor)
+	visitor.queue_free()
+
+func _visitor_arrived(visitor: Visitor) -> void:
+	if visitor.activity == VisitorData.VisitActivity.TO_SILK_MARKET:
+		_remove_scheduled_visitor(visitor)
+	_report_visitor_activity()
 
 func _report_visitor_activity() -> void:
 	visitor_changed.emit(current_visitor())
 
 func _update_visitor_activity() -> void:
 	var visitor := current_visitor_actor()
-	if not is_instance_valid(visitor) or visitor.activity == VisitorData.VisitActivity.PAVILION_REST:
+	if not is_instance_valid(visitor) or visitor.activity in [
+			VisitorData.VisitActivity.PAVILION_REST, VisitorData.VisitActivity.TO_SILK_MARKET]:
 		return
 	if _apply_pavilion_visit(visitor, true) or _apply_visitor_activity(visitor, true):
 		_report_visitor_activity()
 
-func _update_pavilion_visit() -> void:
+func _update_visitor_clock() -> void:
+	if not scheduled_visitor:
+		return
 	var visitor := current_visitor_actor()
-	if is_instance_valid(visitor) and _apply_pavilion_visit(visitor, true):
-		_report_visitor_activity()
+	match scheduled_visitor.silk_trip():
+		VisitorData.SilkTrip.WEST_ROAD:
+			if visitor and visitor.activity != VisitorData.VisitActivity.TO_SILK_MARKET:
+				_send_visitor_to_market(visitor)
+				_report_visitor_activity()
+		VisitorData.SilkTrip.STALL, VisitorData.SilkTrip.RETURN_ROAD:
+			if visitor:
+				_remove_scheduled_visitor(visitor)
+			_report_visitor_activity()
+		VisitorData.SilkTrip.PAVILION:
+			if visitor and visitor.activity == VisitorData.VisitActivity.PAVILION_REST:
+				return
+			if visitor:
+				_remove_scheduled_visitor(visitor)
+			_place_scheduled_visitor(false)
+			_report_visitor_activity()
+		_:
+			if visitor and _apply_pavilion_visit(visitor, true):
+				_report_visitor_activity()
 
 func _apply_pavilion_visit(visitor: Visitor, walk_in: bool) -> bool:
-	if (visitor.activity == VisitorData.VisitActivity.PAVILION_REST or not visitor.data.has_pavilion_rest()
+	var from_market := visitor.data.silk_trip() == VisitorData.SilkTrip.PAVILION
+	if (visitor.activity == VisitorData.VisitActivity.PAVILION_REST or (not from_market and not visitor.data.has_pavilion_rest())
 		or VisitorData.pavilion_rest_seconds() < 0.0 or Global.outcome != Global.Outcome.RUNNING):
 		return false
 	var path := _path_to_pavilion(visitor)
-	if not walk_in:
-		path = _resume_pavilion_walk(visitor, path)
-		walk_in = path.size() > 1 or not visitor.position.is_equal_approx(path[0])
-	visitor.go_to_activity(VisitorData.VisitActivity.PAVILION_REST, path, LANDSCAPE.PAVILION_WATER, walk_in)
+	var elapsed := 0.0 if walk_in else VisitorData.pavilion_rest_seconds()
+	visitor.go_to_activity(VisitorData.VisitActivity.PAVILION_REST, path, LANDSCAPE.PAVILION_WATER,
+		Global.day_progress < 1.0, elapsed)
 	return true
 
 func _path_to_pavilion(visitor: Visitor) -> PackedVector2Array:
 	var start := visitor.position
 	var path := PackedVector2Array()
-	if visitor.data.name == VisitorData.EAST_WATCHER:
+	if visitor.data.silk_trip() == VisitorData.SilkTrip.PAVILION:
+		path = _follow_lane(LANDSCAPE.ESTATE_TRACKS[0], start, LANDSCAPE.ESTATE_SOUTH_LANE[0])
+		# The east verge clears the workshop's rear wall.
+		path.append_array(PackedVector2Array([Vector2(19, 72), Vector2(19, 129), Vector2(17, 142)]))
+	elif visitor.data.name == VisitorData.EAST_WATCHER:
 		path = _follow_lane(LANDSCAPE.ESTATE_EAST_LANE, start, LANDSCAPE.EAST_LANE_JUNCTION)
 	elif visitor.activity == VisitorData.VisitActivity.ROAD_REST and start.x < LANDSCAPE.ROAD_REST_TRACK[0].x:
 		path = _follow_lane(LANDSCAPE.ROAD_REST_TRACK, start, LANDSCAPE.ROAD_REST_TRACK[0])
@@ -813,18 +879,6 @@ func _follow_lane(lane: Array, from: Vector2, destination: Vector2) -> PackedVec
 		for index in range(segment + 1, end + 1):
 			path.append(lane[index])
 	return path
-
-func _resume_pavilion_walk(visitor: Visitor, path: PackedVector2Array) -> PackedVector2Array:
-	# The shared clock also advances when the estate scene is unloaded.
-	var distance := INF if Global.day_progress >= 1.0 else VisitorData.pavilion_rest_seconds() * Visitor.WALK_SPEED
-	for index in path.size():
-		var length := visitor.position.distance_to(path[index])
-		if distance < length:
-			visitor.position = visitor.position.move_toward(path[index], distance)
-			return path.slice(index)
-		visitor.position = path[index]
-		distance -= length
-	return path.slice(-1)
 
 func _apply_visitor_activity(visitor: Visitor, walk_in: bool) -> bool:
 	var work := VisitorData.activity_on(visitor.data.name, Global.current_day)

@@ -41,7 +41,7 @@ func setup(estate_world: Node2D, estate_hud: Control) -> void:
 	hide()
 
 func follow_neighbor(speaker: String) -> bool:
-	if not is_instance_valid(world.neighbor_actor(speaker)):
+	if not is_instance_valid(world.neighbor_actor(speaker)) and not _neighbor_west_gate(speaker):
 		return false
 	clear_tracking()
 	tracked_neighbor = speaker
@@ -92,9 +92,17 @@ func destination() -> Dictionary:
 		var actor: Node2D = world.neighbor_actor(tracked_neighbor)
 		if is_instance_valid(actor):
 			return {"title": tracked_neighbor, "point": world.to_local(actor.global_position)}
+		var gate := _neighbor_west_gate(tracked_neighbor)
+		if gate:
+			return {"title": tracked_neighbor + " · 西路", "point": world.to_local(gate.global_position)}
 	if not tracked_place.is_empty():
 		return {"title": tracked_place, "point": tracked_place_point}
 	return {}
+
+func _neighbor_west_gate(speaker: String) -> Node2D:
+	if speaker == VisitorData.SILK_MERCHANT and not world.silk_trip_note().is_empty():
+		return world.get_node("WestMarketGate")
+	return null
 
 func _tracked_raider() -> Node2D:
 	if following_raid and Global.raid_day > 0:
@@ -150,6 +158,11 @@ func update_marker(blocked: bool) -> void:
 		if is_instance_valid(actor):
 			var portrait := actor.get_global_transform_with_canvas() * Rect2(-10, -23, 20, 25)
 			_mark_map(portrait, tracked_neighbor, Mark.NEIGHBOR, world.player.interaction_target == actor)
+			return
+		var gate := _neighbor_west_gate(tracked_neighbor)
+		if gate:
+			var bounds := gate.get_global_transform_with_canvas() * Rect2(-8, -8, 16, 16)
+			_mark_map(bounds, tracked_neighbor + " · 西路", Mark.PLACE, false)
 			return
 		clear_tracking()
 	if not tracked_place.is_empty():

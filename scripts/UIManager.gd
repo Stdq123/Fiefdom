@@ -354,6 +354,11 @@ func _update_visitor_note(data: VisitorData) -> void:
 		var visitor: Visitor = world.current_visitor_actor()
 		var verb := "" if visitor.walking_to_stop else "在"
 		hud.visitor_label.text = "%s%s%s，靠近按 %s。" % [data.name, verb, visitor.visit_note(), interact_key]
+		if data.name == VisitorData.SILK_MERCHANT and VisitorData.silk_market_day(Global.current_day) \
+				and data.silk_trip() == VisitorData.SilkTrip.NONE:
+			hud.visitor_label.text += "\n午、未时可到西市绸摊见他。"
+	elif not world.silk_trip_note().is_empty():
+		hud.visitor_label.text = VisitorData.SILK_MERCHANT + world.silk_trip_note() + "。"
 	elif Global.field_keeper_visiting():
 		hud.visitor_label.text = "渠伯今天回到井田西南。"
 	elif Global.current_day == 1 and not Global.retainers.is_empty() and Global.retainers[0].name == VisitorData.FIELD_KEEPER:

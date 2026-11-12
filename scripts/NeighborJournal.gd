@@ -78,7 +78,11 @@ func _show_neighbor(speaker: String) -> void:
 	var date := "第 %d 天相识 · %s" % [day, Global.get_current_solar_term(day)] if day > 0 else "旧日相识"
 	first_meeting.text = "%s  ·  %s" % [ROLES[speaker], date]
 	where.text = _location(speaker)
-	locate_button.visible = get_tree().current_scene.get_node("World").neighbor_actor(speaker) != null
+	var world := get_tree().current_scene.get_node("World")
+	var actor: Node2D = world.neighbor_actor(speaker)
+	var on_west_road: bool = actor == null and speaker == VisitorData.SILK_MERCHANT and not world.silk_trip_note().is_empty()
+	locate_button.visible = on_west_road or actor != null
+	locate_button.text = "指路去西路" if on_west_road else "在地图上找"
 	var story := _story(speaker)
 	memory.text = story[0]
 	next_step.text = story[1]
@@ -93,9 +97,14 @@ func _location(speaker: String) -> String:
 	if guest and guest.name == speaker:
 		var actor: Visitor = world.current_visitor_actor()
 		var note := "%s · 今日来访" % actor.visit_note()
-		if guest.has_pavilion_rest() and VisitorData.pavilion_rest_seconds() < 0.0:
+		if speaker == VisitorData.SILK_MERCHANT and VisitorData.silk_market_day(Global.current_day) \
+				and guest.silk_trip() == VisitorData.SilkTrip.NONE:
+			note += "\n" + VisitorData.SILK_MARKET_PLAN
+		elif guest.has_pavilion_rest() and VisitorData.pavilion_rest_seconds() < 0.0:
 			note += "\n" + VisitorData.pavilion_rest_plan()
 		return note
+	if speaker == VisitorData.SILK_MERCHANT and not world.silk_trip_note().is_empty():
+		return world.silk_trip_note()
 	if speaker == VisitorData.FIELD_KEEPER:
 		if Global.field_keeper_visiting():
 			return "井田西南 · 今日回来看看"
@@ -108,7 +117,10 @@ func _location(speaker: String) -> String:
 		if persona.name == speaker:
 			var day := Global.next_visitor_day(speaker)
 			if day > 0:
-				return "下一次轮访 · 第 %d 天 · %s" % [day, VisitorData.scheduled_stop(speaker, persona.place, day)]
+				var note := "下一次轮访 · 第 %d 天 · %s" % [day, VisitorData.scheduled_stop(speaker, persona.place, day)]
+				if speaker == VisitorData.SILK_MERCHANT and VisitorData.silk_market_day(day):
+					note += "\n" + VisitorData.SILK_MARKET_PLAN
+				return note
 			if Global.ravine_handoff_ready():
 				return "蒲宁正等溪行手记 · 交接后再约轮访"
 			return "今日在外 · 来访时常到%s" % persona.place
@@ -128,7 +140,9 @@ func _story(speaker: String) -> Array[String]:
 			return ["石墨在水源旁讲过田渠的高低。", "解锁水利，把水渠接到正在生长的田苗旁，再过一夜。"]
 		VisitorData.SILK_MERCHANT:
 			if Global.silk_sample_day > 0:
-				return ["第 %d 天交了样绸。陶辛留下一角，挂在西廊给来客看。" % Global.silk_sample_day, ""]
+				var lead := "沿西路去绸摊，可以看到蔡娘挂出的样绸。" if VisitorData.silk_sample_on_display(Global.current_day) \
+					else "明日可去西市绸摊看样绸。"
+				return ["第 %d 天交了样绸。陶辛留一角在西廊，把其余的交给蔡娘。" % Global.silk_sample_day, lead]
 			return ["陶辛沿南路收绸，想让来往的人看看这片封地织的样子。", "织好一匹绸，再找陶辛谈样绸。"]
 		VisitorData.RAVINE_GUIDE:
 			if Global.ravine_journal.garden_day > 0:

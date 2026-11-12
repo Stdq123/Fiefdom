@@ -138,6 +138,9 @@ func _collect_people() -> void:
 		_add_person(Global.TAX_ENVOY, "使者 · 堂前候议", world.tax_envoy, CharacterArt.tax_envoy_icon())
 	for visitor: Node2D in world.active_visitors:
 		_add_visitor(visitor)
+	var silk_note: String = world.silk_trip_note()
+	if not silk_note.is_empty() and not world.neighbor_actor(VisitorData.SILK_MERCHANT):
+		_add_person(VisitorData.SILK_MERCHANT, silk_note, world.get_node("WestMarketGate"), null)
 	if is_instance_valid(world.field_guest):
 		_add_visitor(world.field_guest)
 	for guest: Node2D in world.get_node("SpringGathering/Guests").get_children():

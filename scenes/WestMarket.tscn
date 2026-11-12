@@ -17,6 +17,8 @@
 [ext_resource type="Script" path="res://scripts/CampaignHUD.gd" id="15_campaign"]
 [ext_resource type="Script" path="res://scripts/MarketPorter.gd" id="16_porter"]
 [ext_resource type="Script" path="res://scripts/NeighborMotion.gd" id="17_motion"]
+[ext_resource type="Texture2D" path="res://assets/world/west-court-sample.svg" id="18_sample"]
+[ext_resource type="Script" path="res://scripts/UIDialogManager.gd" id="19_dialog"]
 
 [sub_resource type="RectangleShape2D" id="GateMouth"]
 size = Vector2(8, 20)
@@ -54,6 +56,16 @@ kind = 1
 [node name="SilkStall" parent="Stalls" instance=ExtResource("4_stall")]
 position = Vector2(106, 4)
 kind = 2
+
+[node name="MarketSample" type="Sprite2D" parent="Stalls/SilkStall"]
+visible = false
+texture_filter = 1
+position = Vector2(45, 1)
+offset = Vector2(0, -11)
+texture = ExtResource("18_sample")
+
+[node name="DialogManager" type="Node" parent="."]
+script = ExtResource("19_dialog")
 
 [node name="OrderCart" parent="." instance=ExtResource("13_order_cart")]
 position = Vector2(-104, 77)
