@@ -14,6 +14,7 @@ const NIGHT_RATIONS_PANEL := preload("res://scenes/NightRationsPanel.tscn")
 @onready var dawn_caption: Label = $Control/Fader/DawnCaption
 @onready var directions = $Control/EstateDirections
 @onready var estate_map = $Control/EstateMap
+@onready var route_goals = $Control/RouteGoals
 @onready var calendar = $Control/SeasonCalendar
 @onready var autumn_exhibit_panel = $Control/AutumnExhibitPanel
 @onready var sheepfold_panel = $Control/SheepfoldPanel
@@ -50,6 +51,8 @@ func _ready() -> void:
 		directions.follow_ravine(Global.ravine_trip_target)
 	estate_map.setup(world, directions, _map_controls_blocked)
 	hud.map_button.pressed.connect(estate_map.open_map)
+	hud.route_progress.pressed.connect(_open_route_goals)
+	route_goals.action_requested.connect(_on_route_goal_action)
 	calendar.controls_blocked = _map_controls_blocked
 	hud.calendar_button.pressed.connect(calendar.open_map)
 	calendar.directions_requested.connect(_guide_calendar_event)
@@ -84,6 +87,7 @@ func _process(_delta: float) -> void:
 	world.player.meal_controls_blocked = blocked
 	hud.map_button.disabled = blocked or world.player.training_cart.visible or Global.outcome != Global.Outcome.RUNNING
 	hud.calendar_button.disabled = hud.map_button.disabled
+	hud.route_progress.disabled = hud.map_button.disabled
 	hud.raid_alert.disabled = blocked
 	directions.update_marker(blocked or Global.is_indoors())
 
@@ -99,6 +103,26 @@ func _estate_panel_open() -> bool:
 
 func _map_controls_blocked() -> bool:
 	return _estate_controls_blocked() or world.player.training_cart.visible
+
+func _open_route_goals() -> void:
+	if not _map_controls_blocked():
+		route_goals.open_map()
+
+func _on_route_goal_action(kind: Global.RouteGoal) -> void:
+	match kind:
+		Global.RouteGoal.TRIBUTE, Global.RouteGoal.TAXED_HARVEST:
+			estate_map.open_fields()
+		Global.RouteGoal.OFFER_SILK, Global.RouteGoal.SELL_SILK:
+			panel_manager.show_management_panel()
+			panel_manager.management_panel_instance.show_silk()
+		Global.RouteGoal.COPPER:
+			_show_market()
+		Global.RouteGoal.RAIDS:
+			if Global.raid_day > 0 or Global.is_raid_day(Global.current_day + 1):
+				_on_raid_alert_pressed()
+			else:
+				panel_manager.show_management_panel()
+				panel_manager.management_panel_instance.show_estate()
 
 func _connect_signals() -> void:
 	GameEvents.day_advanced.connect(update_ui.unbind(1))

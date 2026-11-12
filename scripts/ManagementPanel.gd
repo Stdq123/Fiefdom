@@ -20,6 +20,7 @@ const MAP_GRID_ITEM := preload("res://scripts/MapGridItem.gd")
 var season_order_panel: Control
 var neighbor_journal: Control
 var fish_ledger: Control
+var silk_panel: VBoxContainer
 
 var retainer_item_scene = preload("res://scenes/RetainerItem.tscn")
 var silk_panel_script = preload("res://scripts/SilkPanel.gd")
@@ -57,7 +58,7 @@ func _ready() -> void:
 	GameEvents.reputation_changed.connect(_refresh_rank_progress.unbind(1))
 	GameEvents.crop_harvested.connect(_refresh_rank_progress.unbind(1))
 	GameEvents.day_advanced.connect(_refresh_rank_progress.unbind(1))
-	var silk_panel := silk_panel_script.new() as VBoxContainer
+	silk_panel = silk_panel_script.new()
 	silk_panel.name = "蚕桑"
 	silk_panel.add_theme_constant_override("separation", 12)
 	$HBoxContainer/RightPanel.add_child(silk_panel)
@@ -81,6 +82,12 @@ func show_season_orders() -> void:
 
 func show_market() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(market_panel)
+
+func show_silk() -> void:
+	tabs.current_tab = tabs.get_tab_idx_from_control(silk_panel)
+
+func show_estate() -> void:
+	tabs.current_tab = tabs.get_tab_idx_from_control(map_grid_container.get_parent())
 
 func show_neighbors() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(neighbor_journal)

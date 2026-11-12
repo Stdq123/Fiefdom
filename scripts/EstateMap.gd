@@ -49,6 +49,11 @@ func setup(estate_world: Node2D, guide: Control, blocked: Callable) -> void:
 	chart.resized.connect(_layout_chart)
 	clear_button.pressed.connect(_clear_directions)
 
+func open_fields() -> void:
+	open_map()
+	if modal.visible:
+		_show_category(Category.FIELDS)
+
 func _map_available() -> bool:
 	return controls_blocked.is_valid() and not controls_blocked.call()
 

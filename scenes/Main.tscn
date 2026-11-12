@@ -41,6 +41,7 @@
 [ext_resource type="PackedScene" path="res://scenes/SheepfoldPen.tscn" id="38_sheep_pen"]
 [ext_resource type="PackedScene" path="res://scenes/SheepfoldPanel.tscn" id="39_sheep_ui"]
 [ext_resource type="PackedScene" path="res://scenes/WinterSupperTable.tscn" id="40_winter_supper"]
+[ext_resource type="PackedScene" path="res://scenes/RouteGoals.tscn" id="42_route_goals"]
 
 [sub_resource type="RectangleShape2D" id="Shape_east_gate"]
 size = Vector2(8, 20)
@@ -451,6 +452,8 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="EstateMap" parent="UI/Control" instance=ExtResource("22_map")]
+
+[node name="RouteGoals" parent="UI/Control" instance=ExtResource("42_route_goals")]
 
 [node name="SeasonCalendar" parent="UI/Control" instance=ExtResource("31_calendar")]
 

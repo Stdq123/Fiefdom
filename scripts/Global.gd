@@ -160,6 +160,8 @@ enum TaxReformChoice {
 	REFORMED,       # 支持改革（法家路线）
 	TRADITIONAL     # 坚守传统（儒家路线）
 }
+enum RouteGoal { TRIBUTE, TAXED_HARVEST, OFFER_SILK, SELL_SILK, COPPER, RAIDS }
+
 var tax_reform_choice: TaxReformChoice = TaxReformChoice.NONE
 var tax_reform_year: int = 0  # 改革发生的年份
 var tax_reform_day: int = 0
@@ -991,18 +993,22 @@ func route_objectives(choice := TaxReformChoice.NONE) -> Array[Dictionary]:
 	match choice:
 		TaxReformChoice.TRADITIONAL:
 			goals = [
-				{"label": "新增公田纳贡", "value": king_storage - baseline.get("tribute", king_storage), "target": balance.ending_traditional_tribute},
-				{"label": "进献丝绸", "value": silk_bolts_offered - baseline.get("offered", silk_bolts_offered), "target": balance.ending_silk_target}
+				{"kind": RouteGoal.TRIBUTE, "label": "新增公田纳贡",
+					"value": king_storage - baseline.get("tribute", king_storage), "target": balance.ending_traditional_tribute},
+				{"kind": RouteGoal.OFFER_SILK, "label": "进献丝绸",
+					"value": silk_bolts_offered - baseline.get("offered", silk_bolts_offered), "target": balance.ending_silk_target}
 			]
 		TaxReformChoice.REFORMED:
 			goals = [
-				{"label": "新增计税收成", "value": private_harvest_total - baseline.get("private", private_harvest_total), "target": balance.ending_reformed_private},
-				{"label": "售出丝绸", "value": silk_bolts_sold - baseline.get("sold", silk_bolts_sold), "target": balance.ending_silk_target},
-				{"label": "现有铜钱", "value": money, "target": balance.ending_reformed_wealth}
+				{"kind": RouteGoal.TAXED_HARVEST, "label": "新增计税收成",
+					"value": private_harvest_total - baseline.get("private", private_harvest_total), "target": balance.ending_reformed_private},
+				{"kind": RouteGoal.SELL_SILK, "label": "售出丝绸",
+					"value": silk_bolts_sold - baseline.get("sold", silk_bolts_sold), "target": balance.ending_silk_target},
+				{"kind": RouteGoal.COPPER, "label": "现有铜钱", "value": money, "target": balance.ending_reformed_wealth}
 			]
 		_:
 			return goals
-	goals.append({"label": "击退敌袭", "value": raids_defeated, "target": balance.ending_raids_min})
+	goals.append({"kind": RouteGoal.RAIDS, "label": "击退敌袭", "value": raids_defeated, "target": balance.ending_raids_min})
 	return goals
 
 func restore_stamina() -> void:
@@ -1071,6 +1077,8 @@ func _capture_ending(result: Outcome) -> Dictionary:
 			{"label": "铜钱", "value": money},
 			{"label": "击退敌袭", "value": raids_defeated}
 		]
+	for account in accounts:
+		account.erase("kind")
 	return {
 		"outcome": result,
 		"date": "第 %d 年 · %s   第 %d 天 · %s" % [

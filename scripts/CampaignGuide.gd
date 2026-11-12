@@ -5,6 +5,7 @@ enum OpeningCue { NONE, PLOT, SEED, SLEEP }
 const ESTATE_WORLD := preload("res://scripts/World.gd")
 
 @onready var heading: Label = %GuideHeading
+@onready var route_progress: Button = %RouteProgress
 
 var world: ESTATE_WORLD
 var opening_cue := OpeningCue.NONE
@@ -33,6 +34,7 @@ func _ready() -> void:
 	GameEvents.tax_reform_choice_made.connect(refresh.unbind(1))
 	GameEvents.silk_changed.connect(refresh)
 	GameEvents.raid_defeated.connect(refresh)
+	GameEvents.campaign_ended.connect(refresh.unbind(1))
 	GameEvents.field_rotation_changed.connect(refresh)
 
 func setup(estate_world: ESTATE_WORLD) -> void:
@@ -46,20 +48,25 @@ func refresh() -> void:
 	waiting_for_tribute_crop = false
 	if not world or Global.well_fields.is_empty():
 		return
+	var goals := Global.route_objectives()
+	route_progress.visible = (not goals.is_empty() and Global.outcome == Global.Outcome.RUNNING
+		and Global.ending_record.is_empty())
 	var record_stand := world.get_node("Scenery/EndingRecord")
 	if record_stand.visible:
 		var route := "守礼安邦" if Global.ending_record["outcome"] == Global.Outcome.TRADITIONAL else "税亩富民"
 		_describe(route + " · 已通关", "到%s翻看%s。" % [record_stand.place_name, record_stand.record_name])
 		return
-	var goals := Global.route_objectives()
 	if Global.tax_council_waiting():
 		_describe("初税亩 · 召简来访", "使者在堂前候议。请在过夜前定案。")
-	elif not goals.is_empty():
+	elif route_progress.visible:
 		var route := "守礼安邦" if Global.tax_reform_choice == Global.TaxReformChoice.TRADITIONAL else "税亩富民"
-		var progress := PackedStringArray()
-		for goal in goals:
-			progress.append("%s %d/%d" % [goal["label"], mini(goal["value"], goal["target"]), goal["target"]])
-		_describe(route, " · ".join(progress))
+		var pending := goals.filter(func(goal: Dictionary) -> bool: return goal.value < goal.target)
+		var next := "已达成全部目标"
+		if not pending.is_empty():
+			var goal: Dictionary = pending.front()
+			next = "%s %d/%d" % [goal.label, goal.value, goal.target]
+		_describe(route, next)
+		route_progress.text = "结局目标 · %d/%d 项" % [goals.size() - pending.size(), goals.size()]
 	elif Global.tax_reform_choice == Global.TaxReformChoice.DELAYED:
 		_describe("暂缓议税 · 还剩 %d 天" % Global.research_days_remaining(),
 			"%d 天后缴 %d 铜钱研究费。经费不足时须抉择。" % [

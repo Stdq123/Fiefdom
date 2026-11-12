@@ -1,0 +1,90 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/RouteGoals.gd" id="1_goals"]
+
+[sub_resource type="StyleBoxFlat" id="Style_ledger"]
+content_margin_left = 22.0
+content_margin_top = 19.0
+content_margin_right = 22.0
+content_margin_bottom = 22.0
+bg_color = Color(0.101, 0.15, 0.125, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.64, 0.54, 0.36, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_left = 6
+corner_radius_bottom_right = 6
+shadow_color = Color(0, 0, 0, 0.32)
+shadow_size = 8
+
+[node name="RouteGoals" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("1_goals")
+toggle_action = &""
+
+[node name="MapModal" type="ColorRect" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.048, 0.065, 0.054, 0.72)
+
+[node name="Center" type="CenterContainer" parent="MapModal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Ledger" type="PanelContainer" parent="MapModal/Center"]
+custom_minimum_size = Vector2(922, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("Style_ledger")
+
+[node name="Stack" type="VBoxContainer" parent="MapModal/Center/Ledger"]
+layout_mode = 2
+theme_override_constants/separation = 13
+
+[node name="Header" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="TitleBlock" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 3
+
+[node name="RouteTitle" type="Label" parent="MapModal/Center/Ledger/Stack/Header/TitleBlock"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.83, 0.59, 1)
+theme_override_font_sizes/font_size = 29
+
+[node name="RouteSummary" type="Label" parent="MapModal/Center/Ledger/Stack/Header/TitleBlock"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.82, 0.7, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="CloseMap" type="Button" parent="MapModal/Center/Ledger/Stack/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 37)
+layout_mode = 2
+size_flags_vertical = 0
+mouse_default_cursor_shape = 2
+text = "返回  Esc"
+
+[node name="GoalRows" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8

@@ -15,6 +15,7 @@ extends Control
 @onready var quest_label: Label = %QuestLabel
 @onready var visitor_label: Label = %VisitorLabel
 @onready var opening_action: Button = %OpeningAction
+@onready var route_progress: Button = %RouteProgress
 @onready var neighbors_button: Button = %NeighborsButton
 @onready var raid_alert: Button = %RaidAlert
 @onready var stamina_label: Label = %StaminaLabel
