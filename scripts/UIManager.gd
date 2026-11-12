@@ -245,6 +245,7 @@ func _connect_signals() -> void:
 	hud.opening_action.pressed.connect(_on_opening_action)
 	sleep_button.pressed.connect(_on_sleep_pressed)
 	hud.rations_button.pressed.connect(_show_night_rations)
+	hud.morning_button.pressed.connect(_show_night_rations.bind(true))
 	hud.raid_alert.pressed.connect(_on_raid_alert_pressed)
 	manage_button.pressed.connect(_on_manage_pressed)
 	hud.neighbors_button.pressed.connect(_on_neighbors_pressed)
@@ -488,19 +489,21 @@ func _on_raid_alert_pressed() -> void:
 	else:
 		_show_night_rations()
 
-func _show_night_rations() -> void:
+func _show_night_rations(show_previous := false) -> void:
 	if Global.outcome != Global.Outcome.RUNNING or world.player.conversation_open or (sleep_tween and sleep_tween.is_running()):
 		return
 	world.set_channel_mode(false)
 	panel_manager.hide_settings_panel()
 	var panel := NIGHT_RATIONS_PANEL.instantiate()
+	panel.show_previous = show_previous
 	var player: Player = world.player
 	player.conversation_open = true
 	$Control.add_child(panel)
 	GameEvents.modal_visibility_changed.emit(true)
 	panel.market_requested.connect(_show_market)
 	panel.duties_requested.connect(panel_manager.show_management_panel)
-	panel.dry_plot_requested.connect(_on_dry_plot_requested.bind(panel))
+	panel.dry_plot_requested.connect(_on_night_plot_requested.bind(panel, Global.NightGrowth.DRY))
+	panel.harvest_requested.connect(_on_night_plot_requested.bind(panel, Global.NightGrowth.READY))
 	panel.sleep_requested.connect(func():
 		panel_manager.hide_management_panel()
 		_on_sleep_pressed()
@@ -511,12 +514,13 @@ func _show_night_rations() -> void:
 			player.conversation_open = false
 	)
 
-func _on_dry_plot_requested(panel: Control) -> void:
-	if directions.follow_field_route(Global.NightGrowth.DRY):
+func _on_night_plot_requested(panel: Control, status: Global.NightGrowth) -> void:
+	if directions.follow_field_route(status):
 		panel_manager.hide_management_panel()
 		panel.queue_free()
 		if Global.is_indoors():
-			hud.practice_label.text = "已标出待浇田 · 从南门回田边"
+			var plot := "可收田" if status == Global.NightGrowth.READY else "待浇田"
+			hud.practice_label.text = "已标出%s · 从南门回田边" % plot
 
 func _guide_driving_practice() -> void:
 	if world.player.training_cart.visible:
@@ -697,48 +701,33 @@ func _on_sleep_pressed() -> void:
 		if Global.outcome != Global.Outcome.RUNNING:
 			_clear_fader()
 			return
+		var previous_rank := Global.current_rank
 		var research_fee := Global.research_fee_due(Global.current_day + 1)
 		Global.begin_next_day()
 		Global.restore_stamina()
 		if Global.outcome != Global.Outcome.RUNNING:
 			_clear_fader()
 			return
-		var promoted := Global.check_rank_up()
+		Global.check_rank_up()
 		var unfinished := Global.well_fields.filter(func(field: Dictionary) -> bool: return not field["is_unlocked"])
 		GameEvents.day_advanced.emit(Global.current_day)
-		Global.save_automatically("dawn")
-		dawn_caption.text = "第 %d 天 · %s · %s" % [Global.current_day, Global.get_current_solar_term(), Global.day_watch_label()]
-		if Global.raid_day == Global.current_day:
-			dawn_caption.text += "\n东路来敌 · " + Global.raid_name(Global.raid_kind)
-		if promoted:
-			dawn_caption.text += "\n晋升%s · 井田上限 %d 块 · 堂屋添了新衣" % [Global.rank_names[Global.current_rank], Global.max_well_fields]
-		var completed := PackedStringArray()
+		var completed: Array[int] = []
 		for field in unfinished:
 			if field["is_unlocked"]:
-				completed.append(str(field["field_id"] + 1))
-		if not completed.is_empty():
-			dawn_caption.text += "\n井田 %s 已完工 · 可耕种" % "、".join(completed)
+				completed.append(field["field_id"] + 1)
+		Global.record_dawn(previous_rank, completed, research_fee)
+		hud.refresh_morning_record()
+		Global.save_automatically("dawn")
+		dawn_caption.text = "第 %d 天 · %s · %s" % [Global.current_day, Global.get_current_solar_term(), Global.day_watch_label()]
+		var milestones := Global.dawn_milestones()
 		var fields := Global.last_field_night
 		var newly_ripe: int = fields.public_ripe + fields.private_ripe
-		if newly_ripe > 0:
+		if Global.raid_day == Global.current_day:
+			dawn_caption.text += "\n东路来敌 · " + Global.raid_name(Global.raid_kind)
+		elif not milestones.is_empty():
+			dawn_caption.text += "\n" + milestones[0]
+		elif newly_ripe > 0:
 			dawn_caption.text += "\n新熟 %d 格" % newly_ripe
-		var meal := Global.night_rations.last
-		var prepared := NightRations.stock_count(meal.used) + int(meal.bought)
-		var purchase := " · 用 %d 铜钱" % meal.copper if meal.copper > 0 else ""
-		if meal.served < meal.need:
-			dawn_caption.text += "\n昨夜用粮 %d/%d 份" % [meal.served, meal.need]
-			if prepared > 0:
-				dawn_caption.text += " · 备粮 %d 份%s" % [prepared, purchase]
-			var departed: PackedStringArray = meal.get("departed", PackedStringArray())
-			if not departed.is_empty():
-				dawn_caption.text += "\n已离任 · " + "、".join(departed)
-		elif prepared > 0:
-			dawn_caption.text += "\n昨夜备粮 %d 份%s" % [prepared, purchase]
-		if research_fee > 0:
-			dawn_caption.text += ("\n研究经费还差 %d 铜钱" % (research_fee - Global.money) if Global.research_choice_pending
-				else "\n研究经费已缴 %d 铜钱" % research_fee)
-		if meal.has("supper"):
-			dawn_caption.text += "\n围炉供饭 %d 份" % meal.supper
 		dawn_caption.modulate.a = 1.0
 		dawn_caption.show()
 	)

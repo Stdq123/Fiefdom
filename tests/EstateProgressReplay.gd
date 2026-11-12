@@ -285,7 +285,8 @@ func _night() -> void:
 	await _button(ui.sleep_button)
 	await tree.create_timer(0.56).timeout
 	var caption: String = ui.dawn_caption.text
-	if promoted_day == 0 and rank < state.current_rank:
+	var promoted: bool = promoted_day == 0 and rank < state.current_rank
+	if promoted:
 		promoted_day = state.current_day
 		_expect("晋升中士" in caption and "井田上限 2 块" in caption, "Dawn presents the earned rank and the new allowance.")
 		print("ESTATE_PROGRESS_PROMOTION day=", promoted_day, " tribute=", state.king_storage, " reputation=", state.reputation)
@@ -293,6 +294,13 @@ func _night() -> void:
 	await tree.create_timer(0.54).timeout
 	_expect(state.current_day == yesterday + 1 and state.night_rations.last.served == state.night_rations.last.need,
 		"Ordinary sleep advances one day and the prepared ration feeds the household.")
+	if promoted:
+		_expect("晋升中士" in ui.hud.morning_button.text, "The calendar signals a new rank.")
+		await _button(ui.hud.morning_button)
+		var record: Control = ui.get_node_or_null("Control/NightRationsPanel")
+		if _expect(record != null and "晋升中士" in record.milestones.text and "井田上限 2 块" in record.milestones.text,
+			"The new title and field allowance remain readable after the fade."):
+			await _button(record.close_button)
 
 func _check_shortage() -> void:
 	var sheet := await _open_survey()
@@ -353,6 +361,12 @@ func _complete_expansion() -> void:
 	var tiles: TileMapLayer = world.tile_map
 	_expect(state.current_day == day and state.get_well_field(1).is_unlocked
 		and tiles.get_cell_tile_data(EXPANSION).get_custom_data("is_public_field"), "The dawn checkpoint restores the finished field.")
+	_expect("井田完工" in ui.hud.morning_button.text, "The calendar signals the opened field after Continue.")
+	await _button(ui.hud.morning_button)
+	var record: Control = ui.get_node_or_null("Control/NightRationsPanel")
+	if not _expect(record != null and "井田 2 已完工" in record.milestones.text, "The finished field stays in the morning record after Continue."):
+		return
+	await _button(record.close_button)
 	_key(KEY_1)
 	await _tend(EXPANSION)
 	_expect(state.active_crops.has(EXPANSION), "The completed field can be cultivated after reloading.")

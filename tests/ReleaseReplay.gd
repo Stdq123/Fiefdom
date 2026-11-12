@@ -133,6 +133,9 @@ func _run() -> void:
 			replay.legacy = arguments[0] == "field-routes-legacy"
 			replay.capture_path = capture_directory
 			await replay.run(tree)
+		"field-nights":
+			var replay = load("res://tests/FieldNightReplay.gd").new()
+			await replay.run(tree, capture_directory)
 		"pavilion-evening", "pavilion-evening-legacy":
 			var replay = load("res://tests/PavilionEveningReplay.gd").new()
 			replay.legacy = arguments[0] == "pavilion-evening-legacy"

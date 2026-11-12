@@ -40,6 +40,12 @@ func _prepare() -> Control:
 		and state.current_day == 50 and state.money == 105, "Use the ordinary night budget the day before the research fee.")
 	return panel
 
+func _review_night() -> Control:
+	await _click(ui.hud.morning_button)
+	var panel := ui.get_node_or_null("Control/NightRationsPanel") as Control
+	_expect(panel != null and panel.show_previous, "Open the previous night directly from the calendar.")
+	return panel
+
 func _old_night(panel: Control) -> void:
 	_expect("15 铜钱" in panel.forecast.text, "The previous program quotes the entire household meal.")
 	await _capture("01-old-meal-quote")
@@ -88,13 +94,18 @@ func _new_night(panel: Control) -> void:
 		and state.food_storage == 0 and state.retainers.size() == 1 and state.retainers[0].name == "季青"
 		and state.reputation == reputation + state.balance.confucian_teaching_reputation,
 		"Pay the installment once and feed the selected teacher with exactly the forecast trade.")
-	_expect("研究经费已缴 100" in ui.dawn_caption.text and "备粮 2 份" in ui.dawn_caption.text,
-		"The dawn receipt shows both debits even though someone missed dinner.")
 	print("RESEARCH_RATIONS_SETTLED day=", state.current_day, " money=", state.money, " remaining=", state.research_days_remaining(),
 		" served=", last.served, "/", last.need, " purchase=", last.copper, " priority=", state.retainers[0].name)
 	await _continue()
 	_expect(state.current_day == 51 and state.money == 0 and state.night_rations.last == last
 		and state.night_rations.partial_meals, "The morning checkpoint restores the receipts without charging again.")
+	var record := await _review_night()
+	if record == null:
+		return
+	_expect("研究经费已缴 100 铜钱" in record.milestones.text and "购粮 1 份（5 铜钱）" in record.receipt.text
+		and "已离任 · 石墨" in record.receipt.text, "The saved record shows the research debit, bought ration, and departure together.")
+	await _capture("03a-research-and-ration-record")
+	await _click(record.close_button)
 
 func _check_whole_portions() -> void:
 	var world: Node2D = tree.current_scene.get_node("World")
@@ -129,8 +140,14 @@ func _check_whole_portions() -> void:
 	panel = await _open()
 	_expect("还差 %d" % gap in panel.get_node("%ResearchFee").text, "Show the gap when the next installment is genuinely underfunded.")
 	await _overnight(panel)
-	_expect(state.current_day == 53 and state.research_choice_pending and "研究经费还差 %d" % gap in ui.dawn_caption.text,
+	_expect(state.current_day == 53 and state.research_choice_pending and "研究经费未缴 · 缺 %d" % gap in ui.dawn_caption.text,
 		"An unpaid installment still returns the envoy for a decision.")
+	var record := await _review_night()
+	if record == null:
+		return
+	_expect("研究经费未缴 · 缺 %d 铜钱" % gap in record.milestones.text and "召简回堂前催议" in record.milestones.text,
+		"The result preserves the exact shortfall and why the envoy returned.")
+	await _click(record.close_button)
 	print("RESEARCH_RATIONS_UNFUNDED day=", state.current_day, " gap=", gap, " forced_choice=", state.research_choice_pending)
 
 func run_research_rations(game_tree: SceneTree, baseline := false, captures := "") -> void:

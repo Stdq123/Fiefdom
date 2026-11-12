@@ -3,6 +3,7 @@ extends Control
 signal market_requested
 signal duties_requested
 signal dry_plot_requested
+signal harvest_requested
 signal sleep_requested
 
 const GOOD := Color("#c7dcaf")
@@ -33,9 +34,17 @@ const SHORT := Color("#efbf8a")
 @onready var receipt: Label = %Receipt
 @onready var field_receipt: Label = %FieldReceipt
 @onready var silk_receipt: Label = %SilkReceipt
+@onready var milestones: Label = %Milestones
+@onready var find_harvest: Button = %FindHarvest
+@onready var title: Label = %Title
+@onready var page_button: Button = %PageButton
+@onready var plan_body: VBoxContainer = %Plan
+@onready var footer: HBoxContainer = %Footer
 @onready var close_button: Button = %Close
 @onready var scroll: ScrollContainer = %Scroll
 @onready var body: VBoxContainer = %Body
+
+var show_previous := false
 
 func _ready() -> void:
 	budget.max_value = NightRations.MAX_COPPER_LIMIT
@@ -48,6 +57,8 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_fit_body)
 	close_button.pressed.connect(queue_free)
 	find_plot.pressed.connect(dry_plot_requested.emit)
+	find_harvest.pressed.connect(harvest_requested.emit)
+	page_button.pressed.connect(func(): _show_page(not show_previous))
 	%Market.pressed.connect(func():
 		queue_free()
 		market_requested.emit()
@@ -76,8 +87,18 @@ func _ready() -> void:
 	GameEvents.raid_started.connect(_refresh_raid_plan)
 	GameEvents.raid_defeated.connect(_refresh_raid_plan)
 	_refresh()
-	_fit_body.call_deferred()
+	_show_page(show_previous)
 	close_button.grab_focus()
+
+func _show_page(previous: bool) -> void:
+	show_previous = previous
+	title.text = "昨夜结算" if previous else "今夜安排"
+	page_button.text = "今夜安排" if previous else "昨夜结算"
+	plan_body.visible = not previous
+	footer.visible = not previous
+	_refresh_fields()
+	scroll.set_deferred("scroll_vertical", 0)
+	_fit_body.call_deferred()
 
 func _fit_body() -> void:
 	var height := get_viewport_rect().size.y - 160.0
@@ -162,7 +183,10 @@ func _refresh() -> void:
 	var last_silk := Global.silk_workshop.last_work_summary()
 	silk_receipt.visible = not last_silk.is_empty()
 	silk_receipt.text = "昨夜蚕棚 · " + last_silk
-	last_card.visible = receipt.visible or field_receipt.visible or silk_receipt.visible
+	milestones.text = "\n".join(Global.dawn_milestones())
+	milestones.visible = not milestones.text.is_empty()
+	last_card.visible = receipt.visible or field_receipt.visible or silk_receipt.visible or milestones.visible
+	page_button.visible = last_card.visible
 
 func _refresh_meal(plan: Dictionary) -> void:
 	var short: bool = not plan.missed.is_empty()
@@ -244,6 +268,7 @@ func _refresh_fields() -> void:
 	field_warning.text = " · ".join(warnings)
 	field_warning.visible = not warnings.is_empty()
 	find_plot.visible = report.dry > 0
+	find_harvest.visible = show_previous and report.ready > 0
 
 func _refresh_field_receipt() -> void:
 	var report := Global.last_field_night

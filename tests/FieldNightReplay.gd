@@ -9,6 +9,7 @@ var state: Node
 var world: Node
 var ui: Node
 var failures := 0
+var capture_dir := ""
 
 func _expect(condition: bool, detail: String) -> bool:
 	if not condition:
@@ -53,6 +54,17 @@ func _open_plan() -> Control:
 	await tree.process_frame
 	return ui.get_node_or_null("Control/NightRationsPanel") as Control
 
+func _open_previous_night() -> Control:
+	await _button(ui.hud.morning_button)
+	return ui.get_node_or_null("Control/NightRationsPanel") as Control
+
+func _capture(name: String) -> void:
+	if capture_dir.is_empty():
+		return
+	await RenderingServer.frame_post_draw
+	var image := tree.root.get_texture().get_image()
+	_expect(image.save_png(capture_dir.path_join(name + ".png")) == OK, "Save the rendered morning frame " + name)
+
 func _sleep() -> String:
 	await _button(ui.sleep_button)
 	await tree.create_timer(0.60).timeout
@@ -85,13 +97,16 @@ func _first_night() -> bool:
 	_expect(state.current_day == 2 and state.active_crops[PUBLIC].age == 0 and state.active_crops[EARLY_PRIVATE].age == 1
 		and state.active_crops[LATE_PRIVATE].age == 0 and state.food_storage == 9 and world.current_visitor().name == VisitorData.ROAD_KEEPER,
 		"The first night advances only the wet crop, serves one ration, and brings Ji Qing to the estate.")
-	plan = await _open_plan()
-	if not _expect(plan != null, "Reopen the plan after the first night."):
+	plan = await _open_previous_night()
+	if not _expect(plan != null and plan.show_previous and not plan.find_harvest.visible, "Open the first night's record while no crops are ripe."):
 		return false
 	_expect("第 1 夜田务" in plan.field_receipt.text and "2 格漏浇停长" in plan.field_receipt.text
 		and "1 格长了一阶" in plan.field_receipt.text and "用粮 1/1" in plan.receipt.text,
 		"The crop and meal entries describe the same night.")
 	print("FIELD_NIGHT_MISSED ", plan.field_receipt.text)
+	await _button(plan.page_button)
+	_expect(not plan.show_previous and plan.plan_body.visible and plan.footer.visible,
+		"Tonight's forecast stays one click away from the record.")
 	await _button(plan.close_button)
 	return true
 
@@ -122,6 +137,7 @@ func _tend_and_harvest() -> bool:
 		return false
 	_expect("已有 1 格可收" in plan.field_forecast.text and "公田 1 格、私田 1 格" in plan.field_forecast.text
 		and not plan.find_plot.visible, "An existing ripe crop stays separate from the forecast of newly mature public and private crops.")
+	var original_size := tree.root.size
 	for resolution in [Vector2i(1280, 720), Vector2i(1024, 768)]:
 		tree.root.size = resolution
 		await tree.process_frame
@@ -131,11 +147,16 @@ func _tend_and_harvest() -> bool:
 			and panel.get_global_rect().encloses(plan.field_receipt.get_global_rect()),
 			"The plan and previous night's field receipt fit at %s." % resolution)
 		print("FIELD_NIGHT_LAYOUT window=", tree.root.size, " plan=", panel.size)
+	tree.root.size = original_size
 	await _button(plan.close_button)
 	var caption := await _sleep()
 	_expect(state.current_day == 4 and "新熟 2 格" in caption and state.last_field_night.public_ripe == 1
 		and state.last_field_night.private_ripe == 1 and state.last_field_night.ready == 1 and state.food_storage == 7,
 		"Dawn counts only the two crops newly ready, while food still settles each night.")
+	await tree.create_timer(0.65).timeout
+	_expect(not ui.dawn_caption.visible and ui.hud.morning_button.visible and "新熟 2 格" in ui.hud.morning_button.text,
+		"The farm HUD retains the new crop count after the dawn fade clears.")
+	await _capture("01-morning-hud")
 	var last_fields: Dictionary = state.last_field_night.duplicate()
 	tree.change_scene_to_file(state.TITLE_SCENE)
 	await tree.scene_changed
@@ -143,17 +164,33 @@ func _tend_and_harvest() -> bool:
 	await tree.scene_changed
 	await _use_estate()
 	world.retainer_instances[state.retainers.front()].set_physics_process(false)
-	plan = await _open_plan()
-	if not _expect(plan != null and state.last_field_night == last_fields, "Continue restores the morning checkpoint's field receipt."):
+	plan = await _open_previous_night()
+	if not _expect(plan != null and plan.show_previous and state.last_field_night == last_fields,
+		"Continue restores a direct route to the morning checkpoint's receipt."):
 		return false
 	_expect("新熟 公田 1 格、私田 1 格" in plan.field_receipt.text and "第 3 夜" in plan.receipt.text,
-		"The saved record remains readable alongside the meal.")
+		"The saved record opens with field and meal results together.")
+	var panel: Control = plan.get_node("Center/Window")
+	_expect(plan.find_harvest.visible and not plan.plan_body.visible and not plan.footer.visible
+		and panel.get_global_rect().encloses(plan.find_harvest.get_global_rect())
+		and tree.root.get_visible_rect().encloses(panel.get_global_rect()), "The morning page fits and can lead directly to harvest.")
 	print("FIELD_NIGHT_CONTINUE ", plan.field_receipt.text, " / ", plan.receipt.text)
-	await _button(plan.close_button)
+	await _capture("02-last-night-record")
+	await _button(plan.find_harvest)
+	_expect(ui.get_node_or_null("Control/NightRationsPanel") == null and ui.directions.tracked_plot == PUBLIC,
+		"The record closes and guides the player to the ripe public plot.")
+	await _capture("03-harvest-route")
 	await _plot(PUBLIC)
 	await _plot(LATE_PRIVATE)
 	_expect(state.king_storage == 1 and state.player_inventory == 1 and state.money == ItemManager.get_crop("millet").sell_price,
 		"The two harvests credit the treasury, private stores, and copper once each.")
+	await _plot(EARLY_PRIVATE)
+	plan = await _open_previous_night()
+	if not _expect(plan != null and not plan.find_harvest.visible and ui.directions.tracked_plot == null,
+		"Collecting all ripe crops clears the route and leaves the historical receipt readable."):
+		return false
+	await _button(plan.close_button)
+	print("MORNING_HARVEST day=", state.current_day, " public=", state.king_storage, " private=", state.player_inventory)
 	return true
 
 func _rain_and_rice() -> void:
@@ -173,7 +210,8 @@ func _rain_and_rice() -> void:
 	await tree.scene_changed
 	await _use_estate()
 	var plan := await _open_plan()
-	if not _expect(plan != null and state.last_field_night.is_empty(), "The legacy save opens without a fabricated previous night."):
+	if not _expect(plan != null and state.last_field_night.is_empty() and not ui.hud.morning_button.visible,
+		"The legacy save opens without a fabricated previous night."):
 		return
 	_expect(state.has_rain() and "公田 0 格、私田 1 格" in plan.field_forecast.text and "1 格稻田断水" in plan.field_warning.text
 		and not plan.find_plot.visible and not plan.field_receipt.visible,
@@ -188,13 +226,15 @@ func _rain_and_rice() -> void:
 		print("FIELD_NIGHT_RAIN ", plan.field_receipt.text)
 		await _button(plan.close_button)
 
-func run(game_tree: SceneTree) -> void:
+func run(game_tree: SceneTree, capture := "") -> void:
 	tree = game_tree
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Isolate the nightly field replay's profile."):
 		tree.quit(1)
 		return
 	seed(213)
-	tree.root.size = Vector2i(1280, 720)
+	capture_dir = capture
+	if capture_dir.is_empty():
+		tree.root.size = Vector2i(1280, 720)
 	tree.root.notify_mouse_entered()
 	state = tree.root.get_node("Global")
 	tree.change_scene_to_file(state.TITLE_SCENE)

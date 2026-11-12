@@ -49,6 +49,7 @@ var selected_seed_id: String = CropData.IDS[0]
 var crop_stock := CropStock.new()
 var night_rations := NightRations.new()
 var last_field_night: Dictionary = {}
+var last_dawn: Dictionary = {}
 var away_field_report: Dictionary = {}
 var _away_work_elapsed: Dictionary[RetainerData, float] = {}
 var player_inventory: int:
@@ -228,6 +229,7 @@ func _reset_campaign() -> void:
 	crop_stock = CropStock.new()
 	night_rations = NightRations.new()
 	last_field_night.clear()
+	last_dawn.clear()
 	away_field_report.clear()
 	_away_work_elapsed.clear()
 	season_order_receipts.clear()
@@ -543,6 +545,7 @@ func is_indoors() -> bool:
 func begin_next_day() -> void:
 	current_day += 1
 	day_progress = 0.0
+	last_dawn.clear()
 	field_route_status = -1
 	field_route_public_only = false
 	away_field_report.clear()
@@ -551,6 +554,39 @@ func begin_next_day() -> void:
 		sheepfold.settle_night(sheep_feed(sheepfold.fodder, current_day - 1), balance.sheep_wool_nights)
 		GameEvents.sheepfold_changed.emit()
 	GameEvents.daylight_changed.emit()
+
+func record_dawn(previous_rank: Rank, completed_fields: Array[int], research_fee: int) -> void:
+	last_dawn = {
+		"day": current_day - 1,
+		"rank_change": int(current_rank) - int(previous_rank),
+		"completed_fields": completed_fields,
+		"research_paid": research_fee if not research_choice_pending else 0,
+		"research_gap": maxi(0, research_fee - money) if research_choice_pending else 0,
+	}
+
+func has_morning_record() -> bool:
+	return not last_dawn.is_empty() or not last_field_night.is_empty() or not night_rations.last.is_empty()
+
+func dawn_milestones() -> PackedStringArray:
+	var lines := PackedStringArray()
+	var rank_change: int = last_dawn.get("rank_change", 0)
+	if rank_change > 0:
+		lines.append("晋升%s · 井田上限 %d 块 · 堂屋添了新衣" % [rank_names[current_rank], max_well_fields])
+	elif rank_change < 0:
+		lines.append("削爵至%s · 井田上限 %d 块" % [rank_names[current_rank], max_well_fields])
+	var completed: Array = last_dawn.get("completed_fields", [])
+	if not completed.is_empty():
+		var numbers := PackedStringArray()
+		for number: int in completed:
+			numbers.append(str(number))
+		lines.append("井田 %s 已完工 · 可耕种" % "、".join(numbers))
+	var research_paid: int = last_dawn.get("research_paid", 0)
+	var research_gap: int = last_dawn.get("research_gap", 0)
+	if research_paid > 0:
+		lines.append("研究经费已缴 %d 铜钱" % research_paid)
+	elif research_gap > 0:
+		lines.append("研究经费未缴 · 缺 %d 铜钱 · 召简回堂前催议" % research_gap)
+	return lines
 
 func solar_term_index(day := 0) -> int:
 	var date := day if day > 0 else current_day
@@ -2289,6 +2325,7 @@ func _save_snapshot(origin: String) -> Error:
 			"last": night_rations.last,
 		},
 		"last_field_night": last_field_night,
+		"last_dawn": last_dawn,
 		"away_field_report": away_field_report,
 		"reputation": reputation,
 		"days_without_contribution": days_without_contribution,
@@ -2771,6 +2808,7 @@ func load_game(path := "") -> Error:
 	tilled_cells = restored_soil
 	fertile_cells = restored_fertility
 	well_fields = restored_fields
+	last_dawn = _restore_dawn(data.get("last_dawn"), saved_day)
 	irrigation.restore(water_source, restored_channels)
 	first_channel_growth_day = clampi(_read_save_int(data.get("first_channel_growth_day"), 0), 0, saved_day)
 	var saved_survey := _read_save_int(data.get("channel_survey_day"), 0)
@@ -2883,6 +2921,24 @@ func _restore_field_night(record: Variant, saved_day: int) -> Dictionary:
 	for key in FIELD_NIGHT_COUNTS:
 		report[key] = maxi(0, _read_save_int(record.get(key), 0))
 	return report
+
+func _restore_dawn(record: Variant, saved_day: int) -> Dictionary:
+	if not record is Dictionary or saved_day <= 1 or _read_save_int(record.get("day"), 0) != saved_day - 1:
+		return {}
+	var completed: Array[int] = []
+	var numbers: Variant = record.get("completed_fields")
+	if numbers is Array:
+		for value in numbers:
+			var number := _read_save_int(value, 0)
+			if number > 1 and number <= well_fields.size() and well_fields[number - 1]["is_unlocked"]:
+				completed.append(number)
+	return {
+		"day": saved_day - 1,
+		"rank_change": clampi(_read_save_int(record.get("rank_change"), 0), -1, 1),
+		"completed_fields": completed,
+		"research_paid": maxi(0, _read_save_int(record.get("research_paid"), 0)),
+		"research_gap": maxi(0, _read_save_int(record.get("research_gap"), 0)),
+	}
 
 func _restore_away_field_report(record: Variant, saved_day: int) -> Dictionary:
 	if not record is Dictionary or _read_save_int(record.get("day"), 0) != saved_day:

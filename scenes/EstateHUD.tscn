@@ -419,6 +419,16 @@ theme_override_colors/font_color = Color(0.7882, 0.8118, 0.6863, 1)
 size_flags_horizontal = 3
 horizontal_alignment = 2
 
+[node name="MorningButton" type="Button" parent="Calendar/Stack"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 29)
+layout_mode = 2
+size_flags_horizontal = 8
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 14
+text = "昨夜结算"
+
 [node name="SaveNotice" type="Label" parent="Calendar/Stack"]
 unique_name_in_owner = true
 visible = false

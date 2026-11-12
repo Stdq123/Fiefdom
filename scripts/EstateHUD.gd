@@ -48,6 +48,7 @@ extends Control
 @onready var worksite_button: Button = %WorksiteButton
 @onready var cancel_directions: Button = %CancelDirections
 @onready var save_notice: Label = %SaveNotice
+@onready var morning_button: Button = %MorningButton
 @onready var map_overlays: Array[Control] = [$Journal, $Calendar, $SeedBelt, $Vitals, $Tools, $Actions, $RationsButton]
 
 var seed_buttons: Dictionary = {}
@@ -126,6 +127,7 @@ func _ready() -> void:
 	_update_health(Global.health)
 	_refresh_pinned_order()
 	_refresh_raid_alert()
+	refresh_morning_record()
 
 func _show_arrival() -> void:
 	arrival.show()
@@ -195,6 +197,24 @@ func _refresh_shortcuts() -> void:
 
 func _refresh_watch() -> void:
 	watch_label.text = Global.day_watch_label()
+
+func refresh_morning_record() -> void:
+	morning_button.visible = Global.has_morning_record()
+	var fields := Global.last_field_night
+	var ripe: int = fields.get("public_ripe", 0) + fields.get("private_ripe", 0)
+	var meals := Global.night_rations.last
+	var missing: int = meals.get("need", 0) - meals.get("served", 0)
+	var rank_change: int = Global.last_dawn.get("rank_change", 0)
+	morning_button.text = "昨夜结算"
+	if missing > 0:
+		morning_button.text += " · 缺粮 %d 份" % missing
+	elif rank_change != 0:
+		var change := "晋升" if rank_change > 0 else "削爵至"
+		morning_button.text += " · " + change + Global.rank_names[Global.current_rank]
+	elif not Global.last_dawn.get("completed_fields", []).is_empty():
+		morning_button.text += " · 井田完工"
+	elif ripe > 0:
+		morning_button.text += " · 新熟 %d 格" % ripe
 
 func show_save_notice(message: String, warning := false) -> void:
 	if save_notice_tween:
