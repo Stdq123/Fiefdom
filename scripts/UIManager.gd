@@ -207,7 +207,7 @@ func _connect_signals() -> void:
 	GameEvents.road_rest_interacted.connect(_on_road_rest_interacted)
 	GameEvents.rotation_book_interacted.connect(_on_rotation_book_interacted)
 	GameEvents.water_source_interacted.connect(_on_water_source_interacted)
-	GameEvents.east_watch_read_requested.connect(dialog_manager.show_east_watch)
+	GameEvents.east_watch_read_requested.connect(_on_east_watch_read)
 	GameEvents.east_watch_built.connect(update_ui)
 	GameEvents.tax_reform_triggered.connect(_on_council_invitation)
 	GameEvents.tax_reform_choice_made.connect(_refresh_opening_action.unbind(1))
@@ -628,9 +628,18 @@ func _on_road_rest_interacted() -> void:
 	world.set_channel_mode(false)
 	dialog_manager.show_road_rest()
 
-func _on_freight_arrival_interacted(speech: String, portrait: Texture2D) -> void:
+func _on_freight_arrival_interacted(speech: String, portrait: Texture2D, order_id: String) -> void:
 	world.set_channel_mode(false)
-	dialog_manager.show_freight_arrival(speech, portrait, _guide_travel_hearth)
+	var guide_watch := _guide_east_watch if order_id == SeasonOrders.WATCH_RELIEF else Callable()
+	dialog_manager.show_freight_arrival(speech, portrait, _guide_travel_hearth, guide_watch)
+
+func _guide_east_watch() -> void:
+	directions.follow_place("东路岗", EstateLayout.EAST_WATCH)
+
+func _on_east_watch_read() -> void:
+	if directions.tracked_place == "东路岗":
+		directions.clear_tracking()
+	dialog_manager.show_east_watch()
 
 func _guide_travel_hearth() -> void:
 	var approach := world.get_node("TravelHearth/Approach") as Marker2D

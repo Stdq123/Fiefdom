@@ -39,6 +39,7 @@ const FIELD_TURN := Vector2(107, 165)
 const EAST_LANE_JUNCTION := Vector2(29, 152)
 const DRIVING_FORK := Vector2(345, 7)
 const EAST_WATCH := Vector2(336, 151)
+const WATCH_RELIEF_POST := EAST_WATCH + Vector2(25, -8)
 const FIELD_LANE_TURN := Vector2(44, 241)
 const BAMBOO_BEND := Vector2(19, 321)
 const PAVILION_TURN := Vector2(44, 385)
@@ -123,6 +124,15 @@ const SOUTH_ROADS := [
 ]
 
 static var road_lines: Array[PackedVector2Array] = _bake_roads()
+
+static func watch_relief_route() -> Array:
+	var aisle := FREIGHT_AISLE.duplicate()
+	aisle.reverse()
+	var unloading := UNLOADING_LANE.slice(0, UNLOADING_LANE.find(FREIGHT_JUNCTION))
+	unloading.reverse()
+	var south := SOUTH_LANE.slice(SOUTH_LANE.find(EAST_LANE_JUNCTION), -1)
+	south.reverse()
+	return aisle + unloading + south + EAST_LANE.slice(1) + [WATCH_RELIEF_POST]
 
 static func festival_entrance() -> Array[Vector2]:
 	var path: Array[Vector2] = []

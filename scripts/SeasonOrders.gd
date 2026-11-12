@@ -5,6 +5,8 @@ const TERMS_PER_SEASON := 6
 const EVENING_DISPATCH := 11.0 / 16.0
 const MORNING_DISPATCH := 1.0 / 16.0
 const TRAVEL_FRACTION := 0.12
+const WATCH_RELIEF := "autumn_watch_relief"
+const WATCH_RELAY_FRACTION := 0.11
 const SILK_ITEM := "silk_bolt"
 const ORDERS := [
 	{
@@ -53,11 +55,11 @@ const FOLLOW_UP_ORDERS := [
 		"arrival": "石墨刚派人取走了稻和白鲦。听说下游的水口已经通了，今晚能在渠边吃顿热饭。"
 	},
 	{
-		"id": "autumn_watch_relief", "title": "东岗换防", "speaker": "弋戎",
+		"id": WATCH_RELIEF, "title": "东岗换防", "speaker": "弋戎",
 		"request": "换岗的人这回要走远些。两份稷和一份菽作路粮，再带一束麻来修旗绳。",
 		"need": {"sorghum": 2, "beans": 1, "hemp": 1},
 		"thanks": "巡粮和麻已捆好。新换岗的人会从南路亭领走。",
-		"arrival": "弋戎的人已经来领路粮。麻绳要换到东岗的旗上，起风时就看得见。"
+		"arrival": "稷、菽和麻在这儿卸下，由巡人沿竹径送去东路岗。麻会换到岗上的旗绳上，起风时就看得见。"
 	},
 	{
 		"id": "winter_woven_goods", "title": "岁末麦帛", "speaker": "陶辛",

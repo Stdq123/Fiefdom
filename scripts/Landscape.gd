@@ -208,7 +208,7 @@ const ESTATE_PROPS := [
 	Vector3i(481, -21, Prop.GROVE_CLUSTER), Vector3i(478, 99, Prop.GROVE_TREE),
 	# The pine verge separates the watch post and the training road.
 	Vector3i(351, 57, Prop.SIGNPOST), Vector3i(357, 87, Prop.OAK), Vector3i(420, 94, Prop.TALL_BAMBOO),
-	Vector3i(357, 133, Prop.GROVE_TREE), Vector3i(354, 177, Prop.PINE), Vector3i(427, 155, Prop.PINE),
+	Vector3i(354, 109, Prop.GROVE_TREE), Vector3i(357, 194, Prop.PINE), Vector3i(427, 155, Prop.PINE),
 	Vector3i(336, 207, Prop.TALL_BAMBOO), Vector3i(348, 226, Prop.FENCE), Vector3i(446, 222, Prop.FENCE),
 	Vector3i(351, 270, Prop.LOGS), Vector3i(448, 276, Prop.OAK), Vector3i(365, 319, Prop.TALL_BAMBOO),
 	Vector3i(447, 326, Prop.GROVE_TREE), Vector3i(375, 378, Prop.GROVE_CLUSTER), Vector3i(453, 385, Prop.PINE),

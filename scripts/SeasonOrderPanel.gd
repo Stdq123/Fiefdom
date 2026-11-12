@@ -88,7 +88,11 @@ func _refresh() -> void:
 		var travel := SeasonOrders.transit_progress(receipt, Global.current_day, Global.day_progress)
 		var delivery := SeasonOrders.dispatch_caption(receipt) if travel < 0.0 else (
 			"正在运往南路卸货场" if travel < 1.0 else "已送到南路卸货场")
-		status.text = "第 %d 天已交 · 已领%s\n申禾 · %s" % [
+		if order.id == SeasonOrders.WATCH_RELIEF and travel >= 1.0:
+			delivery = "巡人 · 正送往东路岗" if Global.watch_relief_progress() < 1.0 else "东路岗 · 巡粮与新旗绳已到"
+		else:
+			delivery = "申禾 · " + delivery
+		status.text = "第 %d 天已交 · 已领%s\n%s" % [
 			delivered_on, "口粮" if receipt.paid_in_food else "铜钱", delivery]
 	elif Global.outcome != Global.Outcome.RUNNING:
 		status.text = "本局已经结算"

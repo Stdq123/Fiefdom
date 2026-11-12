@@ -24,12 +24,17 @@ func setup(host: Control, estate_player: Player) -> void:
 	parent_node = host
 	player = estate_player
 
-func show_freight_arrival(speech: String, portrait: Texture2D, guide_hearth: Callable) -> void:
+func show_freight_arrival(speech: String, portrait: Texture2D, guide_hearth: Callable, guide_watch: Callable) -> void:
+	var choices: Array[String] = ["指路去灶台", "知道了"]
+	var actions: Array[Callable] = [guide_hearth]
+	if guide_watch.is_valid():
+		choices.push_front("指路去东路岗")
+		actions.push_front(guide_watch)
 	var dialog := _open("申禾", "车夫 · 南路卸货场", speech + "\n沿南路往东有灶台。带点食材去，走远路前可以装一份吃的。",
-		["指路去灶台", "知道了"], [], portrait)
+		choices, [], portrait)
 	dialog.option_selected.connect(func(index: int):
-		if index == 0:
-			guide_hearth.call()
+		if index < actions.size():
+			actions[index].call()
 	)
 
 func show_winter_supper() -> void:
@@ -321,15 +326,24 @@ func show_water_source(starter_tiles: int, open_study: Callable, open_technology
 	)
 
 func show_east_watch() -> void:
-	if parent_node.has_node("DialoguePanel") or Global.last_defense.is_empty():
+	if parent_node.has_node("DialoguePanel"):
 		return
-	var note := Global.last_defense
-	var guard: String = note["guard"]
-	var defender := "你放了末一箭" if guard.is_empty() else "%s放了末一箭" % guard
-	var date := "第 %d 天 · %s" % [note["day"], Global.get_current_solar_term(note["day"])]
-	var record := "击退%s，%s。%s。\n封地至今击退 %d 次敌袭。" % [
-		Global.raid_name(note["kind"]), defender, Global.defense_loss_note(), Global.raids_defeated]
-	_open("东岗守备牌", date, record, ["合上"], [], preload("res://assets/world/east-watch.svg"))
+	var title := "东岗巡粮簿"
+	var context := "南路来货"
+	var lines := PackedStringArray()
+	if Global.east_watch_day > 0:
+		var note := Global.last_defense
+		var guard: String = note["guard"]
+		var defender := "你放了末一箭" if guard.is_empty() else "%s放了末一箭" % guard
+		title = "东岗守备牌"
+		context = "第 %d 天 · %s" % [note["day"], Global.get_current_solar_term(note["day"])]
+		lines.append("击退%s，%s。%s。\n封地至今击退 %d 次敌袭。" % [
+			Global.raid_name(note["kind"]), defender, Global.defense_loss_note(), Global.raids_defeated])
+	var relief := Global.watch_relief_day()
+	if relief > 0:
+		lines.append("第 %d 天，南路送到两份稷、一份菽和一束麻。巡粮已分袋，新麻绳系上了岗旗。" % relief)
+	if not lines.is_empty():
+		_open(title, context, "\n\n".join(lines), ["合上"], [], preload("res://assets/world/east-watch.svg"))
 
 func show_gathering_guest(data: VisitorData) -> void:
 	if parent_node.has_node("DialoguePanel") or not Global.is_gathering_day():

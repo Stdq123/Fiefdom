@@ -14,6 +14,7 @@
 [ext_resource type="Script" path="res://scripts/FieldCursor.gd" id="12_field_cursor"]
 [ext_resource type="Script" path="res://scripts/HerbGarden.gd" id="13_herb_garden"]
 [ext_resource type="Script" path="res://scripts/EastWatch.gd" id="14_east_watch"]
+[ext_resource type="Script" path="res://scripts/WatchReliefCourier.gd" id="watch_relay"]
 [ext_resource type="Script" path="res://scripts/SeasonBoard.gd" id="15_season_board"]
 [ext_resource type="Script" path="res://scripts/SpringGathering.gd" id="16_spring_gathering"]
 [ext_resource type="Texture2D" path="res://assets/world/gathering-bell-rack.svg" id="17_bell_rack"]
@@ -344,6 +345,35 @@ theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
 
 [node name="Freight" parent="World" instance=ExtResource("29_freight")]
+
+[node name="WatchReliefCourier" type="Node2D" parent="World"]
+visible = false
+script = ExtResource("watch_relay")
+
+[node name="Body" type="Sprite2D" parent="World/WatchReliefCourier"]
+texture_filter = 1
+position = Vector2(0, -14)
+self_modulate = Color(0.83, 0.96, 0.91, 1)
+script = ExtResource("35_neighbor_motion")
+
+[node name="Sack" type="Sprite2D" parent="World/WatchReliefCourier"]
+texture_filter = 1
+self_modulate = Color(0.88, 0.83, 0.68, 1)
+
+[node name="Name" type="Label" parent="World/WatchReliefCourier"]
+z_index = 4
+offset_left = -46.0
+offset_top = -42.0
+offset_right = 46.0
+offset_bottom = -29.0
+mouse_filter = 2
+material = ExtResource("24_world_hint")
+theme_override_colors/font_color = Color(0.93, 0.85, 0.65, 1)
+theme_override_colors/font_outline_color = Color(0.15, 0.22, 0.15, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "送粮往东岗"
+horizontal_alignment = 1
 
 [node name="TravelHearth" parent="World" instance=ExtResource("30_hearth")]
 position = Vector2(221, 557)

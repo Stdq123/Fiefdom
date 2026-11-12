@@ -107,7 +107,8 @@ func _collect_places() -> void:
 		var approach := world.to_local(pavilion.to_global(PavilionRest.APPROACH))
 		places.append(_entry(Category.PLACES, PavilionRest.PLACE, "与门客说话、查看今夜口粮", approach))
 	_add_built_place("药圃", "采药处", "HerbGarden")
-	_add_built_place("东路岗", "查看守备口信", "Scenery/EastWatch")
+	var relief := Global.watch_relief_day() > 0
+	_add_built_place("东路岗", "巡粮已到，查看到货记录" if relief else "查看守备口信", "Scenery/EastWatch", relief)
 	_add_built_place("轮作簿", "查看轮作约定", "FieldRotationBook")
 	if Global.road_rest_built():
 		_add_built_place("亭西歇脚处", "在长凳旁休息", "RoadRest")

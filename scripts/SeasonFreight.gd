@@ -115,7 +115,7 @@ func _sync_position() -> void:
 	var has_cargo := not lot.is_empty() and delivery_day >= Global.current_day
 	if has_cargo and shown_order != lot.order.id:
 		_load_cargo(lot.order)
-	cargo.visible = has_cargo
+	cargo.visible = has_cargo and (not arrived or shown_order != SeasonOrders.WATCH_RELIEF)
 	var start: float = [0.0, west_road_start, estate_start][route_section]
 	_pose(roads[route_section], 0.0 if at_origin else distance - start, not parked)
 
@@ -174,4 +174,4 @@ func set_interaction_focused(active: bool) -> void:
 	focused = active
 
 func interact() -> void:
-	GameEvents.freight_arrival_interacted.emit(arrival_line, portrait)
+	GameEvents.freight_arrival_interacted.emit(arrival_line, portrait, shown_order)

@@ -176,6 +176,12 @@ func _run() -> void:
 			replay.from_older_save = arguments[0] == "order-preparation-old-save"
 			replay.capture_path = capture_directory
 			await replay.run(tree)
+		"watch-relief", "watch-relief-baseline", "watch-relief-old-save":
+			var replay = load("res://tests/WatchReliefReplay.gd").new()
+			replay.baseline = arguments[0] == "watch-relief-baseline"
+			replay.from_older_save = arguments[0] == "watch-relief-old-save"
+			replay.capture_path = capture_directory
+			await replay.run(tree)
 		"autumn-exhibit":
 			var replay = load("res://tests/AutumnExhibitReplay.gd").new()
 			await replay.run(tree)

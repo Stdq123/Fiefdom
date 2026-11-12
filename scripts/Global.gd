@@ -1914,10 +1914,13 @@ func deliver_season_order(start_day: int, paid_in_food: bool) -> bool:
 		fish_collection[fish].stock -= 1
 	silk_workshop.bolts -= silk
 	var rewards := season_order_rewards(schedule)
+	var previous_post := watch_relief_day() if schedule.order.id == SeasonOrders.WATCH_RELIEF else 0
 	season_order_receipts[schedule.order.id] = {
 		"day": current_day, "paid_in_food": paid_in_food,
 		"dispatch_day": SeasonOrders.dispatch_day(current_day, day_progress),
 	}
+	if previous_post > 0:
+		season_order_receipts[schedule.order.id]["previous_post_day"] = previous_post
 	reputation += balance.interaction_reputation_gain
 	if paid_in_food:
 		food_storage += rewards.food
@@ -1934,6 +1937,19 @@ func deliver_season_order(start_day: int, paid_in_food: bool) -> bool:
 	else:
 		GameEvents.money_changed.emit(money)
 	return true
+
+func watch_relief_progress() -> float:
+	var receipt: Dictionary = season_order_receipts.get(SeasonOrders.WATCH_RELIEF, {})
+	if receipt.is_empty():
+		return -1.0
+	var transit := SeasonOrders.transit_progress(receipt, current_day, day_progress)
+	return (transit - 1.0) * SeasonOrders.TRAVEL_FRACTION / SeasonOrders.WATCH_RELAY_FRACTION
+
+func watch_relief_day() -> int:
+	var receipt: Dictionary = season_order_receipts.get(SeasonOrders.WATCH_RELIEF, {})
+	if receipt.is_empty():
+		return 0
+	return int(receipt.dispatch_day) if watch_relief_progress() >= 1.0 else int(receipt.get("previous_post_day", 0))
 
 func market_crop_plan(amount: int, crop_id := "") -> Dictionary[String, int]:
 	return crop_stock.plan(amount, crop_id, season_order_crops_to_keep())
@@ -3254,6 +3270,10 @@ func _restore_season_order_receipts(record: Variant, saved_day: int) -> void:
 					"day": day, "paid_in_food": receipt.get("paid_in_food") == true,
 					"dispatch_day": clampi(_read_save_int(receipt.get("dispatch_day"), day), day, day + 1),
 				}
+				if order.id == SeasonOrders.WATCH_RELIEF:
+					var previous_post := clampi(_read_save_int(receipt.get("previous_post_day"), 0), 0, day - 1)
+					if previous_post > 0:
+						season_order_receipts[order.id]["previous_post_day"] = previous_post
 
 func _restore_sheepfold(record: Variant, saved_day: int) -> void:
 	sheepfold = Sheepfold.new()
