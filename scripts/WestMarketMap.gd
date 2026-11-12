@@ -3,6 +3,7 @@ extends "res://scripts/SurveyMap.gd"
 const MARKET_BOUNDS := Rect2(-236, -132, 490, 272)
 const INK := Color("#483e2c")
 const GOLD := Color("#f0cc7b")
+const MERCHANT := VisitorData.SILK_MERCHANT
 const WAYPOINT_ARROWS := ["→", "↘", "↓", "↙", "←", "↖", "↑", "↗"]
 const STALL_COLORS := [Color("#b98b53"), Color("#678287"), Color("#a46048")]
 const STALL_SERVICES := ["作物换粮、买粮", "交留鱼单、卖鱼", "卖绸、交易羊毛"]
@@ -13,16 +14,19 @@ const STALL_SERVICES := ["作物换粮、买粮", "交留鱼单、卖鱼", "卖�
 @onready var cancel_button: Button = %CancelDirections
 @onready var clear_button: Button = %ClearRoute
 @onready var route_status: Label = %RouteStatus
+@onready var merchant_button: Button = %FindMerchant
 
+var market: Node2D
 var player: Player
 var ground: Node2D
 var pin: Node2D
 var places: Dictionary[String, Vector2] = {}
 var markers: Dictionary[String, Button] = {}
 
-func setup(walker: Player, market_ground: Node2D, destinations: Dictionary[String, Vector2], waypoint: Node2D) -> void:
-	player = walker
-	ground = market_ground
+func setup(street: Node2D, destinations: Dictionary[String, Vector2], waypoint: Node2D) -> void:
+	market = street
+	player = market.player
+	ground = market.ground
 	places = destinations
 	pin = waypoint
 	pin.draw.connect(_draw_waypoint)
@@ -38,6 +42,8 @@ func setup(walker: Player, market_ground: Node2D, destinations: Dictionary[Strin
 	open_button.pressed.connect(open_map)
 	cancel_button.pressed.connect(_clear)
 	clear_button.pressed.connect(_clear)
+	merchant_button.icon = CharacterArt.dialogue_portrait(MERCHANT, null, true)
+	merchant_button.pressed.connect(_select_place.bind(MERCHANT))
 	chart.resized.connect(_layout_markers)
 	paper.draw.connect(_draw_chart)
 	_refresh_destination()
@@ -50,6 +56,8 @@ func _map_available() -> bool:
 	return not player.conversation_open and not MapTravel.active and Global.outcome == Global.Outcome.RUNNING
 
 func _refresh_on_open() -> void:
+	merchant_button.visible = market.silk_guest != null or market.silk_trip == VisitorData.SilkTrip.WEST_ROAD
+	merchant_button.tooltip_text = _merchant_note()
 	_layout_markers()
 	_refresh_destination()
 
@@ -61,10 +69,35 @@ func _process(_delta: float) -> void:
 	pin.visible = cancel_button.visible
 	if not pin.visible:
 		return
-	pin.global_position = ground.to_global(places[place])
+	var label := place
+	var point: Vector2
+	if place == MERCHANT and market.silk_guest:
+		point = ground.to_local(market.silk_guest.global_position)
+	elif place == MERCHANT:
+		var next := _merchant_waiting_stop()
+		point = places[next]
+		label = "陶辛 · 午时到绸摊" if next != Global.MARKET_RETURN else "回封地找陶辛"
+	else:
+		point = places[place]
+	pin.global_position = ground.to_global(point)
 	var delta := pin.global_position - player.global_position
 	var bearing: String = WAYPOINT_ARROWS[posmod(roundi(delta.angle() / (PI / 4.0)), WAYPOINT_ARROWS.size())]
-	cancel_button.text = "%s  %s · 取消指路" % ["◆" if delta.length() < 12.0 else bearing, place]
+	cancel_button.text = "%s  %s · 取消指路" % ["◆" if delta.length() < 12.0 else bearing, label]
+
+func _merchant_waiting_stop() -> String:
+	return MarketStall.TITLES[MarketStall.Kind.SILK] if market.silk_trip == VisitorData.SilkTrip.WEST_ROAD else Global.MARKET_RETURN
+
+func _merchant_note() -> String:
+	match market.silk_trip:
+		VisitorData.SilkTrip.WEST_ROAD:
+			return "午时到绸摊"
+		VisitorData.SilkTrip.STALL:
+			return "正走向绸摊" if market.silk_guest and market.silk_guest.walking_to_stop else "在绸摊理货"
+		VisitorData.SilkTrip.RETURN_ROAD:
+			return "向东返程，酉时到南路亭"
+		VisitorData.SilkTrip.PAVILION:
+			return "已回封地，去南路亭"
+	return "回封地后按邻里手记找他"
 
 func _select_place(place: String) -> void:
 	Global.market_trip_target = place
@@ -85,11 +118,14 @@ func _refresh_destination() -> void:
 	clear_button.disabled = place.is_empty()
 	for name in markers:
 		markers[name].set_pressed_no_signal(name == place)
+	merchant_button.set_pressed_no_signal(place == MERCHANT)
 	route_status.text = "点选去处，回到街上后看金色标记。" if place.is_empty() else "%s · %s" % [place, _service(place)]
 	paper.queue_redraw()
 
 func _service(place: String) -> String:
 	match place:
+		MERCHANT:
+			return _merchant_note()
 		Global.MARKET_RETURN:
 			return "沿石板街向东出关"
 		Global.MARKET_ORDERS:
@@ -135,21 +171,36 @@ func _draw_chart() -> void:
 			var width := canopy.size.x / 7.0
 			var segment := Rect2(canopy.position + Vector2(width * stripe, 0), Vector2(width, canopy.size.y))
 			paper.draw_rect(segment, STALL_COLORS[index].lightened(0.24))
+	var destination := Global.market_trip_target
+	if destination == MERCHANT and not market.silk_guest:
+		destination = _merchant_waiting_stop()
 	for place in places:
 		var at := _map_point(places[place])
 		if place not in MarketStall.TITLES:
 			var button := markers[place]
 			var label_edge := button.position + Vector2(button.size.x * 0.5, 0.0)
 			paper.draw_line(at, label_edge, INK, 1.0, true)
-		var selected := place == Global.market_trip_target
+		var selected := place == destination
 		paper.draw_circle(at, 6.0 if selected else 4.0, INK)
 		if selected:
 			paper.draw_circle(at, 3.5, GOLD)
+	if market.silk_guest:
+		_draw_merchant()
 	var here := _map_point(ground.to_local(player.global_position))
 	paper.draw_circle(here, 8.0, Color("#2e4a42"))
 	paper.draw_circle(here, 5.0, Color("#e7f0ce"))
 	paper.draw_arc(here, 11.0, 0.0, TAU, 24, Color("#426c5d"), 1.5, true)
 	paper.draw_rect(sheet.grow(-1.0), Color("#8c7c5f"), false, 2.0)
+
+func _draw_merchant() -> void:
+	var foot := _map_point(ground.to_local(market.silk_guest.global_position))
+	var portrait := Rect2(foot + Vector2(-14, -46), Vector2(28, 28))
+	var ink := GOLD if Global.market_trip_target == MERCHANT else Color("#516779")
+	paper.draw_rect(portrait.grow(2.0), ink)
+	paper.draw_texture_rect(merchant_button.icon, portrait, false)
+	paper.draw_line(foot, foot + Vector2(0, -18), ink, 1.5, true)
+	paper.draw_circle(foot, 5.0, INK)
+	paper.draw_circle(foot, 3.0, ink)
 
 func _draw_waypoint() -> void:
 	pin.draw_circle(Vector2.ZERO, 7.5, Color("#263527"), false, 3.4, true)

@@ -52,6 +52,9 @@ func _ready() -> void:
 		directions.follow_ravine(Global.ravine_trip_target)
 	elif Global.market_trip_target == Global.MARKET_RETURN:
 		Global.market_trip_target = ""
+	elif Global.market_trip_target == VisitorData.SILK_MERCHANT:
+		if not directions.follow_neighbor(VisitorData.SILK_MERCHANT):
+			Global.market_trip_target = ""
 	elif not Global.market_trip_target.is_empty():
 		directions.follow_market(Global.market_trip_target)
 	estate_map.setup(world, directions, _map_controls_blocked)

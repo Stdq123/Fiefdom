@@ -81,9 +81,9 @@ func _show_neighbor(speaker: String) -> void:
 	where.text = _location(speaker)
 	var world := get_tree().current_scene.get_node("World")
 	var actor: Node2D = world.neighbor_actor(speaker)
-	var on_west_road: bool = actor == null and speaker == VisitorData.SILK_MERCHANT and not world.silk_trip_note().is_empty()
-	locate_button.visible = on_west_road or actor != null
-	locate_button.text = "指路去西路" if on_west_road else "在地图上找"
+	var trip: Dictionary = world.silk_trip_stop() if actor == null and speaker == VisitorData.SILK_MERCHANT else {}
+	locate_button.visible = actor != null or not trip.is_empty()
+	locate_button.text = "在地图上找" if trip.is_empty() else "指路去" + trip.place
 	var story := _story(speaker)
 	memory.text = story[0]
 	next_step.text = story[1]

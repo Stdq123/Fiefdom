@@ -39,6 +39,25 @@ func _sleep_through(day: int) -> void:
 		if not _expect(state.current_day == date + 1, "One night advances one day."):
 			return
 
+func _save_and_continue() -> bool:
+	var location: String = tree.current_scene.scene_file_path
+	var clock: float = state.day_progress
+	if not _expect(state.save_game() == OK, "Save at the current stop of the trip."):
+		return false
+	tree.change_scene_to_file(state.TITLE_SCENE)
+	await tree.scene_changed
+	await _button(tree.current_scene.continue_button)
+	if tree.current_scene == null:
+		await tree.scene_changed
+	return _expect(tree.current_scene.scene_file_path == location and absf(state.day_progress - clock) < 0.02,
+		"Continue restores the saved scene and time of day.")
+
+func _merchant_journal() -> Control:
+	await _button(ui.hud.neighbors_button)
+	var journal: Control = ui.panel_manager.management_panel_instance.neighbor_journal
+	await _button(journal.roster.get_node(TAO))
+	return journal
+
 func _give_sample() -> bool:
 	await _button(tree.current_scene.new_button)
 	if tree.current_scene == null:
@@ -86,32 +105,56 @@ func _follow_merchant() -> bool:
 	await tree.create_timer(6.0).timeout
 	_expect(world.neighbor_actor(TAO) == null and "正沿西路" in world.silk_trip_note(), "The visitor leaves through the west gate.")
 
-	await _button(ui.hud.neighbors_button)
-	var panel: Control = ui.panel_manager.management_panel_instance
-	var journal: Control = panel.neighbor_journal
-	await _button(journal.roster.get_node(TAO))
-	_expect("正沿西路" in journal.where.text, "The journal reports the trip in progress.")
+	var journal := await _merchant_journal()
+	_expect("正沿西路" in journal.where.text and journal.locate_button.text == "指路去西市",
+		"The journal reports the trip to the market.")
 	await _snapshot("01-neighbor-journal")
 	await _button(journal.locate_button)
-	_expect(ui.directions.destination().point == world.get_node("WestMarketGate").position and not panel.visible,
+	_expect(ui.directions.destination().point == world.get_node("WestMarketGate").position
+		and not ui.panel_manager.management_panel_instance.visible and state.market_trip_target == TAO,
 		"The journal leads to the west gate while the merchant is off the estate.")
+	if not await _save_and_continue():
+		return false
+	_estate()
+	_expect(ui.directions.tracked_neighbor == TAO and state.market_trip_target == TAO,
+		"The selected merchant survives Continue before the crossing.")
 	return await _road_to_market()
 
 func _market_visit() -> bool:
 	var market := tree.current_scene
 	_expect(market.sample.visible and market.silk_guest == null, "Find the sample and wait for the merchant at the market.")
+	var chart: Control = market.market_map
+	await tree.create_timer(0.06).timeout
+	_expect(chart.pin.visible and state.market_trip_target == TAO and "午时到绸摊" in chart.cancel_button.text
+		and chart.pin.global_position.is_equal_approx(chart.places["绸摊"]),
+		"The route leads to the meeting spot while the merchant is still on the road.")
+	print("SILK_MARKET_ROUTE_WAIT day=", state.current_day, " point=", chart.pin.global_position)
+	await _snapshot("01a-wait-at-the-silk-stall")
 	await _walk(market.player, [Vector2(151, 63)])
 	await _time_at(VisitorData.SILK_MARKET_ARRIVE - 0.002)
 	await tree.create_timer(0.70).timeout
 	if not _expect(market.silk_guest != null and market.silk_guest.walking_to_stop, "At noon Tao Xin walks in from the east gate."):
 		return false
+	var first_foot: Vector2 = market.silk_guest.position
+	await tree.create_timer(0.20).timeout
+	_expect(first_foot.distance_to(market.silk_guest.position) > 4.0
+		and chart.pin.global_position.distance_to(market.silk_guest.position) < 2.0,
+		"The world marker follows the moving merchant.")
 	await _snapshot("02-market-arrival")
 	await tree.create_timer(1.65).timeout
 	var tao: Visitor = market.silk_guest
 	_expect(tao != null and not tao.walking_to_stop, "The merchant reaches Cai Niang's stall.")
+	await _key(KEY_M)
+	_expect(chart.modal.visible and chart.merchant_button.is_visible_in_tree() and chart.merchant_button.button_pressed
+		and "在绸摊理货" in chart.route_status.text
+		and tree.root.get_visible_rect().encloses(chart.merchant_button.get_global_rect()),
+		"The market chart shows the current appointment and selected merchant.")
+	await _snapshot("02a-merchant-on-market-chart")
+	await _key(KEY_ESCAPE)
 	await _walk(market.player, [Vector2(151, 63)])
 	if not await _talk(market, "交谈", "03-market-conversation"):
 		return false
+	_expect(state.market_trip_target.is_empty(), "Opening the merchant's dialogue completes the route.")
 	var reputation: int = state.reputation
 	state.change_attire(PlayerAttire.SAMPLE)
 	await _key(KEY_E)
@@ -127,37 +170,61 @@ func _market_visit() -> bool:
 		"Cai Niang's counter names the estate that produced the sample.")
 	await _snapshot("04-silk-counter")
 	await _key(KEY_ESCAPE)
-	if not _expect(state.save_game() == OK, "Save in the market during Tao Xin's visit."):
+	await _key(KEY_M)
+	await _button(chart.merchant_button)
+	await _key(KEY_ESCAPE)
+	if not await _save_and_continue():
 		return false
-	var saved_time: float = state.day_progress
-	tree.change_scene_to_file(state.TITLE_SCENE)
-	await tree.scene_changed
-	await _button(tree.current_scene.continue_button)
-	if tree.current_scene == null:
-		await tree.scene_changed
 	market = tree.current_scene
-	_expect(market.scene_file_path == state.WEST_MARKET_SCENE and market.silk_guest != null and market.sample.visible
-		and absf(state.day_progress - saved_time) < 0.02, "The market and its resident resume at the saved time.")
+	await tree.create_timer(0.06).timeout
+	_expect(market.silk_guest != null and market.sample.visible and state.market_trip_target == TAO
+		and market.market_map.pin.visible, "Continue in the market restores the guide to the actual resident.")
 	print("SILK_MARKET_VISIT day=", state.current_day, " clock=", state.day_watch_label(), " sample=", market.sample.visible)
 	return not failed
 
 func _back_to_pavilion() -> bool:
 	var market := tree.current_scene
+	var chart: Control = market.market_map
 	await _time_at(VisitorData.SILK_MARKET_LEAVE - 0.002)
 	await tree.create_timer(0.72).timeout
 	_expect(market.silk_guest != null and market.silk_guest.walking_to_stop and market.silk_guest.position.x > 150,
 		"At 申时 Tao Xin walks back to the gate.")
-	await tree.create_timer(1.65).timeout
+	await tree.create_timer(2.0).timeout
+	_expect(market.silk_guest == null and chart.pin.visible and "回封地找陶辛" in chart.cancel_button.text
+		and chart.pin.global_position.is_equal_approx(market.get_node("EstateRoad").position),
+		"After the merchant leaves, the guide switches to the return gate.")
+	await _snapshot("04a-market-return-guide")
 	if not await _cross(&"ui_right", state.ESTATE_SCENE):
 		return false
 	_estate()
 	_expect(world.neighbor_actor(TAO) == null and "返程" in world.silk_trip_note(), "No estate duplicate while the merchant is on the road.")
+	var stop: Dictionary = ui.directions.destination()
+	_expect(ui.directions.tracked_neighbor == TAO and "酉时南路亭" in stop.get("title", "")
+		and stop.point == world.get_node("Landscape").PAVILION_REST_FOOT,
+		"On the estate, the guide points to his next stop at the pavilion.")
+	var journal := await _merchant_journal()
+	_expect(journal.locate_button.text == "指路去南路亭", "The neighbor journal also offers the next stop instead of the gate.")
+	await _button(journal.locate_button)
+	await _key(KEY_M)
+	var map: Control = ui.estate_map
+	await _button(map.tabs.get_node("People"))
+	var marked := false
+	for button: Button in map.row_buttons:
+		var entry: Dictionary = map.row_buttons[button]
+		if entry.title == TAO:
+			marked = button.button_pressed and entry.point == stop.point
+	_expect(marked and map.target.point == stop.point, "The selected portrait, destination and estate map agree on the pavilion.")
+	print("SILK_MARKET_ROUTE_RETURN point=", stop.point, " journal=", journal.locate_button.text)
+	await _snapshot("04b-estate-pavilion-guide")
+	await _key(KEY_ESCAPE)
 	await _time_at(VisitorData.SILK_MARKET_RETURN - 0.002)
 	await tree.create_timer(0.70).timeout
 	var tao: Visitor = world.neighbor_actor(TAO)
 	if not _expect(tao != null and tao.walking_to_stop and tao.visit_location() == "南路亭",
 			"At 酉时 the merchant returns along the west road toward the pavilion."):
 		return false
+	_expect(ui.directions.destination().point.distance_to(tao.position) < 2.0,
+		"Once back on the estate, the pointer resumes tracking the actual merchant.")
 	await _snapshot("05-back-on-the-estate")
 	await tree.create_timer(10.6).timeout
 	_expect(tao.resting_at_pavilion(), "Tao Xin follows the road all the way to the pavilion. Position: %s, route stop: %d." % [
@@ -179,6 +246,10 @@ func _rain_and_recruit() -> void:
 		return
 	var market := tree.current_scene
 	_expect(market.sample.visible and market.silk_guest == null, "The sample is still on display during the rain.")
+	await _key(KEY_M)
+	_expect(market.market_map.modal.visible and not market.market_map.merchant_button.visible,
+		"The market chart offers the merchant only on his actual trip.")
+	await _key(KEY_ESCAPE)
 	state.current_day = 9
 	state.day_progress = 0.40
 	state.reputation = maxi(state.reputation, state.balance.recruit_reputation_requirement)

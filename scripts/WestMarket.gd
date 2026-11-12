@@ -19,6 +19,7 @@ const SILK_STALL_PATH := [Vector2(231, 31), Vector2(190, 28), Vector2(166, 34), 
 @onready var fish_icon: Sprite2D = $Stalls/FishStall/FishOrderSign/FishIcon
 
 var silk_guest: Visitor
+var silk_trip := VisitorData.SilkTrip.NONE
 var guest_returning := false
 var fish_reserved := false
 
@@ -35,7 +36,7 @@ func _ready() -> void:
 		lighting.place_lamp($Scenery, foot, 0.82)
 	player.arrive_at($EstateRoadArrival)
 	player.footstep.connect(_step)
-	market_map.setup(player, ground, destinations, $MarketWaypoint)
+	market_map.setup(self, destinations, $MarketWaypoint)
 	$DialogManager.setup($UI/Control, player)
 	%SettingsButton.pressed.connect(settings.show)
 	counter.visibility_changed.connect(_update_modal)
@@ -115,11 +116,11 @@ func _refresh_silk_guest() -> void:
 	if not sample.visible:
 		return
 	var guest := Global.visitor_for_day(Global.current_day)
-	var trip := guest.silk_trip() if guest else VisitorData.SilkTrip.NONE
-	if trip not in [VisitorData.SilkTrip.STALL, VisitorData.SilkTrip.RETURN_ROAD]:
+	silk_trip = guest.silk_trip() if guest else VisitorData.SilkTrip.NONE
+	if silk_trip not in [VisitorData.SilkTrip.STALL, VisitorData.SilkTrip.RETURN_ROAD]:
 		_remove_silk_guest()
 		return
-	var returning := trip == VisitorData.SilkTrip.RETURN_ROAD
+	var returning := silk_trip == VisitorData.SilkTrip.RETURN_ROAD
 	if silk_guest and returning == guest_returning:
 		return
 	var path := PackedVector2Array(SILK_STALL_PATH)
@@ -151,6 +152,7 @@ func _remove_silk_guest() -> void:
 
 func _talk_to_silk_guest(data: VisitorData) -> void:
 	if silk_guest and data == silk_guest.data:
+		market_map.arrive_at(data.name)
 		$DialogManager.show_visitor_dialog(data, VisitorData.SILK_MARKET_PLACE)
 
 func _step(foot: Vector2) -> void:

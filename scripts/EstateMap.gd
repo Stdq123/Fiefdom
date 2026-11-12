@@ -170,9 +170,10 @@ func _collect_people() -> void:
 		_add_person(Global.TAX_ENVOY, "使者 · 堂前候议", world.tax_envoy, CharacterArt.tax_envoy_icon())
 	for visitor: Node2D in world.active_visitors:
 		_add_visitor(visitor)
-	var silk_note: String = world.silk_trip_note()
-	if not silk_note.is_empty() and not world.neighbor_actor(VisitorData.SILK_MERCHANT):
-		_add_person(VisitorData.SILK_MERCHANT, silk_note, world.get_node("WestMarketGate"), null)
+	var silk_stop: Dictionary = world.silk_trip_stop()
+	if not silk_stop.is_empty() and not world.neighbor_actor(VisitorData.SILK_MERCHANT):
+		var portrait := CharacterArt.dialogue_portrait(VisitorData.SILK_MERCHANT, null, true)
+		people.append(_entry(Category.PEOPLE, VisitorData.SILK_MERCHANT, silk_stop.note, silk_stop.point, false, portrait))
 	if is_instance_valid(world.field_guest):
 		_add_visitor(world.field_guest)
 	for guest: Node2D in world.get_node("SpringGathering/Guests").get_children():
@@ -344,7 +345,10 @@ func _refresh_destination() -> void:
 			_: status.text = "点选目的地，回到封地后沿金色标记走。"
 	for row in row_buttons:
 		var entry: Dictionary = row_buttons[row]
-		var selected: String = Global.ravine_trip_target if entry.kind == Category.RAVINE else target.get("title", "")
+		var selected: String = target.get("title", "")
+		match entry.kind:
+			Category.PEOPLE: selected = directions.tracked_neighbor
+			Category.RAVINE: selected = Global.ravine_trip_target
 		row.set_pressed_no_signal(entry.title == selected)
 	_layout_chart()
 

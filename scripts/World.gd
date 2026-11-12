@@ -750,13 +750,23 @@ func handoff_visitor() -> Visitor:
 	return null
 
 func silk_trip_note() -> String:
+	return silk_trip_stop().get("note", "")
+
+func silk_trip_stop() -> Dictionary:
 	if not scheduled_visitor:
-		return ""
+		return {}
+	var note := ""
 	match scheduled_visitor.silk_trip():
-		VisitorData.SilkTrip.WEST_ROAD: return "正沿西路去西市"
-		VisitorData.SilkTrip.STALL: return "在西市绸摊，酉时到南路亭"
-		VisitorData.SilkTrip.RETURN_ROAD: return "正沿西路返程，酉时到南路亭"
-	return ""
+		VisitorData.SilkTrip.WEST_ROAD:
+			note = "正沿西路去西市"
+		VisitorData.SilkTrip.STALL:
+			note = "在西市绸摊，酉时到南路亭"
+		VisitorData.SilkTrip.RETURN_ROAD:
+			return {"title": "陶辛 · 酉时南路亭", "place": "南路亭", "point": LANDSCAPE.PAVILION_REST_FOOT,
+				"note": "正返程，酉时到南路亭"}
+		_:
+			return {}
+	return {"title": "陶辛 · 西市绸摊", "place": "西市", "point": $WestMarketGate.position, "note": note}
 
 func neighbor_actor(speaker: String) -> Node2D:
 	if speaker == Global.TAX_ENVOY and Global.tax_council_waiting():

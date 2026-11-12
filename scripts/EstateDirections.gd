@@ -46,10 +46,12 @@ func setup(estate_world: Node2D, estate_hud: Control) -> void:
 	hide()
 
 func follow_neighbor(speaker: String) -> bool:
-	if not is_instance_valid(world.neighbor_actor(speaker)) and not _neighbor_west_gate(speaker):
+	if not is_instance_valid(world.neighbor_actor(speaker)) and _neighbor_trip_stop(speaker).is_empty():
 		return false
 	clear_tracking()
 	tracked_neighbor = speaker
+	if speaker == VisitorData.SILK_MERCHANT:
+		Global.market_trip_target = speaker
 	hud.cancel_directions.text = "%s · 取消指路" % speaker
 	hud.cancel_directions.show()
 	return true
@@ -126,17 +128,13 @@ func destination() -> Dictionary:
 		var actor: Node2D = world.neighbor_actor(tracked_neighbor)
 		if is_instance_valid(actor):
 			return {"title": tracked_neighbor, "point": world.to_local(actor.global_position)}
-		var gate := _neighbor_west_gate(tracked_neighbor)
-		if gate:
-			return {"title": tracked_neighbor + " · 西路", "point": world.to_local(gate.global_position)}
+		return _neighbor_trip_stop(tracked_neighbor)
 	if not tracked_place.is_empty():
 		return {"title": tracked_place, "point": tracked_place_point}
 	return {}
 
-func _neighbor_west_gate(speaker: String) -> Node2D:
-	if speaker == VisitorData.SILK_MERCHANT and not world.silk_trip_note().is_empty():
-		return world.get_node("WestMarketGate")
-	return null
+func _neighbor_trip_stop(speaker: String) -> Dictionary:
+	return world.silk_trip_stop() if speaker == VisitorData.SILK_MERCHANT else {}
 
 func _tracked_raider() -> Node2D:
 	if following_raid and Global.raid_day > 0:
@@ -197,17 +195,15 @@ func update_marker(blocked: bool) -> void:
 			var portrait := actor.get_global_transform_with_canvas() * Rect2(-10, -23, 20, 25)
 			_mark_map(portrait, tracked_neighbor, Mark.NEIGHBOR, world.player.interaction_target == actor)
 			return
-		var gate := _neighbor_west_gate(tracked_neighbor)
-		if gate:
-			var bounds := gate.get_global_transform_with_canvas() * Rect2(-8, -8, 16, 16)
-			_mark_map(bounds, tracked_neighbor + " · 西路", Mark.PLACE, false)
+		var stop := _neighbor_trip_stop(tracked_neighbor)
+		if not stop.is_empty():
+			_mark_place(stop.title, stop.point)
 			return
 		clear_tracking()
 	if not tracked_place.is_empty():
 		var foot := world.to_local(world.player.global_position)
 		if foot.distance_to(tracked_place_point) > 12.0:
-			var at := world.get_global_transform_with_canvas() * tracked_place_point
-			_mark_map(Rect2(at - Vector2(8, 8), Vector2(16, 16)), tracked_place, Mark.PLACE, false)
+			_mark_place(tracked_place, tracked_place_point)
 			return
 		if not Global.ravine_trip_target.is_empty() or not Global.market_trip_target.is_empty():
 			hide()
@@ -223,6 +219,10 @@ func update_marker(blocked: bool) -> void:
 			_mark_button(hud.seed_buttons[guide.opening_seed_id])
 		_:
 			hide()
+
+func _mark_place(title: String, point: Vector2) -> void:
+	var at := world.get_global_transform_with_canvas() * point
+	_mark_map(Rect2(at - Vector2(8, 8), Vector2(16, 16)), title, Mark.PLACE, false)
 
 func _mark_plot(cell: Vector2i, title: String) -> void:
 	var tiles: TileMapLayer = world.tile_map
