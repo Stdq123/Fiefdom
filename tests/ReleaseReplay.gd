@@ -89,6 +89,11 @@ func _run() -> void:
 			var replay = load("res://tests/EstateDirectionsReplay.gd").new()
 			replay.legacy = arguments[0] == "estate-directions-legacy"
 			await replay.run(tree)
+		"tribute-plan", "tribute-plan-baseline", "tribute-plan-legacy":
+			var replay = load("res://tests/TributePlanReplay.gd").new()
+			replay.baseline = arguments[0] == "tribute-plan-baseline"
+			replay.legacy = arguments[0] == "tribute-plan-legacy"
+			await replay.run_tribute(tree, capture_directory)
 		"field-planning", "field-planning-legacy":
 			var replay = load("res://tests/FieldPlanningReplay.gd").new()
 			replay.legacy = arguments[0] == "field-planning-legacy"

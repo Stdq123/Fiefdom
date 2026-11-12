@@ -4,17 +4,27 @@ signal market_requested
 signal duties_requested
 signal dry_plot_requested
 signal harvest_requested
+signal tribute_field_requested
 signal sleep_requested
 
 const GOOD := Color("#c7dcaf")
 const SHORT := Color("#efbf8a")
+const WINDOW_MARGIN := 16.0
 
+@onready var window: PanelContainer = $Center/Window
+@onready var content: VBoxContainer = $Center/Window/Content
+@onready var header: HBoxContainer = $Center/Window/Content/Header
 @onready var grain: Label = %Grain
 @onready var need: Label = %Need
 @onready var money: Label = %Money
 @onready var raid_plan: PanelContainer = %RaidPlan
 @onready var raid_heading: Label = %RaidHeading
 @onready var raid_instructions: Label = %RaidInstructions
+@onready var tribute_plan: PanelContainer = %TributePlan
+@onready var tribute_deadline: Label = %TributeDeadline
+@onready var tribute_details: Label = %TributeDetails
+@onready var tribute_goal: Label = %TributeGoal
+@onready var find_tribute: Button = %FindTribute
 @onready var field_forecast: Label = %FieldForecast
 @onready var field_warning: Label = %FieldWarning
 @onready var sheep_note: Label = %SheepNote
@@ -58,6 +68,7 @@ func _ready() -> void:
 	close_button.pressed.connect(queue_free)
 	find_plot.pressed.connect(dry_plot_requested.emit)
 	find_harvest.pressed.connect(harvest_requested.emit)
+	find_tribute.pressed.connect(tribute_field_requested.emit)
 	page_button.pressed.connect(func(): _show_page(not show_previous))
 	%Market.pressed.connect(func():
 		queue_free()
@@ -101,7 +112,12 @@ func _show_page(previous: bool) -> void:
 	_fit_body.call_deferred()
 
 func _fit_body() -> void:
-	var height := get_viewport_rect().size.y - 160.0
+	var separation := content.get_theme_constant("separation")
+	var frame_height := window.get_theme_stylebox("panel").get_minimum_size().y \
+		+ header.get_combined_minimum_size().y + separation
+	if footer.visible:
+		frame_height += footer.get_combined_minimum_size().y + separation
+	var height := maxf(0.0, get_viewport_rect().size.y - WINDOW_MARGIN * 2.0 - frame_height)
 	scroll.custom_minimum_size.y = minf(body.get_combined_minimum_size().y, height)
 
 func _change_policy() -> void:
@@ -248,6 +264,7 @@ func _refresh_raid_plan() -> void:
 	raid_instructions.text = instructions
 
 func _refresh_fields() -> void:
+	_refresh_tribute()
 	var report := Global.field_night_forecast()
 	field_forecast.text = "已有 %d 格可收 · 今夜预计 %d 格生长" % [
 		report.ready, report.growing + report.public_ripe + report.private_ripe]
@@ -269,6 +286,53 @@ func _refresh_fields() -> void:
 	field_warning.visible = not warnings.is_empty()
 	find_plot.visible = report.dry > 0
 	find_harvest.visible = show_previous and report.ready > 0
+
+func _refresh_tribute() -> void:
+	var due := Global.tribute_deadline()
+	tribute_plan.visible = due > 0
+	if not tribute_plan.visible:
+		return
+	var field := Global.tribute_field_plan()
+	var tonight := due == Global.current_day
+	var late_crop: bool = not field.is_empty() and field.ready_day > due
+	tribute_deadline.text = "公田纳贡 · 今夜到期" if tonight else "公田纳贡 · 第 %d 天过夜前" % due
+	if Global.tribute_overdue():
+		tribute_deadline.text = "公田纳贡 · 已逾期"
+	tribute_deadline.add_theme_color_override("font_color", SHORT if tonight or late_crop else GOOD)
+	tribute_goal.visible = not Global.quest_completed
+	tribute_goal.text = "累计纳贡 %d/%d · 达标得 %d 声望" % [
+		Global.quest_progress, Global.quest_target, Global.TRIBUTE_QUEST_REPUTATION]
+	find_tribute.visible = not field.is_empty()
+	tribute_details.text = "收割公田后，作物入国库，期限重新计算。"
+	if not field.is_empty():
+		_describe_tribute_field(field)
+	var penalty := Global.tribute_penalty_tonight()
+	if penalty > 0:
+		tribute_details.text += "\n若今夜仍无纳贡，声望 −%d。" % penalty
+		if Global.reputation - penalty <= Global.balance.rank_strip_threshold:
+			tribute_details.text += "将失去封地。" if Global.current_rank == Global.Rank.XIA_SHI else "将被削爵。"
+	elif late_crop and Global.balance.no_contribution_penalty > 0:
+		tribute_details.text += "\n这茬赶不上期限。欠贡将扣 %d 点声望。" % Global.balance.no_contribution_penalty
+
+func _describe_tribute_field(field: Dictionary) -> void:
+	var name := "井田 %d 的%s" % [field.field, field.crop]
+	var growth := "每夜供水，最早第 %d 天可收。" % field.ready_day
+	match field.status:
+		Global.NightGrowth.READY:
+			tribute_details.text = "%s已熟。收下即可纳贡。" % name
+			find_tribute.text = "找熟公田"
+		Global.NightGrowth.BLOCKED:
+			tribute_details.text = "%s需接通水渠。%s" % [name, growth]
+			find_tribute.text = "找断水公田"
+		Global.NightGrowth.DRY:
+			tribute_details.text = "%s今天待浇。%s" % [name, growth]
+			find_tribute.text = "找待浇公田"
+		-1:
+			tribute_details.text = "若今天在井田 %d 播%s并逐夜供水，最早第 %d 天可收。" % [field.field, field.crop, field.ready_day]
+			find_tribute.text = "选%s并指路" % field.crop
+		_:
+			tribute_details.text = "%s已有水。%s" % [name, growth]
+			find_tribute.text = "标出公田"
 
 func _refresh_field_receipt() -> void:
 	var report := Global.last_field_night

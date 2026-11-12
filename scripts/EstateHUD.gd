@@ -12,7 +12,7 @@ extends Control
 @onready var king_label: Label = %KingLabel
 @onready var inventory_label: Label = %InventoryLabel
 @onready var well_field_label: Label = %WellFieldLabel
-@onready var quest_label: Label = %QuestLabel
+@onready var tribute_button: Button = %TributeButton
 @onready var visitor_label: Label = %VisitorLabel
 @onready var opening_action: Button = %OpeningAction
 @onready var handover_button: Button = %HandoverButton
@@ -233,6 +233,9 @@ func refresh_rations() -> void:
 	if plan.uncovered > 0:
 		rations_button.text = "今夜安排 · 缺粮 %d" % (plan.need - plan.served)
 		tone = Color("#efbf8a")
+	elif Global.tribute_penalty_tonight() > 0:
+		rations_button.text = "今夜安排 · 纳贡到期"
+		tone = Color("#efbf8a")
 	elif plan.missing > 0:
 		rations_button.text = "今夜安排 · 口粮可补足"
 		tone = Color("#c7dcaf")
@@ -245,6 +248,27 @@ func refresh_rations() -> void:
 		rations_button.text = "今夜安排"
 	rations_button.add_theme_color_override("font_color", tone)
 	rations_button.tooltip_text = "查看田务和用粮\n粮仓 %d 份 · 今夜所需 %d 份" % [Global.food_storage, plan.need]
+
+func refresh_tribute() -> void:
+	var due := Global.tribute_deadline()
+	tribute_button.visible = (Global.outcome == Global.Outcome.RUNNING and due > 0
+		and (Global.first_tribute_delivered() or due <= Global.current_day + 1))
+	if tribute_button.visible:
+		var tonight := due == Global.current_day
+		tribute_button.text = "纳贡 · 今夜前" if tonight else "纳贡 · 第 %d 天过夜前" % due
+		if Global.tribute_overdue():
+			tribute_button.text = "欠贡 · 查看公田"
+		tribute_button.tooltip_text = "收割任一公田，作物入国库，期限重新计算。"
+		tribute_button.add_theme_color_override("font_color", Color("#efbf8a") if tonight else Color("#e7ddbd"))
+	_refresh_sleep_tooltip()
+
+func _refresh_sleep_tooltip() -> void:
+	sleep_button.tooltip_text = "结束今天，恢复体力"
+	if fields_needing_water > 0:
+		sleep_button.tooltip_text += "\n%d 格作物缺水会停长。查看「今夜安排」。" % fields_needing_water
+	var penalty := Global.tribute_penalty_tonight()
+	if penalty > 0:
+		sleep_button.tooltip_text += "\n若今夜仍无纳贡，声望 −%d。" % penalty
 
 func setup_seeds(ids: Array, select_seed: Callable) -> void:
 	var group := ButtonGroup.new()
@@ -356,9 +380,7 @@ func refresh_farm_status() -> void:
 	var needs_water: int = report.dry + report.blocked
 	if needs_water != fields_needing_water:
 		fields_needing_water = needs_water
-		sleep_button.tooltip_text = "结束今天，恢复体力"
-		if needs_water > 0:
-			sleep_button.tooltip_text += "\n%d 格作物缺水会停长。查看「今夜安排」。" % needs_water
+		_refresh_sleep_tooltip()
 		refresh_rations()
 
 func show_channel_help(message: String) -> void:

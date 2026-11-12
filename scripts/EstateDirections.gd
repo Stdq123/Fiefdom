@@ -13,6 +13,7 @@ const FIELD_ROUTES := {
 	Global.MulberryRoute.PLANT: {"task": "种桑"},
 	Global.MulberryRoute.WATER: {"task": "浇桑", "plot": "待浇"},
 	Global.MulberryRoute.HARVEST: {"task": "采桑叶", "plot": "可收"},
+	Global.TributeRoute.TEND: {"task": "照料公田"},
 }
 
 var world: Node2D
@@ -170,6 +171,8 @@ func _cell_position(cell: Vector2i) -> Vector2:
 	return world.to_local(tiles.to_global(tiles.map_to_local(cell)))
 
 func _field_plot_label(cell: Vector2i) -> String:
+	if Global.field_route_status == Global.TributeRoute.TEND:
+		return "公田 · " + world.field_message(cell, world.field_action(cell))
 	if Global.field_route_status == Global.MulberryRoute.PLANT:
 		if not Global.tilled_cells.has(cell):
 			return "私田 · 翻地种桑"

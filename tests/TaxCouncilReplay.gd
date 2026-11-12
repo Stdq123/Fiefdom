@@ -220,6 +220,12 @@ func _initial_choice() -> bool:
 	await _estate()
 	_expect(state.tax_reform_choice == reform and state.retainer_food_cost() == 2 and _panel() == null and not world.tax_envoy.visible,
 		"The selected scheme and departing retainer persist after Continue.")
+	await _button(ui.hud.rations_button)
+	var night := ui.get_node_or_null("Control/NightRationsPanel") as Control
+	if not _expect(night != null and not night.tribute_plan.visible and not ui.hud.tribute_button.visible
+		and state.tribute_deadline() == 0, "The reformed estate has no public tribute schedule."):
+		return false
+	await _button(night.close_button)
 	await _harvest()
 	_expect(_stores() - before == Vector4i(0, 4, 28, 4), "Harvesting under reform matches all four preview totals.")
 	print("COUNCIL_REFORM harvest=", _stores() - before, " night_food=", state.retainer_food_cost())

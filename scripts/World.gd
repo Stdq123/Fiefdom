@@ -302,6 +302,8 @@ func is_crop_dry(grid_pos: Vector2i) -> bool:
 func find_field_task(status: int, public_only := false) -> Variant:
 	if status == Global.MulberryRoute.PLANT:
 		return _find_mulberry_planting_site()
+	if status == Global.TributeRoute.TEND:
+		return Global.tribute_field_plan().get("cell")
 	var nearest: Variant = null
 	var distance := INF
 	var public_selected := false
@@ -320,6 +322,8 @@ func find_field_task(status: int, public_only := false) -> Variant:
 	return nearest
 
 func matches_field_route(cell: Vector2i, status: int) -> bool:
+	if status == Global.TributeRoute.TEND:
+		return Global.is_public_plot(cell)
 	if status == Global.MulberryRoute.PLANT:
 		return (tile_map.get_cell_source_id(cell) >= 0 and not Global.is_public_plot(cell)
 			and not active_crops.has(cell) and not Global.field_seed_plans.has(cell))

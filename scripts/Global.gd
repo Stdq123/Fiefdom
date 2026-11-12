@@ -141,8 +141,9 @@ enum ReclamationSite { OPEN, EDGE, NEAR_FIELD, SOURCE, CANAL, ROAD, LANDMARK }
 enum CropWater { DRY, BLOCKED, HAND, CANAL, RAIN }
 enum NightGrowth { READY, DRY, BLOCKED, GROW, RIPEN }
 enum MulberryRoute { PLANT = 5, WATER, HARVEST }
+enum TributeRoute { TEND = 8 }
 const FIELD_ROUTE_STATES := [NightGrowth.READY, NightGrowth.DRY, NightGrowth.BLOCKED,
-	MulberryRoute.PLANT, MulberryRoute.WATER, MulberryRoute.HARVEST]
+	MulberryRoute.PLANT, MulberryRoute.WATER, MulberryRoute.HARVEST, TributeRoute.TEND]
 enum Season { SPRING, SUMMER, AUTUMN, WINTER }
 const SEASON_NAMES := ["春", "夏", "秋", "冬"]
 
@@ -200,7 +201,7 @@ const SOLAR_TERMS = [
 ]
 
 # Quest System
-var current_quest: String
+const TRIBUTE_QUEST_REPUTATION := 50
 var quest_target: int = 10
 var quest_progress: int = 0
 var quest_completed: bool = false
@@ -317,7 +318,6 @@ func _reset_campaign() -> void:
 	zhou_li_score = "中"
 	quest_progress = 0
 	quest_completed = false
-	current_quest = "目标：上缴 %d 份公田作物 (0/%d)" % [quest_target, quest_target]
 
 func _starter_retainer() -> RetainerData:
 	return RetainerData.new(VisitorData.FIELD_KEEPER, "农夫", RetainerData.School.MOHIST)
@@ -369,6 +369,17 @@ func next_visitor_day(speaker: String) -> int:
 
 func first_tribute_delivered() -> bool:
 	return quest_progress > 0 or king_storage > 0
+
+func tribute_deadline() -> int:
+	if tax_reform_choice == TaxReformChoice.REFORMED:
+		return 0
+	return current_day + maxi(0, balance.no_contribution_threshold - days_without_contribution - 1)
+
+func tribute_penalty_tonight() -> int:
+	return balance.no_contribution_penalty if tribute_deadline() == current_day else 0
+
+func tribute_overdue() -> bool:
+	return days_without_contribution >= balance.no_contribution_threshold
 
 func next_field_keeper_visit() -> int:
 	return current_day + posmod(-current_day, FieldRotation.VISIT_INTERVAL)
@@ -560,13 +571,14 @@ func begin_next_day() -> void:
 		GameEvents.sheepfold_changed.emit()
 	GameEvents.daylight_changed.emit()
 
-func record_dawn(previous_rank: Rank, completed_fields: Array[int], research_fee: int) -> void:
+func record_dawn(previous_rank: Rank, completed_fields: Array[int], research_fee: int, tribute_penalty: int) -> void:
 	last_dawn = {
 		"day": current_day - 1,
 		"rank_change": int(current_rank) - int(previous_rank),
 		"completed_fields": completed_fields,
 		"research_paid": research_fee if not research_choice_pending else 0,
 		"research_gap": maxi(0, research_fee - money) if research_choice_pending else 0,
+		"tribute_penalty": tribute_penalty,
 	}
 
 func has_morning_record() -> bool:
@@ -591,6 +603,9 @@ func dawn_milestones() -> PackedStringArray:
 		lines.append("研究经费已缴 %d 铜钱" % research_paid)
 	elif research_gap > 0:
 		lines.append("研究经费未缴 · 缺 %d 铜钱 · 召简回堂前催议" % research_gap)
+	var tribute_penalty: int = last_dawn.get("tribute_penalty", 0)
+	if tribute_penalty > 0:
+		lines.append("欠贡 · 声望 −%d" % tribute_penalty)
 	return lines
 
 func solar_term_index(day := 0) -> int:
@@ -970,6 +985,49 @@ func field_night_forecast(day := 0) -> Dictionary:
 				report[key] += 1
 	return report
 
+func tribute_field_plan() -> Dictionary:
+	if tribute_deadline() == 0:
+		return {}
+	var plan := {}
+	var sowing_seed := ""
+	var earliest := INF
+	for field in well_fields:
+		if not field["is_unlocked"]:
+			continue
+		var cell: Vector2i = field["center_pos"]
+		var crop: Dictionary = active_crops.get(cell, {})
+		var status := crop_night_status(cell)
+		var seed := ""
+		var nights: int
+		var crop_data: CropData
+		if crop.is_empty():
+			if sowing_seed.is_empty():
+				sowing_seed = _tribute_seed()
+			seed = sowing_seed
+			crop_data = ItemManager.get_crop(seed)
+			nights = sowing_nights(crop_data)
+		else:
+			crop_data = crop.data
+			nights = maxi(0, int(crop.growth_nights) - int(crop.age))
+		if nights < earliest or (nights == earliest and plan.status == NightGrowth.BLOCKED and status != NightGrowth.BLOCKED):
+			earliest = nights
+			plan = {"cell": cell, "field": int(field["field_id"]) + 1, "status": status,
+				"seed_id": seed, "crop": crop_data.crop_name, "ready_day": current_day + nights}
+	return plan
+
+func _tribute_seed() -> String:
+	var best := "millet"
+	var fewest := sowing_nights(ItemManager.get_crop(best))
+	for seed: String in CropData.IDS:
+		var crop := ItemManager.get_crop(seed)
+		if crop.is_water_crop or crop.is_perennial:
+			continue
+		var nights := sowing_nights(crop)
+		if nights < fewest or (nights == fewest and seed == selected_seed_id):
+			fewest = nights
+			best = seed
+	return best
+
 func knows_ravine_journal() -> bool:
 	return visitor_encounters.has(VisitorData.RAVINE_GUIDE)
 
@@ -1127,7 +1185,7 @@ func route_objectives(choice := TaxReformChoice.NONE) -> Array[Dictionary]:
 	goals.append({"kind": RouteGoal.RAIDS, "label": "击退敌袭", "value": raids_defeated, "target": balance.ending_raids_min})
 	return goals
 
-func restore_stamina() -> void:
+func restore_stamina() -> int:
 	current_stamina = max_stamina
 	health = mini(balance.player_max_health, health + balance.health_recovery_at_night)
 	GameEvents.health_changed.emit(health)
@@ -1145,14 +1203,17 @@ func restore_stamina() -> void:
 
 	# Check contribution
 	if tax_reform_choice == TaxReformChoice.REFORMED:
-		return
+		return 0
+	var due := tribute_deadline() == current_day
 	days_without_contribution += 1
-	if days_without_contribution >= balance.no_contribution_threshold:
+	if due:
 		reputation -= balance.no_contribution_penalty
 		print("Warning: Reputation decreased due to lack of contribution! Current: ", reputation)
 		GameEvents.reputation_changed.emit(reputation)
 		if reputation <= balance.rank_strip_threshold:
 			_strip_rank()
+		return balance.no_contribution_penalty
+	return 0
 
 func _strip_rank() -> void:
 	if current_rank == Rank.XIA_SHI:
@@ -1703,14 +1764,14 @@ func add_item(is_public: bool, unit_price: int, extra_yield := 0, crop_id := "")
 	king_storage += amount
 	reputation += ceili(10 * tax_multiplier) * amount
 	days_without_contribution = 0
+	if field_route_status == TributeRoute.TEND:
+		field_route_status = -1
 	print("Added to King's Treasury. Amount: ", amount, " Reputation: ", reputation)
 	if not quest_completed:
 		quest_progress = mini(quest_target, quest_progress + amount)
-		current_quest = "目标：上缴 %d 份公田作物 (%d/%d)" % [quest_target, quest_progress, quest_target]
 		if quest_progress >= quest_target:
 			quest_completed = true
-			current_quest = "任务完成！获得 50 声望"
-			reputation += 50
+			reputation += TRIBUTE_QUEST_REPUTATION
 			print("Quest Completed!")
 			GameEvents.reputation_changed.emit(reputation)
 	return amount
@@ -2904,8 +2965,6 @@ func load_game(path := "") -> Error:
 			var plan: Variant = seed_plans[key]
 			if cell is Vector2i and plan is String:
 				set_field_seed_plan(cell, plan)
-	current_quest = "任务完成！获得 50 声望" if quest_completed else (
-		"目标：上缴 %d 份公田作物 (%d/%d)" % [quest_target, quest_progress, quest_target])
 	ending_record = _saved_ending_record(data)
 	if ending_record.is_empty() and outcome in [Outcome.TRADITIONAL, Outcome.REFORMED]:
 		ending_record = _capture_ending(outcome)
@@ -2968,6 +3027,7 @@ func _restore_dawn(record: Variant, saved_day: int) -> Dictionary:
 		"completed_fields": completed,
 		"research_paid": maxi(0, _read_save_int(record.get("research_paid"), 0)),
 		"research_gap": maxi(0, _read_save_int(record.get("research_gap"), 0)),
+		"tribute_penalty": maxi(0, _read_save_int(record.get("tribute_penalty"), 0)),
 	}
 
 func _restore_away_field_report(record: Variant, saved_day: int) -> Dictionary:

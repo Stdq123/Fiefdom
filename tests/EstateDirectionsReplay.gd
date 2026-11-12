@@ -298,7 +298,7 @@ func run(game_tree: SceneTree) -> void:
 	await _use_estate()
 	var spawn: Vector2 = world.player.global_position
 	_expect(directions.visible and directions.mark == directions.Mark.PLOT and directions.caption.text == "公田"
-		and "WASD" in ui.hud.guide.text and not ui.hud.quest_label.visible,
+		and "WASD" in ui.hud.guide.text and not ui.hud.tribute_button.visible,
 		"A new estate labels the public plot and explains movement before showing the larger tribute goal.")
 	_expect(directions.plaque.position.y > directions.outline.end.y + directions.outline.size.y - 2.0,
 		"The first caption leaves the adjacent private plot visible.")
@@ -363,7 +363,7 @@ func run(game_tree: SceneTree) -> void:
 	await _click(ui.panel_manager.management_panel_instance.get_node("CloseButton").get_global_rect().get_center())
 
 	await _click(_point_on_field())
-	_expect(state.king_storage == 1 and directions.tracked_neighbor.is_empty() and ui.hud.quest_label.visible
+	_expect(state.king_storage == 1 and directions.tracked_neighbor.is_empty() and ui.hud.tribute_button.visible
 		and ui.hud.guide.heading.text == "第一茬私田" and directions.mark == directions.Mark.PLOT and directions.caption.text == "私田"
 		and not ui.hud.handover_button.visible and ui.hud.opening_action.text == "找渠伯谈轮作",
 		"The treasury receives the public harvest while the next cue stays on the private plot.")

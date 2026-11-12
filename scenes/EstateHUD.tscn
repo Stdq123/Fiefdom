@@ -212,13 +212,14 @@ mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 14
 text = "取消指路"
 
-[node name="QuestLabel" type="Label" parent="Journal/Stack"]
+[node name="TributeButton" type="Button" parent="Journal/Stack"]
+visible = false
+custom_minimum_size = Vector2(0, 27)
 layout_mode = 2
-mouse_filter = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
 unique_name_in_owner = true
-theme_override_font_sizes/font_size = 13
-theme_override_colors/font_color = Color(0.749, 0.7804, 0.6353, 1)
-autowrap_mode = 3
+theme_override_font_sizes/font_size = 14
 
 [node name="OpeningAction" type="Button" parent="Journal/Stack"]
 unique_name_in_owner = true

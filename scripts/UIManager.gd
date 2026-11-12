@@ -111,8 +111,11 @@ func _process(_delta: float) -> void:
 	hud.route_progress.disabled = hud.map_button.disabled
 	hud.council_prep_button.disabled = hud.map_button.disabled
 	hud.handover_button.disabled = hud.map_button.disabled
+	hud.tribute_button.disabled = hud.map_button.disabled
 	hud.raid_alert.disabled = blocked
-	var following_canal := Global.field_route_status == Global.NightGrowth.BLOCKED
+	var following_canal := (Global.field_route_status == Global.NightGrowth.BLOCKED
+		or (Global.field_route_status == Global.TributeRoute.TEND and directions.tracked_plot != null
+			and Global.crop_night_status(directions.tracked_plot) == Global.NightGrowth.BLOCKED))
 	directions.update_marker(busy or world.player.training_cart.visible
 		or (world.channel_mode and not following_canal) or Global.is_indoors())
 
@@ -208,6 +211,7 @@ func _connect_signals() -> void:
 	GameEvents.east_watch_built.connect(update_ui)
 	GameEvents.tax_reform_triggered.connect(_on_council_invitation)
 	GameEvents.tax_reform_choice_made.connect(_refresh_opening_action.unbind(1))
+	GameEvents.tax_reform_choice_made.connect(update_ui.unbind(1))
 	GameEvents.tax_envoy_interacted.connect(_on_tax_envoy_interacted)
 	GameEvents.channel_survey_learned.connect(hud.refresh_survey_button)
 	GameEvents.channel_survey_learned.connect(update_ui)
@@ -251,6 +255,7 @@ func _connect_signals() -> void:
 	hud.opening_action.pressed.connect(_on_opening_action)
 	sleep_button.pressed.connect(_on_sleep_pressed)
 	hud.rations_button.pressed.connect(_show_night_rations)
+	hud.tribute_button.pressed.connect(_show_night_rations)
 	hud.morning_button.pressed.connect(_show_night_rations.bind(true))
 	hud.raid_alert.pressed.connect(_on_raid_alert_pressed)
 	manage_button.pressed.connect(_on_manage_pressed)
@@ -263,9 +268,7 @@ func _connect_signals() -> void:
 func update_ui() -> void:
 	state_manager.update_all_ui()
 	hud.refresh_rations()
-	hud.quest_label.visible = (Global.tax_reform_choice != Global.TaxReformChoice.REFORMED
-		and Global.first_tribute_delivered() and not Global.quest_completed)
-	hud.quest_label.text = Global.current_quest.trim_prefix("目标：")
+	hud.refresh_tribute()
 	hud.reputation_label.text = "声望 %d" % Global.reputation
 	hud.calendar_label.text = "第 %d 年 · %s · %s · %s" % [
 		Global.get_current_year(), Global.SEASON_NAMES[Global.season_index()], Global.get_current_solar_term(),
@@ -527,6 +530,7 @@ func _show_night_rations(show_previous := false) -> void:
 	panel.duties_requested.connect(panel_manager.show_management_panel)
 	panel.dry_plot_requested.connect(_on_night_plot_requested.bind(panel, Global.NightGrowth.DRY))
 	panel.harvest_requested.connect(_on_night_plot_requested.bind(panel, Global.NightGrowth.READY))
+	panel.tribute_field_requested.connect(_on_tribute_field_requested.bind(panel))
 	panel.sleep_requested.connect(func():
 		panel_manager.hide_management_panel()
 		_on_sleep_pressed()
@@ -544,6 +548,16 @@ func _on_night_plot_requested(panel: Control, status: Global.NightGrowth) -> voi
 		if Global.is_indoors():
 			var plot := "可收田" if status == Global.NightGrowth.READY else "待浇田"
 			hud.practice_label.text = "已标出%s · 从南门回田边" % plot
+
+func _on_tribute_field_requested(panel: Control) -> void:
+	if not directions.follow_field_route(Global.TributeRoute.TEND):
+		return
+	var seed: String = Global.tribute_field_plan().seed_id
+	if not seed.is_empty():
+		world.select_seed(seed)
+	panel.queue_free()
+	if Global.is_indoors():
+		hud.practice_label.text = "已标出公田 · 从门口回田边"
 
 func _guide_driving_practice() -> void:
 	if world.player.training_cart.visible:
@@ -737,7 +751,7 @@ func _on_sleep_pressed() -> void:
 		var previous_rank := Global.current_rank
 		var research_fee := Global.research_fee_due(Global.current_day + 1)
 		Global.begin_next_day()
-		Global.restore_stamina()
+		var tribute_penalty := Global.restore_stamina()
 		if Global.outcome != Global.Outcome.RUNNING:
 			_clear_fader()
 			return
@@ -748,7 +762,7 @@ func _on_sleep_pressed() -> void:
 		for field in unfinished:
 			if field["is_unlocked"]:
 				completed.append(field["field_id"] + 1)
-		Global.record_dawn(previous_rank, completed, research_fee)
+		Global.record_dawn(previous_rank, completed, research_fee, tribute_penalty)
 		hud.refresh_morning_record()
 		Global.save_automatically("dawn")
 		dawn_caption.text = "第 %d 天 · %s · %s" % [Global.current_day, Global.get_current_solar_term(), Global.day_watch_label()]

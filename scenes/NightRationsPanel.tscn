@@ -158,6 +158,45 @@ theme_override_colors/font_color = Color(0.87, 0.84, 0.71, 1)
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 
+[node name="TributePlan" type="PanelContainer" parent="Center/Window/Content/Scroll/Body/Plan"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_styles/panel = SubResource("Ledger")
+
+[node name="Row" type="HBoxContainer" parent="Center/Window/Content/Scroll/Body/Plan/TributePlan"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Details" type="VBoxContainer" parent="Center/Window/Content/Scroll/Body/Plan/TributePlan/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="TributeDeadline" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/TributePlan/Row/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+
+[node name="TributeDetails" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/TributePlan/Row/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="TributeGoal" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/TributePlan/Row/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.75, 0.8, 0.67, 1)
+
+[node name="FindTribute" type="Button" parent="Center/Window/Content/Scroll/Body/Plan/TributePlan/Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(115, 34)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+
 [node name="FieldPlan" type="PanelContainer" parent="Center/Window/Content/Scroll/Body/Plan"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("Ledger")
