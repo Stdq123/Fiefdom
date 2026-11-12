@@ -45,6 +45,10 @@ func _run() -> void:
 		"gamepad":
 			var replay = load("res://tests/GamepadReplay.gd").new()
 			await replay.run(tree, capture_directory)
+		"six-arts", "six-arts-legacy":
+			var replay = load("res://tests/SixArtsReplay.gd").new()
+			replay.legacy = arguments[0] == "six-arts-legacy"
+			await replay.run(tree)
 		"bow-aim":
 			var replay = load("res://tests/BowAimReplay.gd").new()
 			await replay.run(tree, capture_directory)

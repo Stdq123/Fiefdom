@@ -5,6 +5,9 @@ class_name Player
 signal footstep(world_position: Vector2)
 
 const SPEED = 100.0
+const CART_SPEED := 145.0
+const CART_ACCELERATION := 295.0
+const CART_BRAKING := 390.0
 const STEP_DISTANCE := 20.0
 const WALK_FRAMES := [1, 0, 2, 0]
 const WALK_FPS := 10.0
@@ -18,7 +21,7 @@ var current_state = State.IDLE
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var tool_gesture: ToolGesture = $ToolGesture
-@onready var training_cart: Sprite2D = $TrainingCart
+@onready var training_cart: TrainingCart = $TrainingCart
 @onready var bow_target: Node2D = $BowTarget
 @onready var camera: Camera2D = $Camera2D
 @onready var meal_button: Button = $MealUI/MealButton
@@ -69,23 +72,28 @@ static func input_direction() -> Vector2:
 		direction = Input.get_vector(KeyBindings.LEFT, KeyBindings.RIGHT, KeyBindings.UP, KeyBindings.DOWN)
 	return GamepadInput.move_direction() if direction.is_zero_approx() else direction
 
-func _world_controls_blocked() -> bool:
+func world_controls_blocked() -> bool:
 	return conversation_open or resting or menu_open or MapTravel.active
 
 func _physics_process(delta: float) -> void:
 	var direction := input_direction()
-	if _world_controls_blocked():
+	var blocked := world_controls_blocked()
+	if blocked:
 		direction = Vector2.ZERO
 	meal_button.visible = _can_use_travel_meal()
-	if direction:
-		velocity = direction * SPEED * (1.5 if training_cart.visible else 1.0)
+	if training_cart.visible and not blocked:
+		var rate := CART_BRAKING if direction.is_zero_approx() else CART_ACCELERATION
+		velocity = velocity.move_toward(direction * CART_SPEED, rate * delta)
+	else:
+		velocity = direction * SPEED
+	if not velocity.is_zero_approx():
 		current_state = State.RUN
 	else:
-		velocity = Vector2.ZERO
 		current_state = State.TOOL_USE if tool_gesture.visible else State.IDLE
 
 	move_and_slide()
-	_update_footsteps(get_position_delta().length())
+	var distance := get_position_delta().length()
+	_update_footsteps(distance)
 	
 	# Camera Shake
 	if shake_strength > 0.05:
@@ -95,7 +103,10 @@ func _physics_process(delta: float) -> void:
 		shake_strength = 0.0
 		camera.offset = Vector2.ZERO
 	
-	_update_walk_sprite(direction, delta)
+	if training_cart.visible:
+		_update_driver(distance)
+	else:
+		_update_walk_sprite(direction, delta)
 	var next_target := _nearest_interactable()
 	if next_target != interaction_target:
 		if is_instance_valid(interaction_target) and interaction_target.has_method("set_interaction_focused"):
@@ -106,6 +117,21 @@ func _physics_process(delta: float) -> void:
 
 func set_training_cart(mounted: bool) -> void:
 	training_cart.visible = mounted
+	velocity = Vector2.ZERO
+	tool_gesture.clear()
+	sprite.position.y = -15.0 if mounted else -6.0
+	if mounted:
+		_update_driver(0.0)
+	else:
+		training_cart.halt()
+
+func _update_driver(distance: float) -> void:
+	if velocity.length_squared() > 144.0:
+		_face(velocity)
+	training_cart.face(facing_direction())
+	training_cart.roll(distance)
+	sprite.offset = Vector2.ZERO
+	sprite.frame_coords = Vector2i(0, facing_row)
 
 func take_damage(amount: int) -> void:
 	if Global.outcome == Global.Outcome.RUNNING:
@@ -160,7 +186,7 @@ func _input(event: InputEvent) -> void:
 func _process(_delta: float) -> void:
 	var target: Node2D
 	var viewport := get_viewport()
-	if (not _world_controls_blocked() and not Global.is_indoors()
+	if (not world_controls_blocked() and not training_cart.visible and not Global.is_indoors()
 			and viewport.get_visible_rect().has_point(bow_pointer)
 			and viewport.gui_get_hovered_control() == null):
 		target = _enemy_under_bow_pointer(get_canvas_transform().affine_inverse() * bow_pointer)
@@ -179,14 +205,15 @@ func _draw_bow_target() -> void:
 		bow_target.draw_polyline(bracket, Color("#e6efbd"), 1.3)
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _world_controls_blocked():
+	if world_controls_blocked():
 		return
 	if event is InputEventMouseButton and event.pressed:
 		if Global.is_indoors():
 			return
 		match event.button_index:
 			MOUSE_BUTTON_RIGHT:
-				shoot_arrow(get_canvas_transform().affine_inverse() * event.position)
+				if not training_cart.visible:
+					shoot_arrow(get_canvas_transform().affine_inverse() * event.position)
 			MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN:
 				if get_viewport().gui_get_hovered_control() == null:
 					var step := 1 if event.button_index == MOUSE_BUTTON_WHEEL_UP else -1
@@ -203,7 +230,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _can_use_travel_meal() -> bool:
 	return (not Global.travel_meal.is_empty() and Global.outcome == Global.Outcome.RUNNING
-		and not (meal_controls_blocked or conversation_open or resting or MapTravel.active))
+		and not (meal_controls_blocked or conversation_open or resting or MapTravel.active or training_cart.visible))
 
 func _refresh_travel_meal() -> void:
 	meal_button.visible = _can_use_travel_meal()
@@ -260,6 +287,8 @@ func apply_shake(strength: float = 5.0) -> void:
 	shake_strength = strength
 
 func _nearest_interactable() -> Node2D:
+	if training_cart.visible:
+		return null
 	var nearest_node: Node2D
 	var min_dist := 60.0 * 60.0
 	for candidate in get_tree().get_nodes_in_group("interactable"):

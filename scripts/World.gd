@@ -396,7 +396,7 @@ func _input(event: InputEvent) -> void:
 			_end_sweep()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if Global.is_indoors() or player.conversation_open or player.resting or player.menu_open:
+	if Global.is_indoors() or player.world_controls_blocked() or player.training_cart.visible:
 		return
 	if (event is InputEventKey or event is InputEventAction) and event.is_pressed() and not event.is_echo():
 		if channel_mode and event.is_action_pressed("ui_cancel"):

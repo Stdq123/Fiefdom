@@ -25,6 +25,10 @@ extends Control
 @onready var health_label: Label = %HealthLabel
 @onready var health_bar: ProgressBar = %HealthBar
 @onready var practice_label: Label = %PracticeLabel
+@onready var driving_panel: PanelContainer = %DrivingPanel
+@onready var driving_status: Label = %DrivingStatus
+@onready var driving_hint: Label = %DrivingHint
+@onready var leave_cart: Button = %LeaveCart
 @onready var help_label: Label = %HelpLabel
 @onready var farm_status: Button = %FarmStatus
 @onready var pinned_order: Button = %PinnedOrder
@@ -49,6 +53,7 @@ var save_notice_tween: Tween
 var fields_needing_water := 0
 var reclamation_mode := false
 var indoors := false
+var driving := false
 var channel_message := ""
 
 func set_reclamation_mode(active: bool) -> void:
@@ -64,8 +69,11 @@ func set_estate_room(room: Global.EstateRoom) -> void:
 	_refresh_silk_stock()
 
 func _refresh_sections() -> void:
-	for section: Control in [$Journal, $SeedBelt, rations_button]:
-		section.visible = not reclamation_mode and not indoors
+	var outdoors := not reclamation_mode and not indoors
+	$Journal.visible = outdoors
+	rations_button.visible = outdoors
+	$SeedBelt.visible = outdoors and not driving
+	driving_panel.visible = outdoors and driving
 	$Tools.visible = not reclamation_mode
 	$Actions.visible = not reclamation_mode
 	$Vitals.visible = not indoors
@@ -74,8 +82,18 @@ func _refresh_sections() -> void:
 	channel_button.visible = not indoors
 	sleep_button.visible = not indoors
 
+func set_driving(active: bool) -> void:
+	driving = active
+	practice_label.text = ""
+	_refresh_sections()
+
+func show_driving_progress(progress: String, instruction: String) -> void:
+	driving_status.text = progress
+	driving_hint.text = instruction
+
 func _ready() -> void:
 	GameEvents.estate_arrived.connect(_show_arrival)
+	GameEvents.driving_practice_progress.connect(show_driving_progress)
 	GamepadInput.changed.connect(_refresh_shortcuts)
 	Preferences.bindings_changed.connect(_refresh_shortcuts)
 	_refresh_shortcuts()
@@ -156,6 +174,7 @@ func _refresh_silk_stock() -> void:
 
 func _refresh_shortcuts() -> void:
 	var pad := GamepadInput.active
+	leave_cart.text = "下车  B" if pad else "下车  Esc"
 	map_button.text = "舆图  %s" % ("Y" if pad else Preferences.key_label(KeyBindings.MAP))
 	calendar_button.text = "历书 %s" % ("View" if pad else Preferences.key_label(KeyBindings.ALMANAC))
 	for id in seed_buttons:

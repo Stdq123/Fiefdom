@@ -34,6 +34,7 @@ var music_practice_script = preload("res://scripts/MusicPractice.gd")
 # Six Arts UI References
 @onready var stats_container: VBoxContainer = $HBoxContainer/RightPanel/君子六艺/StatsContainer
 @onready var study_progress: Label = $HBoxContainer/RightPanel/君子六艺/StudyProgress
+@onready var driving_record: Label = $HBoxContainer/RightPanel/君子六艺/DrivingRecord
 @onready var read_button: Button = $HBoxContainer/RightPanel/君子六艺/Actions/ReadButton
 @onready var music_button: Button = $HBoxContainer/RightPanel/君子六艺/Actions/MusicButton
 @onready var driving_button: Button = $HBoxContainer/RightPanel/君子六艺/Actions/DrivingButton
@@ -230,7 +231,9 @@ func _refresh_practice_buttons() -> void:
 	music_button.disabled = not Global.can_practice_today(PlayerStats.Art.MUSIC)
 	driving_button.disabled = not Global.can_practice_today(PlayerStats.Art.DRIVING)
 	music_button.text = "今日已奏乐" if music_button.disabled else "编钟练习"
-	driving_button.text = "今日已驾御" if driving_button.disabled else "驾御练习"
+	driving_button.text = "今日已练御" if driving_button.disabled else "指路去驾御"
+	driving_record.visible = Global.best_driving_ms > 0
+	driving_record.text = "驾御最快用时 %.1f 秒" % (Global.best_driving_ms / 1000.0)
 
 func _refresh_study_progress() -> void:
 	var literacy := Global.player_stats.get_stat(PlayerStats.Art.LITERACY)

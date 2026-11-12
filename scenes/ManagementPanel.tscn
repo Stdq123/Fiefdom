@@ -159,7 +159,12 @@ text = "编钟练习"
 
 [node name="DrivingButton" type="Button" parent="HBoxContainer/RightPanel/君子六艺/Actions"]
 layout_mode = 2
-text = "驾御练习"
+text = "指路去驾御"
+
+[node name="DrivingRecord" type="Label" parent="HBoxContainer/RightPanel/君子六艺"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.86, 0.77, 0.57, 1)
 
 [node name="科技" type="VBoxContainer" parent="HBoxContainer/RightPanel"]
 visible = false

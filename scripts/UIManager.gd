@@ -60,6 +60,7 @@ func _ready() -> void:
 	estate_map.setup(world, directions, _map_controls_blocked)
 	hud.map_button.pressed.connect(estate_map.open_map)
 	hud.farm_status.pressed.connect(estate_map.open_fields)
+	hud.leave_cart.pressed.connect(world.get_node("DrivingPractice").dismount)
 	hud.handover_button.pressed.connect(_open_handover)
 	handover.find_keeper_requested.connect(_on_neighbor_directions_requested.bind(VisitorData.FIELD_KEEPER))
 	hud.route_progress.pressed.connect(_open_route_goals)
@@ -104,7 +105,8 @@ func _process(_delta: float) -> void:
 	hud.handover_button.disabled = hud.map_button.disabled
 	hud.raid_alert.disabled = blocked
 	var following_canal := Global.field_route_status == Global.NightGrowth.BLOCKED
-	directions.update_marker(busy or (world.channel_mode and not following_canal) or Global.is_indoors())
+	directions.update_marker(busy or world.player.training_cart.visible
+		or (world.channel_mode and not following_canal) or Global.is_indoors())
 
 func _estate_controls_blocked() -> bool:
 	return world.channel_mode or _estate_controls_busy()
@@ -206,6 +208,8 @@ func _connect_signals() -> void:
 	var feedback := func(message: String): hud.practice_label.text = message
 	GameEvents.practice_feedback.connect(feedback)
 	GameEvents.silk_station_feedback.connect(feedback)
+	GameEvents.driving_practice_requested.connect(_guide_driving_practice)
+	GameEvents.driving_practice_changed.connect(_show_driving_hud)
 	GameEvents.estate_room_changed.connect(hud.set_estate_room)
 	GameEvents.silk_shed_directions_requested.connect(_on_silk_shed_directions_requested)
 	GameEvents.west_market_directions_requested.connect(_on_west_market_directions_requested)
@@ -489,6 +493,18 @@ func _on_dry_plot_requested(panel: Control) -> void:
 		panel.queue_free()
 		if Global.is_indoors():
 			hud.practice_label.text = "已标出待浇田 · 从南门回田边"
+
+func _guide_driving_practice() -> void:
+	if world.player.training_cart.visible:
+		return
+	directions.follow_place(DrivingPractice.PLACE, DrivingPractice.START_POINT)
+	var on_arrival := "到田边马车旁按 %s 上车" % GamepadInput.interact_key()
+	hud.practice_label.text = "从南门回封地 · " + on_arrival if Global.is_indoors() else on_arrival
+
+func _show_driving_hud(active: bool) -> void:
+	hud.set_driving(active)
+	if active and directions.tracked_place == DrivingPractice.PLACE:
+		directions.clear_tracking()
 
 func _on_silk_shed_directions_requested() -> void:
 	var shed := world.get_node("SilkShed") as Node2D

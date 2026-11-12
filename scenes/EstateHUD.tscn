@@ -580,6 +580,50 @@ mouse_default_cursor_shape = 2
 text = "设置"
 tooltip_text = "音量、画面与存档"
 
+[node name="DrivingPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -221.0
+offset_top = -91.0
+offset_right = 221.0
+offset_bottom = -16.0
+grow_vertical = 0
+theme_override_styles/panel = SubResource("Journal")
+
+[node name="Row" type="HBoxContainer" parent="DrivingPanel"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="Details" type="VBoxContainer" parent="DrivingPanel/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="DrivingStatus" type="Label" parent="DrivingPanel/Row/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.81, 0.52, 1)
+theme_override_font_sizes/font_size = 17
+
+[node name="DrivingHint" type="Label" parent="DrivingPanel/Row/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.89, 0.75, 1)
+theme_override_font_sizes/font_size = 15
+
+[node name="LeaveCart" type="Button" parent="DrivingPanel/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+custom_minimum_size = Vector2(91, 35)
+mouse_default_cursor_shape = 2
+text = "下车  Esc"
+
 [node name="PracticeLabel" type="Label" parent="."]
 unique_name_in_owner = true
 layout_mode = 1

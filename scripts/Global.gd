@@ -109,6 +109,7 @@ var silk_sample_day := 0
 # Phase 3: RPG Stats
 var player_stats: PlayerStats
 var practice_days: Dictionary[String, int] = {}
+var best_driving_ms := 0
 var gathering_recitals: Dictionary[int, int] = {}
 var summer_raft_results: Dictionary[int, Dictionary] = {}
 var autumn_exhibits: Dictionary[int, Dictionary] = {}
@@ -267,6 +268,7 @@ func _reset_campaign() -> void:
 	silk_sample_day = 0
 	player_stats = PlayerStats.new()
 	practice_days.clear()
+	best_driving_ms = 0
 	gathering_recitals.clear()
 	summer_raft_results.clear()
 	autumn_exhibits.clear()
@@ -2280,6 +2282,7 @@ func _save_snapshot(origin: String) -> Error:
 		"road_rest_used_day": road_rest_used_day,
 		"player_stats": player_stats.stats,
 		"practice_days": practice_days,
+		"best_driving_ms": best_driving_ms,
 		"gathering_recitals": gathering_recitals,
 		"summer_raft_results": summer_raft_results,
 		"autumn_exhibits": autumn_exhibits,
@@ -2736,6 +2739,7 @@ func load_game(path := "") -> Error:
 	road_rest_used_day = used_day if road_rest_paid_day > 0 and used_day > road_rest_paid_day and used_day <= saved_day else 0
 	player_stats = restored_stats
 	practice_days = restored_practice
+	best_driving_ms = maxi(0, _read_save_int(data.get("best_driving_ms"), 0))
 	gathering_recitals = restored_recitals
 	_restore_summer_raft_results(data.get("summer_raft_results"), saved_day)
 	_restore_autumn_exhibits(data.get("autumn_exhibits"), saved_day)

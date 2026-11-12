@@ -9,6 +9,7 @@ param(
     [switch]$Soak,
     [switch]$Rations,
     [switch]$Gamepad,
+    [switch]$SixArts,
     [switch]$BowAim,
     [switch]$WinterSupper,
     [switch]$KeyBindings,
@@ -73,7 +74,7 @@ function Start-VerifiedGame {
     }
     $lines = Get-Content -LiteralPath $log -Encoding utf8
     $marker = if ($Replay) { 'SCENARIO_OK' } else { 'Fiefdom title ready' }
-    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|GAMEPAD_|BOW_AIM_|WINTER_|BINDING_|RAFT_|TITLE_|DECOR_|ROUTE_|DIRECTION_|PLAN_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|FIELD_ROUTE_|PAVILION_EVENING_|FISH_MARKET_|MARKET_WAYFINDING_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
+    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|GAMEPAD_|DRIVING_|BOW_AIM_|WINTER_|BINDING_|RAFT_|TITLE_|DECOR_|ROUTE_|DIRECTION_|PLAN_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|FIELD_ROUTE_|PAVILION_EVENING_|FISH_MARKET_|MARKET_WAYFINDING_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
     if ($process.ExitCode -ne 0 -or $lines -cnotcontains $marker -or $lines -cmatch '^\s*(?:SCRIPT ERROR|USER ERROR|ERROR|WARNING):') {
         throw "$Name failed (exit $($process.ExitCode)). See $log"
     }
@@ -81,7 +82,7 @@ function Start-VerifiedGame {
 
 function Install-Replay([string]$Directory) {
     $testDirectory = (New-Item -ItemType Directory -Path (Join-Path $Directory 'tests')).FullName
-    foreach ($file in 'ReleaseReplay.tscn', 'ReleaseReplay.gd', 'CampaignReplay.gd', 'NightRationsReplay.gd', 'RationPriorityReplay.gd', 'RetainerReturnReplay.gd', 'GamepadReplay.gd', 'BowAimReplay.gd', 'WinterSupperReplay.gd', 'KeyBindingsReplay.gd', 'SummerRaftReplay.gd', 'TitlePresentationReplay.gd', 'HallInteriorReplay.gd', 'HallDecorReplay.gd', 'TaxCouncilReplay.gd', 'RouteGoalsReplay.gd', 'EstateDirectionsReplay.gd', 'FieldSeedPlanReplay.gd', 'FieldPlanningReplay.gd', 'FieldRotationPlanReplay.gd', 'WestMarketReplay.gd', 'SilkMarketReplay.gd', 'SilkBatchReplay.gd', 'NeighborHandoffReplay.gd', 'AmbienceTravelReplay.gd', 'BuildingScaleReplay.gd', 'EstateTerrainReplay.gd', 'FieldRoutesReplay.gd', 'PavilionEveningReplay.gd', 'FishMarketReplay.gd', 'FishingJourneyReplay.gd', 'MarketWayfindingReplay.gd') {
+    foreach ($file in 'ReleaseReplay.tscn', 'ReleaseReplay.gd', 'CampaignReplay.gd', 'NightRationsReplay.gd', 'RationPriorityReplay.gd', 'RetainerReturnReplay.gd', 'GamepadReplay.gd', 'SixArtsReplay.gd', 'BowAimReplay.gd', 'WinterSupperReplay.gd', 'KeyBindingsReplay.gd', 'SummerRaftReplay.gd', 'TitlePresentationReplay.gd', 'HallInteriorReplay.gd', 'HallDecorReplay.gd', 'TaxCouncilReplay.gd', 'RouteGoalsReplay.gd', 'EstateDirectionsReplay.gd', 'FieldSeedPlanReplay.gd', 'FieldPlanningReplay.gd', 'FieldRotationPlanReplay.gd', 'WestMarketReplay.gd', 'SilkMarketReplay.gd', 'SilkBatchReplay.gd', 'NeighborHandoffReplay.gd', 'AmbienceTravelReplay.gd', 'BuildingScaleReplay.gd', 'EstateTerrainReplay.gd', 'FieldRoutesReplay.gd', 'PavilionEveningReplay.gd', 'FishMarketReplay.gd', 'FishingJourneyReplay.gd', 'MarketWayfindingReplay.gd') {
         Copy-Item -LiteralPath (Join-Path $repo "tests/$file") -Destination $testDirectory
     }
     @'
@@ -112,6 +113,9 @@ try {
     Start-VerifiedGame -Directory $release -Profile 'research' -Name 'research' -Replay 'research'
     if ($Gamepad) {
         Start-VerifiedGame -Directory $release -Profile 'gamepad' -Name 'gamepad' -Replay 'gamepad'
+    }
+    if ($SixArts) {
+        Start-VerifiedGame -Directory $release -Profile 'six-arts' -Name 'six-arts' -Replay 'six-arts'
     }
     if ($BowAim) {
         Start-VerifiedGame -Directory $release -Profile 'bow-aim' -Name 'bow-aim' -Replay 'bow-aim'

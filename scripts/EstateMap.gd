@@ -89,6 +89,7 @@ func _collect_places() -> void:
 		_entry(Category.PLACES, "西廊", "常有商客歇脚", VisitorData.WEST_COURT, true),
 		_entry(Category.PLACES, "西市", "沿西路去粮摊、鱼摊和绸摊", _node_point(world.get_node("WestMarketGate")), true),
 		_entry(Category.PLACES, "南路亭", "往来旅人的歇脚处", LANDSCAPE.SOUTH_PAVILION, true, icons.get(LANDSCAPE.SCENE_LANDMARK)),
+		_entry(Category.PLACES, DrivingPractice.PLACE, "在田边上车 · 穿旗门并停稳", DrivingPractice.START_POINT),
 		_entry(Category.PLACES, "南路灶台", "带食材来做路餐" if Global.travel_hearth_open() else "西市交过第一单后开灶",
 			_node_point(world.get_node("TravelHearth/Approach"))),
 		_entry(Category.PLACES, "节令牌", "查看本季托付", _node_point(world.get_node("SeasonBoard")))
