@@ -37,6 +37,9 @@ func _run() -> void:
 		"gamepad":
 			var replay = load("res://tests/GamepadReplay.gd").new()
 			await replay.run(tree, capture_directory)
+		"bow-aim":
+			var replay = load("res://tests/BowAimReplay.gd").new()
+			await replay.run(tree, capture_directory)
 		"winter-supper":
 			var replay = load("res://tests/WinterSupperReplay.gd").new()
 			await replay.run(tree, capture_directory)

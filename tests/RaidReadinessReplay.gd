@@ -179,15 +179,17 @@ func _defend() -> void:
 	destination = ui.directions.destination()
 	_expect(destination.point != old_point and destination.point == world.to_local(raider.global_position),
 		"The waypoint follows the enemy's movement.")
+	var art := raider.get_node("Sprite2D") as Sprite2D
 	for shot in 4:
 		if state.raid_day == 0:
 			break
-		var point := raider.get_global_transform_with_canvas() * Vector2.ZERO
+		var ear := Vector2(-6.5 if art.flip_h else 6.5, -6.5)
+		var point := art.get_global_transform_with_canvas() * ear
 		await _click(point, MOUSE_BUTTON_RIGHT)
 		await tree.create_timer(0.40).timeout
 	_expect(state.raids_defeated == 1 and state.raid_day == 0 and state.last_defense.get("losses") == 0
 		and state.king_storage == 3 and state.player_inventory == 3 and world.is_crop_ripe(PUBLIC) and world.is_crop_ripe(PRIVATE),
-		"Normal right-click shooting protects both harvests and records the defense.")
+		"Aiming at the moving dog's ear with right-click protects both harvests and records the defense.")
 	_expect(not ui.hud.raid_alert.visible and not ui.hud.cancel_directions.visible and ui.directions.destination().is_empty(),
 		"The alert and live marker clear after the fight.")
 	await _capture("04-defense-result")

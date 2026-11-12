@@ -233,6 +233,9 @@ func _on_detection_area_body_exited(body: Node2D) -> void:
 		if pending_attack == Attack.NONE:
 			_resume_patrol()
 
+func is_under_bow_pointer(world_point: Vector2) -> bool:
+	return not is_queued_for_deletion() and sprite.is_visible_in_tree() and sprite.is_pixel_opaque(sprite.to_local(world_point))
+
 func take_damage(amount: int, guard_name := "") -> void:
 	if is_queued_for_deletion() or amount <= 0:
 		return

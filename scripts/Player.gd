@@ -19,6 +19,7 @@ var current_state = State.IDLE
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var tool_gesture: ToolGesture = $ToolGesture
 @onready var training_cart: Sprite2D = $TrainingCart
+@onready var bow_target: Node2D = $BowTarget
 @onready var camera: Camera2D = $Camera2D
 @onready var meal_button: Button = $MealUI/MealButton
 
@@ -33,12 +34,16 @@ var conversation_open := false
 var resting := false
 var menu_open := false
 var meal_controls_blocked := false
+var bow_pointer := Vector2.INF
 
 var arrow_scene = preload("res://scenes/Arrow.tscn")
 
 func _ready() -> void:
 	add_to_group("player")
 	_apply_camera_zoom()
+	bow_target.draw.connect(_draw_bow_target)
+	get_window().mouse_exited.connect(_clear_bow_pointer)
+	get_viewport().size_changed.connect(_clear_bow_pointer)
 	meal_button.pressed.connect(_eat_travel_meal)
 	GameEvents.travel_meal_changed.connect(_refresh_travel_meal)
 	_refresh_travel_meal()
@@ -64,9 +69,12 @@ static func input_direction() -> Vector2:
 		direction = Input.get_vector(KeyBindings.LEFT, KeyBindings.RIGHT, KeyBindings.UP, KeyBindings.DOWN)
 	return GamepadInput.move_direction() if direction.is_zero_approx() else direction
 
+func _world_controls_blocked() -> bool:
+	return conversation_open or resting or menu_open or MapTravel.active
+
 func _physics_process(delta: float) -> void:
 	var direction := input_direction()
-	if conversation_open or resting or menu_open or MapTravel.active:
+	if _world_controls_blocked():
 		direction = Vector2.ZERO
 	meal_button.visible = _can_use_travel_meal()
 	if direction:
@@ -145,8 +153,33 @@ func _face(direction: Vector2) -> void:
 		facing_row = Facing.BACK if direction.y < 0.0 else Facing.FRONT
 		sprite.flip_h = false
 
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion or event is InputEventMouseButton:
+		bow_pointer = event.position
+
+func _process(_delta: float) -> void:
+	var target: Node2D
+	var viewport := get_viewport()
+	if (not _world_controls_blocked() and not Global.is_indoors()
+			and viewport.get_visible_rect().has_point(bow_pointer)
+			and viewport.gui_get_hovered_control() == null):
+		target = _enemy_under_bow_pointer(get_canvas_transform().affine_inverse() * bow_pointer)
+	bow_target.visible = target != null
+	if target:
+		bow_target.global_position = target.global_position
+
+func _clear_bow_pointer() -> void:
+	bow_pointer = Vector2.INF
+	bow_target.hide()
+
+func _draw_bow_target() -> void:
+	for side: float in [-1.0, 1.0]:
+		var bracket := PackedVector2Array([Vector2(13 * side, 2), Vector2(13 * side, 7), Vector2(8 * side, 7)])
+		bow_target.draw_polyline(bracket, Color("#263630"), 3.2)
+		bow_target.draw_polyline(bracket, Color("#e6efbd"), 1.3)
+
 func _unhandled_input(event: InputEvent) -> void:
-	if conversation_open or resting or menu_open or MapTravel.active:
+	if _world_controls_blocked():
 		return
 	if event is InputEventMouseButton and event.pressed:
 		if Global.is_indoors():
@@ -206,14 +239,22 @@ func arrive_at_position(position_in_world: Vector2, direction: Vector2) -> void:
 	camera.reset_smoothing()
 	camera.force_update_scroll()
 
+func _enemy_under_bow_pointer(world_point: Vector2) -> Node2D:
+	var target: Node2D
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if enemy.is_under_bow_pointer(world_point) and (target == null or enemy.global_position.y >= target.global_position.y):
+			target = enemy
+	return target
+
 func shoot_arrow(target_pos: Vector2) -> void:
+	var target := _enemy_under_bow_pointer(target_pos)
+	var aim_point := target.global_position if target else target_pos
 	var arrow = arrow_scene.instantiate()
-	arrow.global_position = global_position
-	arrow.direction = (target_pos - global_position).normalized()
+	arrow.position = position
+	arrow.direction = global_position.direction_to(aim_point)
 	arrow.rotation = arrow.direction.angle()
 	get_parent().add_child(arrow)
-	show_action(Action.BOW, target_pos)
-	print("Fired arrow!")
+	show_action(Action.BOW, aim_point)
 
 func apply_shake(strength: float = 5.0) -> void:
 	shake_strength = strength

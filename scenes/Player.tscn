@@ -1,10 +1,11 @@
-[gd_scene load_steps=7 format=3 uid="uid://player_scene_uid"]
+[gd_scene load_steps=8 format=3 uid="uid://player_scene_uid"]
 
 [ext_resource type="Script" path="res://scripts/Player.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/characters/player.svg" id="2_sprite"]
 [ext_resource type="Texture2D" path="res://assets/characters/training-cart.svg" id="3_cart"]
 [ext_resource type="Script" path="res://scripts/ToolGesture.gd" id="4_tool"]
 [ext_resource type="Theme" path="res://resources/game_theme.tres" id="5_theme"]
+[ext_resource type="Material" path="res://resources/world_hint_material.tres" id="6_world_hint"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(14, 14)
@@ -26,6 +27,11 @@ vframes = 3
 
 [node name="ToolGesture" type="Sprite2D" parent="."]
 script = ExtResource("4_tool")
+
+[node name="BowTarget" type="Node2D" parent="."]
+visible = false
+z_index = 4
+material = ExtResource("6_world_hint")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_1")
