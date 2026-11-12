@@ -97,10 +97,11 @@ func _location(speaker: String) -> String:
 			if actor and not actor.pavilion_note().is_empty():
 				return actor.pavilion_note() + " · 留任门客"
 			return "%s · 留任门客 · %s" % [world.duty_place(resident), resident.duty_name()]
-	var guest: VisitorData = world.current_visitor()
-	if guest and guest.name == speaker:
-		var actor: Visitor = world.current_visitor_actor()
-		var note := "%s · 今日来访" % actor.visit_note()
+	var actor := world.neighbor_actor(speaker) as Visitor
+	if actor and actor in world.active_visitors:
+		var guest := actor.data
+		var purpose := "等交手记" if speaker == VisitorData.RAVINE_GUIDE and Global.ravine_handoff_ready() else "今日来访"
+		var note := "%s · %s" % [actor.visit_note(), purpose]
 		if speaker == VisitorData.SILK_MERCHANT and VisitorData.silk_market_day(Global.current_day) \
 				and guest.silk_trip() == VisitorData.SilkTrip.NONE:
 			note += "\n" + VisitorData.SILK_MARKET_PLAN
@@ -125,8 +126,6 @@ func _location(speaker: String) -> String:
 				if speaker == VisitorData.SILK_MERCHANT and VisitorData.silk_market_day(day):
 					note += "\n" + VisitorData.SILK_MARKET_PLAN
 				return note
-			if Global.ravine_handoff_ready():
-				return "蒲宁正等溪行手记 · 交接后再约轮访"
 			return "今日在外 · 来访时常到%s" % persona.place
 	return "今日在外"
 

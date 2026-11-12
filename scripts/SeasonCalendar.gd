@@ -94,8 +94,10 @@ func _show_date(index: int) -> void:
 		forecast.text = weather + "    ·    节气已过"
 	else:
 		var guest := VisitorData.for_day(day, residents) if upcoming else Global.visitor_for_day(Global.current_day)
-		var visit := "首日轮访" if upcoming and term_days > 1 else ("轮访" if upcoming else "今日来客")
-		forecast.text = "%s    ·    %s" % [weather, "%s %s" % [visit, guest.name] if guest else "歇访"]
+		var visit := "首日轮访" if upcoming and term_days > 1 else ("轮访" if upcoming else "今日轮访")
+		forecast.text = "%s    ·    %s" % [weather, "%s %s" % [visit, guest.name] if guest else "轮访歇日"]
+		if not upcoming and Global.ravine_handoff_visit_today():
+			forecast.text += ("\n蒲宁在南边竹径等手记。" if Global.ravine_handoff_ready() else "\n蒲宁今天在竹径药圃。")
 		if day == Global.current_day + 1 and Global.is_raid_day(day):
 			forecast.text += "\n明日东关有敌情，留意守备。"
 	for crop_id: String in CropData.IDS:

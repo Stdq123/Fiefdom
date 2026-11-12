@@ -367,18 +367,23 @@ func _on_opening_action() -> void:
 func _refresh_visitor_note() -> void:
 	_update_visitor_note(world.current_visitor())
 
+func _visitor_line(visitor: Visitor) -> String:
+	var verb := "" if visitor.walking_to_stop else "在"
+	return "%s%s%s，靠近按 %s。" % [visitor.data.name, verb, visitor.visit_note(), GamepadInput.interact_key()]
+
 func _update_visitor_note(data: VisitorData) -> void:
 	_refresh_opening_action()
 	var interact_key := GamepadInput.interact_key()
-	if data:
-		var visitor: Visitor = world.current_visitor_actor()
-		var verb := "" if visitor.walking_to_stop else "在"
-		hud.visitor_label.text = "%s%s%s，靠近按 %s。" % [data.name, verb, visitor.visit_note(), interact_key]
+	var silk_note: String = world.silk_trip_note()
+	var extra_guide: Visitor = world.handoff_visitor()
+	var showing_silk_trip := not silk_note.is_empty() and (data == null or data.handoff_visit)
+	if showing_silk_trip:
+		hud.visitor_label.text = VisitorData.SILK_MERCHANT + silk_note + "。"
+	elif data:
+		hud.visitor_label.text = _visitor_line(world.current_visitor_actor())
 		if data.name == VisitorData.SILK_MERCHANT and VisitorData.silk_market_day(Global.current_day) \
 				and data.silk_trip() == VisitorData.SilkTrip.NONE:
 			hud.visitor_label.text += "\n午、未时可到西市绸摊见他。"
-	elif not world.silk_trip_note().is_empty():
-		hud.visitor_label.text = VisitorData.SILK_MERCHANT + world.silk_trip_note() + "。"
 	elif Global.field_keeper_visiting():
 		hud.visitor_label.text = "渠伯今天回到井田西南。"
 	elif Global.current_day == 1 and not Global.retainers.is_empty() and Global.retainers[0].name == VisitorData.FIELD_KEEPER:
@@ -413,6 +418,8 @@ func _update_visitor_note(data: VisitorData) -> void:
 				hud.visitor_label.text += "\n手记齐了 · 到%s找蒲宁。" % world.duty_place(resident)
 				return
 		hud.visitor_label.text += "\n" + Global.ravine_status()
+	elif extra_guide and (extra_guide.data != data or showing_silk_trip):
+		hud.visitor_label.text += "\n" + _visitor_line(extra_guide)
 	elif data and data.name == VisitorData.RAVINE_GUIDE and Global.knows_ravine_journal():
 		hud.visitor_label.text += "\n" + Global.ravine_status()
 	elif data and data.name == VisitorData.SILK_MERCHANT and Global.silk_sample_requested():

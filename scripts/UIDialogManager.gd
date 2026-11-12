@@ -161,6 +161,7 @@ func _recruit(data: VisitorData) -> void:
 	if not Global.visitor_encounters.has(data.name):
 		Global.visitor_encounters[data.name] = 0
 	Global.last_recruit_day = Global.current_day
+	Global.last_recruit_from_handoff = data.handoff_visit
 	data.is_recruited = true
 	GameEvents.retainer_recruited.emit(retainer)
 	GameEvents.reputation_changed.emit(Global.reputation)

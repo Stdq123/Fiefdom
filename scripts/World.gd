@@ -250,7 +250,11 @@ func _on_retainer_duty_changed(_data: RetainerData) -> void:
 func _on_retainer_recruited(data: RetainerData) -> void:
 	spawn_retainer(data)
 	if Global.last_recruit_day == Global.current_day:
-		_refresh_visitor()
+		if Global.last_recruit_from_handoff:
+			_refresh_handoff_visitor()
+			_report_visitor_activity()
+		else:
+			_refresh_visitor()
 	spawn_floating_text(Vector2i(5, 5), "%s留在了封地" % data.name, Color("#efce80"))
 
 func _on_retainer_departed(data: RetainerData) -> void:
@@ -261,6 +265,9 @@ func _on_retainer_departed(data: RetainerData) -> void:
 	_refresh_duty_stations()
 	if data.name == VisitorData.FIELD_KEEPER:
 		_refresh_field_keeper_visit()
+	elif data.name == VisitorData.RAVINE_GUIDE:
+		_refresh_handoff_visitor()
+		_report_visitor_activity()
 
 func _on_road_provisions_delivered() -> void:
 	var cell := tile_map.local_to_map(tile_map.to_local(player.global_position))
@@ -727,7 +734,20 @@ func current_visitor() -> VisitorData:
 	return actor.data if actor else null
 
 func current_visitor_actor() -> Visitor:
-	return active_visitors.front() if not active_visitors.is_empty() else null
+	var regular := _scheduled_visitor_actor()
+	return regular if regular else handoff_visitor()
+
+func _scheduled_visitor_actor() -> Visitor:
+	for visitor in active_visitors:
+		if visitor.data == scheduled_visitor:
+			return visitor
+	return null
+
+func handoff_visitor() -> Visitor:
+	for visitor in active_visitors:
+		if visitor.data.handoff_visit:
+			return visitor
+	return null
 
 func silk_trip_note() -> String:
 	if not scheduled_visitor:
@@ -780,8 +800,31 @@ func _refresh_visitor(walk_in := false) -> void:
 		names.append(retainer.name)
 	scheduled_visitor = Global.visitor_for_day(Global.current_day)
 	_place_scheduled_visitor(walk_in)
+	_refresh_handoff_visitor(walk_in)
 	$SpringGathering.refresh(scheduled_visitor, names)
 	_report_visitor_activity()
+
+func _refresh_handoff_visitor(walk_in := false) -> void:
+	var guide := handoff_visitor()
+	var scheduled_guide := scheduled_visitor != null and scheduled_visitor.name == VisitorData.RAVINE_GUIDE
+	if scheduled_guide or not Global.ravine_handoff_visit_today():
+		if guide:
+			_remove_visitor(guide)
+		return
+	if not guide:
+		var data := VisitorData.from_persona(VisitorData.RAVINE_PERSONA)
+		data.handoff_visit = true
+		guide = _add_visitor(data, VisitorData.BAMBOO_PATH)
+	_apply_visitor_activity(guide, walk_in)
+
+func _add_visitor(data: VisitorData, foot: Vector2) -> Visitor:
+	var visitor := visitor_scene.instantiate() as Visitor
+	visitor.data = data
+	visitor.position = foot
+	add_child(visitor)
+	active_visitors.append(visitor)
+	visitor.activity_reached.connect(_visitor_arrived.bind(visitor))
+	return visitor
 
 func _place_scheduled_visitor(walk_in: bool) -> void:
 	if not scheduled_visitor:
@@ -789,13 +832,9 @@ func _place_scheduled_visitor(walk_in: bool) -> void:
 	var trip := scheduled_visitor.silk_trip()
 	if trip in [VisitorData.SilkTrip.STALL, VisitorData.SilkTrip.RETURN_ROAD]:
 		return
-	var visitor := visitor_scene.instantiate() as Visitor
-	visitor.data = scheduled_visitor
-	visitor.position = ($WestMarketArrival.position if trip == VisitorData.SilkTrip.PAVILION
+	var foot: Vector2 = ($WestMarketArrival.position if trip == VisitorData.SilkTrip.PAVILION
 		else scheduled_visitor.meeting_point(get_crop_world_pos(Global.irrigation.source_cell)))
-	add_child(visitor)
-	active_visitors.append(visitor)
-	visitor.activity_reached.connect(_visitor_arrived.bind(visitor))
+	var visitor := _add_visitor(scheduled_visitor, foot)
 	if trip == VisitorData.SilkTrip.PAVILION:
 		_apply_pavilion_visit(visitor, false)
 	else:
@@ -812,32 +851,33 @@ func _send_visitor_to_market(visitor: Visitor) -> void:
 	visitor.go_to_activity(VisitorData.VisitActivity.TO_SILK_MARKET, path, gate + Vector2.LEFT,
 		true, VisitorData.seconds_since(VisitorData.SILK_MARKET_DEPART))
 	if not visitor.walking_to_stop:
-		_remove_scheduled_visitor(visitor)
+		_remove_visitor(visitor)
 
-func _remove_scheduled_visitor(visitor: Visitor) -> void:
+func _remove_visitor(visitor: Visitor) -> void:
 	active_visitors.erase(visitor)
 	visitor.queue_free()
 
 func _visitor_arrived(visitor: Visitor) -> void:
 	if visitor.activity == VisitorData.VisitActivity.TO_SILK_MARKET:
-		_remove_scheduled_visitor(visitor)
+		_remove_visitor(visitor)
 	_report_visitor_activity()
 
 func _report_visitor_activity() -> void:
 	visitor_changed.emit(current_visitor())
 
 func _update_visitor_activity() -> void:
-	var visitor := current_visitor_actor()
-	if not is_instance_valid(visitor) or visitor.activity in [
-			VisitorData.VisitActivity.PAVILION_REST, VisitorData.VisitActivity.TO_SILK_MARKET]:
-		return
-	if _apply_pavilion_visit(visitor, true) or _apply_visitor_activity(visitor, true):
-		_report_visitor_activity()
+	_refresh_handoff_visitor(true)
+	for visitor in active_visitors:
+		if visitor.activity in [VisitorData.VisitActivity.PAVILION_REST, VisitorData.VisitActivity.TO_SILK_MARKET]:
+			continue
+		if not _apply_pavilion_visit(visitor, true):
+			_apply_visitor_activity(visitor, true)
+	_report_visitor_activity()
 
 func _update_visitor_clock() -> void:
 	if not scheduled_visitor:
 		return
-	var visitor := current_visitor_actor()
+	var visitor := _scheduled_visitor_actor()
 	match scheduled_visitor.silk_trip():
 		VisitorData.SilkTrip.WEST_ROAD:
 			if visitor and visitor.activity != VisitorData.VisitActivity.TO_SILK_MARKET:
@@ -845,13 +885,13 @@ func _update_visitor_clock() -> void:
 				_report_visitor_activity()
 		VisitorData.SilkTrip.STALL, VisitorData.SilkTrip.RETURN_ROAD:
 			if visitor:
-				_remove_scheduled_visitor(visitor)
+				_remove_visitor(visitor)
 			_report_visitor_activity()
 		VisitorData.SilkTrip.PAVILION:
 			if visitor and visitor.activity == VisitorData.VisitActivity.PAVILION_REST:
 				return
 			if visitor:
-				_remove_scheduled_visitor(visitor)
+				_remove_visitor(visitor)
 			_place_scheduled_visitor(false)
 			_report_visitor_activity()
 		_:

@@ -93,6 +93,7 @@ var days_without_contribution: int
 var visitor_encounters: Dictionary[String, int] = {}
 var neighbor_met_days: Dictionary[String, int] = {}
 var last_recruit_day := 0
+var last_recruit_from_handoff := false
 var road_provisions_delivered := false
 var road_provisions_day := 0
 var road_rest_paid_day := 0
@@ -250,6 +251,7 @@ func _reset_campaign() -> void:
 	neighbor_met_days.clear()
 	neighbor_met_days[VisitorData.FIELD_KEEPER] = current_day
 	last_recruit_day = 0
+	last_recruit_from_handoff = false
 	road_provisions_delivered = false
 	road_provisions_day = 0
 	road_rest_paid_day = 0
@@ -322,10 +324,7 @@ func visitor_for_day(day: int) -> VisitorData:
 	var resident_names: Array[String] = []
 	for resident in retainers:
 		resident_names.append(resident.name)
-	if ((ravine_handoff_ready() or ravine_journal.garden_day == day)
-		and VisitorData.RAVINE_GUIDE not in resident_names):
-		return VisitorData.from_persona(VisitorData.RAVINE_PERSONA)
-	if last_recruit_day == day:
+	if last_recruit_day == day and not last_recruit_from_handoff:
 		return null
 	if ((defense_review_ready() or east_watch_day == day) and last_defense.get("day", 0) + 1 == day
 		and visitor_encounters.has(VisitorData.EAST_WATCHER) and VisitorData.EAST_WATCHER not in resident_names):
@@ -921,11 +920,15 @@ func ravine_site_today() -> int:
 func ravine_handoff_ready() -> bool:
 	return ravine_journal.complete() and ravine_journal.garden_day == 0
 
+func ravine_handoff_visit_today() -> bool:
+	return ((ravine_handoff_ready() or ravine_journal.garden_day == current_day)
+		and not retainers.any(func(resident: RetainerData) -> bool: return resident.name == VisitorData.RAVINE_GUIDE))
+
 func ravine_status() -> String:
 	if ravine_journal.garden_day > 0:
 		return "手记已交 · 竹径药圃已备好"
 	if ravine_handoff_ready():
-		return "手记 3/3 · 回竹径找蒲宁"
+		return "手记 3/3 · 回竹径找蒲宁" if ravine_handoff_visit_today() else "手记 3/3 · 到蒲宁的岗位交接"
 	var site := ravine_site_today()
 	var step := "今日记%s" % RavineJournal.SITES[site].name if site >= 0 else "今日已记，明日再来"
 	return "手记 %d/%d · %s" % [ravine_journal.count(), RavineJournal.SITES.size(), step]
@@ -2156,6 +2159,7 @@ func _save_snapshot(origin: String) -> Error:
 			"signed_day": field_rotation.signed_day,
 		},
 		"last_recruit_day": last_recruit_day,
+		"last_recruit_from_handoff": last_recruit_from_handoff,
 		"road_provisions_delivered": road_provisions_delivered,
 		"road_provisions_day": road_provisions_day,
 		"road_rest_paid_day": road_rest_paid_day,
@@ -2602,6 +2606,7 @@ func load_game(path := "") -> Error:
 			if first_day > 0 and first_day <= saved_day:
 				neighbor_met_days[speaker] = first_day
 	last_recruit_day = clampi(_read_save_int(data.get("last_recruit_day"), 0), 0, saved_day)
+	last_recruit_from_handoff = data.get("last_recruit_from_handoff", false) == true
 	road_provisions_delivered = data.get("road_provisions_delivered", false) == true
 	road_provisions_day = clampi(_read_save_int(data.get("road_provisions_day"), 0), 0, saved_day) if road_provisions_delivered else 0
 	var paid_day := _read_save_int(data.get("road_rest_paid_day"), 0)

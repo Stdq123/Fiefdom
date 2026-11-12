@@ -308,7 +308,7 @@ func _check_scheduled_guests() -> void:
 		fixture["visitor_encounters"] = [case[1]]
 		if not await _load_fixture(fixture):
 			return
-		var guest: Visitor = world.current_visitor_actor()
+		var guest: Visitor = world.neighbor_actor(case[1])
 		if not _expect(guest != null and guest.data.name == case[1] and guest.visit_location() == case[2]
 			and not guest.data.has_pavilion_rest(), "A priority visitor stays at the promised place after dark."):
 			continue

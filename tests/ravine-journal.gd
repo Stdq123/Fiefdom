@@ -74,8 +74,9 @@ func _run() -> void:
 	await _walk(Vector2(112, 36))
 	if not await _return_home():
 		return
-	_expect(current_scene.get_node("World").current_visitor().name == "蒲宁",
-		"The guide returns on the handoff day outside the usual visiting rotation.")
+	var estate := current_scene.get_node("World")
+	_expect(estate.neighbor_actor("蒲宁") != null and estate.current_visitor().name == "季青",
+		"The guide returns for the handoff alongside the usual visitor.")
 
 	var ui := current_scene.get_node("UI")
 	ui.manage_button.pressed.emit()

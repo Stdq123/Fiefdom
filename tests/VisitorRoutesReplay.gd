@@ -255,14 +255,14 @@ func _handoff_at_the_garden() -> void:
 	if not await _load_fixture({"current_day": 11, "visitor_encounters": [VisitorData.RAVINE_GUIDE],
 		"ravine_journal": {"recorded_days": [5, 6, 7]}}):
 		return
-	var visitor: Visitor = world.current_visitor_actor()
+	var visitor: Visitor = world.neighbor_actor(VisitorData.RAVINE_GUIDE)
 	if not _expect(visitor != null and visitor.data.name == VisitorData.RAVINE_GUIDE
 		and visitor.position == VisitorData.BAMBOO_PATH, "Before the handoff Pu Ning still waits at the bamboo path."):
 		return
 	var dialog := await _meet(visitor)
 	if not await _choose(dialog, "交溪行手记"):
 		return
-	_expect(visitor == world.current_visitor_actor() and visitor.walking_to_stop and state.ravine_journal.garden_day == 11,
+	_expect(visitor == world.neighbor_actor(VisitorData.RAVINE_GUIDE) and visitor.walking_to_stop and state.ravine_journal.garden_day == 11,
 		"The same visitor starts walking when the handoff plants the garden.")
 	await tree.create_timer(2.3).timeout
 	var garden: Node2D = world.get_node("HerbGarden")

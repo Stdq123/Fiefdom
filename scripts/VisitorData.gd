@@ -121,6 +121,7 @@ const RAIN_LINES := {
 @export var school := School.CONFUCIAN
 var meeting_place := "南路亭"
 var is_recruited := false
+var handoff_visit := false
 
 static func for_day(day: int, retainer_names: Array[String]) -> VisitorData:
 	# The first six mornings introduce the cast and give the first visitor a return visit.

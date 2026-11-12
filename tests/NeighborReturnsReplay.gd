@@ -120,20 +120,29 @@ func _check_returns() -> bool:
 	state.first_channel_growth_day = 11
 	if not await _reload_at(11):
 		return false
-	_expect(world.current_visitor().name == "蒲宁" and state.next_visitor_day("陶辛") == 0,
-		"The unfinished ravine handoff takes priority without promising a displaced visit.")
+	_expect(world.current_visitor().name == "石墨" and world.neighbor_actor("蒲宁") != null,
+		"The irrigation review and the ravine handoff are both available.")
+	var cloth_visit: int = state.next_visitor_day("陶辛")
 	journal = await _journal("陶辛")
-	_expect("交接后" in journal.where.text and "蒲宁" in journal.where.text,
-		"The journal explains what currently delays the other visits.")
+	_expect(cloth_visit > 11 and "第 %d 天" % cloth_visit in journal.where.text,
+		"The journal keeps the actual date of the next merchant visit.")
 	await _close_journal()
-	await _choose(await _talk("蒲宁"), "交溪行手记")
-	if not await _reload_at(11):
-		return false
-	_expect(world.current_visitor().name == "蒲宁" and state.next_visitor_day("石墨") == 12,
-		"The guide stays on handoff day, and normal visits resume the next morning.")
+	for night in 3:
+		await _night()
+	_expect(state.current_day == 14 and world.active_visitors.size() == 1
+		and world.handoff_visitor() == world.neighbor_actor("蒲宁"), "The guide waits even on an ordinary rest day.")
 	await _night()
-	_expect(world.current_visitor().name == "石墨", "The rescheduled water visitor actually arrives after handoff.")
-	print("NEIGHBOR_RESUME handoff=11 next=", state.current_day, " speaker=", world.current_visitor().name)
+	_expect(state.current_day == 15 and world.active_visitors.size() == 1 and world.current_visitor().name == "蒲宁"
+		and world.handoff_visitor() == null, "The guide's own rotation uses one actor for both purposes.")
+	await _night()
+	await _choose(await _talk("蒲宁"), "交溪行手记")
+	if not await _reload_at(16):
+		return false
+	_expect(world.current_visitor().name == "弋戎" and world.handoff_visitor().visit_location() == "竹径药圃",
+		"The same-day reload keeps the scheduled guard and the guide at the new garden.")
+	await _night()
+	_expect(state.current_day == 17 and world.handoff_visitor() == null, "After the handoff day, the guide resumes his normal rotation.")
+	print("NEIGHBOR_HANDOFF day=", state.ravine_journal.garden_day, " next=", state.current_day, " cloth_forecast=", cloth_visit)
 	return not failed
 
 func _complete_stories() -> void:
