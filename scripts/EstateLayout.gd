@@ -3,7 +3,7 @@ class_name EstateLayout
 
 const TILE_ORIGIN := Vector2(16, 24)
 const TILE_SIZE := 16.0
-const BOUNDS := Rect2(-330, -205, 840, 739)
+const BOUNDS := Rect2(-330, -205, 840, 931)
 const FIELD_ENTRANCE_WIDTH := TILE_SIZE
 const EDGE_NORMALS := [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT]
 
@@ -17,7 +17,7 @@ const WEST_FORK := Vector2(-273, -21)
 const WEST_COURT_TURN := Vector2(-261, 62)
 const WEST_COURT := Vector2(-282, 68)
 const WEST_COURT_SHELTER := WEST_COURT + Vector2(-22, -14)
-const SOUTH_PAVILION := Vector2(77, 247)
+const SOUTH_PAVILION := Vector2(77, 391)
 const PAVILION_SIZE := Vector2(72, 60)
 const PAVILION_BOUNDS := Rect2(SOUTH_PAVILION + Vector2(-36, -56), PAVILION_SIZE)
 const DRIVING_START := Vector2(279, 152)
@@ -36,20 +36,24 @@ const LANDMARKS := BUILDING_GROUND + [
 
 const FIELD_TURN := Vector2(107, 165)
 const EAST_LANE_JUNCTION := Vector2(29, 152)
-const PAVILION_TURN := Vector2(44, 241)
-const PAVILION_JUNCTION := Vector2(23, 288)
-const SOUTH_FORK := Vector2(29, 344)
-const FREIGHT_STOP := Vector2(-94, 382)
-const FREIGHT_JUNCTION := Vector2(-41, 382)
+const FIELD_LANE_TURN := Vector2(44, 241)
+const BAMBOO_BEND := Vector2(19, 321)
+const PAVILION_TURN := Vector2(44, 385)
+const PAVILION_JUNCTION := Vector2(23, 432)
+const SOUTH_FORK := Vector2(29, 536)
+const FREIGHT_STOP := Vector2(-94, 574)
+const FREIGHT_JUNCTION := Vector2(-41, 574)
 const FREIGHT_APPROACH := FREIGHT_STOP + Vector2(0, 23)
-const HEARTH_APPROACH := Vector2(215, 379)
-const FESTIVAL_FORK := Vector2(257, 394)
-const FESTIVAL_GROUND := Vector2(353, 419)
-const SHEEPFOLD_GATE := Vector2(-248, 458)
-const PAVILION_SEATS := Vector2(151, 292)
+const HEARTH_APPROACH := Vector2(215, 571)
+const FESTIVAL_FORK := Vector2(257, 586)
+const FESTIVAL_GROUND := Vector2(353, 611)
+const SHEEPFOLD_GATE := Vector2(-248, 650)
+const PAVILION_SEATS := Vector2(151, 436)
 const SOUTH_LANE := [
 	Vector2(4, 43), Vector2(1, 72), Vector2(0, 101), Vector2(8, 128), EAST_LANE_JUNCTION,
-	Vector2(46, 177), Vector2(50, 205), PAVILION_TURN, PAVILION_JUNCTION, Vector2(21, 319), SOUTH_FORK,
+	Vector2(46, 177), Vector2(50, 205), FIELD_LANE_TURN, Vector2(35, 268), Vector2(21, 294),
+	BAMBOO_BEND, Vector2(24, 347), Vector2(38, 370), PAVILION_TURN,
+	PAVILION_JUNCTION, Vector2(21, 463), Vector2(17, 489), Vector2(20, 514), SOUTH_FORK,
 ]
 const EAST_LANE := [
 	EAST_LANE_JUNCTION, Vector2(62, 162), FIELD_TURN, Vector2(150, 164), Vector2(194, 160),
@@ -75,23 +79,23 @@ const ROADS := [
 const ROAD_WIDTHS := [32.0, 22.0, 18.0, 30.0, 13.0, 21.0]
 const ROAD_SHOULDER := 2.5
 const PAVILION_APPROACH := [
-	PAVILION_JUNCTION, Vector2(48, 286), Vector2(68, 282), Vector2(77, 267), SOUTH_PAVILION + Vector2(0, 6),
+	PAVILION_JUNCTION, Vector2(48, 430), Vector2(68, 426), Vector2(77, 411), SOUTH_PAVILION + Vector2(0, 6),
 ]
 const PAVILION_COURT := [
-	Vector2(48, 286), Vector2(82, 294), Vector2(116, 304), PAVILION_SEATS + Vector2(0, 15),
+	PAVILION_APPROACH[1], Vector2(82, 438), Vector2(116, 448), PAVILION_SEATS + Vector2(0, 15),
 ]
-const UNLOADING_LANE := [SOUTH_FORK, Vector2(4, 363), FREIGHT_JUNCTION, FREIGHT_STOP]
-const FREIGHT_AISLE := [FREIGHT_JUNCTION, Vector2(-55, 399), FREIGHT_APPROACH]
+const UNLOADING_LANE := [SOUTH_FORK, Vector2(4, 555), FREIGHT_JUNCTION, FREIGHT_STOP]
+const FREIGHT_AISLE := [FREIGHT_JUNCTION, Vector2(-55, 591), FREIGHT_APPROACH]
 const HEARTH_LANE := [
-	SOUTH_FORK, Vector2(76, 348), Vector2(131, 365), Vector2(178, 380), HEARTH_APPROACH, FESTIVAL_FORK,
+	SOUTH_FORK, Vector2(76, 540), Vector2(131, 557), Vector2(178, 572), HEARTH_APPROACH, FESTIVAL_FORK,
 ]
 const FESTIVAL_LANE := [
-	FESTIVAL_FORK, Vector2(280, 411), Vector2(295, 446), Vector2(332, 468), Vector2(368, 470),
-	Vector2(368, 449), FESTIVAL_GROUND + Vector2(0, 18),
+	FESTIVAL_FORK, Vector2(280, 603), Vector2(295, 638), Vector2(332, 660), Vector2(368, 662),
+	Vector2(368, 641), FESTIVAL_GROUND + Vector2(0, 18),
 ]
 const SHEEP_LANE := [
-	SOUTH_FORK, Vector2(5, 400), Vector2(-42, 437), Vector2(-110, 457), Vector2(-181, 462),
-	Vector2(-222, 463), SHEEPFOLD_GATE, SHEEPFOLD_GATE + Vector2(0, -10),
+	SOUTH_FORK, Vector2(5, 592), Vector2(-42, 629), Vector2(-110, 649), Vector2(-181, 654),
+	Vector2(-222, 655), SHEEPFOLD_GATE, SHEEPFOLD_GATE + Vector2(0, -10),
 ]
 const SOUTH_ROADS := [PAVILION_APPROACH, PAVILION_COURT, UNLOADING_LANE, FREIGHT_AISLE, HEARTH_LANE, FESTIVAL_LANE, SHEEP_LANE]
 

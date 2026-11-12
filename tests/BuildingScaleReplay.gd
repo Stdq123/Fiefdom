@@ -163,7 +163,8 @@ func _opening() -> void:
 	await _snapshot("02-hall-door")
 	if not baseline:
 		var landing := hall.position + Vector2(0, -8)
-		for at: Vector2 in [hall.position + Vector2(0, 10), landing, Vector2(48, 286), Vector2(77, 260)]:
+		for at: Vector2 in [hall.position + Vector2(0, 10), landing,
+			EstateLayout.PAVILION_APPROACH[1], EstateLayout.SOUTH_PAVILION + Vector2(0, 13)]:
 			_expect(terrain._surface_at(at) == TerrainAudio.Surface.TRACK,
 				"The hall and pavilion approaches connect their entrances to walkable paths at %s." % at)
 		await _walk(landing)
@@ -173,7 +174,7 @@ func _opening() -> void:
 	var plan := ui.get_node_or_null("Control/NightRationsPanel") as Control
 	_expect(plan != null and plan.visible, "The front approach still opens the hall's real night plan.")
 	await _key(KEY_ESCAPE)
-	await _walk(Vector2(108, 262))
+	await _walk(Landscape.SOUTH_PAVILION + Vector2(31, 15))
 	await _snapshot("03-pavilion")
 	if not baseline:
 		var board := world.get_node("SeasonBoard") as Node2D

@@ -120,7 +120,7 @@ func _take_title_art() -> void:
 	player.position = Vector2(82, 140)
 	var camera: Camera2D = player.camera
 	camera.top_level = true
-	camera.global_position = Vector2(-68, 100)
+	camera.global_position = Vector2(-86, 100)
 	camera.zoom = Vector2(2, 2)
 	camera.reset_smoothing()
 	camera.force_update_scroll()

@@ -121,9 +121,9 @@ const ESTATE_TRACKS := EstateLayout.ROADS + EstateLayout.SOUTH_ROADS + [
 ]
 const WILD_TRACKS := RavineLayout.TRACKS
 const ESTATE_TRACK_WIDTHS: Array[float] = EstateLayout.ROAD_WIDTHS + [18.0, 13.0, 17.0, 14.0, 17.0, 15.0, 13.0, 41.0, 30.0]
-const GARDEN_TRACK := [Vector2(39, 252), Vector2(58, 258), Vector2(78, 263), Vector2(101, 264)]
-const ROAD_REST_TRACK := [Vector2(26, 282), Vector2(9, 288), Vector2(-7, 298)]
-const ROTATION_BOOK_TRACK := [Vector2(44, 241), Vector2(22, 236), Vector2(0, 233), Vector2(-21, 234), Vector2(-43, 238)]
+const GARDEN_TRACK := [EstateLayout.PAVILION_TURN, Vector2(39, 396), Vector2(58, 402), Vector2(78, 407), Vector2(101, 408)]
+const ROAD_REST_TRACK := [EstateLayout.PAVILION_JUNCTION, Vector2(9, 432), Vector2(-7, 442)]
+const ROTATION_BOOK_TRACK := [EstateLayout.FIELD_LANE_TURN, Vector2(22, 236), Vector2(0, 233), Vector2(-21, 234), Vector2(-43, 238)]
 const WILD_TRACK_WIDTHS := RavineLayout.TRACK_WIDTHS
 const CREEK := RavineLayout.CREEK
 const GRAVEL_BAR := [
@@ -192,38 +192,47 @@ const ESTATE_PROPS := [
 	Vector3i(7, 164, Prop.ROCK), Vector3i(159, 139, Prop.FLOWERS), Vector3i(182, 114, Prop.SHRUB),
 	Vector3i(176, 185, Prop.FERN), Vector3i(225, 126, Prop.FLOWERS), Vector3i(280, 137, Prop.ROCK), Vector3i(338, 116, Prop.PINE),
 	Vector3i(303, 215, Prop.OAK), Vector3i(274, 234, Prop.BOULDER), Vector3i(230, 249, Prop.LOGS),
-	Vector3i(196, 229, Prop.BLOSSOM_TREE), Vector3i(149, 237, Prop.TALL_BAMBOO), Vector3i(109, 214, Prop.FLOWERS),
-	Vector3i(115, 236, Prop.LIDDED_JAR), Vector3i(128, 242, Prop.GRAIN_SACK),
-	Vector3i(94, 260, Prop.WHITE_BLOOM), Vector3i(100, 254, Prop.PINK_BLOOM),
-	Vector3i(106, 280, Prop.WHITE_BLOOM), Vector3i(100, 285, Prop.PINK_BLOOM),
-	Vector3i(152, 308, Prop.WHITE_BLOOM), Vector3i(161, 311, Prop.PINK_BLOOM), Vector3i(223, 301, Prop.WHITE_BLOOM),
+	Vector3i(196, 373, Prop.BLOSSOM_TREE), Vector3i(149, 381, Prop.TALL_BAMBOO), Vector3i(109, 358, Prop.FLOWERS),
+	Vector3i(115, 380, Prop.LIDDED_JAR), Vector3i(128, 386, Prop.GRAIN_SACK),
+	Vector3i(94, 404, Prop.WHITE_BLOOM), Vector3i(100, 398, Prop.PINK_BLOOM),
+	Vector3i(106, 424, Prop.WHITE_BLOOM), Vector3i(100, 429, Prop.PINK_BLOOM),
+	Vector3i(152, 452, Prop.WHITE_BLOOM), Vector3i(161, 455, Prop.PINK_BLOOM), Vector3i(223, 445, Prop.WHITE_BLOOM),
 	Vector3i(289, 285, Prop.FLOWERS), Vector3i(262, 305, Prop.BAMBOO), Vector3i(377, 230, Prop.OAK),
 	Vector3i(349, 318, Prop.MOSS_STONE), Vector3i(334, 322, Prop.FERN),
-	Vector3i(-9, 258, Prop.BAMBOO), Vector3i(5, 269, Prop.ROCK), Vector3i(120, 54, Prop.SIGNPOST),
+	Vector3i(120, 54, Prop.SIGNPOST),
 	Vector3i(286, 32, Prop.SIGNPOST), Vector3i(348, -24, Prop.GROVE_TREE), Vector3i(356, -17, Prop.FENCE),
 	Vector3i(413, -16, Prop.GATE_FAR), Vector3i(387, 32, Prop.GATE),
 	Vector3i(445, 25, Prop.FENCE), Vector3i(457, 53, Prop.PINE),
 	Vector3i(481, -21, Prop.GROVE_CLUSTER), Vector3i(478, 99, Prop.GROVE_TREE),
-	# Southern verges and groves between the pavilion, pasture and festival clearing.
-	Vector3i(-297, 310, Prop.TALL_BAMBOO), Vector3i(-267, 304, Prop.GROVE_TREE),
-	Vector3i(-217, 321, Prop.PINE), Vector3i(-188, 332, Prop.OAK), Vector3i(-150, 353, Prop.TALL_BAMBOO),
-	Vector3i(-140, 374, Prop.LOGS), Vector3i(-107, 352, Prop.GRAIN_SACK), Vector3i(-117, 359, Prop.OPEN_SACK),
-	Vector3i(-68, 344, Prop.LIDDED_JAR), Vector3i(-46, 329, Prop.GROVE_TREE), Vector3i(-5, 320, Prop.FERN),
-	Vector3i(-88, 416, Prop.MOSS_STONE), Vector3i(-107, 424, Prop.FLOWERS), Vector3i(-150, 425, Prop.SHRUB),
-	Vector3i(-294, 435, Prop.FENCE), Vector3i(-289, 460, Prop.FLOWERS), Vector3i(-200, 440, Prop.FLOWERS),
-	Vector3i(50, 319, Prop.SIGNPOST), Vector3i(101, 330, Prop.GROVE_TREE), Vector3i(122, 339, Prop.PINE),
-	Vector3i(172, 338, Prop.TALL_BAMBOO), Vector3i(191, 356, Prop.LOGS), Vector3i(253, 363, Prop.JAR),
-	Vector3i(112, 402, Prop.OAK), Vector3i(136, 429, Prop.PINE), Vector3i(172, 417, Prop.GROVE_TREE),
-	Vector3i(37, 408, Prop.BAMBOO), Vector3i(23, 444, Prop.FLOWERS), Vector3i(4, 486, Prop.TALL_BAMBOO),
-	Vector3i(244, 445, Prop.OAK), Vector3i(263, 464, Prop.TALL_BAMBOO), Vector3i(290, 480, Prop.ROCK),
-	Vector3i(306, 377, Prop.BAMBOO), Vector3i(335, 380, Prop.GROVE_TREE), Vector3i(401, 382, Prop.BLOSSOM_TREE),
-	Vector3i(459, 385, Prop.TALL_BAMBOO), Vector3i(489, 420, Prop.PINE), Vector3i(483, 472, Prop.OAK),
-	Vector3i(452, 513, Prop.GROVE_TREE), Vector3i(402, 519, Prop.TALL_BAMBOO),
-	Vector3i(357, 529, Prop.PINE), Vector3i(303, 530, Prop.OAK), Vector3i(258, 542, Prop.PINE),
-	Vector3i(201, 525, Prop.GROVE_TREE), Vector3i(153, 541, Prop.PINE), Vector3i(110, 518, Prop.TALL_BAMBOO),
-	Vector3i(55, 536, Prop.OAK), Vector3i(-41, 534, Prop.PINE), Vector3i(-100, 518, Prop.TALL_BAMBOO),
-	Vector3i(-148, 530, Prop.PINE), Vector3i(-192, 520, Prop.OAK), Vector3i(-241, 531, Prop.PINE),
-	Vector3i(-290, 513, Prop.TALL_BAMBOO), Vector3i(-319, 478, Prop.PINE),
+	# Bamboo and low grasses flank the lane between the fields and the pavilion.
+	Vector3i(12, 224, Prop.SIGNPOST), Vector3i(75, 255, Prop.BAMBOO),
+	Vector3i(-7, 276, Prop.TALL_BAMBOO), Vector3i(-38, 289, Prop.TALL_BAMBOO), Vector3i(-24, 303, Prop.FERN),
+	Vector3i(67, 286, Prop.ROCK), Vector3i(88, 300, Prop.TALL_BAMBOO), Vector3i(122, 307, Prop.GROVE_CLUSTER),
+	Vector3i(54, 315, Prop.TALL_BAMBOO), Vector3i(81, 326, Prop.BAMBOO), Vector3i(46, 338, Prop.FERN),
+	Vector3i(-24, 346, Prop.MOSS_STONE), Vector3i(-53, 367, Prop.TALL_BAMBOO), Vector3i(-80, 359, Prop.OAK),
+	Vector3i(-113, 335, Prop.GROVE_CLUSTER), Vector3i(-194, 369, Prop.PINE), Vector3i(-267, 333, Prop.GROVE_TREE),
+	Vector3i(0, 402, Prop.BAMBOO), Vector3i(7, 413, Prop.ROCK), Vector3i(-9, 465, Prop.FERN),
+	Vector3i(65, 478, Prop.TALL_BAMBOO), Vector3i(98, 486, Prop.GROVE_TREE), Vector3i(-46, 486, Prop.OAK),
+	# Southern verges and groves between the unloading yard, pasture and festival clearing.
+	Vector3i(-297, 502, Prop.TALL_BAMBOO), Vector3i(-267, 496, Prop.GROVE_TREE),
+	Vector3i(-217, 513, Prop.PINE), Vector3i(-188, 524, Prop.OAK), Vector3i(-150, 545, Prop.TALL_BAMBOO),
+	Vector3i(-140, 566, Prop.LOGS), Vector3i(-107, 544, Prop.GRAIN_SACK), Vector3i(-117, 551, Prop.OPEN_SACK),
+	Vector3i(-68, 536, Prop.LIDDED_JAR), Vector3i(-46, 521, Prop.GROVE_TREE), Vector3i(-5, 512, Prop.FERN),
+	Vector3i(-88, 608, Prop.MOSS_STONE), Vector3i(-107, 616, Prop.FLOWERS), Vector3i(-150, 617, Prop.SHRUB),
+	Vector3i(-294, 627, Prop.FENCE), Vector3i(-289, 652, Prop.FLOWERS), Vector3i(-200, 632, Prop.FLOWERS),
+	Vector3i(50, 511, Prop.SIGNPOST), Vector3i(101, 522, Prop.GROVE_TREE), Vector3i(122, 531, Prop.PINE),
+	Vector3i(172, 530, Prop.TALL_BAMBOO), Vector3i(191, 548, Prop.LOGS), Vector3i(253, 555, Prop.JAR),
+	Vector3i(112, 594, Prop.OAK), Vector3i(136, 621, Prop.PINE), Vector3i(172, 609, Prop.GROVE_TREE),
+	Vector3i(37, 600, Prop.BAMBOO), Vector3i(23, 636, Prop.FLOWERS), Vector3i(4, 678, Prop.TALL_BAMBOO),
+	Vector3i(244, 637, Prop.OAK), Vector3i(263, 656, Prop.TALL_BAMBOO), Vector3i(290, 672, Prop.ROCK),
+	Vector3i(306, 569, Prop.BAMBOO), Vector3i(335, 572, Prop.GROVE_TREE), Vector3i(401, 574, Prop.BLOSSOM_TREE),
+	Vector3i(459, 577, Prop.TALL_BAMBOO), Vector3i(489, 612, Prop.PINE), Vector3i(483, 664, Prop.OAK),
+	Vector3i(452, 705, Prop.GROVE_TREE), Vector3i(402, 711, Prop.TALL_BAMBOO),
+	Vector3i(357, 721, Prop.PINE), Vector3i(303, 722, Prop.OAK), Vector3i(258, 734, Prop.PINE),
+	Vector3i(201, 717, Prop.GROVE_TREE), Vector3i(153, 733, Prop.PINE), Vector3i(110, 710, Prop.TALL_BAMBOO),
+	Vector3i(55, 728, Prop.OAK), Vector3i(-41, 726, Prop.PINE), Vector3i(-100, 710, Prop.TALL_BAMBOO),
+	Vector3i(-148, 722, Prop.PINE), Vector3i(-192, 712, Prop.OAK), Vector3i(-241, 723, Prop.PINE),
+	Vector3i(-290, 705, Prop.TALL_BAMBOO), Vector3i(-319, 670, Prop.PINE),
 ]
 const WILD_PROPS := [
 	Vector3i(-363, -1, Prop.GATE_FAR), Vector3i(-389, 41, Prop.GATE),
@@ -613,7 +622,7 @@ func _add_landmark_labels() -> void:
 		_label_at(Vector2(287, -22), "东关 · 竹涧 →")
 		_label_at(Vector2(400, -78), "东关")
 		_label_at(SOUTH_PAVILION + Vector2(0, -69), "南路亭")
-		_label_at(Vector2(12, 206), "南边竹径")
+		_label_at(Vector2(12, 181), "南路亭 ↓")
 		_label_at(EstateLayout.SOUTH_FORK + Vector2(22, -38), "西坡 ↙  ·  灶台 →")
 
 func _label_at(center: Vector2, text: String) -> void:

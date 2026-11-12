@@ -165,7 +165,7 @@ func _build_rest_stop() -> bool:
 			print("VISITOR_ROUTE_APPOINTMENT ", journal.where.text)
 			await _close_management()
 		if day == 21:
-			await _walk(Vector2(63, 225))
+			await _walk(VisitorData.SOUTH_POST + Vector2(13, 11))
 		await _night()
 		arrived = state.current_day == 22
 	return _expect(arrived and state.road_provisions_delivered and state.retainers.size() == 1,
@@ -264,7 +264,10 @@ func _handoff_at_the_garden() -> void:
 		return
 	_expect(visitor == world.neighbor_actor(VisitorData.RAVINE_GUIDE) and visitor.walking_to_stop and state.ravine_journal.garden_day == 11,
 		"The same visitor starts walking when the handoff plants the garden.")
-	await tree.create_timer(2.3).timeout
+	for tick in 210:
+		if not visitor.walking_to_stop:
+			break
+		await tree.physics_frame
 	var garden: Node2D = world.get_node("HerbGarden")
 	_expect(garden.visible and not visitor.walking_to_stop and visitor.position.distance_to(garden.position) < 33.0
 		and "查看药苗" in ui.hud.visitor_label.text, "Pu Ning follows the new path to the actual herb plot.")

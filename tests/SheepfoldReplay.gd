@@ -26,8 +26,8 @@ func _continue() -> void:
 	_estate()
 
 func _open_sheep_trade() -> Control:
-	if world.player.global_position.y > 237.0:
-		await _walk(world.player, [Vector2(-182, 459), Vector2(-182, 54)])
+	if world.player.position.y >= EstateLayout.FIELD_LANE_TURN.y:
+		await Campaign.walk_estate_road_to(tree, world, world.to_global(Vector2(66, 98)))
 	if not await _enter_market(world, ui):
 		return null
 	var market := tree.current_scene
@@ -115,8 +115,7 @@ func _plot(cell: Vector2i) -> void:
 	await _click(tiles.get_global_transform_with_canvas() * tiles.map_to_local(cell))
 
 func _winter_wheat() -> void:
-	await _walk(world.player, [Vector2(-148, 458), Vector2(-148, 238), Vector2(27, 238),
-		Vector2(27, 146), Vector2(66, 146), Vector2(66, 98)])
+	await Campaign.walk_estate_road_to(tree, world, world.to_global(Vector2(66, 98)))
 	await tree.create_timer(0.28).timeout
 	await _key(KEY_4)
 	for cell: Vector2i in [PUBLIC, PRIVATE_WHEAT]:

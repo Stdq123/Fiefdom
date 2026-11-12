@@ -82,7 +82,7 @@ script = ExtResource("11_land")
 y_sort_enabled = true
 
 [node name="PavilionButterfly" type="Node2D" parent="World/Scenery"]
-position = Vector2(107, 288)
+position = Vector2(107, 432)
 script = ExtResource("20_butterfly")
 
 [node name="EastWatch" type="Node2D" parent="World/Scenery"]
@@ -164,7 +164,7 @@ shape = SubResource("Shape_east_gate")
 position = Vector2(-271, -21)
 
 [node name="HerbGarden" type="Node2D" parent="World"]
-position = Vector2(124, 264)
+position = Vector2(124, 408)
 script = ExtResource("13_herb_garden")
 
 [node name="HallRest" type="Node2D" parent="World" groups=["interactable"]]
@@ -295,7 +295,7 @@ rotation = 1.5707964
 position = Vector2(0, -1740)
 
 [node name="SeasonBoard" type="Node2D" parent="World" groups=["interactable"]]
-position = Vector2(-26, 352)
+position = Vector2(-26, 544)
 script = ExtResource("15_season_board")
 
 [node name="Approach" type="Marker2D" parent="World/SeasonBoard"]
@@ -317,19 +317,19 @@ horizontal_alignment = 1
 [node name="Freight" parent="World" instance=ExtResource("29_freight")]
 
 [node name="TravelHearth" parent="World" instance=ExtResource("30_hearth")]
-position = Vector2(221, 365)
+position = Vector2(221, 557)
 
 [node name="AutumnExhibit" parent="World" instance=ExtResource("32_autumn")]
-position = Vector2(353, 419)
+position = Vector2(353, 611)
 
 [node name="SheepfoldPen" parent="World" instance=ExtResource("38_sheep_pen")]
-position = Vector2(-248, 458)
+position = Vector2(-248, 650)
 
 [node name="WinterSupper" parent="World" instance=ExtResource("40_winter_supper")]
-position = Vector2(353, 419)
+position = Vector2(353, 611)
 
 [node name="RoadRest" type="Node2D" parent="World"]
-position = Vector2(-25, 302)
+position = Vector2(-25, 446)
 script = ExtResource("18_road_rest")
 
 [node name="Hint" type="Label" parent="World/RoadRest"]
@@ -346,7 +346,7 @@ theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
 
 [node name="PavilionRest" type="Node2D" parent="World" groups=["interactable"]]
-position = Vector2(151, 292)
+position = Vector2(151, 436)
 script = ExtResource("41_pavilion_rest")
 
 [node name="Mats" type="Node2D" parent="World/PavilionRest"]
@@ -411,7 +411,7 @@ horizontal_alignment = 1
 
 [node name="SpringGathering" type="Node2D" parent="World"]
 y_sort_enabled = true
-position = Vector2(90, 278)
+position = Vector2(90, 422)
 script = ExtResource("16_spring_gathering")
 
 [node name="BellRack" type="Sprite2D" parent="World/SpringGathering"]

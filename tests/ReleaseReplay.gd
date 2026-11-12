@@ -468,7 +468,9 @@ func _visual() -> void:
 	management.get_node("CloseButton").pressed.emit()
 	ui.sleep_button.pressed.emit()
 	await tree.create_timer(1.1).timeout
-	await _move(&"ui_down", 56)
+	var world := tree.current_scene.get_node("World")
+	var visitor: Node2D = world.current_visitor_actor()
+	await load("res://tests/CampaignReplay.gd").walk_estate_road_to(tree, world, visitor.global_position + Vector2(-8, -16))
 	event.keycode = KEY_E
 	event.physical_keycode = KEY_E
 	tree.root.push_input(event, true)

@@ -169,17 +169,34 @@ func _verify_south_route() -> void:
 	var landscape: Node2D = world.get_node("Landscape")
 	await _key(KEY_M)
 	var map: Control = ui.estate_map
-	_expect(map.modal.visible and map.road_path.has(Vector2(29, 344)) and map.road_path.has(Vector2(257, 394))
+	_expect(map.modal.visible and map.road_path.has(EstateLayout.BAMBOO_BEND)
+		and map.road_path.has(EstateLayout.PAVILION_TURN) and map.road_path.has(EstateLayout.SOUTH_FORK)
+		and map.road_path.has(EstateLayout.FESTIVAL_FORK)
 		and map.target.point == approach.position + stand.position and map.captions.has("秋社展台"),
-		"The almanac route runs through the south fork and past the hearth to the exhibition ground.")
+		"The almanac route runs through the bamboo lane and the pavilion, then past the fork and hearth.")
 	await _snapshot("01a-south-road-map")
 	await _key(KEY_ESCAPE)
-	await Campaign.walk_estate_road_to(tree, world, Vector2(29, 344))
+	var origin: Vector2 = world.player.position
+	var start := Engine.get_physics_frames()
+	await Campaign.walk_estate_road_to(tree, world, world.to_global(EstateLayout.BAMBOO_BEND))
+	_expect(world.player.position.distance_to(EstateLayout.BAMBOO_BEND) < 4.0
+		and landscape._surface_at(world.player.position) == landscape.TERRAIN_AUDIO.Surface.TRACK,
+		"Follow the path out of the fields to the bamboo bend.")
+	var frames := Engine.get_physics_frames() - start
+	await _snapshot("01aa-bamboo-lane")
+	start = Engine.get_physics_frames()
+	await Campaign.walk_estate_road_to(tree, world, world.to_global(EstateLayout.PAVILION_TURN))
+	_expect(world.player.position.distance_to(EstateLayout.PAVILION_TURN) < 4.0,
+		"The pavilion has its own arrival beyond the grove.")
+	frames += Engine.get_physics_frames() - start
+	print("SOUTH_PAVILION_WALK from=", origin, " seconds=", frames / float(Engine.physics_ticks_per_second))
+	await _snapshot("01ab-pavilion-turn")
+	await Campaign.walk_estate_road_to(tree, world, world.to_global(EstateLayout.SOUTH_FORK))
+	_expect(world.player.position.distance_to(EstateLayout.SOUTH_FORK) < 4.0,
+		"Continue past the pavilion to reach the unloading and pasture fork.")
 	await _snapshot("01b-south-fork")
 	var travelled := 0.0
-	for point: Vector2 in [Vector2(76, 348), Vector2(131, 365), Vector2(178, 380), Vector2(215, 379),
-			Vector2(257, 394), Vector2(280, 411), Vector2(295, 446), Vector2(332, 468), Vector2(368, 470),
-			Vector2(368, 449), Vector2(353, 437)]:
+	for point: Vector2 in EstateLayout.HEARTH_LANE.slice(1) + EstateLayout.FESTIVAL_LANE.slice(1):
 		travelled += world.player.position.distance_to(point)
 		await Campaign.walk_straight(tree, world.player, point)
 		_expect(world.player.position.distance_to(point) < 3.0

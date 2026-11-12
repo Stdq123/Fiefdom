@@ -219,9 +219,13 @@ func update_marker(blocked: bool) -> void:
 	if not tracked_neighbor.is_empty():
 		var actor: Node2D = world.neighbor_actor(tracked_neighbor)
 		if is_instance_valid(actor):
-			road_guide.hide()
+			var near: bool = world.player.interaction_target == actor
+			if near:
+				road_guide.hide()
+			else:
+				_show_road_route(world.to_local(actor.global_position))
 			var portrait := actor.get_global_transform_with_canvas() * Rect2(-10, -23, 20, 25)
-			_mark_map(portrait, tracked_neighbor, Mark.NEIGHBOR, world.player.interaction_target == actor)
+			_mark_map(portrait, tracked_neighbor, Mark.NEIGHBOR, near)
 			return
 		var stop := _neighbor_trip_stop(tracked_neighbor)
 		if not stop.is_empty():
@@ -249,18 +253,21 @@ func update_marker(blocked: bool) -> void:
 			hide()
 
 func _mark_place(title: String, point: Vector2) -> void:
+	_show_road_route(point)
+	var at := world.get_global_transform_with_canvas() * point
+	_mark_map(Rect2(at - Vector2(8, 8), Vector2(16, 16)), title, Mark.PLACE, false)
+
+func _show_road_route(point: Vector2) -> void:
 	var foot := world.to_local(world.player.global_position)
-	if foot.distance_to(road_origin) > 10.0 or point != road_target:
+	if foot.distance_to(road_origin) > 10.0 or point.distance_to(road_target) > 6.0:
 		road_path = road_route_between(foot, point)
 		road_origin = foot
 		road_target = point
 		road_guide.queue_redraw()
 	road_guide.visible = road_path.size() > 1
-	var at := world.get_global_transform_with_canvas() * point
-	_mark_map(Rect2(at - Vector2(8, 8), Vector2(16, 16)), title, Mark.PLACE, false)
 
 func road_route_between(foot: Vector2, point: Vector2) -> PackedVector2Array:
-	if point.y >= EstateLayout.PAVILION_TURN.y or point.x <= EstateLayout.WEST_FORK.x:
+	if point.y >= EstateLayout.FIELD_LANE_TURN.y or point.x <= EstateLayout.WEST_FORK.x:
 		return road_network.route_between(foot, point)
 	return PackedVector2Array()
 

@@ -229,7 +229,10 @@ func _back_to_pavilion() -> bool:
 	_expect(ui.directions.destination().point.distance_to(tao.position) < 2.0,
 		"Once back on the estate, the pointer resumes tracking the actual merchant.")
 	await _snapshot("05-back-on-the-estate")
-	await tree.create_timer(10.6).timeout
+	for frame in 840:
+		if tao.resting_at_pavilion():
+			break
+		await tree.physics_frame
 	_expect(tao.resting_at_pavilion(), "Tao Xin follows the road all the way to the pavilion. Position: %s, route stop: %d." % [
 		tao.position, tao.next_stop])
 	print("SILK_MARKET_RETURN day=", state.current_day, " at=", tao.visit_location(), " landed=", tao.resting_at_pavilion())

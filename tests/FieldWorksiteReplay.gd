@@ -112,9 +112,12 @@ func _check_obstructed_sites() -> void:
 		and state.money == money and state.food_storage == food, "The order also checks the road before charging.")
 	_expect(state.reclamation_site(Vector2i(12, 6)) == Global.ReclamationSite.ROAD,
 		"A field reaching the east shoulder is unavailable even when its center is off the road.")
-	for site in [Vector2i(-3, -1), Vector2i(4, 11), Vector2i(16, 5), OLD_ROAD_SITE]:
+	for site in [Vector2i(-3, -1), Vector2i(16, 5), OLD_ROAD_SITE]:
 		_expect(state.reclamation_site(site) == Global.ReclamationSite.LANDMARK,
-			"Reserve the hall, pavilion, and both driving areas.")
+			"Reserve the hall and both driving areas.")
+	var pavilion_cell := tiles.local_to_map(tiles.to_local(world.to_global(EstateLayout.SOUTH_PAVILION)))
+	_expect(state.reclamation_site(pavilion_cell) == Global.ReclamationSite.EDGE,
+		"The pavilion stands south of the cultivable land.")
 	var shed_cell := tiles.local_to_map(tiles.to_local(world.to_global(EstateLayout.SILK_SHED_FOOT)))
 	_expect(state.reclamation_site(Vector2i(-4, 5)) == Global.ReclamationSite.OPEN
 		and state.reclamation_site(shed_cell) == Global.ReclamationSite.EDGE,

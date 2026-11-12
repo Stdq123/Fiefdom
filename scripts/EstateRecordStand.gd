@@ -13,7 +13,7 @@ func _ready() -> void:
 	var traditional: bool = Global.ending_record["outcome"] == Global.Outcome.TRADITIONAL
 	record_name = "贡簿" if traditional else "新税册"
 	place_name = "堂前" if traditional else "南路亭"
-	position = Vector2(-86, 69) if traditional else Vector2(144, 269)
+	position = Vector2(-86, 69) if traditional else EstateLayout.SOUTH_PAVILION + Vector2(67, 22)
 	var artwork := AtlasTexture.new()
 	artwork.atlas = PROPS
 	artwork.region = Rect2(3, 18, 35, 23) if traditional else Rect2(75, 21, 45, 18)

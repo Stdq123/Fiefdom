@@ -107,7 +107,7 @@ func _build_stage() -> void:
 		field_focus = estate.tile_map.to_global(estate.tile_map.map_to_local(field["center_pos"])) + Vector2(-4, -12)
 	else:
 		field_focus = estate.player.global_position
-	var stage_at := Vector2(5, 65) if traditional else Vector2(151, 263)
+	var stage_at := Vector2(5, 65) if traditional else EstateLayout.SOUTH_PAVILION + Vector2(74, 16)
 	ceremony_focus = estate.to_global(stage_at + (Vector2(-30, -28) if traditional else Vector2(-41, -19)))
 	walk_start = Vector2(100, -6) if traditional else Vector2(-100, 6)
 	walk_end = Vector2(36, 2) if traditional else Vector2(-37, 2)

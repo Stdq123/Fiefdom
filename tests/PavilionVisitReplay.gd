@@ -93,7 +93,7 @@ func _wait_for_walk(guest: Visitor) -> bool:
 	return _expect(false, "The watch change starts a real walk.")
 
 func _wait_for_arrival(guest: Visitor) -> bool:
-	for frame in 470:
+	for frame in 840:
 		if guest.resting_at_pavilion():
 			return _expect(guest.position == Landscape.PAVILION_REST_FOOT, "The visitor settles at the pavilion.")
 		await tree.physics_frame

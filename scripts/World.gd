@@ -1024,7 +1024,7 @@ func _path_to_pavilion(visitor: Visitor) -> PackedVector2Array:
 	if not path.is_empty():
 		start = path[-1]
 	path.append_array(_follow_lane(LANDSCAPE.ESTATE_SOUTH_LANE, start, LANDSCAPE.PAVILION_TURN))
-	path.append_array(PackedVector2Array([Vector2(63, 250), LANDSCAPE.PAVILION_REST_FOOT]))
+	path.append_array(PackedVector2Array([EstateLayout.SOUTH_PAVILION + Vector2(-14, 3), LANDSCAPE.PAVILION_REST_FOOT]))
 	return path
 
 func _follow_lane(lane: Array, from: Vector2, destination: Vector2) -> PackedVector2Array:
@@ -1057,8 +1057,8 @@ func _apply_visitor_activity(visitor: Visitor, walk_in: bool) -> bool:
 	match work:
 		VisitorData.VisitActivity.ROAD_REST:
 			focus = $RoadRest.position
-			path = PackedVector2Array([Vector2(44, 241)])
-			path.append_array(PackedVector2Array(LANDSCAPE.ROAD_REST_TRACK))
+			path = _follow_lane(LANDSCAPE.ESTATE_SOUTH_LANE, visitor.position, EstateLayout.PAVILION_JUNCTION)
+			path.append_array(PackedVector2Array(LANDSCAPE.ROAD_REST_TRACK.slice(1)))
 			path.append(focus + Vector2(20, 11))
 		VisitorData.VisitActivity.MEASURE:
 			focus = get_crop_world_pos(Global.irrigation.source_cell)
@@ -1068,7 +1068,8 @@ func _apply_visitor_activity(visitor: Visitor, walk_in: bool) -> bool:
 			path.append(focus + Vector2(10, 20))
 		VisitorData.VisitActivity.HERBS:
 			focus = $HerbGarden.position
-			path = PackedVector2Array(LANDSCAPE.GARDEN_TRACK)
+			path = _follow_lane(LANDSCAPE.ESTATE_SOUTH_LANE, visitor.position, LANDSCAPE.GARDEN_TRACK[0])
+			path.append_array(PackedVector2Array(LANDSCAPE.GARDEN_TRACK.slice(1)))
 			path.append(focus + Vector2(-14, 24))
 		VisitorData.VisitActivity.WATCH:
 			focus = $Scenery/EastWatch.position

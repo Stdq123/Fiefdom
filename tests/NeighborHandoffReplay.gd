@@ -99,8 +99,7 @@ func _deliver_journal() -> bool:
 	await _button(journal.locate_button)
 	var guide: Visitor = world.neighbor_actor(GUIDE)
 	_expect(ui.directions.destination().point == guide.position and not panel.visible, "Directions point to the guide at the bamboo path.")
-	await _walk(world.player, [Vector2(-181, 0), Vector2(-181, 67), Vector2(19, 67), Vector2(19, 142),
-		Vector2(37, 214), guide.global_position + Vector2(0, 16)])
+	await Campaign.walk_estate_road_to(tree, world, guide.global_position + Vector2(0, 16))
 	if not await _guide_choice("交溪行手记", "05-handoff"):
 		return false
 	_expect(state.ravine_journal.garden_day == 34 and world.get_node("HerbGarden").visible
@@ -115,7 +114,7 @@ func _deliver_journal() -> bool:
 
 func _recruit_guide() -> void:
 	var guide: Visitor = world.neighbor_actor(GUIDE)
-	await _walk(world.player, [Vector2(29, 241), Vector2(64, 241), guide.global_position + Vector2(0, 17)])
+	await Campaign.walk_estate_road_to(tree, world, guide.global_position + Vector2(0, 17))
 	if not await _guide_choice("招募"):
 		return
 	_expect(world.neighbor_actor(GUIDE) is Retainer and VisitorData.SILK_MARKET_PLACE in world.silk_trip_note(),

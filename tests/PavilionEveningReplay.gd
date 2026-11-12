@@ -1,7 +1,6 @@
 extends "res://tests/WestMarketReplay.gd"
 
 const PRIVATE := Vector2i(6, 5)
-const TO_PAVILION := [Vector2(40, 157), Vector2(45, 216), Vector2(42, 263), Vector2(69, 293)]
 
 var legacy := false
 var capture_path := ""
@@ -71,8 +70,7 @@ func _check_first_walk() -> bool:
 	return await _settled(keeper)
 
 func _first_night() -> bool:
-	await _walk(world.player, TO_PAVILION)
-	await _walk(world.player, [keeper.position + Vector2(-16, 16)])
+	await Campaign.walk_estate_road_to(tree, world, keeper.global_position + Vector2(-16, 16))
 	await _key(KEY_E)
 	var dialogue := ui.get_node_or_null("Control/DialoguePanel") as Control
 	if not _expect(dialogue != null and dialogue.name_label.text == VisitorData.FIELD_KEEPER
@@ -144,7 +142,7 @@ func _evening_conversation() -> bool:
 	await _snapshot("03-evening-map")
 	await _button(map.close_button)
 	await _button(ui.hud.cancel_directions)
-	await _walk(world.player, [Vector2(44, 250), Vector2(71, 284), keeper.position + Vector2(-16, 16)])
+	await Campaign.walk_estate_road_to(tree, world, keeper.global_position + Vector2(-16, 16))
 	await _move_pointer_off_the_field()
 	await _snapshot("04-pavilion-lanterns")
 	await _key(KEY_E)
@@ -200,10 +198,22 @@ func _play() -> void:
 	if not await _bind_estate():
 		return
 	if legacy:
-		_expect(state.current_day == 1 and state.day_watch_label() == "戌时" and state.food_storage == 10
+		var earlier_evening: bool = state.current_day == 1 and state.food_storage == 10
+		var teacher := world.neighbor_actor(VisitorData.ROAD_KEEPER) as Retainer
+		var previous_evening: bool = (state.current_day == 2 and state.food_storage == 9 and state.retainers.size() == 3
+			and state.active_crops.size() == 2 and state.well_fields.size() == 1 and teacher != null
+			and teacher.resting_at_pavilion() and teacher.position == world.pavilion_rest.seat_for(teacher.data))
+		if not _expect((earlier_evening or previous_evening) and state.day_watch_label() == "戌时"
 			and keeper.resting_at_pavilion() and keeper.position == world.pavilion_rest.seat_for(keeper.data),
-			"The genuine previous save uses the same evening clock to place the resident at his seat.")
-		print("PAVILION_EVENING_LEGACY watch=", state.day_watch_label(), " keeper=", keeper.position, " food=", state.food_storage)
+			"The genuine previous save keeps the evening clock, household and crops at the relocated pavilion."):
+			return
+		var table: PavilionRest = world.pavilion_rest
+		await Campaign.walk_estate_road_to(tree, world, table.global_position + PavilionRest.APPROACH)
+		await _key(KEY_E)
+		_expect(ui.has_node("Control/NightRationsPanel"), "The table on the new road opens the night plan after continuing the save.")
+		await _snapshot("01-legacy-evening-table")
+		print("PAVILION_EVENING_LEGACY day=", state.current_day, " watch=", state.day_watch_label(),
+			" keeper=", keeper.position, " food=", state.food_storage, " crops=", state.active_crops.size())
 		return
 	if await _check_first_walk() and await _first_night() and await _recruit_and_settle() and await _evening_conversation():
 		await _resume_and_travel()
