@@ -4,9 +4,9 @@ const Campaign := preload("res://tests/CampaignReplay.gd")
 const CONNECTOR := Vector2i(2, 5)
 const OLD_CANAL := Vector2i(3, 5)
 const FIRST_RICE := Vector2i(4, 5)
-const END_OF_PLAN := Vector2i(6, 7)
-const SECOND_FIELD := Vector2i(5, 9)
-const SECOND_RICE := Vector2i(6, 8)
+const END_OF_PLAN := Vector2i(10, 3)
+const SECOND_FIELD := Vector2i(9, 5)
+const SECOND_RICE := Vector2i(8, 4)
 
 var failed := false
 var state: Node
@@ -172,7 +172,7 @@ func _run() -> void:
 	await _click(_screen(END_OF_PLAN))
 	_expect(state.money == 7 and state.irrigation.channels.size() == 2, "A blocked route cannot dig a partial segment.")
 	await _key(KEY_R)
-	_expect(world.irrigation_overlay.preview_site == state.ChannelSite.NO_FUNDS and "20 铜钱" in ui.hud.canal_preview.text,
+	_expect(world.irrigation_overlay.preview_site == state.ChannelSite.NO_FUNDS and "36 铜钱" in ui.hud.canal_preview.text,
 		"The other bend avoids the field and shows the whole route cost.")
 	await _click(_screen(END_OF_PLAN))
 	_expect(state.money == 7 and state.irrigation.channels.size() == 2, "A route beyond the budget leaves money and channels untouched.")
@@ -202,8 +202,8 @@ func _run() -> void:
 	await _move_pointer(_screen(END_OF_PLAN))
 	_expect("供水 +3 格" in ui.hud.canal_preview.text, "The chosen bend previews the three new fields.")
 	await _click(_screen(END_OF_PLAN))
-	_expect(state.irrigation.channels.size() == 7 and state.money == 160
-		and state.irrigation.watered_footprint(SECOND_FIELD).size() == 3, "A valid plan digs five new cells, charging only once per new cell.")
+	_expect(state.irrigation.channels.size() == 11 and state.money == 144
+		and state.irrigation.watered_footprint(SECOND_FIELD).size() == 3, "A valid plan digs nine new cells, charging only once per new cell.")
 
 	await _button(ui.reclaim_button)
 	await _click(_screen(SECOND_FIELD))
