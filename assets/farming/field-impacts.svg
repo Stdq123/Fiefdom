@@ -1,0 +1,25 @@
+<svg width="64" height="48" viewBox="0 0 64 48" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+  <!-- Soil clods, seed scatter, water splash, and cut stalks. Each column plays downward. -->
+  <path fill="#cbaa75" d="M5 7h3v2H5z M9 5h2v2H9z M8 10h3v2H8z"/>
+  <path fill="#785938" d="M5 9h3v1H5z M8 12h3v1H8z"/>
+  <path fill="#d2b778" d="M23 4h2v2h-2z M21 8h1v2h-1z M26 8h2v2h-2z"/>
+  <path fill="#f3d29c" d="M23 4h1v1h-1z M26 8h1v1h-1z"/>
+  <path fill="#a8ddd2" d="M39 4h2v3h-2z M36 7h1v2h-1z M44 6h1v2h-1z"/>
+  <path fill="#78b6ae" d="M36 10h2v-1h5v1h2v2h-2v-1h-5v1h-2z"/>
+  <path fill="#f0d593" d="M53 10h2V8h2V6h2V4h1v3h-2v2h-2v2h-3z"/>
+  <path fill="#b2bf79" d="M53 7h1v1h-1z M59 10h2v1h-2z"/>
+
+  <path fill="#cbaa75" d="M2 22h3v2H2z M11 21h3v2h-3z M7 19h2v2H7z M7 28h2v2H7z"/>
+  <path fill="#785938" d="M2 24h2v1H2z M11 23h3v1h-3z"/>
+  <path fill="#dfc180" d="M19 24h1v2h-1z M23 23h2v2h-2z M27 25h2v2h-2z M22 27h1v2h-1z"/>
+  <path fill="#e4d39d" d="M25 21h1v1h-1z"/>
+  <path fill="#9bd3c7" d="M34 24h2v-2h3v1h-3v2h-2z M41 22h3v2h2v1h-2v-2h-3z M34 26h2v2h8v-2h2v2h-2v1h-8v-1h-2z"/>
+  <path fill="#c4e8d9" d="M40 19h1v2h-1z M36 20h1v1h-1z M44 19h1v1h-1z"/>
+  <path fill="#dfbc73" d="M51 23h2v1h-2z M56 20h2v2h-2z M59 23h2v1h-2z M62 21h1v1h-1z"/>
+  <path fill="#b8c88a" d="M52 26h2v1h-2z M59 26h2v2h-1v-1h-1z"/>
+
+  <path fill="#a9885c" d="M1 42h2v1H1z M12 42h2v1h-2z M7 46h1v1H7z"/>
+  <path fill="#ac915e" d="M20 42h1v1h-1z M24 40h1v1h-1z M27 43h1v1h-1z"/>
+  <path fill="#83b7ad" d="M33 42h2v1h-2z M35 44h4v1h-4z M42 44h3v1h-3z M45 41h2v1h-2z"/>
+  <path fill="#c1b77c" d="M50 42h2v1h-2z M57 38h1v1h-1z M61 42h2v1h-2z"/>
+</svg>

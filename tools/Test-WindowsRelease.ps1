@@ -1,0 +1,163 @@
+#Requires -Version 7.4
+
+param(
+    [Parameter(Mandatory)]
+    [string]$Package,
+    [string[]]$LegacyPackage,
+    [string]$EvidenceDirectory,
+    [switch]$Capture,
+    [switch]$Soak,
+    [switch]$Rations,
+    [switch]$Gamepad,
+    [switch]$WinterSupper,
+    [switch]$KeyBindings,
+    [switch]$SummerRaft,
+    [switch]$TitlePresentation,
+    [switch]$HallDecor
+)
+
+$ErrorActionPreference = 'Stop'
+$repo = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).ProviderPath
+$packagePath = (Resolve-Path -LiteralPath $Package).ProviderPath
+if (-not $EvidenceDirectory) {
+    $name = [IO.Path]::GetFileNameWithoutExtension($packagePath)
+    $EvidenceDirectory = Join-Path $repo "build/$name-verification"
+}
+$evidence = (New-Item -ItemType Directory -Force -Path $EvidenceDirectory).FullName
+$scratch = [IO.Directory]::CreateTempSubdirectory('fiefdom-smoke-release-')
+$originalAppData = $env:APPDATA
+
+function Start-VerifiedGame {
+    param(
+        [string]$Directory,
+        [string]$Profile,
+        [string]$Name,
+        [string]$Replay,
+        [string]$Resolution
+    )
+
+    $env:APPDATA = (New-Item -ItemType Directory -Force -Path (Join-Path $scratch.FullName $Profile)).FullName
+    $log = Join-Path $evidence "$Name.log"
+    $frameLimit = if ($Replay) { '12000' } else { '180' }
+    $arguments = @('--quit-after', $frameLimit, '--log-file', ('"' + $log + '"'))
+    $arguments += if ($Replay -eq 'soak') { '--max-fps', '60', '--audio-driver', 'Dummy' } else { '--fixed-fps', '60' }
+    if ($Resolution) {
+        $screens = (New-Item -ItemType Directory -Force -Path (Join-Path $evidence $Resolution)).FullName
+        $arguments += @('--windowed', '--position', '-16000,-16000', '--resolution', $Resolution)
+    } else {
+        $arguments += '--headless'
+    }
+    if ($Replay) {
+        $arguments += @('--', $Replay)
+        if ($Resolution) { $arguments += ('"' + $screens + '"') }
+    }
+    Write-Host "== $Name =="
+    $process = Start-Process -FilePath (Join-Path $Directory 'Fiefdom.exe') -WorkingDirectory $Directory -WindowStyle Hidden -PassThru -ArgumentList $arguments
+    if (-not $process.WaitForExit(180000)) {
+        $process.Kill()
+        $process.WaitForExit()
+        throw "$Name timed out. See $log"
+    }
+    $lines = Get-Content -LiteralPath $log -Encoding utf8
+    $marker = if ($Replay) { 'SCENARIO_OK' } else { 'Fiefdom title ready' }
+    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|GAMEPAD_|WINTER_|BINDING_|RAFT_|TITLE_|DECOR_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
+    if ($process.ExitCode -ne 0 -or $lines -cnotcontains $marker -or $lines -cmatch '^\s*(?:SCRIPT ERROR|USER ERROR|ERROR|WARNING):') {
+        throw "$Name failed (exit $($process.ExitCode)). See $log"
+    }
+}
+
+function Install-Replay([string]$Directory) {
+    $testDirectory = (New-Item -ItemType Directory -Path (Join-Path $Directory 'tests')).FullName
+    foreach ($file in 'ReleaseReplay.tscn', 'ReleaseReplay.gd', 'CampaignReplay.gd', 'NightRationsReplay.gd', 'GamepadReplay.gd', 'WinterSupperReplay.gd', 'KeyBindingsReplay.gd', 'SummerRaftReplay.gd', 'TitlePresentationReplay.gd', 'HallInteriorReplay.gd', 'HallDecorReplay.gd') {
+        Copy-Item -LiteralPath (Join-Path $repo "tests/$file") -Destination $testDirectory
+    }
+    @'
+[application]
+run/main_scene="res://tests/ReleaseReplay.tscn"
+
+[display]
+window/size/no_focus=true
+window/size/initial_position_type=0
+window/size/initial_position=Vector2i(-16000, -16000)
+'@ | Set-Content -LiteralPath (Join-Path $Directory 'override.cfg') -Encoding utf8
+}
+
+try {
+    $release = Join-Path $scratch.FullName 'unpacked Windows release'
+    Expand-Archive -LiteralPath $packagePath -DestinationPath $release
+    if (Test-Path -LiteralPath (Join-Path $release 'override.cfg')) {
+        throw 'The distributed package must start without a verification override.'
+    }
+    $runtime = @('Fiefdom.exe', 'Fiefdom.pck') | ForEach-Object { Get-FileHash -LiteralPath (Join-Path $release $_) }
+    Start-VerifiedGame -Directory $release -Profile 'startup' -Name 'startup'
+    # The fixture lives alongside the unpacked files. The distributed EXE and PCK are used byte for byte.
+    Install-Replay $release
+    $fullResolution = if ($Capture) { '1280x720' } else { '' }
+    foreach ($route in 'traditional', 'reformed', 'defeat') {
+        Start-VerifiedGame -Directory $release -Profile $route -Name $route -Replay $route -Resolution $fullResolution
+    }
+    Start-VerifiedGame -Directory $release -Profile 'research' -Name 'research' -Replay 'research'
+    if ($Gamepad) {
+        Start-VerifiedGame -Directory $release -Profile 'gamepad' -Name 'gamepad' -Replay 'gamepad'
+    }
+    if ($WinterSupper) {
+        Start-VerifiedGame -Directory $release -Profile 'winter-supper' -Name 'winter-supper' -Replay 'winter-supper'
+    }
+    if ($SummerRaft) {
+        Start-VerifiedGame -Directory $release -Profile 'summer-raft' -Name 'summer-raft' -Replay 'summer-raft'
+    }
+    if ($TitlePresentation) {
+        Start-VerifiedGame -Directory $release -Profile 'title-presentation' -Name 'title-presentation' -Replay 'title-presentation'
+    }
+    if ($HallDecor) {
+        Start-VerifiedGame -Directory $release -Profile 'hall-decor' -Name 'hall-decor' -Replay 'hall-decor'
+    }
+    if ($KeyBindings) {
+        Start-VerifiedGame -Directory $release -Profile 'key-bindings' -Name 'key-bindings' -Replay 'key-bindings'
+        Start-VerifiedGame -Directory $release -Profile 'key-bindings' -Name 'key-bindings-reload' -Replay 'key-bindings-reload'
+    }
+    if ($Rations) {
+        foreach ($name in 'night-rations', 'traditional-rations', 'reformed-rations') {
+            Start-VerifiedGame -Directory $release -Profile $name -Name $name -Replay $name
+        }
+    }
+    foreach ($previousPackage in $LegacyPackage) {
+        $oldPackage = (Resolve-Path -LiteralPath $previousPackage).ProviderPath
+        $oldName = [IO.Path]::GetFileNameWithoutExtension($oldPackage)
+        $legacy = Join-Path $scratch.FullName "unpacked $oldName"
+        Expand-Archive -LiteralPath $oldPackage -DestinationPath $legacy
+        Install-Replay $legacy
+        Start-VerifiedGame -Directory $legacy -Profile "legacy-$oldName" -Name "legacy-create-$oldName" -Replay 'legacy-create'
+        Start-VerifiedGame -Directory $release -Profile "legacy-$oldName" -Name "legacy-continue-$oldName" -Replay 'legacy-continue'
+    }
+    if ($Capture) {
+        foreach ($resolution in '1280x720', '1024x768') {
+            Start-VerifiedGame -Directory $release -Profile "render-$resolution" -Name "render-$resolution" -Replay 'visual' -Resolution $resolution
+        }
+    }
+    if ($Soak) {
+        Start-VerifiedGame -Directory $release -Profile 'soak' -Name 'soak' -Replay 'soak'
+    }
+    foreach ($file in $runtime) {
+        if ((Get-FileHash -LiteralPath $file.Path).Hash -ne $file.Hash) {
+            throw "The verifier modified a distributed file at $($file.Path)."
+        }
+    }
+    $zip = Get-Item -LiteralPath $packagePath
+    $manifest = @(
+        "$($zip.Name) $($zip.Length) bytes",
+        "ZIP SHA256 $((Get-FileHash -LiteralPath $packagePath).Hash)"
+    )
+    $manifest += $runtime | ForEach-Object { "$([IO.Path]::GetFileName($_.Path)) SHA256 $($_.Hash)" }
+    $manifest | Set-Content -LiteralPath (Join-Path $evidence 'manifest.txt') -Encoding utf8
+    Write-Host "Windows release checks passed. Evidence saved to $evidence"
+} finally {
+    $env:APPDATA = $originalAppData
+    $tempRoot = [IO.Path]::TrimEndingDirectorySeparator([IO.Path]::GetFullPath([IO.Path]::GetTempPath()))
+    $resolvedScratch = Get-Item -LiteralPath $scratch.FullName -Force
+    if ($resolvedScratch.Parent.FullName -eq $tempRoot -and
+        $resolvedScratch.Name -like 'fiefdom-smoke-release-*' -and
+        -not ($resolvedScratch.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+        Remove-Item -LiteralPath $resolvedScratch.FullName -Recurse -Force
+    }
+}

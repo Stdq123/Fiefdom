@@ -28,13 +28,13 @@ func _init() -> void:
 
 func get_art_name(art_enum: int) -> String:
 	match art_enum:
-		Art.RITES: return "礼 (Rites)"
-		Art.MUSIC: return "乐 (Music)"
-		Art.ARCHERY: return "射 (Archery)"
-		Art.DRIVING: return "御 (Driving)"
-		Art.LITERACY: return "书 (Literacy)"
-		Art.MATH: return "数 (Math)"
-	return "Unknown"
+		Art.RITES: return "礼"
+		Art.MUSIC: return "乐"
+		Art.ARCHERY: return "射"
+		Art.DRIVING: return "御"
+		Art.LITERACY: return "书"
+		Art.MATH: return "数"
+	return "未识"
 
 func get_stat(art_enum: int) -> Dictionary:
 	var key = Art.keys()[art_enum]

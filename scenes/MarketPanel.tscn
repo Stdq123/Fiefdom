@@ -1,0 +1,161 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/MarketPanel.gd" id="2_market"]
+
+[node name="MarketPanel" type="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+script = ExtResource("2_market")
+
+[node name="MarketHeader" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="MarketHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "封地市集"
+
+[node name="FishBook" type="Button" parent="MarketHeader"]
+visible = false
+custom_minimum_size = Vector2(92, 33)
+layout_mode = 2
+text = "溪鱼簿"
+
+[node name="NightRations" type="Button" parent="MarketHeader"]
+custom_minimum_size = Vector2(96, 33)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "今夜口粮"
+
+[node name="MarketDirections" type="Button" parent="MarketHeader"]
+custom_minimum_size = Vector2(96, 33)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "指路去西市"
+
+[node name="Stock" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Grain" type="PanelContainer" parent="Stock"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="Stock/Grain"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="Crops" type="PanelContainer" parent="Stock"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="Stock/Crops"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="Copper" type="PanelContainer" parent="Stock"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="Stock/Copper"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="FoodLabel" type="Label" parent="."]
+layout_mode = 2
+
+[node name="StockDetail" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.8, 0.67, 1)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+
+[node name="MarketDivider" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="QuantityRow" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Label" type="Label" parent="QuantityRow"]
+layout_mode = 2
+text = "品种与数量"
+
+[node name="CropChoice" type="OptionButton" parent="QuantityRow"]
+custom_minimum_size = Vector2(150, 36)
+layout_mode = 2
+
+[node name="Quantity" type="SpinBox" parent="QuantityRow"]
+custom_minimum_size = Vector2(100, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 9999999.0
+step = 1.0
+value = 1.0
+alignment = 1
+select_all_on_focus = true
+update_on_text_changed = true
+tooltip_text = "可直接输入数量，也可使用右侧箭头。"
+
+[node name="Five" type="Button" parent="QuantityRow"]
+layout_mode = 2
+text = "5 份"
+
+[node name="AllCrops" type="Button" parent="QuantityRow"]
+layout_mode = 2
+text = "取全部"
+
+[node name="DebitPlan" type="Label" parent="."]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+
+[node name="ConvertButton" type="Button" parent="."]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+
+[node name="SellButton" type="Button" parent="."]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+
+[node name="BuyFoodButton" type="Button" parent="."]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+
+[node name="ReserveDivider" type="HSeparator" parent="."]
+layout_mode = 2
+
+[node name="ReserveKind" type="OptionButton" parent="."]
+custom_minimum_size = Vector2(150, 32)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 17
+
+[node name="ReservePlan" type="Label" parent="."]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="ReserveActions" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ReserveButton" type="Button" parent="ReserveActions"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+text = "按计划补粮"
+
+[node name="ReturnToSurvey" type="Button" parent="ReserveActions"]
+visible = false
+custom_minimum_size = Vector2(124, 36)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "返回勘地"
+
+[node name="Receipt" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.73, 0.82, 0.57, 1)
+autowrap_mode = 3

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="16" viewBox="0 0 64 16" shape-rendering="crispEdges">
+  <!-- 鲫鱼 -->
+  <path fill="#26352e" d="M1 7h1V5h2V4h3V3h3v1h2v2h1V5h2v6h-2v-1h-1v2h-2v1H7v-1H4v-1H2V9H1z"/>
+  <path fill="#91a16c" d="M2 7h1V6h2V5h2V4h3v1h1v2h2V6h1v4h-1V9h-2v2H9v1H7v-1H5v-1H3V9H2z"/>
+  <path fill="#c1c798" d="M3 7h2V6h2V5h2v2h2v2H9v2H6v-1H4V9H3z"/>
+  <path fill="#647a5b" d="M7 7h2v1H7zm2 2h2v1H9zm-4 1h2v1H5z"/>
+  <path fill="#26352e" d="M4 7h1v1H4z"/>
+  <!-- 白鲦 -->
+  <g transform="translate(16 0)">
+    <path fill="#2a3840" d="M1 8h2V7h2V6h5V5h2v2h1V6h2v4h-2V9h-1v1H8v1H5v-1H3V9H1z"/>
+    <path fill="#849f9c" d="M2 8h2V7h6V6h1v2h3V7h1v2h-3v1H8v1H5V9H2z"/>
+    <path fill="#d0d5b5" d="M4 8h7v1H8v1H5V9H4z"/>
+    <path fill="#27383a" d="M4 8h1v1H4z"/>
+  </g>
+  <!-- 鲤鱼 -->
+  <g transform="translate(32 0)">
+    <path fill="#362e2a" d="M0 10h2V7h1V5h2V4h2V3h3v1h2v2h1V4h2v7h-2v-1h-1v2h-2v1H7v-1H4v-1H3v1H1v-1H0z"/>
+    <path fill="#b87f4c" d="M3 8h1V6h2V5h2V4h2v1h1v2h2V5h1v5h-1V9h-2v2h-2v1H7v-1H4v-1H3z"/>
+    <path fill="#e0ad64" d="M4 7h2V6h2V5h1v2h2v2H9v2H6v-1H4z"/>
+    <path fill="#8d5943" d="M7 7h1v1H7zm2 1h1v1H9zm-2 2h2v1H7z"/>
+    <path fill="#382e2b" d="M4 7h1v1H4z"/>
+  </g>
+  <!-- 鳜鱼 -->
+  <g transform="translate(48 0)">
+    <path fill="#28382d" d="M1 8h1V6h2V5h1V3h2v1h1V2h2v2h2v3h1V5h2v6h-2v-1h-1v2h-2v1H7v-1H5v-1H2v-1H1z"/>
+    <path fill="#799474" d="M2 8h1V7h2V5h2V4h1v1h1V3h1v2h1v3h2V6h1v4h-1V9h-2v2H9v1H7v-1H5v-1H3V9H2z"/>
+    <path fill="#abc091" d="M4 7h2V6h2V5h2v2h1v3H9v1H7v-1H5V9H4z"/>
+    <path fill="#486747" d="M6 6h1v2H6zm2-1h1v3H8zm2 3h1v2h-1zm-3 1h2v1H7z"/>
+    <path fill="#28382d" d="M4 7h1v1H4z"/>
+  </g>
+</svg>

@@ -1,0 +1,159 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/NeighborJournal.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="NoteCard"]
+content_margin_left = 19.0
+content_margin_top = 16.0
+content_margin_right = 19.0
+content_margin_bottom = 16.0
+bg_color = Color(0.13, 0.19, 0.15, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.44, 0.45, 0.31, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_left = 5
+corner_radius_bottom_right = 5
+
+[node name="邻里手记" type="VBoxContainer"]
+theme_override_constants/separation = 10
+script = ExtResource("1_script")
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.83, 0.58, 1)
+theme_override_font_sizes/font_size = 25
+text = "邻里手记"
+
+[node name="Caption" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.77, 0.81, 0.67, 1)
+theme_override_font_sizes/font_size = 15
+text = "初见、来往和约定会记在这里。"
+
+[node name="Pages" type="HBoxContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="RosterCard" type="PanelContainer" parent="Pages"]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("NoteCard")
+
+[node name="Stack" type="VBoxContainer" parent="Pages/RosterCard"]
+layout_mode = 2
+theme_override_constants/separation = 11
+
+[node name="KnownCount" type="Label" parent="Pages/RosterCard/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.79, 0.59, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="Scroll" type="ScrollContainer" parent="Pages/RosterCard/Stack"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Roster" type="VBoxContainer" parent="Pages/RosterCard/Stack/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 7
+
+[node name="PageCard" type="PanelContainer" parent="Pages"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("NoteCard")
+
+[node name="Scroll" type="ScrollContainer" parent="Pages/PageCard"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Page" type="VBoxContainer" parent="Pages/PageCard/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 11
+
+[node name="Person" type="HBoxContainer" parent="Pages/PageCard/Scroll/Page"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Portrait" type="TextureRect" parent="Pages/PageCard/Scroll/Page/Person"]
+unique_name_in_owner = true
+texture_filter = 1
+custom_minimum_size = Vector2(88, 88)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Identity" type="VBoxContainer" parent="Pages/PageCard/Scroll/Page/Person"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 5
+
+[node name="PersonName" type="Label" parent="Pages/PageCard/Scroll/Page/Person/Identity"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.83, 0.58, 1)
+theme_override_font_sizes/font_size = 30
+
+[node name="FirstMeeting" type="Label" parent="Pages/PageCard/Scroll/Page/Person/Identity"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.79, 0.66, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="Divider" type="HSeparator" parent="Pages/PageCard/Scroll/Page"]
+layout_mode = 2
+
+[node name="LocationHeading" type="Label" parent="Pages/PageCard/Scroll/Page"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.77, 0.53, 1)
+theme_override_font_sizes/font_size = 15
+text = "去处与轮访"
+
+[node name="Where" type="Label" parent="Pages/PageCard/Scroll/Page"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 19
+autowrap_mode = 3
+
+[node name="LocateNeighbor" type="Button" parent="Pages/PageCard/Scroll/Page"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+custom_minimum_size = Vector2(112, 35)
+mouse_default_cursor_shape = 2
+text = "在地图上找"
+
+[node name="MemoryHeading" type="Label" parent="Pages/PageCard/Scroll/Page"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.77, 0.53, 1)
+theme_override_font_sizes/font_size = 15
+text = "一起做过的事"
+
+[node name="Memory" type="Label" parent="Pages/PageCard/Scroll/Page"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 3
+
+[node name="Next" type="Label" parent="Pages/PageCard/Scroll/Page"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.73, 0.85, 0.65, 1)
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 3
+
+[node name="Empty" type="Label" parent="Pages"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+autowrap_mode = 3

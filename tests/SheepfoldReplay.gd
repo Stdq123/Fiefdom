@@ -1,0 +1,300 @@
+extends "res://tests/WestMarketReplay.gd"
+
+const PRIVATE_WHEAT := Vector2i(6, 5)
+
+var world: Node2D
+var ui: CanvasLayer
+
+func _estate() -> void:
+	world = tree.current_scene.get_node("World")
+	ui = tree.current_scene.get_node("UI")
+
+func _advance_night() -> void:
+	var tomorrow: int = state.current_day + 1
+	await _button(ui.sleep_button)
+	await tree.create_timer(1.12).timeout
+	_expect(state.current_day == tomorrow, "Overnight care advances exactly one day.")
+
+func _watch(progress: float) -> void:
+	state.day_progress = progress
+	tree.root.get_node("GameEvents").daylight_changed.emit()
+
+func _continue() -> void:
+	tree.change_scene_to_file(state.TITLE_SCENE)
+	await tree.scene_changed
+	await _button(tree.current_scene.continue_button)
+	_estate()
+
+func _open_sheep_trade() -> Control:
+	if world.player.global_position.y > 237.0:
+		await _walk(world.player, [Vector2(-210, 344), Vector2(-210, 54)])
+	if not await _enter_market(world, ui):
+		return null
+	var market := tree.current_scene
+	await _walk(market.player, [Vector2(106, 24)])
+	await _key(KEY_E)
+	var counter: Control = market.counter
+	if not _expect(counter.silk.is_visible_in_tree(), "E at the textile stall opens Cai Niang's counter."):
+		return null
+	await _button(counter.get_node("%SheepTrade"))
+	return counter.sheep
+
+func _return_from_market() -> bool:
+	var market := tree.current_scene
+	await _key(KEY_ESCAPE)
+	await _walk(market.player, [Vector2(176, 34)])
+	if not await _cross(&"ui_right", state.ESTATE_SCENE):
+		return false
+	_estate()
+	return true
+
+func _buy_sheep() -> bool:
+	var trade := await _open_sheep_trade()
+	if trade == null:
+		return false
+	_expect(trade.buy_sheep.visible and not trade.buy_sheep.disabled and not trade.sell_wool.is_visible_in_tree(),
+		"The trade page quotes the sheep before purchase.")
+	await _snapshot("01-market-offer")
+	var copper: int = state.money
+	await _button(trade.buy_sheep)
+	_expect(state.sheepfold.bought_day == 18 and state.money == copper - state.balance.sheep_price
+		and not trade.buy_sheep.visible, "Cai Niang places one sheep and charges the quoted price.")
+	await _button(trade.buy_fodder)
+	_expect(state.sheepfold.fodder == 3 and state.money == copper - state.balance.sheep_price - state.balance.sheep_fodder_price,
+		"The fodder bundle reaches the pen as a separate stock.")
+	print("SHEEP_PURCHASE day=", state.current_day, " copper=", copper, "->", state.money, " fodder=", state.sheepfold.fodder)
+	return await _return_from_market()
+
+func _guide_pen() -> void:
+	await _key(KEY_M)
+	var map: Control = ui.estate_map
+	for row: Button in map.row_buttons:
+		if map.row_buttons[row].title == Sheepfold.PLACE:
+			map.scroll.ensure_control_visible(row)
+			await _button(row)
+			break
+	_expect(ui.directions.tracked_place == Sheepfold.PLACE, "The estate map offers directions to the gate.")
+	await _key(KEY_ESCAPE)
+
+func _walk_to_pen() -> void:
+	var point: Vector2 = world.player.global_position
+	if point.distance_to(Vector2(-148, 344)) < 15.0:
+		return
+	if point.x < -190.0 and point.y < 120.0:
+		await _walk(world.player, [Vector2(-218, -18), Vector2(-218, 344), Vector2(-148, 344)])
+	else:
+		await _walk(world.player, [Vector2(32, 151), Vector2(47, 214), Vector2(27, 290),
+			Vector2(8, 313), Vector2(-63, 344), Vector2(-148, 344)])
+
+func _open_pen() -> Control:
+	await _key(KEY_E)
+	var panel: Control = ui.sheepfold_panel
+	return panel if _expect(panel.modal.visible and tree.paused,
+		"E at the gate opens the sheepfold at %s." % world.player.global_position) else null
+
+func _test_pasture() -> void:
+	await _guide_pen()
+	await _walk_to_pen()
+	var pen: Node2D = world.get_node("SheepfoldPen")
+	await _walk(world.player, [Vector2(-180, 344), Vector2(-180, 319)])
+	_expect(world.player.global_position.y > 331.0, "The front rail blocks entry at %s." % world.player.global_position)
+	await _walk(world.player, [Vector2(-180, 344), Vector2(-148, 344), Vector2(-148, 322)])
+	_expect(world.player.global_position.y < 330.0, "The visible gate is wide enough to enter.")
+	await _walk(world.player, [Vector2(-148, 344)])
+	_watch(0.34)
+	await tree.create_timer(0.15).timeout
+	_expect(pen.visible and pen.animal.position.y > 24.0 and pen.hay.visible, "On a dry day the sheep moves out to pasture.")
+	await _snapshot("02-pasture")
+	_watch(0.88)
+	await tree.create_timer(0.15).timeout
+	_expect(pen.animal.position.distance_to(Vector2(-12, 7)) < 1.0, "At dusk the sheep is back under cover.")
+	await _advance_night()
+	_expect(state.current_day == 19 and state.sheepfold.wool_nights == 1 and state.sheepfold.fodder == 3
+		and state.sheepfold.last_feed == Sheepfold.Feed.PASTURE, "The final autumn day used pasture before winter begins.")
+	_watch(0.34)
+	await tree.create_timer(0.15).timeout
+	_expect(pen.animal.position.distance_to(Vector2(-12, 7)) < 1.0, "In winter the sheep stays by the shelter.")
+
+func _plot(cell: Vector2i) -> void:
+	var tiles: TileMapLayer = world.tile_map
+	await _click(tiles.get_global_transform_with_canvas() * tiles.map_to_local(cell))
+
+func _winter_wheat() -> void:
+	await _walk(world.player, [Vector2(-68, 344), Vector2(-68, 238), Vector2(27, 238),
+		Vector2(27, 146), Vector2(66, 146), Vector2(66, 98)])
+	await tree.create_timer(0.28).timeout
+	await _key(KEY_4)
+	for cell: Vector2i in [PUBLIC, PRIVATE_WHEAT]:
+		await _plot(cell)
+		await _plot(cell)
+	var nights: int = state.sowing_nights(tree.root.get_node("ItemManager").get_crop("wheat"))
+	for night in nights:
+		for cell: Vector2i in [PUBLIC, PRIVATE_WHEAT]:
+			await _plot(cell)
+		await _advance_night()
+	var tribute: int = state.king_storage
+	for cell: Vector2i in [PUBLIC, PRIVATE_WHEAT]:
+		await _plot(cell)
+	_expect(state.king_storage == tribute + 1 and state.crop_stock.count("wheat") == 1,
+		"The public wheat enters tribute and only the private harvest becomes fodder material.")
+
+func _winter_feed() -> bool:
+	await _winter_wheat()
+	while state.current_day < 22 and not failed:
+		await _advance_night()
+	if not _expect(state.sheepfold.fodder == 0 and state.sheepfold.wool_nights == 4
+		and state.sheepfold.last_feed == Sheepfold.Feed.FODDER, "Three winter nights used the three bought portions."):
+		return false
+	await _button(ui.hud.rations_button)
+	var plan := ui.get_node_or_null("Control/NightRationsPanel") as Control
+	if not _expect(plan != null and plan.sheep_note.visible and "缺草" in plan.sheep_note.text,
+		"The bedtime forecast identifies the coming shortage."):
+		return false
+	await _snapshot("03-winter-forecast")
+	await _button(plan.close_button)
+	await _advance_night()
+	_expect(state.sheepfold.wool_nights == 4 and state.sheepfold.last_feed == Sheepfold.Feed.SHORTAGE,
+		"One unfed night pauses growth.")
+	await _walk_to_pen()
+	var panel := await _open_pen()
+	if panel == null:
+		return false
+	var tribute: int = state.king_storage
+	var rations: int = state.food_storage
+	var copper: int = state.money
+	await _button(panel.mix_fodder)
+	_expect(state.crop_stock.count("wheat") == 0 and state.sheepfold.fodder == 3 and state.king_storage == tribute
+		and state.food_storage == rations and state.money == copper and panel.shear.disabled,
+		"Mixing fodder spends one private wheat and leaves the king's grain, rations and copper in place.")
+	await _snapshot("04-fodder-mixed")
+	await _key(KEY_ESCAPE)
+	_watch(0.34)
+	await _snapshot("04b-winter-sheep")
+	await _advance_night()
+	_expect(state.current_day == 24 and state.sheepfold.wool_nights == 5 and state.sheepfold.fodder == 2,
+		"A fed night resumes growth and spends one portion.")
+	var record: Dictionary = state.sheepfold.save_record()
+	if not _expect(state.save_game() == OK, "Save the winter feed checkpoint."):
+		return false
+	await _continue()
+	_expect(state.sheepfold.save_record() == record and world.get_node("SheepfoldPen/Paddock/Trough/Fodder").is_visible_in_tree(),
+		"Continue restores both the feed record and the full trough.")
+	print("SHEEP_WINTER day=", state.current_day, " wool_nights=", state.sheepfold.wool_nights, " fodder=", state.sheepfold.fodder)
+	return not failed
+
+func _grow_and_shear(capture: bool) -> bool:
+	while state.sheepfold.wool_nights < state.balance.sheep_wool_nights and not failed:
+		if not _expect(state.sheep_feed(state.sheepfold.fodder) != Sheepfold.Feed.SHORTAGE, "This clip has enough pasture or fodder."):
+			return false
+		var rainy: bool = state.has_rain()
+		var fodder: int = state.sheepfold.fodder
+		await _advance_night()
+		if rainy:
+			_expect(state.sheepfold.last_feed == Sheepfold.Feed.FODDER and state.sheepfold.fodder == fodder - 1,
+				"The spring rain uses the remaining fodder instead of pasture.")
+	await _walk_to_pen()
+	var pen: Node2D = world.get_node("SheepfoldPen")
+	_watch(0.35)
+	await tree.create_timer(0.15).timeout
+	var grown_texture: Texture2D = pen.animal.texture
+	if capture:
+		await _snapshot("05-wool-ready")
+	var panel := await _open_pen()
+	if panel == null:
+		return false
+	var wool: int = state.sheepfold.wool
+	await _button(panel.shear)
+	_expect(state.sheepfold.wool == wool + 1 and state.sheepfold.wool_nights == 0
+		and panel.shear.disabled and pen.animal.texture != grown_texture and not pen.get_node("Paddock/Wool").visible,
+		"Shearing takes exactly one full coat and starts regrowth.")
+	if DisplayServer.get_name() != "headless":
+		var bleat: bool = pen.animal.get_parent().get_children().any(func(node: Node): return node is AudioStreamPlayer2D and node.stream == pen.BLEAT)
+		_expect(bleat, "Shearing starts the recorded sheep sound.")
+	await _key(KEY_ESCAPE)
+	if capture:
+		await _snapshot("06-after-shear")
+	print("SHEEP_SHEAR day=", state.current_day, " wool=", state.sheepfold.wool)
+	return not failed
+
+func _sell_then_continue() -> bool:
+	var copper: int = state.money
+	if not _expect(state.save_game() == OK, "Save the first clip before deciding how to use it."):
+		return false
+	var trade := await _open_sheep_trade()
+	if trade == null:
+		return false
+	await _button(trade.sell_wool)
+	_expect(state.sheepfold.wool == 0 and state.money == copper + state.balance.sheep_wool_price
+		and not state.can_wear_attire(PlayerAttire.WOOL), "Selling the first clip pays the listed price.")
+	print("SHEEP_SOLD day=", state.current_day, " copper=", copper, "->", state.money)
+	await _key(KEY_ESCAPE)
+	await _continue()
+	return _expect(state.sheepfold.wool == 1 and state.money == copper, "Continue can take the keep-wool branch.")
+
+func _wear_coat() -> void:
+	var trade := await _open_sheep_trade()
+	if trade == null:
+		return
+	var copper: int = state.money
+	await _button(trade.weave_coat)
+	_expect(state.sheepfold.wool == 0 and state.money == copper and state.can_wear_attire(PlayerAttire.WOOL),
+		"Two saved clips unlock the wool coat.")
+	await _snapshot("07-coat-order")
+	if not await _return_from_market():
+		return
+	var yard: Marker2D = world.get_node("HallRest/Yard")
+	await _walk(world.player, [Vector2(-181, 15), Vector2(-181, 48), Vector2(-96, 48), yard.global_position])
+	if not await _cross(&"ui_up", state.ESTATE_SCENE):
+		return
+	if not _expect(state.estate_room == state.EstateRoom.HALL, "Walk through the hall doorway to the wardrobe."):
+		return
+	var room: Node2D = world.get_node("HallInterior")
+	await _walk(world.player, [room.to_global(Vector2(0, 33)), room.to_global(Vector2(-52, 33))])
+	await _key(KEY_E)
+	var wardrobe := ui.get_node("Control/WardrobePanel") as Control
+	if not _expect(wardrobe.modal.visible, "E at the clothes rack opens the wardrobe."):
+		return
+	await _button(wardrobe.rows[PlayerAttire.WOOL])
+	await _snapshot("08-wardrobe")
+	await _button(wardrobe.apply_button)
+	_expect(state.attire_id == PlayerAttire.WOOL and world.player.sprite.texture.region == Rect2(0, 576, 96, 96),
+		"The player wears the commissioned coat.")
+	await _snapshot("09-wearing-wool")
+	_expect(state.save_game() == OK, "Save while wearing the coat.")
+	await _continue()
+	_expect(state.estate_room == state.EstateRoom.HALL and state.attire_id == PlayerAttire.WOOL
+		and state.sheepfold.coat and state.king_storage == 2, "Continue preserves the coat, flock, and two public harvests.")
+	print("SHEEP_COAT day=", state.current_day, " attire=", state.attire_id, " tribute=", state.king_storage)
+
+func _play() -> void:
+	await _button(tree.current_scene.new_button)
+	_estate()
+	_expect(not world.get_node("SheepfoldPen").visible and not state.sheepfold.owned(), "The pasture is empty in a fresh campaign.")
+	await _harvest(world, ui)
+	state.current_day = 18
+	state.money = 134
+	state.food_storage = 64
+	state.reputation = 140
+	state.balance.raid_first_day = 1000
+	tree.root.get_node("GameEvents").day_advanced.emit(state.current_day)
+	if not await _buy_sheep():
+		return
+	await _test_pasture()
+	if await _winter_feed() and await _grow_and_shear(true) and await _sell_then_continue() and await _grow_and_shear(false):
+		await _wear_coat()
+
+func run(game_tree: SceneTree) -> void:
+	tree = game_tree
+	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated sheepfold profile."):
+		tree.quit(1)
+		return
+	capture_dir = OS.get_environment("FIEFDOM_SHEEP_CAPTURES")
+	state = tree.root.get_node("Global")
+	tree.root.notify_mouse_entered()
+	tree.change_scene_to_file(state.TITLE_SCENE)
+	await tree.scene_changed
+	await tree.process_frame
+	await _play()
+	if not failed:
+		print("SCENARIO_OK")
+	tree.quit(1 if failed else 0)

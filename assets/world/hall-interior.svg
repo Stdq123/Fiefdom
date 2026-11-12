@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="208" height="192" viewBox="0 0 208 192" shape-rendering="crispEdges">
+  <!-- Room, 208 × 144. Furniture is drawn as separate sprites below the floor. -->
+  <g>
+    <path fill="#181b19" d="M5 11h198v123h-9v5h-67v4H81v-4H14v-5H5z"/>
+    <path fill="#492f29" d="M7 4h194v127h-9v5H16v-5H7z"/>
+    <path fill="#805c44" d="M14 11h180v118H14z"/>
+    <path fill="#b3956b" d="M16 14h176v27H16z"/>
+    <path fill="#c2a97b" d="M18 16h172v7H18z"/>
+    <path fill="#9e805e" d="M18 35h172v6H18zM22 25h26v1H22zM151 29h30v1h-30zM35 33h24v1H35z"/>
+    <path fill="#634234" d="M12 10h184v5H12zM12 39h184v6H12zM16 14h6v29h-6zM62 14h4v27h-4zM145 14h4v28h-4zM185 14h7v29h-7z"/>
+    <path fill="#aa754d" d="M11 6h186v4H11zM15 40h178v2H15zM16 13h4v29h-4zM186 14h3v28h-3z"/>
+    <path fill="#422e27" d="M76 16h56v24H76z"/>
+    <path fill="#779c9d" d="M80 19h48v17H80z"/>
+    <path fill="#a9bab2" d="M81 19h46v5H81z"/>
+    <path fill="#587a7e" d="M81 31h46v5H81z"/>
+    <path fill="#72513b" d="M80 26h48v2H80zM91 18h2v20h-2zM103 18h2v20h-2zM115 18h2v20h-2z"/>
+    <path fill="#c39760" d="M77 16h54v2H77zM77 38h54v2H77z"/>
+    <path fill="#a17b53" d="M14 45h180v82H14z"/>
+    <path fill="#98704c" d="M14 45h180v6H14zM14 59h180v7H14zM14 75h180v6H14zM14 91h180v7H14zM14 108h180v7H14zM14 123h180v4H14z"/>
+    <path fill="#75513c" d="M14 51h180v1H14zM14 59h180v1H14zM14 67h180v1H14zM14 75h180v1H14zM14 83h180v1H14zM14 91h180v1H14zM14 99h180v1H14zM14 107h180v1H14zM14 115h180v1H14zM14 123h180v1H14z"/>
+    <path fill="#886045" d="M47 45h1v7h-1zM132 45h1v7h-1zM68 52h1v7h-1zM160 52h1v7h-1zM37 60h1v7h-1zM109 60h1v7h-1zM174 60h1v7h-1zM55 68h1v7h-1zM142 68h1v7h-1zM33 76h1v7h-1zM92 76h1v7h-1zM156 76h1v7h-1zM49 84h1v7h-1zM135 84h1v7h-1zM65 92h1v7h-1zM178 92h1v7h-1zM37 100h1v7h-1zM145 100h1v7h-1zM60 108h1v7h-1zM165 108h1v7h-1zM44 116h1v7h-1zM141 116h1v7h-1z"/>
+    <path fill="#b58d5b" d="M25 54h19v1H25zM110 55h18v1h-18zM149 64h13v1h-13zM27 70h10v1H27zM66 71h19v1H66zM149 79h26v1h-26zM19 87h26v1H19zM162 95h19v1h-19zM47 104h12v1H47zM148 110h18v1h-18zM22 119h21v1H22zM164 119h21v1h-21z"/>
+    <path fill="#754e38" d="M15 45h177v4H15zM14 48h4v77h-4zM190 48h4v77h-4z"/>
+    <!-- Rear shelf and oil lamp. -->
+    <path fill="#4f382e" d="M152 28h31v23h-31zM29 29h26v14H29z"/>
+    <path fill="#925e40" d="M151 28h33v3h-33zM151 38h33v3h-33zM151 47h33v3h-33zM29 29h26v3H29zM29 40h26v3H29z"/>
+    <path fill="#a79a62" d="M157 32h10v5h-10zM169 33h9v4h-9zM35 34h13v5H35zM169 43h10v3h-10z"/>
+    <path fill="#c7af7b" d="M157 33h10v1h-10zM34 34h15v1H34zM169 43h10v1h-10z"/>
+    <path fill="#5d654f" d="M156 44h7v3h-7zM157 42h5v2h-5z"/>
+    <path fill="#4d3b32" d="M136 44h13v3h-13zM138 40h9v4h-9z"/>
+    <path fill="#9b7147" d="M137 40h11v2h-11zM139 42h7v2h-7zM142 37h1v4h-1z"/>
+    <path fill="#f8bd66" d="M142 35h1v2h1v3h-4v-2h1v-2h1z"/>
+    <path fill="#fff0ac" d="M142 37h1v2h-1z"/>
+    <!-- Cutaway walls and stone at the door. -->
+    <path fill="#5e3d31" d="M7 43h7v87H7zM194 43h7v87h-7zM13 123h77v11H13zM118 123h77v11h-77z"/>
+    <path fill="#8a6248" d="M8 43h4v83H8zM196 43h4v83h-4zM14 123h76v4H14zM118 123h76v4h-76z"/>
+    <path fill="#9e784f" d="M13 123h20v2H13zM48 123h18v2H48zM73 123h17v2H73zM118 123h24v2h-24zM159 123h25v2h-25z"/>
+    <path fill="#614838" d="M88 121h32v13H88z"/>
+    <path fill="#927e62" d="M90 125h28v5H90zM88 130h32v4H88zM85 134h38v4H85z"/>
+    <path fill="#bdac84" d="M90 125h28v1H90zM88 130h32v1H88zM85 134h38v1H85z"/>
+    <path fill="#77624e" d="M83 138h42v2H83z"/>
+  </g>
+  <!-- Study desk, 48 × 32. -->
+  <g transform="translate(0 144)">
+    <path fill="#674a39" d="M4 26h40v4H4z"/>
+    <path fill="#4e332a" d="M6 16h5v12H6zM37 16h5v12h-5zM7 19h34v4H7z"/>
+    <path fill="#996645" d="M5 9h38v10H5z"/>
+    <path fill="#bf8953" d="M6 7h36v7H6z"/>
+    <path fill="#704b36" d="M4 15h40v4H4zM8 24h2v4H8zM38 23h2v5h-2z"/>
+    <path fill="#d6a670" d="M6 14h36v1H6z"/>
+    <path fill="#706344" d="M9 7h16v6H9z"/>
+    <path fill="#cdb179" d="M10 6h14v6H10z"/>
+    <path fill="#98764f" d="M11 7h1v4h-1zM14 7h1v4h-1zM17 7h1v4h-1zM20 7h1v4h-1z"/>
+    <path fill="#3e433a" d="M30 8h8v5h-8zM28 6h12v1H28z"/>
+    <path fill="#777b5f" d="M31 8h5v1h-5z"/>
+  </g>
+  <!-- Sleeping platform, 52 × 48. -->
+  <g transform="translate(48 144)">
+    <path fill="#684936" d="M4 39h44v6H4z"/>
+    <path fill="#55382e" d="M5 3h42v37H5zM6 39h5v5H6zM41 39h5v5h-5z"/>
+    <path fill="#82583b" d="M6 4h40v4H6zM8 8h36v29H8z"/>
+    <path fill="#b39766" d="M10 8h32v28H10z"/>
+    <path fill="#d8be8b" d="M13 9h26v7H13z"/>
+    <path fill="#eed6a1" d="M14 9h24v2H14z"/>
+    <path fill="#b79e75" d="M14 15h24v2H14z"/>
+    <path fill="#894d42" d="M9 18h34v20H9z"/>
+    <path fill="#a76952" d="M10 18h32v14H10z"/>
+    <path fill="#c09267" d="M10 20h32v2H10zM10 30h32v2H10z"/>
+    <path fill="#8d5644" d="M12 23h3v3h-3zM19 25h3v3h-3zM25 23h3v3h-3zM31 25h3v3h-3zM37 23h3v3h-3z"/>
+    <path fill="#c99c67" d="M13 32h1v4h-1zM18 32h1v4h-1zM23 32h1v4h-1zM28 32h1v4h-1zM33 32h1v4h-1zM38 32h1v4h-1z"/>
+    <path fill="#5b3b2e" d="M5 37h42v3H5z"/>
+    <path fill="#a4744a" d="M6 37h40v1H6z"/>
+  </g>
+</svg>

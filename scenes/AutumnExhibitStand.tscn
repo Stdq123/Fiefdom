@@ -1,0 +1,79 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/AutumnExhibitStand.gd" id="1_stand"]
+[ext_resource type="Texture2D" path="res://assets/world/autumn-exhibit.svg" id="2_art"]
+[ext_resource type="PackedScene" path="res://scenes/AutumnExhibitGuest.tscn" id="3_person"]
+[ext_resource type="Material" path="res://resources/world_hint_material.tres" id="4_hint"]
+
+[sub_resource type="RectangleShape2D" id="TableFootprint"]
+size = Vector2(85, 12)
+
+[node name="AutumnExhibit" type="Node2D" groups=["interactable"]]
+visible = false
+y_sort_enabled = true
+script = ExtResource("1_stand")
+
+[node name="Approach" type="Marker2D" parent="."]
+position = Vector2(0, 18)
+
+[node name="Display" type="Sprite2D" parent="."]
+centered = false
+texture = ExtResource("2_art")
+offset = Vector2(-68, -60)
+
+[node name="ReedMat" type="Sprite2D" parent="."]
+position = Vector2(72, 67)
+z_index = -2
+texture_filter = 1
+
+[node name="Lanterns" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Guests" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="阿绥" parent="Guests" instance=ExtResource("3_person")]
+
+[node name="林蓼" parent="Guests" instance=ExtResource("3_person")]
+role = 1
+
+[node name="禾伯" parent="Guests" instance=ExtResource("3_person")]
+role = 2
+
+[node name="商音" parent="Guests" instance=ExtResource("3_person")]
+role = 3
+
+[node name="Bench" type="StaticBody2D" parent="."]
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape2D" parent="Bench"]
+position = Vector2(0, -3)
+shape = SubResource("TableFootprint")
+disabled = true
+
+[node name="Samples" type="Node2D" parent="."]
+position = Vector2(0, 1)
+
+[node name="Left" type="Sprite2D" parent="Samples"]
+position = Vector2(-26, -21)
+
+[node name="Middle" type="Sprite2D" parent="Samples"]
+position = Vector2(0, -21)
+
+[node name="Right" type="Sprite2D" parent="Samples"]
+position = Vector2(26, -21)
+
+[node name="Hint" type="Label" parent="."]
+visible = false
+z_index = 6
+material = ExtResource("4_hint")
+offset_left = -49.0
+offset_top = -69.0
+offset_right = 49.0
+offset_bottom = -55.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.99, 0.86, 0.57, 1)
+theme_override_colors/font_outline_color = Color(0.13, 0.21, 0.16, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1

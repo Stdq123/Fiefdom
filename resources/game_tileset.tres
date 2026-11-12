@@ -1,6 +1,7 @@
 [gd_resource type="TileSet" format=3 uid="uid://bp7kea3f521rt"]
 
 [ext_resource type="Texture2D" uid="uid://b1wysqyuawdlj" path="res://assets/tileset.svg" id="1_tex"]
+[ext_resource type="Texture2D" path="res://assets/farming/josehzz/crop-spritesheet.png" id="2_crops"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1"]
 texture = ExtResource("1_tex")
@@ -13,8 +14,36 @@ texture = ExtResource("1_tex")
 0:2/0 = 0
 1:2/0 = 0
 2:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+2:3/0 = 0
+0:6/0 = 0
+1:6/0 = 0
+2:6/0 = 0
+0:7/0 = 0
+1:7/0 = 0
+2:7/0 = 0
+0:8/0 = 0
+1:8/0 = 0
+2:8/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_FarmingCrops"]
+texture = ExtResource("2_crops")
+7:4/0 = 0
+7:4/0/modulate = Color(0.72, 1.3, 1.1, 1)
+9:4/0 = 0
+9:4/0/modulate = Color(2.15, 1.23, 1.1, 1)
+11:4/0 = 0
+11:4/0/modulate = Color(2.15, 1.23, 1.1, 1)
+1:5/0 = 0
+1:5/0/modulate = Color(0.85, 0.88, 1, 1)
+3:5/0 = 0
+3:5/0/modulate = Color(2.15, 1.23, 1.1, 1)
+5:5/0 = 0
+5:5/0/modulate = Color(2, 1.7, 1.2, 1)
 
 [resource]
 custom_data_layer_0/name = "is_public_field"
 custom_data_layer_0/type = 1
 sources/0 = SubResource("TileSetAtlasSource_1")
+sources/1 = SubResource("TileSetAtlasSource_FarmingCrops")

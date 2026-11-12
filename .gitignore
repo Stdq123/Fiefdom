@@ -3,3 +3,16 @@
 
 # Node modules
 godot-mcp-ultimate/node_modules/
+
+# Machine-specific Godot executable and MCP settings
+/.codex/config.toml
+/.godot-mcp.json
+
+# Local export artifacts
+/build/
+*.backup
+
+# Local ACE-Step jobs and configuration
+/acestep_output/
+/.agents/skills/acestep/scripts/config.json
+/.agents/skills/acestep/scripts/.first_gen_done

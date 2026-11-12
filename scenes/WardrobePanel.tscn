@@ -1,0 +1,171 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/WardrobePanel.gd" id="1_panel"]
+
+[sub_resource type="StyleBoxFlat" id="Style_preview"]
+content_margin_left = 12.0
+content_margin_top = 14.0
+content_margin_right = 12.0
+content_margin_bottom = 14.0
+bg_color = Color(0.667, 0.598, 0.428, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.527, 0.463, 0.319, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_left = 4
+corner_radius_bottom_right = 4
+
+[node name="WardrobePanel" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("1_panel")
+toggle_action = &""
+
+[node name="MapModal" type="ColorRect" parent="."]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.06, 0.08, 0.066, 0.74)
+
+[node name="Center" type="CenterContainer" parent="MapModal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="MapModal/Center"]
+custom_minimum_size = Vector2(848, 0)
+layout_mode = 2
+
+[node name="Stack" type="VBoxContainer" parent="MapModal/Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="MapModal/Center/Panel/Stack"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="MapModal/Center/Panel/Stack/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.95, 0.82, 0.57, 1)
+theme_override_font_sizes/font_size = 31
+text = "堂屋衣架"
+
+[node name="CloseMap" type="Button" parent="MapModal/Center/Panel/Stack/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(132, 39)
+mouse_default_cursor_shape = 2
+text = "返回堂屋  Esc"
+
+[node name="Pages" type="HBoxContainer" parent="MapModal/Center/Panel/Stack"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Preview" type="VBoxContainer" parent="MapModal/Center/Panel/Stack/Pages"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 9
+
+[node name="OutfitName" type="Label" parent="MapModal/Center/Panel/Stack/Pages/Preview"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.82, 0.57, 1)
+theme_override_font_sizes/font_size = 25
+
+[node name="OutfitDetail" type="Label" parent="MapModal/Center/Panel/Stack/Pages/Preview"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.79, 0.83, 0.71, 1)
+
+[node name="Tray" type="PanelContainer" parent="MapModal/Center/Panel/Stack/Pages/Preview"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("Style_preview")
+
+[node name="Center" type="CenterContainer" parent="MapModal/Center/Panel/Stack/Pages/Preview/Tray"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Views" type="HBoxContainer" parent="MapModal/Center/Panel/Stack/Pages/Preview/Tray/Center"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Front" type="VBoxContainer" parent="MapModal/Center/Panel/Stack/Pages/Preview/Tray/Center/Views"]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="Sprite" type="TextureRect" parent="MapModal/Center/Panel/Stack/Pages/Preview/Tray/Center/Views/Front"]
+texture_filter = 1
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="MapModal/Center/Panel/Stack/Pages/Preview/Tray/Center/Views/Front"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.20, 0.171, 0.128, 1)
+text = "正面"
+horizontal_alignment = 1
+
+[node name="Side" type="VBoxContainer" parent="MapModal/Center/Panel/Stack/Pages/Preview/Tray/Center/Views"]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="Sprite" type="TextureRect" parent="MapModal/Center/Panel/Stack/Pages/Preview/Tray/Center/Views/Side"]
+texture_filter = 1
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="MapModal/Center/Panel/Stack/Pages/Preview/Tray/Center/Views/Side"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.20, 0.171, 0.128, 1)
+text = "侧面"
+horizontal_alignment = 1
+
+[node name="Back" type="VBoxContainer" parent="MapModal/Center/Panel/Stack/Pages/Preview/Tray/Center/Views"]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="Sprite" type="TextureRect" parent="MapModal/Center/Panel/Stack/Pages/Preview/Tray/Center/Views/Back"]
+texture_filter = 1
+custom_minimum_size = Vector2(128, 128)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="MapModal/Center/Panel/Stack/Pages/Preview/Tray/Center/Views/Back"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.20, 0.171, 0.128, 1)
+text = "背面"
+horizontal_alignment = 1
+
+[node name="WearOutfit" type="Button" parent="MapModal/Center/Panel/Stack/Pages/Preview"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+custom_minimum_size = Vector2(178, 42)
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.96, 0.84, 0.58, 1)
+
+[node name="Outfits" type="VBoxContainer" parent="MapModal/Center/Panel/Stack/Pages"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(310, 0)
+layout_mode = 2
+theme_override_constants/separation = 6

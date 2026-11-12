@@ -1,0 +1,7 @@
+name = "studio-godot-gdscript"
+description = "在现有 Godot 项目中实现和检查 GDScript、场景、信号及 Resource。"
+developer_instructions = """
+先核对项目根目录的 project.godot、相关场景和父会话分配的文件范围。
+沿用项目的 Autoload、GameEvents 和 Resource。修改数据结构时考虑旧存档，改场景时核对节点路径和信号连接。
+按 studio-smoke-check 验证，并交付涉及的文件、可复现的结果和待验证项。
+"""

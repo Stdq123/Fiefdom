@@ -1,0 +1,172 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/RavineMap.gd" id="1_map"]
+
+[sub_resource type="StyleBoxFlat" id="PanelStyle"]
+content_margin_left = 24.0
+content_margin_top = 20.0
+content_margin_right = 24.0
+content_margin_bottom = 20.0
+bg_color = Color(0.12, 0.18, 0.14, 1)
+border_width_left = 1
+border_width_top = 2
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.66, 0.56, 0.36, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_left = 6
+corner_radius_bottom_right = 6
+shadow_color = Color(0.06, 0.08, 0.06, 0.65)
+shadow_size = 9
+
+[node name="RavineMap" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_map")
+
+[node name="OpenMap" type="Button" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -154.0
+offset_top = 16.0
+offset_right = -20.0
+offset_bottom = 53.0
+grow_horizontal = 0
+mouse_default_cursor_shape = 2
+text = "竹涧舆图  M"
+
+[node name="CancelDirections" type="Button" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -276.0
+offset_top = 108.0
+offset_right = -20.0
+offset_bottom = 144.0
+grow_horizontal = 0
+mouse_default_cursor_shape = 2
+
+[node name="MapModal" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="MapModal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.06, 0.08, 0.065, 0.7)
+
+[node name="Center" type="CenterContainer" parent="MapModal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="MapModal/Center"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("PanelStyle")
+
+[node name="Layout" type="VBoxContainer" parent="MapModal/Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="MapModal/Center/Panel/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="MapModal/Center/Panel/Layout/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.94, 0.81, 0.56, 1)
+theme_override_font_sizes/font_size = 29
+text = "竹涧舆图"
+
+[node name="JournalSite" type="Button" parent="MapModal/Center/Panel/Layout/Header"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+
+[node name="TrapSite" type="Button" parent="MapModal/Center/Panel/Layout/Header"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+
+[node name="CloseMap" type="Button" parent="MapModal/Center/Panel/Layout/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(124, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "返回山路  Esc"
+
+[node name="Chart" type="Control" parent="MapModal/Center/Panel/Layout"]
+unique_name_in_owner = true
+clip_contents = true
+custom_minimum_size = Vector2(860, 414)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="MapInk" type="Control" parent="MapModal/Center/Panel/Layout/Chart"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Footer" type="HBoxContainer" parent="MapModal/Center/Panel/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="RouteStatus" type="Label" parent="MapModal/Center/Panel/Layout/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.93, 0.87, 0.72, 1)
+theme_override_font_sizes/font_size = 16
+text = "选一处地点，回到山路后沿标记走。"
+
+[node name="PositionLegend" type="Label" parent="MapModal/Center/Panel/Layout/Footer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.88, 0.62, 1)
+theme_override_font_sizes/font_size = 16
+text = "● 当前位置"
+
+[node name="ClearRoute" type="Button" parent="MapModal/Center/Panel/Layout/Footer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(108, 36)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+disabled = true
+text = "清除指路"

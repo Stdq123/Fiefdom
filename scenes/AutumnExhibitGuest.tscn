@@ -1,0 +1,37 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/AutumnExhibitGuest.gd" id="1_guest"]
+[ext_resource type="Script" path="res://scripts/NeighborMotion.gd" id="2_motion"]
+[ext_resource type="Material" path="res://resources/world_hint_material.tres" id="3_hint"]
+
+[node name="AutumnExhibitGuest" type="Node2D" groups=["interactable"]]
+texture_filter = 1
+script = ExtResource("1_guest")
+
+[node name="Motion" type="Sprite2D" parent="."]
+position = Vector2(0, -6)
+script = ExtResource("2_motion")
+
+[node name="Parcel" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(7, -4)
+scale = Vector2(0.68, 0.68)
+
+[node name="Crop" type="Sprite2D" parent="Parcel"]
+position = Vector2(1, -4)
+scale = Vector2(0.65, 0.65)
+
+[node name="Hint" type="Label" parent="."]
+visible = false
+z_index = 6
+material = ExtResource("3_hint")
+offset_left = -45.0
+offset_top = -39.0
+offset_right = 45.0
+offset_bottom = -26.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.89, 0.64, 1)
+theme_override_colors/font_outline_color = Color(0.13, 0.21, 0.16, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1

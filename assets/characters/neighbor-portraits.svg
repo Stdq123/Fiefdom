@@ -1,0 +1,264 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="624" height="48" viewBox="0 0 624 48" shape-rendering="crispEdges">
+  <!-- 渠伯 -->
+  <g>
+    <path fill="#252b2b" d="M4 47v-6h3v-4h5v-3h8v-4h-6v-3h-3v-5H9V12h3V8h4V5h18v3h4v4h3v10h-3v5h-3v5h-6v2h8v3h5v4h3v6Z"/>
+    <path fill="#464e54" d="M6 47v-5h3v-4h5v-2h20v2h6v4h3v5Z"/>
+    <path fill="#646e72" d="M8 47v-4h3v-4h5v-2h8v4h-5v2h-4v4Zm27-10h3v3h3v7h-6v-7h-2Z"/>
+    <path fill="#8d9590" d="M14 36h6l5 6v5h-4v-4Zm13 4 4-4h4l-8 8Z"/>
+    <path fill="#9f764d" d="M33 36h4v4h-2v4h-2v3h-5v-3h2v-4h3Z"/>
+    <path fill="#baa383" d="M33 37h2v3h-2zm-3 5h2v3h-2z"/>
+    <path fill="#93624e" d="M19 28h12v8h-3v3h-6v-3h-3Z"/>
+    <path fill="#c08c65" d="M12 17h24v3h3v5h-4v5h-4v3H20v-2h-4v-4h-3v-2h-2v-5h1Z"/>
+    <path fill="#dfac80" d="M15 16h18v3h2v6h-2v4h-4v2h-8v-2h-4v-5h-2Z"/>
+    <path fill="#efc095" d="M16 17h14v3h-4v3h-3v3h-2v-2h-5Z"/>
+    <path fill="#a87557" d="M31 21h4v5h-3v3h-3v-5h2zm-9 4h3v2h-4v-1h1zm-8-3h2v3h-2zm23-1h1v3h-2v-2h1Z"/>
+    <path fill="#352e2c" d="M16 21h5v1h-1v2h-2v-2h-2zm11 0h5v1h-1v2h-2v-2h-2Z"/>
+    <path fill="#8e806c" d="M16 19h5v1h-5zm11 0h5v1h-5zm-9 9h3v1h5v-1h5v2h-4v2h-6v-2h-3Z"/>
+    <path fill="#694438" d="M22 29h5v1h-5Z"/>
+    <path fill="#3d4143" d="M11 13h3V9h4V6h14v3h4v4h3v5H11Z"/>
+    <path fill="#555c5d" d="M16 10h4V7h10v3h3v4H15v-2h1Z"/>
+    <path fill="#777d76" d="M12 14h25v2h-4v2H16v-1h-4Z"/>
+    <path fill="#a0a093" d="M14 14h19v1H14Z"/>
+    <path fill="#333739" d="M10 17h7v2h-3v3h-2v-2h-2zm24-1h5v5h-4Z"/>
+  </g>
+  <!-- 季青初见 -->
+  <g transform="translate(48 0)">
+    <path fill="#242b32" d="M4 47v-6h4v-4h5v-3h6v-4h-4v-3h-4v-5H9v-9h2V9h3V5h21v4h3v4h3v9h-2v5h-3v3h-4v4h6v3h5v4h2v6Z"/>
+    <path fill="#566d86" d="M6 47v-5h4v-4h5v-2h21v2h5v4h2v5Z"/>
+    <path fill="#7897ac" d="M9 47v-5h3v-3h5v-2h8v5h-6v5zm24-10h3v3h3v7h-6v-6h-2Z"/>
+    <path fill="#d3dacb" d="M16 36h5l7 7v4h-5v-3Zm11 5 4-5h4l-5 7Z"/>
+    <path fill="#b1c5ba" d="M16 36h4l6 7v2h-2Z"/>
+    <path fill="#936553" d="M19 28h13v7h-4v4h-5v-3h-4Z"/>
+    <path fill="#be896b" d="M12 16h25v4h2v5h-4v4h-3v3H21v-2h-5v-3h-3v-3h-2v-4h1Z"/>
+    <path fill="#dfac84" d="M15 15h19v4h2v6h-3v4h-4v2h-7v-2h-4v-3h-3Z"/>
+    <path fill="#f0c3a0" d="M16 17h16v3h-7v3h-2v3h-4v-2h-3Z"/>
+    <path fill="#ad755c" d="M32 20h3v6h-2v3h-4v-5h3zm-9 5h3v2h-4v-1h1zm-10-3h1v3h-1Z"/>
+    <path fill="#393336" d="M16 19h5v1h-5zm12 0h5v1h-5Z"/>
+    <path fill="#343036" d="M17 22h4v1h-1v2h-2v-2h-1zm11 0h4v1h-1v2h-2v-2h-1Z"/>
+    <path fill="#8d574a" d="M22 28h6v1h-6Z"/>
+    <path fill="#354451" d="M10 13h3V9h3V6h17v3h3v4h4v5H10Z"/>
+    <path fill="#566c79" d="M16 9h3V7h13v3h3v4H14v-2h2Z"/>
+    <path fill="#7a9398" d="M17 8h11v1H17zm-4 6h24v2H13Z"/>
+    <path fill="#313d47" d="M10 16h6v4h-3v2h-2zm26 0h4v5h-3Z"/>
+    <path fill="#493b32" d="M31 42h3v-4h3v-4h9v5h-3v4h-4v4h-8Z"/>
+    <path fill="#c6a16b" d="M33 43h3v-4h3v-4h6v3h-3v4h-4v4h-5Z"/>
+    <path fill="#e2c28a" d="M36 42h2v-3h3v-3h3v2h-3v4h-3v3h-2Z"/>
+    <path fill="#a27b54" d="M37 40h2v1h-2zm3-4h3v1h-3z"/>
+  </g>
+  <!-- 季青谈起路粮 -->
+  <g transform="translate(96 0)">
+    <path fill="#242b32" d="M4 47v-6h4v-4h5v-3h6v-4h-4v-3h-4v-5H9v-9h2V9h3V5h21v4h3v4h3v9h-2v5h-3v3h-4v4h6v3h5v4h2v6Z"/>
+    <path fill="#566d86" d="M6 47v-5h4v-4h5v-2h21v2h5v4h2v5Z"/>
+    <path fill="#7897ac" d="M9 47v-5h3v-3h5v-2h8v5h-6v5zm24-10h3v3h3v7h-6v-6h-2Z"/>
+    <path fill="#d3dacb" d="M16 36h5l7 7v4h-5v-3Zm11 5 4-5h4l-5 7Z"/>
+    <path fill="#b1c5ba" d="M16 36h4l6 7v2h-2Z"/>
+    <path fill="#936553" d="M19 28h13v7h-4v4h-5v-3h-4Z"/>
+    <path fill="#be896b" d="M12 16h25v4h2v5h-4v4h-3v3H21v-2h-5v-3h-3v-3h-2v-4h1Z"/>
+    <path fill="#dfac84" d="M15 15h19v4h2v6h-3v4h-4v2h-7v-2h-4v-3h-3Z"/>
+    <path fill="#f0c3a0" d="M16 17h16v3h-7v3h-2v3h-4v-2h-3Z"/>
+    <path fill="#ad755c" d="M32 20h3v6h-2v3h-4v-5h3zm-9 5h3v2h-4v-1h1zm-10-3h1v3h-1Z"/>
+    <path fill="#393336" d="M16 19h5v1h-5zm12 0h5v1h-5Z"/>
+    <path fill="#51403a" d="M16 23h2v-1h3v1h-2v1h-3zm12-1h3v1h2v1h-3v-1h-2Z"/>
+    <path fill="#c6866c" d="M16 25h4v1h-4zm14 0h4v1h-4Z"/>
+    <path fill="#815044" d="M22 28h7v1h-2v1h-3v-1h-2Z"/>
+    <path fill="#f4cfaa" d="M24 28h3v1h-3Z"/>
+    <path fill="#354451" d="M10 13h3V9h3V6h17v3h3v4h4v5H10Z"/>
+    <path fill="#566c79" d="M16 9h3V7h13v3h3v4H14v-2h2Z"/>
+    <path fill="#7a9398" d="M17 8h11v1H17zm-4 6h24v2H13Z"/>
+    <path fill="#313d47" d="M10 16h6v4h-3v2h-2zm26 0h4v5h-3Z"/>
+    <path fill="#493b32" d="M31 42h3v-4h3v-4h9v5h-3v4h-4v4h-8Z"/>
+    <path fill="#c6a16b" d="M33 43h3v-4h3v-4h6v3h-3v4h-4v4h-5Z"/>
+    <path fill="#e2c28a" d="M36 42h2v-3h3v-3h3v2h-3v4h-3v3h-2Z"/>
+    <path fill="#a27b54" d="M37 40h2v1h-2zm3-4h3v1h-3z"/>
+  </g>
+  <!-- 陶辛在西廊 -->
+  <g transform="translate(144 0)">
+    <path fill="#302923" d="M4 47v-6h4v-4h5v-3h7v-4h-5v-3h-4v-5H9v-7H6v-5h8V7h4V5h15v2h4v3h6v5h-4v10h-3v4h-4v5h7v3h4v4h3v6Z"/>
+    <path fill="#714337" d="M6 47v-5h4v-4h5v-2h22v2h5v4h2v5Z"/>
+    <path fill="#a45f48" d="M9 47v-5h3v-3h5v-2h9v4h-4v2h-8v4Zm27-9h3v3h3v6h-6Z"/>
+    <path fill="#d1ac75" d="M16 36h5l7 7v4h-5v-3Zm11 6 5-6h4l-6 8h-2Z"/>
+    <path fill="#926249" d="M19 27h14v8h-4v4h-6v-3h-4Z"/>
+    <path fill="#c58960" d="M12 16h24v4h3v5h-4v4h-4v4H21v-2h-4v-4h-4v-3h-2v-5h1Z"/>
+    <path fill="#e1aa7c" d="M15 16h19v4h2v5h-3v3h-4v3h-7v-2h-4v-4h-3Z"/>
+    <path fill="#f1bd8d" d="M16 17h15v3h-5v4h-4v-2h-6Z"/>
+    <path fill="#5a3b2f" d="M15 19h6v1h-6zm12 0h6v1h-6zM17 22h4v2h-3v-1h-1zm11 0h4v2h-3v-1h-1z"/>
+    <path fill="#9b5c45" d="M24 24h3v2h-4v-1h1zm-2 4h7v1h-7z"/>
+    <path fill="#5b4433" d="M8 11h8V8h4V6h11v2h4v3h6v3H8Z"/>
+    <path fill="#93714e" d="M17 10h4V8h10v2h3v2H16Z"/>
+    <path fill="#c4a16b" d="M9 12h31v2H9zM22 8h8v1h-8Z"/>
+    <path fill="#49372d" d="M11 15h6v3h-3v4h-2v-3h-1zm23 0h5v6h-3v-3h-2z"/>
+    <path fill="#d4a36d" d="M35 38h4v6h-4Z"/>
+    <path fill="#5d4132" d="M36 39h2v3h-2Z"/>
+  </g>
+  <!-- 陶辛收到样绸 -->
+  <g transform="translate(192 0)">
+    <path fill="#302923" d="M4 47v-6h4v-4h5v-3h7v-4h-5v-3h-4v-5H9v-7H6v-5h8V7h4V5h15v2h4v3h6v5h-4v10h-3v4h-4v5h7v3h4v4h3v6Z"/>
+    <path fill="#714337" d="M6 47v-5h4v-4h5v-2h22v2h5v4h2v5Z"/>
+    <path fill="#a45f48" d="M9 47v-5h3v-3h5v-2h9v4h-4v2h-8v4Zm27-9h3v3h3v6h-6Z"/>
+    <path fill="#d1ac75" d="M16 36h5l7 7v4h-5v-3Zm11 6 5-6h4l-6 8h-2Z"/>
+    <path fill="#926249" d="M19 27h14v8h-4v4h-6v-3h-4Z"/>
+    <path fill="#c58960" d="M12 16h24v4h3v5h-4v4h-4v4H21v-2h-4v-4h-4v-3h-2v-5h1Z"/>
+    <path fill="#e1aa7c" d="M15 16h19v4h2v5h-3v3h-4v3h-7v-2h-4v-4h-3Z"/>
+    <path fill="#f1bd8d" d="M16 17h15v3h-5v4h-4v-2h-6Z"/>
+    <path fill="#5a3b2f" d="M15 19h6v1h-6zm12 0h6v1h-6zM17 23h2v-1h2v1h-2v1h-2zm11-1h3v1h1v1h-2v-1h-2z"/>
+    <path fill="#a35b46" d="M24 24h3v2h-4v-1h1zm-3 3h2v1h6v-1h1v2h-3v1h-4v-1h-2z"/>
+    <path fill="#5b4433" d="M8 11h8V8h4V6h11v2h4v3h6v3H8Z"/>
+    <path fill="#93714e" d="M17 10h4V8h10v2h3v2H16Z"/>
+    <path fill="#c4a16b" d="M9 12h31v2H9zM22 8h8v1h-8Z"/>
+    <path fill="#49372d" d="M11 15h6v3h-3v4h-2v-3h-1zm23 0h5v6h-3v-3h-2z"/>
+    <path fill="#503732" d="M28 42h4v-5h3v-3h11v7h-3v3h-5v3H28Z"/>
+    <path fill="#a44d43" d="M30 43h4v-5h3v-3h8v5h-4v3h-5v4h-6Z"/>
+    <path fill="#d68d6c" d="M33 44h3v-4h3v-3h4v2h-4v4h-3v3h-3zM39 40h2v2h-2z"/>
+  </g>
+  <!-- 蒲宁托付竹简 -->
+  <g transform="translate(240 0)">
+    <path fill="#263329" d="M4 47v-7h5v-4h6v-3h6v-4h-5v-3h-4v-5h-2v-8h3V9h4V6h4V3h9v3h4v4h4v5h2v8h-3v5h-4v5h6v3h5v4h3v7Z"/>
+    <path fill="#486652" d="M6 47v-6h5v-4h6v-3h18v3h7v4h3v6Z"/>
+    <path fill="#71927a" d="M9 47v-5h4v-4h7v-2h8v4h-5v3h-8v4Zm25-10h4v3h3v7h-7Z"/>
+    <path fill="#c8c49a" d="M17 35h5l6 7v5h-5v-3Zm11 6 5-6h4l-7 8Z"/>
+    <path fill="#89654c" d="M21 27h11v8h-4v4h-5v-4h-2Z"/>
+    <path fill="#b98b64" d="M14 14h20v5h4v5h-4v5h-4v3h-8v-2h-4v-4h-4v-3h-2v-5h2Z"/>
+    <path fill="#d9ad81" d="M16 15h17v4h2v5h-3v4h-4v3h-5v-2h-4v-4h-3Z"/>
+    <path fill="#edc598" d="M17 16h13v3h-5v4h-4v-3h-4Z"/>
+    <path fill="#493b32" d="M17 19h5v1h-5zm10 0h6v1h-6zM18 22h3v2h-2v-1h-1zm10 0h4v2h-3v-1h-1z"/>
+    <path fill="#98654f" d="M23 27h6v1h-6Z"/>
+    <path fill="#39443a" d="M13 12h4V8h5V5h7v3h4v4h4v6h-4v-3h-5v-2h-8v3h-3v3h-4Z"/>
+    <path fill="#676950" d="M19 10h5V7h5v3h3v2H18Zm-3 4h16v1H16Z"/>
+    <path fill="#594836" d="M31 37h12v10H31z"/>
+    <path fill="#c3a470" d="M32 37h10v9H32z"/>
+    <path fill="#97794c" d="M34 38h1v7h-1zm4 0h1v7h-1z"/>
+    <path fill="#6b513c" d="M32 40h10v1H32zm0 3h10v1H32z"/>
+  </g>
+  <!-- 蒲宁照料药苗 -->
+  <g transform="translate(288 0)">
+    <path fill="#263329" d="M4 47v-7h5v-4h6v-3h6v-4h-5v-3h-4v-5h-2v-8h3V9h4V6h4V3h9v3h4v4h4v5h2v8h-3v5h-4v5h6v3h5v4h3v7Z"/>
+    <path fill="#486652" d="M6 47v-6h5v-4h6v-3h18v3h7v4h3v6Z"/>
+    <path fill="#71927a" d="M9 47v-5h4v-4h7v-2h8v4h-5v3h-8v4Zm25-10h4v3h3v7h-7Z"/>
+    <path fill="#c8c49a" d="M17 35h5l6 7v5h-5v-3Zm11 6 5-6h4l-7 8Z"/>
+    <path fill="#89654c" d="M21 27h11v8h-4v4h-5v-4h-2Z"/>
+    <path fill="#b98b64" d="M14 14h20v5h4v5h-4v5h-4v3h-8v-2h-4v-4h-4v-3h-2v-5h2Z"/>
+    <path fill="#d9ad81" d="M16 15h17v4h2v5h-3v4h-4v3h-5v-2h-4v-4h-3Z"/>
+    <path fill="#edc598" d="M17 16h13v3h-5v4h-4v-3h-4Z"/>
+    <path fill="#493b32" d="M17 19h5v1h-5zm10 0h6v1h-6zM17 23h2v-1h2v1h-2v1h-2zm11-1h3v1h2v1h-2v-1h-3z"/>
+    <path fill="#98654f" d="M22 27h2v1h5v-1h1v2h-7v-1h-1Z"/>
+    <path fill="#39443a" d="M13 12h4V8h5V5h7v3h4v4h4v6h-4v-3h-5v-2h-8v3h-3v3h-4Z"/>
+    <path fill="#676950" d="M19 10h5V7h5v3h3v2H18Zm-3 4h16v1H16Z"/>
+    <path fill="#775b40" d="M32 41h12v5H32Z"/>
+    <path fill="#52734f" d="M33 37h3v-4h3v2h4v3h2v4h-6v3h-3v-4h-3Z"/>
+    <path fill="#a8bd77" d="M34 36h4v-3h2v4h3v2h-4v3h-2v-4h-3Z"/>
+  </g>
+  <!-- 弋戎 -->
+  <g transform="translate(336 0)">
+    <path fill="#292e2a" d="M3 47v-7h5v-4h8v-4h4v-3h-4v-4h-4V12h4V8h5V5h11v3h4v4h3v12h-3v5h-4v4h5v3h6v4h3v7Z"/>
+    <path fill="#715345" d="M6 47v-6h5v-4h7v-4h15v4h8v4h3v6Z"/>
+    <path fill="#a06d51" d="M8 41h8v-4h5v6h-6v4H8Zm26-5h4v4h4v7h-6v-5h-2Z"/>
+    <path fill="#4a5045" d="M18 40h14v7H18z M23 35h8v4h-8z"/>
+    <path fill="#d1a46e" d="M24 37h3v2h-3z M18 41h4v2h-4z M25 43h5v2h-5z"/>
+    <path fill="#9d7357" d="M19 14h16v7h2v3h-3v5h-4v7h-8v-4h-3v-4h-3v-6h-2v-4h5Z"/>
+    <path fill="#d6a877" d="M18 15h15v7h-2v5h-4v3h-6v-4h-4v-6h1Z"/>
+    <path fill="#efd099" d="M20 15h12v3h-8v4h-3v-2h-3v-3h2Z"/>
+    <path fill="#483831" d="M17 20h6v1h-6z M27 19h6v1h-6z M20 22h2v2h-2z M28 22h2v2h-2z M22 28h7v1h-7z"/>
+    <path fill="#3f4035" d="M13 12h4V9h4V6h10v3h5v4h2v6h-4v-3H17v4h-4Z"/>
+    <path fill="#ad7951" d="M14 13h22v3H14z M26 12h4v5h-4z"/>
+    <path fill="#c6a679" d="M27 12h2v3h-2z M39 28h2v10h-2z M37 28h6v2h-6z"/>
+  </g>
+  <!-- 弋戎拿着守备竹简 -->
+  <g transform="translate(384 0)">
+    <path fill="#292e2a" d="M3 47v-7h5v-4h8v-4h4v-3h-4v-4h-4V12h4V8h5V5h11v3h4v4h3v12h-3v5h-4v4h5v3h6v4h3v7Z"/>
+    <path fill="#715345" d="M6 47v-6h5v-4h7v-4h15v4h8v4h3v6Z"/>
+    <path fill="#a06d51" d="M8 41h8v-4h5v6h-6v4H8Zm26-5h4v4h4v7h-6v-5h-2Z"/>
+    <path fill="#4a5045" d="M18 40h14v7H18z M23 35h8v4h-8z"/>
+    <path fill="#d1a46e" d="M24 37h3v2h-3z M18 41h4v2h-4z M25 43h5v2h-5z"/>
+    <path fill="#9d7357" d="M19 14h16v7h2v3h-3v5h-4v7h-8v-4h-3v-4h-3v-6h-2v-4h5Z"/>
+    <path fill="#d6a877" d="M18 15h15v7h-2v5h-4v3h-6v-4h-4v-6h1Z"/>
+    <path fill="#efd099" d="M20 15h12v3h-8v4h-3v-2h-3v-3h2Z"/>
+    <path fill="#483831" d="M17 20h6v1h-6z M27 19h6v1h-6z M19 22h3v1h-3z M28 22h3v1h-3z M22 28h6v1h-6z M28 27h2v1h-2z"/>
+    <path fill="#3f4035" d="M13 12h4V9h4V6h10v3h5v4h2v6h-4v-3H17v4h-4Z"/>
+    <path fill="#ad7951" d="M14 13h22v3H14z M26 12h4v5h-4z"/>
+    <path fill="#c6a679" d="M27 12h2v3h-2z"/>
+    <path fill="#4b3e31" d="M31 35h13v12H31z"/>
+    <path fill="#d3b67c" d="M32 36h11v10H32z"/>
+    <path fill="#886b46" d="M33 37h1v8h-1z M36 37h1v8h-1z M40 37h1v8h-1z M32 39h11v1H32z M32 43h11v1H32z"/>
+  </g>
+  <!-- 石墨初见 -->
+  <g transform="translate(432 0)">
+    <path fill="#272d2c" d="M5 47v-7h4v-4h8v-3h4v-4h-6v-3h-3v-4h-2v-7h2v-4h4V7h4V4h12v3h4v4h3v9h2v5h-4v4h-4v4h6v4h4v3h3v7Z"/>
+    <path fill="#454b51" d="M7 47v-6h4v-3h7v-3h16v2h6v4h4v6Z"/>
+    <path fill="#656e6e" d="M10 47v-5h4v-3h6v-3h6v4h-6v3h-4v4zm23-11h3v3h4v3h2v5h-7v-6h-2Z"/>
+    <path fill="#a2a492" d="M17 36h4l7 8v3h-4v-2Zm11 7 5-7h4l-7 9Z"/>
+    <path fill="#a7785a" d="M20 27h12v8h-4v4h-5v-4h-3Z"/>
+    <path fill="#be8e68" d="M13 16h23v4h3v4h-4v4h-3v4H22v-2h-5v-3h-3v-4h-2v-5h1Z"/>
+    <path fill="#dfae81" d="M16 17h17v4h2v4h-3v4h-4v1h-6v-2h-4v-4h-2Z"/>
+    <path fill="#ebbd91" d="M17 17h12v3h-6v3h-4v-1h-2Z"/>
+    <path fill="#3e3931" d="M17 19h5v1h-5z M27 19h5v1h-5z M19 21h2v2h-2z M29 21h2v2h-2z M23 27h5v1h-5z"/>
+    <path fill="#966852" d="M31 25h2v2h-2z M15 23h2v2h-2z M23 30h5v1h-5z"/>
+    <path fill="#3a4145" d="M12 15v-3h5V8h4V6h10v3h4v3h3v5h-5v-2H18v3h-4v3h-3v-6Z"/>
+    <path fill="#5d6565" d="M17 12h4V8h9v2h4v3H17Z"/>
+    <path fill="#999e92" d="M13 14h25v2h-5v1H18v-1h-5Z"/>
+    <path fill="#b7905e" d="M36 16h3v12h-1v-5h-2z"/>
+  </g>
+  <!-- 石墨带着量水尺 -->
+  <g transform="translate(480 0)">
+    <path fill="#272d2c" d="M5 47v-7h4v-4h8v-3h4v-4h-6v-3h-3v-4h-2v-7h2v-4h4V7h4V4h12v3h4v4h3v9h2v5h-4v4h-4v4h6v4h4v3h3v7Z"/>
+    <path fill="#454b51" d="M7 47v-6h4v-3h7v-3h16v2h6v4h4v6Z"/>
+    <path fill="#656e6e" d="M10 47v-5h4v-3h6v-3h6v4h-6v3h-4v4zm23-11h3v3h4v3h2v5h-7v-6h-2Z"/>
+    <path fill="#a2a492" d="M17 36h4l7 8v3h-4v-2Zm11 7 5-7h4l-7 9Z"/>
+    <path fill="#a7785a" d="M20 27h12v8h-4v4h-5v-4h-3Z"/>
+    <path fill="#be8e68" d="M13 16h23v4h3v4h-4v4h-3v4H22v-2h-5v-3h-3v-4h-2v-5h1Z"/>
+    <path fill="#dfae81" d="M16 17h17v4h2v4h-3v4h-4v1h-6v-2h-4v-4h-2Z"/>
+    <path fill="#ebbd91" d="M17 17h12v3h-6v3h-4v-1h-2Z"/>
+    <path fill="#3e3931" d="M17 19h5v1h-5z M27 19h5v1h-5z M19 21h2v2h-2z M29 21h2v2h-2z M23 27h4v1h-4z M27 26h2v1h-2z"/>
+    <path fill="#966852" d="M31 25h2v2h-2z M15 23h2v2h-2z M23 30h5v1h-5z"/>
+    <path fill="#3a4145" d="M12 15v-3h5V8h4V6h10v3h4v3h3v5h-5v-2H18v3h-4v3h-3v-6Z"/>
+    <path fill="#5d6565" d="M17 12h4V8h9v2h4v3H17Z"/>
+    <path fill="#999e92" d="M13 14h25v2h-5v1H18v-1h-5Z"/>
+    <path fill="#b7905e" d="M36 16h3v12h-1v-5h-2z"/>
+    <path fill="#493b2c" d="M37 29h7v18H32v-5h5Z"/>
+    <path fill="#a97b4e" d="M38 30h5v16h-5Z"/>
+    <path fill="#dfb778" d="M39 30h4v14h-4Z"/>
+    <path fill="#78583e" d="M39 32h4v1h-4z M41 35h2v1h-2z M39 38h4v1h-4z M41 41h2v1h-2z"/>
+    <path fill="#d3a474" d="M35 41h5v3h-5z M34 43h2v3h-2z"/>
+  </g>
+  <!-- 商音 -->
+  <g transform="translate(528 0)">
+    <path fill="#302b30" d="M5 48v-9h3v-3h7v-3h4v-3h-5v-3h-3V13h2V9h5V5h13v3h4v3h4v15h-3v4h-6v3h6v3h6v4h3v8Z"/>
+    <path fill="#724d50" d="M7 48v-8h3v-3h7v-2h16v2h7v4h3v7Z"/>
+    <path fill="#a16f64" d="M10 47v-6h6v-3h7v8h-5v2h-8zM31 37h5v2h4v7h-6v-5h-3z"/>
+    <path fill="#d8bc88" d="M16 35h5l7 6v6h-4v-5zm11 6 6-6h4l-7 8Z"/>
+    <path fill="#8d5946" d="M17 17h18v6h3v3h-3v3h-4v4h-9v-2h-6v-4h-3v-7h4Z"/>
+    <path fill="#d4a478" d="M16 18h17v2h2v7h-4v4H21v-2h-4v-4h-2v-5h1Z"/>
+    <path fill="#e4b88a" d="M18 19h12v2h-5v3h-2v-3h-5zM18 25h3v2h-3zM30 24h3v2h-3z"/>
+    <path fill="#423239" d="M13 15h2v-4h4V8h11v2h4v3h3v6h-4v-2H17v3h-4Z"/>
+    <path fill="#855753" d="M17 10h4V7h7v3h5v3H17zM15 14h21v2H15z"/>
+    <path fill="#c19463" d="M15 15h21v1H15zM24 8h4v4h-4z"/>
+    <path fill="#513b36" d="M18 21h4v1h-4zm10 0h4v1h-4zM19 23h2v2h-2zm10 0h2v2h-2zM23 28h5v1h-5z"/>
+    <path fill="#503f32" d="M37 27h4v6h2v9h-2v2h-7v-2h-2v-9h3v-6Z"/>
+    <path fill="#b4945e" d="M36 28h3v6h2v7h-7v-7h2z"/>
+    <path fill="#ddbd76" d="M35 36h2v4h-2zM35 41h6v1h-6z"/>
+  </g>
+  <!-- 渠伯记下轮作以后 -->
+  <g transform="translate(576 0)">
+    <path fill="#252b2b" d="M4 47v-6h3v-4h5v-3h8v-4h-6v-3h-3v-5H9V12h3V8h4V5h18v3h4v4h3v10h-3v5h-3v5h-6v2h8v3h5v4h3v6Z"/>
+    <path fill="#464e54" d="M6 47v-5h3v-4h5v-2h20v2h6v4h3v5Z"/>
+    <path fill="#687575" d="M8 47v-4h3v-4h5v-2h8v4h-5v2h-4v4Zm27-10h3v3h3v7h-6v-7h-2Z"/>
+    <path fill="#a0a299" d="M14 36h6l5 6v5h-4v-4Zm13 4 4-4h4l-8 8Z"/>
+    <path fill="#93624e" d="M19 28h12v8h-3v3h-6v-3h-3Z"/>
+    <path fill="#c08c65" d="M12 17h24v3h3v5h-4v5h-4v3H20v-2h-4v-4h-3v-2h-2v-5h1Z"/>
+    <path fill="#e2af83" d="M15 16h18v3h2v6h-2v4h-4v2h-8v-2h-4v-5h-2Z"/>
+    <path fill="#efc095" d="M16 17h14v3h-4v3h-3v3h-2v-2h-5Z"/>
+    <path fill="#b87557" d="M31 22h4v4h-3v3h-3v-5h2zm-9 3h3v2h-4v-1h1zm-8-3h3v3h-2v-1h-1zm23-1h1v3h-2v-2h1Z"/>
+    <path fill="#3b322d" d="M16 22h1v-1h3v1h1v1h-2v-1h-2v1h-1zm11 0h1v-1h3v1h1v1h-2v-1h-2v1h-1Z"/>
+    <path fill="#8e806c" d="M16 19h5v1h-5zm11 0h5v1h-5zm-9 9h3v1h5v-1h5v2h-4v2h-6v-2h-3Z"/>
+    <path fill="#6e4439" d="M21 28h2v1h3v-1h2v1h-2v1h-3v-1h-2Z"/>
+    <path fill="#3d4143" d="M11 13h3V9h4V6h14v3h4v4h3v5H11Z"/>
+    <path fill="#555c5d" d="M16 10h4V7h10v3h3v4H15v-2h1Z"/>
+    <path fill="#a09e8a" d="M12 14h25v2h-4v2H16v-1h-4Z"/>
+    <path fill="#333739" d="M10 17h7v2h-3v3h-2v-2h-2zm24-1h5v5h-4Z"/>
+    <path fill="#514034" d="M26 38h3v-3h4v-1h9v2h2v10h-2v2H24v-3h2Z"/>
+    <path fill="#b7925c" d="M29 37h13v9H25v-2h2v-4h2Z"/>
+    <path fill="#e2c686" d="M30 37h11v7H28v-3h2Zm-3 8h14v1H27Z"/>
+    <path fill="#816041" d="M31 38h1v6h-1zm4 0h1v6h-1zm4 0h1v6h-1zm-9 1h11v1H30zm-2 3h13v1H28z"/>
+    <path fill="#bd8b68" d="M23 44h2v-3h4v1h1v2h-2v3h-5Z"/>
+    <path fill="#dda982" d="M25 43h3v1h-3Zm-1 2h3v1h-3Z"/>
+  </g>
+</svg>

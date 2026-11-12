@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="38" viewBox="0 0 128 38" shape-rendering="crispEdges">
+  <!-- Timber set out for the night -->
+  <path fill="#26382c" opacity=".65" d="M6 29h51v6H6zm6 6h39v2H12z"/>
+  <path fill="#4b3a32" d="M7 23h4v-3h32v2h6v7h5v6H9v-3H7z"/>
+  <path fill="#94704c" d="M11 22h32v3H11zm-2 5h38v3H9zm4 4h38v2H13z"/>
+  <path fill="#c2a474" d="M12 22h29v1H12zm-1 5h34v1H11zm5 4h33v1H16z"/>
+  <path fill="#66513b" d="M21 20h3v12h-3zm15 0h3v10h-3z"/>
+  <path fill="#c7a86b" d="M21 20h2v10h-2zm15 0h2v8h-2z"/>
+  <path fill="#724b39" d="M48 17h7v2h2v9h-2v3h-7v-2h-2V19h2z"/>
+  <path fill="#a36d4c" d="M48 19h7v2h1v6h-2v2h-6v-2h-1v-6h1z"/>
+  <path fill="#ac976b" d="M48 18h7v2h-7zm1 5h1v5h-1z"/>
+
+  <!-- Bench, rain awning and water jar -->
+  <g transform="translate(64 0)">
+    <path fill="#233a2d" opacity=".72" d="M4 32h57v4H4zm6 4h43v2H10z"/>
+    <path fill="#44382e" d="M6 11h5v24H6zm37 0h5v24h-5z"/>
+    <path fill="#8d6847" d="M7 12h2v22H7zm37 0h2v22h-2zm-34 4h7v2h-7zm27 0h7v2h-7z"/>
+    <path fill="#574a37" d="M1 11h3V8h6V6h9V4h19v2h7v2h6v3h3v4H1z"/>
+    <path fill="#a88e5d" d="M3 11h3V9h6V7h8V5h17v2h8v2h5v2h2v2H3z"/>
+    <path fill="#c6ac72" d="M7 10h42v1H7zm8-3h27v1H15zm7-2h14v1H22z"/>
+    <path fill="#7d714c" d="M3 12h49v2H3zm8 0h1v3h-1zm9 0h1v3h-1zm12 0h1v3h-1zm10 0h1v3h-1z"/>
+    <path fill="#4c3c31" d="M12 22h31v5H12zm2 5h28v4H14zm2 4h4v4h-4zm21 0h4v4h-4z"/>
+    <path fill="#b58c5b" d="M14 23h27v3H14zm2 5h24v2H16zm1 3h2v3h-2zm21 0h2v3h-2z"/>
+    <path fill="#dab17b" d="M15 23h25v1H15zm3 5h19v1H18z"/>
+    <path fill="#434336" d="M50 23h8v2h2v7h-2v3h-8v-2h-2v-8h2z"/>
+    <path fill="#567474" d="M51 25h6v2h2v5h-2v2h-6v-2h-2v-5h2z"/>
+    <path fill="#8fa798" d="M50 25h8v1h-8zm1 3h2v4h-2z"/>
+    <path fill="#6e543e" d="M49 23h10v2H49z"/>
+    <path fill="#9a7953" d="M50 23h7v1h-7z"/>
+  </g>
+</svg>

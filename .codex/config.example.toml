@@ -1,0 +1,6 @@
+# Copy to .codex/config.toml and set cwd to the absolute path of your checkout.
+[mcp_servers.godot-ultimate]
+command = "node"
+args = ["godot-mcp-ultimate/dist/index.js"]
+cwd = "D:/path/to/game"
+env_vars = ["GODOT_PATH", "GODOT_LSP_PORT"]

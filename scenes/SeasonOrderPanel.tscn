@@ -1,0 +1,124 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/SeasonOrderPanel.gd" id="1_orders"]
+
+[sub_resource type="StyleBoxFlat" id="Card"]
+content_margin_left = 18.0
+content_margin_top = 14.0
+content_margin_right = 18.0
+content_margin_bottom = 14.0
+bg_color = Color(0.126, 0.184, 0.145, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.361, 0.407, 0.293, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_left = 6
+corner_radius_bottom_right = 6
+
+[node name="时令单" type="VBoxContainer"]
+theme_override_constants/separation = 14
+script = ExtResource("1_orders")
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 2
+theme_override_font_sizes/font_size = 26
+text = "南路亭交货簿"
+
+[node name="Lead" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.73, 0.8, 0.66, 1)
+text = "每季可交一单。提前看下季所需，再安排田地和预留收成。"
+autowrap_mode = 3
+
+[node name="Current" type="PanelContainer" parent="."]
+layout_mode = 2
+theme_override_styles/panel = SubResource("Card")
+
+[node name="Content" type="VBoxContainer" parent="Current"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Heading" type="HBoxContainer" parent="Current/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Name" type="Label" parent="Current/Content/Heading"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.96, 0.85, 0.62, 1)
+theme_override_font_sizes/font_size = 23
+
+[node name="Deadline" type="Label" parent="Current/Content/Heading"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+
+[node name="Request" type="Label" parent="Current/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 3
+
+[node name="Cargo" type="HBoxContainer" parent="Current/Content"]
+layout_mode = 2
+theme_override_constants/separation = 26
+
+[node name="State" type="Label" parent="Current/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="Rewards" type="HBoxContainer" parent="Current/Content"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Copper" type="Button" parent="Current/Content/Rewards"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Food" type="Button" parent="Current/Content/Rewards"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Actions" type="HBoxContainer" parent="Current/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Pin" type="Button" parent="Current/Content/Actions"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+toggle_mode = true
+text = "在田边跟踪此单"
+
+[node name="FishRoute" type="Button" parent="Current/Content/Actions"]
+visible = false
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+
+[node name="Next" type="PanelContainer" parent="."]
+layout_mode = 2
+theme_override_styles/panel = SubResource("Card")
+
+[node name="Content" type="VBoxContainer" parent="Next"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Heading" type="Label" parent="Next/Content"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.76, 0.84, 0.65, 1)
+theme_override_font_sizes/font_size = 18
+
+[node name="Details" type="Label" parent="Next/Content"]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="LastReceipt" type="Label" parent="."]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.73, 0.8, 0.66, 1)
+autowrap_mode = 3

@@ -1,27 +1,405 @@
 [gd_scene format=3 uid="uid://ct0q14d1jja3e"]
 
 [ext_resource type="Script" uid="uid://dkhnj24a1t7jv" path="res://scripts/World.gd" id="1_world"]
-[ext_resource type="TileSet" path="res://resources/game_tileset.tres" id="2_tileset"]
+[ext_resource type="TileSet" uid="uid://bp7kea3f521rt" path="res://resources/game_tileset.tres" id="2_tileset"]
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="3_player"]
 [ext_resource type="Script" uid="uid://dd0uqup0hk8b5" path="res://scripts/UIManager.gd" id="4_ui"]
-[ext_resource type="Theme" uid="uid://game_theme_uid" path="res://resources/game_theme.tres" id="5_theme"]
-[ext_resource type="Script" path="res://scripts/WellFieldMarker.gd" id="6_marker"]
+[ext_resource type="Theme" uid="uid://bb1anfi4o7nf5" path="res://resources/game_theme.tres" id="5_theme"]
+[ext_resource type="Script" uid="uid://b7801nragst0t" path="res://scripts/WellFieldMarker.gd" id="6_marker"]
+[ext_resource type="Script" path="res://scripts/IrrigationOverlay.gd" id="7_irrigation"]
+[ext_resource type="PackedScene" path="res://scenes/EstateHUD.tscn" id="8_hud"]
+[ext_resource type="Script" path="res://scripts/DrivingPractice.gd" id="9_drive"]
+[ext_resource type="Script" path="res://scripts/CampaignHUD.gd" id="10_campaign"]
+[ext_resource type="Script" path="res://scripts/Landscape.gd" id="11_land"]
+[ext_resource type="Script" path="res://scripts/FieldCursor.gd" id="12_field_cursor"]
+[ext_resource type="Script" path="res://scripts/HerbGarden.gd" id="13_herb_garden"]
+[ext_resource type="Script" path="res://scripts/EastWatch.gd" id="14_east_watch"]
+[ext_resource type="Script" path="res://scripts/SeasonBoard.gd" id="15_season_board"]
+[ext_resource type="Script" path="res://scripts/SpringGathering.gd" id="16_spring_gathering"]
+[ext_resource type="Texture2D" path="res://assets/world/gathering-bell-rack.svg" id="17_bell_rack"]
+[ext_resource type="Script" path="res://scripts/RoadRest.gd" id="18_road_rest"]
+[ext_resource type="Script" path="res://scripts/FieldRotationBook.gd" id="19_rotation_book"]
+[ext_resource type="Script" path="res://scripts/MeadowButterfly.gd" id="20_butterfly"]
+[ext_resource type="Script" path="res://scripts/EstateDirections.gd" id="21_directions"]
+[ext_resource type="PackedScene" path="res://scenes/EstateMap.tscn" id="22_map"]
+[ext_resource type="Script" path="res://scripts/HallRest.gd" id="23_hall_rest"]
+[ext_resource type="Material" path="res://resources/world_hint_material.tres" id="24_world_hint"]
+[ext_resource type="Script" path="res://scripts/MapGate.gd" id="25_gate"]
+[ext_resource type="PackedScene" path="res://scenes/HallInterior.tscn" id="26_hall_interior"]
+[ext_resource type="Script" path="res://scripts/EstateEntrance.gd" id="27_entrance"]
+[ext_resource type="PackedScene" path="res://scenes/SilkInterior.tscn" id="28_silk_interior"]
+[ext_resource type="PackedScene" path="res://scenes/SeasonFreight.tscn" id="29_freight"]
+[ext_resource type="PackedScene" path="res://scenes/TravelHearth.tscn" id="30_hearth"]
+[ext_resource type="PackedScene" path="res://scenes/SeasonCalendar.tscn" id="31_calendar"]
+[ext_resource type="PackedScene" path="res://scenes/AutumnExhibitStand.tscn" id="32_autumn"]
+[ext_resource type="PackedScene" path="res://scenes/AutumnExhibitPanel.tscn" id="33_exhibit"]
+[ext_resource type="Script" path="res://scripts/TaxEnvoy.gd" id="34_tax_envoy"]
+[ext_resource type="Script" path="res://scripts/NeighborMotion.gd" id="35_neighbor_motion"]
+[ext_resource type="Script" path="res://scripts/EstateRecordStand.gd" id="36_estate_record"]
+[ext_resource type="PackedScene" path="res://scenes/WardrobePanel.tscn" id="37_wardrobe"]
+[ext_resource type="PackedScene" path="res://scenes/HallDecorPanel.tscn" id="41_decor"]
+[ext_resource type="PackedScene" path="res://scenes/SheepfoldPen.tscn" id="38_sheep_pen"]
+[ext_resource type="PackedScene" path="res://scenes/SheepfoldPanel.tscn" id="39_sheep_ui"]
+[ext_resource type="PackedScene" path="res://scenes/WinterSupperTable.tscn" id="40_winter_supper"]
+
+[sub_resource type="RectangleShape2D" id="Shape_east_gate"]
+size = Vector2(8, 20)
+
+[sub_resource type="RectangleShape2D" id="Shape_hall_entrance"]
+size = Vector2(8, 6)
+
+[sub_resource type="RectangleShape2D" id="Shape_hall_wall"]
+size = Vector2(36, 17)
+
+[sub_resource type="RectangleShape2D" id="Shape_hall_back"]
+size = Vector2(102, 6)
+
+[sub_resource type="RectangleShape2D" id="Shape_shed_left"]
+size = Vector2(28, 11)
+
+[sub_resource type="RectangleShape2D" id="Shape_shed_right"]
+size = Vector2(12, 11)
+
+[sub_resource type="RectangleShape2D" id="Shape_shed_back"]
+size = Vector2(62, 3)
 
 [node name="Main" type="Node" unique_id=310311831]
 
 [node name="World" type="Node2D" parent="." unique_id=400461097]
+y_sort_enabled = true
 script = ExtResource("1_world")
 
+[node name="Landscape" type="Node2D" parent="World"]
+z_index = -4
+script = ExtResource("11_land")
+
+[node name="Scenery" type="Node2D" parent="World"]
+y_sort_enabled = true
+
+[node name="PavilionButterfly" type="Node2D" parent="World/Scenery"]
+position = Vector2(107, 288)
+script = ExtResource("20_butterfly")
+
+[node name="EastWatch" type="Node2D" parent="World/Scenery"]
+position = Vector2(336, 151)
+script = ExtResource("14_east_watch")
+
+[node name="EndingRecord" type="Sprite2D" parent="World/Scenery"]
+visible = false
+texture_filter = 1
+script = ExtResource("36_estate_record")
+
+[node name="Hint" type="Label" parent="World/Scenery/EndingRecord"]
+visible = false
+z_index = 6
+material = ExtResource("24_world_hint")
+offset_left = -42.0
+offset_top = -37.0
+offset_right = 42.0
+offset_bottom = -25.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.882, 0.635, 1)
+theme_override_colors/font_outline_color = Color(0.13, 0.21, 0.16, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
 [node name="TileMapLayer" type="TileMapLayer" parent="World" unique_id=1265781007]
+z_index = -3
+position = Vector2(16, 24)
 tile_set = ExtResource("2_tileset")
-[node name="WellFieldMarker" type="Node2D" parent="World/TileMapLayer"]
+
+[node name="WellFieldMarker" type="Node2D" parent="World/TileMapLayer" unique_id=280756956]
 script = ExtResource("6_marker")
 
-[node name="CropsLayer" type="TileMapLayer" parent="World" unique_id=43186087]
+[node name="IrrigationOverlay" type="Node2D" parent="World/TileMapLayer"]
+z_index = 1
+script = ExtResource("7_irrigation")
+
+[node name="FieldCursor" type="Node2D" parent="World/TileMapLayer"]
+script = ExtResource("12_field_cursor")
+
+[node name="CropsLayer" type="TileMapLayer" parent="World/TileMapLayer" unique_id=43186087]
+z_as_relative = false
+z_index = -1
 tile_set = ExtResource("2_tileset")
 
 [node name="Player" parent="World" unique_id=1908940042 instance=ExtResource("3_player")]
-position = Vector2(80, 80)
+position = Vector2(66, 98)
+
+[node name="EastGate" type="Area2D" parent="World"]
+position = Vector2(400, 8)
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("25_gate")
+destination = "res://scenes/Wilderness.tscn"
+arrival_path = NodePath("WestArrival")
+player_path = NodePath("Player")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/EastGate"]
+shape = SubResource("Shape_east_gate")
+
+[node name="EastArrival" type="Marker2D" parent="World"]
+position = Vector2(360, 4)
+rotation = 3.1415927
+
+[node name="WestMarketGate" type="Area2D" parent="World"]
+position = Vector2(-308, -24)
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("25_gate")
+destination = "res://scenes/WestMarket.tscn"
+arrival_path = NodePath("EstateRoadArrival")
+player_path = NodePath("Player")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/WestMarketGate"]
+shape = SubResource("Shape_east_gate")
+
+[node name="WestMarketArrival" type="Marker2D" parent="World"]
+position = Vector2(-271, -21)
+
+[node name="HerbGarden" type="Node2D" parent="World"]
+position = Vector2(124, 264)
+script = ExtResource("13_herb_garden")
+
+[node name="HallRest" type="Node2D" parent="World" groups=["interactable"]]
+position = Vector2(-12, 44)
+script = ExtResource("23_hall_rest")
+
+[node name="InteractionHint" type="Label" parent="World/HallRest"]
+visible = false
+z_index = 7
+material = ExtResource("24_world_hint")
+offset_left = -57.0
+offset_top = -127.0
+offset_right = 57.0
+offset_bottom = -98.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.89, 0.64, 1)
+theme_override_colors/font_outline_color = Color(0.13, 0.18, 0.15, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+
+[node name="Entrance" type="Area2D" parent="World/HallRest"]
+position = Vector2(0, -30)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/HallRest/Entrance"]
+shape = SubResource("Shape_hall_entrance")
+
+[node name="Walls" type="StaticBody2D" parent="World/HallRest"]
+collision_mask = 0
+
+[node name="Left" type="CollisionShape2D" parent="World/HallRest/Walls"]
+position = Vector2(-33, -25)
+shape = SubResource("Shape_hall_wall")
+
+[node name="Right" type="CollisionShape2D" parent="World/HallRest/Walls"]
+position = Vector2(33, -25)
+shape = SubResource("Shape_hall_wall")
+
+[node name="Back" type="CollisionShape2D" parent="World/HallRest/Walls"]
+position = Vector2(0, -36)
+shape = SubResource("Shape_hall_back")
+
+[node name="Yard" type="Marker2D" parent="World/HallRest"]
+position = Vector2(0, -3)
+rotation = 1.5707964
+
+[node name="TaxEnvoy" type="Node2D" parent="World"]
+visible = false
+position = Vector2(26, 56)
+script = ExtResource("34_tax_envoy")
+
+[node name="Motion" type="Sprite2D" parent="World/TaxEnvoy"]
+texture_filter = 1
+position = Vector2(0, -13)
+script = ExtResource("35_neighbor_motion")
+
+[node name="InteractionHint" type="Label" parent="World/TaxEnvoy"]
+visible = false
+z_index = 7
+material = ExtResource("24_world_hint")
+offset_left = -49.0
+offset_top = -43.0
+offset_right = 49.0
+offset_bottom = -28.0
+mouse_filter = 2
+theme_override_colors/font_outline_color = Color(0.13, 0.18, 0.15, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
+[node name="HallInterior" parent="World" instance=ExtResource("26_hall_interior")]
+position = Vector2(0, -1050)
+
+[node name="SilkShed" type="Node2D" parent="World"]
+visible = false
+position = Vector2(-21, 135)
+script = ExtResource("27_entrance")
+
+[node name="Sign" type="Label" parent="World/SilkShed"]
+z_index = 6
+material = ExtResource("24_world_hint")
+offset_left = -45.0
+offset_top = -90.0
+offset_right = 45.0
+offset_bottom = -76.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.90, 0.84, 0.65, 1)
+theme_override_colors/font_outline_color = Color(0.13, 0.18, 0.15, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "蚕棚"
+horizontal_alignment = 1
+
+[node name="Entrance" type="Area2D" parent="World/SilkShed"]
+position = Vector2(0, -24)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="World/SilkShed/Entrance"]
+shape = SubResource("Shape_hall_entrance")
+
+[node name="Walls" type="StaticBody2D" parent="World/SilkShed"]
+collision_mask = 0
+
+[node name="Left" type="CollisionShape2D" parent="World/SilkShed/Walls"]
+position = Vector2(-25, -20.5)
+shape = SubResource("Shape_shed_left")
+disabled = true
+
+[node name="Right" type="CollisionShape2D" parent="World/SilkShed/Walls"]
+position = Vector2(17, -20.5)
+shape = SubResource("Shape_shed_right")
+disabled = true
+
+[node name="Back" type="CollisionShape2D" parent="World/SilkShed/Walls"]
+position = Vector2(-8, -27.5)
+shape = SubResource("Shape_shed_back")
+disabled = true
+
+[node name="Yard" type="Marker2D" parent="World/SilkShed"]
+rotation = 1.5707964
+
+[node name="SilkInterior" parent="World" instance=ExtResource("28_silk_interior")]
+position = Vector2(0, -1740)
+
+[node name="SeasonBoard" type="Node2D" parent="World" groups=["interactable"]]
+position = Vector2(56, 273)
+script = ExtResource("15_season_board")
+
+[node name="Hint" type="Label" parent="World/SeasonBoard"]
+z_index = 6
+material = ExtResource("24_world_hint")
+offset_left = -43.0
+offset_top = 4.0
+offset_right = 43.0
+offset_bottom = 18.0
+mouse_filter = 2
+theme_override_colors/font_outline_color = Color(0.13, 0.21, 0.16, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
+[node name="Freight" parent="World" instance=ExtResource("29_freight")]
+
+[node name="TravelHearth" parent="World" instance=ExtResource("30_hearth")]
+position = Vector2(230, 322)
+
+[node name="AutumnExhibit" parent="World" instance=ExtResource("32_autumn")]
+position = Vector2(319, 269)
+
+[node name="SheepfoldPen" parent="World" instance=ExtResource("38_sheep_pen")]
+position = Vector2(-148, 344)
+
+[node name="WinterSupper" parent="World" instance=ExtResource("40_winter_supper")]
+position = Vector2(319, 269)
+
+[node name="RoadRest" type="Node2D" parent="World"]
+position = Vector2(-25, 302)
+script = ExtResource("18_road_rest")
+
+[node name="Hint" type="Label" parent="World/RoadRest"]
+z_index = 6
+material = ExtResource("24_world_hint")
+offset_left = -56.0
+offset_top = -48.0
+offset_right = 56.0
+offset_bottom = -36.0
+mouse_filter = 2
+theme_override_colors/font_outline_color = Color(0.13, 0.21, 0.16, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
+[node name="FieldRotationBook" type="Node2D" parent="World"]
+position = Vector2(-52, 238)
+script = ExtResource("19_rotation_book")
+
+[node name="Hint" type="Label" parent="World/FieldRotationBook"]
+z_index = 6
+material = ExtResource("24_world_hint")
+offset_left = -48.0
+offset_top = -41.0
+offset_right = 48.0
+offset_bottom = -29.0
+mouse_filter = 2
+theme_override_colors/font_outline_color = Color(0.13, 0.21, 0.16, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
+[node name="DrivingPractice" type="Node2D" parent="World"]
+z_index = 2
+script = ExtResource("9_drive")
+
+[node name="SpringGathering" type="Node2D" parent="World"]
+y_sort_enabled = true
+position = Vector2(90, 278)
+script = ExtResource("16_spring_gathering")
+
+[node name="BellRack" type="Sprite2D" parent="World/SpringGathering"]
+visible = false
+position = Vector2(89, -10)
+texture = ExtResource("17_bell_rack")
+offset = Vector2(0, -18.5)
+
+[node name="Guests" type="Node2D" parent="World/SpringGathering"]
+y_sort_enabled = true
+position = Vector2(0, -12)
+
+[node name="EventSign" type="Label" parent="World/SpringGathering"]
+visible = false
+z_index = 6
+material = ExtResource("24_world_hint")
+offset_left = 19.0
+offset_top = -72.0
+offset_right = 159.0
+offset_bottom = -59.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.82, 0.57, 1)
+theme_override_colors/font_outline_color = Color(0.13, 0.21, 0.16, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
+[node name="BookHint" type="Label" parent="World/SpringGathering"]
+material = ExtResource("24_world_hint")
+z_index = 6
+offset_left = -34.0
+offset_top = 3.0
+offset_right = 34.0
+offset_bottom = 15.0
+mouse_filter = 2
+theme_override_colors/font_outline_color = Color(0.13, 0.21, 0.16, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
 
 [node name="UI" type="CanvasLayer" parent="." unique_id=473533694]
 script = ExtResource("4_ui")
@@ -36,79 +414,17 @@ grow_vertical = 2
 mouse_filter = 2
 theme = ExtResource("5_theme")
 
-[node name="DayLabel" type="Label" parent="UI/Control" unique_id=1377062417]
-layout_mode = 0
-offset_left = 10.0
-offset_top = 10.0
-offset_right = 100.0
-offset_bottom = 33.0
-text = "第 1 天"
+[node name="EstateHUD" parent="UI/Control" instance=ExtResource("8_hud")]
 
-[node name="InventoryLabel" type="Label" parent="UI/Control" unique_id=188040551]
+[node name="EstateDirections" type="Control" parent="UI/Control"]
 layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 10.0
-offset_top = -33.0
-offset_right = 200.0
-offset_bottom = -10.0
-grow_vertical = 0
-text = "背包"
-
-[node name="KingLabel" type="Label" parent="UI/Control" unique_id=225522846]
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -200.0
-offset_top = 10.0
-offset_right = -10.0
-offset_bottom = 33.0
-grow_horizontal = 0
-text = "国库"
-
-[node name="StaminaLabel" type="Label" parent="UI/Control" unique_id=60873908]
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 10.0
-offset_top = -60.0
-offset_right = 150.0
-offset_bottom = -37.0
-grow_vertical = 0
-text = "体力: 100/100"
-
-[node name="SleepButton" type="Button" parent="UI/Control" unique_id=127106327]
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -80.0
-offset_top = -40.0
-offset_right = -10.0
-offset_bottom = -10.0
-grow_horizontal = 0
-grow_vertical = 0
-text = "睡觉"
-
-[node name="ManageButton" type="Button" parent="UI/Control" unique_id=987123654]
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -160.0
-offset_top = -40.0
-offset_right = -90.0
-offset_bottom = -10.0
-grow_horizontal = 0
-grow_vertical = 0
-text = "管理"
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("21_directions")
 
 [node name="Fader" type="ColorRect" parent="UI/Control" unique_id=730486771]
 layout_mode = 1
@@ -119,3 +435,34 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0)
+
+[node name="DawnCaption" type="Label" parent="UI/Control/Fader"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.61, 1)
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EstateMap" parent="UI/Control" instance=ExtResource("22_map")]
+
+[node name="SeasonCalendar" parent="UI/Control" instance=ExtResource("31_calendar")]
+
+[node name="AutumnExhibitPanel" parent="UI/Control" instance=ExtResource("33_exhibit")]
+
+[node name="WardrobePanel" parent="UI/Control" instance=ExtResource("37_wardrobe")]
+
+[node name="HallDecorPanel" parent="UI/Control" instance=ExtResource("41_decor")]
+
+[node name="SheepfoldPanel" parent="UI/Control" instance=ExtResource("39_sheep_ui")]
+
+[node name="CampaignHUD" type="CanvasLayer" parent="."]
+layer = 8
+script = ExtResource("10_campaign")
+show_field_status = false

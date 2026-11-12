@@ -1,0 +1,190 @@
+extends "res://scripts/SurveyMap.gd"
+
+const LANDSCAPE := preload("res://scripts/Landscape.gd")
+const INK := Color("#403b29")
+const PATH_INK := Color("#934b2e")
+const MAP_MARGIN := Vector2(20, 20)
+const JOURNAL_SUFFIX := "水迹"
+
+@onready var chart: Control = %Chart
+@onready var paper: Control = %MapInk
+@onready var open_button: Button = %OpenMap
+@onready var journal_button: Button = %JournalSite
+@onready var trap_button: Button = %TrapSite
+@onready var cancel_button: Button = %CancelDirections
+@onready var clear_button: Button = %ClearRoute
+@onready var route_status: Label = %RouteStatus
+
+var guide: Node2D
+var player: Player
+var places: Dictionary[String, Vector2] = {}
+var markers: Dictionary[String, Button] = {}
+
+func _refresh_shortcuts() -> void:
+	super._refresh_shortcuts()
+	open_button.text = "竹涧舆图  %s" % ("Y" if GamepadInput.active else Preferences.key_label(KeyBindings.MAP))
+
+func setup(trail_guide: Node2D, walker: Player, destinations: Dictionary[String, Vector2]) -> void:
+	guide = trail_guide
+	player = walker
+	places = destinations
+	var trap_icon := CreekTrap.icon()
+	for place in places:
+		var button := Button.new()
+		if place in CreekTrap.PLACES:
+			button.icon = trap_icon
+			button.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			button.accessibility_name = place
+		else:
+			button.text = place
+		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		button.toggle_mode = true
+		button.pressed.connect(_select_place.bind(place, places[place]))
+		chart.add_child(button)
+		markers[place] = button
+	open_button.pressed.connect(open_map)
+	journal_button.pressed.connect(_select_journal_site)
+	trap_button.pressed.connect(_select_deployed_trap)
+	cancel_button.pressed.connect(guide.clear)
+	clear_button.pressed.connect(guide.clear)
+	chart.resized.connect(_layout_markers)
+	paper.draw.connect(_draw_chart)
+	guide.changed.connect(_refresh_route)
+	GameEvents.ravine_journal_changed.connect(_refresh_journal)
+	GameEvents.creek_trap_changed.connect(_refresh_traps)
+	GameEvents.fish_changed.connect(_refresh_traps)
+	_refresh_journal()
+	_refresh_traps()
+	_refresh_route()
+
+func _map_available() -> bool:
+	return is_instance_valid(player) and not player.conversation_open and not MapTravel.active
+
+func _refresh_on_open() -> void:
+	for place: String in Global.ravine_trip_places():
+		var detail := Global.ravine_place_detail(place)
+		markers[place].tooltip_text = place + "\n" + detail if place in CreekTrap.PLACES else detail
+	_refresh_route()
+	_layout_markers()
+
+func _on_campaign_ended(outcome: Global.Outcome) -> void:
+	super._on_campaign_ended(outcome)
+	guide.clear()
+
+func _select_place(place: String, point: Vector2) -> void:
+	if not guide.follow(place, point):
+		_refresh_route()
+		route_status.text = "这里接不上山路，靠近一条路后再选。"
+
+func follow_place(place: String) -> void:
+	_select_place(place, places[place])
+
+func _select_deployed_trap() -> void:
+	follow_place(CreekTrap.PLACES[Global.creek_trap_site()])
+
+func _refresh_traps() -> void:
+	for place: String in CreekTrap.PLACES:
+		markers[place].visible = Global.creek_traps_unlocked()
+	var site := Global.creek_trap_site()
+	trap_button.visible = site >= 0
+	if trap_button.visible:
+		var forecast := Global.creek_trap_catch()
+		var when := "可收" if Global.current_day >= forecast.day else "第 %d 天可收" % forecast.day
+		trap_button.text = CreekTrap.PLACES[site] + " · " + when
+	paper.queue_redraw()
+
+func _select_journal_site() -> void:
+	var site := Global.ravine_site_today()
+	if site >= 0:
+		var location: Dictionary = RavineJournal.SITES[site]
+		_select_place(location.name + JOURNAL_SUFFIX, location.position)
+
+func _refresh_journal() -> void:
+	var site := Global.ravine_site_today()
+	journal_button.visible = site >= 0
+	if site >= 0:
+		journal_button.text = "今日水迹 · " + RavineJournal.SITES[site].name
+	elif guide.destination_name.ends_with(JOURNAL_SUFFIX):
+		guide.clear()
+	paper.queue_redraw()
+
+func _refresh_route() -> void:
+	var name: String = guide.destination_name
+	cancel_button.visible = not name.is_empty()
+	cancel_button.text = name + " · 清除指路"
+	clear_button.disabled = name.is_empty()
+	for place in markers:
+		markers[place].set_pressed_no_signal(place == name)
+	if name.is_empty():
+		route_status.text = "选一处地点，回到山路后沿标记走。"
+	else:
+		route_status.text = "前往" + name
+		if guide.route.has(LANDSCAPE.BRIDGE):
+			route_status.text += " · 经木桥"
+		elif guide.route.has(LANDSCAPE.FORD):
+			route_status.text += " · 经浅滩"
+		if name in Global.ravine_trip_places():
+			route_status.text += "\n" + Global.ravine_place_detail(name)
+	paper.queue_redraw()
+
+func _map_point(point: Vector2) -> Vector2:
+	return MAP_MARGIN + (point - LANDSCAPE.WILD_BOUNDS.position) * (chart.size - MAP_MARGIN * 2.0) / LANDSCAPE.WILD_BOUNDS.size
+
+func _map_line(points: Array) -> PackedVector2Array:
+	var ink := PackedVector2Array()
+	for point: Vector2 in points:
+		ink.append(_map_point(point))
+	return ink
+
+func _layout_markers() -> void:
+	for place in markers:
+		var button := markers[place]
+		button.size = button.get_combined_minimum_size()
+		var offset := Vector2(-button.size.x / 2.0, 8)
+		if place in CreekTrap.PLACES:
+			offset = Vector2(12, -button.size.y - 4) if place == CreekTrap.PLACES[CreekFish.Site.POOL] else Vector2(12, 2)
+		elif place == SummerRaft.PLACE:
+			offset = Vector2(-button.size.x - 12, -button.size.y - 8)
+		button.position = (_map_point(places[place]) + offset).round()
+	paper.queue_redraw()
+
+func _draw_chart() -> void:
+	var sheet := Rect2(Vector2.ZERO, chart.size)
+	paper.draw_rect(sheet, Color("#dbd0ae"))
+	for prop: Vector3i in LANDSCAPE.WILD_PROPS:
+		if prop.z in LANDSCAPE.LEAFY_PROPS:
+			var at := _map_point(Vector2(prop.x, prop.y))
+			paper.draw_circle(at, 6.0, Color("#a5ad85"))
+			paper.draw_circle(at + Vector2(0, -3), 4.5, Color("#89976f"))
+	var creek := _map_line(LANDSCAPE.CREEK)
+	paper.draw_polyline(creek, Color("#a7b19c"), 44.0, true)
+	paper.draw_polyline(creek, Color("#557e88"), 32.0, true)
+	paper.draw_polyline(creek, Color("#90adb0"), 3.0, true)
+	for track in LANDSCAPE.WILD_TRACKS:
+		var line := _map_line(track)
+		paper.draw_polyline(line, Color("#9b865f"), 9.0, true)
+		paper.draw_polyline(line, Color("#c7b388"), 6.0, true)
+	var marked := PackedVector2Array()
+	for point: Vector2 in guide.route:
+		marked.append(_map_point(point))
+	if marked.size() >= 2:
+		paper.draw_polyline(marked, Color("#f7df9f"), 7.0, true)
+		paper.draw_polyline(marked, PATH_INK, 4.0, true)
+	for place in places:
+		if markers[place].visible:
+			var pin := _map_point(places[place])
+			paper.draw_circle(pin, 4.0, INK)
+			if place in CreekTrap.PLACES:
+				var button := markers[place]
+				paper.draw_line(pin, button.position + Vector2(0, button.size.y * 0.5), INK, 1.0, true)
+			elif place == SummerRaft.PLACE:
+				var button := markers[place]
+				paper.draw_line(pin, button.position + Vector2(button.size.x, button.size.y * 0.5), INK, 1.0, true)
+	var site := Global.ravine_site_today()
+	if site >= 0:
+		paper.draw_arc(_map_point(RavineJournal.SITES[site].position), 6.0, 0.0, TAU, 18, PATH_INK, 2.0, true)
+	var here := _map_point(guide.to_local(player.global_position))
+	paper.draw_circle(here, 8.0, INK)
+	paper.draw_circle(here, 5.0, Color("#ffe19d"))
+	paper.draw_arc(here, 11.0, 0.0, TAU, 22, Color("#826839"), 1.5, true)
+	paper.draw_rect(sheet.grow(-1.0), Color("#8c7c5f"), false, 2.0)

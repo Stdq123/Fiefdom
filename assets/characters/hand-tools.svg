@@ -1,0 +1,43 @@
+<svg width="120" height="24" viewBox="0 0 120 24" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+  <!-- Hoe -->
+  <path fill="#2c3028" d="M5 10h14V7h3v1h1v10h-5v-4H5z"/>
+  <path fill="#a47a50" d="M6 11h14v2H6z"/>
+  <path fill="#d9ac72" d="M7 11h12v1H7z"/>
+  <path fill="#7b8b75" d="M20 8h2v9h-3v-5h1z"/>
+  <path fill="#c1ad78" d="M21 8h1v8h-1z"/>
+  <path fill="#e2b48a" d="M10 10h3v3h-3z"/>
+  <!-- Seed pouch -->
+  <g transform="translate(24 0)">
+    <path fill="#2b3329" d="M9 5h8v2h2v4h-2v2h2v6h-2v2H8v-2H6v-5h1v-3h2V9H8V6h1z"/>
+    <path fill="#946745" d="M10 6h6v2h2v2h-3v3h2v2h1v3h-2v2H9v-2H7v-3h1v-2h2V9H9V7h1z"/>
+    <path fill="#c49c64" d="M10 7h5v2h-4v4h4v2h2v3H9v-2h1v-2h1v-3h-1z"/>
+    <path fill="#d5be80" d="M11 11h5v2h-5z"/>
+    <path fill="#e4b88e" d="M8 10h3v3H8z"/>
+  </g>
+  <!-- Wooden water pail -->
+  <g transform="translate(48 0)">
+    <path fill="#2b332a" d="M10 4h6v1h2v2h2v3h1v4h-1v5h-2v2H9v-2H7v-5H6v-4h1V7h1V5h2z"/>
+    <path fill="#a4865b" d="M10 5h6v1h2v2h1v3h-2V8h-2V7h-5v1H9v3H7V8h1V6h2z"/>
+    <path fill="#a9784c" d="M7 11h13v2h-1v5h-2v2h-7v-2H8v-5H7z"/>
+    <path fill="#69a19a" d="M8 10h11v2H8z"/>
+    <path fill="#b4d8ca" d="M10 10h6v1h-6z"/>
+    <path fill="#c79962" d="M10 13h2v5h-2z M14 13h2v6h-2z"/>
+    <path fill="#745b41" d="M8 16h11v2H8z"/>
+    <path fill="#e4b88e" d="M10 4h4v2h-4z"/>
+  </g>
+  <!-- Bronze sickle -->
+  <g transform="translate(72 0)">
+    <path fill="#2c3028" d="M6 15h5v-3h3V9h2V6h-5V4h6v1h3v2h2v4h-2v3h-3v2h-4v2H6z"/>
+    <path fill="#b08a56" d="M7 15h5v2H7z"/>
+    <path fill="#859278" d="M13 5h4v1h3v2h1v2h-2v3h-3v2h-4v-2h3v-3h2V7h-1V6h-3z"/>
+    <path fill="#dbc98a" d="M17 6h2v2h1v2h-1v2h-2v1h-2v-1h1v-2h2V8h-1z"/>
+    <path fill="#e4b88e" d="M9 13h3v3H9z"/>
+  </g>
+  <!-- Bow and string -->
+  <g transform="translate(96 0)">
+    <path fill="#2c3028" d="M11 2h3v2h3v2h2v4h2v4h-2v4h-2v2h-3v2h-3v-2h1V4h-1z"/>
+    <path fill="#c5b593" d="M12 4h1v16h-1z"/>
+    <path fill="#b48351" d="M13 3h1v2h3v2h1v4h2v2h-2v4h-1v2h-3v2h-1v-3h2v-2h1v-4h1v-1h-1V7h-1V6h-2z"/>
+    <path fill="#e4b88e" d="M15 11h4v3h-4z"/>
+  </g>
+</svg>

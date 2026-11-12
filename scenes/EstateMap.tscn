@@ -1,0 +1,208 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/EstateMap.gd" id="1_map"]
+
+[sub_resource type="StyleBoxFlat" id="PanelStyle"]
+content_margin_left = 22.0
+content_margin_top = 17.0
+content_margin_right = 22.0
+content_margin_bottom = 18.0
+bg_color = Color(0.12, 0.18, 0.14, 1)
+border_width_left = 1
+border_width_top = 2
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.66, 0.56, 0.36, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_left = 6
+corner_radius_bottom_right = 6
+shadow_color = Color(0.06, 0.08, 0.06, 0.65)
+shadow_size = 9
+
+[node name="EstateMap" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_map")
+
+[node name="MapModal" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="MapModal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.06, 0.08, 0.065, 0.75)
+
+[node name="Center" type="CenterContainer" parent="MapModal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="MapModal/Center"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("PanelStyle")
+
+[node name="Layout" type="VBoxContainer" parent="MapModal/Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="MapModal/Center/Panel/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 19
+
+[node name="Title" type="Label" parent="MapModal/Center/Panel/Layout/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.81, 0.56, 1)
+theme_override_font_sizes/font_size = 29
+text = "封地舆图"
+
+[node name="Date" type="Label" parent="MapModal/Center/Panel/Layout/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.76, 0.8, 0.68, 1)
+
+[node name="CloseMap" type="Button" parent="MapModal/Center/Panel/Layout/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(136, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "返回封地  Esc"
+
+[node name="Content" type="HBoxContainer" parent="MapModal/Center/Panel/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="Chart" type="Control" parent="MapModal/Center/Panel/Layout/Content"]
+unique_name_in_owner = true
+clip_contents = true
+custom_minimum_size = Vector2(684, 456)
+layout_mode = 2
+
+[node name="Index" type="VBoxContainer" parent="MapModal/Center/Panel/Layout/Content"]
+custom_minimum_size = Vector2(253, 0)
+layout_mode = 2
+theme_override_constants/separation = 9
+
+[node name="Tabs" type="HBoxContainer" parent="MapModal/Center/Panel/Layout/Content/Index"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Places" type="Button" parent="MapModal/Center/Panel/Layout/Content/Index/Tabs"]
+custom_minimum_size = Vector2(0, 37)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+toggle_mode = true
+text = "地点"
+
+[node name="Fields" type="Button" parent="MapModal/Center/Panel/Layout/Content/Index/Tabs"]
+custom_minimum_size = Vector2(0, 37)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+toggle_mode = true
+text = "井田"
+
+[node name="People" type="Button" parent="MapModal/Center/Panel/Layout/Content/Index/Tabs"]
+custom_minimum_size = Vector2(0, 37)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+toggle_mode = true
+text = "人物"
+
+[node name="Ravine" type="Button" parent="MapModal/Center/Panel/Layout/Content/Index/Tabs"]
+custom_minimum_size = Vector2(0, 37)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+toggle_mode = true
+text = "竹涧"
+
+[node name="RavineNote" type="Label" parent="MapModal/Center/Panel/Layout/Content/Index"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.89, 0.79, 0.57, 1)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+
+[node name="IndexScroll" type="ScrollContainer" parent="MapModal/Center/Panel/Layout/Content/Index"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="Listing" type="VBoxContainer" parent="MapModal/Center/Panel/Layout/Content/Index/IndexScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 7
+
+[node name="Footer" type="HBoxContainer" parent="MapModal/Center/Panel/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="DirectionStatus" type="Label" parent="MapModal/Center/Panel/Layout/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.93, 0.87, 0.72, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="PositionLegend" type="Label" parent="MapModal/Center/Panel/Layout/Footer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.84, 0.57, 1)
+theme_override_font_sizes/font_size = 15
+text = "● 当前位置"
+
+[node name="WaterLegend" type="Label" parent="MapModal/Center/Panel/Layout/Footer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.60, 0.82, 0.83, 1)
+theme_override_font_sizes/font_size = 15
+text = "━ 通水渠"
+
+[node name="DryLegend" type="Label" parent="MapModal/Center/Panel/Layout/Footer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.72, 0.57, 1)
+theme_override_font_sizes/font_size = 15
+text = "━ 未通水"
+
+[node name="SiteLegend" type="Label" parent="MapModal/Center/Panel/Layout/Footer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.72, 0.57, 1)
+theme_override_font_sizes/font_size = 15
+text = "▧ 工地"
+
+[node name="ClearDirections" type="Button" parent="MapModal/Center/Panel/Layout/Footer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(106, 35)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+disabled = true
+text = "清除指路"

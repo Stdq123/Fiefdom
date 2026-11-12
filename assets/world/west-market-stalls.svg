@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="252" height="120" viewBox="0 0 252 120" shape-rendering="crispEdges">
+  <!-- Rear walls above, counters and awnings below. Keepers stand between the layers. -->
+  <!-- Grain: split bamboo baskets, a tied sack, and a hemp awning. -->
+  <g>
+    <path fill="#364235" d="M5 51h73v4h4v4H3v-4h2z"/>
+    <path fill="#7a7157" d="M8 51h69v6H8z"/>
+    <path fill="#a09770" d="M10 53h64v2H10zM14 56h13v1H14zM59 55h11v1H59z"/>
+    <path fill="#655541" d="M11 20h62v27H11z"/>
+    <path fill="#8d7450" d="M15 23h54v19H15zM15 44h54v2H15z"/>
+    <path fill="#a2885c" d="M17 26h17v1H17zM47 29h20v1H47zM19 35h9v1H19z"/>
+    <path fill="#4b382c" d="M7 18h8v36H7zM69 18h8v36h-8z"/>
+    <path fill="#b58958" d="M10 22h3v30h-3zM71 22h3v30h-3z"/>
+  </g>
+  <g transform="translate(0 60)">
+    <path fill="#553e2d" d="M12 43h60v10H12z"/>
+    <path fill="#98754c" d="M13 46h58v6H13zM13 43h58v2H13z"/>
+    <path fill="#624c37" d="M15 48h54v1H15zM20 50h22v1H20zM49 50h16v1H49z"/>
+    <path fill="#664730" d="M15 36h14l2 3-3 5H16l-3-5zM48 38h13l2 2-2 5H49l-3-5z"/>
+    <path fill="#c89455" d="M16 37h12l1 2H15zM17 40h11v2H17zM49 39h11l1 2H48zM50 42h10v2H50z"/>
+    <path fill="#ead28d" d="M19 35h8v2H17v-1h2zM51 37h7v2h-7zM20 40h2v1h-2zM24 40h2v1h-2z"/>
+    <path fill="#af956d" d="M61 34h4v3h2v6h-1v2h-7v-2h-1v-5h2v-4z"/>
+    <path fill="#e2c48c" d="M61 36h4v1h-4zM60 38h2v5h-2z"/>
+    <path fill="#473d2c" d="M14 5h56v3h4v4h4v4h4v8H2v-8h4v-4h4V8h4z"/>
+    <path fill="#aa7548" d="M16 7h52v3h5v4h4v4h3v3H4v-3h3v-4h4v-4h5z"/>
+    <path fill="#c99761" d="M19 8h8l-3 12H9l3-4h3zM33 8h10v12H29zM50 8h9l5 12H50zM65 8h3v3h4v4h4v5h-8z"/>
+    <path fill="#e1bb7d" d="M17 7h50v1H17zM4 20h76v2H4zM12 14h2v1h-2zM31 13h2v1h-2zM50 13h2v1h-2z"/>
+    <path fill="#765338" d="M5 22h12v3H5zM30 22h13v3H30zM55 22h13v3H55zM75 22h4v3H75z"/>
+  </g>
+  <!-- Fish: shallow trays, a hanging net, and a painted indigo awning. -->
+  <g transform="translate(84)">
+    <path fill="#364235" d="M5 51h73v4h4v4H3v-4h2z"/>
+    <path fill="#726b57" d="M8 51h69v6H8z"/>
+    <path fill="#9c9476" d="M10 53h64v2H10zM20 56h15v1H20zM58 55h12v1H58z"/>
+    <path fill="#4d5546" d="M12 18h60v29H12z"/>
+    <path fill="#657565" d="M16 23h52v19H16z"/>
+    <path fill="#9e9272" d="M56 24h11v1H56zM57 28h9v1h-9zM59 32h5v1h-5zM58 25h1v5h-1zM62 25h1v9h-1zM66 25h1v6h-1z"/>
+    <path fill="#4b3d32" d="M7 18h8v36H7zM69 18h8v36h-8z"/>
+    <path fill="#a17c51" d="M10 22h3v30h-3zM71 22h3v30h-3z"/>
+  </g>
+  <g transform="translate(84 60)">
+    <path fill="#4e4637" d="M12 42h60v12H12z"/>
+    <path fill="#817958" d="M13 45h58v7H13z"/>
+    <path fill="#aea27b" d="M13 43h58v2H13zM18 48h48v1H18z"/>
+    <path fill="#3d554f" d="M14 38h22v6H14zM49 37h19v7H49z"/>
+    <path fill="#b2c8b2" d="M17 38h4v-1h7v1h4v1h-4v2h-7v-1h-4zM51 39h3v-2h7v1h4v2h-4v1h-7v-1h-3z"/>
+    <path fill="#648788" d="M15 40h4v1h4v1h8v1H15zM50 41h5v1h11v1H50z"/>
+    <path fill="#344e4c" d="M14 6h56v3h4v4h4v4h4v7H2v-7h4v-4h4V9h4z"/>
+    <path fill="#557b78" d="M16 8h52v3h5v4h4v4h3v2H4v-2h3v-4h4v-4h5z"/>
+    <path fill="#93aa92" d="M20 8h9l-3 12H11zM36 8h10v12H34zM53 8h10l9 12H57z"/>
+    <path fill="#b2bd9b" d="M17 8h50v1H17zM4 20h76v2H4z"/>
+    <path fill="#4d6660" d="M5 22h12v3H5zM30 22h13v3H30zM55 22h13v3H55zM75 22h4v3H75z"/>
+  </g>
+  <!-- Silk: dyed bolts, a patterned hanging, and a warm red awning. -->
+  <g transform="translate(168)">
+    <path fill="#364235" d="M5 51h73v4h4v4H3v-4h2z"/>
+    <path fill="#726652" d="M8 51h69v6H8z"/>
+    <path fill="#a19376" d="M10 53h64v2H10zM17 56h12v1H17zM57 55h13v1H57z"/>
+    <path fill="#665248" d="M12 18h60v29H12z"/>
+    <path fill="#8d7062" d="M16 23h52v20H16z"/>
+    <path fill="#b58b73" d="M17 25h13v1H17zM20 28h9v1h-9zM49 28h14v1H49z"/>
+    <path fill="#503b34" d="M7 18h8v36H7zM69 18h8v36h-8z"/>
+    <path fill="#b48c65" d="M10 22h3v30h-3zM71 22h3v30h-3z"/>
+  </g>
+  <g transform="translate(168 60)">
+    <path fill="#563e35" d="M12 43h60v10H12z"/>
+    <path fill="#987350" d="M13 46h58v6H13zM13 43h58v2H13z"/>
+    <path fill="#6d4e3c" d="M15 48h54v1H15z"/>
+    <path fill="#b46769" d="M15 40h16v4H15z"/>
+    <path fill="#d39a73" d="M18 36h13v4H18z"/>
+    <path fill="#e4c397" d="M18 36h12v1H18zM16 40h13v1H16zM16 42h3v1h-3z"/>
+    <path fill="#613b43" d="M50 30h17v23H50z"/>
+    <path fill="#a36068" d="M52 31h13v20H52z"/>
+    <path fill="#cc9390" d="M54 32h1v18h-1zM62 32h1v18h-1zM56 36h5v1h-5zM57 38h3v1h-3zM58 40h1v2h-1zM56 44h5v1h-5zM55 48h7v1h-7z"/>
+    <path fill="#4d3835" d="M14 5h56v3h4v4h4v4h4v8H2v-8h4v-4h4V8h4z"/>
+    <path fill="#9d6055" d="M16 7h52v3h5v4h4v4h3v3H4v-3h3v-4h4v-4h5z"/>
+    <path fill="#c98b74" d="M19 8h8l-3 12H9l3-4h3zM33 8h10v12H29zM50 8h9l5 12H50zM65 8h3v3h4v4h4v5h-8z"/>
+    <path fill="#dfaa83" d="M17 7h50v1H17zM4 20h76v2H4zM33 12h8v1h-8zM50 13h5v1h-5z"/>
+    <path fill="#754a45" d="M5 22h12v3H5zM30 22h13v3H30zM55 22h13v3H55zM75 22h4v3H75z"/>
+  </g>
+</svg>

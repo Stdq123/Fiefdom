@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://management_panel_uid"]
+[gd_scene load_steps=3 format=3 uid="uid://management_panel_uid"]
 
 [ext_resource type="Script" path="res://scripts/ManagementPanel.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/MarketPanel.tscn" id="2_market"]
 
 [node name="ManagementPanel" type="Control"]
 layout_mode = 3
@@ -18,7 +19,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.1, 0.1, 0.1, 0.95)
+color = Color(0.083, 0.128, 0.107, 0.98)
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 1
@@ -60,45 +61,34 @@ layout_mode = 2
 
 [node name="Label" type="Label" parent="HBoxContainer/RightPanel/封地概览"]
 layout_mode = 2
-text = "拖拽门客到对应地块指派工作"
+text = "拖动门客到田格可指定优先田。田间照料门客会按安排补播空畦。"
+autowrap_mode = 3
+
+[node name="WellFieldSelector" type="OptionButton" parent="HBoxContainer/RightPanel/封地概览"]
+layout_mode = 2
+
+[node name="SeedPlan" type="HBoxContainer" parent="HBoxContainer/RightPanel/封地概览"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Label" type="Label" parent="HBoxContainer/RightPanel/封地概览/SeedPlan"]
+layout_mode = 2
+text = "续播安排"
+
+[node name="SeedPicker" type="OptionButton" parent="HBoxContainer/RightPanel/封地概览/SeedPlan"]
+layout_mode = 2
+size_flags_horizontal = 3
 
 [node name="GridContainer" type="GridContainer" parent="HBoxContainer/RightPanel/封地概览"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/h_separation = 10
 theme_override_constants/v_separation = 10
+columns = 3
 
-[node name="市场" type="VBoxContainer" parent="HBoxContainer/RightPanel"]
+[node name="市场" parent="HBoxContainer/RightPanel" instance=ExtResource("2_market")]
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 20
-
-[node name="FoodLabel" type="Label" parent="HBoxContainer/RightPanel/市场"]
-layout_mode = 2
-text = "粮仓: 0"
-
-[node name="CropLabel" type="Label" parent="HBoxContainer/RightPanel/市场"]
-layout_mode = 2
-text = "作物库存: 0"
-
-[node name="MoneyLabel" type="Label" parent="HBoxContainer/RightPanel/市场"]
-layout_mode = 2
-text = "铜钱: 0"
-
-[node name="HSeparator" type="HSeparator" parent="HBoxContainer/RightPanel/市场"]
-layout_mode = 2
-
-[node name="SellButton" type="Button" parent="HBoxContainer/RightPanel/市场"]
-layout_mode = 2
-text = "卖出作物 (+5 铜钱)"
-
-[node name="BuyFoodButton" type="Button" parent="HBoxContainer/RightPanel/市场"]
-layout_mode = 2
-text = "购买粮食 (5 铜钱 -> 1 粮食)"
-
-[node name="ConvertButton" type="Button" parent="HBoxContainer/RightPanel/市场"]
-layout_mode = 2
-text = "作物转粮食 (1 作物 -> 1 粮食)"
 
 [node name="君子六艺" type="VBoxContainer" parent="HBoxContainer/RightPanel"]
 visible = false
@@ -107,24 +97,40 @@ theme_override_constants/separation = 20
 
 [node name="Title" type="Label" parent="HBoxContainer/RightPanel/君子六艺"]
 layout_mode = 2
-text = "君子六艺 (Character Stats)"
+theme_override_font_sizes/font_size = 24
+text = "君子六艺"
 
 [node name="StatsContainer" type="VBoxContainer" parent="HBoxContainer/RightPanel/君子六艺"]
 layout_mode = 2
-size_flags_vertical = 3
 theme_override_constants/separation = 10
+
+[node name="StudyDivider" type="HSeparator" parent="HBoxContainer/RightPanel/君子六艺"]
+layout_mode = 2
+
+[node name="StudyProgress" type="Label" parent="HBoxContainer/RightPanel/君子六艺"]
+layout_mode = 2
+autowrap_mode = 3
 
 [node name="Actions" type="HBoxContainer" parent="HBoxContainer/RightPanel/君子六艺"]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 10
 
 [node name="ReadButton" type="Button" parent="HBoxContainer/RightPanel/君子六艺/Actions"]
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
-text = "读书 (Read)"
+text = "研读简册"
 
 [node name="WorshipButton" type="Button" parent="HBoxContainer/RightPanel/君子六艺/Actions"]
 layout_mode = 2
-text = "祭祀 (Worship)"
+text = "祭祀"
+
+[node name="MusicButton" type="Button" parent="HBoxContainer/RightPanel/君子六艺/Actions"]
+layout_mode = 2
+text = "编钟练习"
+
+[node name="DrivingButton" type="Button" parent="HBoxContainer/RightPanel/君子六艺/Actions"]
+layout_mode = 2
+text = "驾御练习"
 
 [node name="科技" type="VBoxContainer" parent="HBoxContainer/RightPanel"]
 visible = false
@@ -133,19 +139,19 @@ theme_override_constants/separation = 20
 
 [node name="RankLabel" type="Label" parent="HBoxContainer/RightPanel/科技"]
 layout_mode = 2
-text = "当前爵位: 下士 (Lower Scholar)"
+autowrap_mode = 3
 
 [node name="TechContainer" type="VBoxContainer" parent="HBoxContainer/RightPanel/科技"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
 [node name="IrrigationButton" type="Button" parent="HBoxContainer/RightPanel/科技/TechContainer"]
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
-text = "解锁水利 (Unlock Irrigation) - Need Literacy Lv.3"
 
 [node name="BowButton" type="Button" parent="HBoxContainer/RightPanel/科技/TechContainer"]
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
-text = "解锁复合弓 (Unlock Composite Bow) - Need Archery Lv.2"
 
 [node name="CloseButton" type="Button" parent="."]
 layout_mode = 1

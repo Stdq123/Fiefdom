@@ -1,0 +1,183 @@
+extends Control
+
+signal market_requested
+signal dry_plot_requested
+signal sleep_requested
+
+const GOOD := Color("#c7dcaf")
+const SHORT := Color("#efbf8a")
+
+@onready var grain: Label = %Grain
+@onready var need: Label = %Need
+@onready var money: Label = %Money
+@onready var raid_plan: PanelContainer = %RaidPlan
+@onready var raid_heading: Label = %RaidHeading
+@onready var raid_instructions: Label = %RaidInstructions
+@onready var field_forecast: Label = %FieldForecast
+@onready var field_warning: Label = %FieldWarning
+@onready var sheep_note: Label = %SheepNote
+@onready var find_plot: Button = %FindPlot
+@onready var delegate: CheckButton = %Delegate
+@onready var budget: SpinBox = %Budget
+@onready var forecast: Label = %Forecast
+@onready var keep: Label = %Keep
+@onready var last_card: PanelContainer = %LastCard
+@onready var receipt: Label = %Receipt
+@onready var field_receipt: Label = %FieldReceipt
+@onready var close_button: Button = %Close
+
+func _ready() -> void:
+	budget.max_value = NightRations.MAX_COPPER_LIMIT
+	budget.get_line_edit().max_length = 10
+	delegate.toggled.connect(func(enabled: bool): Global.set_night_rations(enabled, int(budget.value)))
+	budget.value_changed.connect(func(limit: float): Global.set_night_rations(delegate.button_pressed, int(limit)))
+	close_button.pressed.connect(queue_free)
+	find_plot.pressed.connect(dry_plot_requested.emit)
+	%Market.pressed.connect(func():
+		queue_free()
+		market_requested.emit()
+	)
+	%Sleep.pressed.connect(func():
+		queue_free()
+		sleep_requested.emit()
+	)
+	GameEvents.night_rations_changed.connect(_refresh)
+	GameEvents.sheepfold_changed.connect(_refresh)
+	GameEvents.food_changed.connect(_refresh.unbind(1))
+	GameEvents.money_changed.connect(_refresh.unbind(1))
+	GameEvents.inventory_changed.connect(_refresh.unbind(1))
+	GameEvents.retainer_recruited.connect(_refresh.unbind(1))
+	GameEvents.retainer_departed.connect(_refresh.unbind(1))
+	GameEvents.retainer_duty_changed.connect(_refresh.unbind(1))
+	GameEvents.farm_state_changed.connect(_refresh_fields)
+	GameEvents.crop_harvested.connect(_refresh_fields.unbind(1))
+	GameEvents.channels_changed.connect(_refresh_fields)
+	GameEvents.day_advanced.connect(_refresh.unbind(1))
+	GameEvents.raid_started.connect(_refresh_raid_plan)
+	GameEvents.raid_defeated.connect(_refresh_raid_plan)
+	_refresh()
+	close_button.grab_focus()
+
+func _refresh() -> void:
+	_refresh_raid_plan()
+	_refresh_fields()
+	sheep_note.visible = Global.sheepfold.owned()
+	if sheep_note.visible:
+		var feed := Global.sheep_feed(Global.sheepfold.fodder)
+		sheep_note.text = "羊棚 · " + Sheepfold.FEED_LABELS[feed]
+		sheep_note.modulate = SHORT if feed == Sheepfold.Feed.SHORTAGE else GOOD
+	var plan := Global.night_rations_plan()
+	var policy := Global.night_rations
+	grain.text = "粮仓\n%d 份" % Global.food_storage
+	need.text = "今夜所需\n%d 份" % plan.need
+	money.text = "铜钱\n%d 枚" % Global.money
+	delegate.set_pressed_no_signal(policy.enabled)
+	budget.set_value_no_signal(policy.copper_limit)
+	budget.editable = policy.enabled
+	forecast.add_theme_color_override("font_color", SHORT if plan.uncovered > 0 else GOOD)
+	if plan.need == 0:
+		forecast.text = "今夜暂无门客用粮。"
+	elif plan.supper == plan.need:
+		forecast.text = "今夜口粮由围炉供齐，共 %d 份。" % plan.supper
+	elif plan.missing == 0:
+		forecast.text = "粮仓够用，今夜从粮仓取 %d 份。" % (plan.need - plan.supper)
+	elif not policy.enabled:
+		forecast.text = "今夜缺 %d 份。可到市集备粮，或开启夜间备粮。" % plan.missing
+	elif plan.uncovered > 0:
+		forecast.text = "余粮与可用铜钱还差 %d 份。现在过夜会缺 %d 份。" % [plan.uncovered, plan.missing]
+	else:
+		forecast.text = "今夜补足 %d 份 · %s" % [plan.missing, _describe_exchange(plan)]
+	if plan.supper > 0 and plan.supper < plan.need:
+		forecast.text = "围炉供 %d 份。%s" % [plan.supper, forecast.text]
+	var reserved := ItemManager.describe_crops(plan.reserved)
+	keep.visible = policy.enabled and (not reserved.is_empty() or plan.new_order)
+	if not reserved.is_empty():
+		keep.text = "%s「%s」留货 · %s" % ["明日" if plan.new_order else "", plan.order_name, reserved]
+	else:
+		keep.text = "明日换季，按「%s」留货。" % plan.order_name
+	var meal := policy.last
+	receipt.visible = not meal.is_empty()
+	if receipt.visible:
+		receipt.text = "第 %d 夜 · 用粮 %d/%d 份" % [meal.day, meal.served, meal.need]
+		if meal.has("supper"):
+			receipt.text += " · 围炉 %d 份" % meal.supper
+		var exchange := _describe_exchange(meal)
+		if not exchange.is_empty():
+			receipt.text += "\n" + exchange
+		elif meal.served < meal.need:
+			receipt.text += " · 缺 %d 份" % (meal.need - meal.served)
+	_refresh_field_receipt()
+	last_card.visible = receipt.visible or field_receipt.visible
+
+func _refresh_raid_plan() -> void:
+	var tomorrow := Global.current_day + 1
+	var active := Global.raid_day > 0
+	raid_plan.visible = active or Global.is_raid_day(tomorrow)
+	if not raid_plan.visible:
+		return
+	raid_heading.text = "东路来敌 · " + Global.raid_name(Global.raid_kind) if active else "明日有敌袭"
+	if not active and Global.east_watch_day > 0:
+		raid_heading.text += " · " + Global.raid_name(Global.raid_kind_on(tomorrow))
+	var instructions := "右键朝来敌射箭，侧走避开地面标记。"
+	if not active:
+		instructions = "过夜前可先收成熟作物。" + instructions
+	if Global.retainers.any(func(worker: RetainerData) -> bool: return worker.can_take_duty(RetainerData.Duty.GUARD)):
+		instructions += "\n可在「管理」中安排兵家门客守卫。"
+	raid_instructions.text = instructions
+
+func _refresh_fields() -> void:
+	var report := Global.field_night_forecast()
+	field_forecast.text = "已有 %d 格可收 · 今夜预计 %d 格生长" % [
+		report.ready, report.growing + report.public_ripe + report.private_ripe]
+	var ripe := _describe_ripe(report)
+	if not ripe.is_empty():
+		field_forecast.text += "\n明早新熟 · " + ripe
+	var away_jobs := Global.away_field_summary(Global.AWAY_FIELD_JOBS)
+	if not away_jobs.is_empty():
+		field_forecast.text += "\n外出田务 · " + away_jobs
+		var away_yields := Global.away_field_summary(Global.AWAY_FIELD_YIELDS)
+		if not away_yields.is_empty():
+			field_forecast.text += "\n" + away_yields
+	var warnings := PackedStringArray()
+	if report.dry > 0:
+		warnings.append("%d 格待浇，缺水会停长" % report.dry)
+	if report.blocked > 0:
+		warnings.append("%d 格稻田断水，需接通水渠" % report.blocked)
+	field_warning.text = " · ".join(warnings)
+	field_warning.visible = not warnings.is_empty()
+	find_plot.visible = report.dry > 0
+
+func _refresh_field_receipt() -> void:
+	var report := Global.last_field_night
+	var details := PackedStringArray()
+	if not report.is_empty():
+		var ripe := _describe_ripe(report)
+		if not ripe.is_empty():
+			details.append("新熟 " + ripe)
+		if report.growing > 0:
+			details.append("%d 格长了一阶" % report.growing)
+		if report.dry > 0:
+			details.append("%d 格漏浇停长" % report.dry)
+		if report.blocked > 0:
+			details.append("%d 格稻田断水停长" % report.blocked)
+	field_receipt.visible = not details.is_empty()
+	if field_receipt.visible:
+		field_receipt.text = "第 %d 夜田务 · %s" % [report.day, " · ".join(details)]
+
+func _describe_ripe(report: Dictionary) -> String:
+	if report.public_ripe + report.private_ripe == 0:
+		return ""
+	return "公田 %d 格、私田 %d 格" % [report.public_ripe, report.private_ripe]
+
+func _describe_exchange(plan: Dictionary) -> String:
+	var details := PackedStringArray()
+	if not plan.used.is_empty():
+		details.append("转用 %s" % ItemManager.describe_crops(plan.used))
+	if plan.bought > 0:
+		details.append("购粮 %d 份（%d 铜钱）" % [plan.bought, plan.copper])
+	return " · ".join(details)
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		get_viewport().set_input_as_handled()
+		queue_free()

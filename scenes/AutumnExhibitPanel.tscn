@@ -1,0 +1,105 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/AutumnExhibitPanel.gd" id="1_exhibit"]
+[ext_resource type="Texture2D" path="res://assets/world/autumn-exhibit.svg" id="2_art"]
+
+[node name="AutumnExhibitPanel" type="Control"]
+process_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("1_exhibit")
+toggle_action = &""
+
+[node name="MapModal" type="ColorRect" parent="."]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.09, 0.07, 0.62)
+
+[node name="Anchor" type="MarginContainer" parent="MapModal"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 124.0
+offset_top = -305.0
+offset_right = -124.0
+offset_bottom = -25.0
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="MapModal/Anchor"]
+layout_mode = 2
+
+[node name="Stack" type="VBoxContainer" parent="MapModal/Anchor/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 11
+
+[node name="Header" type="HBoxContainer" parent="MapModal/Anchor/Panel/Stack"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Art" type="TextureRect" parent="MapModal/Anchor/Panel/Stack/Header"]
+custom_minimum_size = Vector2(148, 73)
+layout_mode = 2
+texture_filter = 1
+texture = ExtResource("2_art")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Heading" type="VBoxContainer" parent="MapModal/Anchor/Panel/Stack/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Title" type="Label" parent="MapModal/Anchor/Panel/Stack/Header/Heading"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.82, 0.57, 1)
+theme_override_font_sizes/font_size = 28
+text = "秋社"
+
+[node name="Introduction" type="Label" parent="MapModal/Anchor/Panel/Stack/Header/Heading"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+
+[node name="CloseMap" type="Button" parent="MapModal/Anchor/Panel/Stack/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(116, 38)
+layout_mode = 2
+size_flags_vertical = 0
+mouse_default_cursor_shape = 2
+text = "离开  Esc"
+
+[node name="Crops" type="HBoxContainer" parent="MapModal/Anchor/Panel/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Selection" type="Label" parent="MapModal/Anchor/Panel/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.84, 0.60, 1)
+theme_override_font_sizes/font_size = 18
+
+[node name="Choices" type="HBoxContainer" parent="MapModal/Anchor/Panel/Stack"]
+layout_mode = 2
+theme_override_constants/separation = 9
+
+[node name="Take" type="Button" parent="MapModal/Anchor/Panel/Stack/Choices"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+
+[node name="Share" type="Button" parent="MapModal/Anchor/Panel/Stack/Choices"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2

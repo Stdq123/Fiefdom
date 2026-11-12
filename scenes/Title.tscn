@@ -1,0 +1,209 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/Title.gd" id="1_title"]
+[ext_resource type="Theme" path="res://resources/game_theme.tres" id="2_theme"]
+[ext_resource type="Texture2D" path="res://assets/world/title-estate-morning.png" id="3_morning"]
+[ext_resource type="Texture2D" path="res://assets/world/title-estate-dusk.png" id="4_dusk"]
+[ext_resource type="FontFile" path="res://assets/fonts/MaShanZheng-Title.woff2" id="5_heading"]
+
+[sub_resource type="Gradient" id="Gradient_ink"]
+offsets = PackedFloat32Array(0, 0.30, 0.40, 0.54, 0.70, 1)
+colors = PackedColorArray(0.067, 0.111, 0.088, 0.98, 0.067, 0.111, 0.088, 0.95, 0.067, 0.111, 0.088, 0.83, 0.067, 0.111, 0.088, 0.36, 0.067, 0.111, 0.088, 0, 0.067, 0.111, 0.088, 0)
+
+[sub_resource type="GradientTexture2D" id="Texture_ink"]
+gradient = SubResource("Gradient_ink")
+width = 512
+height = 8
+fill_to = Vector2(1, 0)
+
+[sub_resource type="StyleBoxFlat" id="Style_primary"]
+content_margin_left = 12.0
+content_margin_right = 12.0
+content_margin_top = 5.0
+content_margin_bottom = 5.0
+bg_color = Color(0.43, 0.31, 0.20, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 2
+border_color = Color(0.78, 0.64, 0.41, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxLine" id="Style_rule"]
+color = Color(0.72, 0.60, 0.38, 0.64)
+thickness = 1
+
+[sub_resource type="Animation" id="Animation_light"]
+resource_name = "estate_light"
+length = 42.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/path = NodePath("Twilight:modulate:a")
+tracks/0/interp = 1
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 8, 20, 27, 41, 42),
+"transitions": PackedFloat32Array(1, 1.4, 1, 1.4, 1, 1),
+"update": 0,
+"values": [0.0, 0.0, 1.0, 1.0, 0.0, 0.0]
+}
+
+[sub_resource type="AnimationLibrary" id="Library_light"]
+_data = {
+&"estate_light": SubResource("Animation_light")
+}
+
+[node name="Title" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_title")
+primary_action_style = SubResource("Style_primary")
+
+[node name="Morning" type="TextureRect" parent="."]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_morning")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Twilight" type="TextureRect" parent="."]
+modulate = Color(1, 1, 1, 0)
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("4_dusk")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="InkShade" type="TextureRect" parent="."]
+texture_filter = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("Texture_ink")
+expand_mode = 1
+
+[node name="Lighting" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("Library_light")
+}
+autoplay = "estate_light"
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchor_right = 0.43
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Menu" type="VBoxContainer" parent="Center"]
+custom_minimum_size = Vector2(378, 0)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Heading" type="Label" parent="Center/Menu"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.93, 0.84, 0.64, 1)
+theme_override_fonts/font = ExtResource("5_heading")
+theme_override_font_sizes/font_size = 83
+text = "采邑春秋"
+
+[node name="Divider" type="HSeparator" parent="Center/Menu"]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+theme_override_styles/separator = SubResource("Style_rule")
+
+[node name="Continue" type="Button" parent="Center/Menu"]
+visible = false
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "继续游戏"
+alignment = 0
+
+[node name="Status" type="Label" parent="Center/Menu"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.83, 0.69, 1)
+theme_override_constants/line_spacing = 5
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+
+[node name="NewGame" type="Button" parent="Center/Menu"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "新建游戏"
+alignment = 0
+
+[node name="SaveArchive" type="Button" parent="Center/Menu"]
+visible = false
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "选择存档"
+alignment = 0
+
+[node name="Settings" type="Button" parent="Center/Menu"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "设置"
+alignment = 0
+
+[node name="Exit" type="Button" parent="Center/Menu"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "退出游戏"
+alignment = 0
+
+[node name="Version" type="Label" parent="."]
+layout_mode = 1
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 86.0
+offset_top = -49.0
+offset_right = 306.0
+offset_bottom = -23.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.67, 0.69, 0.56, 1)
+theme_override_font_sizes/font_size = 14
+
+[node name="NewConfirmation" type="ConfirmationDialog" parent="."]
+title = "新建封地"
+ok_button_text = "开始新游戏"
+
+[node name="Form" type="VBoxContainer" parent="NewConfirmation"]
+custom_minimum_size = Vector2(340, 0)
+theme_override_constants/separation = 9
+
+[node name="SaveHint" type="Label" parent="NewConfirmation/Form"]
+layout_mode = 2
+text = "各局封地的存档独立保存。"
+
+[node name="EstateName" type="LineEdit" parent="NewConfirmation/Form"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+placeholder_text = "封地名称"
+max_length = 16

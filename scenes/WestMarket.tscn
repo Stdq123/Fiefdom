@@ -1,0 +1,236 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/WestMarket.gd" id="1_market"]
+[ext_resource type="Script" path="res://scripts/WestMarketGround.gd" id="2_ground"]
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://scenes/MarketStall.tscn" id="4_stall"]
+[ext_resource type="Script" path="res://scripts/MapGate.gd" id="5_gate"]
+[ext_resource type="Script" path="res://scripts/DayLighting.gd" id="6_light"]
+[ext_resource type="Script" path="res://scripts/TerrainAudio.gd" id="7_audio"]
+[ext_resource type="Script" path="res://scripts/RainVeil.gd" id="8_rain"]
+[ext_resource type="Material" path="res://resources/world_hint_material.tres" id="9_hint"]
+[ext_resource type="Theme" path="res://resources/game_theme.tres" id="10_theme"]
+[ext_resource type="PackedScene" path="res://scenes/WestMarketCounter.tscn" id="11_counter"]
+[ext_resource type="Script" path="res://scripts/SettingsPanel.gd" id="12_settings"]
+[ext_resource type="PackedScene" path="res://scenes/SeasonOrderCart.tscn" id="13_order_cart"]
+[ext_resource type="PackedScene" path="res://scenes/SeasonFreight.tscn" id="14_freight"]
+[ext_resource type="Script" path="res://scripts/CampaignHUD.gd" id="15_campaign"]
+[ext_resource type="Script" path="res://scripts/MarketPorter.gd" id="16_porter"]
+[ext_resource type="Script" path="res://scripts/NeighborMotion.gd" id="17_motion"]
+
+[sub_resource type="RectangleShape2D" id="GateMouth"]
+size = Vector2(8, 20)
+
+[sub_resource type="RectangleShape2D" id="VerticalEdge"]
+size = Vector2(24, 310)
+
+[sub_resource type="RectangleShape2D" id="HorizontalEdge"]
+size = Vector2(536, 24)
+
+[sub_resource type="RectangleShape2D" id="Pier"]
+size = Vector2(24, 7)
+
+[node name="WestMarket" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_market")
+
+[node name="Ground" type="Node2D" parent="."]
+z_index = -4
+script = ExtResource("2_ground")
+
+[node name="Scenery" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Stalls" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="GrainStall" parent="Stalls" instance=ExtResource("4_stall")]
+position = Vector2(-104, 4)
+
+[node name="FishStall" parent="Stalls" instance=ExtResource("4_stall")]
+position = Vector2(0, -1)
+kind = 1
+
+[node name="SilkStall" parent="Stalls" instance=ExtResource("4_stall")]
+position = Vector2(106, 4)
+kind = 2
+
+[node name="OrderCart" parent="." instance=ExtResource("13_order_cart")]
+position = Vector2(-104, 77)
+
+[node name="Freight" parent="." instance=ExtResource("14_freight")]
+at_market = true
+
+[node name="Porter" type="Node2D" parent="."]
+script = ExtResource("16_porter")
+
+[node name="Body" type="Sprite2D" parent="Porter"]
+offset = Vector2(0, -13)
+script = ExtResource("17_motion")
+
+[node name="EstateRoad" type="Area2D" parent="."]
+position = Vector2(221, 34)
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("5_gate")
+destination = "res://scenes/Main.tscn"
+arrival_path = NodePath("World/WestMarketArrival")
+player_path = NodePath("World/Player")
+
+[node name="Mouth" type="CollisionShape2D" parent="EstateRoad"]
+shape = SubResource("GateMouth")
+
+[node name="RoadSign" type="Label" parent="EstateRoad"]
+material = ExtResource("9_hint")
+z_index = 4
+offset_left = -58.0
+offset_top = -78.0
+offset_right = 58.0
+offset_bottom = -62.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.90, 0.85, 0.69, 1)
+theme_override_colors/font_outline_color = Color(0.15, 0.22, 0.15, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "封地 →"
+horizontal_alignment = 1
+
+[node name="EstateRoadArrival" type="Marker2D" parent="."]
+position = Vector2(176, 34)
+rotation = 3.1415927
+
+[node name="Edges" type="StaticBody2D" parent="."]
+collision_mask = 0
+
+[node name="West" type="CollisionShape2D" parent="Edges"]
+position = Vector2(-247, 4)
+shape = SubResource("VerticalEdge")
+
+[node name="East" type="CollisionShape2D" parent="Edges"]
+position = Vector2(267, 4)
+shape = SubResource("VerticalEdge")
+
+[node name="North" type="CollisionShape2D" parent="Edges"]
+position = Vector2(10, -144)
+shape = SubResource("HorizontalEdge")
+
+[node name="South" type="CollisionShape2D" parent="Edges"]
+position = Vector2(10, 152)
+shape = SubResource("HorizontalEdge")
+
+[node name="FarPier" type="CollisionShape2D" parent="Edges"]
+position = Vector2(230, 10)
+shape = SubResource("Pier")
+
+[node name="NearPier" type="CollisionShape2D" parent="Edges"]
+position = Vector2(207, 56)
+shape = SubResource("Pier")
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+position = Vector2(176, 34)
+
+[node name="Camera2D" parent="Player" index="4"]
+limit_left = -326
+limit_top = -192
+limit_right = 344
+limit_bottom = 197
+
+[node name="DayLighting" type="CanvasModulate" parent="."]
+script = ExtResource("6_light")
+
+[node name="TerrainAudio" type="Node" parent="."]
+script = ExtResource("7_audio")
+
+[node name="Rain" type="Node2D" parent="."]
+z_index = 11
+script = ExtResource("8_rain")
+
+[node name="UI" type="CanvasLayer" parent="."]
+layer = 8
+
+[node name="Control" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("10_theme")
+
+[node name="MarketName" type="PanelContainer" parent="UI/Control"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 240.0
+offset_bottom = 87.0
+mouse_filter = 2
+
+[node name="Stack" type="VBoxContainer" parent="UI/Control/MarketName"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Name" type="Label" parent="UI/Control/MarketName/Stack"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.82, 0.55, 1)
+theme_override_font_sizes/font_size = 24
+text = "西市"
+
+[node name="Date" type="Label" parent="UI/Control/MarketName/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Wallet" type="HBoxContainer" parent="UI/Control"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -341.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 56.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_override_constants/separation = 8
+alignment = 2
+
+[node name="Plate" type="PanelContainer" parent="UI/Control/Wallet"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Stock" type="Label" parent="UI/Control/Wallet/Plate"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="SettingsButton" type="Button" parent="UI/Control/Wallet"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(81, 40)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "设置"
+
+[node name="SettingsShade" type="ColorRect" parent="UI/Control"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.064, 0.101, 0.083, 0.68)
+
+[node name="Settings" type="Panel" parent="UI/Control"]
+unique_name_in_owner = true
+visible = false
+script = ExtResource("12_settings")
+
+[node name="Counter" parent="UI/Control" instance=ExtResource("11_counter")]
+unique_name_in_owner = true
+
+[node name="CampaignHUD" type="CanvasLayer" parent="."]
+layer = 8
+script = ExtResource("15_campaign")
+show_field_status = false
+
+[editable path="Player"]

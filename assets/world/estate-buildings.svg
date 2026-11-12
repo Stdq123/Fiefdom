@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="344" height="88" viewBox="0 0 344 88" shape-rendering="crispEdges">
+  <!-- Hall, 128 × 88. The facade and entrance share the same ground line. -->
+  <g>
+    <path fill="#293c2e" d="M9 77h110v4h6v4H3v-4h6z"/>
+    <path fill="#736f5b" d="M12 72h104v9H12z"/>
+    <path fill="#a49777" d="M12 72h104v3H12zM16 77h16v1H16zM89 78h21v1H89z"/>
+    <path fill="#5c5549" d="M37 75h1v6h-1zM92 75h1v6h-1z"/>
+    <path fill="#9d7655" d="M14 38h100v35H14z"/>
+    <path fill="#c7a775" d="M21 46h29v23H21zM78 46h29v23H78z"/>
+    <path fill="#b28f63" d="M21 64h29v5H21zM78 64h29v5H78zM100 46h7v23h-7z"/>
+    <path fill="#573f32" d="M13 40h7v34h-7zM108 40h7v34h-7zM46 42h5v33h-5zM77 42h5v33h-5z"/>
+    <path fill="#a47550" d="M15 48h2v21h-2zM48 48h2v20h-2zM78 48h2v20h-2zM110 48h2v21h-2z"/>
+    <path fill="#796044" d="M26 51h15v12H26zM87 51h15v12H87z"/>
+    <path fill="#e3bc83" d="M27 51h13v2H27zM27 61h13v1H27zM30 53h2v8h-2zM35 53h2v8h-2zM88 51h13v2H88zM88 61h13v1H88zM91 53h2v8h-2zM96 53h2v8h-2z"/>
+    <path fill="#392d28" d="M51 43h26v31H51z"/>
+    <path fill="#5e4738" d="M53 45h22v28H53z"/>
+    <path fill="#775541" d="M55 47h8v24h-8zM65 47h8v24h-8z"/>
+    <path fill="#d8ab6a" d="M60 57h1v4h-1zM67 57h1v4h-1zM53 44h22v1H53z"/>
+    <path fill="#8e7d64" d="M47 74h34v4H47zM43 78h42v4H43zM40 82h48v3H40z"/>
+    <path fill="#b8a788" d="M47 74h34v1H47zM43 78h42v1H43zM40 82h48v1H40z"/>
+    <path fill="#43302a" d="M1 34h7v-3h8v-4h8v-5h7v-5h7v-5h7V8h7V5h24v3h7v4h7v5h7v5h7v5h8v4h8v3h7v6h-8v3H9v-3H1z"/>
+    <path fill="#935740" d="M6 35h8v-3h8v-4h8v-5h7v-5h7v-5h8V9h24v4h8v5h7v5h7v5h8v4h8v3h8v3H6z"/>
+    <path fill="#a46546" d="M22 32h84v2H22zM30 28h68v2H30zM37 23h54v2H37zM44 18h40v2H44zM52 13h24v2H52z"/>
+    <path fill="#c48458" d="M8 36h112v1H8zM25 31h78v1H25zM35 26h58v1H35zM43 21h42v1H43zM51 16h26v1H51zM52 9h24v2H52z"/>
+    <path fill="#764431" d="M31 32h2v3h-2zM48 32h2v3h-2zM66 32h2v3h-2zM83 32h2v3h-2zM99 32h2v3h-2zM40 27h2v3h-2zM57 27h2v3h-2zM75 27h2v3h-2zM89 27h2v3h-2zM48 22h2v3h-2zM65 22h2v3h-2zM79 22h2v3h-2zM56 17h2v3h-2zM70 17h2v3h-2z"/>
+    <path fill="#bb895e" d="M10 40h108v1H10zM51 43h26v2H51z"/>
+  </g>
+  <!-- Silk shed, 80 × 64. -->
+  <g transform="translate(128)">
+    <path fill="#2b3c31" d="M4 56h72v3h3v3H1v-3h3z"/>
+    <path fill="#77694f" d="M9 51h62v8H9z"/>
+    <path fill="#bb9b70" d="M9 23h62v32H9z"/>
+    <path fill="#957352" d="M9 50h62v5H9zM10 27h5v24h-5zM65 26h4v25h-4z"/>
+    <path fill="#d6b58a" d="M16 27h17v4H16zM16 47h17v3H16zM62 29h3v20h-3z"/>
+    <path fill="#674d37" d="M15 32h18v13H15z"/>
+    <path fill="#433b2e" d="M17 34h14v9H17z"/>
+    <path fill="#b38d5e" d="M17 35h14v2H17zM17 39h14v1H17zM17 42h14v1H17z"/>
+    <path fill="#574033" d="M34 25h28v31H34z"/>
+    <path fill="#342c27" d="M37 27h22v28H37z"/>
+    <path fill="#4d3d31" d="M37 28h3v26h-3zM56 28h3v26h-3zM40 53h16v2H40z"/>
+    <path fill="#936e4b" d="M34 27h1v28h-1zM60 27h1v28h-1z"/>
+    <path fill="#997f5f" d="M34 55h28v3H34zM30 58h36v3H30z"/>
+    <path fill="#c1a37a" d="M34 55h28v1H34zM30 58h36v1H30z"/>
+    <path fill="#344236" d="M1 21h6v-3h8v-3h9v-4h8V7h16v4h8v4h9v3h8v3h6v5H1z"/>
+    <path fill="#546650" d="M6 21h8v-3h9v-4h9v-3h16v3h9v4h9v3h8v2H6z"/>
+    <path fill="#778566" d="M11 22h58v1H11zM20 18h40v1H20zM27 14h26v1H27zM33 8h14v1H33z"/>
+    <path fill="#364939" d="M23 19h2v3h-2zM35 19h2v3h-2zM44 19h2v3h-2zM55 19h2v3h-2zM33 15h2v3h-2zM46 15h2v3h-2z"/>
+    <path fill="#7d6e50" d="M6 25h68v1H6z"/>
+  </g>
+  <!-- Open roadside pavilion, 72 × 60. -->
+  <g transform="translate(208)">
+    <path fill="#304338" d="M5 52h62v3h3v3H2v-3h3z"/>
+    <path fill="#77745d" d="M7 49h58v6H7zM18 55h36v3H18z"/>
+    <path fill="#a29a72" d="M9 49h54v2H9zM19 55h34v1H19z"/>
+    <path fill="#89744f" d="M14 46h44v3H14z"/>
+    <path fill="#ad9363" d="M18 46h36v1H18zM23 48h14v1H23zM44 48h11v1H44z"/>
+    <path fill="#71583d" d="M13 22h4v26h-4zM55 22h4v26h-4z"/>
+    <path fill="#584332" d="M7 20h7v32H7zM58 20h7v32h-7z"/>
+    <path fill="#b68b58" d="M9 24h3v26H9zM60 24h3v26h-3zM6 49h9v3H6zM57 49h9v3h-9z"/>
+    <path fill="#745638" d="M19 40h18v4H19zM20 44h2v3h-2zM34 44h2v3h-2z"/>
+    <path fill="#b68a53" d="M19 39h18v2H19z"/>
+    <path fill="#2c4339" d="M1 18h7v-3h8v-3h8V8h6V4h12v4h6v4h8v3h8v3h7v4H1z"/>
+    <path fill="#517468" d="M6 18h8v-3h9v-3h7V9h4V6h4v3h4v3h7v3h9v3h8v2H6z"/>
+    <path fill="#789480" d="M12 18h48v1H12zM22 14h28v1H22zM30 10h12v1H30zM34 6h4v1h-4z"/>
+    <path fill="#3b5b51" d="M20 16h2v2h-2zM28 13h2v1h-2zM35 11h2v3h-2zM43 13h2v1h-2zM50 16h2v2h-2z"/>
+    <path fill="#c29a69" d="M5 21h62v1H5z"/>
+  </g>
+  <!-- Roadside gate piers. Each 32 × 48 frame is sorted at its own stone footing. -->
+  <g transform="translate(280)">
+    <path fill="#344235" d="M4 42h24v4H4z"/>
+    <path fill="#827b61" d="M6 39h20v5H6zM9 35h14v4H9z"/>
+    <path fill="#aba284" d="M6 39h20v1H6zM9 36h14v1H9z"/>
+    <path fill="#675342" d="M9 17h14v19H9z"/>
+    <path fill="#8f7353" d="M11 19h10v16H11z"/>
+    <path fill="#c5a675" d="M11 20h2v14h-2zM16 25h3v5h-3z"/>
+    <path fill="#435548" d="M2 14h5v-3h4V8h10v3h4v3h5v4H2z"/>
+    <path fill="#738471" d="M5 15h5v-3h4v-2h4v2h4v3h5v1H5z"/>
+    <path fill="#988d69" d="M4 17h24v1H4z"/>
+  </g>
+  <g transform="translate(312)">
+    <path fill="#344235" d="M4 42h24v4H4z"/>
+    <path fill="#827b61" d="M6 39h20v5H6zM9 35h14v4H9z"/>
+    <path fill="#aba284" d="M6 39h20v1H6zM9 36h14v1H9zM9 42h6v1H9z"/>
+    <path fill="#634936" d="M9 17h14v19H9z"/>
+    <path fill="#9c7b55" d="M11 19h10v16H11z"/>
+    <path fill="#bb925c" d="M11 20h2v14h-2zM19 20h1v14h-1z"/>
+    <path fill="#503b2d" d="M13 22h7v10h-7z"/>
+    <path fill="#ae704b" d="M14 23h5v8h-5z"/>
+    <path fill="#dfb36c" d="M15 25h3v1h-3zM16 26h1v3h-1z"/>
+    <path fill="#394c43" d="M2 14h5v-3h4V8h10v3h4v3h5v4H2z"/>
+    <path fill="#61796a" d="M5 15h5v-3h4v-2h4v2h4v3h5v1H5z"/>
+    <path fill="#8b9b78" d="M8 14h16v1H8zM12 11h8v1h-8z"/>
+    <path fill="#ac9066" d="M4 17h24v1H4z"/>
+  </g>
+</svg>

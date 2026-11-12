@@ -1,0 +1,105 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/CreekTrapPanel.gd" id="1_trap"]
+[ext_resource type="Theme" path="res://resources/game_theme.tres" id="2_theme"]
+
+[node name="CreekTrapPanel" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_trap")
+toggle_action = &""
+
+[node name="MapModal" type="ColorRect" parent="."]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.06, 0.10, 0.084, 0.25)
+
+[node name="Dock" type="VBoxContainer" parent="MapModal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -24.0
+mouse_filter = 2
+alignment = 2
+
+[node name="Panel" type="PanelContainer" parent="MapModal/Dock"]
+custom_minimum_size = Vector2(656, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="Stack" type="VBoxContainer" parent="MapModal/Dock/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="MapModal/Dock/Panel/Stack"]
+layout_mode = 2
+
+[node name="SiteName" type="Label" parent="MapModal/Dock/Panel/Stack/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.94, 0.82, 0.57, 1)
+theme_override_font_sizes/font_size = 25
+
+[node name="CloseMap" type="Button" parent="MapModal/Dock/Panel/Stack/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(128, 38)
+mouse_default_cursor_shape = 2
+text = "返回溪岸  Esc"
+
+[node name="TrapStatus" type="Label" parent="MapModal/Dock/Panel/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.79, 0.85, 0.71, 1)
+
+[node name="Baits" type="HBoxContainer" parent="MapModal/Dock/Panel/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Catch" type="HBoxContainer" parent="MapModal/Dock/Panel/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="FishIcon" type="TextureRect" parent="MapModal/Dock/Panel/Stack/Catch"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(44, 44)
+texture_filter = 1
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CatchLabel" type="Label" parent="MapModal/Dock/Panel/Stack/Catch"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 19
+
+[node name="Take" type="Button" parent="MapModal/Dock/Panel/Stack/Catch"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(132, 40)
+mouse_default_cursor_shape = 2
+text = "收笼取鱼"
+
+[node name="Guide" type="Button" parent="MapModal/Dock/Panel/Stack/Catch"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(152, 40)
+mouse_default_cursor_shape = 2
+
+[node name="Receipt" type="Label" parent="MapModal/Dock/Panel/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.91, 0.81, 0.56, 1)

@@ -1,28 +1,92 @@
-<svg width="64" height="48" xmlns="http://www.w3.org/2000/svg">
-  <!-- Row 0: Raw Soil -->
-  <!-- 0,0: Private Raw -->
-  <rect x="0" y="0" width="16" height="16" fill="#a18a6e" stroke="#85735e" stroke-width="1"/>
-  <!-- 1,0: Public Raw -->
-  <rect x="16" y="0" width="16" height="16" fill="#d6c87b" stroke="#b5a86b" stroke-width="1"/>
-  
-  <!-- Row 1: Tilled Soil -->
-  <!-- 0,1: Private Tilled -->
-  <rect x="0" y="16" width="16" height="16" fill="#6e5a42" stroke="#524331" stroke-width="1">
-    <path d="M2 18 h12 M2 22 h12 M2 26 h12" stroke="#4a3b2a" stroke-width="1"/>
-  </rect>
-  <!-- 1,1: Public Tilled -->
-  <rect x="16" y="16" width="16" height="16" fill="#968842" stroke="#756a33" stroke-width="1">
-    <path d="M18 18 h12 M18 22 h12 M18 26 h12" stroke="#665c2d" stroke-width="1"/>
-  </rect>
+<svg width="48" height="144" viewBox="0 0 48 144" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+  <!-- Private and public earth, followed by the same two tilled tiles. -->
+  <path fill="#5e513c" d="M0 0h16v16H0z M0 16h16v16H0z"/>
+  <path fill="#92754f" d="M1 1h14v14H1z"/>
+  <path fill="#a3855a" d="M1 1h14v1H2v13H1z M3 4h3v1H3z M9 6h3v1H9z M4 10h2v1H4z M10 12h4v1h-4z"/>
+  <path fill="#735c42" d="M6 5h2v2H6z M11 8h2v1h-2z M3 12h4v1H3z M8 14h7v1H8z"/>
+  <path fill="#65764b" d="M3 6h2v1H3z M13 4h1v2h-1z M7 11h2v1H7z"/>
 
-  <!-- Row 2: Crops -->
-  <!-- 0,2: Seed -->
-  <circle cx="8" cy="40" r="3" fill="#90EE90" />
-  
-  <!-- 1,2: Sapling -->
-  <path d="M8 48 v-8 M4 40 l4 4 l4 -4" stroke="#32CD32" stroke-width="2" fill="none" transform="translate(16, 0)"/>
-  
-  <!-- 2,2: Mature -->
-  <path d="M8 48 v-12 M4 36 l4 4 l4 -4 M8 36 l0 -4" stroke="#FFD700" stroke-width="2" fill="none" transform="translate(32, 0)"/>
-  <circle cx="40" cy="34" r="3" fill="#FFD700" />
+  <path fill="#c59d59" d="M16 0h16v16H16z M16 16h16v16H16z"/>
+  <path fill="#9a784a" d="M17 1h14v14H17z"/>
+  <path fill="#d9b471" d="M17 1h14v1h-13v13h-1z M20 4h4v1h-4z M27 6h2v1h-2z M20 10h3v1h-3z M25 12h4v1h-4z"/>
+  <path fill="#775b3a" d="M23 5h2v2h-2z M26 9h3v1h-3z M20 13h3v1h-3z M17 14h14v1H17z"/>
+
+  <path fill="#644b36" d="M1 17h14v14H1z"/>
+  <path fill="#805d40" d="M2 18h12v2H2z M2 22h12v2H2z M2 26h12v2H2z M3 30h11v1H3z"/>
+  <path fill="#a17c51" d="M2 18h5v1H2z M9 18h3v1H9z M4 22h5v1H4z M3 26h5v1H3z M10 26h3v1h-3z"/>
+  <path fill="#493727" d="M3 20h10v1H3z M2 24h11v1H2z M3 28h11v1H3z"/>
+  <path fill="#795734" d="M17 17h14v14H17z"/>
+  <path fill="#a27a47" d="M18 18h12v2H18z M18 22h12v2H18z M18 26h12v2H18z M19 30h11v1H19z"/>
+  <path fill="#c8a064" d="M18 18h6v1h-6z M26 18h2v1h-2z M20 22h7v1h-7z M19 26h5v1h-5z M26 26h3v1h-3z"/>
+  <path fill="#573e29" d="M19 20h10v1H19z M18 24h11v1H18z M19 28h11v1H19z"/>
+
+  <!-- Millet -->
+  <g transform="translate(0 32)">
+    <path fill="#eed38a" d="M5 7h2v2H5z M9 5h2v2H9z M9 10h2v2H9z"/>
+    <path fill="none" stroke="#a9d961" stroke-width="1.5" d="M24 14V7m0 3-4-3m4 1 4-3"/>
+    <path fill="none" stroke="#b9d275" stroke-width="1.5" d="M40 14V4m0 8-4-3m4 1 4-3"/>
+    <path fill="#98603c" d="M37 3h6v5h-6z M34 6h3v4h-3z M44 5h3v4h-3z"/>
+    <path fill="#edb95e" d="M38 2h4v5h-4z M34 6h2v3h-2z M44 4h2v4h-2z"/>
+    <path fill="#ffe09a" d="M38 2h3v1h-3z M44 4h2v1h-2z"/>
+  </g>
+
+  <!-- Sorghum -->
+  <g transform="translate(0 48)">
+    <path fill="#e89964" d="M5 7h2v2H5z M9 5h2v2H9z M9 10h2v2H9z"/>
+    <path fill="none" stroke="#a0be56" stroke-width="1.5" d="M24 14V5m0 7-5-2m5 0 4-3"/>
+    <path fill="none" stroke="#a0be56" stroke-width="1.5" d="M40 14V4m0 8-5-3m5 1 5-3"/>
+    <path fill="#8a4c3d" d="M36 3h8v5h-8z M38 8h5v1h-5z"/>
+    <path fill="#ce7953" d="M37 2h6v5h-6z M35 4h2v2h-2z M43 4h2v2h-2z"/>
+    <path fill="#f5ad70" d="M38 2h3v1h-3z M41 5h2v1h-2z"/>
+  </g>
+
+  <!-- Rice -->
+  <g transform="translate(0 64)">
+    <path fill="#faf0b7" d="M5 6h1v3H5z M10 5h1v3h-1z M9 10h1v3H9z"/>
+    <path fill="none" stroke="#8bc977" stroke-width="1.5" d="m24 14-4-7m4 7 1-10m0 10 4-7"/>
+    <path fill="none" stroke="#9bd481" stroke-width="1.5" d="m39 14-3-8m4 8 1-11m0 11 4-8"/>
+    <path fill="#e2d49b" d="M33 5h2v4h-2z M37 3h2v4h-2z M41 1h2v5h-2z M45 4h2v4h-2z"/>
+    <path fill="#fff0be" d="M33 5h2v1h-2z M37 3h2v1h-2z M41 1h2v2h-2z M45 4h2v1h-2z"/>
+  </g>
+
+  <!-- Wheat -->
+  <g transform="translate(0 80)">
+    <path fill="#f6b958" d="M5 7h2v3H5z M9 5h2v3H9z M9 10h2v3H9z"/>
+    <path fill="none" stroke="#b9c56b" stroke-width="1.5" d="M24 14V5m0 7-4-3m4 1 4-3"/>
+    <path fill="none" stroke="#c29346" stroke-width="1.5" d="M39 14V3m-3 11V6m7 8V5"/>
+    <path fill="#e6a74f" d="M34 6h3v5h-3z M38 2h3v7h-3z M43 4h3v6h-3z"/>
+    <path fill="#ffe195" d="M34 6h1v3h-1z M38 2h1v4h-1z M43 4h1v4h-1z"/>
+  </g>
+
+  <!-- Beans -->
+  <g transform="translate(0 96)">
+    <ellipse cx="6" cy="7" rx="2" ry="1.3" fill="#e2cc9b"/>
+    <ellipse cx="10" cy="10" rx="2" ry="1.3" fill="#e2cc9b"/>
+    <path fill="none" stroke="#80d180" stroke-width="1.5" d="M24 14V8m0 2-4-3m4 2 4-3"/>
+    <ellipse cx="20" cy="7" rx="2" ry="1.3" fill="#80d180"/>
+    <ellipse cx="28" cy="6" rx="2" ry="1.3" fill="#80d180"/>
+    <path fill="none" stroke="#8ad67c" stroke-width="1.5" d="M40 14V5m0 5-5-4m5 2 5-4"/>
+    <path fill="#518c58" d="M33 5h5v4h-5z M41 3h6v4h-6z"/>
+    <path fill="#bdd886" d="M34 7h2v4h-2z M36 10h2v3h-2z M44 6h2v4h-2z M42 9h2v3h-2z"/>
+  </g>
+
+  <!-- Mulberry -->
+  <g transform="translate(0 112)">
+    <path fill="#da9bad" d="M5 7h2v2H5z M9 5h2v2H9z M9 10h2v2H9z"/>
+    <path fill="none" stroke="#b08f67" stroke-width="1.5" d="M24 14V7m0 4-4-3m4 2 4-4"/>
+    <circle cx="24" cy="6" r="3.5" fill="#7cb365"/>
+    <path fill="none" stroke="#c7a173" stroke-width="1.5" d="M40 14V5"/>
+    <path fill="#446746" d="M33 6h2V3h4V1h4v2h3v3h2v4h-3v2H35v-2h-2z"/>
+    <path fill="#7cac60" d="M35 5h4V2h4v2h3v4h-4v2h-6V8h-1z"/>
+    <path fill="#a6c677" d="M39 2h3v1h-3z M35 5h3v1h-3z"/>
+    <path fill="#c782a0" d="M36 7h2v2h-2z M43 8h2v2h-2z"/>
+  </g>
+
+  <!-- Hemp -->
+  <g transform="translate(0 128)">
+    <path fill="#bdc996" d="M5 7h2v2H5z M9 5h2v2H9z M9 10h2v2H9z"/>
+    <path fill="none" stroke="#8fc98e" stroke-width="1.5" d="M24 14V5m0 6-4-3m4 3 4-3"/>
+    <path fill="none" stroke="#7ab58b" stroke-width="1.5" d="M40 14V3m0 9-5-3m5 3 5-3m-5 0-4-4m4 4 4-4"/>
+    <path fill="#a5cc91" d="M39 2h2v4h-2z M34 4h3v2h-3z M43 4h3v2h-3z M33 8h4v2h-4z M44 8h3v2h-3z"/>
+  </g>
 </svg>
