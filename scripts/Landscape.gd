@@ -298,9 +298,7 @@ func _ready() -> void:
 	snow_footprints = SNOW_FOOTPRINTS.new()
 	snow_footprints.name = "SnowFootprints"
 	add_child(snow_footprints)
-	terrain_audio = TERRAIN_AUDIO.new()
-	terrain_audio.name = "TerrainAudio"
-	add_child(terrain_audio)
+	terrain_audio = AudioManager.terrain_audio
 	day_lighting = DAY_LIGHTING.new()
 	day_lighting.name = "DayLighting"
 	add_child(day_lighting)
@@ -444,12 +442,9 @@ func _process(delta: float) -> void:
 	day_lighting.refresh(delta)
 	var foot := to_local(player.global_position)
 	var creek_distance := absf(foot.x - creek_x(foot.y)) if wilderness else INF
-	var birds_distance := foot.distance_to(BERRY_GROVE) if wilderness and season != Global.Season.WINTER else INF
-	var cricket_distance := INF
-	if season in [Global.Season.SUMMER, Global.Season.AUTUMN]:
-		cricket_distance = foot.distance_to(BERRY_GROVE if wilderness else SOUTH_PAVILION)
-	terrain_audio.update_ambience(delta, creek_distance, raining, birds_distance, cricket_distance,
-		Global.dusk_amount(), Global.is_indoors())
+	var birds_distance := foot.distance_to(BERRY_GROVE) if wilderness else INF
+	var cricket_distance := foot.distance_to(BERRY_GROVE if wilderness else SOUTH_PAVILION)
+	AudioManager.set_world_ambience(creek_distance, birds_distance, cricket_distance)
 	for sprite in scenery:
 		if not sprite.visible:
 			continue

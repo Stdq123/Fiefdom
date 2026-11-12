@@ -75,7 +75,7 @@ func _run() -> void:
 	if not await _enter_trail():
 		return
 
-	var terrain := current_scene.get_node("Landscape/TerrainAudio")
+	var terrain: Node = root.get_node("AudioManager").terrain_audio
 	_expect(is_zero_approx(terrain.creek.volume_linear) and is_zero_approx(terrain.rain.volume_linear),
 		"No creek or rain is audible at the dry west entrance.")
 	var starting_food: int = state.food_storage
@@ -110,7 +110,9 @@ func _run() -> void:
 	_expect(walker.position.x < 122, "The shallow crossing provides an alternate way back.")
 	if not await _return_home():
 		return
-	_expect(not is_instance_valid(terrain), "Leaving Bamboo Ravine releases its audio players.")
+	await create_timer(0.65).timeout
+	_expect(is_zero_approx(terrain.creek.volume_linear) and is_zero_approx(terrain.birds.volume_linear),
+		"Leaving Bamboo Ravine fades the local creek and birds on the shared players.")
 	_expect(state.active_crops.has(planted) and state.active_crops[planted]["watered"], "A day trip preserves the farm.")
 	current_scene.get_node("UI").sleep_button.pressed.emit()
 	await create_timer(1.15).timeout
@@ -143,7 +145,6 @@ func _run() -> void:
 		and state.active_crops.has(planted) and state.active_crops[planted]["age"] == 1,
 		"The save preserves the gathering limit, health and crop growth.")
 
-	terrain = current_scene.get_node("World/Landscape/TerrainAudio")
 	for night in range(state.SOLAR_TERMS.size() * state.balance.days_per_solar_term):
 		if state.has_rain():
 			break
@@ -153,13 +154,11 @@ func _run() -> void:
 		"Rain reaches the estate after sleeping into the right solar term.")
 	if not await _enter_trail():
 		return
-	terrain = current_scene.get_node("Landscape/TerrainAudio")
 	await _walk(Vector2(-59, -70))
 	_expect(is_zero_approx(terrain.birds.volume_linear) and terrain.rain.volume_linear > 0.1,
 		"In rain, the grove layers rain in place of the dry-weather birdsong.")
 	if not await _return_home():
 		return
-	terrain = current_scene.get_node("World/Landscape/TerrainAudio")
 	current_scene.get_node("UI").sleep_button.pressed.emit()
 	await create_timer(1.15).timeout
 	_expect(not state.has_rain() and is_zero_approx(terrain.rain.volume_linear), "The rain fades away after the weather clears.")

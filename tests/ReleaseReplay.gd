@@ -80,6 +80,10 @@ func _run() -> void:
 			replay.legacy = arguments[0] == "neighbor-handoff-legacy"
 			replay.capture_path = capture_directory
 			await replay.run(tree)
+		"ambience-travel":
+			var replay = load("res://tests/AmbienceTravelReplay.gd").new()
+			replay.capture_path = capture_directory
+			await replay.run(tree)
 		"estate-terrain", "estate-terrain-art":
 			var replay = load("res://tests/EstateTerrainReplay.gd").new()
 			replay.title_art = arguments[0] == "estate-terrain-art"

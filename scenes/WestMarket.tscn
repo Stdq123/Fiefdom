@@ -6,7 +6,6 @@
 [ext_resource type="PackedScene" path="res://scenes/MarketStall.tscn" id="4_stall"]
 [ext_resource type="Script" path="res://scripts/MapGate.gd" id="5_gate"]
 [ext_resource type="Script" path="res://scripts/DayLighting.gd" id="6_light"]
-[ext_resource type="Script" path="res://scripts/TerrainAudio.gd" id="7_audio"]
 [ext_resource type="Script" path="res://scripts/RainVeil.gd" id="8_rain"]
 [ext_resource type="Material" path="res://resources/world_hint_material.tres" id="9_hint"]
 [ext_resource type="Theme" path="res://resources/game_theme.tres" id="10_theme"]
@@ -156,9 +155,6 @@ limit_bottom = 197
 
 [node name="DayLighting" type="CanvasModulate" parent="."]
 script = ExtResource("6_light")
-
-[node name="TerrainAudio" type="Node" parent="."]
-script = ExtResource("7_audio")
 
 [node name="Rain" type="Node2D" parent="."]
 z_index = 11

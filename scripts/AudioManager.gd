@@ -19,10 +19,12 @@ const SEASON_SCORES := [
 ]
 const SCORE_GAIN := 0.36
 const CROSSFADE_SECONDS := 1.45
+const TERRAIN_AUDIO := preload("res://scripts/TerrainAudio.gd")
 
 var bgm_player: AudioStreamPlayer
 var sfx_player: AudioStreamPlayer
 var ui_sfx_player: AudioStreamPlayer
+var terrain_audio: TERRAIN_AUDIO
 var field_sounds: Array[AudioStreamWAV] = []
 var _music_players: Array[AudioStreamPlayer] = []
 var _music_gains: Array[float] = [0.0, 0.0]
@@ -50,6 +52,10 @@ func _ready() -> void:
 	Preferences.apply_music_volume()
 	Preferences.apply_ambience_volume()
 
+	terrain_audio = TERRAIN_AUDIO.new()
+	terrain_audio.name = "TerrainAudio"
+	add_child(terrain_audio)
+
 	for index in _music_gains.size():
 		var player := AudioStreamPlayer.new()
 		player.name = "Music%d" % (index + 1)
@@ -72,6 +78,13 @@ func _ready() -> void:
 			field_sounds.append(load(path))
 	_sync_score.call_deferred()
 
+func set_world_ambience(creek_distance: float, birds_distance: float, cricket_distance: float) -> void:
+	var season := Global.season_index()
+	var birds := birds_distance if season != Global.Season.WINTER else INF
+	var crickets := cricket_distance if season in [Global.Season.SUMMER, Global.Season.AUTUMN] else INF
+	terrain_audio.set_ambience(creek_distance, Global.has_rain(), birds, crickets,
+		Global.dusk_amount(), Global.is_indoors())
+
 func _sync_score() -> void:
 	var scene := get_tree().current_scene
 	if scene == null:
@@ -79,11 +92,14 @@ func _sync_score() -> void:
 	var path := ""
 	match scene.scene_file_path:
 		Global.TITLE_SCENE:
+			terrain_audio.fade_out()
 			path = TITLE_SCORE
 		Global.ESTATE_SCENE, Global.WEST_MARKET_SCENE:
 			path = SEASON_SCORES[Global.season_index()]
 		Global.WILDERNESS_SCENE:
 			path = RAVINE_SCORE
+		_:
+			terrain_audio.fade_out()
 	if bgm_player and bgm_player.stream.resource_path == path:
 		return
 	bgm_player = null

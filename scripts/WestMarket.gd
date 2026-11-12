@@ -7,7 +7,7 @@ const SILK_STALL_PATH := [Vector2(231, 31), Vector2(190, 28), Vector2(166, 34), 
 @onready var player: Player = $Player
 @onready var ground: Node2D = $Ground
 @onready var lighting: CanvasModulate = $DayLighting
-@onready var audio: Node = $TerrainAudio
+@onready var audio: TRACK_AUDIO = AudioManager.terrain_audio
 @onready var counter: Control = %Counter
 @onready var settings: Panel = %Settings
 @onready var settings_shade: ColorRect = %SettingsShade
@@ -56,7 +56,7 @@ func _process(delta: float) -> void:
 	lighting.refresh(delta)
 	var tree_line := Vector2(-183, -35)
 	var distance := player.position.distance_to(tree_line)
-	audio.update_ambience(delta, INF, Global.has_rain(), distance, distance, Global.dusk_amount(), false)
+	AudioManager.set_world_ambience(INF, distance, distance)
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("ui_cancel"):
