@@ -38,7 +38,7 @@ var people: Array[Dictionary] = []
 var row_buttons: Dictionary[Button, Dictionary] = {}
 var captions: Dictionary[String, Rect2] = {}
 var target: Dictionary = {}
-var south_path := PackedVector2Array()
+var road_path := PackedVector2Array()
 
 func setup(estate_world: Node2D, guide: Control, blocked: Callable) -> void:
 	world = estate_world
@@ -87,7 +87,8 @@ func _collect_places() -> void:
 	places = [
 		_entry(Category.PLACES, "东关", "通往竹涧", _node_point(world.get_node("EastGate")), true, icons.get(LANDSCAPE.Prop.GATE)),
 		_entry(Category.PLACES, "水源", "封地的引水处", _cell_point(Global.irrigation.source_cell), true),
-		_entry(Category.PLACES, "西廊", "常有商客歇脚", VisitorData.WEST_COURT, true),
+		_entry(Category.PLACES, "西廊", "西关内的歇脚处，陶辛在这里理绸", EstateLayout.WEST_COURT, true,
+			icons.get(LANDSCAPE.SCENE_WEST_COURT)),
 		_entry(Category.PLACES, "西市", "沿西路去粮摊、鱼摊和绸摊", _node_point(world.get_node("WestMarketGate")), true),
 		_entry(Category.PLACES, "南路亭", "往来旅人的歇脚处", LANDSCAPE.SOUTH_PAVILION, true, icons.get(LANDSCAPE.SCENE_LANDMARK)),
 		_entry(Category.PLACES, DrivingPractice.PLACE, "在田边上车 · 穿旗门并停稳", DrivingPractice.START_POINT),
@@ -121,7 +122,8 @@ func _collect_places() -> void:
 		_add_built_place(Sheepfold.PLACE, sheepfold_detail, "SheepfoldPen", true)
 	var shed := world.get_node("SilkShed") as Node2D
 	if shed.visible:
-		places.append(_entry(Category.PLACES, "蚕棚", "养蚕、缫丝与织绸", _node_point(shed.get_node("Yard")), true, icons.get(LANDSCAPE.Prop.SILK_SHED)))
+		places.append(_entry(Category.PLACES, "蚕棚", "从西廊沿土路向南，进屋养蚕、缫丝与织绸",
+			_node_point(shed.get_node("Yard")), true, icons.get(LANDSCAPE.Prop.SILK_SHED)))
 
 func _add_built_place(title: String, detail: String, path: NodePath, caption := false) -> void:
 	var site := world.get_node(path) as Node2D
@@ -337,8 +339,8 @@ func _clear_directions() -> void:
 
 func _refresh_destination() -> void:
 	target = directions.destination()
-	south_path = PackedVector2Array() if directions.tracked_place.is_empty() else \
-		directions.south_route_between(_player_point(), directions.tracked_place_point)
+	road_path = PackedVector2Array() if directions.tracked_place.is_empty() else \
+		directions.road_route_between(_player_point(), directions.tracked_place_point)
 	clear_button.disabled = target.is_empty()
 	if not target.is_empty():
 		status.text = "指路 · " + target.title
@@ -457,9 +459,9 @@ func _draw_chart() -> void:
 			17 + (index * 179) % int(chart.size.y - 34.0))
 		chart.draw_rect(Rect2(point, Vector2(2, 1)), Color("#9c88563c"))
 	_draw_landscape()
-	if south_path.size() > 1:
+	if road_path.size() > 1:
 		var route := PackedVector2Array()
-		for point in south_path:
+		for point in road_path:
 			route.append(_map_point(point))
 		chart.draw_polyline(route, INK, 4.0, true)
 		chart.draw_polyline(route, GOLD, 2.0, true)

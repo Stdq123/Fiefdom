@@ -11,7 +11,7 @@ const HARVEST_TEXT_OFFSET := -4.0
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const DUTY_STATIONS := {
 	RetainerData.Duty.FIELD: {"anchor": Vector2(136, 154), "place": "田边"},
-	RetainerData.Duty.REEL: {"anchor": Vector2(-30, 137), "place": "蚕桑棚"},
+	RetainerData.Duty.REEL: {"anchor": EstateLayout.SILK_SHED_YARD + Vector2(-12, 5), "place": "蚕桑棚"},
 	RetainerData.Duty.TEACH: {"anchor": Vector2(-20, 49), "place": "堂前"},
 	RetainerData.Duty.GUARD: {"anchor": Vector2(184, 161), "place": "东路"},
 	RetainerData.Duty.HARVEST: {"anchor": Vector2(147, 113), "place": "田边"},
@@ -930,8 +930,9 @@ func _place_scheduled_visitor(walk_in: bool) -> void:
 
 func _send_visitor_to_market(visitor: Visitor) -> void:
 	var gate: Vector2 = $WestMarketGate.position
-	var path := PackedVector2Array([Vector2(-92, 61)])
-	path.append_array(_follow_lane(LANDSCAPE.ESTATE_TRACKS[0], Vector2(-90, 28), gate))
+	var path := _follow_lane(EstateLayout.WEST_COURT_PATH, visitor.position, EstateLayout.WEST_COURT_TURN)
+	path.append_array(_follow_lane(EstateLayout.WEST_LANE, EstateLayout.WEST_COURT_TURN, EstateLayout.WEST_FORK).slice(1))
+	path.append_array(_follow_lane(LANDSCAPE.ESTATE_TRACKS[0], EstateLayout.WEST_FORK, gate).slice(1))
 	visitor.go_to_activity(VisitorData.VisitActivity.TO_SILK_MARKET, path, gate + Vector2.LEFT,
 		true, VisitorData.seconds_since(VisitorData.SILK_MARKET_DEPART))
 	if not visitor.walking_to_stop:
@@ -998,8 +999,6 @@ func _path_to_pavilion(visitor: Visitor) -> PackedVector2Array:
 	var path := PackedVector2Array()
 	if visitor.data.silk_trip() == VisitorData.SilkTrip.PAVILION:
 		path = _follow_lane(LANDSCAPE.ESTATE_TRACKS[0], start, LANDSCAPE.ESTATE_SOUTH_LANE[0])
-		# The east verge clears the workshop's rear wall.
-		path.append_array(PackedVector2Array([Vector2(19, 72), Vector2(19, 129), Vector2(17, 142)]))
 	elif visitor.data.name == VisitorData.EAST_WATCHER:
 		path = _follow_lane(LANDSCAPE.ESTATE_EAST_LANE, start, LANDSCAPE.EAST_LANE_JUNCTION)
 	elif visitor.activity == VisitorData.VisitActivity.ROAD_REST and start.x < LANDSCAPE.ROAD_REST_TRACK[0].x:

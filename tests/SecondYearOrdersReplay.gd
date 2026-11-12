@@ -321,7 +321,7 @@ func _follow_summer_shipment() -> void:
 	if not await _cross(&"ui_right", state.ESTATE_SCENE):
 		return
 	_estate()
-	await Campaign.walk_south_to(tree, world, EstateLayout.FREIGHT_APPROACH)
+	await Campaign.walk_estate_road_to(tree, world, EstateLayout.FREIGHT_APPROACH)
 	var cart := world.get_node("Freight") as SeasonFreight
 	_expect(cart.arrived and cart.shown_order == "summer_willow_catch" and cart.cargo.get_child_count() == 2,
 		"The mixed load reaches the pavilion on the ordinary cart route after reload.")

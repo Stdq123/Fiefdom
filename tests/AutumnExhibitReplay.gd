@@ -161,7 +161,7 @@ func _calendar_preview() -> void:
 
 func _walk_to_exhibit() -> void:
 	var approach := world.get_node("AutumnExhibit/Approach") as Marker2D
-	await Campaign.walk_south_to(tree, world, approach.global_position)
+	await Campaign.walk_estate_road_to(tree, world, approach.global_position)
 
 func _verify_south_route() -> void:
 	var stand := world.get_node("AutumnExhibit") as Node2D
@@ -169,12 +169,12 @@ func _verify_south_route() -> void:
 	var landscape: Node2D = world.get_node("Landscape")
 	await _key(KEY_M)
 	var map: Control = ui.estate_map
-	_expect(map.modal.visible and map.south_path.has(Vector2(29, 344)) and map.south_path.has(Vector2(257, 394))
+	_expect(map.modal.visible and map.road_path.has(Vector2(29, 344)) and map.road_path.has(Vector2(257, 394))
 		and map.target.point == approach.position + stand.position and map.captions.has("秋社展台"),
 		"The almanac route runs through the south fork and past the hearth to the exhibition ground.")
 	await _snapshot("01a-south-road-map")
 	await _key(KEY_ESCAPE)
-	await Campaign.walk_south_to(tree, world, Vector2(29, 344))
+	await Campaign.walk_estate_road_to(tree, world, Vector2(29, 344))
 	await _snapshot("01b-south-fork")
 	var travelled := 0.0
 	for point: Vector2 in [Vector2(76, 348), Vector2(131, 365), Vector2(178, 380), Vector2(215, 379),

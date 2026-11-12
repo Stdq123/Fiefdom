@@ -78,7 +78,7 @@ func _guide_pen() -> void:
 
 func _walk_to_pen() -> void:
 	var gate: Vector2 = world.get_node("SheepfoldPen").global_position
-	await Campaign.walk_south_to(tree, world, gate)
+	await Campaign.walk_estate_road_to(tree, world, gate)
 
 func _open_pen() -> Control:
 	await _key(KEY_E)

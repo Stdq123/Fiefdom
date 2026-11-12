@@ -103,6 +103,9 @@ func _run() -> void:
 			replay.legacy = arguments[0] == "silk-market-legacy"
 			replay.capture_path = capture_directory
 			await replay.run(tree)
+		"silk-interior":
+			OS.set_environment("FIEFDOM_SILK_CAPTURES", capture_directory)
+			await load("res://tests/SilkInteriorReplay.gd").new().run(tree)
 		"neighbor-handoff", "neighbor-handoff-legacy":
 			var replay = load("res://tests/NeighborHandoffReplay.gd").new()
 			replay.legacy = arguments[0] == "neighbor-handoff-legacy"

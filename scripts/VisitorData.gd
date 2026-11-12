@@ -20,7 +20,6 @@ const SILK_MARKET_LEAVE := (15.0 - Global.DAY_START_HOUR) / (Global.DAY_END_HOUR
 const SILK_MARKET_RETURN := (17.0 - Global.DAY_START_HOUR) / (Global.DAY_END_HOUR - Global.DAY_START_HOUR)
 const NEIGHBORS := [FIELD_KEEPER, ROAD_KEEPER, WATER_GUIDE, SILK_MERCHANT, RAVINE_GUIDE, EAST_WATCHER, MUSIC_HOST]
 const SOUTH_POST := Vector2(50, 214)
-const WEST_COURT := Vector2(-56, 81)
 const BAMBOO_PATH := Vector2(15, 241)
 const EAST_POST := Vector2(226, 144)
 const RAVINE_PERSONA := {"name": RAVINE_GUIDE, "school": School.TAOIST, "place": "南边竹径"}
@@ -146,7 +145,7 @@ static func from_persona(persona: Dictionary) -> VisitorData:
 func meeting_point(water_source: Vector2) -> Vector2:
 	match meeting_place:
 		"水源旁": return water_source + Vector2(-5, 21)
-		"西廊": return WEST_COURT
+		"西廊": return EstateLayout.WEST_COURT
 		"南边竹径": return BAMBOO_PATH
 		"东路岗": return EAST_POST
 	return SOUTH_POST

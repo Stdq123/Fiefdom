@@ -4,6 +4,7 @@ const HALL_DITCH := Vector2i(-2, 0)
 const SHED_DITCH := Vector2i(-2, 5)
 const WEST_TURN := Vector2i(-2, 4)
 const EAST_TURN := Vector2i(2, 5)
+const HALL_TURN := Vector2i(2, 0)
 const NORTH_INLET := Vector2i(-8, -3)
 const NORTH_RICE := Vector2i(-8, -4)
 const PUBLIC := Vector2i(5, 5)
@@ -109,9 +110,9 @@ func _visit_room(facade_name: String, interior_name: String, destination: int, f
 func _use_both_rooms() -> void:
 	await Campaign.walk_to(tree, world.player, Vector2(23, 61))
 	if await _visit_room("HallRest", "HallInterior", state.EstateRoom.HALL, "05-enter-hall"):
-		await Campaign.walk_to(tree, world.player, Vector2(45, 135))
+		await Campaign.walk_estate_road_to(tree, world, world.get_node("SilkShed/Yard").global_position)
 		if await _visit_room("SilkShed", "SilkInterior", state.EstateRoom.SILK_SHED, "06-enter-shed"):
-			await Campaign.walk_to(tree, world.player, Vector2(45, 135))
+			await Campaign.walk_estate_road_to(tree, world, Vector2(45, 135))
 
 func _grow_and_harvest() -> void:
 	await _look_at_doors()
@@ -135,28 +136,34 @@ func _new_excavation() -> void:
 	await _button(ui.channel_button)
 	var overlay: Node2D = world.irrigation_overlay
 	var money: int = state.money
-	for cell in [HALL_DITCH, SHED_DITCH]:
-		await _pointer(_point(cell))
-		_expect("屋基" in ui.hud.canal_preview.text and overlay.blocked_cell == cell,
-			"The single-ditch preview identifies the foundation.")
-		await _capture("01-hall-foundation" if cell == HALL_DITCH else "02-shed-foundation")
-		await _click(_point(cell))
-		_expect(state.money == money and not state.irrigation.channels.has(cell) and _doors_visible(),
-			"Reject a ditch on the building without charging or removing access.")
+	await _pointer(_point(HALL_DITCH))
+	_expect("屋基" in ui.hud.canal_preview.text and overlay.blocked_cell == HALL_DITCH,
+		"The single-ditch preview identifies the hall foundation.")
+	await _capture("01-hall-foundation")
+	await _click(_point(HALL_DITCH))
+	_expect(state.money == money and not state.irrigation.channels.has(HALL_DITCH) and _doors_visible(),
+		"Reject a ditch on the hall without charging or removing access.")
+	await _pointer(_point(SHED_DITCH))
+	_expect(overlay.preview_site == state.ChannelSite.AVAILABLE,
+		"The former workshop site is open to irrigation.")
+	await _capture("02-former-shed-site")
 	await _click(_point(EAST_TURN))
 	await _survey_from(EAST_TURN)
+	await _click(_point(HALL_TURN))
+	await _survey_from(HALL_TURN)
+	var charges: int = state.irrigation.channels.size()
 	await _pointer(_point(NORTH_INLET))
-	_expect("屋基" in ui.hud.canal_preview.text, "The first survey bend crosses the shed foundation.")
+	_expect(charges == 6 and "屋基" in ui.hud.canal_preview.text, "The first survey bend crosses the hall foundation.")
 	await _click(_point(NORTH_INLET))
-	_expect(overlay.survey_start == EAST_TURN and state.money == money - state.channel_cost()
-		and state.irrigation.channels.size() == 1, "An obstructed line keeps its stake and pays for no extra cells.")
+	_expect(overlay.survey_start == HALL_TURN and state.money == money - charges * state.channel_cost()
+		and state.irrigation.channels.size() == charges, "An obstructed line keeps its stake and pays for no extra cells.")
 	await _capture("03-survey-blocked")
 	await _key(KEY_R)
 	await _pointer(_point(NORTH_INLET))
 	_expect(overlay.preview_site == state.ChannelSite.AVAILABLE, "Turning the line clears the foundation.")
 	await _click(_point(NORTH_INLET))
 	await _key(KEY_ESCAPE)
-	_expect(_doors_visible() and state.irrigation.supplies(NORTH_RICE) and overlay.footbridges.size() == 1,
+	_expect(_doors_visible() and state.irrigation.supplies(NORTH_RICE) and not overlay.footbridges.is_empty(),
 		"The open bend waters the rice and leaves a road footbridge and both entrances.")
 	await _capture("04-road-and-open-doors")
 	print("CANAL_DOOR_BEND wet_rice=", state.irrigation.supplies(NORTH_RICE), " crossings=", overlay.footbridges.size())

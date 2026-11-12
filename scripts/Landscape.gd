@@ -17,7 +17,7 @@ const ESTATE_TERRAIN := preload("res://scripts/EstateTerrain.gd")
 const SNOW_FOOTPRINTS := preload("res://scripts/SnowFootprints.gd")
 const ROAD_PAVILION := preload("res://assets/world/road-pavilion.svg")
 const SILK_SAMPLE := preload("res://assets/world/west-court-sample.svg")
-const SILK_SAMPLE_BOUNDS := Rect2(VisitorData.WEST_COURT + Vector2(-40, -19), Vector2(28, 24))
+const SILK_SAMPLE_BOUNDS := Rect2(EstateLayout.WEST_COURT + Vector2(-37, -4), Vector2(28, 24))
 const LOOKOUT := preload("res://assets/world/stone-lookout.svg")
 const RAIN_VEIL := preload("res://scripts/RainVeil.gd")
 const TERRAIN_AUDIO := preload("res://scripts/TerrainAudio.gd")
@@ -88,6 +88,7 @@ const PAVILION_REST_FOOT := SOUTH_PAVILION + Vector2(5, 5)
 const PAVILION_WATER := PAVILION_REST_FOOT + Vector2(10, -4)
 const SILK_SHED_FOOT := EstateLayout.SILK_SHED_FOOT
 const SCENE_LANDMARK := -1
+const SCENE_WEST_COURT := -2
 # Meadow, shade, sunny patches, and road for spring through winter.
 const SEASON_PALETTES := [
 	[Color("#4c6549"), Color("#3b563f"), Color("#57704c"), Color("#a08c65")],
@@ -154,6 +155,15 @@ const ESTATE_PROPS := [
 	Vector3i(-305, -198, Prop.RAVINE_ROCK), Vector3i(-169, -196, Prop.RAVINE_ROCK),
 	Vector3i(-48, -201, Prop.RAVINE_ROCK), Vector3i(123, -196, Prop.RAVINE_ROCK),
 	Vector3i(300, -200, Prop.RAVINE_ROCK), Vector3i(433, -199, Prop.RAVINE_ROCK),
+	# The woods continue past the western boundary, with an opening at the market road.
+	Vector3i(-469, -117, Prop.PINE), Vector3i(-413, -115, Prop.OAK), Vector3i(-355, -91, Prop.TALL_BAMBOO),
+	Vector3i(-453, 27, Prop.OAK), Vector3i(-404, 43, Prop.GROVE_TREE), Vector3i(-358, 40, Prop.PINE),
+	Vector3i(-469, 97, Prop.GROVE_CLUSTER), Vector3i(-425, 109, Prop.TALL_BAMBOO), Vector3i(-365, 89, Prop.OAK),
+	Vector3i(-438, 169, Prop.PINE), Vector3i(-394, 163, Prop.OAK), Vector3i(-351, 152, Prop.GROVE_TREE),
+	Vector3i(-474, 228, Prop.OAK), Vector3i(-411, 233, Prop.GROVE_TREE), Vector3i(-365, 221, Prop.TALL_BAMBOO),
+	Vector3i(-448, 285, Prop.GROVE_CLUSTER), Vector3i(-393, 290, Prop.PINE), Vector3i(-350, 267, Prop.OAK),
+	Vector3i(-467, 354, Prop.PINE), Vector3i(-415, 340, Prop.OAK), Vector3i(-361, 329, Prop.GROVE_TREE),
+	Vector3i(-442, 417, Prop.OAK), Vector3i(-384, 413, Prop.TALL_BAMBOO), Vector3i(-348, 392, Prop.PINE),
 	Vector3i(-278, -166, Prop.RAVINE_ROCK), Vector3i(-245, -143, Prop.TALL_BAMBOO),
 	Vector3i(-194, -142, Prop.OAK), Vector3i(-176, -166, Prop.FERN),
 	Vector3i(-124, -117, Prop.PINE), Vector3i(-102, -114, Prop.FERN),
@@ -170,7 +180,11 @@ const ESTATE_PROPS := [
 	Vector3i(52, -17, Prop.BLOSSOM_TREE), Vector3i(85, -20, Prop.PINE), Vector3i(115, -42, Prop.GROVE_TREE),
 	Vector3i(126, -25, Prop.SHRUB), Vector3i(173, -23, Prop.ROCK), Vector3i(204, -35, Prop.PINE),
 	Vector3i(233, -21, Prop.OAK), Vector3i(267, -41, Prop.BAMBOO), Vector3i(306, -27, Prop.MOSS_STONE),
-	Vector3i(-268, 91, Prop.PINE), Vector3i(-245, 107, Prop.TALL_BAMBOO), Vector3i(-211, 115, Prop.SHRUB),
+	Vector3i(-239, 10, Prop.SIGNPOST),
+	Vector3i(-320, 94, Prop.FENCE), Vector3i(-290, 99, Prop.OPEN_SACK),
+	Vector3i(-311, 116, Prop.TALL_BAMBOO), Vector3i(-284, 124, Prop.PINE), Vector3i(-231, 101, Prop.TALL_BAMBOO),
+	Vector3i(-211, 115, Prop.SHRUB), Vector3i(-317, 188, Prop.LIDDED_JAR), Vector3i(-311, 195, Prop.JAR),
+	Vector3i(-319, 227, Prop.SHRUB), Vector3i(-283, 236, Prop.OAK), Vector3i(-244, 207, Prop.FLOWERS),
 	Vector3i(-204, 148, Prop.OAK), Vector3i(-221, 153, Prop.FERN), Vector3i(-166, 150, Prop.RAVINE_ROCK),
 	Vector3i(-146, 160, Prop.FERN), Vector3i(-184, 221, Prop.TALL_BAMBOO), Vector3i(-148, 245, Prop.PINE),
 	Vector3i(-118, 253, Prop.SHRUB), Vector3i(-96, 254, Prop.FERN),
@@ -359,8 +373,12 @@ func _refresh_estate_tracks() -> void:
 	estate_tracks.assign(ESTATE_TRACKS)
 	estate_track_widths.assign(ESTATE_TRACK_WIDTHS)
 	for approach in field_approaches.values():
+		# An old field can open directly onto an adjacent road.
+		if approach[0].distance_to(approach[-1]) < EstateLayout.FIELD_ENTRANCE_WIDTH * 0.5:
+			continue
 		estate_tracks.append(approach)
 		estate_track_widths.append(EstateLayout.FIELD_ENTRANCE_WIDTH)
+	var field_track_count := estate_tracks.size() - ESTATE_TRACKS.size()
 	if Global.ravine_journal.garden_day > 0:
 		estate_tracks.append(GARDEN_TRACK)
 		estate_track_widths.append(11.0)
@@ -370,7 +388,7 @@ func _refresh_estate_tracks() -> void:
 	if Global.field_rotation.signed_day > 0:
 		estate_tracks.append(ROTATION_BOOK_TRACK)
 		estate_track_widths.append(11.0)
-	_build_track_shapes(estate_tracks, estate_track_widths, field_approaches.size())
+	_build_track_shapes(estate_tracks, estate_track_widths, field_track_count)
 	queue_redraw()
 
 func _prepare_map() -> void:
@@ -391,6 +409,8 @@ func _prepare_map() -> void:
 	else:
 		var pavilion_texture := _atlas_texture(ESTATE_BUILDINGS, PAVILION_REGION)
 		scenery[_place_sprite(props_layer, SOUTH_PAVILION, _building_offset(PAVILION_REGION.size), pavilion_texture)] = SCENE_LANDMARK
+		var shelter := _atlas_texture(ROAD_PAVILION, Rect2(0, 0, 48, 40))
+		scenery[_place_sprite(props_layer, EstateLayout.WEST_COURT_SHELTER, Vector2(-24, -38), shelter)] = SCENE_WEST_COURT
 		var workshop := _place_sprite(props_layer, SILK_SHED_FOOT,
 			_prop_bounds(Vector2.ZERO, Prop.SILK_SHED).position, _prop_texture(Prop.SILK_SHED))
 		scenery[workshop] = Prop.SILK_SHED
@@ -417,6 +437,7 @@ func _place_lanterns(layer: Node2D) -> void:
 		day_lighting.place_lamp(layer, EstateLayout.FREIGHT_STOP + Vector2(37, -19), 0.80)
 		day_lighting.place_lamp(layer, Vector2(415, 31))
 		day_lighting.place_lamp(layer, Vector2(-286, -4))
+		day_lighting.place_lamp(layer, EstateLayout.WEST_COURT + Vector2(-31, -9), 0.78)
 	day_lighting.refresh()
 
 func _place_sprite(layer: Node, foot: Vector2, offset: Vector2, texture: Texture2D) -> Sprite2D:
@@ -586,6 +607,8 @@ func _add_landmark_labels() -> void:
 	else:
 		_label_at(Vector2(-305, -104), "← 西市")
 		_label_at(Vector2(-136, 37), "← 西市")
+		_label_at(Vector2(-239, -21), "西廊 ↓")
+		_label_at(EstateLayout.WEST_COURT_SHELTER + Vector2(0, -48), "西廊")
 		_label_at(Vector2(120, 6), "东关 →")
 		_label_at(Vector2(287, -22), "东关 · 竹涧 →")
 		_label_at(Vector2(400, -78), "东关")
@@ -940,7 +963,7 @@ func _install_boundaries() -> void:
 
 	var camera := player.get_node("Camera2D") as Camera2D
 	var view := bounds.grow(125)
-	camera.limit_left = floori(view.position.x)
+	camera.limit_left = floori(view.position.x if wilderness else view.position.x - 60.0)
 	camera.limit_right = ceili(view.end.x)
 	camera.limit_top = floori(view.position.y)
 	camera.limit_bottom = ceili(view.end.y if wilderness else bounds.end.y + 62.0)

@@ -180,7 +180,7 @@ func _freight_to_pavilion() -> void:
 			"Resuming mid-trip keeps the cart at the same place on the road.")
 		await _set_watch(SeasonOrders.EVENING_DISPATCH + SeasonOrders.TRAVEL_FRACTION + 0.01)
 		var world := estate.get_node("World") as Node2D
-		await Campaign.walk_south_to(tree, world, EstateLayout.FREIGHT_APPROACH)
+		await Campaign.walk_estate_road_to(tree, world, EstateLayout.FREIGHT_APPROACH)
 		_expect(cart.arrived and cart.position.is_equal_approx(EstateLayout.FREIGHT_STOP)
 			and world.player.interaction_target == cart,
 			"The west-road shipment stops in the unloading yard, with room to approach the driver.")
@@ -199,7 +199,7 @@ func _open_hearth(frame := "") -> Control:
 	var estate := tree.current_scene
 	var world := estate.get_node("World") as Node2D
 	var approach := world.get_node("TravelHearth/Approach") as Marker2D
-	await Campaign.walk_south_to(tree, world, approach.global_position)
+	await Campaign.walk_estate_road_to(tree, world, approach.global_position)
 	_expect(estate.get_node("UI").directions.tracked_place != "南路灶台", "The stove's direction label clears at the front step.")
 	if not frame.is_empty():
 		await _snapshot(frame)

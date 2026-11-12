@@ -10,8 +10,13 @@ const EDGE_NORMALS := [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT]
 const HALL_FOOT := Vector2i(-12, 26)
 const HALL_BASE := Rect2(-51, -21, 102, 23)
 const HALL_LANDING := Rect2(Vector2(HALL_FOOT) + Vector2(-22, 1), Vector2(44, 15))
-const SILK_SHED_FOOT := Vector2(-29, 120)
+const SILK_SHED_FOOT := Vector2(-291, 169)
+const SILK_SHED_YARD := SILK_SHED_FOOT + Vector2(8, 15)
 const SILK_SHED_BASE := Rect2(-31, -14, 62, 14)
+const WEST_FORK := Vector2(-273, -21)
+const WEST_COURT_TURN := Vector2(-261, 62)
+const WEST_COURT := Vector2(-282, 68)
+const WEST_COURT_SHELTER := WEST_COURT + Vector2(-22, -14)
 const SOUTH_PAVILION := Vector2(77, 247)
 const PAVILION_SIZE := Vector2(72, 60)
 const PAVILION_BOUNDS := Rect2(SOUTH_PAVILION + Vector2(-36, -56), PAVILION_SIZE)
@@ -50,18 +55,24 @@ const EAST_LANE := [
 	EAST_LANE_JUNCTION, Vector2(62, 162), FIELD_TURN, Vector2(150, 164), Vector2(194, 160),
 	Vector2(243, 153), Vector2(293, 150), Vector2(336, 151),
 ]
+const WEST_LANE := [
+	WEST_FORK, Vector2(-268, 7), Vector2(-259, 34), WEST_COURT_TURN,
+	Vector2(-265, 97), Vector2(-257, 124), Vector2(-251, 150), Vector2(-251, 176),
+	Vector2(-258, 195), SILK_SHED_YARD + Vector2(0, 11), SILK_SHED_YARD,
+]
+const WEST_COURT_PATH := [WEST_COURT_TURN, Vector2(-269, 68), WEST_COURT, Vector2(-300, 71)]
+const WEST_ROADS := [WEST_LANE, WEST_COURT_PATH]
 const ROADS := [
-	[Vector2(-504, -33), Vector2(-397, -31), Vector2(-343, -28), Vector2(-308, -24), Vector2(-273, -21), Vector2(-249, -19),
+	[Vector2(-504, -33), Vector2(-397, -31), Vector2(-343, -28), Vector2(-308, -24), WEST_FORK, Vector2(-249, -19),
 		Vector2(-205, 0), Vector2(-140, 16), Vector2(-90, 28), Vector2(-40, 41),
 		Vector2(4, 43), Vector2(39, 38), Vector2(91, 32), Vector2(148, 27), Vector2(213, 20),
 		Vector2(283, 12), Vector2(345, 7), Vector2(400, 8), Vector2(460, 0), Vector2(516, 0),
 		Vector2(579, -3), Vector2(676, 6)],
 	SOUTH_LANE,
 	EAST_LANE,
-	[Vector2(-45, 127), Vector2(-18, 128), Vector2(8, 128)],
 	[Vector2(HALL_FOOT) + Vector2(0, 17), Vector2(HALL_FOOT) + Vector2(0, 9)],
-]
-const ROAD_WIDTHS := [32.0, 22.0, 18.0, 16.0, 30.0]
+] + WEST_ROADS
+const ROAD_WIDTHS := [32.0, 22.0, 18.0, 30.0, 13.0, 21.0]
 const ROAD_SHOULDER := 2.5
 const PAVILION_APPROACH := [
 	PAVILION_JUNCTION, Vector2(48, 286), Vector2(68, 282), Vector2(77, 267), SOUTH_PAVILION + Vector2(0, 6),

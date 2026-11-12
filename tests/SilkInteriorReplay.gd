@@ -87,9 +87,14 @@ func _step_through(action: StringName, room_kind: int) -> bool:
 		"The same estate stays alive across the doorway.")
 
 func _enter_shed(take_photo := false) -> bool:
-	await _walk(Vector2(45, 135))
-	await _walk(shed.get_node("Yard").global_position)
+	var yard: Marker2D = shed.get_node("Yard")
+	var start := Engine.get_physics_frames()
+	await Campaign.walk_estate_road_to(tree, world, yard.global_position)
 	if take_photo:
+		_expect(player.global_position.distance_to(yard.global_position) < 4.0,
+			"Follow the western lane to the workshop threshold on foot.")
+		print("SILK_WEST_WALK seconds=", float(Engine.get_physics_frames() - start) / Engine.physics_ticks_per_second,
+			" yard=", yard.position + shed.position)
 		await _snapshot("01-workshop-door")
 	if not await _step_through(&"ui_up", state.EstateRoom.SILK_SHED):
 		return false
@@ -153,6 +158,14 @@ func _build_shed() -> bool:
 		return false
 	await _press(silk.visit_button)
 	_expect(not panel.visible and ui.directions.tracked_place == "蚕棚", "The silk page points to the real entrance.")
+	await _snapshot("00a-field-after-building")
+	await _key(KEY_M)
+	var chart: Control = ui.estate_map
+	_expect(chart.modal.visible and chart.road_path.has(EstateLayout.WEST_FORK)
+		and chart.road_path.has(EstateLayout.WEST_COURT_TURN) and chart.road_path[-1] == EstateLayout.SILK_SHED_YARD,
+		"The estate chart draws the turn from the main road and leads to the actual yard.")
+	await _snapshot("00-west-lane-map")
+	await _key(KEY_M)
 	if not await _enter_shed(true):
 		return false
 	await _key(KEY_M)
@@ -170,9 +183,7 @@ func _merchant(deliver: bool) -> bool:
 	var actor: Node2D = world.neighbor_actor(VisitorData.SILK_MERCHANT)
 	if not _expect(is_instance_valid(actor), "Tao Xin visits the west court."):
 		return false
-	await _walk(Vector2(-84, 137))
-	await _walk(Vector2(-84, 84))
-	await _walk(actor.global_position + Vector2(0, 17))
+	await Campaign.walk_estate_road_to(tree, world, actor.global_position + Vector2(0, 17))
 	await _key(KEY_E)
 	var dialogue: Control = ui.get_node_or_null("Control/DialoguePanel")
 	if not _expect(dialogue != null and dialogue.name_label.text == "陶辛", "Talk to Tao Xin in person."):
@@ -192,8 +203,7 @@ func _merchant(deliver: bool) -> bool:
 	return _expect(false, "The conversation offers %s." % option)
 
 func _wear_sample_in_hall() -> void:
-	await _walk(Vector2(-84, 41))
-	await _walk(world.get_node("HallRest/Yard").global_position)
+	await Campaign.walk_estate_road_to(tree, world, world.get_node("HallRest/Yard").global_position)
 	if not await _step_through(&"ui_up", state.EstateRoom.HALL):
 		return
 	var hall := world.get_node("HallInterior") as Node2D
@@ -243,9 +253,7 @@ func _begin_batch() -> bool:
 	return await _save_batch_inside() and await _leave(room)
 
 func _night_in_hall() -> bool:
-	await _walk(Vector2(55, 135))
-	await _walk(Vector2(55, 41))
-	await _walk(world.get_node("HallRest/Yard").global_position)
+	await Campaign.walk_estate_road_to(tree, world, world.get_node("HallRest/Yard").global_position)
 	if not await _step_through(&"ui_up", state.EstateRoom.HALL):
 		return false
 	var hall := world.get_node("HallInterior") as Node2D
@@ -342,13 +350,17 @@ func _location_compatibility() -> void:
 		"well_fields": [{"center_pos": "-3,5", "is_unlocked": true, "reclamation_progress": 4}]
 	}))
 	file.close()
-	if not _expect(state.load_game(conflict) == OK, "Load an established field covering the shed's base."):
+	if not _expect(state.load_game(conflict) == OK, "Load an established field at the former workshop site."):
 		return
 	if not await _estate():
 		return
-	_expect(state.estate_room == state.EstateRoom.OUTDOORS and not shed.visible and player.camera.is_current()
-		and shed.get_node("Walls/Back").disabled and state.can_use_workshop(SilkWorkshop.Action.START_BATCH),
-		"The field stays usable and workshop management remains available when the doorway is covered.")
+	_expect(state.estate_room == state.EstateRoom.SILK_SHED and shed.visible and room.room_camera.is_current()
+		and state.well_fields[0].center_pos == Vector2i(-3, 5) and state.well_fields[0].is_unlocked
+		and state.can_use_workshop(SilkWorkshop.Action.START_BATCH),
+		"The old field keeps its cells and the workshop save opens inside the relocated building.")
+	if await _leave(room):
+		_expect(player.position.distance_to(EstateLayout.SILK_SHED_YARD) < 2.0,
+			"The saved room exits into the new yard.")
 
 func run(game_tree: SceneTree) -> void:
 	tree = game_tree

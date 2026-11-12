@@ -21,6 +21,7 @@ param(
     [switch]$FieldPlanning,
     [switch]$FieldRotationPlans,
     [switch]$SilkMarket,
+    [switch]$SilkInterior,
     [switch]$NeighborHandoff,
     [switch]$AmbienceTravel,
     [switch]$EstateTerrain,
@@ -91,7 +92,7 @@ function Install-Replay([string]$Directory) {
     foreach ($file in 'ReleaseReplay.tscn', 'ReleaseReplay.gd', 'CampaignReplay.gd', 'NightRationsReplay.gd', 'RationPriorityReplay.gd', 'RetainerReturnReplay.gd', 'GamepadReplay.gd', 'SixArtsReplay.gd', 'BowAimReplay.gd', 'WinterSupperReplay.gd', 'KeyBindingsReplay.gd', 'SummerRaftReplay.gd', 'TitlePresentationReplay.gd', 'HallInteriorReplay.gd', 'HallDecorReplay.gd', 'TaxCouncilReplay.gd', 'RouteGoalsReplay.gd', 'CouncilPrepReplay.gd', 'EstateDirectionsReplay.gd', 'FieldSeedPlanReplay.gd', 'FieldPlanningReplay.gd', 'FieldRotationPlanReplay.gd', 'WestMarketReplay.gd', 'SilkMarketReplay.gd', 'SilkBatchReplay.gd', 'NeighborHandoffReplay.gd', 'AmbienceTravelReplay.gd', 'BuildingScaleReplay.gd', 'EstateTerrainReplay.gd', 'FieldWorksiteReplay.gd', 'FieldRoutesReplay.gd', 'PavilionEveningReplay.gd', 'FishMarketReplay.gd', 'FishingJourneyReplay.gd', 'MarketWayfindingReplay.gd') {
         Copy-Item -LiteralPath (Join-Path $repo "tests/$file") -Destination $testDirectory
     }
-    Copy-Item -LiteralPath (Join-Path $repo 'tests/CanalDoorReplay.gd'), (Join-Path $repo 'tests/CanalFlowReplay.gd'), (Join-Path $repo 'tests/EstateProgressReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/CanalDoorReplay.gd'), (Join-Path $repo 'tests/CanalFlowReplay.gd'), (Join-Path $repo 'tests/EstateProgressReplay.gd'), (Join-Path $repo 'tests/SilkInteriorReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ResearchRationsReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldStrokeReplay.gd') -Destination $testDirectory
     foreach ($file in 'MarketOrderReplay.gd', 'AutumnExhibitReplay.gd', 'SheepfoldReplay.gd', 'RavineMapReplay.gd', 'CreekTrapReplay.gd', 'FieldNightReplay.gd', 'CouncilSilkReplay.gd') {
@@ -162,6 +163,9 @@ try {
     if ($SilkMarket) {
         Start-VerifiedGame -Directory $release -Profile 'silk-market' -Name 'silk-market' -Replay 'silk-market'
         Start-VerifiedGame -Directory $release -Profile 'silk-batches' -Name 'silk-batches' -Replay 'silk-batches'
+    }
+    if ($SilkInterior) {
+        Start-VerifiedGame -Directory $release -Profile 'silk-interior' -Name 'silk-interior' -Replay 'silk-interior'
     }
     if ($NeighborHandoff) {
         Start-VerifiedGame -Directory $release -Profile 'neighbor-handoff' -Name 'neighbor-handoff' -Replay 'neighbor-handoff'

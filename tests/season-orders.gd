@@ -53,7 +53,7 @@ func _key(code: Key) -> void:
 
 func _open_board() -> Control:
 	var approach := world.get_node("SeasonBoard/Approach") as Marker2D
-	await Campaign.walk_south_to(self, world, approach.global_position)
+	await Campaign.walk_estate_road_to(self, world, approach.global_position)
 	await _key(KEY_E)
 	var panel: Control = ui.panel_manager.management_panel_instance
 	_expect(panel != null and panel.season_order_panel.is_visible_in_tree(), "E at the unloading yard opens the delivery book.")

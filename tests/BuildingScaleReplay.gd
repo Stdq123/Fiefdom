@@ -207,13 +207,17 @@ func _silk_and_gates() -> void:
 			"The shed's painted 22-pixel opening lines up with the wall collision and entrance.")
 	print("SCALE_WORKSHOP shed=", shed)
 	var shed_front := Landscape.SILK_SHED_FOOT + Vector2(12, 31)
-	if not baseline:
-		await _walk(Vector2(43, shed_front.y))
-	await _walk(shed_front)
+	if baseline:
+		await _walk(shed_front)
+	else:
+		await Campaign.walk_estate_road_to(tree, world, shed_front)
 	_expect(world.player.position.distance_to(shed_front) < 4.0,
-		"The workshop facade is reached on foot from the south lane.")
+		"The workshop facade is reached on foot from the west lane.")
 	await _snapshot("04-silk-shed")
-	await _walk(Vector2(360, 4))
+	if baseline:
+		await _walk(Vector2(360, 4))
+	else:
+		await Campaign.walk_estate_road_to(tree, world, world.get_node("EastArrival").global_position)
 	await _snapshot("05-east-gate")
 	await _move(&"ui_right")
 	if not _expect(tree.current_scene.scene_file_path == state.WILDERNESS_SCENE, "Walk through East Gate into the ravine."):

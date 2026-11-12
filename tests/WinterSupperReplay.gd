@@ -111,7 +111,7 @@ func _open_calendar() -> void:
 
 func _walk_to_table() -> void:
 	var approach := world.get_node("WinterSupper/Approach") as Marker2D
-	await Campaign.walk_south_to(tree, world, approach.global_position)
+	await Campaign.walk_estate_road_to(tree, world, approach.global_position)
 
 func _recruit_and_fish() -> bool:
 	var guest: Node2D = world.neighbor_actor(VisitorData.RAVINE_GUIDE)

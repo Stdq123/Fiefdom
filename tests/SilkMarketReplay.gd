@@ -12,7 +12,7 @@ func _estate() -> void:
 	ui = tree.current_scene.get_node("UI")
 
 func _road_to_market() -> bool:
-	await _walk(world.player, [Vector2(-181, 54), Vector2(-181, 0), Vector2(-270, -21)])
+	await Campaign.walk_estate_road_to(tree, world, world.get_node("WestMarketArrival").global_position)
 	return await _cross(&"ui_left", state.WEST_MARKET_SCENE)
 
 func _talk(host: Node, choice: String, capture := "") -> bool:
@@ -73,7 +73,7 @@ func _give_sample() -> bool:
 	var tao: Node2D = world.neighbor_actor(TAO)
 	if not _expect(tao != null, "The first merchant visits the west court."):
 		return false
-	await _walk(world.player, [Vector2(-84, 137), Vector2(-84, 84), tao.global_position + Vector2(0, 18)])
+	await Campaign.walk_estate_road_to(tree, world, tao.global_position + Vector2(0, 18))
 	if not await _talk(tree.current_scene, "交谈"):
 		return false
 	var purse: int = state.money
@@ -97,7 +97,7 @@ func _follow_merchant() -> bool:
 	if not _expect(tao != null and tao.visit_location() == "西廊绸架", "Start the morning in the west court."):
 		return false
 	_expect("午、未时" in ui.hud.visitor_label.text, "The estate announces the afternoon visit.")
-	await _walk(world.player, [Vector2(-180, 50), Vector2(-119, 63)])
+	await Campaign.walk_estate_road_to(tree, world, EstateLayout.WEST_COURT_TURN + Vector2(16, 10))
 	await _time_at(VisitorData.SILK_MARKET_DEPART - 0.002)
 	await tree.create_timer(0.72).timeout
 	_expect(tao.activity == VisitorData.VisitActivity.TO_SILK_MARKET and tao.walking_to_stop, "The merchant walks out at 巳时.")
