@@ -98,6 +98,9 @@ func show_season_orders() -> void:
 func show_market() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(market_panel)
 
+func show_six_arts() -> void:
+	tabs.current_tab = tabs.get_tab_idx_from_control(stats_container.get_parent())
+
 func show_silk() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(silk_panel)
 

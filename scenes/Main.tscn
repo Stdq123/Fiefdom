@@ -45,6 +45,7 @@
 [ext_resource type="PackedScene" path="res://scenes/RouteGoals.tscn" id="42_route_goals"]
 [ext_resource type="PackedScene" path="res://scenes/EstateHandover.tscn" id="43_handover"]
 [ext_resource type="PackedScene" path="res://scenes/TrainingCart.tscn" id="44_cart"]
+[ext_resource type="PackedScene" path="res://scenes/CouncilPreparation.tscn" id="45_council_prep"]
 
 [sub_resource type="RectangleShape2D" id="Shape_east_gate"]
 size = Vector2(8, 20)
@@ -500,6 +501,8 @@ vertical_alignment = 1
 [node name="EstateMap" parent="UI/Control" instance=ExtResource("22_map")]
 
 [node name="RouteGoals" parent="UI/Control" instance=ExtResource("42_route_goals")]
+
+[node name="CouncilPreparation" parent="UI/Control" instance=ExtResource("45_council_prep")]
 
 [node name="EstateHandover" parent="UI/Control" instance=ExtResource("43_handover")]
 

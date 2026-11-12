@@ -56,18 +56,20 @@ func follow_neighbor(speaker: String) -> bool:
 	hud.cancel_directions.show()
 	return true
 
-func follow_field_route(status: int) -> bool:
-	var cell: Variant = world.find_field_task(status)
+func follow_field_route(status: int, public_only := false) -> bool:
+	var cell: Variant = world.find_field_task(status, public_only)
 	if cell == null:
 		return false
 	clear_tracking()
 	Global.field_route_status = status
+	Global.field_route_public_only = public_only
 	_track_field_plot(cell)
 	return true
 
 func _track_field_plot(cell: Vector2i) -> void:
 	tracked_plot = cell
-	hud.cancel_directions.text = FIELD_ROUTES[Global.field_route_status].task + " · 取消指路"
+	var task: String = FIELD_ROUTES[Global.field_route_status].task
+	hud.cancel_directions.text = task + ("公田" if Global.field_route_public_only else "") + " · 取消指路"
 	hud.cancel_directions.show()
 
 func _refresh_field_route() -> void:
@@ -78,7 +80,7 @@ func _refresh_field_route() -> void:
 		return
 	if tracked_plot != null and Global.crop_night_status(tracked_plot) == status:
 		return
-	var next: Variant = world.find_field_task(status)
+	var next: Variant = world.find_field_task(status, Global.field_route_public_only)
 	if next == null:
 		clear_tracking()
 	else:
@@ -158,6 +160,7 @@ func clear_tracking() -> void:
 	tracked_neighbor = ""
 	tracked_plot = null
 	Global.field_route_status = -1
+	Global.field_route_public_only = false
 	tracked_site = -1
 	tracked_place = ""
 	Global.ravine_trip_target = ""

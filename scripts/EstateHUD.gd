@@ -18,6 +18,7 @@ extends Control
 @onready var handover_button: Button = %HandoverButton
 @onready var arrival: Label = %Arrival
 @onready var route_progress: Button = %RouteProgress
+@onready var council_prep_button: Button = %CouncilPrepButton
 @onready var neighbors_button: Button = %NeighborsButton
 @onready var raid_alert: Button = %RaidAlert
 @onready var stamina_label: Label = %StaminaLabel

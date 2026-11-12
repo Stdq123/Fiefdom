@@ -40,7 +40,7 @@ func _check_progress() -> void:
 func invite_if_eligible() -> void:
 	if Global.tax_reform_choice != Global.TaxReformChoice.NONE or Global.tax_council_invited:
 		return
-	if Global.get_current_year() < 3 or Global.current_rank < Global.Rank.DA_FU:
+	if Global.current_day < Global.tax_council_start_day() or Global.current_rank < Global.Rank.DA_FU:
 		return
 	if Global.king_storage > 0 and Global.public_contribution_ratio() >= Global.balance.public_field_ratio_threshold:
 		Global.tax_council_invited = true

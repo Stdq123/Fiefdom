@@ -15,6 +15,7 @@ const NIGHT_RATIONS_PANEL := preload("res://scenes/NightRationsPanel.tscn")
 @onready var directions = $Control/EstateDirections
 @onready var estate_map = $Control/EstateMap
 @onready var route_goals = $Control/RouteGoals
+@onready var council_preparation = $Control/CouncilPreparation
 @onready var handover = $Control/EstateHandover
 @onready var calendar = $Control/SeasonCalendar
 @onready var autumn_exhibit_panel = $Control/AutumnExhibitPanel
@@ -65,6 +66,10 @@ func _ready() -> void:
 	handover.find_keeper_requested.connect(_on_neighbor_directions_requested.bind(VisitorData.FIELD_KEEPER))
 	hud.route_progress.pressed.connect(_open_route_goals)
 	route_goals.action_requested.connect(_on_route_goal_action)
+	council_preparation.world = world
+	hud.council_prep_button.pressed.connect(_open_council_preparation)
+	council_preparation.fields_requested.connect(_guide_public_harvest)
+	council_preparation.six_arts_requested.connect(_show_six_arts)
 	calendar.controls_blocked = _map_controls_blocked
 	hud.calendar_button.pressed.connect(calendar.open_map)
 	calendar.directions_requested.connect(_guide_calendar_event)
@@ -102,6 +107,7 @@ func _process(_delta: float) -> void:
 	hud.farm_status.disabled = hud.map_button.disabled
 	hud.calendar_button.disabled = hud.map_button.disabled
 	hud.route_progress.disabled = hud.map_button.disabled
+	hud.council_prep_button.disabled = hud.map_button.disabled
 	hud.handover_button.disabled = hud.map_button.disabled
 	hud.raid_alert.disabled = blocked
 	var following_canal := Global.field_route_status == Global.NightGrowth.BLOCKED
@@ -127,6 +133,18 @@ func _map_controls_blocked() -> bool:
 func _open_route_goals() -> void:
 	if not _map_controls_blocked():
 		route_goals.open_map()
+
+func _open_council_preparation() -> void:
+	if not _map_controls_blocked():
+		council_preparation.open_map()
+
+func _guide_public_harvest() -> void:
+	if not directions.follow_field_route(Global.NightGrowth.READY, true):
+		estate_map.open_fields()
+
+func _show_six_arts() -> void:
+	panel_manager.show_management_panel()
+	panel_manager.management_panel_instance.show_six_arts()
 
 func _open_handover() -> void:
 	if not _map_controls_blocked():
@@ -182,7 +200,7 @@ func _connect_signals() -> void:
 	GameEvents.rotation_book_interacted.connect(_on_rotation_book_interacted)
 	GameEvents.east_watch_read_requested.connect(dialog_manager.show_east_watch)
 	GameEvents.east_watch_built.connect(update_ui)
-	GameEvents.tax_reform_triggered.connect(_refresh_opening_action)
+	GameEvents.tax_reform_triggered.connect(_on_council_invitation)
 	GameEvents.tax_reform_choice_made.connect(_refresh_opening_action.unbind(1))
 	GameEvents.tax_envoy_interacted.connect(_on_tax_envoy_interacted)
 	GameEvents.channel_survey_learned.connect(hud.refresh_survey_button)
@@ -321,6 +339,11 @@ func _on_tax_envoy_interacted() -> void:
 	world.set_channel_mode(false)
 	directions.arrive_at(Global.TAX_ENVOY)
 	EventManager.open_tax_council(world, $Control)
+
+func _on_council_invitation() -> void:
+	if Global.field_route_public_only:
+		directions.clear_tracking()
+	_refresh_opening_action()
 
 func _opening_neighbor() -> String:
 	if Global.tax_council_waiting():

@@ -69,6 +69,10 @@ func _run() -> void:
 			var replay = load("res://tests/RouteGoalsReplay.gd").new()
 			replay.legacy = arguments[0] == "route-goals-legacy"
 			await replay.run(tree)
+		"council-prep", "council-prep-legacy":
+			var replay = load("res://tests/CouncilPrepReplay.gd").new()
+			replay.legacy = arguments[0] == "council-prep-legacy"
+			await replay.run(tree)
 		"estate-directions", "estate-directions-legacy":
 			var replay = load("res://tests/EstateDirectionsReplay.gd").new()
 			replay.legacy = arguments[0] == "estate-directions-legacy"

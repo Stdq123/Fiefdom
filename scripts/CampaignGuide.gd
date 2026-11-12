@@ -6,6 +6,7 @@ const ESTATE_WORLD := preload("res://scripts/World.gd")
 
 @onready var heading: Label = %GuideHeading
 @onready var route_progress: Button = %RouteProgress
+@onready var council_prep: Button = %CouncilPrepButton
 
 var world: ESTATE_WORLD
 var opening_cue := OpeningCue.NONE
@@ -51,6 +52,10 @@ func refresh() -> void:
 	var goals := Global.route_objectives()
 	route_progress.visible = (not goals.is_empty() and Global.outcome == Global.Outcome.RUNNING
 		and Global.ending_record.is_empty())
+	council_prep.visible = (Global.outcome == Global.Outcome.RUNNING
+		and Global.tax_reform_choice == Global.TaxReformChoice.NONE and not Global.tax_council_waiting()
+		and (Global.current_rank >= Global.Rank.SHANG_SHI
+			or (Global.well_fields.size() > 1 and Global.well_fields[1].is_unlocked)))
 	var record_stand := world.get_node("Scenery/EndingRecord")
 	if record_stand.visible:
 		var route := "守礼安邦" if Global.ending_record["outcome"] == Global.Outcome.TRADITIONAL else "税亩富民"
@@ -72,9 +77,13 @@ func refresh() -> void:
 			"%d 天后缴 %d 铜钱研究费。经费不足时须抉择。" % [
 				Global.research_days_until_payment(), Global.balance.research_monthly_cost])
 	elif Global.current_rank >= Global.Rank.DA_FU:
-		_describe("筹备初税亩 · 第 %d/3 年" % mini(3, Global.get_current_year()),
-			"公田贡献 %.0f%%/%.0f%%。先耕各井田的公田，再扩大私田收成。" % [
-				Global.public_contribution_ratio() * 100.0, Global.balance.public_field_ratio_threshold * 100.0])
+		var start := Global.tax_council_start_day()
+		var date := "第 %d 天起议税" % start if Global.current_day < start else "已到议税时日"
+		var gap := Global.tax_council_public_gap()
+		var tribute := "纳贡已达标" if gap == 0 else "还差 %d 份纳贡" % gap
+		if gap < 0:
+			tribute = "查看纳贡条件"
+		_describe("筹备初税亩", "%s\n公田 %.2f%% · %s" % [date, Global.public_contribution_ratio() * 100.0, tribute])
 	elif Global.well_fields.size() >= 2:
 		var field: Dictionary = Global.well_fields[1]
 		if not field["is_unlocked"]:
@@ -82,7 +91,8 @@ func refresh() -> void:
 			_describe("开垦第二块井田", "已完成 %d/%d 夜 · %s\n睡觉可推进。" % [
 				progress, Global.RECLAMATION_NIGHTS, Global.reclamation_stage(progress)])
 		else:
-			_describe("新井田已完工", Global.promotion_summary() + "。过夜核定晋升，别忘了继续纳贡。")
+			var next := "条件已齐，过夜核定。" if Global.eligible_for_promotion() else "达标后过夜核定。"
+			_describe("新井田已完工", Global.promotion_summary() + "\n" + next)
 	elif not Global.first_tribute_delivered() and Global.current_rank == Global.Rank.XIA_SHI:
 		_describe("第一次纳贡", _opening_field_step(Global.well_fields[0]["center_pos"], true))
 	elif (Global.current_rank == Global.Rank.XIA_SHI and Global.private_harvest_total == 0

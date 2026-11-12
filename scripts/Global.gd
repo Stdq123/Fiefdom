@@ -13,6 +13,7 @@ const RAVINE_TRIP_PLACES := ["野果坳", "望溪台", "柳湾", "砾滩", Summe
 const MARKET_ORDERS := "收货牌"
 const MARKET_RETURN := "回封地"
 const TAX_ENVOY := "召简"
+const TAX_COUNCIL_YEAR := 3
 const RECLAMATION_BOUNDS := Rect2i(-16, -10, 36, 23)
 const FIRST_FIELD_CENTER := Vector2i(5, 5)
 const RECLAMATION_NIGHTS := 4
@@ -118,6 +119,7 @@ var winter_suppers: Dictionary[int, Dictionary] = {}
 var active_crops: Dictionary = {}
 var tilled_cells: Dictionary = {}
 var field_route_status := -1
+var field_route_public_only := false
 var field_seed_plans: Dictionary[Vector2i, String] = {}
 var fertile_cells: Dictionary[Vector2i, bool] = {}
 var irrigation: Irrigation
@@ -276,6 +278,7 @@ func _reset_campaign() -> void:
 	active_crops.clear()
 	tilled_cells.clear()
 	field_route_status = -1
+	field_route_public_only = false
 	field_seed_plans.clear()
 	fertile_cells.clear()
 	irrigation = Irrigation.new()
@@ -537,6 +540,7 @@ func begin_next_day() -> void:
 	current_day += 1
 	day_progress = 0.0
 	field_route_status = -1
+	field_route_public_only = false
 	away_field_report.clear()
 	_away_work_elapsed.clear()
 	if sheepfold.owned():
@@ -996,8 +1000,25 @@ func study_bamboo_slips() -> bool:
 func get_current_year() -> int:
 	return ceili(float(current_day) / maxi(1, balance.days_per_year))
 
-func public_contribution_ratio() -> float:
-	return float(king_storage) / maxi(1, king_storage + private_harvest_total)
+func public_contribution_ratio(added_public := 0, added_private := 0) -> float:
+	var tribute := king_storage + added_public
+	return float(tribute) / maxi(1, tribute + private_harvest_total + added_private)
+
+func tax_council_start_day() -> int:
+	return (TAX_COUNCIL_YEAR - 1) * maxi(1, balance.days_per_year) + 1
+
+func tax_council_public_gap(added_public := 0, added_private := 0) -> int:
+	var tribute := king_storage + added_public
+	var private_yield := private_harvest_total + added_private
+	var threshold := balance.public_field_ratio_threshold
+	if threshold > 1.0 or (threshold == 1.0 and private_yield > 0):
+		return -1
+	if private_yield == 0 or threshold <= 0.0:
+		return maxi(0, 1 - tribute)
+	# Test the nearest whole amount with the same ratio used at the invitation.
+	var estimate := maxi(1, floori(private_yield * threshold / (1.0 - threshold)))
+	var minimum := estimate + int(float(estimate) / (estimate + private_yield) < threshold)
+	return maxi(0, minimum - tribute)
 
 func tax_council_waiting() -> bool:
 	if outcome != Outcome.RUNNING:
@@ -1897,7 +1918,7 @@ func eligible_for_promotion() -> bool:
 		Rank.XIA_SHI:
 			return zhou_li_score in ["上上", "上中", "中上", "中"]
 		Rank.ZHONG_SHI:
-			return _has_any_six_art_level(balance.upper_rank_art_level)
+			return highest_six_art_level() >= balance.upper_rank_art_level
 		Rank.DA_FU:
 			return _all_six_arts_level(balance.minister_rank_art_level)
 	return true
@@ -1930,12 +1951,11 @@ func promotion_summary() -> String:
 	return "%s → %s · 声望 %d/%d%s" % [
 		rank_names[current_rank], rank_names[current_rank + 1], reputation, promotion_reputation(), detail]
 
-# Helper: Check if any six art stat reaches level
-func _has_any_six_art_level(required_level: int) -> bool:
+func highest_six_art_level() -> int:
+	var highest := 0
 	for art in PlayerStats.Art.values():
-		if player_stats.get_level(art) >= required_level:
-			return true
-	return false
+		highest = maxi(highest, player_stats.get_level(art))
+	return highest
 
 # Helper: Check if all six arts reach level
 func _all_six_arts_level(required_level: int) -> bool:
@@ -2195,6 +2215,7 @@ func _save_snapshot(origin: String) -> Error:
 		"location": "west_market" if get_tree().current_scene and get_tree().current_scene.scene_file_path == WEST_MARKET_SCENE else "estate",
 		"selected_seed": selected_seed_id,
 		"field_route_status": field_route_status,
+		"field_route_public_only": field_route_public_only,
 		"current_stamina": current_stamina,
 		"health": health,
 		"outcome": outcome,
@@ -2687,6 +2708,7 @@ func load_game(path := "") -> Error:
 	market_trip_target = saved_market_trip if saved_market_trip is String and saved_market_trip in market_places else ""
 	var saved_route := _read_save_int(data.get("field_route_status"), -1)
 	field_route_status = saved_route if saved_route in FIELD_ROUTE_STATES else -1
+	field_route_public_only = field_route_status == NightGrowth.READY and data.get("field_route_public_only", false) == true
 	ravine_journal = _restore_ravine_journal(data.get("ravine_journal"), saved_day)
 	money = maxi(0, _read_save_int(data.get("money"), 0))
 	_restore_crop_stock(data.get("crop_stock"), maxi(0, _read_save_int(data.get("player_inventory"), 0)))
