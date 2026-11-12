@@ -285,7 +285,16 @@ func _check_journal() -> void:
 	if not await _walk_route():
 		return
 	var travel_seconds: float = (state.day_progress - clock) * state.balance.daylight_seconds
-	_expect(travel_seconds > 1.0, "The raft landing and fishing cove have a distinct stretch of shore between them.")
+	_expect(travel_seconds > 3.2, "Reaching the upstream cove from the raft landing takes a full stretch of shore path.")
+	var pool := ravine.get_node("WillowPool") as Node2D
+	var trap := ravine.get_node("PoolTrap") as Node2D
+	_expect(pool.position == RavineLayout.WILLOW_POOL and trap.position == RavineLayout.POOL_TRAP,
+		"The two upstream interactions sit at the ends of their marked lanes.")
+	var float_point: Vector2 = pool.position + pool.water
+	var basket_point: Vector2 = trap.position + trap.water_offset
+	for point in [float_point, basket_point]:
+		_expect(absf(point.x - LANDSCAPE.creek_x(point.y)) < LANDSCAPE.WATER_HALF_WIDTH - 4.0,
+			"The relocated float and basket still land inside the creek.")
 	print("RAVINE_MAP_UPSTREAM seconds=", snappedf(travel_seconds, 0.01))
 	await _capture_map_frame("05-willow-cove")
 	await _key(KEY_E)

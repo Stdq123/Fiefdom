@@ -270,9 +270,18 @@ const WILD_PROPS := [
 	Vector3i(173, 321, Prop.BAMBOO), Vector3i(167, 356, Prop.GROVE_TREE), Vector3i(235, 352, Prop.RAVINE_ROCK),
 	Vector3i(153, 292, Prop.TALL_BAMBOO), Vector3i(110, 309, Prop.PINE), Vector3i(55, 302, Prop.GROVE_TREE),
 	Vector3i(41, -53, Prop.PINE), Vector3i(23, -100, Prop.OAK), Vector3i(-14, -142, Prop.GROVE_CLUSTER),
-	Vector3i(41, -165, Prop.GROVE_TREE), Vector3i(60, -135, Prop.TALL_BAMBOO), Vector3i(59, -208, Prop.PINE),
-	Vector3i(97, -222, Prop.WILLOW), Vector3i(125, -245, Prop.PINE), Vector3i(161, -234, Prop.REEDS),
-	Vector3i(149, -197, Prop.BANK_GRASS), Vector3i(152, -165, Prop.RAVINE_RUSH), Vector3i(111, -153, Prop.FERN),
+	Vector3i(25, -166, Prop.GROVE_TREE), Vector3i(43, -138, Prop.TALL_BAMBOO), Vector3i(28, -218, Prop.PINE),
+	Vector3i(102, -189, Prop.MOSS_STONE), Vector3i(117, -216, Prop.REEDS), Vector3i(169, -237, Prop.REEDS),
+	Vector3i(112, -157, Prop.RAVINE_RUSH), Vector3i(128, -253, Prop.BANK_GRASS), Vector3i(83, -281, Prop.PINE),
+	Vector3i(40, -262, Prop.TALL_BAMBOO), Vector3i(32, -314, Prop.GROVE_CLUSTER), Vector3i(79, -331, Prop.PINE),
+	Vector3i(129, -287, Prop.PEBBLES), Vector3i(159, -314, Prop.REEDS), Vector3i(187, -356, Prop.RAVINE_RUSH),
+	Vector3i(112, -367, Prop.TALL_BAMBOO), Vector3i(128, -417, Prop.WILLOW), Vector3i(141, -388, Prop.MOSS_STONE),
+	Vector3i(183, -387, Prop.PEBBLES), Vector3i(199, -421, Prop.REEDS), Vector3i(143, -456, Prop.PEBBLES),
+	Vector3i(106, -460, Prop.PINE), Vector3i(61, -438, Prop.GROVE_TREE), Vector3i(25, -392, Prop.PINE),
+	Vector3i(85, -504, Prop.GROVE_CLUSTER), Vector3i(134, -510, Prop.TALL_BAMBOO),
+	Vector3i(164, -486, Prop.RAVINE_ROCK), Vector3i(230, -496, Prop.PINE), Vector3i(273, -465, Prop.GROVE_TREE),
+	Vector3i(262, -422, Prop.WILLOW), Vector3i(258, -369, Prop.REEDS), Vector3i(290, -338, Prop.PINE),
+	Vector3i(212, -290, Prop.GROVE_CLUSTER), Vector3i(262, -256, Prop.TALL_BAMBOO), Vector3i(331, -287, Prop.PINE),
 	Vector3i(117, -80, Prop.RAVINE_RUSH), Vector3i(157, -55, Prop.REEDS), Vector3i(92, 3, Prop.TALL_BAMBOO),
 	Vector3i(107, 60, Prop.PEBBLES), Vector3i(183, 58, Prop.PEBBLES), Vector3i(204, 6, Prop.TALL_BAMBOO),
 	Vector3i(225, -169, Prop.WILLOW), Vector3i(208, -108, Prop.MOSS_STONE), Vector3i(241, -88, Prop.GROVE_TREE),
@@ -547,6 +556,7 @@ func _draw() -> void:
 	if wilderness:
 		var gravel := _track_dust().lerp(Color("#939988"), 0.58)
 		draw_colored_polygon(PackedVector2Array(GRAVEL_BAR), gravel)
+		draw_colored_polygon(PackedVector2Array(RavineLayout.WILLOW_BANK), gravel)
 		_draw_tracks()
 		_draw_creek()
 		_draw_crossings()
@@ -628,6 +638,7 @@ func _add_landmark_labels() -> void:
 		_label_at(RavineLayout.FORD_FORK + Vector2(-10, 23), "浅滩 ↘")
 		_label_at(Vector2(140, 186), "南路小径 ↓")
 		_label_at(RavineLayout.SHORE_FORK + Vector2(0, -31), "↑ 柳湾 · 埠头")
+		_label_at(RavineLayout.DOCK_FORK + Vector2(-24, -19), "↑ 柳湾")
 		_label_at(BRIDGE + Vector2(-66, -31), "木桥 →")
 		_label_at(RavineLayout.RIDGE_FORK + Vector2(0, -34), "望溪台 ↗")
 		_label_at(RavineLayout.LOOKOUT + Vector2(0, -55), "望溪台")

@@ -210,6 +210,7 @@ func _draw_chart() -> void:
 			paper.draw_circle(at, 6.0, Color("#a5ad85"))
 			paper.draw_circle(at + Vector2(0, -3), 4.5, Color("#89976f"))
 	paper.draw_colored_polygon(_map_line(PackedVector2Array(LANDSCAPE.GRAVEL_BAR)), Color("#b1ae92"))
+	paper.draw_colored_polygon(_map_line(PackedVector2Array(RavineLayout.WILLOW_BANK)), Color("#b1ae92"))
 	var creek := _map_line(PackedVector2Array(LANDSCAPE.CREEK))
 	paper.draw_polyline(creek, Color("#a7b19c"), 51.0 * _map_scale(), true)
 	paper.draw_polyline(creek, Color("#557e88"), 35.0 * _map_scale(), true)

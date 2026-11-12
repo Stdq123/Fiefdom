@@ -93,9 +93,9 @@ medicinal = true
 script = ExtResource("7_journal")
 
 [node name="WillowPool" type="Node2D" parent="." groups=["interactable"]]
-position = Vector2(138, -180)
+position = Vector2(190, -410)
 script = ExtResource("8_fishing")
-water = Vector2(42, 0)
+water = Vector2(36, 0)
 
 [node name="GravelShoal" type="Node2D" parent="." groups=["interactable"]]
 position = Vector2(277, 229)
@@ -104,9 +104,9 @@ site = 1
 water = Vector2(-33, 0)
 
 [node name="PoolTrap" parent="." instance=ExtResource("12_trap_stand")]
-position = Vector2(126, -210)
-stake_offset = Vector2(22, -4)
-water_offset = Vector2(65, -2)
+position = Vector2(155, -448)
+stake_offset = Vector2(17, -4)
+water_offset = Vector2(47, -4)
 
 [node name="ShoalTrap" parent="." instance=ExtResource("12_trap_stand")]
 position = Vector2(312, 283)

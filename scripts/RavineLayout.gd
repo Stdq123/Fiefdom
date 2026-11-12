@@ -1,14 +1,14 @@
 extends RefCounted
 class_name RavineLayout
 
-const BOUNDS := Rect2(-436, -276, 990, 650)
+const BOUNDS := Rect2(-436, -508, 990, 882)
 const WEST_GATE := Vector2(-376, 20)
 const WEST_ARRIVAL := Vector2(-334, 20)
 const GROVE_FORK := Vector2(-184, 18)
 const FORD_FORK := Vector2(-75, 6)
 const SHORE_FORK := Vector2(38, 13)
 const DOCK_FORK := Vector2(81, -88)
-const WILLOW_FORK := Vector2(114, -185)
+const WILLOW_FORK := Vector2(167, -404)
 const RAFT_LANDING := Vector2(104, -102)
 const BRIDGE := Vector2(148, 36)
 const FORD := Vector2(213, 182)
@@ -21,8 +21,8 @@ const SOUTH_TRAIL_NAME := "南路小径"
 
 const FRUIT := Vector2(-139, -123)
 const HERBS := Vector2(446, -106)
-const WILLOW_POOL := Vector2(138, -180)
-const POOL_TRAP := Vector2(126, -210)
+const WILLOW_POOL := Vector2(190, -410)
+const POOL_TRAP := Vector2(155, -448)
 const GRAVEL_SHOAL := Vector2(277, 229)
 const SHOAL_TRAP := Vector2(312, 283)
 const LOOKOUT := Vector2(431, -108)
@@ -41,11 +41,12 @@ const BERRY_LANE := [
 	GROVE_FORK, Vector2(-196, -24), Vector2(-192, -65), Vector2(-170, -103), FRUIT,
 ]
 const WEST_SHORE := [
-	SHORE_FORK, Vector2(54, -22), Vector2(66, -62), DOCK_FORK, Vector2(88, -128),
-	Vector2(99, -161), WILLOW_FORK, WILLOW_POOL,
+	SHORE_FORK, Vector2(54, -22), Vector2(66, -62), DOCK_FORK,
+	Vector2(68, -134), Vector2(61, -180), Vector2(76, -223), Vector2(101, -263),
+	Vector2(112, -298), Vector2(133, -335), Vector2(153, -370), WILLOW_FORK, WILLOW_POOL,
 ]
 const DOCK_LANE := [DOCK_FORK, Vector2(95, -99), RAFT_LANDING]
-const POOL_TRAP_LANE := [WILLOW_FORK, Vector2(117, -201), POOL_TRAP]
+const POOL_TRAP_LANE := [WILLOW_FORK, Vector2(161, -427), POOL_TRAP]
 const FORD_TRAIL := [
 	FORD_FORK, Vector2(-59, 44), Vector2(-28, 83), Vector2(19, 109), Vector2(72, 126),
 	Vector2(118, 148), Vector2(151, 172), FORD_WEST, FORD, FORD_EAST, Vector2(277, 167),
@@ -65,7 +66,15 @@ const TRACKS := [MAIN_TRAIL, BERRY_LANE, WEST_SHORE, DOCK_LANE, POOL_TRAP_LANE, 
 const TRACK_WIDTHS: Array[float] = [26.0, 13.0, 16.0, 12.0, 10.0, 17.0, 13.0, 15.0, 14.0]
 
 const CREEK := [
-	Vector2(275, -452), Vector2(237, -331), Vector2(203, -250), Vector2(177, -193), Vector2(151, -136), Vector2(132, -73),
+	Vector2(210, -665), Vector2(184, -552), Vector2(188, -490), Vector2(202, -450),
+	Vector2(226, -410), Vector2(228, -378), Vector2(206, -341), Vector2(177, -302),
+	Vector2(153, -267), Vector2(145, -234), Vector2(147, -204), Vector2(158, -171),
+	Vector2(151, -136), Vector2(132, -73),
 	Vector2(139, -19), Vector2(145, 17), BRIDGE, Vector2(149, 79), Vector2(161, 102), Vector2(177, 119),
 	Vector2(192, 143), FORD, Vector2(256, 246), Vector2(283, 338), Vector2(308, 412), Vector2(334, 528),
+]
+const WILLOW_BANK := [
+	Vector2(140, -463), Vector2(162, -472), Vector2(184, -465), Vector2(202, -441),
+	Vector2(224, -409), Vector2(221, -385), Vector2(193, -370), Vector2(168, -374),
+	Vector2(145, -391), Vector2(137, -417),
 ]
