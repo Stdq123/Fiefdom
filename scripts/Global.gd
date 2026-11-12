@@ -95,8 +95,10 @@ var retainers: Array[RetainerData] = []
 var days_without_contribution: int
 var visitor_encounters: Dictionary[String, int] = {}
 var neighbor_met_days: Dictionary[String, int] = {}
+enum DepartureReason { UNRECORDED, HUNGER, REFORM }
+var neighbor_departures: Dictionary[String, Dictionary] = {}
 var last_recruit_day := 0
-var last_recruit_from_handoff := false
+var last_recruit_outside_rotation := false
 var road_provisions_delivered := false
 var road_provisions_day := 0
 var road_rest_paid_day := 0
@@ -254,8 +256,9 @@ func _reset_campaign() -> void:
 	visitor_encounters.clear()
 	neighbor_met_days.clear()
 	neighbor_met_days[VisitorData.FIELD_KEEPER] = current_day
+	neighbor_departures.clear()
 	last_recruit_day = 0
-	last_recruit_from_handoff = false
+	last_recruit_outside_rotation = false
 	road_provisions_delivered = false
 	road_provisions_day = 0
 	road_rest_paid_day = 0
@@ -304,7 +307,8 @@ func _starter_retainer() -> RetainerData:
 	return RetainerData.new(VisitorData.FIELD_KEEPER, "农夫", RetainerData.School.MOHIST)
 
 func knows_neighbor(speaker: String) -> bool:
-	if neighbor_met_days.has(speaker) or visitor_encounters.has(speaker) or VisitorData.favor_completed(speaker):
+	if (neighbor_met_days.has(speaker) or visitor_encounters.has(speaker) or neighbor_departures.has(speaker)
+		or VisitorData.favor_completed(speaker)):
 		return true
 	for resident in retainers:
 		if resident.name == speaker:
@@ -328,7 +332,7 @@ func visitor_for_day(day: int) -> VisitorData:
 	var resident_names: Array[String] = []
 	for resident in retainers:
 		resident_names.append(resident.name)
-	if last_recruit_day == day and not last_recruit_from_handoff:
+	if last_recruit_day == day and not last_recruit_outside_rotation:
 		return null
 	if ((defense_review_ready() or east_watch_day == day) and last_defense.get("day", 0) + 1 == day
 		and visitor_encounters.has(VisitorData.EAST_WATCHER) and VisitorData.EAST_WATCHER not in resident_names):
@@ -1463,7 +1467,7 @@ func _serve_night_rations(finished_day: int) -> Array[RetainerData]:
 		retainer.loyalty = maxf(0.0, retainer.loyalty - NightRations.MISSED_MEAL_LOYALTY)
 		if retainer.loyalty == 0.0:
 			departed.append(retainer.name)
-			dismiss_retainer(retainer)
+			dismiss_retainer(retainer, DepartureReason.HUNGER, finished_day)
 	night_rations.last = {
 		"day": finished_day, "need": plan.need, "served": served,
 		"used": used, "bought": bought, "copper": copper,
@@ -1499,12 +1503,62 @@ func assign_duty(retainer: RetainerData, duty: RetainerData.Duty) -> bool:
 		GameEvents.retainer_duty_changed.emit(retainer)
 	return true
 
-func dismiss_retainer(retainer: RetainerData) -> void:
+func dismiss_retainer(retainer: RetainerData, reason := DepartureReason.UNRECORDED, day := 0) -> void:
 	if retainers.has(retainer):
 		retainers.erase(retainer)
 		if night_rations.priority == retainer:
 			night_rations.priority = null
+		if (reason != DepartureReason.UNRECORDED and retainer.name in VisitorData.NEIGHBORS
+			and not retainers.any(func(resident: RetainerData) -> bool: return resident.name == retainer.name)):
+			neighbor_departures[retainer.name] = {
+				"day": day if day > 0 else current_day, "reason": reason, "returned_day": 0,
+			}
 		GameEvents.retainer_departed.emit(retainer)
+
+func pending_neighbor_return(speaker: String) -> Dictionary:
+	var departure: Dictionary = neighbor_departures.get(speaker, {})
+	return departure if departure.get("returned_day", 0) == 0 else {}
+
+func recruitment_food_requirement(speaker: String) -> int:
+	if (speaker == VisitorData.FIELD_KEEPER
+		or pending_neighbor_return(speaker).get("reason") == DepartureReason.HUNGER):
+		return retainer_food_cost() + 1
+	return 0
+
+func can_recruit_visitor(guest: VisitorData) -> bool:
+	return (outcome == Outcome.RUNNING and not guest.is_recruited
+		and last_recruit_day != current_day and reputation >= balance.recruit_reputation_requirement
+		and pending_neighbor_return(guest.name).get("day", 0) < current_day
+		and food_storage >= recruitment_food_requirement(guest.name)
+		and not retainers.any(func(resident: RetainerData) -> bool: return resident.name == guest.name))
+
+func recruit_visitor(guest: VisitorData) -> void:
+	if not can_recruit_visitor(guest):
+		return
+	var school := RetainerData.School.NONE
+	match guest.school:
+		VisitorData.School.CONFUCIAN: school = RetainerData.School.CONFUCIAN
+		VisitorData.School.MOHIST: school = RetainerData.School.MOHIST
+		VisitorData.School.MILITARY: school = RetainerData.School.MILITARY
+	var profession := guest.get_school_name() if guest.name in [VisitorData.SILK_MERCHANT, VisitorData.RAVINE_GUIDE] else "士人"
+	var keeper := guest.name == VisitorData.FIELD_KEEPER
+	var retainer := _starter_retainer() if keeper else RetainerData.new(guest.name, profession, school)
+	if not keeper:
+		retainer.visitor_appearance = guest.school
+	var departure := pending_neighbor_return(guest.name)
+	if not departure.is_empty():
+		departure.returned_day = current_day
+	elif keeper:
+		neighbor_departures[guest.name] = {"day": 0, "reason": DepartureReason.UNRECORDED, "returned_day": current_day}
+	reputation -= balance.recruit_reputation_requirement
+	retainers.append(retainer)
+	if not visitor_encounters.has(guest.name):
+		visitor_encounters[guest.name] = 0
+	last_recruit_day = current_day
+	last_recruit_outside_rotation = guest.handoff_visit or keeper
+	guest.is_recruited = true
+	GameEvents.retainer_recruited.emit(retainer)
+	GameEvents.reputation_changed.emit(reputation)
 
 func harvest_proceeds(is_public: bool, unit_price: int, extra_yield: int,
 		choice: TaxReformChoice, rate: float) -> Dictionary:
@@ -2186,6 +2240,7 @@ func _save_snapshot(origin: String) -> Error:
 		"visitor_encounters": visitor_encounters.keys(),
 		"visitor_talk_days": visitor_encounters,
 		"neighbor_met_days": neighbor_met_days,
+		"neighbor_departures": neighbor_departures,
 		"field_rotation": {
 			"promise_day": field_rotation.promise_day,
 			"beans_day": field_rotation.beans_day,
@@ -2195,7 +2250,7 @@ func _save_snapshot(origin: String) -> Error:
 			"signed_day": field_rotation.signed_day,
 		},
 		"last_recruit_day": last_recruit_day,
-		"last_recruit_from_handoff": last_recruit_from_handoff,
+		"last_recruit_outside_rotation": last_recruit_outside_rotation,
 		"road_provisions_delivered": road_provisions_delivered,
 		"road_provisions_day": road_provisions_day,
 		"road_rest_paid_day": road_rest_paid_day,
@@ -2644,8 +2699,9 @@ func load_game(path := "") -> Error:
 			var first_day := _read_save_int(known_days.get(speaker), 0)
 			if first_day > 0 and first_day <= saved_day:
 				neighbor_met_days[speaker] = first_day
+	_restore_neighbor_departures(data.get("neighbor_departures"), saved_day)
 	last_recruit_day = clampi(_read_save_int(data.get("last_recruit_day"), 0), 0, saved_day)
-	last_recruit_from_handoff = data.get("last_recruit_from_handoff", false) == true
+	last_recruit_outside_rotation = data.get("last_recruit_outside_rotation", data.get("last_recruit_from_handoff", false)) == true
 	road_provisions_delivered = data.get("road_provisions_delivered", false) == true
 	road_provisions_day = clampi(_read_save_int(data.get("road_provisions_day"), 0), 0, saved_day) if road_provisions_delivered else 0
 	var paid_day := _read_save_int(data.get("road_rest_paid_day"), 0)
@@ -2749,6 +2805,26 @@ func _restore_away_field_report(record: Variant, saved_day: int) -> Dictionary:
 	for key in AWAY_FIELD_TOTALS:
 		report[key] = maxi(0, _read_save_int(record.get(key), 0))
 	return report
+
+func _restore_neighbor_departures(saved: Variant, saved_day: int) -> void:
+	neighbor_departures.clear()
+	if not saved is Dictionary:
+		return
+	for speaker: String in VisitorData.NEIGHBORS:
+		var departure: Variant = saved.get(speaker)
+		if not departure is Dictionary:
+			continue
+		var day := _read_save_int(departure.get("day"), 0)
+		var reason := _read_save_int(departure.get("reason"), DepartureReason.UNRECORDED)
+		var returned := _read_save_int(departure.get("returned_day"), 0)
+		if day == 0 and reason == DepartureReason.UNRECORDED and returned > 0 and returned <= saved_day:
+			neighbor_departures[speaker] = {"day": 0, "reason": reason, "returned_day": returned}
+			continue
+		if day <= 0 or day > saved_day or reason not in [DepartureReason.HUNGER, DepartureReason.REFORM]:
+			continue
+		neighbor_departures[speaker] = {
+			"day": day, "reason": reason, "returned_day": returned if returned > day and returned <= saved_day else 0,
+		}
 
 func _restore_night_rations(record: Variant, saved_day: int, roster: Array[RetainerData]) -> NightRations:
 	var restored := NightRations.new()

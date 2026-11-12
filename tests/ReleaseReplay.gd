@@ -38,6 +38,10 @@ func _run() -> void:
 			var replay = load("res://tests/RationPriorityReplay.gd").new()
 			replay.legacy = arguments[0] == "ration-priority-legacy"
 			await replay.run(tree)
+		"retainer-return", "retainer-return-legacy":
+			var replay = load("res://tests/RetainerReturnReplay.gd").new()
+			replay.legacy = arguments[0] == "retainer-return-legacy"
+			await replay.run(tree)
 		"gamepad":
 			var replay = load("res://tests/GamepadReplay.gd").new()
 			await replay.run(tree, capture_directory)

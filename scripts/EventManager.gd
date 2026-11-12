@@ -200,7 +200,7 @@ func _on_tax_reform_choice(choice: Global.TaxReformChoice) -> void:
 				if retainer.school == RetainerData.School.CONFUCIAN:
 					retainer.loyalty = _loyalty_after_choice(retainer, choice)
 					if retainer.loyalty == 0.0:
-						Global.dismiss_retainer(retainer)
+						Global.dismiss_retainer(retainer, Global.DepartureReason.REFORM)
 		Global.TaxReformChoice.TRADITIONAL:
 			Global.tax_rate = 0.0
 			Global.zhou_li_score = "上上"

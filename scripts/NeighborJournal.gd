@@ -48,6 +48,7 @@ func _ready() -> void:
 	GameEvents.retainer_location_changed.connect(refresh)
 	GameEvents.retainer_recruited.connect(refresh.unbind(1))
 	GameEvents.retainer_departed.connect(refresh.unbind(1))
+	GameEvents.food_changed.connect(refresh.unbind(1))
 	GameEvents.road_rest_changed.connect(refresh)
 	GameEvents.field_rotation_changed.connect(refresh)
 	locate_button.pressed.connect(func(): GameEvents.neighbor_directions_requested.emit(selected))
@@ -87,7 +88,17 @@ func _show_neighbor(speaker: String) -> void:
 	var story := _story(speaker)
 	memory.text = story[0]
 	next_step.text = story[1]
-	next_step.visible = not story[1].is_empty()
+	var departure: Dictionary = Global.neighbor_departures.get(speaker, {})
+	if not departure.is_empty():
+		if departure.day > 0:
+			var note := "第 %d 天夜 · 缺餐后离任。" if departure.reason == Global.DepartureReason.HUNGER else "第 %d 天 · 议税后离任。"
+			memory.text += "\n" + (note % departure.day)
+		if departure.returned_day > 0:
+			memory.text += "\n第 %d 天 · 应邀回来照料田地。" % departure.returned_day
+	var portions := Global.recruitment_food_requirement(speaker)
+	if portions > 0 and not Global.retainers.any(func(resident: RetainerData) -> bool: return resident.name == speaker):
+		where.text += "\n请他回来需备足一夜口粮。粮仓 %d / %d 份。" % [Global.food_storage, portions]
+	next_step.visible = not next_step.text.is_empty()
 
 func _location(speaker: String) -> String:
 	var world := get_tree().current_scene.get_node("World")

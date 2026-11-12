@@ -249,13 +249,17 @@ func _on_retainer_duty_changed(_data: RetainerData) -> void:
 
 func _on_retainer_recruited(data: RetainerData) -> void:
 	spawn_retainer(data)
+	if data.name == VisitorData.FIELD_KEEPER:
+		_refresh_field_keeper_visit()
 	if Global.last_recruit_day == Global.current_day:
-		if Global.last_recruit_from_handoff:
+		if Global.last_recruit_outside_rotation:
 			_refresh_handoff_visitor()
 			_report_visitor_activity()
 		else:
 			_refresh_visitor()
-	spawn_floating_text(Vector2i(5, 5), "%s留在了封地" % data.name, Color("#efce80"))
+	var returned: bool = Global.neighbor_departures.get(data.name, {}).get("returned_day", 0) == Global.current_day
+	var notice := "%s重新留任" if returned else "%s留在了封地"
+	spawn_floating_text(Vector2i(5, 5), notice % data.name, Color("#efce80"))
 
 func _on_retainer_departed(data: RetainerData) -> void:
 	var retainer = retainer_instances.get(data)

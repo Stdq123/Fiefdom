@@ -7,6 +7,14 @@ const MUSIC_PRACTICE := preload("res://scripts/MusicPractice.gd")
 const ROAD_REST := preload("res://scripts/RoadRest.gd")
 const ROTATION_BOOK := preload("res://scripts/FieldRotationBook.gd")
 const TRAVEL_HEARTH := preload("res://scripts/TravelHearth.gd")
+const HUNGER_RETURN_LINES := {
+	VisitorData.FIELD_KEEPER: "那夜没分到饭，我只好去南边借住。今早路过，还是想看看咱们那块田。",
+	VisitorData.ROAD_KEEPER: "那晚我拎着空碗出了门，是过路人分了我一把炒菽。我记得这份情，也惦记亭西的人。",
+	VisitorData.WATER_GUIDE: "那夜吃不上饭，我就去上游的磨坊借宿了。今天刚过路口，先想来看看水源。",
+	VisitorData.SILK_MERCHANT: "我去西市帮蔡娘理货，换了几顿饭。回来走这一路，还是一眼就认出了西廊的石阶。",
+	VisitorData.RAVINE_GUIDE: "那天我空着肚子走到木桥，幸好还有人在涧边生火。今天回来了，想先沿竹径走一走。",
+	VisitorData.EAST_WATCHER: "那夜我把弓靠在门边，空手去了东头讨一碗饭。今天走旧路，还是先往田埂上看了一眼。",
+}
 
 var parent_node: Control
 var player: Player
@@ -98,20 +106,21 @@ func show_visitor_dialog(data: VisitorData, place: String, at_pavilion := false)
 	if data.name == VisitorData.FIELD_KEEPER:
 		if Global.field_keeper_visiting():
 			_show_field_keeper("回访 · " + data.meeting_place, data.get_appearance_texture(),
-				"我从南边回来看看这片地。记得先收井田中央那格，那一份要送进国库。")
+				"我从南边回来看看这片地。记得先收井田中央那格，那一份要送进国库。", "", data)
 		return
 	var balance := Global.balance
+	var returning := not Global.pending_neighbor_return(data.name).is_empty()
 	var options: Array[String] = [
 		"已交谈" if data.talked_today() else "交谈",
 		"交易（%d 铜钱）" % balance.trade_base_price,
-		"招募（%d 声望）" % balance.recruit_reputation_requirement,
+		_return_option() if returning else "招募（%d 声望）" % balance.recruit_reputation_requirement,
 	]
 	var disabled: Array[int] = []
 	if data.talked_today():
 		disabled.append(0)
 	if Global.money < balance.trade_base_price:
 		disabled.append(1)
-	if Global.reputation < balance.recruit_reputation_requirement or Global.last_recruit_day == Global.current_day:
+	if not Global.can_recruit_visitor(data):
 		disabled.append(2)
 	var favor_index := options.size()
 	var favor := _add_favor_option(data.name, options, disabled)
@@ -119,6 +128,8 @@ func show_visitor_dialog(data: VisitorData, place: String, at_pavilion := false)
 	var speech := data.pavilion_greeting() if at_pavilion else data.greeting()
 	if place == VisitorData.SILK_MARKET_PLACE:
 		speech = VisitorData.silk_market_line()
+	if returning:
+		speech = _return_speech(data.name, speech if favor.is_valid() else "")
 	var dialog = _open(data.name, data.get_school_name() + " · " + place,
 		speech, options, disabled, data.get_appearance_texture())
 	dialog.option_selected.connect(_on_visitor_choice.bind(data, favor_index, favor))
@@ -140,31 +151,25 @@ func _on_visitor_choice(index: int, data: VisitorData, favor_index: int, favor: 
 				GameEvents.money_changed.emit(Global.money)
 				GameEvents.inventory_changed.emit(Global.player_inventory)
 		2:
-			_recruit(data)
+			Global.recruit_visitor(data)
 
-func _recruit(data: VisitorData) -> void:
-	var cost := Global.balance.recruit_reputation_requirement
-	if Global.reputation < cost or Global.last_recruit_day == Global.current_day:
-		return
-	var school := RetainerData.School.NONE
-	match data.school:
-		VisitorData.School.CONFUCIAN: school = RetainerData.School.CONFUCIAN
-		VisitorData.School.MOHIST: school = RetainerData.School.MOHIST
-		VisitorData.School.MILITARY: school = RetainerData.School.MILITARY
-	var profession := "士人"
-	if data.name in [VisitorData.SILK_MERCHANT, VisitorData.RAVINE_GUIDE]:
-		profession = data.get_school_name()
-	var retainer := RetainerData.new(data.name, profession, school)
-	retainer.visitor_appearance = data.school
-	Global.reputation -= cost
-	Global.retainers.append(retainer)
-	if not Global.visitor_encounters.has(data.name):
-		Global.visitor_encounters[data.name] = 0
-	Global.last_recruit_day = Global.current_day
-	Global.last_recruit_from_handoff = data.handoff_visit
-	data.is_recruited = true
-	GameEvents.retainer_recruited.emit(retainer)
-	GameEvents.reputation_changed.emit(Global.reputation)
+func _return_option() -> String:
+	return "请回来（%d 声望）" % Global.balance.recruit_reputation_requirement
+
+func _return_speech(speaker: String, following: String) -> String:
+	var departure := Global.pending_neighbor_return(speaker)
+	var speech := "我从南边回来看看这片地。若还缺个管田的人，咱们坐下说说。"
+	match departure.get("reason"):
+		Global.DepartureReason.HUNGER:
+			speech = HUNGER_RETURN_LINES[speaker]
+		Global.DepartureReason.REFORM:
+			speech = "议税那天我收了行李。今天路过，想看看新法落在田里，种田的人过得怎样。"
+	var portions := Global.recruitment_food_requirement(speaker)
+	if portions > 0:
+		speech += "\n若再留下，先在粮仓备齐大伙一夜的口粮。现有 %d / %d 份。" % [Global.food_storage, portions]
+	if not following.is_empty():
+		speech += "\n" + following
+	return speech
 
 func show_retainer_dialog(data: RetainerData, at_pavilion := false) -> void:
 	if parent_node.has_node("DialoguePanel") or not Global.retainers.has(data):
@@ -189,7 +194,7 @@ func show_retainer_dialog(data: RetainerData, at_pavilion := false) -> void:
 				favor.call()
 		)
 
-func _show_field_keeper(context: String, appearance: Texture2D, usual_line: String, evening := "") -> void:
+func _show_field_keeper(context: String, appearance: Texture2D, usual_line: String, evening := "", guest: VisitorData = null) -> void:
 	var story := Global.field_rotation
 	var text := usual_line if evening.is_empty() else evening
 	var options: Array[String] = ["离开"]
@@ -211,12 +216,24 @@ func _show_field_keeper(context: String, appearance: Texture2D, usual_line: Stri
 		follow_up = Global.agree_to_rotation
 	if not evening.is_empty() and text != evening:
 		text = evening + "\n" + text
-	var dialog := _open(VisitorData.FIELD_KEEPER, context, text, options, [], appearance)
-	if follow_up.is_valid():
+	var return_index := -1
+	var disabled: Array[int] = []
+	if guest:
+		return_index = options.size() - 1
+		options.insert(return_index, _return_option())
+		if not Global.can_recruit_visitor(guest):
+			disabled.append(return_index)
+		text = _return_speech(guest.name, text if text != usual_line else "")
+	var dialog := _open(VisitorData.FIELD_KEEPER, context, text, options, disabled, appearance)
+	if follow_up.is_valid() or guest:
 		var day := Global.current_day
 		dialog.option_selected.connect(func(index: int):
-			if index == 0 and Global.current_day == day:
+			if Global.current_day != day:
+				return
+			if index == 0 and follow_up.is_valid():
 				follow_up.call()
+			elif index == return_index:
+				Global.recruit_visitor(guest)
 		)
 
 func _field_keeper_season_line() -> String:
