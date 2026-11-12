@@ -6,7 +6,7 @@
 
 | 玩家体验 | 完成时要看到的证据 | 当前情况 |
 | --- | --- | --- |
-| 耕作清楚、有手感 | 从标题开新档，不查说明书就能找到公田、换种、判断水分和收获；窗口和镜头变化后仍能准确点田。 | 新档交接简说明公私田的收成去向，标记随实际田况切换。首次纳贡后标出第一茬私田，玩家可另行指路去谈轮作。拖动耕作有逐格反馈。「今夜安排」预览公私田新熟格数和缺水。还需初次玩家独立试玩。 |
+| 耕作清楚、有手感 | 从标题开新档，不查说明书就能找到公田、换种、判断水分和收获；窗口和镜头变化后仍能准确点田。 | 新档交接简说明公私田的收成去向。首次纳贡后标出第一茬私田，玩家可另行指路去谈轮作。拖动耕作有逐格反馈。种子栏可直达井田舆图，按成熟、待浇或断水逐格指路。「今夜安排」预览公私田新熟格数和缺水。还需初次玩家独立试玩。 |
 | 封地有人生活 | 玩家知道去哪找熟人；重复来访会遇到熟悉的角色和新的对话，交谈、帮忙及重要决定会留下可见变化。 | 七位邻居在地图上有独立服饰，留任和读档后保留造型。手记可标出人物、预告轮访和晚间去处。五位常规来客会按时辰和天气走到南路亭。交样绸后，蔡娘会在西市陈列样绸，陶辛晴天轮访时沿西路去绸摊再回南路亭。首次纳贡可接续渠伯轮作，季青的路粮可接续亭西歇脚处，谷雨合奏留下曲簿记录。还需完整人工试玩核对相遇节奏和对白重复感。 |
 | 地图有可记住的地方 | 封地和野外有不同的地标、捷径和探索回报；地形有前后层次，路径、资源和敌人始终可辨。 | 封地北侧的石垒标出行走边界，两条关道延伸出镜头，草地与田埂在路肩交接。封地与竹涧随四季更换树形和地表，新井田从立桩到完工能在地图看出变化。南路亭、野果坳与浅滩有随天气和季节出现的小动物。竹涧舆图可查看当前位置，沿木桥或浅滩去采集点、钓点、今日水迹和返程西门。三处水迹可跨日记录，回封地可开药圃。还需初次玩家验证路线指引。 |
 | 多天经营仍有选择 | 开局之外，公私田、工艺、门客与探索互相带来取舍；试玩记录能指出多种有效策略以及会令人反复刷同一动作的段落。 | 夜间备粮减少双结局回放里的手动转粮与购粮，收割岗可用每夜额外一份口粮换取田间帮手。照料门客可按田格补播，也可一次安排一块井田的私田，选种时显示成熟所需夜数和次日节令的变化。去西市或竹涧时门客继续田务，回封地可查田务和收成去向。田地与蚕桑两种安排通过前两年回放，外出可在采果、取药和鱼获之间选择。初税亩可比较本局成熟作物、门客粮耗、两条结局与延期经费。仍需人工长线试玩核对节奏。 |
@@ -560,3 +560,9 @@
 - 上一版两条主路出关后在镜头内收尾，北侧行走止点没有地形。主路现在通到镜头之外，北坡用石垒和前后两层林木标出边界，舆图的道路裁在图幅内。新版实走西市和竹涧往返，向北走到石垒脚边停下。 [旧西路](../build/polish-estate-terrain/baseline-frames/1280x720/01-west-road.png) · [新西路](../build/polish-estate-terrain/final-frames/1280x720/01-west-road.png) · [北坡](../build/polish-estate-terrain/final-frames/1280x720/02-north-slope.png) · [舆图](../build/polish-estate-terrain/final-frames/1024x768/07-estate-survey.png)
 - 土纹和路肩草丛取自 Pixel-Boy 与 AAA 的 CC0 图块，按季节和天气调色。首轮取帧后减淡土纹，并把低处的田边土层放到路面下，让田埂贴路时保留路肩。专项从新档播种和浇水，切图回来仍可查到水分。谷雨场景用预置的第二块井田和蚕棚，通过原水利入口建渠，复核进水口和横跨路面的木板。冬日场景以预置日期核对覆雪的北坡和井田。标题使用最终地形取景，清晨和薄暮使用同一机位和一块预置的成熟井田。 [谷雨通水](../build/polish-estate-terrain/final-frames/1024x768/03-rain-and-second-field.png) · [冬日北坡](../build/polish-estate-terrain/final-frames/1280x720/06-winter-slope.png) · [薄暮标题](../build/polish-estate-terrain/title-frames/1280x720/02-dusk-title.png) · [素材作者页](https://pixel-boy.itch.io/ninja-adventure-asset-pack)
 - Godot 导入、脚本加载、启动及 22 项回归通过。最终 Windows 包在不可见的隔离桌面核对 1280×720 与 1024×768 窗口，并完成新档双结局、旧档接续和无窗口连续运行。完整人工长线试玩待验收。 [Godot 回归](../build/polish-estate-terrain/godot-delivered-22.log) · [发行验证](../build/polish-estate-terrain/windows-release-check.log) · [Windows 试玩包](../build/polish-estate-terrain/Fiefdom-estate-terrain-preview-Windows-x64.zip)
+
+## 井田舆图与连续田务指路
+
+- 上一版「今夜安排」只能指出一格待浇田。点种子栏的「田务」现可直达井田页，用方块、菱形和叉号区分可收、待浇和断水。选一类田务，完成当前格后自动指向下一格。第一轮取帧发现已浇田的悬停提示遮住下一格，现随指路前进收起旧提示。 [上一版回放](../build/polish-field-routes/previous-windows-replay.log) · [井田舆图](../build/polish-field-routes/final-frames/1024x768/01-field-map.png) · [下一格标记](../build/polish-field-routes/final-frames/1280x720/02-next-dry-plot.png)
+- 专项从标题新建，正常播种两格，再预置第二块井田、部分作物长势和断开的水渠。实际浇水、收割和挖渠，核对公私田结算与体力消耗。同日读档后恢复待浇路线，去西市期间门客浇完最后一格，回封地保留外出回报。过夜结束当前指路，挖渠时仍能看见断水稻田标记。用上一版实际保存的两格黍读档，从「今夜安排」浇完公田后继续标私田，原档校验值一致。 [断水指路](../build/polish-field-routes/final-frames/1024x768/03-disconnected-rice.png) · [旧档回放](../build/polish-field-routes/legacy-field-routes.log)
+- Godot 导入、脚本加载、启动及 20 项回归通过。同一 Windows 包在不可见的隔离桌面核对 1280×720 和 1024×768 窗口，自动验证两条结局、续营、战败恢复和旧档接续。首次独立试玩和完整人工长线试玩待验收。 [Godot 回归](../build/polish-field-routes/godot-field-routes.log) · [发行验证](../build/polish-field-routes/windows-release-check.log) · [Windows 试玩包](../build/polish-field-routes/Fiefdom-field-routes-preview-Windows-x64.zip)

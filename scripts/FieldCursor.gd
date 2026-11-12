@@ -37,8 +37,12 @@ func _clear_pointer() -> void:
 	pointer_seen = false
 	hide()
 
+func clear_plot_hover(cell: Vector2i) -> void:
+	if pointer_seen and world.field_at(pointer) == cell:
+		_clear_pointer()
+
 func _input(event: InputEvent) -> void:
-	if event is InputEventMouse:
+	if event is InputEventMouseMotion or (event is InputEventMouseButton and event.pressed):
 		pointer_seen = true
 		pointer = event.position
 

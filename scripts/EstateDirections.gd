@@ -5,6 +5,11 @@ enum Mark { PLOT, BUTTON, NEIGHBOR, EDGE, WORKSITE, PLACE }
 const CAMPAIGN_GUIDE := preload("res://scripts/CampaignGuide.gd")
 const GOLD := Color("#f1d38b")
 const SHADOW := Color("#24352b")
+const FIELD_ROUTES := {
+	Global.NightGrowth.READY: {"task": "收获", "plot": "可收"},
+	Global.NightGrowth.DRY: {"task": "浇水", "plot": "待浇"},
+	Global.NightGrowth.BLOCKED: {"task": "断水", "plot": "断水"},
+}
 
 var world: Node2D
 var hud: Control
@@ -49,11 +54,35 @@ func follow_neighbor(speaker: String) -> bool:
 	hud.cancel_directions.show()
 	return true
 
-func follow_dry_plot(cell: Vector2i) -> void:
+func follow_field_route(status: int) -> bool:
+	var cell: Variant = world.find_field_task(status)
+	if cell == null:
+		return false
 	clear_tracking()
+	Global.field_route_status = status
+	_track_field_plot(cell)
+	return true
+
+func _track_field_plot(cell: Vector2i) -> void:
 	tracked_plot = cell
-	hud.cancel_directions.text = _dry_plot_label(cell) + " · 取消指路"
+	hud.cancel_directions.text = FIELD_ROUTES[Global.field_route_status].task + " · 取消指路"
 	hud.cancel_directions.show()
+
+func _refresh_field_route() -> void:
+	var status := Global.field_route_status
+	if status < 0:
+		if tracked_plot != null:
+			clear_tracking()
+		return
+	if tracked_plot != null and Global.crop_night_status(tracked_plot) == status:
+		return
+	var next: Variant = world.find_field_task(status)
+	if next == null:
+		clear_tracking()
+	else:
+		if tracked_plot != null:
+			world.tile_map.get_node("FieldCursor").clear_plot_hover(tracked_plot)
+		_track_field_plot(next)
 
 func follow_worksite(field_id: int) -> void:
 	clear_tracking()
@@ -86,8 +115,8 @@ func destination() -> Dictionary:
 	var site := Global.get_well_field(tracked_site)
 	if not site.is_empty() and not site["is_unlocked"]:
 		return {"title": "井田 %d 工地" % (tracked_site + 1), "point": _cell_position(site["center_pos"])}
-	if tracked_plot != null and world.is_crop_dry(tracked_plot):
-		return {"title": _dry_plot_label(tracked_plot), "point": _cell_position(tracked_plot)}
+	if tracked_plot != null and Global.field_route_status >= 0 and Global.crop_night_status(tracked_plot) == Global.field_route_status:
+		return {"title": _field_plot_label(tracked_plot), "point": _cell_position(tracked_plot)}
 	if not tracked_neighbor.is_empty():
 		var actor: Node2D = world.neighbor_actor(tracked_neighbor)
 		if is_instance_valid(actor):
@@ -113,8 +142,10 @@ func _cell_position(cell: Vector2i) -> Vector2:
 	var tiles: TileMapLayer = world.tile_map
 	return world.to_local(tiles.to_global(tiles.map_to_local(cell)))
 
-func _dry_plot_label(cell: Vector2i) -> String:
-	return "待浇公田" if Global.is_public_plot(cell) else "待浇私田"
+func _field_plot_label(cell: Vector2i) -> String:
+	var land := "公田" if Global.is_public_plot(cell) else "私田"
+	var crop: CropData = Global.active_crops[cell].data
+	return "%s · %s%s" % [crop.crop_name, FIELD_ROUTES[Global.field_route_status].plot, land]
 
 func arrive_at(speaker: String) -> void:
 	if tracked_neighbor == speaker:
@@ -123,6 +154,7 @@ func arrive_at(speaker: String) -> void:
 func clear_tracking() -> void:
 	tracked_neighbor = ""
 	tracked_plot = null
+	Global.field_route_status = -1
 	tracked_site = -1
 	tracked_place = ""
 	Global.ravine_trip_target = ""
@@ -130,6 +162,8 @@ func clear_tracking() -> void:
 	hud.cancel_directions.hide()
 
 func update_marker(blocked: bool) -> void:
+	if not MapTravel.active and Global.outcome == Global.Outcome.RUNNING:
+		_refresh_field_route()
 	if blocked or Global.outcome != Global.Outcome.RUNNING:
 		hide()
 		return
@@ -149,10 +183,8 @@ func update_marker(blocked: bool) -> void:
 			return
 		clear_tracking()
 	if tracked_plot != null:
-		if world.is_crop_dry(tracked_plot):
-			_mark_plot(tracked_plot, _dry_plot_label(tracked_plot))
-			return
-		clear_tracking()
+		_mark_plot(tracked_plot, _field_plot_label(tracked_plot))
+		return
 	if not tracked_neighbor.is_empty():
 		var actor: Node2D = world.neighbor_actor(tracked_neighbor)
 		if is_instance_valid(actor):

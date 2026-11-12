@@ -143,6 +143,42 @@ mouse_default_cursor_shape = 2
 toggle_mode = true
 text = "竹涧"
 
+[node name="FieldRoutes" type="HBoxContainer" parent="MapModal/Center/Panel/Layout/Content/Index"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="HarvestRoute" type="Button" parent="MapModal/Center/Panel/Layout/Content/Index/FieldRoutes"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+tooltip_text = "依次标出可收作物"
+theme_override_colors/font_color = Color(0.96, 0.84, 0.57, 1)
+theme_override_font_sizes/font_size = 14
+
+[node name="WaterRoute" type="Button" parent="MapModal/Center/Panel/Layout/Content/Index/FieldRoutes"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+tooltip_text = "依次标出待浇的作物"
+theme_override_colors/font_color = Color(0.65, 0.86, 0.94, 1)
+theme_override_font_sizes/font_size = 14
+
+[node name="CanalRoute" type="Button" parent="MapModal/Center/Panel/Layout/Content/Index/FieldRoutes"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+tooltip_text = "依次标出需接通水渠的稻田"
+theme_override_colors/font_color = Color(0.98, 0.70, 0.56, 1)
+theme_override_font_sizes/font_size = 14
+
 [node name="RavineNote" type="Label" parent="MapModal/Center/Panel/Layout/Content/Index"]
 unique_name_in_owner = true
 visible = false

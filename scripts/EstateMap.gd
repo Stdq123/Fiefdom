@@ -14,6 +14,10 @@ const MAP_MARGIN := 19.0
 
 @onready var chart: Control = %Chart
 @onready var tabs: HBoxContainer = %Tabs
+@onready var field_routes: HBoxContainer = %FieldRoutes
+@onready var harvest_route: Button = %HarvestRoute
+@onready var water_route: Button = %WaterRoute
+@onready var canal_route: Button = %CanalRoute
 @onready var ravine_note: Label = %RavineNote
 @onready var listing: VBoxContainer = %Listing
 @onready var scroll: ScrollContainer = %IndexScroll
@@ -29,6 +33,7 @@ var tiles: TileMapLayer
 var category := Category.PLACES
 var places: Array[Dictionary] = []
 var fields: Array[Dictionary] = []
+var field_tasks: Dictionary[Vector2i, int] = {}
 var people: Array[Dictionary] = []
 var row_buttons: Dictionary[Button, Dictionary] = {}
 var captions: Dictionary[String, Rect2] = {}
@@ -44,15 +49,24 @@ func setup(estate_world: Node2D, guide: Control, blocked: Callable) -> void:
 		category = Category.RAVINE
 	for tab: Button in tabs.get_children():
 		tab.pressed.connect(_show_category.bind(tab.get_index()))
+	harvest_route.pressed.connect(_start_field_route.bind(Global.NightGrowth.READY))
+	water_route.pressed.connect(_start_field_route.bind(Global.NightGrowth.DRY))
+	canal_route.pressed.connect(_start_field_route.bind(Global.NightGrowth.BLOCKED))
 	chart.draw.connect(_draw_chart)
 	chart.gui_input.connect(_chart_input)
 	chart.resized.connect(_layout_chart)
 	clear_button.pressed.connect(_clear_directions)
 
 func open_fields() -> void:
-	open_map()
 	if modal.visible:
 		_show_category(Category.FIELDS)
+	else:
+		category = Category.FIELDS
+		open_map()
+
+func _start_field_route(task: int) -> void:
+	if directions.follow_field_route(task):
+		close_map()
 
 func _map_available() -> bool:
 	return controls_blocked.is_valid() and not controls_blocked.call()
@@ -110,6 +124,7 @@ func _add_built_place(title: String, detail: String, path: NodePath) -> void:
 
 func _collect_fields() -> void:
 	fields.clear()
+	field_tasks.clear()
 	for field in Global.well_fields:
 		var center: Vector2i = field["center_pos"]
 		var id: int = field["field_id"]
@@ -118,18 +133,31 @@ func _collect_fields() -> void:
 		var title := "井田 %d" % (id + 1)
 		var watered := Global.irrigation.watered_footprint(center)
 		var detail := ""
+		var needs := PackedStringArray()
 		if working:
 			title += " 工地"
 			detail = "%s · 还需 %d 夜" % [Global.reclamation_stage(progress), Global.RECLAMATION_NIGHTS - progress]
 		else:
 			var ripe := 0
+			var dry := 0
+			var blocked := 0
 			for y in range(-1, 2):
 				for x in range(-1, 2):
-					if world.is_crop_ripe(center + Vector2i(x, y)):
-						ripe += 1
+					var cell := center + Vector2i(x, y)
+					var task := Global.crop_night_status(cell)
+					if task in Global.FIELD_ROUTE_STATES:
+						field_tasks[cell] = task
+					match task:
+						Global.NightGrowth.READY: ripe += 1
+						Global.NightGrowth.DRY: dry += 1
+						Global.NightGrowth.BLOCKED: blocked += 1
 			detail = "渠水 %d/9 格 · 可收 %d 格" % [watered.size(), ripe]
+			if dry > 0:
+				needs.append("待浇 %d" % dry)
+			if blocked > 0:
+				needs.append("断水 %d" % blocked)
 		var entry := _entry(Category.FIELDS, title, detail, _cell_point(center))
-		entry.merge({"field_id": id, "worksite": working, "watered": watered})
+		entry.merge({"field_id": id, "worksite": working, "watered": watered, "needs": " · ".join(needs)})
 		fields.append(entry)
 
 func _collect_people() -> void:
@@ -200,6 +228,12 @@ func _show_category(next: Category) -> void:
 		Category.FIELDS: entries = fields
 		Category.PEOPLE: entries = people
 		Category.RAVINE: entries = _ravine_places()
+	field_routes.visible = category == Category.FIELDS
+	if field_routes.visible:
+		var report := Global.field_night_forecast()
+		_update_field_button(harvest_route, "■ 可收", report.ready)
+		_update_field_button(water_route, "◇ 待浇", report.dry)
+		_update_field_button(canal_route, "× 断水", report.blocked)
 	ravine_note.visible = category == Category.RAVINE
 	if ravine_note.visible:
 		var quota := "今日已有外出收获" if Global.last_forage_day == Global.current_day else "今日可带回一份外出收获"
@@ -214,12 +248,19 @@ func _show_category(next: Category) -> void:
 		_add_row(entry)
 	_refresh_destination()
 
+func _update_field_button(button: Button, label_text: String, count: int) -> void:
+	button.text = "%s %d" % [label_text, count]
+	button.disabled = count == 0
+
 func _add_row(entry: Dictionary) -> void:
 	var row := Button.new()
-	row.custom_minimum_size.y = 58.0
+	var needs: String = entry.get("needs", "")
+	row.custom_minimum_size.y = 58.0 if needs.is_empty() else 76.0
 	row.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	row.toggle_mode = true
 	row.accessibility_name = "%s，%s" % [entry.title, entry.detail]
+	if not needs.is_empty():
+		row.accessibility_name += "，" + needs
 	if entry.kind == Category.RAVINE:
 		row.tooltip_text = entry.detail
 	row.pressed.connect(_select.bind(entry))
@@ -251,6 +292,8 @@ func _add_row(entry: Dictionary) -> void:
 	copy.offset_right = -12.0
 	_add_row_text(copy, entry.title, 17, Color("#f5e7bd"))
 	_add_row_text(copy, entry.detail, 14, Color("#c7cbb2"))
+	if not needs.is_empty():
+		_add_row_text(copy, needs, 14, Color("#e6cb99"))
 
 func _add_row_text(parent: VBoxContainer, content: String, font_size: int, ink: Color) -> void:
 	var label := Label.new()
@@ -286,10 +329,13 @@ func _clear_directions() -> void:
 func _refresh_destination() -> void:
 	target = directions.destination()
 	clear_button.disabled = target.is_empty()
-	status.text = ("选个去处，沿金色标记走东关。" if category == Category.RAVINE
-		else "点选目的地，回到封地后沿金色标记走。")
 	if not target.is_empty():
 		status.text = "指路 · " + target.title
+	else:
+		match category:
+			Category.FIELDS: status.text = "选一类田务，做完一格会标出下一格。"
+			Category.RAVINE: status.text = "选个去处，沿金色标记走东关。"
+			_: status.text = "点选目的地，回到封地后沿金色标记走。"
 	for row in row_buttons:
 		var entry: Dictionary = row_buttons[row]
 		var selected: String = Global.ravine_trip_target if entry.kind == Category.RAVINE else target.get("title", "")
@@ -349,7 +395,10 @@ func _layout_chart() -> void:
 	for place in places:
 		occupied.append(_place_pin(place).grow(2.0))
 	for field in fields:
-		occupied.append(_field_rect(field.point).grow(2.0))
+		var footprint := _field_rect(field.point).grow(2.0)
+		if category == Category.FIELDS:
+			footprint = footprint.grow_side(SIDE_TOP, 15.0)
+		occupied.append(footprint)
 	if category == Category.PEOPLE:
 		for person in people:
 			occupied.append(Rect2(_map_point(person.point) - Vector2(8, 8), Vector2(16, 16)))
@@ -393,6 +442,9 @@ func _draw_chart() -> void:
 	_draw_channels()
 	for field in fields:
 		_draw_field(field)
+	if category == Category.FIELDS:
+		for cell in field_tasks:
+			_draw_field_task(cell, field_tasks[cell])
 	for place in places:
 		_draw_place(place)
 	if category == Category.PEOPLE:
@@ -400,8 +452,9 @@ func _draw_chart() -> void:
 			_draw_person(_map_point(person.point))
 	if not target.is_empty():
 		var point := _map_point(target.point)
-		chart.draw_arc(point, 13.0, 0.0, TAU, 32, INK, 3.6, true)
-		chart.draw_arc(point, 13.0, 0.0, TAU, 32, GOLD, 2.0, true)
+		var radius := 7.0 if category == Category.FIELDS and Global.field_route_status >= 0 else 13.0
+		chart.draw_arc(point, radius, 0.0, TAU, 32, INK, 3.6, true)
+		chart.draw_arc(point, radius, 0.0, TAU, 32, GOLD, 2.0, true)
 	var here := _map_point(_player_point())
 	chart.draw_circle(here, 7.0, INK, true, -1.0, true)
 	chart.draw_circle(here, 4.7, GOLD, true, -1.0, true)
@@ -468,7 +521,25 @@ func _draw_field(field: Dictionary) -> void:
 				area.position + Vector2(area.size.x, cell.y * offset), Color("#6e7859"))
 		chart.draw_rect(Rect2(at - cell * 0.5, cell), Color("#6e5734"), false, 1.4)
 		chart.draw_rect(area, Color("#576345"), false, 1.6)
-	_draw_text(str(field.field_id + 1), at, 12, INK)
+	var number_at := Vector2(at.x, area.position.y - 8.0) if category == Category.FIELDS else at
+	_draw_text(str(field.field_id + 1), number_at, 12, INK)
+
+func _draw_field_task(cell: Vector2i, task: int) -> void:
+	var at := _map_point(_cell_point(cell))
+	match task:
+		Global.NightGrowth.READY:
+			var square := Rect2(at - Vector2(4, 4), Vector2(8, 8))
+			chart.draw_rect(square, INK)
+			chart.draw_rect(square.grow(-1.5), GOLD)
+		Global.NightGrowth.DRY:
+			var diamond := PackedVector2Array([at + Vector2(0, -4), at + Vector2(4, 0),
+				at + Vector2(0, 4), at + Vector2(-4, 0), at + Vector2(0, -4)])
+			chart.draw_polyline(diamond, INK, 3.5, true)
+			chart.draw_polyline(diamond, Color("#b7e1ef"), 1.5, true)
+		Global.NightGrowth.BLOCKED:
+			for diagonal in [Vector2(3, 3), Vector2(3, -3)]:
+				chart.draw_line(at - diagonal, at + diagonal, INK, 3.5, true)
+				chart.draw_line(at - diagonal, at + diagonal, Color("#ffb38f"), 1.5, true)
 
 func _draw_place(place: Dictionary) -> void:
 	var at := _map_point(place.point)

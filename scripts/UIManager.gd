@@ -52,6 +52,7 @@ func _ready() -> void:
 		directions.follow_ravine(Global.ravine_trip_target)
 	estate_map.setup(world, directions, _map_controls_blocked)
 	hud.map_button.pressed.connect(estate_map.open_map)
+	hud.farm_status.pressed.connect(estate_map.open_fields)
 	hud.handover_button.pressed.connect(_open_handover)
 	handover.find_keeper_requested.connect(_on_neighbor_directions_requested.bind(VisitorData.FIELD_KEEPER))
 	hud.route_progress.pressed.connect(_open_route_goals)
@@ -86,17 +87,23 @@ func _show_away_field_report() -> void:
 
 func _process(_delta: float) -> void:
 	world.player.menu_open = _estate_panel_open()
-	var blocked := _estate_controls_blocked()
+	var busy := _estate_controls_busy()
+	var blocked: bool = busy or world.channel_mode
 	world.player.meal_controls_blocked = blocked
 	hud.map_button.disabled = blocked or world.player.training_cart.visible or Global.outcome != Global.Outcome.RUNNING
+	hud.farm_status.disabled = hud.map_button.disabled
 	hud.calendar_button.disabled = hud.map_button.disabled
 	hud.route_progress.disabled = hud.map_button.disabled
 	hud.handover_button.disabled = hud.map_button.disabled
 	hud.raid_alert.disabled = blocked
-	directions.update_marker(blocked or Global.is_indoors())
+	var following_canal := Global.field_route_status == Global.NightGrowth.BLOCKED
+	directions.update_marker(busy or (world.channel_mode and not following_canal) or Global.is_indoors())
 
 func _estate_controls_blocked() -> bool:
-	return (MapTravel.active or world.channel_mode or world.player.conversation_open
+	return world.channel_mode or _estate_controls_busy()
+
+func _estate_controls_busy() -> bool:
+	return (MapTravel.active or world.player.conversation_open
 		or (sleep_tween and sleep_tween.is_running())
 		or _estate_panel_open())
 
@@ -446,9 +453,7 @@ func _show_night_rations() -> void:
 	)
 
 func _on_dry_plot_requested(panel: Control) -> void:
-	var cell: Variant = world.find_dry_plot()
-	if cell != null:
-		directions.follow_dry_plot(cell)
+	if directions.follow_field_route(Global.NightGrowth.DRY):
 		panel_manager.hide_management_panel()
 		panel.queue_free()
 		if Global.is_indoors():

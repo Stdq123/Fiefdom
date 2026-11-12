@@ -261,17 +261,18 @@ func _on_tax_reform_choice_made(choice: Global.TaxReformChoice) -> void:
 func is_crop_dry(grid_pos: Vector2i) -> bool:
 	return Global.field_crop_is_dry(grid_pos)
 
-func find_dry_plot() -> Variant:
+func find_field_task(status: int) -> Variant:
 	var nearest: Variant = null
 	var distance := INF
 	var public_selected := false
+	var start := estate_player_point()
 	for cell: Vector2i in active_crops:
-		if not is_crop_dry(cell):
+		if Global.crop_night_status(cell) != status:
 			continue
 		var is_public := Global.is_public_plot(cell)
 		if public_selected and not is_public:
 			continue
-		var distance_to_crop := player.global_position.distance_squared_to(to_global(get_crop_world_pos(cell)))
+		var distance_to_crop := start.distance_squared_to(get_crop_world_pos(cell))
 		if is_public != public_selected or distance_to_crop < distance:
 			nearest = cell
 			distance = distance_to_crop

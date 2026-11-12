@@ -109,6 +109,7 @@ var winter_suppers: Dictionary[int, Dictionary] = {}
 
 var active_crops: Dictionary = {}
 var tilled_cells: Dictionary = {}
+var field_route_status := -1
 var field_seed_plans: Dictionary[Vector2i, String] = {}
 var fertile_cells: Dictionary[Vector2i, bool] = {}
 var irrigation: Irrigation
@@ -123,6 +124,7 @@ enum ChannelSite { AVAILABLE, LOCKED, BLOCKED, ALREADY_BUILT, NO_FUNDS }
 enum ReclamationSite { OPEN, EDGE, NEAR_FIELD, SOURCE, CANAL }
 enum CropWater { DRY, BLOCKED, HAND, CANAL, RAIN }
 enum NightGrowth { READY, DRY, BLOCKED, GROW, RIPEN }
+const FIELD_ROUTE_STATES := [NightGrowth.READY, NightGrowth.DRY, NightGrowth.BLOCKED]
 enum Season { SPRING, SUMMER, AUTUMN, WINTER }
 const SEASON_NAMES := ["春", "夏", "秋", "冬"]
 
@@ -260,6 +262,7 @@ func _reset_campaign() -> void:
 	winter_suppers.clear()
 	active_crops.clear()
 	tilled_cells.clear()
+	field_route_status = -1
 	field_seed_plans.clear()
 	fertile_cells.clear()
 	irrigation = Irrigation.new()
@@ -522,6 +525,7 @@ func is_indoors() -> bool:
 func begin_next_day() -> void:
 	current_day += 1
 	day_progress = 0.0
+	field_route_status = -1
 	away_field_report.clear()
 	_away_work_elapsed.clear()
 	if sheepfold.owned():
@@ -877,13 +881,16 @@ func night_growth(crop: Dictionary, water: CropWater) -> NightGrowth:
 		CropWater.BLOCKED: return NightGrowth.BLOCKED
 	return NightGrowth.RIPEN if nights_left == 1 else NightGrowth.GROW
 
+func crop_night_status(cell: Vector2i, day := 0) -> int:
+	var crop: Dictionary = active_crops.get(cell, {})
+	return -1 if crop.is_empty() else night_growth(crop, crop_water(cell, crop, day))
+
 func field_night_forecast(day := 0) -> Dictionary:
 	var report := {"day": current_day if day <= 0 else day}
 	for key in FIELD_NIGHT_COUNTS:
 		report[key] = 0
 	for cell: Vector2i in active_crops:
-		var crop: Dictionary = active_crops[cell]
-		match night_growth(crop, crop_water(cell, crop, report.day)):
+		match crop_night_status(cell, report.day):
 			NightGrowth.READY: report.ready += 1
 			NightGrowth.DRY: report.dry += 1
 			NightGrowth.BLOCKED: report.blocked += 1
@@ -2042,6 +2049,7 @@ func _save_snapshot(origin: String) -> Error:
 		"estate_room": estate_room,
 		"location": "west_market" if get_tree().current_scene and get_tree().current_scene.scene_file_path == WEST_MARKET_SCENE else "estate",
 		"selected_seed": selected_seed_id,
+		"field_route_status": field_route_status,
 		"current_stamina": current_stamina,
 		"health": health,
 		"outcome": outcome,
@@ -2516,6 +2524,8 @@ func load_game(path := "") -> Error:
 	creek_trap = _restore_creek_trap(data.get("creek_trap"), saved_day)
 	var saved_trip: Variant = data.get("ravine_trip_target")
 	ravine_trip_target = saved_trip if saved_trip is String and saved_trip in ravine_trip_places() else ""
+	var saved_route := _read_save_int(data.get("field_route_status"), -1)
+	field_route_status = saved_route if saved_route in FIELD_ROUTE_STATES else -1
 	ravine_journal = _restore_ravine_journal(data.get("ravine_journal"), saved_day)
 	money = maxi(0, _read_save_int(data.get("money"), 0))
 	_restore_crop_stock(data.get("crop_stock"), maxi(0, _read_save_int(data.get("player_inventory"), 0)))

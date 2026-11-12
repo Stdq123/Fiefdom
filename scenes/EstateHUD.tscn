@@ -503,11 +503,12 @@ theme_override_constants/separation = 5
 unique_name_in_owner = true
 alignment = 1
 
-[node name="FarmStatus" type="Label" parent="SeedBelt/Stack"]
+[node name="FarmStatus" type="Button" parent="SeedBelt/Stack"]
 layout_mode = 2
-mouse_filter = 2
 unique_name_in_owner = true
-horizontal_alignment = 1
+size_flags_horizontal = 4
+mouse_default_cursor_shape = 2
+tooltip_text = "打开舆图查看田务并指路"
 theme_override_font_sizes/font_size = 13
 theme_override_colors/font_color = Color(0.745, 0.83, 0.718, 1)
 

@@ -26,7 +26,7 @@ extends Control
 @onready var health_bar: ProgressBar = %HealthBar
 @onready var practice_label: Label = %PracticeLabel
 @onready var help_label: Label = %HelpLabel
-@onready var farm_status: Label = %FarmStatus
+@onready var farm_status: Button = %FarmStatus
 @onready var pinned_order: Button = %PinnedOrder
 @onready var canal_controls: HBoxContainer = %CanalControls
 @onready var canal_preview: Label = %CanalPreview
@@ -295,7 +295,7 @@ func refresh_seed_calendar() -> void:
 
 func refresh_farm_status() -> void:
 	var report := Global.field_night_forecast()
-	farm_status.text = "待浇 %d · 可收 %d · 今夜成熟 %d" % [
+	farm_status.text = "田务  ›  待浇 %d · 可收 %d · 今夜成熟 %d" % [
 		report.dry, report.ready, report.public_ripe + report.private_ripe]
 	if report.blocked > 0:
 		farm_status.text += " · 断水 %d" % report.blocked
