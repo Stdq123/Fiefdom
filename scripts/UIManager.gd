@@ -2,6 +2,7 @@ extends CanvasLayer
 
 const NIGHT_RATIONS_PANEL := preload("res://scenes/NightRationsPanel.tscn")
 const SEED_GARDEN := preload("res://scripts/SeedGarden.gd")
+const WINTER_RATIONS := preload("res://scripts/WinterRoadRations.gd")
 const FISHING_PANEL := preload("res://scripts/FishingPanel.gd")
 
 @onready var world = $"../World"
@@ -225,6 +226,7 @@ func _connect_signals() -> void:
 	GameEvents.seed_garden_requested.connect(_on_seed_garden_requested)
 	GameEvents.fishing_requested.connect(_on_fishing_requested)
 	GameEvents.travel_hearth_interacted.connect(_on_travel_hearth_interacted)
+	GameEvents.winter_road_rations_interacted.connect(_on_winter_road_rations_interacted)
 	GameEvents.winter_supper_requested.connect(_on_winter_supper_requested)
 	GameEvents.winter_supper_prepared.connect(update_ui)
 	GameEvents.road_rest_interacted.connect(_on_road_rest_interacted)
@@ -691,7 +693,16 @@ func _on_freight_arrival_interacted(speech: String, portrait: Texture2D, order_i
 	elif order_id in SeasonOrders.POND_ORDERS:
 		destination = CreekFish.PLACES[CreekFish.Site.POND]
 		guide = directions.follow_place.bind(destination, EstateLayout.POND_LANDING)
+	elif order_id == SeasonOrders.WINTER_WOVEN_GOODS:
+		destination = WINTER_RATIONS.PLACE
+		guide = directions.follow_place.bind(destination, EstateLayout.WINTER_RATIONS_APPROACH)
 	dialog_manager.show_freight_arrival(speech, portrait, _guide_travel_hearth, destination, guide)
+
+func _on_winter_road_rations_interacted() -> void:
+	world.set_channel_mode(false)
+	if directions.tracked_place == WINTER_RATIONS.PLACE:
+		directions.clear_tracking()
+	dialog_manager.show_winter_road_rations(world.get_node("WinterRoadRations").courier_at_table())
 
 func _on_fishing_requested(spot: Node2D) -> void:
 	if _estate_controls_blocked() or not Global.cast_fishing_line(spot.site):

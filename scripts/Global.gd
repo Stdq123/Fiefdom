@@ -1383,6 +1383,9 @@ func _ending_memories() -> Array[String]:
 	var pond_day := pond_landing_day()
 	if pond_day > 0:
 		events.append({"day": pond_day, "text": "下游乡亲送来木板，石墨在南池西岸铺了钓台。"})
+	var rations_day := winter_road_rations_day()
+	if rations_day > 0:
+		events.append({"day": rations_day, "text": "阿绥把你送的麦帛搬到亭前，赶路人有了麦饼和行囊。"})
 	var relief := watch_relief_day()
 	if relief > 0:
 		events.append({"day": relief, "text": "你备下的巡粮到了东岗，岗旗换上新麻绳。"})
@@ -2169,6 +2172,8 @@ func deliver_season_order(start_day: int, paid_in_food: bool) -> bool:
 	var previous_post := watch_relief_day() if schedule.order.id == SeasonOrders.WATCH_RELIEF else 0
 	var previous_garden := seed_garden_day() if schedule.order.id in SeasonOrders.SEED_ORDERS else 0
 	var previous_pond := pond_landing_day() if schedule.order.id in SeasonOrders.POND_ORDERS else 0
+	var previous_rations := winter_road_rations_day() if schedule.order.id == SeasonOrders.WINTER_WOVEN_GOODS else 0
+	var cake_claimed_for: int = season_order_receipts.get(schedule.order.id, {}).get("cake_claimed_for", 0)
 	season_order_receipts[schedule.order.id] = {
 		"day": current_day, "paid_in_food": paid_in_food,
 		"dispatch_day": SeasonOrders.dispatch_day(current_day, day_progress),
@@ -2179,6 +2184,9 @@ func deliver_season_order(start_day: int, paid_in_food: bool) -> bool:
 		season_order_receipts[schedule.order.id]["previous_garden_day"] = previous_garden
 	if previous_pond > 0:
 		season_order_receipts[schedule.order.id]["first_pond_day"] = previous_pond
+	if previous_rations > 0:
+		season_order_receipts[schedule.order.id]["previous_rations_day"] = previous_rations
+		season_order_receipts[schedule.order.id]["cake_claimed_for"] = cake_claimed_for
 	reputation += balance.interaction_reputation_gain
 	if paid_in_food:
 		food_storage += rewards.food
@@ -2267,7 +2275,25 @@ func fish_for_travel_meal() -> String:
 			return id
 	return ""
 
+func winter_road_rations_progress() -> float:
+	var receipt: Dictionary = season_order_receipts.get(SeasonOrders.WINTER_WOVEN_GOODS, {})
+	return -1.0 if receipt.is_empty() else SeasonOrders.relay_progress(receipt,
+		current_day, day_progress, SeasonOrders.WINTER_RELAY_FRACTION)
+
+func winter_road_rations_day() -> int:
+	var receipt: Dictionary = season_order_receipts.get(SeasonOrders.WINTER_WOVEN_GOODS, {})
+	if receipt.is_empty():
+		return 0
+	return receipt.dispatch_day if winter_road_rations_progress() >= 1.0 else receipt.get("previous_rations_day", 0)
+
+func winter_road_rations_gift_available() -> bool:
+	var day := winter_road_rations_day()
+	return day > 0 and season_order_receipts[SeasonOrders.WINTER_WOVEN_GOODS].get("cake_claimed_for", 0) != day
+
 func can_pack_travel_meal(meal: String, fish_id: String) -> bool:
+	if meal == TravelMeal.WHEAT_CAKE:
+		return (outcome == Outcome.RUNNING and travel_meal.is_empty() and winter_road_rations_day() > 0
+			and (winter_road_rations_gift_available() or crop_stock.can_spend(TravelMeal.RECIPES[meal].crops)))
 	return (outcome == Outcome.RUNNING and travel_hearth_open() and travel_meal.is_empty()
 		and (meal != TravelMeal.RICE_FISH or fish_count(fish_id) > 0)
 		and crop_stock.can_spend(TravelMeal.RECIPES[meal].crops))
@@ -2275,7 +2301,10 @@ func can_pack_travel_meal(meal: String, fish_id: String) -> bool:
 func pack_travel_meal(meal: String, fish_id: String) -> bool:
 	if not can_pack_travel_meal(meal, fish_id):
 		return false
-	crop_stock.spend(TravelMeal.RECIPES[meal].crops)
+	if meal == TravelMeal.WHEAT_CAKE and winter_road_rations_gift_available():
+		season_order_receipts[SeasonOrders.WINTER_WOVEN_GOODS]["cake_claimed_for"] = winter_road_rations_day()
+	else:
+		crop_stock.spend(TravelMeal.RECIPES[meal].crops)
 	travel_meal = meal
 	if meal == TravelMeal.RICE_FISH:
 		fish_collection[fish_id].stock -= 1
@@ -3677,6 +3706,13 @@ func _restore_season_order_receipts(record: Variant, saved_day: int) -> void:
 					var first_pond := clampi(_read_save_int(receipt.get("first_pond_day"), 0), 0, day)
 					if first_pond > 0:
 						season_order_receipts[order.id]["first_pond_day"] = first_pond
+				elif order.id == SeasonOrders.WINTER_WOVEN_GOODS:
+					var previous_rations := clampi(_read_save_int(receipt.get("previous_rations_day"), 0), 0, day)
+					if previous_rations > 0:
+						season_order_receipts[order.id]["previous_rations_day"] = previous_rations
+					var cake_claimed_for := clampi(_read_save_int(receipt.get("cake_claimed_for"), 0), 0, saved_day)
+					if cake_claimed_for > 0:
+						season_order_receipts[order.id]["cake_claimed_for"] = cake_claimed_for
 
 func _restore_sheepfold(record: Variant, saved_day: int) -> void:
 	sheepfold = Sheepfold.new()

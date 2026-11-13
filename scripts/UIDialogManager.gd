@@ -8,6 +8,7 @@ const ROAD_REST := preload("res://scripts/RoadRest.gd")
 const ROTATION_BOOK := preload("res://scripts/FieldRotationBook.gd")
 const WATER_SOURCE := preload("res://scripts/WaterSource.gd")
 const SEED_GARDEN := preload("res://scripts/SeedGarden.gd")
+const WINTER_RATIONS := preload("res://scripts/WinterRoadRations.gd")
 const ESTATE_STORAGE := preload("res://assets/world/estate-storage.png")
 const HUNGER_RETURN_LINES := {
 	VisitorData.FIELD_KEEPER: "那夜没分到饭，我只好去南边借住。今早路过，还是想看看咱们那块田。",
@@ -113,6 +114,26 @@ func show_seed_garden(host_present: bool) -> void:
 		dialog.option_selected.connect(func(index: int):
 			if index < SeasonOrders.SEED_CROPS.size() and Global.take_seed_garden_gift(SeasonOrders.SEED_CROPS[index]):
 				GameEvents.world_notice.emit("亭西种圃 · %s入私仓" % ItemManager.crop_label(Global.seed_garden_gift)))
+
+func show_winter_road_rations(host_present: bool) -> void:
+	var meal := TravelMeal.WHEAT_CAKE
+	var gift := Global.winter_road_rations_gift_available()
+	var name := "阿绥" if host_present else WINTER_RATIONS.PLACE
+	var text := ("陶辛裁的布给赶路人做了行囊。你送来的麦也烙了饼，筐里给你留了一份。" if gift else
+		"亭前备着包路粮的布。带一份私仓麦来，还能做一份麦饼。")
+	var options: Array[String] = ["领一份麦饼" if gift else "用 1 份麦做麦饼", "离开"]
+	var disabled: Array[int] = []
+	if not Global.can_pack_travel_meal(meal, ""):
+		disabled.append(0)
+		if not Global.travel_meal.is_empty():
+			text += "\n你已经带着%s，吃完再来。" % TravelMeal.RECIPES[Global.travel_meal].name
+		elif not gift:
+			text += "\n私仓缺一份麦。"
+	var detail := TravelMeal.describe_recovery(TravelMeal.benefits(meal, Global.balance))
+	var dialog := _open(name, "南路亭 · " + detail, text, options, disabled, TravelMeal.icon(meal))
+	dialog.option_selected.connect(func(index: int):
+		if index == 0:
+			Global.pack_travel_meal(meal, ""))
 
 func show_winter_supper() -> void:
 	var record := Global.winter_supper_record()

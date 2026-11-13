@@ -80,6 +80,7 @@ class_name BalanceData
 @export_range(0, 10000) var fish_order_copper_bonus: int = 4
 @export_range(0, 100) var fish_order_food_bonus: int = 2
 @export_range(1, 100) var bean_millet_stamina: int = 32
+@export_range(1, 100) var wheat_cake_stamina: int = 24
 @export_range(1, 100) var rice_fish_stamina: int = 18
 @export_range(1, 100) var rice_fish_health: int = 28
 @export_range(0, 100) var autumn_exhibit_rites: int = 30

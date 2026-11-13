@@ -74,6 +74,8 @@ const RAVINE_TRAIL_ARRIVAL := Vector2(437, 574)
 const RAVINE_TRAIL_NAME := "竹涧小径"
 const SHEEPFOLD_GATE := Vector2(-248, 650)
 const PAVILION_SEATS := Vector2(151, 436)
+const WINTER_RATIONS := Vector2(101, 421)
+const WINTER_RATIONS_APPROACH := WINTER_RATIONS + Vector2(0, 16)
 const SOUTH_LANE := [
 	Vector2(4, 43), Vector2(1, 72), Vector2(0, 101), Vector2(8, 128), EAST_LANE_JUNCTION,
 	Vector2(46, 177), Vector2(50, 205), FIELD_LANE_TURN, Vector2(35, 268), Vector2(21, 294),
@@ -161,6 +163,12 @@ static func seed_garden_route() -> Array:
 	var south := SOUTH_LANE.slice(SOUTH_LANE.find(PAVILION_JUNCTION), -1)
 	south.reverse()
 	return unloading_exit() + south + SEED_GARDEN_TRACK.slice(1) + [SEED_GARDEN + Vector2(37, 7)]
+
+static func winter_rations_route() -> Array:
+	var south := SOUTH_LANE.slice(SOUTH_LANE.find(PAVILION_JUNCTION), -1)
+	south.reverse()
+	return unloading_exit() + south + PAVILION_APPROACH.slice(1, 3) + [
+		Vector2(89, 432), WINTER_RATIONS + Vector2(18, 4)]
 
 static func festival_entrance() -> Array[Vector2]:
 	var path: Array[Vector2] = []

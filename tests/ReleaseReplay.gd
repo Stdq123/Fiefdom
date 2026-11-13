@@ -66,6 +66,11 @@ func _run() -> void:
 		"winter-supper":
 			var replay = load("res://tests/WinterSupperReplay.gd").new()
 			await replay.run(tree, capture_directory)
+		"winter-road-rations":
+			var replay = load("res://tests/SecondYearOrdersReplay.gd").new()
+			replay.winter_only = true
+			replay.capture_dir = capture_directory
+			await replay.run(tree)
 		"summer-raft":
 			var replay = load("res://tests/SummerRaftReplay.gd").new()
 			await replay.run(tree, capture_directory)

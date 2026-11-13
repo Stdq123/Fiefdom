@@ -4,6 +4,7 @@ enum Category { PLACES, FIELDS, PEOPLE, RAVINE }
 
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const SEED_GARDEN := preload("res://scripts/SeedGarden.gd")
+const WINTER_RATIONS := preload("res://scripts/WinterRoadRations.gd")
 const PAPER := Color("#ded2ac")
 const INK := Color("#3e3c2a")
 const GOLD := Color("#f2ce78")
@@ -126,6 +127,10 @@ func _collect_places() -> void:
 		if detail.is_empty():
 			detail = "南池西岸 · 可钓鲫鱼"
 		places.append(_entry(Category.PLACES, CreekFish.PLACES[CreekFish.Site.POND], detail, EstateLayout.POND_LANDING, true))
+	if Global.winter_road_rations_day() > 0:
+		var detail := "可领一份麦饼" if Global.winter_road_rations_gift_available() else "带一份私仓麦可做麦饼"
+		places.append(_entry(Category.PLACES, WINTER_RATIONS.PLACE, detail,
+			_node_point(world.get_node("WinterRoadRations/Approach")), true))
 	var record_stand := world.get_node("Scenery/EndingRecord")
 	if record_stand.visible:
 		var task := "翻看通关当天的账目" if record_stand.archived else "呈交账簿，开启结尾"

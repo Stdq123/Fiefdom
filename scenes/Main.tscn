@@ -51,6 +51,7 @@
 [ext_resource type="Script" path="res://scripts/WaterSource.gd" id="47_water_source"]
 [ext_resource type="Script" path="res://scripts/SeedGarden.gd" id="48_seed_garden"]
 [ext_resource type="Script" path="res://scripts/PondLanding.gd" id="49_pond_landing"]
+[ext_resource type="PackedScene" path="res://scenes/WinterRoadRations.tscn" id="50_winter_rations"]
 
 [sub_resource type="RectangleShape2D" id="Shape_east_gate"]
 size = Vector2(8, 20)
@@ -429,6 +430,9 @@ position = Vector2(-248, 650)
 
 [node name="WinterSupper" parent="World" instance=ExtResource("40_winter_supper")]
 position = Vector2(338, 873)
+
+[node name="WinterRoadRations" parent="World" instance=ExtResource("50_winter_rations")]
+position = Vector2(101, 421)
 
 [node name="RoadRest" type="Node2D" parent="World"]
 position = Vector2(-25, 446)

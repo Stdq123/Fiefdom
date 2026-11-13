@@ -933,3 +933,8 @@
 
 - 酉时前交的鱼会在西市摊边鱼槽游动。酉时背筐伙计带竹篓到槽边取鱼，沿北巷走上石板街出东关。酉时以后交的鱼由渔生打烊后送。两种时段都在交鱼时结算，鱼槽和伙计按收据日期、交鱼时刻与当前时辰恢复。
 - 第 35 天从柳湾钓白鲦，沿路去鱼摊换 13 铜钱。回标题续玩仍能看见鱼，酉时取走后鱼槽空出。第 37 天酉时后交鳜鱼换 7 份粮，由渔生收下。Godot 的交鱼、西市和指路回放通过。Windows 解压版通过留鱼、双结局、战败恢复及研究。鱼槽、取鱼和离场在独立桌面核对。 [Windows 试玩包](../build/polish-fish-porter/Fiefdom-1.0.0-Windows-x64.zip) · [鱼槽里的白鲦](../build/polish-fish-porter/render-1024x768/06-stall-plaque.png) · [酉时取鱼](../build/polish-fish-porter/render-1024x768/06a-porter-at-basin.png) · [发行回放](../build/polish-fish-porter/windows-check/fish-market-orders.log)
+
+## 岁末麦帛送到亭前路粮案
+
+- 阿绥从卸货场把麦和绸搬到南路亭。到货后可从申禾或封地舆图指路。案上每批留一份麦饼，用过后可用一份私仓麦做。麦饼占现有路餐位，默认恢复 24 体力。
+- 回放在第二年自种麦和织绸，第 45 天交货，走到亭前领麦饼并续档食用。第 48 天晚交的另一批跨年送达，领完后再用一份私仓麦做，国库保持四份。Godot 与 Windows 解压版通过专项回放，发行版双结局、战败恢复、延期研究和冬至围炉通过。两次送达的画面在独立桌面核对。 [Windows 试玩包](../build/polish-winter-rations/Fiefdom-1.0.0-Windows-x64.zip) · [亭前到货](../build/polish-winter-rations/final-1024x768/08-winter-rations-at-pavilion.png) · [跨年到货](../build/polish-winter-rations/final-1024x768/11-next-year-arrival.png) · [发行回放](../build/polish-winter-rations/windows-check/winter-road-rations.log)

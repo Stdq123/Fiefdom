@@ -13,6 +13,7 @@ param(
     [switch]$SixArts,
     [switch]$BowAim,
     [switch]$WinterSupper,
+    [switch]$WinterRoadRations,
     [switch]$KeyBindings,
     [switch]$SummerRaft,
     [switch]$TitlePresentation,
@@ -151,6 +152,9 @@ try {
     }
     if ($WinterSupper) {
         Start-VerifiedGame -Directory $release -Profile 'winter-supper' -Name 'winter-supper' -Replay 'winter-supper'
+    }
+    if ($WinterRoadRations) {
+        Start-VerifiedGame -Directory $release -Profile 'winter-road-rations' -Name 'winter-road-rations' -Replay 'winter-road-rations'
     }
     if ($SummerRaft) {
         Start-VerifiedGame -Directory $release -Profile 'summer-raft' -Name 'summer-raft' -Replay 'summer-raft'
