@@ -26,4 +26,10 @@
   <path fill="#4d4030" d="M58 43h14v5H58zm2-4h10v4H60z"/>
   <path fill="#b08a55" d="M59 44h12v2H59zm2-4h8v2h-8z"/>
   <path fill="#d0a369" d="M60 44h3v2h-3zm5-4h3v2h-3z"/>
+  <path fill="#e2c080" d="M31 5.5h4v.5h-4z M39 5h.5v1.5H39z M46 5.5h3v.5h-3z M23 8h3v.5h-3z M28 9h.5v1.5H28z M35.5 7.5h.5v1.5h-.5z M42 8h3v.5h-3z M52 8h4v.5h-4z M14 11.5h3v.5h-3z M24 12h2v.5h-2z M34 11h4v.5h-4z M47 12h5v.5h-5z M55.5 11H61v.5h-5.5z M64 13h3v.5h-3z M8.5 16h4v.5h-4z M25 16h4v.5h-4z M33 15h4v.5h-4z M40 16h4v.5h-4z M58 15h4v.5h-4z M64 16.5h4v.5h-4z"/>
+  <path fill="#6e5839" d="M8 20h4v.5H8z M15 19.5h3v.5h-3z M23 20.5h4v.5h-4z M30 20h5v.5h-5z M38 21h3v.5h-3z M45 20h4v.5h-4z M52 20.5h5v.5h-5z M61 20h4v.5h-4z"/>
+  <path fill="#a5916b" d="M11 44.5h5v.5h-5z M17 45h3v.5h-3z M24 45h5v.5h-5z M31 46h4v.5h-4z M49.5 45h4v.5h-4z M55.5 46H58v.5h-2.5z M12.5 48h5v.5h-5z M21 48.5h6v.5h-6z M53 48.5h4v.5h-4z"/>
+  <path fill="#c78c60" d="M30.5 39h5v.5h-5z M46.5 39h5.5v.5h-5.5z M31 42h3v.5h-3z M50 42h2.5v.5H50z M30 44.5h3v.5h-3z M51 44.5h1.5v.5H51z"/>
+  <path fill="#473630" d="M36 46.5h3v.5h-3z M37 45h2v.5h-2z M44.5 45h3v.5h-3z M39.5 47h3.5v.5h-3.5z M44 47.5h4v.5h-4z"/>
+  <path fill="#b1af90" d="M34.5 30h13v.5h-13z M36.5 32h4v.5h-4z M36 33h1v.5h-1z M16 32h2v.5h-2z M15 34h.5v1.5H15z"/>
 </svg>

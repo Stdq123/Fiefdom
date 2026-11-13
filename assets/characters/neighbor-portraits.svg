@@ -20,6 +20,13 @@
     <path fill="#777d76" d="M12 14h25v2h-4v2H16v-1h-4Z"/>
     <path fill="#a0a093" d="M14 14h19v1H14Z"/>
     <path fill="#333739" d="M10 17h7v2h-3v3h-2v-2h-2zm24-1h5v5h-4Z"/>
+    <path fill="#666c66" d="M20 7.5h8V8h-5v1h-3zM16 11h4v.5h-3v1h-1z"/>
+    <path fill="#c0b5a0" d="M14.5 14h6.5v.5h-6.5zm10 0h6v.5h-6z"/>
+    <path fill="#929389" d="M11 39.5h4v-1h2v.5h-1v1h-3v1h-2zm23 4h1v2h-1z"/>
+    <path fill="#c0bdac" d="M14.5 36h4.5v.5h-3v1h-1.5zm4 3h1v1h1v1h1v1H21v-1h-1v-1h-1.5z"/>
+    <path fill="#f8d5a5" d="M18.5 17.5h7v.5h-5v.5h-2zM23 22.5h1v1.5h-.5v1h-1v-.5h.5z"/>
+    <path fill="#d6be99" d="M33.5 37h1v1.5h-1zM30.5 42h1.5v.5h-1v1h-.5z"/>
+    <path fill="#a49680" d="M20 29.5h1v1h2v1h-1v-.5h-2zm7 1h2v.5h-1v.5h-1z"/>
   </g>
   <!-- 季青初见 -->
   <g transform="translate(48 0)">
@@ -44,6 +51,12 @@
     <path fill="#c6a16b" d="M33 43h3v-4h3v-4h6v3h-3v4h-4v4h-5Z"/>
     <path fill="#e2c28a" d="M36 42h2v-3h3v-3h3v2h-3v4h-3v3h-2Z"/>
     <path fill="#a27b54" d="M37 40h2v1h-2zm3-4h3v1h-3z"/>
+    <path fill="#667c93" d="M17 7h10v.5h-7V8h-3zM29 9h3v1h3v1h-2v-.5h-4z"/>
+    <path fill="#a0b6b3" d="M14.5 13.5h6v.5h-6zM26 13.5h8v.5h-8z"/>
+    <path fill="#a0b8c2" d="M12.5 40h2v-1h4v.5h-3v1h-2.5v1h-.5z"/>
+    <path fill="#eef0d9" d="M16.5 36H20v.5h-2v1h-1.5zm4 3h1v1h1v1h1v1h-1v-1h-1v-1h-1z"/>
+    <path fill="#f8d5a5" d="M18.5 17.5h7v.5h-5v.5h-2zM23 22.5h1v1.5h-.5v1h-1v-.5h.5z"/>
+    <path fill="#f1d297" d="M36.5 42h1v.5h-1zM41.5 36h2v.5h-2z"/>
   </g>
   <!-- 季青谈起路粮 -->
   <g transform="translate(96 0)">
@@ -70,6 +83,12 @@
     <path fill="#c6a16b" d="M33 43h3v-4h3v-4h6v3h-3v4h-4v4h-5Z"/>
     <path fill="#e2c28a" d="M36 42h2v-3h3v-3h3v2h-3v4h-3v3h-2Z"/>
     <path fill="#a27b54" d="M37 40h2v1h-2zm3-4h3v1h-3z"/>
+    <path fill="#667c93" d="M17 7h10v.5h-7V8h-3zM29 9h3v1h3v1h-2v-.5h-4z"/>
+    <path fill="#a0b6b3" d="M14.5 13.5h6v.5h-6zM26 13.5h8v.5h-8z"/>
+    <path fill="#a0b8c2" d="M12.5 40h2v-1h4v.5h-3v1h-2.5v1h-.5z"/>
+    <path fill="#eef0d9" d="M16.5 36H20v.5h-2v1h-1.5zm4 3h1v1h1v1h1v1h-1v-1h-1v-1h-1z"/>
+    <path fill="#f8d5a5" d="M18.5 17.5h7v.5h-5v.5h-2zM23 22.5h1v1.5h-.5v1h-1v-.5h.5z"/>
+    <path fill="#f1d297" d="M36.5 42h1v.5h-1zM41.5 36h2v.5h-2z"/>
   </g>
   <!-- 陶辛在西廊 -->
   <g transform="translate(144 0)">
@@ -89,6 +108,12 @@
     <path fill="#49372d" d="M11 15h6v3h-3v4h-2v-3h-1zm23 0h5v6h-3v-3h-2z"/>
     <path fill="#d4a36d" d="M35 38h4v6h-4Z"/>
     <path fill="#5d4132" d="M36 39h2v3h-2Z"/>
+    <path fill="#ae865c" d="M21.5 9h7v.5h-4v.5h-3zm-4 1h3v.5h-3z"/>
+    <path fill="#debb80" d="M10 12h7v.5h-7zM20 12h6v.5h-6zM29 12h8v.5h-8z"/>
+    <path fill="#c58365" d="M12.5 40h2v-1h4v.5h-2v1h-2v1h-2z"/>
+    <path fill="#edc98c" d="M16.5 36h3.5v.5h-2v1h-1.5zm4 3h1.5v1h1v1h1v1h-1v-1h-1v-1h-1.5z"/>
+    <path fill="#f8d5a5" d="M18.5 17.5h7v.5h-5v.5h-2zM23 22.5h1v1.5h-.5v1h-1v-.5h.5z"/>
+    <path fill="#dfbd8a" d="M35.5 38h2.5v.5h-2.5zm2.5 4h.5v1.5H38z"/>
   </g>
   <!-- 陶辛收到样绸 -->
   <g transform="translate(192 0)">
@@ -109,6 +134,12 @@
     <path fill="#503732" d="M28 42h4v-5h3v-3h11v7h-3v3h-5v3H28Z"/>
     <path fill="#a44d43" d="M30 43h4v-5h3v-3h8v5h-4v3h-5v4h-6Z"/>
     <path fill="#d68d6c" d="M33 44h3v-4h3v-3h4v2h-4v4h-3v3h-3zM39 40h2v2h-2z"/>
+    <path fill="#ae865c" d="M21.5 9h7v.5h-4v.5h-3zm-4 1h3v.5h-3z"/>
+    <path fill="#debb80" d="M10 12h7v.5h-7zM20 12h6v.5h-6zM29 12h8v.5h-8z"/>
+    <path fill="#c58365" d="M12.5 40h2v-1h4v.5h-2v1h-2v1h-2z"/>
+    <path fill="#edc98c" d="M16.5 36h3.5v.5h-2v1h-1.5zm4 3h1.5v1h1v1h1v1h-1v-1h-1v-1h-1.5z"/>
+    <path fill="#f8d5a5" d="M18.5 17.5h7v.5h-5v.5h-2zM23 22.5h1v1.5h-.5v1h-1v-.5h.5z"/>
+    <path fill="#e4a184" d="M37.5 35.5h6v.5h-5v1h-1zm2 4.5h.5v1.5h-.5z"/>
   </g>
   <!-- 蒲宁托付竹简 -->
   <g transform="translate(240 0)">
@@ -128,6 +159,12 @@
     <path fill="#c3a470" d="M32 37h10v9H32z"/>
     <path fill="#97794c" d="M34 38h1v7h-1zm4 0h1v7h-1z"/>
     <path fill="#6b513c" d="M32 40h10v1H32zm0 3h10v1H32z"/>
+    <path fill="#7b8063" d="M23 7h5v.5h-3v1h-2zm-3 2.5h3v.5h-2v1h-1z"/>
+    <path fill="#a9ab83" d="M17 14h5v.5h-5zM25 14h5v.5h-5z"/>
+    <path fill="#96ad87" d="M13.5 39.5h3v-1h3v.5h-2v1h-2.5v1h-1.5z"/>
+    <path fill="#e4d6a7" d="M17.5 35.5h3.5v.5h-2v1h-1.5zM21 39h1v1h1v1h1v1h-1v-1h-1v-1h-1z"/>
+    <path fill="#f8d5a5" d="M18.5 17.5h7v.5h-5v.5h-2zM23 22.5h1v1.5h-.5v1h-1v-.5h.5z"/>
+    <path fill="#d9bd8b" d="M32.5 37.5h9v.5h-9zm2 1h.5V40h-.5zM38.5 41h.5v1.5h-.5z"/>
   </g>
   <!-- 蒲宁照料药苗 -->
   <g transform="translate(288 0)">
@@ -146,6 +183,12 @@
     <path fill="#775b40" d="M32 41h12v5H32Z"/>
     <path fill="#52734f" d="M33 37h3v-4h3v2h4v3h2v4h-6v3h-3v-4h-3Z"/>
     <path fill="#a8bd77" d="M34 36h4v-3h2v4h3v2h-4v3h-2v-4h-3Z"/>
+    <path fill="#7b8063" d="M23 7h5v.5h-3v1h-2zm-3 2.5h3v.5h-2v1h-1z"/>
+    <path fill="#a9ab83" d="M17 14h5v.5h-5zM25 14h5v.5h-5z"/>
+    <path fill="#96ad87" d="M13.5 39.5h3v-1h3v.5h-2v1h-2.5v1h-1.5z"/>
+    <path fill="#e4d6a7" d="M17.5 35.5h3.5v.5h-2v1h-1.5zM21 39h1v1h1v1h1v1h-1v-1h-1v-1h-1z"/>
+    <path fill="#f8d5a5" d="M18.5 17.5h7v.5h-5v.5h-2zM23 22.5h1v1.5h-.5v1h-1v-.5h.5z"/>
+    <path fill="#c1cc93" d="M38.5 33.5h1v2h-.5v1h-.5zM36 37h2v.5h-2z"/>
   </g>
   <!-- 弋戎 -->
   <g transform="translate(336 0)">
@@ -161,6 +204,12 @@
     <path fill="#3f4035" d="M13 12h4V9h4V6h10v3h5v4h2v6h-4v-3H17v4h-4Z"/>
     <path fill="#ad7951" d="M14 13h22v3H14z M26 12h4v5h-4z"/>
     <path fill="#c6a679" d="M27 12h2v3h-2z M39 28h2v10h-2z M37 28h6v2h-6z"/>
+    <path fill="#635e4c" d="M21 7h8v.5h-5v1h-3zM17.5 10h4v.5h-4z"/>
+    <path fill="#d1aa70" d="M15 13.5h7v.5h-7zM26.5 12.5H29v.5h-2.5zM31 13.5h4v.5h-4z"/>
+    <path fill="#be8a67" d="M10 41.5h5v.5h-3v1h-2zM16.5 38h3v.5h-3z"/>
+    <path fill="#e2c594" d="M18.5 41h3v.5h-3zM25 43h4v.5h-4zM24.5 37h2v.5h-2z"/>
+    <path fill="#f8d5a5" d="M20 17h6v.5h-3v.5h-3zM23.5 22.5h1V24h-.5v1h-1v-.5h.5z"/>
+    <path fill="#dbbb8d" d="M37.5 28h5v.5h-5zM39.5 30h.5v3h-.5z"/>
   </g>
   <!-- 弋戎拿着守备竹简 -->
   <g transform="translate(384 0)">
@@ -179,6 +228,12 @@
     <path fill="#4b3e31" d="M31 35h13v12H31z"/>
     <path fill="#d3b67c" d="M32 36h11v10H32z"/>
     <path fill="#886b46" d="M33 37h1v8h-1z M36 37h1v8h-1z M40 37h1v8h-1z M32 39h11v1H32z M32 43h11v1H32z"/>
+    <path fill="#635e4c" d="M21 7h8v.5h-5v1h-3zM17.5 10h4v.5h-4z"/>
+    <path fill="#d1aa70" d="M15 13.5h7v.5h-7zM26.5 12.5H29v.5h-2.5zM31 13.5h4v.5h-4z"/>
+    <path fill="#be8a67" d="M10 41.5h5v.5h-3v1h-2zM16.5 38h3v.5h-3z"/>
+    <path fill="#e2c594" d="M18.5 41h3v.5h-3zM25 43h4v.5h-4zM24.5 37h2v.5h-2z"/>
+    <path fill="#f8d5a5" d="M20 17h6v.5h-3v.5h-3zM23.5 22.5h1V24h-.5v1h-1v-.5h.5z"/>
+    <path fill="#e6c996" d="M32.5 36.5h10v.5h-10zm1 1h.5v1.5h-.5zm3 0h.5v1.5h-.5z"/>
   </g>
   <!-- 石墨初见 -->
   <g transform="translate(432 0)">
@@ -196,6 +251,12 @@
     <path fill="#5d6565" d="M17 12h4V8h9v2h4v3H17Z"/>
     <path fill="#999e92" d="M13 14h25v2h-5v1H18v-1h-5Z"/>
     <path fill="#b7905e" d="M36 16h3v12h-1v-5h-2z"/>
+    <path fill="#747b76" d="M22 8.5h7v.5h-4v1h-3zm-3 2.5h5v.5h-5z"/>
+    <path fill="#bcc1ad" d="M14 14h7v.5h-7zM25 14h5v.5h-5zM32 14h4v.5h-4z"/>
+    <path fill="#868b82" d="M14.5 40h3v-1h2.5v.5h-2v1h-2v1h-1.5z"/>
+    <path fill="#c7c5b2" d="M17.5 36h3.5v.5h-2v1h-1.5zm4 3.5h1v1h1v1h1v1h-1v-1h-1v-1h-1z"/>
+    <path fill="#f8d5a5" d="M20 17h6v.5h-3v.5h-3zM23.5 22.5h1V24h-.5v1h-1v-.5h.5z"/>
+    <path fill="#ceae78" d="M36.5 17h.5v4h-.5z"/>
   </g>
   <!-- 石墨带着量水尺 -->
   <g transform="translate(480 0)">
@@ -218,6 +279,12 @@
     <path fill="#dfb778" d="M39 30h4v14h-4Z"/>
     <path fill="#78583e" d="M39 32h4v1h-4z M41 35h2v1h-2z M39 38h4v1h-4z M41 41h2v1h-2z"/>
     <path fill="#d3a474" d="M35 41h5v3h-5z M34 43h2v3h-2z"/>
+    <path fill="#747b76" d="M22 8.5h7v.5h-4v1h-3zm-3 2.5h5v.5h-5z"/>
+    <path fill="#bcc1ad" d="M14 14h7v.5h-7zM25 14h5v.5h-5zM32 14h4v.5h-4z"/>
+    <path fill="#868b82" d="M14.5 40h3v-1h2.5v.5h-2v1h-2v1h-1.5z"/>
+    <path fill="#c7c5b2" d="M17.5 36h3.5v.5h-2v1h-1.5zm4 3.5h1v1h1v1h1v1h-1v-1h-1v-1h-1z"/>
+    <path fill="#f8d5a5" d="M20 17h6v.5h-3v.5h-3zM23.5 22.5h1V24h-.5v1h-1v-.5h.5z"/>
+    <path fill="#efd29a" d="M39.5 30.5H43v.5h-3v1h-.5zm0 2.5h.5v1.5h-.5zm0 6h.5v1.5h-.5z"/>
   </g>
   <!-- 商音 -->
   <g transform="translate(528 0)">
@@ -235,6 +302,12 @@
     <path fill="#503f32" d="M37 27h4v6h2v9h-2v2h-7v-2h-2v-9h3v-6Z"/>
     <path fill="#b4945e" d="M36 28h3v6h2v7h-7v-7h2z"/>
     <path fill="#ddbd76" d="M35 36h2v4h-2zM35 41h6v1h-6z"/>
+    <path fill="#a06a64" d="M21.5 7.5h4V8h-2.5v1h-1.5zM17.5 11h4v.5h-3v.5h-1z"/>
+    <path fill="#e3ba82" d="M16 15h6v.5h-6zM26.5 8h1v2h-1zm3 7h5v.5h-5z"/>
+    <path fill="#bf8b78" d="M16 39h3v.5h-2v1h-2v1h-1v-1.5h2z"/>
+    <path fill="#edcc9a" d="M16.5 35.5H20v.5h-2v1h-1.5zm4 3h1v1h1v1h1v1h-1v-1h-1v-1h-1z"/>
+    <path fill="#f1c89e" d="M19 19h6v.5h-3v.5h-3zM23.5 22.5h1V24h-.5v1h-1v-.5h.5z"/>
+    <path fill="#eccb8e" d="M36.5 28.5h2v.5h-1.5v3h-.5zm-1 8.5h.5v3h-.5z"/>
   </g>
   <!-- 渠伯记下轮作以后 -->
   <g transform="translate(576 0)">
@@ -260,5 +333,12 @@
     <path fill="#816041" d="M31 38h1v6h-1zm4 0h1v6h-1zm4 0h1v6h-1zm-9 1h11v1H30zm-2 3h13v1H28z"/>
     <path fill="#bd8b68" d="M23 44h2v-3h4v1h1v2h-2v3h-5Z"/>
     <path fill="#dda982" d="M25 43h3v1h-3Zm-1 2h3v1h-3Z"/>
+    <path fill="#666c66" d="M20 7.5h8V8h-5v1h-3zM16 11h4v.5h-3v1h-1z"/>
+    <path fill="#c0b5a0" d="M14.5 14h6.5v.5h-6.5zm10 0h6v.5h-6z"/>
+    <path fill="#929389" d="M11 39.5h4v-1h2v.5h-1v1h-3v1h-2zm23 4h1v2h-1z"/>
+    <path fill="#c0bdac" d="M14.5 36h4.5v.5h-3v1h-1.5zm4 3h1v1h1v1h1v1H21v-1h-1v-1h-1.5z"/>
+    <path fill="#f8d5a5" d="M18.5 17.5h7v.5h-5v.5h-2zM23 22.5h1v1.5h-.5v1h-1v-.5h.5z"/>
+    <path fill="#f2dba7" d="M30.5 37.5h10v.5h-10zm1 1h.5v.5h-.5zm4 2h.5v1.5h-.5z"/>
+    <path fill="#a49680" d="M20 29.5h1v1h2v1h-1v-.5h-2zm7 1h2v.5h-1v.5h-1z"/>
   </g>
 </svg>

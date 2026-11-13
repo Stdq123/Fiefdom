@@ -3,9 +3,8 @@ extends Node2D
 const PLACE := "亭西种圃"
 const HOST := "林蓼"
 const CAST := preload("res://assets/characters/autumn-guests.svg")
-const STORAGE := preload("res://assets/world/estate-storage.png")
+const STORAGE := preload("res://assets/world/estate-storage.svg")
 const SHARING := preload("res://assets/world/autumn-sharing.svg")
-const TILES := preload("res://resources/game_tileset.tres")
 const BED_WIDTH := 25
 const SHARE_START := 3.0 / 16.0
 const SHARE_END := 11.0 / 16.0
@@ -235,9 +234,8 @@ func _draw() -> void:
 
 func _draw_row(crop_id: String, at: Vector2) -> void:
 	var crop := ItemManager.get_crop(crop_id)
-	var atlas := TILES.get_source(crop.atlas_source_id) as TileSetAtlasSource
+	var atlas := ItemManager.crop_atlas
 	var cell: Vector2i = crop.stages_atlas_coords[stage]
 	var rect := atlas.get_tile_texture_region(cell)
-	var tint := atlas.get_tile_data(cell, 0).modulate
 	for gap in [0, 10]:
-		draw_texture_rect_region(atlas.texture, Rect2(at + Vector2(gap - 6, -9), Vector2(12, 12)), rect, tint)
+		draw_texture_rect_region(atlas.texture, Rect2(at + Vector2(gap - 6, -9), Vector2(12, 12)), rect)

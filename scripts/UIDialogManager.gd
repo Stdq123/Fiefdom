@@ -9,7 +9,7 @@ const ROTATION_BOOK := preload("res://scripts/FieldRotationBook.gd")
 const WATER_SOURCE := preload("res://scripts/WaterSource.gd")
 const SEED_GARDEN := preload("res://scripts/SeedGarden.gd")
 const WINTER_RATIONS := preload("res://scripts/WinterRoadRations.gd")
-const ESTATE_STORAGE := preload("res://assets/world/estate-storage.png")
+const ESTATE_STORAGE := preload("res://assets/world/estate-storage.svg")
 const HUNGER_RETURN_LINES := {
 	VisitorData.FIELD_KEEPER: "那夜没分到饭，我只好去南边借住。今早路过，还是想看看咱们那块田。",
 	VisitorData.ROAD_KEEPER: "那晚我拎着空碗出了门，是过路人分了我一把炒菽。我记得这份情，也惦记亭西的人。",

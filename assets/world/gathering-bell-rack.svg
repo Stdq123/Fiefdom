@@ -17,4 +17,7 @@
   <path fill="#aa8953" d="M23 22h4v2h1v5h-6v-5h1zM33 22h4v2h1v4h-6v-4h1zM42 22h4v2h1v3h-6v-3h1zM51 22h3v2h1v2h-5v-2h1z"/>
   <path fill="#dfbd77" d="M23 24h1v3h-1zM33 24h1v2h-1zM42 23h1v2h-1zM51 23h1v2h-1z"/>
   <path fill="#b38b5a" d="M2 38h6v2H2zM68 38h6v2h-6z"/>
+  <path fill="#d9a57f" d="M29 5.5h5v.5h-5zm10 0h6v.5h-6zM19 8.5h8v.5h-8zm12 0h10v.5H31zm15 0h10v.5H46zM9 11.5h10v.5H9zm14 0h10v.5H23zm15 0h11v.5H38zm15 0h13v.5H53z"/>
+  <path fill="#865246" d="M29 7h.5v3H29zm15 0h.5v3H44zm-7 3h.5v2H37zm15 0h.5v2H52z"/>
+  <path fill="#bc8e64" d="M11 20h.5v8H11zm52-2h.5v7H63zM17 33.5h11v.5H17zm21 0h13v.5H38z"/>
 </svg>

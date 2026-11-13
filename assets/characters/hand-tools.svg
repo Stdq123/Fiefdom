@@ -6,6 +6,7 @@
   <path fill="#7b8b75" d="M20 8h2v9h-3v-5h1z"/>
   <path fill="#c1ad78" d="M21 8h1v8h-1z"/>
   <path fill="#e2b48a" d="M10 10h3v3h-3z"/>
+  <path fill="#dcca96" d="M21 8.5h.5v6h-.5zM14 11h3v.5h-3z"/>
   <!-- Seed pouch -->
   <g transform="translate(24 0)">
     <path fill="#2b3329" d="M9 5h8v2h2v4h-2v2h2v6h-2v2H8v-2H6v-5h1v-3h2V9H8V6h1z"/>
@@ -13,6 +14,7 @@
     <path fill="#c49c64" d="M10 7h5v2h-4v4h4v2h2v3H9v-2h1v-2h1v-3h-1z"/>
     <path fill="#d5be80" d="M11 11h5v2h-5z"/>
     <path fill="#e4b88e" d="M8 10h3v3H8z"/>
+    <path fill="#ead29b" d="M11.5 11.5h4v.5h-4zM10.5 15h3v.5h-3zM9.5 17h4v.5h-4z"/>
   </g>
   <!-- Wooden water pail -->
   <g transform="translate(48 0)">
@@ -24,6 +26,8 @@
     <path fill="#c79962" d="M10 13h2v5h-2z M14 13h2v6h-2z"/>
     <path fill="#745b41" d="M8 16h11v2H8z"/>
     <path fill="#e4b88e" d="M10 4h4v2h-4z"/>
+    <path fill="#d3e7d2" d="M10.5 10h3v.5h-3zM16.5 11h1.5v.5h-1.5z"/>
+    <path fill="#dab07e" d="M10.5 13h.5v3h-.5zm4 5h.5v1h-.5z"/>
   </g>
   <!-- Bronze sickle -->
   <g transform="translate(72 0)">
@@ -32,6 +36,7 @@
     <path fill="#859278" d="M13 5h4v1h3v2h1v2h-2v3h-3v2h-4v-2h3v-3h2V7h-1V6h-3z"/>
     <path fill="#dbc98a" d="M17 6h2v2h1v2h-1v2h-2v1h-2v-1h1v-2h2V8h-1z"/>
     <path fill="#e4b88e" d="M9 13h3v3H9z"/>
+    <path fill="#f1dc9f" d="M17.5 6.5h1v.5h-1zM19 8.5h.5v1H19zm-1.5 2h.5v1.5h-.5z"/>
   </g>
   <!-- Bow and string -->
   <g transform="translate(96 0)">
@@ -39,5 +44,6 @@
     <path fill="#c5b593" d="M12 4h1v16h-1z"/>
     <path fill="#b48351" d="M13 3h1v2h3v2h1v4h2v2h-2v4h-1v2h-3v2h-1v-3h2v-2h1v-4h1v-1h-1V7h-1V6h-2z"/>
     <path fill="#e4b88e" d="M15 11h4v3h-4z"/>
+    <path fill="#d8ae70" d="M14 5h2v.5h-2zm3 2h.5v2h-.5zm-.5 8h.5v1.5h-.5zM14 19h1v.5h-1z"/>
   </g>
 </svg>

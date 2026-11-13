@@ -1,7 +1,7 @@
 extends Node2D
 
 const BOARD := preload("res://assets/world/east-watch.svg")
-const STORAGE := preload("res://assets/world/estate-storage.png")
+const STORAGE := preload("res://assets/world/estate-storage.svg")
 const POLE := EstateLayout.WATCH_RELIEF_POST - EstateLayout.EAST_WATCH
 const SNARE := EstateLayout.EAST_RAID_SNARE - EstateLayout.EAST_WATCH
 const SNARE_NORTH := Vector2(-1, -16)

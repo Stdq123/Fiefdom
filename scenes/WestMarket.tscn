@@ -19,7 +19,7 @@
 [ext_resource type="Texture2D" path="res://assets/world/west-court-sample.svg" id="18_sample"]
 [ext_resource type="Script" path="res://scripts/UIDialogManager.gd" id="19_dialog"]
 [ext_resource type="PackedScene" path="res://scenes/WestMarketMap.tscn" id="20_map"]
-[ext_resource type="Texture2D" path="res://assets/world/estate-storage.png" id="21_storage"]
+[ext_resource type="Texture2D" path="res://assets/world/estate-storage.svg" id="21_storage"]
 [ext_resource type="Texture2D" path="res://assets/world/creek-trap.svg" id="22_creel"]
 
 [sub_resource type="RectangleShape2D" id="GateMouth"]

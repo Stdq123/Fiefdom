@@ -1,10 +1,11 @@
 extends Node
 
-const FARMING_CROPS_ATLAS := 1
-const TILESET := preload("res://resources/game_tileset.tres")
+const FIELD_CROPS := "res://resources/field_crops.tres"
 const SILK_SAMPLE := preload("res://assets/world/west-court-sample.svg")
 
 var crops: Dictionary = {}
+var crop_icons: Dictionary[Vector2i, Texture2D] = {}
+var crop_atlas: TileSetAtlasSource
 
 func _ready() -> void:
 	_init_crops()
@@ -17,8 +18,6 @@ func _init_crops() -> void:
 	millet.crop_name = "黍"
 	millet.days_to_grow = ceil(b.millet_growth_days / b.crop_growth_speed)
 	millet.sell_price = ceil(b.millet_price * b.crop_price_multiplier)
-	var millet_stages: Array[Vector2i] = [Vector2i(0,2), Vector2i(1,2), Vector2i(2,2)]
-	millet.stages_atlas_coords = millet_stages
 	crops["millet"] = millet
 
 	# Sorghum (稷)
@@ -27,8 +26,6 @@ func _init_crops() -> void:
 	sorghum.days_to_grow = ceil(b.sorghum_growth_days / b.crop_growth_speed)
 	sorghum.sell_price = ceil(b.sorghum_price * b.crop_price_multiplier)
 	sorghum.favored_season = Global.Season.AUTUMN
-	var sorghum_stages: Array[Vector2i] = [Vector2i(0,3), Vector2i(1,3), Vector2i(2,3)]
-	sorghum.stages_atlas_coords = sorghum_stages
 	crops["sorghum"] = sorghum
 
 	# Rice (稻) - Water Crop
@@ -36,9 +33,6 @@ func _init_crops() -> void:
 	rice.crop_name = "稻"
 	rice.days_to_grow = ceil(b.rice_growth_days / b.crop_growth_speed)
 	rice.sell_price = ceil(b.rice_price * b.crop_price_multiplier)
-	rice.atlas_source_id = FARMING_CROPS_ATLAS
-	var rice_stages: Array[Vector2i] = [Vector2i(11, 4), Vector2i(9, 4), Vector2i(7, 4)]
-	rice.stages_atlas_coords = rice_stages
 	rice.is_water_crop = true
 	rice.favored_season = Global.Season.SUMMER
 	crops["rice"] = rice
@@ -49,9 +43,6 @@ func _init_crops() -> void:
 	wheat.days_to_grow = ceil(b.wheat_growth_days / b.crop_growth_speed)
 	wheat.sell_price = ceil(b.wheat_price * b.crop_price_multiplier)
 	wheat.favored_season = Global.Season.WINTER
-	wheat.atlas_source_id = FARMING_CROPS_ATLAS
-	var wheat_stages: Array[Vector2i] = [Vector2i(5, 5), Vector2i(3, 5), Vector2i(1, 5)]
-	wheat.stages_atlas_coords = wheat_stages
 	crops["wheat"] = wheat
 
 	# Beans (菽) - Restores Fertility
@@ -59,8 +50,6 @@ func _init_crops() -> void:
 	beans.crop_name = "菽"
 	beans.days_to_grow = ceil(b.beans_growth_days / b.crop_growth_speed)
 	beans.sell_price = ceil(b.beans_price * b.crop_price_multiplier)
-	var beans_stages: Array[Vector2i] = [Vector2i(0,6), Vector2i(1,6), Vector2i(2,6)]
-	beans.stages_atlas_coords = beans_stages
 	beans.restores_fertility = true
 	crops["beans"] = beans
 
@@ -69,8 +58,6 @@ func _init_crops() -> void:
 	mulberry.crop_name = "桑"
 	mulberry.days_to_grow = ceil(b.mulberry_growth_days / b.crop_growth_speed)
 	mulberry.sell_price = ceil(b.mulberry_price * b.crop_price_multiplier)
-	var mulberry_stages: Array[Vector2i] = [Vector2i(0,7), Vector2i(1,7), Vector2i(2,7)]
-	mulberry.stages_atlas_coords = mulberry_stages
 	mulberry.is_perennial = true
 	mulberry.favored_season = Global.Season.SPRING
 	crops["mulberry"] = mulberry
@@ -80,21 +67,25 @@ func _init_crops() -> void:
 	hemp.crop_name = "麻"
 	hemp.days_to_grow = ceil(b.hemp_growth_days / b.crop_growth_speed)
 	hemp.sell_price = ceil(b.hemp_price * b.crop_price_multiplier)
-	var hemp_stages: Array[Vector2i] = [Vector2i(0,8), Vector2i(1,8), Vector2i(2,8)]
-	hemp.stages_atlas_coords = hemp_stages
 	crops["hemp"] = hemp
+
+	var tiles := load(FIELD_CROPS) as TileSet
+	crop_atlas = tiles.get_source(0) as TileSetAtlasSource
+	var source := crop_atlas.texture.get_image()
+	for row in CropData.IDS.size():
+		var crop: CropData = crops[CropData.IDS[row]]
+		var mature := Vector2i(2, row)
+		crop.stages_atlas_coords = [Vector2i(0, row), Vector2i(1, row), mature]
+		var icon := ImageTexture.create_from_image(source.get_region(crop_atlas.get_tile_texture_region(mature)))
+		icon.set_size_override(Vector2i.ONE * int(EstateLayout.TILE_SIZE))
+		crop_icons[mature] = icon
 
 func get_crop(id: String) -> CropData:
 	return crops.get(id)
 
 func crop_picture(crop: CropData) -> Dictionary:
-	var atlas := TILESET.get_source(crop.atlas_source_id) as TileSetAtlasSource
 	var mature: Vector2i = crop.stages_atlas_coords.back()
-	var texture := AtlasTexture.new()
-	texture.atlas = atlas.texture
-	texture.region = Rect2(atlas.get_tile_texture_region(mature))
-	texture.filter_clip = true
-	return {"texture": texture, "tint": atlas.get_tile_data(mature, 0).modulate}
+	return {"texture": crop_icons[mature], "tint": Color.WHITE}
 
 func crop_label(id: String) -> String:
 	if id == CropStock.MIXED:

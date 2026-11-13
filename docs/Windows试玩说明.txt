@@ -203,7 +203,7 @@
   存档目录为 %APPDATA%\Godot\app_userdata\Fiefdom。每局的目录在 campaigns 下，含 savegame.json 和 autosave-1.json 至 autosave-3.json。旧版文件保留在 Fiefdom 目录下。
 
 地图素材
-  标题背景在游戏内同一机位拍摄堂屋、井田和西廊入口，采用清晨与薄暮两帧。
+  标题背景在游戏内同一机位以 2560×1440 拍摄堂屋、井田和西廊入口，采用清晨与薄暮两帧。
   标题四字采用 Ma Shan Zheng Project Authors 的 Ma Shan Zheng 字体子集（SIL OFL 1.1）。许可随包附带。
   发布页 https://github.com/google/fonts/tree/main/ofl/mashanzheng
   部分林木、苔石、蕨草、碎石和树桩来自 Pixel-Boy 与 AAA 的 Ninja Adventure Asset Pack（CC0 1.0）。新井田清草阶段沿用其中的碎石。
@@ -222,11 +222,11 @@
   采用 assets/props/bamboo.png，按地图中的位置、季节和天气绘制。原包标注为 AI 辅助制作。
   发布页 https://mightykartz.itch.io/mountain-post-free-pixel-art
   堂前和南路亭的两种谷袋来自 Kenney Vleugels 与 Lynn Evers 的 Roguelike/RPG pack（CC0 1.0）。
-  取用 roguelikeSheet_transparent.png 中左上角分别为 (425, 34) 和 (459, 34) 的 16×16 图块，并在游戏中调色。
+  依据 roguelikeSheet_transparent.png 中左上角分别为 (425, 34) 和 (459, 34) 的 16×16 图块，重绘布缝和袋口。
   发布页 https://kenney.nl/assets/roguelike-rpg-pack
   作者上传的素材包 https://opengameart.org/content/roguelikerpg-pack-1700-tiles
   同两处的陶罐与带盖罐来自 zwonky 的 Various Containers（CC0 1.0）。
-  取用 pottery.png 中左上角分别为 (32, 0) 和 (32, 32) 的 16×16 图块，去底色后与谷袋合图。
+  依据 pottery.png 中左上角分别为 (32, 0) 和 (32, 32) 的 16×16 图块，重绘釉面后与谷袋合图。
   发布页 https://opengameart.org/content/various-containers
   竹涧的溪石、嫩芽与岸草来自 MOMONGA 的 Bamboo Forest Basic Tiles（CC0 1.0）。
   从 bamboo_forest_objects.png 取用 (214, 47) 起的 84×17 区域，按季节和天气调色。
@@ -245,8 +245,8 @@
   许可 https://creativecommons.org/licenses/by/3.0/
 
 作物素材
-  稻和麦的三个田间阶段来自 josehzz 的 Farming crops 16x16（CC0 1.0）。
-  游戏内调整图块颜色，选种栏使用与田里相同的成熟图。
+  黍、菽、稷、麦、稻、桑、麻的田间生长图由本项目绘制，每格有三张 32×32 图。选种栏与农事图鉴共用田里的成熟图。
+  早期版本采用过 josehzz 的 Farming crops 16x16（CC0 1.0），原参考图保留在项目中。
   发布页 https://opengameart.org/content/farming-crops-16x16
 
   作物卡的菽字底纹由玩家提供。其余六字取自中央研究院「小學堂文字學資料庫」的 CC0 1.0 查询字形图。

@@ -64,3 +64,7 @@ locale/include_text_server_data=true
 
 environment/defaults/default_clear_color=Color(0.20, 0.25, 0.17, 1)
 textures/canvas_textures/default_texture_filter=0
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/fiefdom_art/plugin.cfg")

@@ -1,7 +1,7 @@
 extends Node2D
 
 const PORTER := preload("res://assets/characters/market-porter.svg")
-const STORAGE := preload("res://assets/world/estate-storage.png")
+const STORAGE := preload("res://assets/world/estate-storage.svg")
 
 @onready var body: NeighborMotion = $Body
 @onready var sack: Sprite2D = $Sack

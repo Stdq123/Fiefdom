@@ -7,4 +7,11 @@
   <path fill="#595247" d="M11 21H8v10H6v15H4V28h2V17h5zm7 8h4v-8h3V10h2v12h-2v10h-4v7h-3zm8 8h4v6h-3v10h-2v12h-2V51h2zm13-8h-4v-7h-3V11h3v9h3v6h4zm11 13h-3V28h3V17h4V9h2v12h-3v10h-3zm15-9h5v-7h4V15h2v14h-3v8h-5v13h-3v13h-2V47h2zm-6 15h3v15h-3v11h-2V60h2z"/>
   <path fill="#94947a" d="M6 31h1v12H6zm12 3h1v13h-1zm7 13h1v14h-1zm30-27h1v8h-1zm11 25h1v13h-1zm-7 17h1v9h-1z"/>
   <path fill="#cad6c9" d="M11 26h8v2h-8zm15 10h7v2h-7zm13-8h6v2h-6zm13 4h6v2h-6zm12-6h8v2h-8zm-34 59h5v2h-5zm14 2h9v2h-9z"/>
+  <!-- Bark follows the forks and exposed roots -->
+  <path fill="#aa8c68" d="M26 81.5h.5V85H26z M28 78h.5v3.5H28z M31.5 74h.5v3.5h-.5z M34 70h.5v4H34z M36.5 65h.5v4h-.5z M39 60h.5v4H39z M39 54h.5v3H39z M42.5 40h.5v5h-.5z M54 39.5h.5v3H54z M33.5 47h.5v3.5h-.5z M21.5 87h3v.5h-3z"/>
+  <path fill="#59483d" d="M31.5 79.5h.5v3h-.5z M35.5 74h.5v4h-.5z M37 70h.5v4H37z M40.5 64h.5v4h-.5z M42 59h.5v5H42z M44 52h.5v3H44z M46.5 47h.5v5h-.5z M36.5 49h.5v3.5h-.5z M37 84h.5v2.5H37z M23.5 88h2.5v.5h-2.5z"/>
+  <path fill="#a4a991" d="M6.5 32h.5v5h-.5z M18.5 34h.5v4h-.5z M25.5 50h.5v5h-.5z M32.5 14h.5v5h-.5z M55.5 21h.5v4h-.5z M65.5 47h.5v3h-.5z M59.5 63h.5v5h-.5z"/>
+  <!-- Snow crust and blue shadow at the limb edges -->
+  <path fill="#e0e9e0" d="M12 26h4v.5h-4z M26.5 36h4v.5h-4z M40 28h3.5v.5H40z M53 32h3.5v.5H53z M65 26h5v.5h-5z M30.5 85h3v.5h-3z M46 87h4v.5h-4z M16 91.5h4v.5h-4z M50 91.5h5v.5h-5z"/>
+  <path fill="#9eafa9" d="M12.5 27.5h4v.5h-4z M29 37.5h3.5v.5H29z M41 29.5h3v.5h-3z M53.5 33.5H57v.5h-3.5z M65.5 27.5h4v.5h-4z M46 88.5h4v.5h-4z M14 93h5v.5h-5z M56 92.5h4v.5h-4z"/>
 </svg>

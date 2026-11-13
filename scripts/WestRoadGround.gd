@@ -174,12 +174,12 @@ func place_scenery(layer: Node2D) -> void:
 	for index in TREES.size():
 		var frame: Vector2 = LANDSCAPE.ORCHARD_FRAMES[season] if index % 3 == 1 else Vector2(season, 0)
 		if index % 4 == 2:
-			var pine_sheet := LANDSCAPE.SEASONAL_TREES if winter else LANDSCAPE.SCENERY
+			var pine_sheet: Texture2D = LANDSCAPE.SEASONAL_TREES if winter else LANDSCAPE.SCENERY
 			var pine_frame := Vector2(96, 48) if winter else Vector2(144, 0)
 			_prop(layer, TREES[index], pine_sheet, Rect2(pine_frame, Vector2(48, 48)))
 		else:
 			_prop(layer, TREES[index], LANDSCAPE.SEASONAL_TREES, Rect2(frame * 48.0, Vector2(48, 48)))
-	var willow_sheet := LANDSCAPE.WINTER_WILLOW if winter else LANDSCAPE.ACTG_SCENERY
+	var willow_sheet: Texture2D = LANDSCAPE.WINTER_WILLOW if winter else LANDSCAPE.ACTG_SCENERY
 	var willow_region: Rect2 = Rect2(Vector2.ZERO, willow_sheet.get_size()) if winter else LANDSCAPE.EXTERNAL_REGIONS[LANDSCAPE.Prop.WILLOW]
 	_prop(layer, Vector2(36, -55), willow_sheet, willow_region).scale = Vector2.ONE * 0.72
 	_prop(layer, Vector2(-73, 111), willow_sheet, willow_region).scale = Vector2.ONE * 0.81

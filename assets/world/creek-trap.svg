@@ -16,4 +16,9 @@
   <path fill="#514f37" d="M25 8h3v4h-3zM33 6h5v2h-5z"/>
   <path fill="#cbb17b" d="M25 8h1v4h-1zm8-2h5v1h-5z"/>
   <path fill="#e1c48a" d="M42 8h3v1h-3zm2 0h1v3h-1z"/>
+  <path fill="#d7b17b" d="M7.5 3h.5v3.5h-.5z M7.5 10h.5v2.5h-.5z M8 13h.5v2.5H8z M7 7h4v.5H7z M11.5 7.5h.5v1h-.5z M7 9h4v.5H7z"/>
+  <path fill="#6f543b" d="M9 4h.5v2H9z M10 10.5h.5v2H10z M9 15h1.5v.5H9z"/>
+  <path fill="#dfc285" d="M30.5 6.5h2v.5h-2z M38.5 7.5h2v.5h-2z M27 9h2v.5h-2z M30 9.5h3v.5h-3z M34 9.5h3v.5h-3z M38 9.5h3v.5h-3z M27 11.5h2v.5h-2z M30 11.5h3v.5h-3z M34 11.5h3v.5h-3z M38 11.5h3v.5h-3z M28 13h4v.5H28z M34 13h5v.5h-5z"/>
+  <path fill="#806d47" d="M31 10h.5v2H31z M35 10h.5v2H35z M39 10h.5v2H39z M29.5 12.5h.5V14h-.5z M33.5 12.5h.5V14h-.5z M37.5 12.5h.5V14h-.5z"/>
+  <path fill="#5c8e89" opacity=".75" d="M23.5 14.5H26v.5h-2.5z M26 15h3v.5h-3z M40 15h3v.5h-3z M43 14.5h2v.5h-2z"/>
 </svg>

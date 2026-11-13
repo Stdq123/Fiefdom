@@ -948,3 +948,9 @@
 
 - 冬日与雨天有草料时，羊会在日间从棚里走到食槽低头进食，再回棚。棚边最多陈列三捆干草，余量仍在羊棚账上显示。点剪毛后回到棚外，可看到短毛和落下的羊毛。
 - Godot 回放覆盖秋季放牧、冬雨进食、缺草、收剪及草甸过冬。Windows 解压版完成售毛、制衣和试穿，并通过井田、南路相关回放和双结局。1024×768 画面在独立桌面核对。 [Windows 试玩包](../build/polish-sheep-and-steward/Fiefdom-1.0.0-Windows-x64.zip) · [冬日槽边吃草](../build/polish-sheep-and-steward/sheepfold-1024x768/02b-winter-feeding.png) · [发行回放](../build/polish-sheep-and-steward/windows-check/sheepfold.log)
+
+## 地图、人物与标题贴图细化
+
+- 游戏内的 SVG 和 11 张原低分辨率 PNG 以双倍分辨率导入。人物、对话头像、堂屋、蚕棚、西市、羊棚、树木及农事道具补绘衣褶、瓦缝和经纬等细节。七种作物各有三张原生 32×32 的生长图，公私田仍使用同一套 16×16 格线。
+- 原有高像素密度的筏、绵羊和作物字形使用原素材。标题的清晨、薄暮画面以 2560×1440 实机重新拍摄。
+- Godot 通过建筑比例、封地地形、读档、换装、田间计划、种圃、西市、丝坊和羊棚回放。Windows 解压版通过双结局、战败恢复、研究和相关场景回放。封地和丝坊实机截图在独立桌面核对。旧版和本版的昼夜回放均可复现夜间大厅断言。 [Windows 试玩包](../build/polish-art-resolution/Fiefdom-1.0.0-Windows-x64.zip) · [封地](../build/polish-art-resolution/estate-art/estate-morning.png) · [标题](../build/polish-art-resolution/title-final/01-morning-title.png) · [丝坊](../build/polish-art-resolution/silk-art/04-first-bolt.png)

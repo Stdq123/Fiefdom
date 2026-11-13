@@ -5,10 +5,14 @@
   <g transform="translate(0 0)">
   <path fill="#24252a" d="M10 23h6v4h-1v2H9v-2h1z"/>
   <path fill="#675148" d="M11 25h4v2h-2v1h-3v-1h1z"/>
+  <path fill="#8d715a" d="M11.5 25.5H14v.5h-2v.5h-1V26h.5z"/>
+  <path fill="#463b3a" d="M10.5 27.5H13v.5h-2.5z"/>
 </g>
   <g transform="translate(0 0)">
   <path fill="#24252a" d="M16 23h6v4h1v2h-6v-2h-1z"/>
   <path fill="#675148" d="M17 25h4v2h1v1h-4v-1h-1z"/>
+  <path fill="#8d715a" d="M17.5 25.5h2.5v.5h-2v.5h-.5z"/>
+  <path fill="#463b3a" d="M19 27.5h2.5v.5H19z"/>
 </g>
   <g transform="translate(0 0)">
   <path fill="#24252a" d="M11 12h10v2h3v2h2v5h-2v2h-2v3H10v-3H8v-2H6v-5h2v-2h3z"/>
@@ -34,6 +38,15 @@
   <rect x="15" y="13" width="2" height="1" fill="#ab6e55"/>
   <rect x="11" y="5" width="10" height="1" fill="#a97548"/>
   <rect x="19" y="5" width="2" height="1" fill="#deb17b"/>
+  <path fill="#a3b3a4" d="M10 16h1v.5h-1v1H8.5V17H10zM20 16h2v.5h1v1h-.5V17h-1v-.5H20z"/>
+  <path fill="#e0cfab" d="M12 15.5h1v1h1v1h1V19h1.5v.5H15v-.5h-.5v-1H13v-1h-1z"/>
+  <path fill="#3e5552" d="M11 23h.5v1h2v.5h-2.5zM19 23h1.5v1.5h-2v-.5H20v-.5h-1z"/>
+  <path fill="#ffe0b0" d="M14 10h2.5v.5H14zM16 11.5h.5v1h-1V12h.5z"/>
+  <path fill="#c68f72" d="M12 12h1.5v.5H12zM18.5 12h1.5v.5h-1.5z"/>
+  <path fill="#684c3e" d="M14 3.5h2.5v.5h-2v.5H14zM11.5 7h2v.5h-1.5V8H11v-.5h.5z"/>
+  <path fill="#936e50" d="M11.5 5.5h6.5V6h-6.5z"/>
+  <path fill="#dfb075" d="M16 5h2.5v.5H16zM19.5 5h1.5v.5h-1.5z"/>
+  <path fill="#e0cfab" d="M15 21h1.5v.5H15zM17.5 21h.5v.5h-.5z"/>
 </g>
 </g>
 <!-- front, step one -->
@@ -42,10 +55,14 @@
   <g transform="translate(0 1)">
   <path fill="#24252a" d="M10 23h6v4h-1v2H9v-2h1z"/>
   <path fill="#675148" d="M11 25h4v2h-2v1h-3v-1h1z"/>
+  <path fill="#8d715a" d="M11.5 25.5H14v.5h-2v.5h-1V26h.5z"/>
+  <path fill="#463b3a" d="M10.5 27.5H13v.5h-2.5z"/>
 </g>
   <g transform="translate(0 -1)">
   <path fill="#24252a" d="M16 23h6v4h1v2h-6v-2h-1z"/>
   <path fill="#675148" d="M17 25h4v2h1v1h-4v-1h-1z"/>
+  <path fill="#8d715a" d="M17.5 25.5h2.5v.5h-2v.5h-.5z"/>
+  <path fill="#463b3a" d="M19 27.5h2.5v.5H19z"/>
 </g>
   <g transform="translate(0 -1)">
   <path fill="#24252a" d="M11 12h10v2h3v2h2v5h-2v2h-2v3H10v-3H8v-2H6v-5h2v-2h3z"/>
@@ -71,6 +88,15 @@
   <rect x="15" y="13" width="2" height="1" fill="#ab6e55"/>
   <rect x="11" y="5" width="10" height="1" fill="#a97548"/>
   <rect x="19" y="5" width="2" height="1" fill="#deb17b"/>
+  <path fill="#a3b3a4" d="M10 16h1v.5h-1v1H8.5V17H10zM20 16h2v.5h1v1h-.5V17h-1v-.5H20z"/>
+  <path fill="#e0cfab" d="M12 15.5h1v1h1v1h1V19h1.5v.5H15v-.5h-.5v-1H13v-1h-1z"/>
+  <path fill="#3e5552" d="M11 23h.5v1h2v.5h-2.5zM19 23h1.5v1.5h-2v-.5H20v-.5h-1z"/>
+  <path fill="#ffe0b0" d="M14 10h2.5v.5H14zM16 11.5h.5v1h-1V12h.5z"/>
+  <path fill="#c68f72" d="M12 12h1.5v.5H12zM18.5 12h1.5v.5h-1.5z"/>
+  <path fill="#684c3e" d="M14 3.5h2.5v.5h-2v.5H14zM11.5 7h2v.5h-1.5V8H11v-.5h.5z"/>
+  <path fill="#936e50" d="M11.5 5.5h6.5V6h-6.5z"/>
+  <path fill="#dfb075" d="M16 5h2.5v.5H16zM19.5 5h1.5v.5h-1.5z"/>
+  <path fill="#e0cfab" d="M15 21h1.5v.5H15zM17.5 21h.5v.5h-.5z"/>
 </g>
 </g>
 <!-- front, step two -->
@@ -79,10 +105,14 @@
   <g transform="translate(0 -1)">
   <path fill="#24252a" d="M10 23h6v4h-1v2H9v-2h1z"/>
   <path fill="#675148" d="M11 25h4v2h-2v1h-3v-1h1z"/>
+  <path fill="#8d715a" d="M11.5 25.5H14v.5h-2v.5h-1V26h.5z"/>
+  <path fill="#463b3a" d="M10.5 27.5H13v.5h-2.5z"/>
 </g>
   <g transform="translate(0 1)">
   <path fill="#24252a" d="M16 23h6v4h1v2h-6v-2h-1z"/>
   <path fill="#675148" d="M17 25h4v2h1v1h-4v-1h-1z"/>
+  <path fill="#8d715a" d="M17.5 25.5h2.5v.5h-2v.5h-.5z"/>
+  <path fill="#463b3a" d="M19 27.5h2.5v.5H19z"/>
 </g>
   <g transform="translate(0 -1)">
   <path fill="#24252a" d="M11 12h10v2h3v2h2v5h-2v2h-2v3H10v-3H8v-2H6v-5h2v-2h3z"/>
@@ -108,6 +138,15 @@
   <rect x="15" y="13" width="2" height="1" fill="#ab6e55"/>
   <rect x="11" y="5" width="10" height="1" fill="#a97548"/>
   <rect x="19" y="5" width="2" height="1" fill="#deb17b"/>
+  <path fill="#a3b3a4" d="M10 16h1v.5h-1v1H8.5V17H10zM20 16h2v.5h1v1h-.5V17h-1v-.5H20z"/>
+  <path fill="#e0cfab" d="M12 15.5h1v1h1v1h1V19h1.5v.5H15v-.5h-.5v-1H13v-1h-1z"/>
+  <path fill="#3e5552" d="M11 23h.5v1h2v.5h-2.5zM19 23h1.5v1.5h-2v-.5H20v-.5h-1z"/>
+  <path fill="#ffe0b0" d="M14 10h2.5v.5H14zM16 11.5h.5v1h-1V12h.5z"/>
+  <path fill="#c68f72" d="M12 12h1.5v.5H12zM18.5 12h1.5v.5h-1.5z"/>
+  <path fill="#684c3e" d="M14 3.5h2.5v.5h-2v.5H14zM11.5 7h2v.5h-1.5V8H11v-.5h.5z"/>
+  <path fill="#936e50" d="M11.5 5.5h6.5V6h-6.5z"/>
+  <path fill="#dfb075" d="M16 5h2.5v.5H16zM19.5 5h1.5v.5h-1.5z"/>
+  <path fill="#e0cfab" d="M15 21h1.5v.5H15zM17.5 21h.5v.5h-.5z"/>
 </g>
 </g>
 <!-- back, idle -->
@@ -116,10 +155,14 @@
   <g transform="translate(0 0)">
   <path fill="#24252a" d="M10 23h6v4h-1v2H9v-2h1z"/>
   <path fill="#675148" d="M11 25h4v2h-2v1h-3v-1h1z"/>
+  <path fill="#8d715a" d="M11.5 25.5H14v.5h-2v.5h-1V26h.5z"/>
+  <path fill="#463b3a" d="M10.5 27.5H13v.5h-2.5z"/>
 </g>
   <g transform="translate(0 0)">
   <path fill="#24252a" d="M16 23h6v4h1v2h-6v-2h-1z"/>
   <path fill="#675148" d="M17 25h4v2h1v1h-4v-1h-1z"/>
+  <path fill="#8d715a" d="M17.5 25.5h2.5v.5h-2v.5h-.5z"/>
+  <path fill="#463b3a" d="M19 27.5h2.5v.5H19z"/>
 </g>
   <g transform="translate(0 0)">
   <path fill="#24252a" d="M11 12h10v2h3v2h2v5h-2v2h-2v3H10v-3H8v-2H6v-5h2v-2h3z"/>
@@ -143,6 +186,14 @@
   <rect x="14" y="12" width="3" height="2" fill="#66504a"/>
   <rect x="11" y="5" width="10" height="1" fill="#a97548"/>
   <rect x="19" y="5" width="2" height="1" fill="#deb17b"/>
+  <path fill="#a3b3a4" d="M10 16h2v.5h-1.5v1H9v-.5h1zM19.5 16H22v1h1v.5h-1.5v-1h-2z"/>
+  <path fill="#e0cfab" d="M13.5 15.5h1v.5h2.5v-.5h1.5v.5h-1v.5H14V16h-.5z"/>
+  <path fill="#3e5552" d="M15 17h.5v2h1v1.5H16v-1h-1zM11 23h.5v1h2v.5h-2.5zM19 23h1.5v1.5h-2v-.5H20v-.5h-1z"/>
+  <path fill="#765c4e" d="M12 8.5h.5v2h1v1h.5v1.5h-.5v-1h-.5v-1h-1zM18.5 9.5h.5v1h-.5v1h-1v2H17V11h1.5z"/>
+  <path fill="#684c3e" d="M14 3.5h2.5v.5h-2v.5H14zM11.5 7h2v.5h-1.5V8H11v-.5h.5z"/>
+  <path fill="#936e50" d="M11.5 5.5h6.5V6h-6.5z"/>
+  <path fill="#dfb075" d="M16 5h2.5v.5H16zM19.5 5h1.5v.5h-1.5z"/>
+  <path fill="#e0cfab" d="M15 21h1.5v.5H15zM17.5 21h.5v.5h-.5z"/>
 </g>
 </g>
 <!-- back, step one -->
@@ -151,10 +202,14 @@
   <g transform="translate(0 1)">
   <path fill="#24252a" d="M10 23h6v4h-1v2H9v-2h1z"/>
   <path fill="#675148" d="M11 25h4v2h-2v1h-3v-1h1z"/>
+  <path fill="#8d715a" d="M11.5 25.5H14v.5h-2v.5h-1V26h.5z"/>
+  <path fill="#463b3a" d="M10.5 27.5H13v.5h-2.5z"/>
 </g>
   <g transform="translate(0 -1)">
   <path fill="#24252a" d="M16 23h6v4h1v2h-6v-2h-1z"/>
   <path fill="#675148" d="M17 25h4v2h1v1h-4v-1h-1z"/>
+  <path fill="#8d715a" d="M17.5 25.5h2.5v.5h-2v.5h-.5z"/>
+  <path fill="#463b3a" d="M19 27.5h2.5v.5H19z"/>
 </g>
   <g transform="translate(0 -1)">
   <path fill="#24252a" d="M11 12h10v2h3v2h2v5h-2v2h-2v3H10v-3H8v-2H6v-5h2v-2h3z"/>
@@ -178,6 +233,14 @@
   <rect x="14" y="12" width="3" height="2" fill="#66504a"/>
   <rect x="11" y="5" width="10" height="1" fill="#a97548"/>
   <rect x="19" y="5" width="2" height="1" fill="#deb17b"/>
+  <path fill="#a3b3a4" d="M10 16h2v.5h-1.5v1H9v-.5h1zM19.5 16H22v1h1v.5h-1.5v-1h-2z"/>
+  <path fill="#e0cfab" d="M13.5 15.5h1v.5h2.5v-.5h1.5v.5h-1v.5H14V16h-.5z"/>
+  <path fill="#3e5552" d="M15 17h.5v2h1v1.5H16v-1h-1zM11 23h.5v1h2v.5h-2.5zM19 23h1.5v1.5h-2v-.5H20v-.5h-1z"/>
+  <path fill="#765c4e" d="M12 8.5h.5v2h1v1h.5v1.5h-.5v-1h-.5v-1h-1zM18.5 9.5h.5v1h-.5v1h-1v2H17V11h1.5z"/>
+  <path fill="#684c3e" d="M14 3.5h2.5v.5h-2v.5H14zM11.5 7h2v.5h-1.5V8H11v-.5h.5z"/>
+  <path fill="#936e50" d="M11.5 5.5h6.5V6h-6.5z"/>
+  <path fill="#dfb075" d="M16 5h2.5v.5H16zM19.5 5h1.5v.5h-1.5z"/>
+  <path fill="#e0cfab" d="M15 21h1.5v.5H15zM17.5 21h.5v.5h-.5z"/>
 </g>
 </g>
 <!-- back, step two -->
@@ -186,10 +249,14 @@
   <g transform="translate(0 -1)">
   <path fill="#24252a" d="M10 23h6v4h-1v2H9v-2h1z"/>
   <path fill="#675148" d="M11 25h4v2h-2v1h-3v-1h1z"/>
+  <path fill="#8d715a" d="M11.5 25.5H14v.5h-2v.5h-1V26h.5z"/>
+  <path fill="#463b3a" d="M10.5 27.5H13v.5h-2.5z"/>
 </g>
   <g transform="translate(0 1)">
   <path fill="#24252a" d="M16 23h6v4h1v2h-6v-2h-1z"/>
   <path fill="#675148" d="M17 25h4v2h1v1h-4v-1h-1z"/>
+  <path fill="#8d715a" d="M17.5 25.5h2.5v.5h-2v.5h-.5z"/>
+  <path fill="#463b3a" d="M19 27.5h2.5v.5H19z"/>
 </g>
   <g transform="translate(0 -1)">
   <path fill="#24252a" d="M11 12h10v2h3v2h2v5h-2v2h-2v3H10v-3H8v-2H6v-5h2v-2h3z"/>
@@ -213,6 +280,14 @@
   <rect x="14" y="12" width="3" height="2" fill="#66504a"/>
   <rect x="11" y="5" width="10" height="1" fill="#a97548"/>
   <rect x="19" y="5" width="2" height="1" fill="#deb17b"/>
+  <path fill="#a3b3a4" d="M10 16h2v.5h-1.5v1H9v-.5h1zM19.5 16H22v1h1v.5h-1.5v-1h-2z"/>
+  <path fill="#e0cfab" d="M13.5 15.5h1v.5h2.5v-.5h1.5v.5h-1v.5H14V16h-.5z"/>
+  <path fill="#3e5552" d="M15 17h.5v2h1v1.5H16v-1h-1zM11 23h.5v1h2v.5h-2.5zM19 23h1.5v1.5h-2v-.5H20v-.5h-1z"/>
+  <path fill="#765c4e" d="M12 8.5h.5v2h1v1h.5v1.5h-.5v-1h-.5v-1h-1zM18.5 9.5h.5v1h-.5v1h-1v2H17V11h1.5z"/>
+  <path fill="#684c3e" d="M14 3.5h2.5v.5h-2v.5H14zM11.5 7h2v.5h-1.5V8H11v-.5h.5z"/>
+  <path fill="#936e50" d="M11.5 5.5h6.5V6h-6.5z"/>
+  <path fill="#dfb075" d="M16 5h2.5v.5H16zM19.5 5h1.5v.5h-1.5z"/>
+  <path fill="#e0cfab" d="M15 21h1.5v.5H15zM17.5 21h.5v.5h-.5z"/>
 </g>
 </g>
 <!-- profile, idle -->
@@ -221,10 +296,14 @@
   <g transform="translate(0 0)">
   <path fill="#24252a" d="M10 23h6v4h-1v2H9v-2h1z"/>
   <path fill="#675148" d="M11 25h4v2h-2v1h-3v-1h1z"/>
+  <path fill="#8d715a" d="M11.5 25.5H14v.5h-2v.5h-1V26h.5z"/>
+  <path fill="#463b3a" d="M10.5 27.5H13v.5h-2.5z"/>
 </g>
   <g transform="translate(0 0)">
   <path fill="#24252a" d="M16 23h6v4h1v2h-6v-2h-1z"/>
   <path fill="#675148" d="M17 25h4v2h1v1h-4v-1h-1z"/>
+  <path fill="#8d715a" d="M17.5 25.5h2.5v.5h-2v.5h-.5z"/>
+  <path fill="#463b3a" d="M19 27.5h2.5v.5H19z"/>
 </g>
   <g transform="translate(0 0)">
   <path fill="#24252a" d="M12 12h9v2h3v3h1v5h-2v3H10v-2H8v-6h2v-3h2z"/>
@@ -242,6 +321,14 @@
   <rect x="20" y="9" width="2" height="1" fill="#f3c69b"/>
   <path fill="#493934" d="M14 5h4v2h-4z M12 8h4v1h-4z"/>
   <rect x="15" y="5" width="8" height="1" fill="#b17d4b"/>
+  <path fill="#a3b3a4" d="M12.5 16h2v.5h-1.5v1h-1.5V17h1z"/>
+  <path fill="#e0cfab" d="M16.5 16h2.5v.5h-1v1.5h-.5v1.5H17V18h.5v-1.5h-1z"/>
+  <path fill="#3e5552" d="M11 22.5h1v.5h2v.5h-2.5v-.5H11zM19 23h1.5v.5H19z"/>
+  <path fill="#765c4e" d="M13 8h1.5v.5h-1v1.5H13v1h-.5V9.5h.5z"/>
+  <path fill="#ffe0b0" d="M20 9.5h1.5v.5H20zM23 12h1.5v.5H23z"/>
+  <path fill="#936e50" d="M15 5.5h6v.5h-6z"/>
+  <path fill="#dfb075" d="M16 5h3v.5h-3zM20 5h1.5v.5H20z"/>
+  <path fill="#e0cfab" d="M18 21h1.5v.5H18z"/>
 </g>
 </g>
 <!-- profile, step one -->
@@ -250,10 +337,14 @@
   <g transform="translate(0 1)">
   <path fill="#24252a" d="M10 23h6v4h-1v2H9v-2h1z"/>
   <path fill="#675148" d="M11 25h4v2h-2v1h-3v-1h1z"/>
+  <path fill="#8d715a" d="M11.5 25.5H14v.5h-2v.5h-1V26h.5z"/>
+  <path fill="#463b3a" d="M10.5 27.5H13v.5h-2.5z"/>
 </g>
   <g transform="translate(0 -1)">
   <path fill="#24252a" d="M16 23h6v4h1v2h-6v-2h-1z"/>
   <path fill="#675148" d="M17 25h4v2h1v1h-4v-1h-1z"/>
+  <path fill="#8d715a" d="M17.5 25.5h2.5v.5h-2v.5h-.5z"/>
+  <path fill="#463b3a" d="M19 27.5h2.5v.5H19z"/>
 </g>
   <g transform="translate(0 -1)">
   <path fill="#24252a" d="M12 12h9v2h3v3h1v5h-2v3H10v-2H8v-6h2v-3h2z"/>
@@ -271,6 +362,14 @@
   <rect x="20" y="9" width="2" height="1" fill="#f3c69b"/>
   <path fill="#493934" d="M14 5h4v2h-4z M12 8h4v1h-4z"/>
   <rect x="15" y="5" width="8" height="1" fill="#b17d4b"/>
+  <path fill="#a3b3a4" d="M12.5 16h2v.5h-1.5v1h-1.5V17h1z"/>
+  <path fill="#e0cfab" d="M16.5 16h2.5v.5h-1v1.5h-.5v1.5H17V18h.5v-1.5h-1z"/>
+  <path fill="#3e5552" d="M11 22.5h1v.5h2v.5h-2.5v-.5H11zM19 23h1.5v.5H19z"/>
+  <path fill="#765c4e" d="M13 8h1.5v.5h-1v1.5H13v1h-.5V9.5h.5z"/>
+  <path fill="#ffe0b0" d="M20 9.5h1.5v.5H20zM23 12h1.5v.5H23z"/>
+  <path fill="#936e50" d="M15 5.5h6v.5h-6z"/>
+  <path fill="#dfb075" d="M16 5h3v.5h-3zM20 5h1.5v.5H20z"/>
+  <path fill="#e0cfab" d="M18 21h1.5v.5H18z"/>
 </g>
 </g>
 <!-- profile, step two -->
@@ -279,10 +378,14 @@
   <g transform="translate(0 -1)">
   <path fill="#24252a" d="M10 23h6v4h-1v2H9v-2h1z"/>
   <path fill="#675148" d="M11 25h4v2h-2v1h-3v-1h1z"/>
+  <path fill="#8d715a" d="M11.5 25.5H14v.5h-2v.5h-1V26h.5z"/>
+  <path fill="#463b3a" d="M10.5 27.5H13v.5h-2.5z"/>
 </g>
   <g transform="translate(0 1)">
   <path fill="#24252a" d="M16 23h6v4h1v2h-6v-2h-1z"/>
   <path fill="#675148" d="M17 25h4v2h1v1h-4v-1h-1z"/>
+  <path fill="#8d715a" d="M17.5 25.5h2.5v.5h-2v.5h-.5z"/>
+  <path fill="#463b3a" d="M19 27.5h2.5v.5H19z"/>
 </g>
   <g transform="translate(0 -1)">
   <path fill="#24252a" d="M12 12h9v2h3v3h1v5h-2v3H10v-2H8v-6h2v-3h2z"/>
@@ -300,6 +403,14 @@
   <rect x="20" y="9" width="2" height="1" fill="#f3c69b"/>
   <path fill="#493934" d="M14 5h4v2h-4z M12 8h4v1h-4z"/>
   <rect x="15" y="5" width="8" height="1" fill="#b17d4b"/>
+  <path fill="#a3b3a4" d="M12.5 16h2v.5h-1.5v1h-1.5V17h1z"/>
+  <path fill="#e0cfab" d="M16.5 16h2.5v.5h-1v1.5h-.5v1.5H17V18h.5v-1.5h-1z"/>
+  <path fill="#3e5552" d="M11 22.5h1v.5h2v.5h-2.5v-.5H11zM19 23h1.5v.5H19z"/>
+  <path fill="#765c4e" d="M13 8h1.5v.5h-1v1.5H13v1h-.5V9.5h.5z"/>
+  <path fill="#ffe0b0" d="M20 9.5h1.5v.5H20zM23 12h1.5v.5H23z"/>
+  <path fill="#936e50" d="M15 5.5h6v.5h-6z"/>
+  <path fill="#dfb075" d="M16 5h3v.5h-3zM20 5h1.5v.5H20z"/>
+  <path fill="#e0cfab" d="M18 21h1.5v.5H18z"/>
 </g>
 </g>
 </svg>

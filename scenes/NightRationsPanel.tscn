@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/NightRationsPanel.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/world/estate-storage.png" id="2_storage"]
+[ext_resource type="Texture2D" path="res://assets/world/estate-storage.svg" id="2_storage"]
 
 [sub_resource type="AtlasTexture" id="Sack"]
 atlas = ExtResource("2_storage")

@@ -193,7 +193,7 @@ func _draw_basin() -> void:
 
 func place_scenery(layer: Node2D) -> void:
 	var season := Global.season_index()
-	var pine_sheet := LANDSCAPE.SEASONAL_TREES if season == Global.Season.WINTER else LANDSCAPE.SCENERY
+	var pine_sheet: Texture2D = LANDSCAPE.SEASONAL_TREES if season == Global.Season.WINTER else LANDSCAPE.SCENERY
 	var pine_region := Rect2(96, 48, 48, 48) if season == Global.Season.WINTER else Rect2(144, 0, 48, 48)
 	for index in TREE_FEET.size():
 		var frame: Vector2 = LANDSCAPE.ORCHARD_FRAMES[season] if index % 4 == 1 else Vector2(season, 0)

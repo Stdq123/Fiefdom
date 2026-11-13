@@ -16,16 +16,25 @@
     <path fill="#597c75" d="M87 31h50v5H87z"/>
     <path fill="#715b40" d="M87 26h50v2H87zM98 18h2v19h-2zM111 18h2v19h-2zM124 18h2v19h-2z"/>
     <path fill="#bda57a" d="M84 16h56v2H84zM84 38h56v2H84z"/>
+    <path fill="#c4a477" d="M17 8h26v.5H17z M47 7.5h27v.5H47z M82 8h34v.5H82z M124 8h30v.5h-30z M166 7.5h29v.5h-29z M199 8h11v.5h-11z M17 15h.5v23H17z M73 16h.5v18H73z M147 17h.5v17h-.5z M205 15h.5v24h-.5z"/>
+    <path fill="#b8aa78" d="M22 23h11v.5H22z M38 28.5h16v.5H38z M59 33.5h10v.5H59z M151 28.5h13v.5h-13z M170 23.5h15v.5h-15z M191 29h10v.5h-10z M25 38.5h7v.5h-7z M57 38.5h12v.5H57z M196 38.5h7v.5h-7z"/>
+    <path fill="#c3c5a7" d="M88 20.5h8v.5h-8z M102 21h7v.5h-7z M114 20.5h8v.5h-8z M128 22h8v.5h-8z M90 24h7v.5h-7z M115 23h6v.5h-6z"/>
+    <path fill="#6c8b7e" d="M89 30h8v.5h-8z M102 29.5h8v.5h-8z M114 30.5h9v.5h-9z M128 29.5h8v.5h-8z M88 33.5h9v.5h-9z M103 33h7v.5h-7z M115 34h8v.5h-8z M127 32.5h7v.5h-7z"/>
+    <path fill="#a48257" d="M98 18.5h.5V37H98z M111 18.5h.5V37H111z M124 18.5h.5V37H124z M87 26.5h50v.5H87z"/>
     <path fill="#9f8460" d="M14 46h196v81H14z"/>
     <path fill="#917554" d="M14 46h196v6H14zM14 60h196v7H14zM14 76h196v6H14zM14 92h196v6H14zM14 107h196v8H14zM14 123h196v4H14z"/>
     <path fill="#755c43" d="M14 52h196v1H14zM14 60h196v1H14zM14 68h196v1H14zM14 76h196v1H14zM14 84h196v1H14zM14 92h196v1H14zM14 100h196v1H14zM14 108h196v1H14zM14 116h196v1H14zM14 124h196v1H14z"/>
     <path fill="#80684c" d="M50 46h1v7h-1zM140 46h1v7h-1zM73 53h1v7h-1zM166 53h1v7h-1zM34 61h1v7h-1zM107 61h1v7h-1zM179 61h1v7h-1zM60 69h1v7h-1zM154 69h1v7h-1zM39 77h1v7h-1zM86 77h1v7h-1zM159 77h1v7h-1zM52 85h1v7h-1zM138 85h1v7h-1zM65 93h1v7h-1zM188 93h1v7h-1zM34 101h1v7h-1zM143 101h1v7h-1zM61 109h1v7h-1zM173 109h1v7h-1zM42 117h1v7h-1zM141 117h1v7h-1z"/>
     <path fill="#b0956c" d="M27 56h24v1H27zM110 57h18v1h-18zM151 65h14v1h-14zM28 71h16v1H28zM76 72h19v1H76zM154 80h24v1h-24zM19 88h19v1H19zM166 96h19v1h-19zM44 104h12v1H44zM151 111h18v1h-18zM23 120h21v1H23zM164 120h21v1h-21z"/>
+    <path fill="#ad9266" d="M52 51h23v.5H52z M85 50.5h30v.5H85z M144 51h20v.5h-20z M181 51h16v.5h-16z M31 57.5h11v.5H31z M52 55h16v.5H52z M79 57h18v.5H79z M134 55.5h23v.5h-23z M177 57h16v.5h-16z M22 65.5h10v.5H22z M39 63h19v.5H39z M65 64.5h22v.5H65z M115 65h22v.5h-22z M159 66h13v.5h-13z M184 62.5h15v.5h-15z M46 73h11v.5H46z M64 74h12v.5H64z M97 73h23v.5H97z M129 71h21v.5h-21z M164 72h22v.5h-22z M69 80h12v.5H69z M92 79.5h25v.5H92z M126 80.5h18v.5h-18z M70 88h16v.5H70z M139 88.5h15v.5h-15z M42 97h19v.5H42z M69 96h15v.5H69z M140 95h15v.5h-15z M31 104h9v.5h-9z M61 105h15v.5H61z M81 103h8v.5h-8z M148 105h23v.5h-23z M182 103h17v.5h-17z M22 112h19v.5H22z M65 111.5h22v.5H65z M96 114h19v.5H96z M127 112h17v.5h-17z M177 114h17v.5h-17z M45 118.5h17v.5H45z M71 120h22v.5H71z M106 119h14v.5h-14z M148 119.5h14v.5h-14z"/>
+    <path fill="#886d50" d="M37 58.5h12v.5H37z M57 56h11v.5H57z M94 55h12v.5H94z M119 58h12v.5h-12z M155 56.5h9v.5h-9z M42 66h10v.5H42z M79 66.5h15v.5H79z M119 63h11v.5h-11z M142 66.5h9v.5h-9z M177 65h16v.5h-16z M26 73.5h12v.5H26z M81 74.5h10v.5H81z M121 74h13v.5h-13z M174 74.5h13v.5h-13z M74 81h11v.5H74z M103 81h14v.5h-14z M73 89.5h10v.5H73z M138 90h15v.5h-15z M70 97.5h14v.5H70z M138 97h11v.5h-11z M45 106h17v.5H45z M68 104h13v.5H68z M151 106.5h17v.5h-17z M175 105.5h13v.5h-13z M49 113h10v.5H49z M84 114h9v.5h-9z M119 114h12v.5h-12z M174 111h11v.5h-11z M50 121.5h12v.5H50z M93 121.5h18v.5H93z M151 121.5h11v.5h-11z"/>
     <path fill="#7d6749" d="M15 46h194v5H15zM14 49h4v77h-4zM206 49h4v77h-4z"/>
     <!-- Reed foot mats leave a clear aisle between the tools and the door. -->
     <path fill="#655b3e" d="M29 77h38v21H29zM89 83h46v23H89zM156 77h39v21h-39z"/>
     <path fill="#ac9d69" d="M30 77h36v19H30zM90 83h44v21H90zM157 77h37v19h-37z"/>
     <path fill="#918759" d="M31 80h34v1H31zM31 84h34v1H31zM31 88h34v1H31zM31 92h34v1H31zM91 86h42v1H91zM91 90h42v1H91zM91 94h42v1H91zM91 98h42v1H91zM158 80h35v1h-35zM158 84h35v1h-35zM158 88h35v1h-35zM158 92h35v1h-35z"/>
+    <path fill="#bfae73" d="M31 78h34v.5H31z M32 82h12v.5H32z M46 82h17v.5H46z M33 86h20v.5H33z M55 86h8v.5h-8z M32 90h16v.5H32z M50 90h13v.5H50z M31 94.5h34v.5H31z M91 84h42v.5H91z M92 88h14v.5H92z M108 88h23v.5h-23z M93 92h22v.5H93z M117 92h15v.5h-15z M92 96h18v.5H92z M113 96h19v.5h-19z M93 100h12v.5H93z M107 100h25v.5h-25z M91 102.5h42v.5H91z M158 78h35v.5h-35z M159 82h12v.5h-12z M173 82h18v.5h-18z M160 86h18v.5h-18z M180 86h12v.5h-12z M159 90h14v.5h-14z M175 90h16v.5h-16z M158 94.5h35v.5h-35z"/>
+    <path fill="#9b8c5d" d="M32 79h.5v15H32z M63.5 79h.5v15h-.5z M92 85h.5v17H92z M131.5 85h.5v17h-.5z M159 79h.5v15h-.5z M191.5 79h.5v15h-.5z"/>
     <!-- Storage against the wall, with an oil lamp between the reel and the loom. -->
     <path fill="#634e39" d="M25 31h35v16H25zM157 30h36v17h-36zM145 44h12v3h-12z"/>
     <path fill="#97734c" d="M25 31h35v2H25zM25 42h35v3H25zM157 30h36v2h-36zM157 42h36v3h-36zM147 40h8v4h-8z"/>
@@ -39,6 +48,10 @@
     <path fill="#938267" d="M98 125h28v5H98zM96 130h32v4H96zM93 134h38v4H93z"/>
     <path fill="#b5a37c" d="M98 125h28v1H98zM96 130h32v1H96zM93 134h38v1H93z"/>
     <path fill="#79634d" d="M91 138h42v2H91z"/>
+    <path fill="#b69363" d="M9 49h.5v19H9z M10 77h.5v17H10z M9 104h.5v17H9z M213 49h.5v25h-.5z M213 84h.5v15h-.5z M213 105h.5v18h-.5z M18 123.5h23v.5H18z M52 123.5h15v.5H52z M76 123.5h18v.5H76z M128 123.5h20v.5H128z M161 123.5h16v.5h-16z M187 123.5h16v.5h-16z"/>
+    <path fill="#be9867" d="M27 32h10v.5H27z M44 32h13v.5H44z M27 43h11v.5H27z M45 43h11v.5H45z M160 31h11v.5h-11z M175 31h14v.5h-14z M161 43h13v.5h-13z M180 43h9v.5h-9z M148 42h5v.5h-5z"/>
+    <path fill="#d3bb85" d="M31 36.5h7v.5h-7z M45 35.5h7v.5h-7z M163 35h9v.5h-9z M178 36h8v.5h-8z M29.5 39h10v.5h-10z M45 39h8v.5h-8z M163 38.5h10v.5h-10z M178 39h9v.5h-9z"/>
+    <path fill="#a89675" d="M101 127h8v.5h-8z M113 127.5h10v.5h-10z M98 131.5h10v.5H98z M114 132h9v.5h-9z M96 135.5h11v.5H96z M113 136h12v.5h-12z"/>
   </g>
   <!-- Bamboo rack and trays, 56 × 40. -->
   <g transform="translate(0 144)">
@@ -49,6 +62,8 @@
     <path fill="#c4a96d" d="M13 8h30v2h4v6h-4v2H13v-2H9v-6h4zM13 23h30v2h4v5h-4v2H13v-2H9v-5h4z"/>
     <path fill="#9a8151" d="M15 11h26v1H15zM13 14h30v1H13zM15 26h26v1H15zM13 29h30v1H13z"/>
     <path fill="#d9be80" d="M12 16h32v1H12zM12 30h32v1H12z"/>
+    <path fill="#e0c68a" d="M12 9.5h12v.5H12z M26 9.5h16v.5H26z M12.5 12.5h6v.5h-6z M20 12.5h8v.5h-8z M30 12.5h8v.5h-8z M40 12.5h4v.5h-4z M12 24.5h12v.5H12z M26 24.5h16v.5H26z M12.5 27.5h8v.5h-8z M23 27.5h8v.5h-8z M33 27.5h9v.5h-9z"/>
+    <path fill="#b2985e" d="M15 10h.5v6H15z M19 10h.5v6H19z M23 10h.5v6H23z M27 10h.5v6H27z M31 10h.5v6H31z M35 10h.5v6H35z M39 10h.5v6H39z M43 10h.5v6H43z M16 25h.5v5H16z M20 25h.5v5H20z M24 25h.5v5H24z M28 25h.5v5H28z M32 25h.5v5H32z M36 25h.5v5H36z M40 25h.5v5H40z"/>
   </g>
   <!-- Reel, its water bowl and wheel, 58 × 45. -->
   <g transform="translate(56 144)">
@@ -63,6 +78,10 @@
     <path fill="#a48862" d="M6 27h9v2h4v3H2v-3h4z"/>
     <path fill="#6f8178" d="M6 29h9v2H6z"/>
     <path fill="#d0b180" d="M5 35h11v1H5zM7 39h7v1H7z"/>
+    <path fill="#bd9563" d="M27.5 5.5H36v.5h-8.5z M24 8.5h3v.5h-3z M21 12h2v.5h-2z M20.5 14h.5v5h-.5z M22.5 21h.5v2h-.5z M27 25.5h3v.5h-3z M34 26h3v.5h-3z M39 23h2v.5h-2z M41.5 18h.5v3h-.5z"/>
+    <path fill="#927048" d="M30.5 8h1v6h-1z M25 15h5v.5h-5z M34 15h6v.5h-6z M31 18h1v6h-1z M30 14h4v4h-4z"/>
+    <path fill="#d0ae74" d="M31 15h2v1h-2z M35 9.5h2v.5h-2z M38 11.5h2v.5h-2z M40 13.5h1v.5h-1z M24 26.5h4v.5h-4z M36 27h5v.5h-5z"/>
+    <path fill="#a7aa8e" d="M7 29.5h6v.5H7z M10 30.5h4v.5h-4z M5.5 34h4v.5h-4z M11 36.5h4v.5h-4z"/>
   </g>
   <!-- Loom frame and weaving bed, 64 × 48. -->
   <g transform="translate(114 144)">
@@ -75,5 +94,9 @@
     <path fill="#755138" d="M15 26h34v3H15zM14 36h36v3H14z"/>
     <path fill="#b38b5a" d="M16 26h32v1H16zM16 36h32v1H16zM9 7h46v1H9z"/>
     <path fill="#7d6447" d="M46 34h11v5H46zM45 39h13v3H45z"/>
+    <path fill="#c59764" d="M11.5 8.5H23v.5H11.5z M26 8.5h12v.5H26z M41 8.5h11v.5H41z M11.5 13h.5v11h-.5z M12 28h.5v10H12z M51.5 13h.5v11h-.5z M52 27h.5v8H52z M17 32.5h13v.5H17z M34 32.5h13v.5H34z M16 36.5h11v.5H16z M32 36.5h9v.5h-9z"/>
+    <path fill="#ccb989" d="M18.5 15h.5v11h-.5z M22 15h.5v11H22z M26 15h.5v11H26z M30 15h.5v11H30z M34 15h.5v11H34z M38 15h.5v11H38z M42 15h.5v11H42z M45 15h.5v11H45z"/>
+    <path fill="#a38960" d="M18 18.5h28v.5H18z M18 20h28v.5H18z M18 21.5h28v.5H18z M18 23h28v.5H18z M18 24.5h28v.5H18z"/>
+    <path fill="#ebd6a0" d="M20.5 17.5H23v.5h-2.5z M27 19.5h3.5v.5H27z M34 21h4v.5h-4z M41 22.5h4.5v.5H41z M21 24h3v.5h-3z M49 35h6v.5h-6z M47 39.5h8v.5h-8z"/>
   </g>
 </svg>

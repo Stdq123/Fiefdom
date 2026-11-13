@@ -24,4 +24,7 @@
   <path fill="#5d4c34" d="M32 43h20v4H32zm26 0h20v4H58zm26 0h20v4H84z"/>
   <path fill="#c2a272" d="M34 43h16v2H34zm26 0h16v2H60zm26 0h16v2H86z"/>
   <path fill="#8c6843" d="M34 45h16v1H34zm26 0h16v1H60zm26 0h16v1H86z"/>
+  <path fill="#ce9a72" d="M12 9.5h13v.5H12zm19 0h16v.5H31zm21 0h13v.5H52zm20 0h18v.5H72zm23 0h11v.5H95zm14 0h15v.5h-15z"/>
+  <path fill="#b96d4e" d="M32 14.5h9v.5h-9zm12 0h9v.5h-9zm13 0h7v.5h-7zm11 0h9v.5h-9zm13 0h9v.5h-9zm13 0h10v.5H94z"/>
+  <path fill="#d3b373" opacity=".75" d="M23 53.5h6v.5h-6zm7 2h8v.5h-8zm9-2h7v.5h-7zm13 2h7v.5h-7zm16-2h8v.5h-8zm14 2h9v.5h-9zm14-2h7v.5h-7zm7 2h8v.5h-8z"/>
 </svg>

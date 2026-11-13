@@ -56,7 +56,7 @@ function Invoke-GodotExportStep([string]$Step, [string[]]$Options) {
 
 try {
     New-Item -ItemType Directory -Path $project | Out-Null
-    foreach ($entry in @('assets', 'resources', 'scenes', 'scripts', 'project.godot', 'export_presets.cfg', 'icon.svg', 'icon.svg.import')) {
+    foreach ($entry in @('addons', 'assets', 'resources', 'scenes', 'scripts', 'project.godot', 'export_presets.cfg', 'icon.svg', 'icon.svg.import')) {
         Copy-Item -LiteralPath (Join-Path $repo $entry) -Destination $project -Recurse
     }
 

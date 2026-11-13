@@ -13,4 +13,8 @@
   <path fill="#6c834a" d="M5 12h3v-2h2v1h2v1h3v1H9v1H5z"/>
   <path fill="#b5c082" d="M8 11h2v2H8zm5 1h2v1h-2z"/>
   <path fill="#74553d" d="M3 16h25v1H3zm0 2h26v1H3z"/>
+  <path fill="#f3e4b5" d="M11.5 3h2v.5h-2z M14.5 3h1.5v.5h-1.5z M17.5 3h2v.5h-2z M21.5 3h2v.5h-2z M25 3h1v.5h-1z M10 9h1v.5h-1z M13.5 9H16v.5h-2.5z M18 9h2v.5h-2z M22 9h2v.5h-2z M26 9h2v.5h-2z"/>
+  <path fill="#624930" d="M11.5 6.5H13V7h-1.5z M15.5 6.5H17V7h-1.5z M19.5 6.5H21V7h-1.5z M23.5 6.5H25V7h-1.5z M11.5 8.5H13V9h-1.5z M15.5 8.5H17V9h-1.5z M19.5 8.5H21V9h-1.5z M23.5 8.5H25V9h-1.5z"/>
+  <path fill="#94704b" d="M14 4h.5v1H14z M18 4.5h.5v1H18z M21.5 4.5h1V5h-1z M22 5h.5v.5H22z M26 4.5h.5v1H26z M14.5 7h.5v.5h-.5z M18 7h.5v.5H18z"/>
+  <path fill="#c29864" d="M7 14h5v.5H7z M15 14h4v.5h-4z M21 13.5h5.5v.5H21z M5 15h3v.5H5z M21 15h7v.5h-7z M6 21h.5v2.5H6z M24 22.5h.5v2H24z"/>
 </svg>

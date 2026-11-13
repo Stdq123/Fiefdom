@@ -13,4 +13,10 @@
   <path fill="#783f36" d="M26 4h11v2h2v3h-4v3h-9z"/>
   <path fill="#b27655" d="M27 5h9v2h-9zm0 3h7v1h-7z"/>
   <path fill="#61764c" d="M5 34h4v2H5zm33-2h4v2h-4zm-26 2h3v1h-3z"/>
+  <!-- Chisel marks and horizontal strata -->
+  <path fill="#a5b1a2" d="M9.5 12.5H12v.5H9.5z M36.5 12.5H39v.5h-2.5z M15 15.5h4v.5h-4z M20.5 15.5H24v.5h-3.5z M27 15.5h5v.5h-5z M11.5 21.5H15v.5h-3.5z M17 21.5h3v.5h-3z M27.5 21h3v.5h-3z M33 22h4v.5h-4z M11 25.5h4v.5h-4z M33.5 25.5h4v.5h-4z"/>
+  <path fill="#59695e" d="M9 15h.5v4H9z M13 15h.5v3H13z M36 15h.5v4H36z M40 15h.5v4H40z M15 18h5.5v.5H15z M24.5 18.5h4v.5h-4z M30.5 18h4v.5h-4z M8 29h4v.5H8z M11.5 31.5H16v.5h-4.5z M14 32h.5v2H14z M22 31h4v.5h-4z M26 32h5v.5h-5z M32.5 29.5h6v.5h-6z M37.5 30h.5v2h-.5z M17.5 34.5h5v.5h-5z"/>
+  <path fill="#d6ba85" d="M17.5 24.5h5v.5h-5z M24 24.5h3v.5h-3z M28.5 24.5h3v.5h-3z M25 6h.5v4H25z"/>
+  <path fill="#cd9169" d="M27.5 5.5H32v.5h-4.5z M33.5 5.5h2.5v.5h-2.5z M27 8.5h3v.5h-3z M31.5 10h3v.5h-3z"/>
+  <path fill="#633a33" d="M27.5 7h.5v4h-.5z M29 7.5h3.5v.5H29z M33.5 7.5h3.5v.5h-3.5z M28.5 10h2v.5h-2z"/>
 </svg>
