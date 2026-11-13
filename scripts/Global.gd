@@ -2779,9 +2779,13 @@ func save_game() -> Error:
 	GameEvents.save_finished.emit(result, false)
 	return result
 
-func save_automatically(origin: String) -> void:
-	if Preferences.autosave and outcome == Outcome.RUNNING:
-		GameEvents.save_finished.emit(_save_snapshot(origin), true)
+func save_automatically(origin: String) -> Error:
+	var can_save := outcome in [Outcome.TRADITIONAL, Outcome.REFORMED] if origin == "ending" else outcome == Outcome.RUNNING
+	if not Preferences.autosave or not can_save:
+		return ERR_SKIP
+	var result := _save_snapshot(origin)
+	GameEvents.save_finished.emit(result, true)
+	return result
 
 func _save_snapshot(origin: String) -> Error:
 	var folder := _campaign_directory()
@@ -3061,6 +3065,7 @@ func saved_games() -> Array[Dictionary]:
 		if path.get_file() != SAVE_PATH.get_file():
 			match data.get("save_origin"):
 				"council": source = "初税亩自动存档"
+				"ending": source = "结局自动存档"
 				"ending_continue": source = "续营自动存档"
 				_: source = "晨间自动存档"
 		var saved_outcome := _read_save_int(data.get("outcome"), Outcome.RUNNING)

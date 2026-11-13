@@ -160,7 +160,6 @@ func _play(from_handoff := false) -> void:
 	report.hide()
 	shade.hide()
 	film.show()
-	status.text = ""
 	envoy.position = walk_start
 	walk_sprite.stand()
 	walk_sprite.face(walk_end - walk_start)

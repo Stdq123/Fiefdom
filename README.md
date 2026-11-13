@@ -24,6 +24,8 @@
 & ./tools/Test-WindowsRelease.ps1 -Package ./build/Fiefdom-1.0.0-Windows-x64.zip -Capture -Soak
 ```
 
+加上 `-ProcessRestart` 可分别退出并重启两个测试进程，验证标题能读到自动保存的结局。
+
 ## Codex 工作室
 
 从项目根目录打开 Codex，新建会话后输入 `$studio-start`，即可盘点当前进度。也可以直接说「用 `$studio-dev-story` 实现……」。`project.yaml` 采用轻量流程，例行实现和验证直接推进，玩法方向或交付范围需要决策时由你决定。

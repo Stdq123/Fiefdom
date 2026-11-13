@@ -158,14 +158,44 @@ func _watch_film(ending: Control, branch: String) -> void:
 	await _capture(branch + "-ledger", capture_dir)
 	print("ENDING_FILM branch=", branch, " arrival=", reached, " footsteps=", sampled_move, " sampled_frames=", frames)
 
+func _ending_save_failure() -> void:
+	await _new_estate()
+	var manual_path: String = state.manual_save_path()
+	var pending := "%s/autosave-1.json.%d.tmp" % [manual_path.get_base_dir(), OS.get_process_id()]
+	if not _expect(DirAccess.make_dir_recursive_absolute(pending) == OK,
+		"Stage a write failure in the isolated autosave slot."):
+		return
+	await _stage_result(true)
+	var hud := tree.current_scene.get_node("CampaignHUD")
+	var ending: Control = hud.summary
+	_expect(DirAccess.remove_absolute(pending) == OK and ending != null and "自动保存失败" in hud.status.text
+		and state.latest_saved_game().get("campaign") != state.campaign_id,
+		"A failed automatic write reports the failure and leaves the manual option available.")
+	if ending != null:
+		await _press(ending.skip_button)
+		await _press(ending.save_button)
+		_expect(hud.status.text == "结局已存档。" and FileAccess.file_exists(manual_path),
+			"The same victory can be saved manually after a failed automatic write.")
+
 func _play_ending(traditional: bool) -> void:
 	await _new_estate()
+	var preferences := tree.root.get_node("Preferences")
+	preferences.autosave = traditional
+	var manual_path: String = state.manual_save_path()
 	await _stage_result(traditional)
 	var branch := "traditional" if traditional else "reformed"
 	var hud := tree.current_scene.get_node("CampaignHUD")
 	var ending: Control = hud.summary
 	if not _expect(ending != null and tree.paused and ending.shot == ending.Shot.CEREMONY, "The finished route starts at its handoff."):
+		preferences.autosave = true
 		return
+	var latest: Dictionary = state.latest_saved_game()
+	if traditional:
+		_expect(latest.get("campaign") == state.campaign_id and latest.get("source") == "结局自动存档"
+			and not FileAccess.file_exists(manual_path), "The new victory is written to an automatic slot.")
+	else:
+		_expect(latest.get("campaign") != state.campaign_id and not FileAccess.file_exists(manual_path)
+			and "保存结局" in hud.status.text, "The ledger stays available for manual saving without an automatic checkpoint.")
 	await _watch_film(ending, branch)
 	var rows := _record_rows(ending)
 	if traditional:
@@ -282,6 +312,37 @@ func _verify_old_record() -> void:
 	_expect(ending.report.visible and not ending.has_route_totals and rows[0].begins_with("国库 44"),
 		"An old finished save shows its known totals without inventing route deltas.")
 
+func run_process_restart(game_tree: SceneTree, traditional: bool, resume: bool) -> void:
+	tree = game_tree
+	state = tree.root.get_node("Global")
+	tree.root.notify_mouse_entered()
+	var branch := "守礼安邦" if traditional else "税亩富民"
+	var result: int = state.Outcome.TRADITIONAL if traditional else state.Outcome.REFORMED
+	if resume:
+		tree.change_scene_to_file(TITLE)
+		await tree.scene_changed
+		var title := tree.current_scene
+		if not _expect("结局自动存档" in title.status.text and title.continue_button.visible,
+			"The restarted program offers to continue from the automatic ending."):
+			await _finish()
+			return
+		await _press(title.continue_button)
+		if tree.current_scene == null:
+			await tree.scene_changed
+		await tree.process_frame
+		var ending := tree.current_scene.get_node_or_null("CampaignHUD")
+		_expect(state.outcome == result and ending != null and ending.summary != null
+			and ending.summary.report.visible and ending.summary.heading.text == branch,
+			"Continue opens the correct recorded ending after a full process restart.")
+	else:
+		await _new_estate()
+		await _stage_result(traditional)
+		var checkpoint: Dictionary = state.latest_saved_game()
+		_expect(checkpoint.get("outcome") == result and checkpoint.get("source") == "结局自动存档"
+			and not FileAccess.file_exists(state.manual_save_path()), "Write only the automatic ending before the process exits.")
+	print("ENDING_RESTART phase=", "resume" if resume else "write", " branch=", branch, " day=", state.current_day)
+	await _finish()
+
 func run(game_tree: SceneTree, directory := "") -> void:
 	tree = game_tree
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Isolate the ending replay's profile."):
@@ -291,9 +352,13 @@ func run(game_tree: SceneTree, directory := "") -> void:
 	capture_dir = directory if not directory.is_empty() else OS.get_environment("FIEFDOM_ENDING_CAPTURES")
 	film_dir = OS.get_environment("FIEFDOM_ENDING_FILMS")
 	state = tree.root.get_node("Global")
+	await _ending_save_failure()
 	await _play_ending(true)
 	await _play_ending(false)
 	await _verify_old_record()
+	await _finish()
+
+func _finish() -> void:
 	tree.paused = false
 	tree.unload_current_scene()
 	for node in tree.root.get_node("AudioManager").get_children():

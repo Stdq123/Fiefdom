@@ -530,8 +530,13 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 		_expect(row.get_child(0).text == final_goals[index]["label"]
 			and row.get_child(1).text.begins_with("%d / %d" % [final_goals[index]["value"], final_goals[index]["target"]]),
 			"The displayed ledger agrees with the goals earned in play.")
-	ending.save_button.pressed.emit()
-	_expect(outcome_view.status.text == "结局已存档。", "The ending can be saved.")
+	var saved_victory: Dictionary = state.latest_saved_game()
+	var recovery: Dictionary = state.latest_saved_game(true)
+	_expect(saved_victory.get("source") == "结局自动存档" and saved_victory.get("outcome") == expected
+		and saved_victory.get("campaign") == state.campaign_id and recovery.get("running", false)
+		and recovery.get("campaign") == state.campaign_id and outcome_view.status.text == "结局已自动保存。"
+		and not ending.restore_button.disabled,
+		"Presenting the ledger saves the victory and keeps a playable checkpoint.")
 	ending.title_button.pressed.emit()
 	await tree.scene_changed
 	_expect(tree.current_scene.scene_file_path == TITLE and not tree.paused, "The ending can return to the normal title.")
@@ -539,8 +544,10 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 	await tree.scene_changed
 	await tree.process_frame
 	ending = tree.current_scene.get_node("CampaignHUD").summary
-	_expect(state.outcome == expected and tree.paused and ending.report.visible and not ending.score.playing,
-		"Continuing a finished save opens the same ledger directly.")
+	var reloaded_victory: Dictionary = state.latest_saved_game()
+	_expect(state.outcome == expected and tree.paused and ending.report.visible and not ending.score.playing
+		and saved_victory.get("sequence") == reloaded_victory.get("sequence"),
+		"Continuing without a manual save opens the same ledger directly.")
 	ending.replay_button.pressed.emit()
 	_expect(ending.shot == ending.Shot.FIELD and ending.film.visible, "The saved ending can replay its film.")
 	ending.skip_button.pressed.emit()

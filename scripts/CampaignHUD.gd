@@ -275,6 +275,11 @@ func _show_ending(saved_ending: bool) -> void:
 	var ending = _add_ending_panel()
 	ending.present(get_parent().get_node("World"), saved_ending)
 	status = ending.status
+	if not saved_ending:
+		match Global.save_automatically("ending"):
+			OK: status.text = "结局已自动保存。"
+			ERR_SKIP: status.text = "可点「保存结局」留存本次记录。"
+			_: status.text = "结局自动保存失败。可尝试「保存结局」。"
 	ending.continue_button.pressed.connect(_continue_estate)
 	ending.save_button.pressed.connect(_save_ending)
 	ending.restore_button.disabled = Global.latest_saved_game(true).is_empty()

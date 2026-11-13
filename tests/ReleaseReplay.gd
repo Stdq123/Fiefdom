@@ -28,6 +28,9 @@ func _run() -> void:
 		"traditional", "reformed":
 			var replay = load("res://tests/CampaignReplay.gd").new()
 			await replay.run(tree, arguments[0], true, capture_directory)
+		"save-ending-traditional", "save-ending-reformed", "resume-ending-traditional", "resume-ending-reformed":
+			var replay = load("res://tests/EndingFilmReplay.gd").new()
+			await replay.run_process_restart(tree, arguments[0].ends_with("traditional"), arguments[0].begins_with("resume-"))
 		"traditional-rations", "reformed-rations":
 			var replay = load("res://tests/CampaignReplay.gd").new()
 			await replay.run(tree, arguments[0].trim_suffix("-rations"), true, capture_directory, true)

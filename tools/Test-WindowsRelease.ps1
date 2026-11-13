@@ -17,6 +17,7 @@ param(
     [switch]$KeyBindings,
     [switch]$SummerRaft,
     [switch]$TitlePresentation,
+    [switch]$ProcessRestart,
     [switch]$Backpack,
     [switch]$HallDecor,
     [switch]$RouteGoals,
@@ -62,10 +63,16 @@ function Start-VerifiedGame {
         [string]$Profile,
         [string]$Name,
         [string]$Replay,
-        [string]$Resolution
+        [string]$Resolution,
+        [switch]$ResumeProfile
     )
 
-    $env:APPDATA = (New-Item -ItemType Directory -Force -Path (Join-Path $scratch.FullName $Profile)).FullName
+    $profilePath = Join-Path $scratch.FullName $Profile
+    $env:APPDATA = if ($ResumeProfile) {
+        (Resolve-Path -LiteralPath $profilePath).ProviderPath
+    } else {
+        (New-Item -ItemType Directory -Path $profilePath).FullName
+    }
     $log = Join-Path $evidence "$Name.log"
     $frameLimit = if ($Replay) { '12000' } else { '180' }
     $arguments = @('--quit-after', $frameLimit, '--log-file', ('"' + $log + '"'))
@@ -177,6 +184,13 @@ try {
     if ($TitlePresentation) {
         Start-VerifiedGame -Directory $release -Profile 'title-presentation' -Name 'title-presentation' -Replay 'title-presentation' -Resolution $fullResolution
     }
+    if ($ProcessRestart) {
+        foreach ($route in 'traditional', 'reformed') {
+            $profile = "restart-$route"
+            Start-VerifiedGame -Directory $release -Profile $profile -Name "ending-write-$route" -Replay "save-ending-$route"
+            Start-VerifiedGame -Directory $release -Profile $profile -Name "ending-restart-$route" -Replay "resume-ending-$route" -ResumeProfile
+        }
+    }
     if ($Backpack) {
         Start-VerifiedGame -Directory $release -Profile 'backpack' -Name 'backpack' -Replay 'backpack'
     }
@@ -279,7 +293,7 @@ try {
         Expand-Archive -LiteralPath $oldPackage -DestinationPath $legacy
         Install-Replay $legacy
         Start-VerifiedGame -Directory $legacy -Profile "legacy-$oldName" -Name "legacy-create-$oldName" -Replay 'legacy-create'
-        Start-VerifiedGame -Directory $release -Profile "legacy-$oldName" -Name "legacy-continue-$oldName" -Replay 'legacy-continue'
+        Start-VerifiedGame -Directory $release -Profile "legacy-$oldName" -Name "legacy-continue-$oldName" -Replay 'legacy-continue' -ResumeProfile
     }
     if ($Capture) {
         foreach ($size in $fullResolution, '1024x768') {

@@ -994,4 +994,9 @@
 
 - 鼠标和手柄瞄准斥候时，贴图透明边缘让箭矢按原方向射出，指向帽檐可锁定。箭出手后斥候仍能走开躲避。2× 贴图在逻辑分辨率下缓存透明度，供原有的瞄准判定使用。 [Godot Texture2D 文档](https://docs.godotengine.org/en/4.7/classes/class_texture2d.html#class-texture2d-private-method-is-pixel-opaque)
 - 封地记事用货物送达后带来的变化记下这笔交货。改革结局回放同屏保留季青的歇脚处、弋戎的战果和阿绥送到亭前的麦帛。
-- 101 项 Godot 场景通过。解压版无窗口验证覆盖 27 项，含两种备粮方式的双结局、弓箭、结局续营、战败恢复、研究、上一版续档与连续运行。发行脚本在隔离桌面取得默认 1920×1080 的开局和双结局，以及 1024×768 的耕作、管理、敲钟和对白。 [Windows 1.0 x64](../build/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-windows-acceptance/final/source/source-matrix.txt) · [发行校验](../build/polish-windows-acceptance/final/headless/manifest.txt) · [传统结局](../build/polish-windows-acceptance/final/capture/1920x1080/ending-traditional.png) · [改革结局](../build/polish-windows-acceptance/final/capture/1920x1080/ending-reformed.png)
+- 101 项 Godot 场景通过。解压版无窗口验证覆盖 27 项，含两种备粮方式的双结局、弓箭、结局续营、战败恢复、研究、上一版续档与连续运行。发行脚本在隔离桌面取得默认 1920×1080 的开局和双结局，以及 1024×768 的耕作、管理、敲钟和对白。 [源码回归](../build/polish-windows-acceptance/final/source/source-matrix.txt) · [发行校验](../build/polish-windows-acceptance/final/headless/manifest.txt) · [传统结局](../build/polish-windows-acceptance/final/capture/1920x1080/ending-traditional.png) · [改革结局](../build/polish-windows-acceptance/final/capture/1920x1080/ending-reformed.png)
+
+## 呈交贡簿或税册时保存结局
+
+- 在堂前交贡簿或在南路亭交新税册后，默认写入结局自动档。结算显示保存结果。从标题继续会回到同一结算，存档列表同时保留本局可恢复的通关前进度。关闭自动存档时，仍可用结算页的「保存结局」。
+- 两条新档回放在结算页直接返回标题，再从自动档继续。续档保留路线和日期，可重看演出或继续经营。专项覆盖关闭自动存档、自动写入失败后手动保存及战败恢复。另用布置好的结局进度，在解压版完整退出并重启进程，核对两条路线都可从标题继续。 [Godot 验证](../build/polish-ending-autosave/godot.log) · [写入失败回归](../build/polish-ending-autosave/save-failure.log) · [Windows 1.0 x64](../build/polish-ending-autosave/Fiefdom-1.0.0-Windows-x64.zip) · [发行回放](../build/polish-ending-autosave/release-headless.log) · [重启进程回放](../build/polish-ending-autosave/release-restart.log) · [隔离桌面](../build/polish-ending-autosave/release-capture.log)
