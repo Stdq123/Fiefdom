@@ -604,7 +604,8 @@ func _on_west_market_directions_requested(place: String) -> void:
 	directions.follow_market(place)
 	panel_manager.hide_management_panel()
 	if Global.is_indoors():
-		hud.practice_label.text = "已标出西市%s · 从南门回封地" % place
+		var destination := place if place == Sheepfold.MEADOW else "西市" + place
+		hud.practice_label.text = "已标出%s · 从南门回封地" % destination
 
 func _on_ravine_trip_requested(place: String) -> void:
 	world.set_channel_mode(false)

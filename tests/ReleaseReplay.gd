@@ -185,8 +185,9 @@ func _run() -> void:
 		"autumn-exhibit":
 			var replay = load("res://tests/AutumnExhibitReplay.gd").new()
 			await replay.run(tree)
-		"sheepfold":
+		"sheepfold", "meadow-fodder":
 			var replay = load("res://tests/SheepfoldReplay.gd").new()
+			replay.meadow_only = arguments[0] == "meadow-fodder"
 			await replay.run(tree)
 		"fish-market-orders", "fish-market-orders-legacy":
 			var replay = load("res://tests/FishMarketReplay.gd").new()

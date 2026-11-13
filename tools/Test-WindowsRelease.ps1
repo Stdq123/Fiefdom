@@ -210,7 +210,7 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'pavilion-evening' -Name 'pavilion-evening' -Replay 'pavilion-evening'
     }
     if ($SouthRoad) {
-        foreach ($name in 'market-orders', 'order-preparation', 'watch-relief', 'autumn-exhibit', 'sheepfold') {
+        foreach ($name in 'market-orders', 'order-preparation', 'watch-relief', 'autumn-exhibit', 'sheepfold', 'meadow-fodder') {
             Start-VerifiedGame -Directory $release -Profile $name -Name $name -Replay $name
         }
     }

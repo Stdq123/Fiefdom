@@ -5,12 +5,15 @@ extends "res://scripts/SurveyMap.gd"
 @onready var forecast: Label = %Forecast
 @onready var mix_fodder: Button = %MixFodder
 @onready var shear: Button = %Shear
+@onready var meadow: Button = %Meadow
+@onready var meadow_status: Label = %MeadowStatus
 @onready var receipt: Label = %Receipt
 
 func _ready() -> void:
 	super._ready()
 	mix_fodder.pressed.connect(_mix_fodder)
 	shear.pressed.connect(_shear)
+	meadow.pressed.connect(_follow_meadow)
 
 func _refresh_on_open() -> void:
 	receipt.text = ""
@@ -34,6 +37,11 @@ func _refresh() -> void:
 	mix_fodder.text = "用 1 份麦备 %d 份草料" % Global.balance.sheep_fodder_bundle
 	mix_fodder.disabled = not Global.can_use_sheepfold(Sheepfold.Action.MIX_FODDER)
 	shear.disabled = not ready
+	meadow_status.text = Global.meadow_status()
+
+func _follow_meadow() -> void:
+	close_map()
+	GameEvents.west_market_directions_requested.emit(Sheepfold.MEADOW)
 
 func _mix_fodder() -> void:
 	if Global.use_sheepfold(Sheepfold.Action.MIX_FODDER):

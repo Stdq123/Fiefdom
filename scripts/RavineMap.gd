@@ -162,6 +162,8 @@ func _refresh_route() -> void:
 	var name: String = guide.destination_name
 	var going_to_market := name == ESTATE_EXIT and not Global.market_trip_target.is_empty()
 	var destination := "西市 · " + Global.market_trip_target if going_to_market else name
+	if going_to_market and Global.market_trip_target == Sheepfold.MEADOW:
+		destination = Sheepfold.MEADOW
 	cancel_button.visible = not name.is_empty()
 	cancel_button.text = destination + " · 清除指路"
 	clear_button.disabled = name.is_empty()

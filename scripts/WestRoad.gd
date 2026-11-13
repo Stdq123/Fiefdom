@@ -28,16 +28,18 @@ func _ready() -> void:
 	$EstateGate.position = LAYOUT.ESTATE_GATE
 	$MarketArrival.position = LAYOUT.MARKET_GATE + Vector2(33, 0)
 	$EstateArrival.position = LAYOUT.ESTATE_GATE - Vector2(33, 0)
+	$FodderMeadow.position = LAYOUT.MEADOW
 	player.arrive_at($MarketArrival if Global.restored_west_road_from_market else $EstateArrival)
 	Global.restored_west_road_from_market = false
 	ground.place_scenery($Scenery)
-	network = TRACK_DIRECTION.new([LAYOUT.ROAD], self, player)
+	network = TRACK_DIRECTION.new([LAYOUT.ROAD, LAYOUT.MEADOW_TRACK], self, player)
 	scheduled_guest = Global.visitor_for_day(Global.current_day)
 	$DialogManager.setup($UI/Control, player)
 	for foot: Vector2 in [Vector2(-243, 59), Vector2(245, 60), Vector2(-58, 58), Vector2(54, 59)]:
 		$DayLighting.place_lamp($Scenery, foot, 0.82)
 	_place_sign(LAYOUT.MARKET_GATE + Vector2(15, -48), "← 西市")
 	_place_sign(LAYOUT.ESTATE_GATE + Vector2(-16, -48), "封地 →")
+	_place_sign(LAYOUT.MEADOW_JUNCTION + Vector2(21, 30), "↓ " + Sheepfold.MEADOW)
 	$Waypoint.draw.connect(_draw_waypoint)
 	player.footstep.connect(_step)
 	settings.save_resume_hint = "续档时从溪桥道较近的一侧路口继续。"
@@ -124,14 +126,19 @@ func _talk_to_silk_guest(data: VisitorData) -> void:
 
 func _refresh_route() -> void:
 	var target := Global.market_trip_target
+	var tracking_meadow := target == Sheepfold.MEADOW
 	var tracking_guest := target == VisitorData.SILK_MERCHANT
 	var silk_trip := scheduled_guest.silk_trip() if tracking_guest and scheduled_guest else VisitorData.SilkTrip.NONE
-	if not tracking_guest or not silk_guest:
+	if not tracking_meadow and (not tracking_guest or not silk_guest):
 		route.clear()
 		route_origin = Vector2.INF
 	if not Global.ravine_trip_target.is_empty():
 		%Route.text = "竹涧 · %s →" % Global.ravine_trip_target
 		route_direction = Vector2.RIGHT
+	elif tracking_meadow:
+		%Route.text = Sheepfold.MEADOW
+		route_direction = Vector2.ZERO
+		_route_to(LAYOUT.MEADOW, 5.0)
 	elif target == Global.MARKET_RETURN:
 		%Route.text = "回封地 →"
 		route_direction = Vector2.RIGHT
@@ -139,9 +146,7 @@ func _refresh_route() -> void:
 		var foot := silk_guest.position
 		route_direction = Vector2(signf(foot.x - player.position.x), 0)
 		%Route.text = ("← " if route_direction.x < 0.0 else "") + "陶辛 · 溪桥道" + (" →" if route_direction.x > 0.0 else "")
-		if player.position.distance_to(route_origin) >= 3.0 or route.is_empty() or foot.distance_to(route[-1]) >= 2.0:
-			route_origin = player.position
-			route = network.route_between(route_origin, foot)
+		_route_to(foot, 3.0)
 	elif silk_trip in [VisitorData.SilkTrip.RETURN_ROAD, VisitorData.SilkTrip.PAVILION]:
 		%Route.text = "陶辛 · 南路亭 →"
 		route_direction = Vector2.RIGHT
@@ -157,6 +162,11 @@ func _refresh_route() -> void:
 	%Route.visible = not %Route.text.is_empty()
 	$Waypoint.queue_redraw()
 
+func _route_to(foot: Vector2, refresh_distance: float) -> void:
+	if player.position.distance_to(route_origin) >= refresh_distance or route.is_empty() or foot.distance_to(route[-1]) >= 2.0:
+		route_origin = player.position
+		route = network.route_between(route_origin, foot)
+
 func _draw_waypoint() -> void:
 	if route.size() >= 2:
 		for index in range(1, route.size()):
@@ -169,6 +179,10 @@ func _draw_waypoint() -> void:
 		var head := point + route_direction * 3.0
 		var tail := point - route_direction * 3.0
 		$Waypoint.draw_polyline(PackedVector2Array([tail - Vector2(0, 4), head, tail + Vector2(0, 4)]), GOLD, 1.5)
+
+func finish_meadow_route() -> void:
+	if Global.market_trip_target == Sheepfold.MEADOW:
+		_clear_regional_trip()
 
 func _place_sign(point: Vector2, caption: String) -> void:
 	var sign := Label.new()
@@ -191,6 +205,6 @@ func _step(foot: Vector2) -> void:
 		surface = TRACK_AUDIO.Surface.PLANK
 	elif Geometry2D.is_point_in_polygon(foot, ground.pavement):
 		surface = TRACK_AUDIO.Surface.STONE
-	elif Geometry2D.is_point_in_polygon(foot, ground.track):
+	elif Geometry2D.is_point_in_polygon(foot, ground.track) or Geometry2D.is_point_in_polygon(foot, ground.meadow_track):
 		surface = TRACK_AUDIO.Surface.TRACK
 	audio.play_step(surface)

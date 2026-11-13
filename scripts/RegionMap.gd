@@ -24,6 +24,7 @@ const TREES := preload("res://assets/world/seasonal-trees.svg")
 const MARKET_CHOICES := MarketStall.TITLES + [Global.MARKET_ORDERS]
 const SEAL_RADIUS := 11.0
 const HERE_RADIUS := 23.0
+const MEADOW_ICON := Vector2(315, 245)
 
 @onready var paper: Control = %Paper
 @onready var destinations: HFlowContainer = %Destinations
@@ -31,6 +32,7 @@ const HERE_RADIUS := 23.0
 @onready var local_button: Button = %LocalMap
 @onready var road_button: Button = %RoadMap
 @onready var route_label: Label = %Route
+@onready var place_detail: Label = %PlaceDetail
 @onready var route_button: Button = %Follow
 @onready var clear_button: Button = %ClearDirections
 @onready var region_buttons: HBoxContainer = %Regions
@@ -100,11 +102,14 @@ func _refresh_on_open() -> void:
 func _region_for(place: String) -> Region:
 	if place == Global.MARKET_RETURN:
 		return Region.ESTATE
+	if place == Sheepfold.MEADOW:
+		return Region.ROAD
 	return Region.RAVINE if place in Global.ravine_trip_places() else Region.MARKET
 
 func _active_destination() -> String:
 	var place: String = active_trip.call()
-	var listed := (place == Global.MARKET_RETURN or place in MARKET_CHOICES or place in Global.ravine_trip_places())
+	var listed := (place in [Global.MARKET_RETURN, Sheepfold.MEADOW]
+		or place in MARKET_CHOICES or place in Global.ravine_trip_places())
 	return place if listed else ""
 
 func _browse(index: int) -> void:
@@ -115,6 +120,10 @@ func _browse(index: int) -> void:
 
 func _select_region_on_map(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+		if Rect2(MEADOW_ICON - Vector2(45, 20), Vector2(90, 44)).has_point(event.position):
+			_browse(Region.ROAD)
+			_preview_destination(Sheepfold.MEADOW)
+			return
 		for index in POINTS.size():
 			var point: Vector2 = POINTS[index]
 			if Rect2(point - Vector2(45, 88), Vector2(90, 135)).has_point(event.position):
@@ -131,6 +140,8 @@ func _refresh_selection() -> void:
 		child.queue_free()
 	destination_buttons.clear()
 	match selected:
+		Region.ROAD:
+			_add_destination(Sheepfold.MEADOW, Sheepfold.MEADOW, Global.meadow_status())
 		Region.MARKET:
 			for place: String in MARKET_CHOICES:
 				_add_destination(place, place)
@@ -149,17 +160,19 @@ func _add_destination(place: String, caption: String, detail := "") -> void:
 	button.toggle_mode = true
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.custom_minimum_size = Vector2(0, 34)
-	button.pressed.connect(func():
-		selected_place = place
-		_refresh_route()
-	)
+	button.pressed.connect(_preview_destination.bind(place))
 	destinations.add_child(button)
 	destination_buttons[place] = button
+
+func _preview_destination(place: String) -> void:
+	selected_place = place
+	_refresh_route()
 
 func _refresh_route() -> void:
 	for place in destination_buttons:
 		destination_buttons[place].set_pressed_no_signal(place == selected_place)
 	var active: String = active_trip.call()
+	place_detail.text = Global.meadow_status() if selected_place == Sheepfold.MEADOW else ""
 	clear_button.disabled = active.is_empty()
 	route_button.disabled = selected_place.is_empty() or selected_place == active
 	route_button.text = "开始指路" if selected_place.is_empty() else "指路去" + selected_place
@@ -228,6 +241,7 @@ func _draw_chart() -> void:
 	if Global.ravine_shortcut_open():
 		_draw_road(SHORTCUT, south)
 		_draw_text("南路小径", Vector2(542, 286), 14, INK)
+	_draw_meadow()
 	_draw_bridge()
 	_draw_landmarks()
 	_draw_text("北", Vector2(680, 42), 15, INK)
@@ -254,6 +268,13 @@ func _draw_road_position(bridge: Vector2, progress: float) -> void:
 	paper.draw_circle(foot, 8.0, INK, true, -1.0, true)
 	paper.draw_circle(foot, 5.0, GOLD, true, -1.0, true)
 	paper.draw_circle(foot, 2.0, INK, true, -1.0, true)
+
+func _draw_meadow() -> void:
+	var selected_meadow := selected_place == Sheepfold.MEADOW
+	_draw_road([Vector2(306, 188), Vector2(314, 210), Vector2(309, 225), MEADOW_ICON], selected_meadow)
+	paper.draw_circle(MEADOW_ICON, 7.5, INK, true, -1.0, true)
+	paper.draw_circle(MEADOW_ICON, 4.0, GOLD if selected_meadow else PAPER, true, -1.0, true)
+	_draw_text(Sheepfold.MEADOW, MEADOW_ICON + Vector2(5, 18), 14, INK)
 
 func _draw_land() -> void:
 	paper.draw_colored_polygon(PackedVector2Array([Vector2(23, 97), Vector2(54, 65), Vector2(128, 52),

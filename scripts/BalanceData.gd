@@ -182,6 +182,7 @@ class_name BalanceData
 @export_range(0, 10000) var sheep_wool_price := 36
 @export_range(0, 10000) var sheep_fodder_price := 6
 @export_range(1, 30) var sheep_fodder_bundle := 3
+@export_range(1, 12) var sheep_meadow_yield := 2
 @export_range(1, 30) var sheep_coat_wool := 2
 
 # ==================== 六艺系统 ====================

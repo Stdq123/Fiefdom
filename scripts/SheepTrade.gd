@@ -26,6 +26,7 @@ func _refresh() -> void:
 	var prices := Global.balance
 	if flock.owned():
 		account.text = "羊在西坡羊棚 · 草料 %d 份 · 羊毛 %d 份" % [flock.fodder, flock.wool]
+		account.text += "\n桥东草甸 · " + Global.meadow_status()
 	else:
 		account.text = "领羊后在封地西坡立栏。\n雨天和冬季要备草料，饱食 %d 夜可剪毛。" % prices.sheep_wool_nights
 		if Global.money < prices.sheep_price:

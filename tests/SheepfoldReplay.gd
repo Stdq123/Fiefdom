@@ -4,6 +4,7 @@ const PRIVATE_WHEAT := Vector2i(6, 5)
 
 var world: Node2D
 var ui: CanvasLayer
+var meadow_only := false
 
 func _estate() -> void:
 	world = tree.current_scene.get_node("World")
@@ -20,10 +21,15 @@ func _watch(progress: float) -> void:
 	tree.root.get_node("GameEvents").daylight_changed.emit()
 
 func _continue() -> void:
+	await _resume()
+	_estate()
+
+func _resume() -> void:
 	tree.change_scene_to_file(state.TITLE_SCENE)
 	await tree.scene_changed
 	await _button(tree.current_scene.continue_button)
-	_estate()
+	if tree.current_scene == null:
+		await tree.scene_changed
 
 func _open_sheep_trade() -> Control:
 	if world.player.position.y >= EstateLayout.FIELD_LANE_TURN.y:
@@ -48,22 +54,24 @@ func _return_from_market() -> bool:
 	_estate()
 	return true
 
-func _buy_sheep() -> bool:
+func _buy_sheep(buy_feed: bool) -> bool:
 	var trade := await _open_sheep_trade()
 	if trade == null:
 		return false
 	_expect(trade.buy_sheep.visible and not trade.buy_sheep.disabled and not trade.sell_wool.is_visible_in_tree(),
 		"The trade page quotes the sheep before purchase.")
 	await _snapshot("01-market-offer")
+	var purchase_day: int = state.current_day
 	var copper: int = state.money
 	await _button(trade.buy_sheep)
-	_expect(state.sheepfold.bought_day == 18 and state.money == copper - state.balance.sheep_price
+	_expect(state.sheepfold.bought_day == purchase_day and state.money == copper - state.balance.sheep_price
 		and not trade.buy_sheep.visible, "Cai Niang places one sheep and charges the quoted price.")
-	await _button(trade.buy_fodder)
-	_expect(state.sheepfold.fodder == 3 and state.money == copper - state.balance.sheep_price - state.balance.sheep_fodder_price,
-		"The fodder bundle reaches the pen as a separate stock.")
+	if buy_feed:
+		await _button(trade.buy_fodder)
+		_expect(state.sheepfold.fodder == 3 and state.money == copper - state.balance.sheep_price - state.balance.sheep_fodder_price,
+			"The fodder bundle reaches the pen as a separate stock.")
 	print("SHEEP_PURCHASE day=", state.current_day, " copper=", copper, "->", state.money, " fodder=", state.sheepfold.fodder)
-	return await _return_from_market()
+	return true
 
 func _guide_pen() -> void:
 	await _key(KEY_M)
@@ -260,18 +268,156 @@ func _wear_coat() -> void:
 		and state.sheepfold.coat and state.king_storage == 2, "Continue preserves the coat, flock, and two public harvests.")
 	print("SHEEP_COAT day=", state.current_day, " attire=", state.attire_id, " tribute=", state.king_storage)
 
+func _walk_to_meadow(road: Node2D) -> void:
+	var route: PackedVector2Array = road.network.route_between(road.player.position, road.ground.LAYOUT.MEADOW)
+	_expect(route.has(road.ground.LAYOUT.MEADOW_JUNCTION), "The grass clearing connects to the road at its own junction.")
+	for point: Vector2 in route.slice(1):
+		await Campaign.walk_straight(tree, road.player, point)
+	var spot := road.get_node("FodderMeadow") as Node2D
+	_expect(road.player.position.distance_to(spot.position) < 3.0 and road.player.interaction_target == spot,
+		"Walk down the spur and reach the actual cutting site.")
+
+func _back_from_meadow(road: Node2D) -> bool:
+	var arrival := road.get_node("EstateArrival") as Marker2D
+	var route: PackedVector2Array = road.network.route_between(road.player.position, arrival.position)
+	for point: Vector2 in route.slice(1):
+		await Campaign.walk_straight(tree, road.player, point)
+	if not await _cross(&"ui_right", state.ESTATE_SCENE):
+		return false
+	_estate()
+	return true
+
+func _cut_summer_meadow(portions: int) -> bool:
+	var market := tree.current_scene
+	await _key(KEY_ESCAPE)
+	await _key(KEY_M)
+	var chart: Control = market.market_map
+	await _button(chart.get_node("%RegionMap"))
+	var overview: Control = chart.region_map
+	await _button(overview.region_buttons.get_node("WestRoad"))
+	await _button(overview.destination_buttons[Sheepfold.MEADOW])
+	_expect(overview.route_label.text == "西市 → 溪桥道" and overview.place_detail.text == "可割草料 %d 份" % portions,
+		"The market chart previews the bridge and the current harvest.")
+	await _button(overview.route_button)
+	_expect(chart._current_stop() == state.MARKET_RETURN and chart._destination_label(state.MARKET_RETURN) == Sheepfold.MEADOW,
+		"The local market route points to the gate and names the meadow.")
+	await Campaign.walk_to_market_exit(tree, market)
+	if not await _cross(&"ui_right", state.WEST_ROAD_SCENE):
+		return false
+	var road := tree.current_scene as Node2D
+	_expect(road.route.has(road.ground.LAYOUT.MEADOW_JUNCTION), "The market route continues across the bridge to the spur.")
+	await _walk_to_meadow(road)
+	var rain_term: String = state.balance.rain_solar_term
+	state.balance.rain_solar_term = state.get_current_solar_term()
+	await _key(KEY_E)
+	_expect(state.meadow_status() == "等晴天再割草" and state.sheepfold.fodder == 0 and state.sheepfold.last_meadow_cut == 0,
+		"Interacting in summer rain leaves the grass uncut.")
+	state.balance.rain_solar_term = rain_term
+	await _key(KEY_E)
+	_expect(state.sheepfold.fodder == portions and state.sheepfold.last_meadow_cut == 12,
+		"The dry summer harvest supplies the first feed without buying any.")
+	print("MEADOW_SUMMER cut_day=", state.sheepfold.last_meadow_cut, " stock=", state.sheepfold.fodder)
+	return await _back_from_meadow(road)
+
+func _verify_meadow_seasons() -> void:
+	var portions: int = state.balance.sheep_meadow_yield
+	var tribute: int = state.king_storage
+	var stock: int = state.player_inventory
+	var money: int = state.money
+	if not await _cut_summer_meadow(portions):
+		return
+	await _advance_night()
+	_watch(0.34)
+	var cut_day: int = state.current_day
+	_expect(cut_day == 13 and state.meadow_has_grass() and state.sheepfold.last_feed == Sheepfold.Feed.PASTURE,
+		"Grass regrows across the summer to autumn boundary.")
+	await _guide_pen()
+	await _walk_to_pen()
+	var pen_panel := await _open_pen()
+	if pen_panel == null:
+		return
+	_expect(pen_panel.meadow_status.text == "可割草料 %d 份" % portions,
+		"The pen names the current meadow harvest before leaving.")
+	await _snapshot("10-meadow-pen")
+	await _button(pen_panel.meadow)
+	_expect(state.market_trip_target == Sheepfold.MEADOW and ui.directions.tracked_place == Sheepfold.MEADOW
+		and not pen_panel.modal.visible, "Follow directions from the sheepfold to the west gate.")
+	await Campaign.walk_estate_road_to(tree, world, world.get_node("WestMarketArrival").global_position)
+	if not await _cross(&"ui_left", state.WEST_ROAD_SCENE):
+		return
+	var road := tree.current_scene as Node2D
+	await tree.process_frame
+	_expect(road.route.has(road.ground.LAYOUT.MEADOW_JUNCTION) and road.route[-1] == road.ground.LAYOUT.MEADOW,
+		"Crossing the gate continues to the grass rather than through the market.")
+	await _key(KEY_M)
+	var overview: Control = road.region_map
+	_expect(overview.selected_place == Sheepfold.MEADOW and overview.place_detail.text == "可割草料 %d 份" % portions,
+		"The active regional waypoint displays the harvest status.")
+	await _snapshot("11-meadow-map")
+	await _key(KEY_M)
+	_expect(state.save_game() == OK, "Save the uncut meadow's active route on the bridge road.")
+	await _resume()
+	road = tree.current_scene
+	if not _expect(road.scene_file_path == state.WEST_ROAD_SCENE and state.market_trip_target == Sheepfold.MEADOW,
+		"Continuing at the bridge road restores the meadow route."):
+		return
+	await _walk_to_meadow(road)
+	await _snapshot("12-uncut-autumn-grass")
+	await _key(KEY_E)
+	_expect(state.sheepfold.fodder == portions * 2 and state.sheepfold.last_meadow_cut == cut_day
+		and state.market_trip_target.is_empty() and state.last_forage_day != cut_day,
+		"Cutting adds the quoted feed once, clears the route, and leaves the ravine forage allowance.")
+	await _snapshot("13-cut-grass")
+	await _key(KEY_E)
+	_expect(state.sheepfold.fodder == portions * 2 and state.player_inventory == stock
+		and state.money == money and state.king_storage == tribute, "Cut grass spends no wheat, tribute or copper.")
+	_expect(state.save_game() == OK, "Save after cutting grass while still on the bridge road.")
+	await _resume()
+	road = tree.current_scene
+	if not _expect(road.scene_file_path == state.WEST_ROAD_SCENE and state.sheepfold.fodder == portions * 2
+		and state.sheepfold.last_meadow_cut == cut_day, "Continue preserves the feed and the cut meadow."):
+		return
+	await _walk_to_meadow(road)
+	await _key(KEY_E)
+	_expect(state.sheepfold.fodder == portions * 2 and "本季已收" in road.get_node("FodderMeadow/Hint").text,
+		"Reentering the meadow does not refill it in the same season.")
+	if not await _back_from_meadow(road):
+		return
+	while state.current_day < 19 and not failed:
+		await _advance_night()
+	_expect(state.sheepfold.last_feed == Sheepfold.Feed.PASTURE, "The final autumn evening still uses pasture.")
+	await _advance_night()
+	_expect(state.current_day == 20 and state.sheepfold.fodder == portions * 2 - 1
+		and state.sheepfold.last_feed == Sheepfold.Feed.FODDER, "The first winter evening uses one portion of the meadow grass.")
+	await _walk_to_pen()
+	pen_panel = await _open_pen()
+	if pen_panel:
+		_expect(not state.meadow_has_grass() and pen_panel.meadow_status.text == "夏秋可割草"
+			and "昨夜  用草料 1 份" in pen_panel.forecast.text, "The pen shows winter dormancy and last night's feed.")
+		await _snapshot("14-meadow-winter-feed")
+		await _key(KEY_ESCAPE)
+	print("MEADOW_WINTER cut_day=", state.sheepfold.last_meadow_cut, " fed_day=", state.current_day - 1,
+		" stock=", state.sheepfold.fodder, " tribute=", state.king_storage)
+
 func _play() -> void:
 	await _button(tree.current_scene.new_button)
 	_estate()
 	_expect(not world.get_node("SheepfoldPen").visible and not state.sheepfold.owned(), "The pasture is empty in a fresh campaign.")
 	await _harvest(world, ui)
-	state.current_day = 18
+	state.current_day = 12 if meadow_only else 18
 	state.money = 134
 	state.food_storage = 64
 	state.reputation = 140
 	state.balance.raid_first_day = 1000
 	tree.root.get_node("GameEvents").day_advanced.emit(state.current_day)
-	if not await _buy_sheep():
+	if meadow_only:
+		_expect(state.meadow_has_grass() and not state.can_cut_meadow_grass(), "Harvest requires a sheep even in summer.")
+	if not await _buy_sheep(not meadow_only):
+		return
+	if meadow_only:
+		await _verify_meadow_seasons()
+		return
+	if not await _return_from_market():
 		return
 	await _test_pasture()
 	if await _winter_feed() and await _grow_and_shear(true) and await _sell_then_continue() and await _grow_and_shear(false):

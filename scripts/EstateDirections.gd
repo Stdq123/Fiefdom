@@ -131,7 +131,7 @@ func ravine_gate_point(place: String) -> Vector2:
 
 func follow_market(place: String) -> void:
 	var gate := world.get_node("WestMarketGate") as Node2D
-	follow_place("西市 · " + place, world.to_local(gate.global_position))
+	follow_place(place if place == Sheepfold.MEADOW else "西市 · " + place, world.to_local(gate.global_position))
 	Global.market_trip_target = place
 
 func follow_raid() -> void:

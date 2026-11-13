@@ -167,11 +167,15 @@ func _refresh_destination() -> void:
 	paper.queue_redraw()
 
 func _current_stop() -> String:
-	return Global.MARKET_RETURN if not Global.ravine_trip_target.is_empty() else Global.market_trip_target
+	if not Global.ravine_trip_target.is_empty() or Global.market_trip_target == Sheepfold.MEADOW:
+		return Global.MARKET_RETURN
+	return Global.market_trip_target
 
 func _destination_label(place: String) -> String:
 	if place == Global.MARKET_RETURN and not Global.ravine_trip_target.is_empty():
 		return "竹涧 · " + Global.ravine_trip_target
+	if place == Global.MARKET_RETURN and Global.market_trip_target == Sheepfold.MEADOW:
+		return Sheepfold.MEADOW
 	return place
 
 func _service(place: String) -> String:
@@ -179,6 +183,8 @@ func _service(place: String) -> String:
 		MERCHANT:
 			return _merchant_note()
 		Global.MARKET_RETURN:
+			if Global.market_trip_target == Sheepfold.MEADOW:
+				return "向东出市，过桥后转向南边"
 			return "经溪桥道回封地，再从东关进竹涧" if not Global.ravine_trip_target.is_empty() else "沿石板街向东，经溪桥道回封地"
 		Global.MARKET_ORDERS:
 			return "查看时令单、交货"

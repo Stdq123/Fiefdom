@@ -6,6 +6,12 @@ const TERRAIN := preload("res://scripts/EstateTerrain.gd")
 const BACKDROP := Rect2(-800, -460, 1600, 960)
 const ROAD_HALF_WIDTH := 20.0
 const WATER_HALF_WIDTH := 23.0
+const MEADOW_HALF_WIDTH := 7.0
+const MEADOW_EDGE := [
+	Vector2(113, 121), Vector2(129, 106), Vector2(157, 101), Vector2(183, 102),
+	Vector2(205, 117), Vector2(213, 135), Vector2(205, 152), Vector2(174, 164),
+	Vector2(145, 158), Vector2(122, 150), Vector2(112, 138),
+]
 const GROVES := [
 	Rect2(-440, -174, 299, 130), Rect2(-394, 111, 277, 146),
 	Rect2(47, -174, 392, 130), Rect2(76, 96, 370, 157),
@@ -20,8 +26,8 @@ const TREES := [
 	Vector2(-313, -66), Vector2(-269, -51), Vector2(-229, -73), Vector2(-178, -95),
 	Vector2(-212, 127), Vector2(-147, 144), Vector2(-245, 162), Vector2(-314, 125),
 	Vector2(61, -98), Vector2(119, -104), Vector2(159, -61), Vector2(209, -84),
-	Vector2(269, -47), Vector2(315, -82), Vector2(104, 120), Vector2(161, 160),
-	Vector2(217, 111), Vector2(269, 144), Vector2(320, 119),
+	Vector2(269, -47), Vector2(315, -82), Vector2(73, 120), Vector2(102, 159),
+	Vector2(231, 111), Vector2(269, 144), Vector2(320, 119),
 ]
 const BANK_PROPS := [
 	Vector3i(-62, -86, LANDSCAPE.Prop.ROCK), Vector3i(-43, -46, LANDSCAPE.Prop.REEDS),
@@ -45,6 +51,9 @@ var road := EstateLayout.sample_road(PackedVector2Array(LAYOUT.ROAD))
 var creek := EstateLayout.sample_road(PackedVector2Array(LAYOUT.CREEK))
 var track := _ribbon(road, ROAD_HALF_WIDTH)
 var shoulder := _ribbon(road, ROAD_HALF_WIDTH + 3.0)
+var meadow_lane := EstateLayout.sample_road(PackedVector2Array(LAYOUT.MEADOW_TRACK))
+var meadow_track := _ribbon(meadow_lane, MEADOW_HALF_WIDTH)
+var meadow_shoulder := _ribbon(meadow_lane, MEADOW_HALF_WIDTH + 2.0)
 var banks := _riverbed(WATER_HALF_WIDTH + 9.0)
 var shallows := _riverbed(WATER_HALF_WIDTH + 4.0)
 var water := _riverbed(WATER_HALF_WIDTH)
@@ -108,6 +117,7 @@ func _draw() -> void:
 		draw_colored_polygon(edge, grass.lerp(palette[1], 0.67))
 	meadow.draw_meadow(self, grass, winter)
 	draw_texture_rect(LANDSCAPE.GRAIN, BACKDROP, true, Color(1.0, 1.0, 1.0, 0.62))
+	_draw_meadow(grass, loam, season)
 	meadow.draw_verge(self, road, ROAD_HALF_WIDTH * 2.0, grass, winter)
 	draw_colored_polygon(shoulder, loam.lerp(grass, 0.54))
 	TERRAIN.draw_loam(self, track, loam)
@@ -119,6 +129,17 @@ func _draw() -> void:
 	draw_colored_polygon(deep_water, stream_color.darkened(0.19))
 	_draw_water_edge(stream_color, winter)
 	_draw_bridge(winter)
+
+func _draw_meadow(grass: Color, loam: Color, season: int) -> void:
+	var shade: Color = [Color("#6c784e"), Color("#7c8b50"), Color("#958353"), Color("#89998b")][season]
+	var edge := PackedVector2Array(MEADOW_EDGE)
+	draw_colored_polygon(edge, grass.lerp(shade, 0.65))
+	if season == Global.Season.WINTER:
+		for drift: Rect2 in [Rect2(130, 112, 35, 8), Rect2(173, 118, 24, 10), Rect2(183, 144, 20, 5)]:
+			draw_rect(drift, Color("#b7c3b5"))
+	meadow.draw_verge(self, meadow_lane, MEADOW_HALF_WIDTH * 2.0, grass, season == Global.Season.WINTER)
+	draw_colored_polygon(meadow_shoulder, loam.lerp(grass, 0.52))
+	TERRAIN.draw_loam(self, meadow_track, loam)
 
 func _draw_water_edge(tint: Color, winter: bool) -> void:
 	var rim := Color("#a8b8ac") if winter else tint.lightened(0.24)

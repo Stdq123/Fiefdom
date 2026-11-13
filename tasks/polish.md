@@ -826,3 +826,8 @@
 - 封地、西市和竹涧的舆图可打开区域图。在溪桥道直接按舆图键打开。区域图画出四地相连的路，标记桥上的当前位置，预览目的地和沿途关口。确认后沿现有指路步行。南路小径在交完溪行手记后入图，封地南段去砾滩时可沿小径走。 [西市出发去柳湾](../build/polish-region-map/verified-frames/1280x720/01a-market-to-ravine.png) · [溪桥道续行](../build/polish-region-map/verified-frames/1280x720/04a-bridge-regions.png) · [南路小径](../build/polish-region-map/verified-frames/1024x768/shortcut/03a-region-shortcut.png)
 - 回放从西市选柳湾，途经溪桥道和封地，钓鱼后从竹涧选返程并回西市交货。另查桥上取消或更换去处、换图暂停与续档、上一版溪桥道实存档的陶辛指路。1280×720 和 1024×768 在不可见桌面核对。 [竹涧返程](../build/polish-region-map/verified-frames/1024x768/journey/06a-ravine-to-market.png) · [交货回执](../build/polish-region-map/verified-frames/1024x768/journey/08-order-receipt.png) · [旧档回放](../build/polish-region-map/verified-frames/1024x768/old-bridge/render.log)
 - Godot 4.7.2 资源导入、148 个脚本加载、标题启动和 17 项源码回归通过。发行包通过 58 项 Windows 回放，覆盖井田收获、过夜、双结局和 90 秒连续运行。初次玩家能否独立找到区域舆图仍待人工试玩。 [源码回归](../build/polish-region-map/godot-region-verified.log) · [发行验证](../build/polish-region-map/windows-release-verified.log) · [Windows 试玩包](../build/polish-region-map/Fiefdom-region-map-release-Windows-x64.zip)
+
+## 桥东草甸与冬夜草料
+
+- 木桥东岸增加一条通向林缘的草径。羊棚、绸摊和区域舆图显示草甸状态。领羊后夏秋晴天各可割一次，默认两份草料直接存进羊棚。借鉴了巴士站道路旁按季节变化的采集点。 [巴士站采集](https://stardewvalleywiki.com/Bus_Stop#Foraging)
+- 无窗口回放从西市过桥割夏草，入秋从羊棚指路再割一次。途中保存能恢复指引，割草后重进草甸仍显示本季已收。首个冬夜消耗一份，余三份。井田的公私田结算和过夜回放也通过。实景和整包验收并入最终试玩。 [Godot 冒烟记录](../build/polish-bridge-meadow/godot-meadow-split.log)

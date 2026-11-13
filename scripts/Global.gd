@@ -638,6 +638,36 @@ func sheep_feed(fodder: int, day := 0) -> Sheepfold.Feed:
 		return Sheepfold.Feed.PASTURE
 	return Sheepfold.Feed.FODDER if fodder > 0 else Sheepfold.Feed.SHORTAGE
 
+func meadow_has_grass() -> bool:
+	return season_index() in [Season.SUMMER, Season.AUTUMN] and sheepfold.last_meadow_cut < _season_start()
+
+func meadow_status() -> String:
+	if season_index() not in [Season.SUMMER, Season.AUTUMN]:
+		return "夏秋可割草"
+	if not meadow_has_grass():
+		return "本季已收"
+	if not sheepfold.owned():
+		return "领羊立栏后可割草"
+	if has_rain():
+		return "等晴天再割草"
+	return "可割草料 %d 份" % balance.sheep_meadow_yield
+
+func can_cut_meadow_grass() -> bool:
+	return outcome == Outcome.RUNNING and sheepfold.owned() and meadow_has_grass() and not has_rain()
+
+func cut_meadow_grass() -> bool:
+	if not can_cut_meadow_grass():
+		return false
+	sheepfold.last_meadow_cut = current_day
+	sheepfold.fodder += balance.sheep_meadow_yield
+	GameEvents.sheepfold_changed.emit()
+	GameEvents.world_notice.emit("草料 +%d · 已送回羊棚" % balance.sheep_meadow_yield)
+	return true
+
+func _season_start() -> int:
+	var term_days := maxi(1, balance.days_per_solar_term)
+	return _solar_term_start(current_day) - posmod(solar_term_index(), SeasonOrders.TERMS_PER_SEASON) * term_days
+
 func can_use_sheepfold(action: Sheepfold.Action) -> bool:
 	if outcome != Outcome.RUNNING:
 		return false
@@ -2940,7 +2970,7 @@ func load_game(path := "") -> Error:
 	var saved_waypoint: Variant = data.get("ravine_waypoint")
 	restored_ravine_waypoint = saved_waypoint if resume_scene == WILDERNESS_SCENE and saved_waypoint is String else ""
 	var saved_market_trip: Variant = data.get("market_trip_target")
-	var market_places := MarketStall.TITLES + [MARKET_ORDERS, MARKET_RETURN, VisitorData.SILK_MERCHANT]
+	var market_places := MarketStall.TITLES + [MARKET_ORDERS, MARKET_RETURN, VisitorData.SILK_MERCHANT, Sheepfold.MEADOW]
 	market_trip_target = saved_market_trip if saved_market_trip is String and saved_market_trip in market_places else ""
 	var saved_route := _read_save_int(data.get("field_route_status"), -1)
 	field_route_status = saved_route if saved_route in FIELD_ROUTE_STATES else -1
@@ -3300,6 +3330,7 @@ func _restore_sheepfold(record: Variant, saved_day: int) -> void:
 	sheepfold.wool = maxi(0, _read_save_int(record.get("wool"), 0))
 	sheepfold.coat = record.get("coat", false) == true
 	sheepfold.last_feed = clampi(_read_save_int(record.get("last_feed"), 0), 0, Sheepfold.Feed.SHORTAGE) as Sheepfold.Feed
+	sheepfold.last_meadow_cut = clampi(_read_save_int(record.get("last_meadow_cut"), 0), 0, saved_day)
 
 func _restore_summer_raft_results(record: Variant, saved_day: int) -> void:
 	summer_raft_results.clear()
