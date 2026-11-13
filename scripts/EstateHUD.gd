@@ -1,5 +1,7 @@
 extends Control
 
+const SEED_BUTTON := preload("res://scripts/SeedButton.gd")
+
 @onready var day_label: Label = %DayLabel
 @onready var watch_label: Label = %WatchLabel
 @onready var calendar_label: Label = %CalendarLabel
@@ -286,7 +288,9 @@ func setup_seeds(ids: Array, select_seed: Callable) -> void:
 	for i in ids.size():
 		var id: String = ids[i]
 		var crop := ItemManager.get_crop(id)
-		var slot := Button.new()
+		var picture := ItemManager.crop_picture(crop)
+		var slot := SEED_BUTTON.new()
+		slot.setup(id, crop.crop_name, picture)
 		slot.name = "Seed%d" % (i + 1)
 		slot.custom_minimum_size = Vector2(56, 47)
 		slot.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
@@ -302,7 +306,6 @@ func setup_seeds(ids: Array, select_seed: Callable) -> void:
 		seed_buttons[id] = slot
 
 		var icon := TextureRect.new()
-		var picture := ItemManager.crop_picture(crop)
 		icon.texture = picture.texture
 		icon.self_modulate = picture.tint
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -317,7 +320,7 @@ func setup_seeds(ids: Array, select_seed: Callable) -> void:
 		shortcut.name = "Shortcut"
 		shortcut.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		shortcut.size.x = 31.0
-		_slot_label(slot, crop.crop_name, Vector2(30, 16), 17, Color("#f6e6bc"))
+		_slot_label(slot, SEED_BUTTON.display_name(id, crop.crop_name), Vector2(30, 16), 17, Color("#f6e6bc"))
 		var mark := _slot_label(slot, "令", Vector2(41, 2), 10, Color("#edd18a"))
 		mark.name = "SeasonMark"
 	_refresh_shortcuts()
@@ -354,7 +357,8 @@ func show_seed(seed_id: String) -> void:
 	var seasonal := "当令 " if nights < crop.days_to_grow else ""
 	var water := " · 需通水" if crop.is_water_crop else ""
 	var sweep := "按住 A，右摇杆拖过田格" if GamepadInput.active else "按住左键拖过田格"
-	help_label.text = "%s · %s%d 夜成熟%s   |   %s" % [crop.crop_name, seasonal, nights, water, sweep]
+	var name_in_belt := SEED_BUTTON.display_name(seed_id, crop.crop_name)
+	help_label.text = "%s · %s%d 夜成熟%s   |   %s" % [name_in_belt, seasonal, nights, water, sweep]
 
 func refresh_seed_calendar() -> void:
 	var tomorrow := Global.current_day + 1
@@ -362,22 +366,10 @@ func refresh_seed_calendar() -> void:
 		Global.get_current_solar_term(tomorrow), "雨润旱田" if Global.has_rain(tomorrow) else "晴"]
 	for id in seed_buttons:
 		var crop := ItemManager.get_crop(id)
-		var slot: Button = seed_buttons[id]
+		var slot: SEED_BUTTON = seed_buttons[id]
 		var nights := Global.sowing_nights(crop)
 		slot.get_node("SeasonMark").visible = nights < crop.days_to_grow
-		slot.tooltip_text = "%s · %d 次供水过夜成熟" % [crop.crop_name, nights]
-		if not GamepadInput.active:
-			slot.tooltip_text += " · %s 换种" % Preferences.seed_label(id)
-		if crop.favored_season >= 0:
-			var saving := crop.days_to_grow - crop.sowing_nights(crop.favored_season, Global.balance.seasonal_growth_reduction)
-			if saving > 0:
-				slot.tooltip_text += " · %s播少等 %d 夜" % [Global.SEASON_NAMES[crop.favored_season], saving]
-		if crop.is_water_crop:
-			slot.tooltip_text += "\n有渠水的田格才能种稻。断水时停长。"
-		elif crop.is_perennial:
-			slot.tooltip_text += "\n收叶后保留桑树。当令加成用于初栽。"
-		elif crop.restores_fertility:
-			slot.tooltip_text += "\n收菽留肥。下一茬非菽作物多收一份。"
+		slot.refresh_tooltip(crop, nights)
 
 func refresh_farm_status() -> void:
 	var report := Global.field_night_forecast()
