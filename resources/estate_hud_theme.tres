@@ -42,6 +42,18 @@ texture_margin_right = 5.0
 texture_margin_bottom = 5.0
 region_rect = Rect2(224, 0, 32, 32)
 
+[sub_resource type="StyleBoxTexture" id="Seal"]
+content_margin_left = 8.0
+content_margin_top = 4.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+texture = ExtResource("1_frame")
+texture_margin_left = 5.0
+texture_margin_top = 5.0
+texture_margin_right = 5.0
+texture_margin_bottom = 5.0
+region_rect = Rect2(320, 0, 32, 32)
+
 [sub_resource type="StyleBoxTexture" id="Button"]
 content_margin_left = 10.0
 content_margin_top = 5.0
@@ -247,6 +259,11 @@ HudRail/base_type = &"PanelContainer"
 HudRail/styles/panel = SubResource("Rail")
 HudWell/base_type = &"PanelContainer"
 HudWell/styles/panel = SubResource("Well")
+HudSeal/base_type = &"PanelContainer"
+HudSeal/styles/panel = SubResource("Seal")
+HudSealLabel/base_type = &"Label"
+HudSealLabel/styles/normal = SubResource("Seal")
+HudSealLabel/colors/font_color = Color(0.98, 0.898, 0.71, 1)
 HudButton/base_type = &"Button"
 HudPrimary/base_type = &"Button"
 HudPrimary/colors/font_color = Color(0.224, 0.145, 0.106, 1)

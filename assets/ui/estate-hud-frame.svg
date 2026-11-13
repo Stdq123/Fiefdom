@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="320" height="32" viewBox="0 0 320 32" shape-rendering="crispEdges">
+<svg xmlns="http://www.w3.org/2000/svg" width="352" height="32" viewBox="0 0 352 32" shape-rendering="crispEdges">
   <defs>
     <path id="outer" d="M4 0h24v1h2v2h1v2h1v22h-1v2h-1v2h-2v1H4v-1H2v-2H1v-2H0V5h1V3h1V1h2z"/>
     <path id="rim" d="M4 1h24v1h2v2h1v23h-1v2h-2v2H4v-1H2v-2H1V5h1V3h2z"/>
@@ -7,112 +7,146 @@
     <path id="slot_face" d="M4 5h24v1h1v21h-1v1H4v-1H3V6h1z"/>
     <path id="small_rim" d="M3 1h26v1h2v27h-1v1h-2v1H4v-1H2v-1H1V3h2z"/>
     <path id="corners" d="M4 2h2v1H4zm-2 2h1v2H2zm24-2h2v1h-2zm3 2h1v2h-1zM3 26h1v2H3zm1 3h2v1H4zm24-2h1v2h-1zm-2 2h2v1h-2z"/>
-    <path id="rail_grain" d="M8 3h4v1H8zm7 0h3v1h-3zm6 0h3v1h-3zM9 28h5v1H9zm8 0h2v1h-2zm5 0h2v1h-2zM2 9h1v4H2zm0 8h1v3H2zm27-6h1v3h-1zm0 9h1v3h-1z"/>
     <path id="pin_glints" d="M4 3h1v1H4zm23 0h1v1h-1zM4 28h1v1H4zm23 0h1v1h-1z"/>
     <path id="bevel_light" d="M4 2h24v1H4zM2 5h1v19H2zM3 4h1v1H3zm25-1h1v1h-1z"/>
     <path id="bevel_shadow" d="M4 29h24v1H4zm25-24h1v23h-1zm-1 23h1v1h-1z"/>
+    <!-- Two interlocked coils fit the 18px tiling segment of the seven-pixel frame. -->
+    <path id="coil" d="M7 2.5h1v-.5h5v.5h1v2h-5v-1h2v.5h2v-1h-4v.5H7zm9 0h1v-.5h5v.5h1v2h-5v-1h2v.5h2v-1h-4v.5h-2z"/>
+    <path id="coil_glint" d="M8 2h5v.5H8zm1.5 1.5h1.5V4H9.5zm7.5-1.5h5v.5h-5zm1.5 1.5h1.5V4h-1.5z"/>
+    <g id="coil_frieze">
+      <use href="#coil"/>
+      <use href="#coil" transform="rotate(180 16 16)"/>
+      <use href="#coil" transform="rotate(-90 16 16)"/>
+      <use href="#coil" transform="rotate(90 16 16)"/>
+    </g>
+    <g id="coil_highlights">
+      <use href="#coil_glint"/>
+      <use href="#coil_glint" transform="rotate(-90 16 16)"/>
+    </g>
+    <path id="patina" d="M4 5h1v1H4zm2-1h1v.5H6zm21 1h1v1h-1zm1 1h.5v1H28zM3 22h1v2H3zm1 3h1v1H4zm0 1h1v1H4zm2 1h1v.5H6zm20-1h1v1h-1zm1 1h1v1h-1zm1-1h1v1h-1z"/>
+    <path id="braid" d="M7 3h2v1H7zm3 1h2v1h-2zm3-1h2v1h-2zm3 1h2v1h-2zm3-1h2v1h-2zm3 1h2v1h-2z"/>
   </defs>
 
-  <!-- Bamboo paper under a lacquered frame, with copper corner pins. -->
+  <!-- Bamboo slips bound at both ends, set inside a cast bronze surround. -->
   <g>
-    <use href="#outer" fill="#352319"/>
-    <use href="#rim" fill="#9a5730"/>
-    <use href="#bevel_light" fill="#e1a460"/>
-    <use href="#bevel_shadow" fill="#633820"/>
-    <use href="#inner" fill="#ac7544"/>
-    <use href="#face" fill="#ebcd91"/>
-    <path fill="#f4daa4" d="M5 5h22v1H5zM4 7h1v18H4zM6 7h1v1H6zM24 7h1v1h-1z"/>
-    <path fill="#d9af75" d="M27 7h1v19h-1zM5 26h22v1H5zM6 24h1v1H6zm19 0h1v1h-1z"/>
-    <path fill="#e6c486" d="M11 12h4v.5h-4zm8 5h3v.5h-3zm-4 4h5v.5h-5z"/>
-    <path fill="#f2d79f" d="M17 10h4v.5h-4zM10 18h3v.5h-3z"/>
-    <use href="#rail_grain" fill="#b87542"/>
-    <use href="#corners" fill="#c18649"/>
-    <use href="#pin_glints" fill="#efbe6c"/>
+    <use href="#outer" fill="#231c15"/>
+    <use href="#rim" fill="#51452d"/>
+    <use href="#bevel_light" fill="#aa8552"/>
+    <use href="#bevel_shadow" fill="#2c2920"/>
+    <use href="#inner" fill="#747153"/>
+    <use href="#face" fill="#d5bf90"/>
+    <path fill="#d0b887" d="M8 5.5h4.5v21H8zm12 0h4v21h-4z"/>
+    <path fill="#c5ac7f" d="M6 5.5h.5v21H6zm6.5 0h.5v21h-.5zm6 0h.5v21h-.5zm5.5 0h.5v21H24z"/>
+    <path fill="#e1cca0" d="M7 5.5h1v21H7zm6 0h1v21h-1zm6 0h1v21h-1zm5.5 0h1v21h-1z"/>
+    <path fill="#cbb181" d="M9 6h.5v6H9zm1 9h.5v6H10zm5.5-7h.5v7h-.5zm1 10h.5v5h-.5zm4 1h.5v6h-.5zm2-9h.5v4h-.5z"/>
+    <path fill="#e4cda0" d="M5 5h22v.5H5zM4 7h1v18H4z"/>
+    <path fill="#bfa275" d="M27 7h1v19h-1zM5 26h22v1H5z"/>
+    <path fill="#ae9368" d="M4 6h24v.5H4zm0 19.5h24v.5H4z"/>
+    <path fill="#92794f" d="M5.5 6h1.5v1H5.5zm6.5 0h1.5v1H12zm6 0h1.5v1H18zm5.5 0h1.5v1h-1.5zM5.5 25h1.5v1H5.5zm6.5 0h1.5v1H12zm6 0h1.5v1H18zm5.5 0h1.5v1h-1.5z"/>
+    <path fill="#e0c292" d="M5.5 6h1.5v.5H5.5zm6.5 0h1.5v.5H12zm6 0h1.5v.5H18zm5.5 0h1.5v.5h-1.5z"/>
+    <use href="#coil_frieze" fill="#292c23"/>
+    <use href="#coil_highlights" fill="#788263"/>
+    <use href="#patina" fill="#6c775b"/>
+    <use href="#corners" fill="#857047"/>
+    <use href="#pin_glints" fill="#c49d5e"/>
   </g>
 
-  <!-- Deep lacquered wood, shared by status meters and the slot rail. -->
+  <!-- Oxidized bronze tray for status meters and the seed belt. -->
   <g transform="translate(32 0)">
-    <use href="#outer" fill="#271d15"/>
-    <use href="#rim" fill="#805038"/>
-    <use href="#bevel_light" fill="#b98251"/>
-    <use href="#bevel_shadow" fill="#4c3223"/>
-    <use href="#inner" fill="#36261b"/>
-    <use href="#face" fill="#493023"/>
-    <path fill="#503629" d="M9 9h8v.5H9zm8 5h5v.5h-5zm-7 7h9v.5h-9zm9 3h4v.5h-4z"/>
-    <use href="#rail_grain" fill="#946044"/>
-    <use href="#corners" fill="#bf8551"/>
-    <use href="#pin_glints" fill="#e1ab62"/>
+    <use href="#outer" fill="#211e17"/>
+    <use href="#rim" fill="#655537"/>
+    <use href="#bevel_light" fill="#aa8552"/>
+    <use href="#bevel_shadow" fill="#2b2c22"/>
+    <use href="#inner" fill="#4c5745"/>
+    <use href="#face" fill="#30362b"/>
+    <path fill="#3a3e30" d="M10 11h1v.5h-1zm5.5 5h.5v1h-.5zm7-5h1v.5h-1zm1.5 9h.5v1h-.5zm-11 2h1v.5h-1z"/>
+    <use href="#coil_frieze" fill="#30352a"/>
+    <use href="#coil_highlights" fill="#879171"/>
+    <use href="#patina" fill="#768260"/>
+    <use href="#corners" fill="#877650"/>
+    <use href="#pin_glints" fill="#d0a269"/>
   </g>
 
-  <!-- Ordinary wood command buttons. -->
+  <!-- Cast command buttons with a dark recess and a worn brass ridge. -->
   <g transform="translate(64 0)">
-    <use href="#outer" fill="#2f2119"/>
-    <use href="#small_rim" fill="#966043"/>
-    <use href="#bevel_light" fill="#cf9a61"/>
-    <use href="#bevel_shadow" fill="#62412c"/>
-    <use href="#slot_face" fill="#744b32"/>
-    <path fill="#825739" d="M4 5h24v2H4zm5 4h10v.5H9zm12 16h5v.5h-5z"/>
-    <use href="#pin_glints" fill="#dba564"/>
+    <use href="#outer" fill="#242119"/>
+    <use href="#small_rim" fill="#6b5e40"/>
+    <use href="#bevel_light" fill="#a78954"/>
+    <use href="#bevel_shadow" fill="#2f3025"/>
+    <use href="#slot_face" fill="#494c37"/>
+    <path fill="#555843" d="M4 5h24v1H4zm2 2h.5v2H6zm20 16h.5v1H26z"/>
+    <use href="#pin_glints" fill="#b49762"/>
   </g>
   <g transform="translate(96 0)">
-    <use href="#outer" fill="#362519"/>
-    <use href="#small_rim" fill="#ad7046"/>
-    <use href="#bevel_light" fill="#f1bf74"/>
-    <use href="#bevel_shadow" fill="#67422a"/>
-    <use href="#slot_face" fill="#875433"/>
-    <path fill="#9a613d" d="M4 5h24v2H4zm5 4h10v.5H9zm12 16h5v.5h-5z"/>
-    <use href="#pin_glints" fill="#f3c582"/>
+    <use href="#outer" fill="#28241a"/>
+    <use href="#small_rim" fill="#85714c"/>
+    <use href="#bevel_light" fill="#c2a569"/>
+    <use href="#bevel_shadow" fill="#393c2f"/>
+    <use href="#slot_face" fill="#565a40"/>
+    <path fill="#676a4c" d="M4 5h24v1H4zm2 2h.5v2H6zm20 16h.5v1H26z"/>
+    <use href="#pin_glints" fill="#d0b277"/>
   </g>
   <g transform="translate(128 0)">
-    <use href="#outer" fill="#30231a"/>
-    <use href="#small_rim" fill="#96613e"/>
-    <use href="#bevel_light" fill="#775035"/>
-    <use href="#bevel_shadow" fill="#bb824f"/>
-    <use href="#slot_face" fill="#5e3a29"/>
-    <path fill="#483024" d="M4 5h24v2H4z"/>
-    <path fill="#a26b43" d="M5 26h22v1H5z"/>
+    <use href="#outer" fill="#28231a"/>
+    <use href="#small_rim" fill="#756344"/>
+    <use href="#bevel_light" fill="#535342"/>
+    <use href="#bevel_shadow" fill="#b09964"/>
+    <use href="#slot_face" fill="#3c4637"/>
+    <path fill="#303a2d" d="M4 5h24v2H4z"/>
+    <path fill="#6b7455" d="M5 26h22v1H5z"/>
   </g>
   <g transform="translate(160 0)">
-    <use href="#outer" fill="#362e25"/>
-    <use href="#small_rim" fill="#796957"/>
-    <use href="#bevel_light" fill="#93816a"/>
-    <use href="#bevel_shadow" fill="#655647"/>
-    <use href="#slot_face" fill="#5c4e41"/>
+    <use href="#outer" fill="#2c2a22"/>
+    <use href="#small_rim" fill="#646454"/>
+    <use href="#bevel_light" fill="#817e65"/>
+    <use href="#bevel_shadow" fill="#4c4d42"/>
+    <use href="#slot_face" fill="#4f5145"/>
   </g>
 
-  <!-- The amber seal marks the primary action and the active quick slot. -->
+  <!-- Restrained amber inlay marks the primary action. -->
   <g transform="translate(192 0)">
-    <use href="#outer" fill="#422819"/>
-    <use href="#small_rim" fill="#b97e43"/>
-    <use href="#bevel_light" fill="#ffdb8a"/>
-    <use href="#bevel_shadow" fill="#8b552e"/>
-    <use href="#slot_face" fill="#eab86a"/>
-    <path fill="#f8cc7b" d="M4 5h24v2H4zm5 4h10v.5H9zm12 16h5v.5h-5z"/>
-    <use href="#pin_glints" fill="#fff0b1"/>
+    <use href="#outer" fill="#33251a"/>
+    <use href="#small_rim" fill="#9a7042"/>
+    <use href="#bevel_light" fill="#e6c281"/>
+    <use href="#bevel_shadow" fill="#73442e"/>
+    <use href="#slot_face" fill="#ce9c59"/>
+    <path fill="#dab072" d="M4 5h24v1H4zm5 4h10v.5H9zm12 16h5v.5h-5z"/>
+    <use href="#braid" fill="#8f5538"/>
+    <use href="#pin_glints" fill="#eac982"/>
   </g>
   <g transform="translate(224 0)">
-    <use href="#outer" fill="#302117"/>
-    <use href="#small_rim" fill="#835334"/>
-    <use href="#bevel_light" fill="#3c291e"/>
-    <use href="#bevel_shadow" fill="#b37b4f"/>
-    <use href="#slot_face" fill="#4d3527"/>
-    <path fill="#39261d" d="M4 5h24v2H4zM3 7h1v17H3z"/>
-    <path fill="#573e2d" d="M5 26h22v1H5z"/>
+    <use href="#outer" fill="#222019"/>
+    <use href="#small_rim" fill="#625739"/>
+    <use href="#bevel_light" fill="#38392c"/>
+    <use href="#bevel_shadow" fill="#92805a"/>
+    <use href="#slot_face" fill="#394031"/>
+    <path fill="#2d352a" d="M4 5h24v2H4zM3 7h1v17H3z"/>
+    <path fill="#515b42" d="M5 26h22v1H5z"/>
   </g>
   <g transform="translate(256 0)">
-    <use href="#outer" fill="#43281a"/>
-    <use href="#small_rim" fill="#cb9250"/>
-    <use href="#bevel_light" fill="#ffdb87"/>
-    <use href="#bevel_shadow" fill="#a97339"/>
-    <use href="#slot_face" fill="#805332"/>
-    <path fill="#573621" d="M4 5h24v1H4zm0 2h1v18H4z"/>
-    <path fill="#c3894a" d="M5 26h22v1H5z"/>
-    <use href="#pin_glints" fill="#fff0a7"/>
+    <use href="#outer" fill="#38251a"/>
+    <use href="#small_rim" fill="#ae7b46"/>
+    <use href="#bevel_light" fill="#ebc778"/>
+    <use href="#bevel_shadow" fill="#a0663a"/>
+    <use href="#slot_face" fill="#6c3d2e"/>
+    <path fill="#522d24" d="M4 5h24v1H4zm0 2h1v18H4z"/>
+    <path fill="#9f6143" d="M5 26h22v1H5z"/>
+    <use href="#pin_glints" fill="#f2d28c"/>
   </g>
 
   <!-- A keyed, hollow outline stays visible over either frame material. -->
   <g transform="translate(288 0)">
     <path fill="#332419" d="M5 0h22v1h3v2h1v2h1v22h-1v2h-1v2h-3v1H5v-1H2v-2H1v-2H0V5h1V3h1V1h3zm0 3v1H4v1H3v22h1v1h1v1h22v-1h1v-1h1V5h-1V4h-1V3z"/>
     <path fill="#fff2b4" d="M5 1h22v1h3v3h1v22h-1v3h-3v1H5v-1H2v-3H1V5h1V2h3zm0 2v1H4v1H3v22h1v1h1v1h22v-1h1v-1h1V5h-1V4h-1V3z"/>
+  </g>
+  <!-- Vermilion lacquer plate for place names and short status labels. -->
+  <g transform="translate(320 0)">
+    <use href="#outer" fill="#352018"/>
+    <use href="#small_rim" fill="#6e3326"/>
+    <use href="#bevel_light" fill="#be7750"/>
+    <use href="#bevel_shadow" fill="#51271f"/>
+    <use href="#slot_face" fill="#8e3e30"/>
+    <path fill="#9e4b38" d="M4 5h24v1H4zm3 3h6v.5H7zm12 16h5v.5h-5z"/>
+    <use href="#pin_glints" fill="#cd8c57"/>
   </g>
 </svg>

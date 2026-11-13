@@ -228,12 +228,37 @@ theme_override_constants/separation = 4
 [node name="Header" type="HBoxContainer" parent="UI/Control/MarketName/Stack"]
 layout_mode = 2
 mouse_filter = 2
+theme_override_constants/separation = 0
 
-[node name="Name" type="Label" parent="UI/Control/MarketName/Stack/Header"]
+[node name="Nameplate" type="PanelContainer" parent="UI/Control/MarketName/Stack/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"HudWell"
+
+[node name="TitleRow" type="HBoxContainer" parent="UI/Control/MarketName/Stack/Header/Nameplate"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+
+[node name="Seal" type="PanelContainer" parent="UI/Control/MarketName/Stack/Header/Nameplate/TitleRow"]
+custom_minimum_size = Vector2(12, 16)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"HudSeal"
+
+[node name="Name" type="Label" parent="UI/Control/MarketName/Stack/Header/Nameplate/TitleRow"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.97, 0.86, 0.67, 1)
+theme_override_font_sizes/font_size = 18
+text = "西市"
+
+[node name="Spacer" type="Control" parent="UI/Control/MarketName/Stack/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 22
-text = "西市"
+mouse_filter = 2
 
 [node name="WeatherWell" type="PanelContainer" parent="UI/Control/MarketName/Stack/Header"]
 custom_minimum_size = Vector2(28, 28)

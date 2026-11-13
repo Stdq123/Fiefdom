@@ -1,17 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="192" height="16" viewBox="0 0 192 16" shape-rendering="crispEdges">
-  <!-- Backpack -->
+  <!-- Woven travel basket. Bamboo weaving reference: https://www.dpm.org.cn/Uploads/File/2019/07/29/u5d3e6268b665c.pdf -->
   <g>
-    <path fill="#a48353" d="M6 1h4v1h1v2h2v2h1v7h-1v1H3v-1H2V6h1V4h2V2h1zm.5 1.5v1h3v-1z"/>
-    <path fill="#e7cc91" d="M4 5h1V4.5h6V5h1v2h1v5.5H3V7h1z"/>
-    <path fill="#8e7048" d="M4 7h8v1H9v2H7V8H4zm0 4h8v1H4z"/>
-    <path fill="#fff0c2" d="M5 5h5v1H5zm2.5 3h1v1h-1z"/>
+    <path fill="#9b6c42" d="M6 1h4v1h1v2h2v1h1v2h-1v4h-1v3h-1v1H5v-1H4v-3H3V7H2V5h1V4h2V2h1zm.5 1.5V4h3V2.5z"/>
+    <path fill="#d2a46a" d="M3 5h10v2h-1v4h-1v2h-1v1H6v-1H5v-2H4V7H3z"/>
+    <path fill="#f5d398" d="M4 4.5h8v1.5H4zm0 3h3v1H4zm5 0h3v1H9zm-3 3h3v1H6zm2 2h2v1H8z"/>
+    <path fill="#9d7148" d="M5 9h1.5v1H5zm3 0h3v1H8zm-3 2h1v1H5zm5 .5h1v1h-1z"/>
+    <path fill="#688269" d="M7 6h2v3H7z"/>
+    <path fill="#f7e4b5" d="M7.5 6h1v1h-1zM6.5 1.5h3v.5h-3z"/>
   </g>
-  <!-- Folded map -->
+  <!-- Route diagram on rolled slips, an original game symbol based on early bound writing materials. -->
   <g transform="translate(16)">
-    <path fill="#a48353" d="M1 4h2V3h2V2h2v1h2v1h2V3h2V2h2v11h-2v1h-2v1H9v-1H7v-1H5v1H3v1H1z"/>
-    <path fill="#e7cc91" d="M2 5h2V4h2V3h1v1h2v1h2V4h2V3h1v9h-2v1h-2v1H9v-1H7v-1H5v1H3v1H2z"/>
-    <path fill="#b69462" d="M5.5 4h1v8h-1zm4 1.5h1v8h-1z"/>
-    <path fill="#7d6343" d="M3 10h2V9h2V8h2V7h2V6h2v1.5h-2v1H9v1H7v1H5v1H3z"/>
+    <path fill="#9e6c43" d="M2 3h9V2h3v1h1v9h-1v2h-2v1H3v-1H1V5h1z"/>
+    <path fill="#eac995" d="M3 4h9v8h1v1H3v-1H2V5h1z"/>
+    <path fill="#fae2ae" d="M3 4h8v1H3zM3 12h9v1H3z"/>
+    <path fill="#c6a66e" d="M4 5h.5v7H4zm3 0h.5v7H7zm3 0h.5v7H10z"/>
+    <path fill="#56735c" d="M3 10h2V8h3V6h2v1H9v2H6v2H3zM12 3h2v9h-2z"/>
+    <path fill="#b4c188" d="M12.5 3h1v1h-1zm0 7h1v1h-1z"/>
+    <path fill="#a15543" d="M9 5h2v2H9z"/>
   </g>
   <!-- Settings gear -->
   <g transform="translate(32)">
@@ -19,18 +24,21 @@
     <path fill="#e7cc91" d="M6.5 2h3v2H11V3h1.5v.5h.5V5h-1v1.5h2v3h-2V11h1v1.5h-.5v.5H11v-1H9.5v2h-3v-2H5v1H3.5v-.5H3V11h1V9.5H2v-3h2V5H3V3.5h.5V3H5v1h1.5zM7 5v1H6v1H5v2h1v1h1v1h2v-1h1V9h1V7h-1V6H9V5z"/>
     <path fill="#fff0c2" d="M6.5 2h3v1h-3zM3.5 3h1v1h-1z"/>
   </g>
-  <!-- Square-hole cash coin -->
+  <!-- Spade money. Shanghai Museum: https://www.shanghaimuseum.net/mu/frontend/pg/m/article/id/CI00000788 -->
   <g transform="translate(48)">
-    <path fill="#986c41" d="M5 1h6v1h2v2h1v2h1v5h-1v2h-2v1h-2v1H5v-1H3v-2H2v-2H1V5h1V3h2V2h1zM7 7v3h3V7z"/>
-    <path fill="#e7be71" d="M5 2h5v1h2v2h1v5h-1v2h-2v1H5v-1H3v-2H2V5h1V3h2zM5.5 5.5v5h5v-5z"/>
-    <path fill="#fff0c2" d="M5 3h5v1H5zM3 5h1v3H3zM6 5.5h4v1H6zM4 10h1v1H4z"/>
+    <path fill="#53694e" d="M6 1h4v4h3v2h-1v3h1v2h1v3h-3v-1H9v-1H7v1H5v1H2v-3h1v-2h1V7H3V5h3z"/>
+    <path fill="#cfab6d" d="M7 2h2v4h3v1h-1v3h1v2h1v2h-2v-1H9v-1H7v1H5v1H3v-2h1v-2h1V7H4V6h3z"/>
+    <path fill="#ebd095" d="M7 2h2v1H7zM4 6h4v1H4zm1 2h1v4H5zM4 12h1v1H4z"/>
+    <path fill="#708361" d="M8 3h1v3H8zM7.5 7.5h1v4h-1zm2 .5h1v4h-1zm1 3h1v1h-1zM6 9h1v3H6z"/>
+    <path fill="#aa8053" d="M11 11h1v2h-1zm1 2h1v1h-1z"/>
   </g>
-  <!-- Calendar -->
+  <!-- Calendar on bound slips. https://bowuguan.bucm.edu.cn/kpzl/ysmt/35597.htm -->
   <g transform="translate(64)">
-    <path fill="#a48353" d="M4 1h2v2h4V1h2v2h2v11H2V3h2z"/>
-    <path fill="#e7cc91" d="M3 6h10v7H3zM4.5 1.5h1v3h-1zm6 0h1v3h-1zM3 4h1v1H3zm3 0h4v1H6zm6 0h1v1h-1z"/>
-    <path fill="#8e7048" d="M5 7h2v2H5zm4 0h2v2H9zm-4 3h2v2H5zm4 0h2v2H9z"/>
-    <path fill="#fff0c2" d="M3 6h10v1H3z"/>
+    <path fill="#986a46" d="M2 3h3V2h3v1h2V2h3v1h1v10h-1v1H9v-1H7v1H3v-1H2z"/>
+    <path fill="#e3c18a" d="M3 3h2v10H3zm3 0h2v10H6zm3 1h2v9H9zm3-1h1v10h-1z"/>
+    <path fill="#f6daa4" d="M3 3h.5v10H3zm3 0h.5v10H6zm3 1h.5v9H9zm3-1h.5v10H12z"/>
+    <path fill="#ad6650" d="M1 5h14v1.5H1zm0 5h14v1.5H1z"/>
+    <path fill="#725b42" d="M4 7h.5v2H4zm3 0h.5v2H7zm3 1h.5v1H10zm2.5-1h.5v2h-.5z"/>
   </g>
   <!-- Sun -->
   <g transform="translate(80)">
@@ -40,9 +48,10 @@
   </g>
   <!-- Rain -->
   <g transform="translate(96)">
-    <path fill="#829489" d="M6 1h4v1h1v1h2v1h1v1h1v3h-1v1H2V8H1V5h1V4h2V3h1V2h1z"/>
-    <path fill="#bdd1bd" d="M6 2h4v1h1v1h2v1h1v2h-1v1H3V7H2V6h1V5h2V3h1zM4 10h1v2H4v1H3v-2h1zm4 1h1v2H8v2H7v-3h1zm4-1h1v2h-1v1h-1v-2h1z"/>
-    <path fill="#e4ead1" d="M6 3h3v1H6zm-3 3h2v1H3z"/>
+    <path fill="#577661" d="M6 1h4v1h1v1h2v1h1v1h1v3h-1v1H2V8H1V5h1V4h2V3h1V2h1z"/>
+    <path fill="#a6bb9e" d="M6 2h4v1h1v1h2v1h1v2h-1v1H3V7H2V6h1V5h2V3h1z"/>
+    <path fill="#83a88c" d="M4 10h1v2H4v1H3v-2h1zm4 1h1v2H8v2H7v-3h1zm4-1h1v2h-1v1h-1v-2h1z"/>
+    <path fill="#e6e8c1" d="M6 3h3v1H6zm-3 3h2v1H3z"/>
   </g>
   <!-- Crescent moon -->
   <g transform="translate(112)">
@@ -52,14 +61,14 @@
   </g>
   <!-- Health -->
   <g transform="translate(128)">
-    <path fill="#995e4f" d="M3 2h4v1h2V2h4v1h1v1h1v5h-1v1h-1v1h-1v1h-1v1H9v2H7v-2H5v-1H4v-1H3v-1H2V9H1V4h1V3h1z"/>
-    <path fill="#dc9278" d="M3 3h4v1h2V3h4v1h1v4h-1v1h-1v1h-1v1H9v2H7v-2H5v-1H4V9H3V8H2V4h1z"/>
+    <path fill="#8d5540" d="M3 2h4v1h2V2h4v1h1v1h1v5h-1v1h-1v1h-1v1h-1v1H9v2H7v-2H5v-1H4v-1H3v-1H2V9H1V4h1V3h1z"/>
+    <path fill="#d38867" d="M3 3h4v1h2V3h4v1h1v4h-1v1h-1v1h-1v1H9v2H7v-2H5v-1H4V9H3V8H2V4h1z"/>
     <path fill="#ffe5bd" d="M4 4h2v1H5v1H3V5h1z"/>
   </g>
   <!-- Stamina -->
   <g transform="translate(144)">
-    <path fill="#8e8550" d="M8 1h6v1h-1v2h-1v2h2v2h-1v1h-1v1h-1v1h-1v1H9v1H8v1H6v1H4v-2h1v-2h1V9H3V7h1V6h1V5h1V4h1V2h1z"/>
-    <path fill="#d1d087" d="M8 2h4v1h-1v2h-1v2h3v1h-1v1h-1v1h-1v1H9v1H8v1H6v1H5v-1h1v-2h1V8H4V7h1V6h1V5h1V3h1z"/>
+    <path fill="#728059" d="M8 1h6v1h-1v2h-1v2h2v2h-1v1h-1v1h-1v1h-1v1H9v1H8v1H6v1H4v-2h1v-2h1V9H3V7h1V6h1V5h1V4h1V2h1z"/>
+    <path fill="#c8c887" d="M8 2h4v1h-1v2h-1v2h3v1h-1v1h-1v1h-1v1H9v1H8v1H6v1H5v-1h1v-2h1V8H4V7h1V6h1V5h1V3h1z"/>
     <path fill="#f3eab5" d="M9 2h2v1H9v2H8v1H7v1H6V6h1V5h1V3h1z"/>
   </g>
   <!-- Grain -->

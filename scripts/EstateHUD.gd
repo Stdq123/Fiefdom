@@ -4,6 +4,7 @@ const SEED_BUTTON := preload("res://scripts/SeedButton.gd")
 
 @onready var day_label: Label = %DayLabel
 @onready var watch_label: Label = %WatchLabel
+@onready var watch_dial: Control = %WatchDial
 @onready var calendar_label: Label = %CalendarLabel
 @onready var forecast_label: Label = %ForecastLabel
 @onready var calendar_button: Button = %CalendarButton
@@ -239,6 +240,7 @@ func _refresh_shortcuts() -> void:
 
 func _refresh_watch() -> void:
 	watch_label.text = Global.day_watch_label()
+	watch_dial.show_watch(watch_label.text)
 	weather_icon.texture = sky_icons[HUDIcons.sky_index()]
 
 func refresh_morning_record() -> void:

@@ -970,3 +970,8 @@
 
 - 封地手记、时辰和气血改用竹纸像素框，种槽与操作键使用深木、铜钉和压下后的凹边。睡觉有暖色底，田格悬停和指路也用同一组描边。展开来客近况时可继续使用同一张手记上的指路按钮。
 - 西市、溪桥道与竹涧把当地时辰和天气集中在右上，舆图、背包和设置采用同一排按钮。背包的物品图、数量、页签与路餐在同样的竹纸和木框上显示。 [封地实机](../build/polish-art-resolution/hud-wood-final-1280/04-first-field.png) · [西市实机](../build/polish-art-resolution/travel-frame-market/02-market-arrival.png) · [背包实机](../build/polish-hud-bag-frame/frames-1024/02-private-crops.png)
+
+## 春秋青铜与竹简界面
+
+- 常驻界面补绘青铜卷蛇纹、绳纹和铜绿，简册可辨出竹片与编绳。朱漆标出选中种槽、爵位与外出地名。铜钱图标取春秋空首布的铲形，历书和舆图使用编绳简册，背包画成竹编行箧。
+- 封地铜盘有十二个刻点，亮点随地支时辰移动。昼夜回放核对酉时盘面与西廊灯笼，旧档继续时按存档时辰绘制。 [封地实机](../build/polish-art-resolution/hud-spring-release-1280/04-first-field.png) · [窄窗口实机](../build/polish-art-resolution/hud-spring-release-1024/04a-journal-expanded.png) · [Windows 试玩包](../build/polish-hud-spring-autumn/Fiefdom-1.0.0-Windows-x64.zip)

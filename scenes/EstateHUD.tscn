@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scripts/EstateHUD.gd" id="1_hud"]
 [ext_resource type="Script" path="res://scripts/CampaignGuide.gd" id="2_guide"]
 [ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="3_hud_theme"]
+[ext_resource type="Script" path="res://scripts/WatchDial.gd" id="4_watch_dial"]
 
 [node name="EstateHUD" type="Control"]
 layout_mode = 3
@@ -257,16 +258,28 @@ layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
 theme_override_font_sizes/font_size = 22
+size_flags_horizontal = 3
 text = "第 1 天"
 
-[node name="WatchLabel" type="Label" parent="Calendar/Stack/Date"]
+[node name="WatchDial" type="Control" parent="Calendar/Stack/Date"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
+size_flags_vertical = 4
 mouse_filter = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 19
-theme_override_colors/font_color = Color(0.36, 0.21, 0.11, 1)
-horizontal_alignment = 2
+script = ExtResource("4_watch_dial")
+
+[node name="WatchLabel" type="Label" parent="Calendar/Stack/Date/WatchDial"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.99, 0.89, 0.69, 1)
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="WeatherSeal" type="PanelContainer" parent="Calendar/Stack/Date"]
 custom_minimum_size = Vector2(29, 29)
@@ -352,7 +365,7 @@ theme_override_constants/separation = 8
 layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
-theme_override_colors/font_color = Color(0.38, 0.22, 0.12, 1)
+theme_type_variation = &"HudSealLabel"
 
 [node name="ReputationLabel" type="Label" parent="Calendar/Stack/LedgerDetails/Status"]
 layout_mode = 2

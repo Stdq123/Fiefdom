@@ -50,6 +50,7 @@ func _ready() -> void:
 	region_map.setup(SURVEY.Region.ROAD, func(): return player.conversation_open, Global.regional_destination,
 		_follow_region_destination, _clear_regional_trip, null, Callable(), _map_road_progress)
 	region_map.road_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
+	%RouteIcon.texture = HUDIcons.icon(HUDIcons.Symbol.MAP)
 	GameEvents.daylight_changed.connect(_refresh_clock)
 	GameEvents.visitor_interacted.connect(_talk_to_silk_guest)
 	GameEvents.retainer_recruited.connect(_refresh_scheduled_guest.unbind(1))
@@ -173,7 +174,7 @@ func _refresh_route() -> void:
 	else:
 		%Route.text = ""
 		route_direction = Vector2.ZERO
-	%Route.visible = not %Route.text.is_empty()
+	%RouteRow.visible = not %Route.text.is_empty()
 	$Waypoint.queue_redraw()
 
 func _route_to(foot: Vector2, refresh_distance: float) -> void:
