@@ -1000,3 +1000,8 @@
 
 - 在堂前交贡簿或在南路亭交新税册后，默认写入结局自动档。结算显示保存结果。从标题继续会回到同一结算，存档列表同时保留本局可恢复的通关前进度。关闭自动存档时，仍可用结算页的「保存结局」。
 - 两条新档回放在结算页直接返回标题，再从自动档继续。续档保留路线和日期，可重看演出或继续经营。专项覆盖关闭自动存档、自动写入失败后手动保存及战败恢复。另用布置好的结局进度，在解压版完整退出并重启进程，核对两条路线都可从标题继续。 [Godot 验证](../build/polish-ending-autosave/godot.log) · [写入失败回归](../build/polish-ending-autosave/save-failure.log) · [Windows 1.0 x64](../build/polish-ending-autosave/Fiefdom-1.0.0-Windows-x64.zip) · [发行回放](../build/polish-ending-autosave/release-headless.log) · [重启进程回放](../build/polish-ending-autosave/release-restart.log) · [隔离桌面](../build/polish-ending-autosave/release-capture.log)
+
+## 结算簿与通关前存档
+
+- 结尾字幕、路线结算和封地记事采用现有漆木、暗铜边饰。结算突出「继续经营」。选「读取通关前存档」先看将载入的档位、日期和时辰。默认选中「留在结算」，按 Esc 返回原按钮。确认读取后，通关前的进度和已保存的结局都可在存档列表查到。
+- 两条新档回放验证结算、取消读档、结局自动保存和续营。专项确认回到通关前的手动档后，两份存档均可读。结算和确认在 1920×1080 和 1024×768 的隔离桌面核对。 [Windows 1.0 x64](../build/polish-ending-ledger/Fiefdom-1.0.0-Windows-x64.zip) · [传统结算](../build/polish-ending-ledger/final-capture/1920x1080/ending-traditional.png) · [窄窗口确认](../build/polish-ending-ledger/final-capture/1024x768/pre-victory-confirmation.png) · [发行校验](../build/polish-ending-ledger/final-headless/manifest.txt)

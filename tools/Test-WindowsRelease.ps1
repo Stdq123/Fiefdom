@@ -299,6 +299,9 @@ try {
         foreach ($size in $fullResolution, '1024x768') {
             Start-VerifiedGame -Directory $release -Profile "render-$size" -Name "render-$size" -Replay 'visual' -Resolution $size
         }
+        if ($RouteGoals) {
+            Start-VerifiedGame -Directory $release -Profile 'ending-film-compact' -Name 'ending-film-1024x768' -Replay 'ending-film' -Resolution '1024x768'
+        }
     }
     if ($Soak) {
         Start-VerifiedGame -Directory $release -Profile 'soak' -Name 'soak' -Replay 'soak'

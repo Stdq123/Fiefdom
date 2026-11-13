@@ -537,6 +537,17 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 		and recovery.get("campaign") == state.campaign_id and outcome_view.status.text == "结局已自动保存。"
 		and not ending.restore_button.disabled,
 		"Presenting the ledger saves the victory and keeps a playable checkpoint.")
+	ending.restore_button.pressed.emit()
+	await tree.process_frame
+	_expect(ending.restore_confirmation.visible and state.saved_game_caption(recovery) in ending.restore_detail.text
+		and ending.stay_button.has_focus() and state.outcome == expected,
+		"Reading a pre-victory save shows its actual destination and focuses staying at the ending.")
+	if not capture_directory.is_empty():
+		await _capture_ending(capture_directory, "ending-" + branch + "-restore")
+	_key(KEY_ESCAPE)
+	await tree.process_frame
+	_expect(not ending.restore_confirmation.visible and ending.restore_button.has_focus() and state.outcome == expected,
+		"Cancel returns to the same ledger and restores focus.")
 	ending.title_button.pressed.emit()
 	await tree.scene_changed
 	_expect(tree.current_scene.scene_file_path == TITLE and not tree.paused, "The ending can return to the normal title.")

@@ -177,6 +177,35 @@ func _ending_save_failure() -> void:
 		_expect(hud.status.text == "结局已存档。" and FileAccess.file_exists(manual_path),
 			"The same victory can be saved manually after a failed automatic write.")
 
+func _restore_before_ending() -> void:
+	await _new_estate()
+	var campaign: String = state.campaign_id
+	var saved_day: int = state.current_day
+	if not _expect(state.save_game() == OK, "Write a playable checkpoint before the ending."):
+		return
+	var manual_path: String = state.manual_save_path()
+	var manual := FileAccess.get_file_as_bytes(manual_path)
+	await _stage_result(true)
+	var ending: Control = tree.current_scene.get_node("CampaignHUD").summary
+	await _press(ending.skip_button)
+	await _press(ending.restore_button)
+	if not _expect(ending.restore_confirmation.visible and "手动存档" in ending.restore_detail.text,
+		"The restore choice identifies the saved checkpoint."):
+		return
+	_expect(tree.root.get_visible_rect().encloses(ending.load_before_ending.get_global_rect())
+		and tree.root.get_visible_rect().encloses(ending.stay_button.get_global_rect()),
+		"Both confirmation choices fit the current viewport.")
+	await _capture("pre-victory-confirmation", capture_dir)
+	await _press(ending.load_before_ending)
+	if tree.current_scene == null:
+		await tree.scene_changed
+	await tree.process_frame
+	var latest: Dictionary = state.latest_saved_game()
+	_expect(state.campaign_id == campaign and state.current_day == saved_day and state.outcome == state.Outcome.RUNNING
+		and state.ending_record.is_empty() and not tree.paused and latest.get("source") == "结局自动存档"
+		and FileAccess.get_file_as_bytes(manual_path) == manual,
+		"Confirming restores the playable checkpoint and keeps both saved files.")
+
 func _play_ending(traditional: bool) -> void:
 	await _new_estate()
 	var preferences := tree.root.get_node("Preferences")
@@ -353,6 +382,7 @@ func run(game_tree: SceneTree, directory := "") -> void:
 	film_dir = OS.get_environment("FIEFDOM_ENDING_FILMS")
 	state = tree.root.get_node("Global")
 	await _ending_save_failure()
+	await _restore_before_ending()
 	await _play_ending(true)
 	await _play_ending(false)
 	await _verify_old_record()

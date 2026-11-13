@@ -2,12 +2,14 @@ extends Control
 
 signal film_finished()
 signal close_requested()
+signal restore_requested()
 
 enum Shot { FIELD, CEREMONY, RECORD }
 
 const ENVOY := preload("res://assets/characters/envoy-motion.svg")
 const PROPS := preload("res://assets/world/ending-ceremonies.svg")
 const RECORD_STAND := preload("res://scripts/EstateRecordStand.gd")
+const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 const TRADITIONAL_SCORE := preload("res://assets/audio/music/ending-traditional.ogg")
 const REFORMED_SCORE := preload("res://assets/audio/music/ending-reformed.ogg")
 const UNITS := {"新增公田纳贡": "份", "进献丝绸": "匹", "新增计税收成": "份",
@@ -34,6 +36,10 @@ const CEREMONY_HOLD := 2.30
 @onready var restore_button: Button = %RestoreCampaign
 @onready var title_button: Button = %ReturnToTitle
 @onready var replay_button: Button = %ReplayEnding
+@onready var restore_confirmation: Control = %RestoreConfirmation
+@onready var restore_detail: Label = %RestoreDetail
+@onready var stay_button: Button = %StayAtEnding
+@onready var load_before_ending: Button = %LoadBeforeEnding
 @onready var score: AudioStreamPlayer = $Score
 
 var estate: Node2D
@@ -51,7 +57,20 @@ var presenter: Sprite2D
 var accounts: Array = []
 var has_route_totals := false
 var archive_open := false
+var ending_saved := false
 var shot := Shot.RECORD
+
+func _ready() -> void:
+	for button in [skip_button, continue_button, replay_button, restore_button, save_button, title_button]:
+		button.theme = HUD_THEME
+		button.theme_type_variation = &"HudButton"
+	continue_button.theme_type_variation = &"HudPrimary"
+	restore_button.pressed.connect(_confirm_restore)
+	stay_button.pressed.connect(_close_restore)
+	load_before_ending.pressed.connect(func():
+		_close_restore()
+		restore_requested.emit()
+	)
 
 func present(estate_world: Node2D, already_finished: bool) -> void:
 	estate = estate_world
@@ -79,10 +98,43 @@ func open_archive() -> void:
 	title_button.pressed.connect(func(): close_requested.emit())
 	_show_record()
 
+func refresh_restore() -> void:
+	var checkpoint := Global.latest_saved_game(true)
+	restore_button.disabled = checkpoint.is_empty()
+	restore_button.tooltip_text = "本局没有可读取的通关前存档。" if checkpoint.is_empty() else Global.saved_game_caption(checkpoint)
+
+func _confirm_restore() -> void:
+	var checkpoint := Global.latest_saved_game(true)
+	if checkpoint.is_empty():
+		refresh_restore()
+		status.text = "本局没有可读取的通关前存档。"
+		return
+	var consequence := ("已保存的结局可从标题的「选择存档」打开。" if ending_saved else
+		"可先留在结算，点「保存结局」保留这次记录。")
+	restore_detail.text = "%s\n\n读取后会回到呈交账册前。\n%s" % [
+		Global.saved_game_caption(checkpoint), consequence]
+	report.hide()
+	restore_confirmation.show()
+	_focus_action(stay_button)
+
+func _close_restore() -> void:
+	restore_confirmation.hide()
+	report.show()
+	_focus_action(restore_button)
+
+func _focus_action(button: Button) -> void:
+	button.grab_focus()
+	if GamepadInput.active:
+		await get_tree().process_frame
+		if button.has_focus():
+			GamepadInput.snap_pointer_to_focus()
+
 func _unhandled_key_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel") and (archive_open or shot != Shot.RECORD):
+	if event.is_action_pressed("ui_cancel") and (restore_confirmation.visible or archive_open or shot != Shot.RECORD):
 		get_viewport().set_input_as_handled()
-		if archive_open:
+		if restore_confirmation.visible:
+			_close_restore()
+		elif archive_open:
 			close_requested.emit()
 		else:
 			_show_record()
@@ -174,7 +226,7 @@ func _play(from_handoff := false) -> void:
 	camera.force_update_scroll()
 	if DisplayServer.get_name() != "headless":
 		score.play()
-	skip_button.grab_focus()
+	_focus_action(skip_button)
 	motion = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	if not from_handoff:
 		motion.tween_property(camera, "global_position", field_focus + Vector2(12, -3), FIELD_HOLD)
@@ -234,8 +286,7 @@ func _show_record() -> void:
 	film.hide()
 	shade.show()
 	report.show()
-	var primary := title_button if archive_open else continue_button
-	primary.grab_focus()
+	_focus_action(title_button if archive_open else continue_button)
 	film_finished.emit()
 
 func _populate_record() -> void:
