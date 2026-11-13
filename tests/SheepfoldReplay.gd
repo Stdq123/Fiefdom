@@ -296,7 +296,7 @@ func _cut_summer_meadow(portions: int) -> bool:
 	var overview: Control = chart.region_map
 	await _button(overview.region_buttons.get_node("WestRoad"))
 	await _button(overview.destination_buttons[Sheepfold.MEADOW])
-	_expect(overview.route_label.text == "西市 → 溪桥道" and overview.place_detail.text == "可割草料 %d 份" % portions,
+	_expect(overview.route_label.text == "西市 → 溪桥道 → 桥东草甸" and overview.place_detail.text == "可割草料 %d 份" % portions,
 		"The market chart previews the bridge and the current harvest.")
 	await _button(overview.route_button)
 	_expect(chart._current_stop() == state.MARKET_RETURN and chart._destination_label(state.MARKET_RETURN) == Sheepfold.MEADOW,

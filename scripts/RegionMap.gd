@@ -7,9 +7,15 @@ const GOLD := Color("#f2ca73")
 const ROAD_INK := Color("#9b8660")
 const WATER := Color("#6b9992")
 const POINTS := [Vector2(97, 184), Vector2(266, 184), Vector2(449, 184), Vector2(636, 184)]
+const ROAD_WEST := Vector2(188, 184)
+const ROAD_EAST := Vector2(344, 184)
+const MEADOW_TURN := Vector2(305, 184)
+const MEADOW_BEND := Vector2(303, 221)
+const MEADOW_ICON := Vector2(320, 254)
+const MEADOW_TRAIL := [MEADOW_TURN, MEADOW_BEND, MEADOW_ICON]
 const TRAILS := [
-	[Vector2(97, 184), Vector2(147, 186), Vector2(197, 175), Vector2(266, 184)],
-	[Vector2(266, 184), Vector2(334, 191), Vector2(388, 188), Vector2(449, 184)],
+	[POINTS[0], Vector2(147, 186), ROAD_WEST, POINTS[1]],
+	[POINTS[1], MEADOW_TURN, ROAD_EAST, Vector2(388, 188), POINTS[2]],
 	[Vector2(449, 184), Vector2(509, 177), Vector2(569, 170), Vector2(636, 184)],
 ]
 const SHORTCUT := [Vector2(449, 184), Vector2(465, 232), Vector2(513, 265),
@@ -24,7 +30,6 @@ const TREES := preload("res://assets/world/seasonal-trees.svg")
 const MARKET_CHOICES := MarketStall.TITLES + [Global.MARKET_ORDERS]
 const SEAL_RADIUS := 11.0
 const HERE_RADIUS := 23.0
-const MEADOW_ICON := Vector2(315, 245)
 
 @onready var paper: Control = %Paper
 @onready var destinations: HFlowContainer = %Destinations
@@ -197,6 +202,8 @@ func _refresh_route() -> void:
 			route_label.text += " · 经西门"
 		if names.size() == 1:
 			route_label.text = "在%s内前往%s" % [names[0], selected_place]
+		elif selected_place == Sheepfold.MEADOW:
+			route_label.text += " → " + Sheepfold.MEADOW
 		if selected_place == active:
 			route_label.text += " · 正在指路"
 	paper.queue_redraw()
@@ -235,13 +242,15 @@ func _draw_chart() -> void:
 	if not selected_place.is_empty():
 		highlighted = _route_regions(_region_for(selected_place))
 	var south := _uses_shortcut()
+	var meadow := selected_place == Sheepfold.MEADOW
 	for index in TRAILS.size():
-		var active := index in highlighted and index + 1 in highlighted and (index != Region.ESTATE or not south)
+		var active := (index in highlighted and index + 1 in highlighted
+			and (index != Region.ESTATE or not south) and (index != Region.ROAD or not meadow))
 		_draw_road(TRAILS[index], active)
 	if Global.ravine_shortcut_open():
 		_draw_road(SHORTCUT, south)
 		_draw_text("南路小径", Vector2(542, 286), 14, INK)
-	_draw_meadow()
+	_draw_meadow(meadow)
 	_draw_bridge()
 	_draw_landmarks()
 	_draw_text("北", Vector2(680, 42), 15, INK)
@@ -254,7 +263,7 @@ func _draw_chart() -> void:
 		paper.draw_circle(at, SEAL_RADIUS - 3.0, GOLD if target or index in highlighted else PAPER, true, -1.0, true)
 		if current:
 			if region == Region.ROAD:
-				_draw_road_position(at, road_progress.call())
+				_draw_road_position(_road_point(road_progress.call()))
 			else:
 				paper.draw_arc(at, SEAL_RADIUS + 3.0, 0.0, TAU, 24, INK, 2.0, true)
 				paper.draw_circle(at, 3.0, INK, true, -1.0, true)
@@ -262,16 +271,37 @@ func _draw_chart() -> void:
 		if current:
 			_draw_text("当前位置", at + Vector2(0, 50), 14, Color("#586b4d"))
 
-func _draw_road_position(bridge: Vector2, progress: float) -> void:
-	var foot := bridge + Vector2(lerpf(-78.0, 78.0, progress), -HERE_RADIUS)
-	paper.draw_line(foot + Vector2(0, 7), Vector2(foot.x, bridge.y), INK, 1.6, true)
-	paper.draw_circle(foot, 8.0, INK, true, -1.0, true)
-	paper.draw_circle(foot, 5.0, GOLD, true, -1.0, true)
-	paper.draw_circle(foot, 2.0, INK, true, -1.0, true)
+func _road_point(progress: Vector2) -> Vector2:
+	if progress.y == 0.0:
+		return ROAD_WEST.lerp(ROAD_EAST, progress.x)
+	if progress.y < 0.5:
+		return MEADOW_TURN.lerp(MEADOW_BEND, progress.y * 2.0)
+	return MEADOW_BEND.lerp(MEADOW_ICON, progress.y * 2.0 - 1.0)
 
-func _draw_meadow() -> void:
-	var selected_meadow := selected_place == Sheepfold.MEADOW
-	_draw_road([Vector2(306, 188), Vector2(314, 210), Vector2(309, 225), MEADOW_ICON], selected_meadow)
+func _draw_road_position(foot: Vector2) -> void:
+	var pin := foot - Vector2(0, HERE_RADIUS)
+	paper.draw_line(pin + Vector2(0, 7), foot, INK, 1.6, true)
+	paper.draw_circle(pin, 8.0, INK, true, -1.0, true)
+	paper.draw_circle(pin, 5.0, GOLD, true, -1.0, true)
+	paper.draw_circle(pin, 2.0, INK, true, -1.0, true)
+
+func _draw_meadow(selected_meadow: bool) -> void:
+	var trail := MEADOW_TRAIL
+	if selected_meadow:
+		match region:
+			Region.MARKET:
+				_draw_road([POINTS[Region.ROAD], MEADOW_TURN], true)
+			Region.ESTATE, Region.RAVINE:
+				_draw_road(TRAILS[Region.ROAD].slice(1), true)
+			Region.ROAD:
+				var progress: Vector2 = road_progress.call()
+				var start := _road_point(progress)
+				if progress.y > 0.0:
+					_draw_road(MEADOW_TRAIL, false)
+					trail = [start, MEADOW_BEND, MEADOW_ICON] if progress.y < 0.5 else [start, MEADOW_ICON]
+				else:
+					_draw_road([start, MEADOW_TURN], true)
+	_draw_road(trail, selected_meadow)
 	paper.draw_circle(MEADOW_ICON, 7.5, INK, true, -1.0, true)
 	paper.draw_circle(MEADOW_ICON, 4.0, GOLD if selected_meadow else PAPER, true, -1.0, true)
 	_draw_text(Sheepfold.MEADOW, MEADOW_ICON + Vector2(5, 18), 14, INK)

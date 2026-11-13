@@ -7,11 +7,6 @@ const BACKDROP := Rect2(-800, -460, 1600, 960)
 const ROAD_HALF_WIDTH := 20.0
 const WATER_HALF_WIDTH := 23.0
 const MEADOW_HALF_WIDTH := 7.0
-const MEADOW_EDGE := [
-	Vector2(113, 121), Vector2(129, 106), Vector2(157, 101), Vector2(183, 102),
-	Vector2(205, 117), Vector2(213, 135), Vector2(205, 152), Vector2(174, 164),
-	Vector2(145, 158), Vector2(122, 150), Vector2(112, 138),
-]
 const GROVES := [
 	Rect2(-440, -174, 299, 130), Rect2(-394, 111, 277, 146),
 	Rect2(47, -174, 392, 130), Rect2(76, 96, 370, 157),
@@ -132,8 +127,7 @@ func _draw() -> void:
 
 func _draw_meadow(grass: Color, loam: Color, season: int) -> void:
 	var shade: Color = [Color("#6c784e"), Color("#7c8b50"), Color("#958353"), Color("#89998b")][season]
-	var edge := PackedVector2Array(MEADOW_EDGE)
-	draw_colored_polygon(edge, grass.lerp(shade, 0.65))
+	draw_colored_polygon(PackedVector2Array(LAYOUT.MEADOW_EDGE), grass.lerp(shade, 0.65))
 	if season == Global.Season.WINTER:
 		for drift: Rect2 in [Rect2(130, 112, 35, 8), Rect2(173, 118, 24, 10), Rect2(183, 144, 20, 5)]:
 			draw_rect(drift, Color("#b7c3b5"))

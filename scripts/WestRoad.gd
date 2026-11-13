@@ -89,8 +89,14 @@ func _clear_regional_trip() -> void:
 	Global.ravine_trip_target = ""
 	_refresh_route()
 
-func _map_road_progress() -> float:
-	return clampf(inverse_lerp(LAYOUT.MARKET_GATE.x, LAYOUT.ESTATE_GATE.x, player.position.x), 0.0, 1.0)
+func _map_road_progress() -> Vector2:
+	var foot := player.position
+	var across := clampf(inverse_lerp(LAYOUT.MARKET_GATE.x, LAYOUT.ESTATE_GATE.x, foot.x), 0.0, 1.0)
+	var down := 0.0
+	if foot.y > LAYOUT.MEADOW_JUNCTION.y + 12.0 and (Geometry2D.is_point_in_polygon(foot, ground.meadow_track)
+			or Geometry2D.is_point_in_polygon(foot, PackedVector2Array(LAYOUT.MEADOW_EDGE))):
+		down = clampf(inverse_lerp(LAYOUT.MEADOW_JUNCTION.y, LAYOUT.MEADOW.y, foot.y), 0.0, 1.0)
+	return Vector2(across, down)
 
 func resume_from_market() -> bool:
 	return player.position.distance_squared_to(LAYOUT.MARKET_GATE) < player.position.distance_squared_to(LAYOUT.ESTATE_GATE)

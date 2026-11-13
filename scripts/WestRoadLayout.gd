@@ -10,6 +10,11 @@ const MEADOW_TRACK := [
 	MEADOW_JUNCTION, Vector2(115, 62), Vector2(106, 91), Vector2(118, 114),
 	Vector2(144, 128), MEADOW,
 ]
+const MEADOW_EDGE := [
+	Vector2(113, 121), Vector2(129, 106), Vector2(157, 101), Vector2(183, 102),
+	Vector2(205, 117), Vector2(213, 135), Vector2(205, 152), Vector2(174, 164),
+	Vector2(145, 158), Vector2(122, 150), Vector2(112, 138),
+]
 const ROAD := [
 	Vector2(-400, 36), MARKET_GATE, Vector2(-192, 40), Vector2(-119, 38),
 	Vector2(-59, 36), Vector2(59, 36), MEADOW_JUNCTION, Vector2(196, 34), ESTATE_GATE, Vector2(400, 36),
