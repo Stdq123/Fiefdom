@@ -50,11 +50,13 @@ var music_practice_script = preload("res://scripts/MusicPractice.gd")
 func _ready() -> void:
 	refresh_retainers()
 	well_field_selector.item_selected.connect(_show_well_field)
-	seed_plan_picker.add_item("选种后点田格")
+	seed_plan_picker.add_item("选择续播方式")
 	for seed_id: String in CropData.IDS:
 		var crop := ItemManager.get_crop(seed_id)
 		seed_plan_picker.add_icon_item(ItemManager.crop_picture(crop).texture, crop.crop_name)
 		seed_plan_picker.set_item_metadata(seed_plan_picker.item_count - 1, seed_id)
+	seed_plan_picker.add_item("按时令续播")
+	seed_plan_picker.set_item_metadata(seed_plan_picker.item_count - 1, FieldSeedPlan.SEASONAL)
 	seed_plan_picker.add_item("取消续播")
 	seed_plan_picker.set_item_metadata(seed_plan_picker.item_count - 1, "")
 	var seed_menu := seed_plan_picker.get_popup()
@@ -390,11 +392,17 @@ func _refresh_stewards() -> void:
 	steward_note.hide()
 	var id := well_field_selector.get_selected_id()
 	var names := PackedStringArray()
+	var has_field_keeper := false
 	for retainer in Global.retainers:
+		has_field_keeper = has_field_keeper or retainer.duty == RetainerData.Duty.FIELD
 		if retainer.duty == RetainerData.Duty.STEWARD and Global.stewarded_field(retainer).field_id == id:
 			names.append(retainer.name)
 	if not names.is_empty():
 		steward_note.text = "管事 %s · 收割、浇水，按安排续播" % "、".join(names)
+		steward_note.show()
+	elif not has_field_keeper and map_grid_container.get_children().any(
+			func(item: MAP_GRID_ITEM) -> bool: return Global.field_seed_plans.has(item.grid_pos)):
+		steward_note.text = "这块井田的续播在等照料门客或管事。"
 		steward_note.show()
 
 func _show_steward_assignment(data: RetainerData, _cell: Vector2i) -> void:
@@ -410,6 +418,7 @@ func _refresh_field_tiles() -> void:
 	if is_visible_in_tree():
 		for item: MAP_GRID_ITEM in map_grid_container.get_children():
 			item.refresh_plot()
+		_refresh_stewards()
 		_refresh_seed_plan_preview()
 
 func _apply_seed_plan(item: MAP_GRID_ITEM) -> void:
@@ -417,6 +426,7 @@ func _apply_seed_plan(item: MAP_GRID_ITEM) -> void:
 		return
 	Global.set_field_seed_plan(item.grid_pos, _selected_seed_plan())
 	item.refresh_plot()
+	_refresh_stewards()
 	_refresh_seed_plan_preview()
 
 func _selected_seed_plan() -> String:
@@ -424,7 +434,7 @@ func _selected_seed_plan() -> String:
 	return FieldSeedPlan.with_beans(seed_id) if rotate_seed.button_pressed else seed_id
 
 func _refresh_seed_choices() -> void:
-	for index in range(1, seed_plan_picker.item_count - 1):
+	for index in range(1, CropData.IDS.size() + 1):
 		var crop := ItemManager.get_crop(seed_plan_picker.get_item_metadata(index))
 		var label := "%s · %d 夜" % [crop.crop_name, Global.sowing_nights(crop)]
 		if crop.favored_season == Global.season_index():
@@ -452,7 +462,7 @@ func _refresh_seed_plan_preview() -> void:
 	if seed_plan_picker.selected == 0:
 		apply_private_plan.disabled = true
 		apply_private_plan.text = "安排私田"
-		seed_plan_note.text = "选种后点田格。也可一次安排当前井田的已翻私田。"
+		seed_plan_note.text = "可选固定作物或按时令续播，再点田格或批量安排私田。"
 		return
 	var plan := _selected_seed_plan()
 	var targets := _private_plan_targets(plan)
@@ -462,18 +472,7 @@ func _refresh_seed_plan_preview() -> void:
 		seed_plan_note.text = "清除后续的播种安排，田里的作物继续生长。"
 		return
 	apply_private_plan.text = "安排私田 · %d 格" % targets.size()
-	var tomorrow := Global.current_day + 1
-	var nights := Global.sowing_nights(crop)
-	var next_nights := Global.sowing_nights(crop, tomorrow)
-	if FieldSeedPlan.is_rotation(plan):
-		var beans := ItemManager.get_crop(FieldSeedPlan.BEANS)
-		seed_timing.text = "菽 %d 夜 → %s %d 夜 · 收菽留肥，下茬多收一份" % [Global.sowing_nights(beans), crop.crop_name, nights]
-		if nights != next_nights:
-			seed_timing.text += "\n明日%s播%s需 %d 夜" % [Global.get_current_solar_term(tomorrow), crop.crop_name, next_nights]
-		seed_timing.show()
-	elif nights != next_nights:
-		seed_timing.text = "明日%s播种需 %d 夜" % [Global.get_current_solar_term(tomorrow), next_nights]
-		seed_timing.show()
+	_show_seed_timing(plan, crop)
 	if targets.is_empty():
 		seed_plan_note.text = "点田格可调整单格。批量范围为当前井田的已翻私田。"
 		return
@@ -481,11 +480,12 @@ func _refresh_seed_plan_preview() -> void:
 	var after_harvest := 0
 	var waiting_for_water := 0
 	var changed_seed := 0
+	var needs_canal := crop != null and crop.is_water_crop
 	for cell in targets:
 		var occupied := Global.active_crops.has(cell)
 		if occupied:
 			after_harvest += 1
-		if crop.is_water_crop and Global.next_seed_for_plan(cell, plan) == seed_id and not Global.irrigation.supplies(cell):
+		if needs_canal and Global.next_seed_for_plan(cell, plan) == seed_id and not Global.irrigation.supplies(cell):
 			waiting_for_water += 1
 		elif not occupied:
 			open_plots += 1
@@ -502,6 +502,24 @@ func _refresh_seed_plan_preview() -> void:
 		details.append("含 %d 格改种" % changed_seed)
 	seed_plan_note.text = " · ".join(details)
 
+func _show_seed_timing(plan: String, crop: CropData) -> void:
+	if plan == FieldSeedPlan.SEASONAL:
+		seed_timing.text = "春菽 · 夏稻（无渠水种黍） · 秋稷 · 冬麦"
+		seed_timing.show()
+		return
+	var tomorrow := Global.current_day + 1
+	var nights := Global.sowing_nights(crop)
+	var next_nights := Global.sowing_nights(crop, tomorrow)
+	if FieldSeedPlan.is_rotation(plan):
+		var beans := ItemManager.get_crop(FieldSeedPlan.BEANS)
+		seed_timing.text = "菽 %d 夜 → %s %d 夜 · 收菽留肥，下茬多收一份" % [Global.sowing_nights(beans), crop.crop_name, nights]
+		if nights != next_nights:
+			seed_timing.text += "\n明日%s播%s需 %d 夜" % [Global.get_current_solar_term(tomorrow), crop.crop_name, next_nights]
+		seed_timing.show()
+	elif nights != next_nights:
+		seed_timing.text = "明日%s播种需 %d 夜" % [Global.get_current_solar_term(tomorrow), next_nights]
+		seed_timing.show()
+
 func _apply_private_seed_plan() -> void:
 	var plan := _selected_seed_plan()
 	var targets := _private_plan_targets(plan)
@@ -510,5 +528,7 @@ func _apply_private_seed_plan() -> void:
 	_refresh_field_tiles()
 	if FieldSeedPlan.is_rotation(plan):
 		seed_plan_note.text = "已安排 %d 格私田轮作" % targets.size()
+	elif plan == FieldSeedPlan.SEASONAL:
+		seed_plan_note.text = "已安排 %d 格私田按时令续播" % targets.size()
 	else:
 		seed_plan_note.text = ("已取消 %d 格私田的续播" if plan.is_empty() else "已安排 %d 格私田的续播") % targets.size()

@@ -878,6 +878,8 @@ func set_field_seed_plan(cell: Vector2i, plan: String) -> void:
 		field_seed_plans[cell] = plan
 
 func next_seed_for_plan(cell: Vector2i, plan: String) -> String:
+	if plan == FieldSeedPlan.SEASONAL:
+		return FieldSeedPlan.seasonal_seed(season_index(), irrigation.supplies(cell))
 	if not FieldSeedPlan.is_rotation(plan):
 		return plan
 	var crop: Dictionary = active_crops.get(cell, {})

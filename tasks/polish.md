@@ -908,3 +908,8 @@
 
 - 秋社选样时提示送出哪些本季或已跟踪下季的留货，换选即更新。摆样带回保留收成。分享后，禾伯在同年冬至往麦菽粥里添一份菽，玩家只需带一份麦，仍可给门客备三份粥。
 - 新档走到第 16 天，分别核对带回和分享。用分享后的存档准备第 22 天的验证档，确认私仓无菽时也能下锅，续档保留禾伯的贡献，隔年要再分享才会回赠。Godot 和 Windows 解压版通过节庆、交货和双结局相关回放。秋社和冬至画面在 1024×768 的不可见桌面核对。 [Windows 试玩包](../build/polish-harvest-supper/Fiefdom-1.0.0-Windows-x64.zip) · [秋社选样](../build/polish-harvest-supper/render-1024x768/02-choose-samples.png) · [冬至菜单](../build/polish-harvest-supper/render-1024x768/08-he-bo-winter-gift.png) · [发行回放](../build/polish-harvest-supper/windows-check/autumn-exhibit.log)
+
+## 照料门客与管事按时令续播
+
+- 封地概览可逐格或批量安排「按时令续播」。春播菽，夏播稻，无渠水则播黍，秋播稷，冬播麦。田格预览当天的续播品种，没有照料门客或管事的井田显示等待状态。
+- 回放从第 35 天的双井田档接续。第二块井田的管事在玩家去西市时补播夏黍，换季后收完这茬，到第 38 天换播秋稷。三晚用 12 份口粮，公田实收两份，玩家未手动耕作。批量安排预览核对了同一井田的通水与旱地选种。Godot 田务回放、Windows 解压版双结局及备粮回放通过，早期存档中的固定播种安排照常读取。1024×768 画面在不可见桌面核对。 [Windows 试玩包](../build/polish-seasonal-sowing/Fiefdom-1.0.0-Windows-x64.zip) · [续播安排](../build/polish-seasonal-sowing/final-1024x768/02-seasonal-private-plans.png) · [秋季接种](../build/polish-seasonal-sowing/final-1024x768/03-autumn-resowing.png) · [发行回放](../build/polish-seasonal-sowing/windows-final/field-steward.log)
