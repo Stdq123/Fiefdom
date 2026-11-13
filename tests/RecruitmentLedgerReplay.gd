@@ -113,8 +113,9 @@ func _invite_after_shortage() -> void:
 	if dialog == null:
 		return
 	var invite := _option(dialog, "请回来")
-	_expect(invite != null and invite.disabled and "还差 1 份口粮" in invite.text,
-		"The dialogue gives the same food reason.")
+	_expect(invite != null and invite.disabled and "还差 1 份口粮" in invite.text
+		and "每夜用粮 1 → 2 份 · 粮仓 1 份" in dialog.context_label.text,
+		"The dialogue gives the same food reason and forecasts the returning worker's ration.")
 	await _snapshot("05-return-dialogue")
 	await _key(KEY_ESCAPE)
 	await _button(ui.manage_button)
@@ -144,14 +145,53 @@ func _check_promotion_tradeoff() -> void:
 	if dialog == null:
 		return
 	var invite := _option(dialog, "招募")
-	_expect(invite != null and not invite.disabled and "80/100" in dialog.context_label.text and "晋升中士" in dialog.context_label.text,
-		"Recruiting at the first promotion threshold shows the exact reputation tradeoff before confirmation.")
+	_expect(invite != null and not invite.disabled and "80/100" in dialog.context_label.text and "晋升中士" in dialog.context_label.text
+		and "每夜用粮 1 → 2 份 · 粮仓 12 份" in dialog.context_label.text,
+		"Recruiting at the first promotion threshold shows the reputation and food tradeoffs before confirmation.")
 	await _snapshot("06-promotion-tradeoff")
 	await _button(invite)
 	await _sleep_through(3)
 	_expect(state.current_rank == state.Rank.XIA_SHI and state.reputation == 80 and state.retainers.size() == 2,
 		"The player can still recruit immediately and promotion follows the resulting reputation.")
 	print("RECRUITMENT_PROMOTION day=", state.current_day, " rank=", state.current_rank, " reputation=", state.reputation)
+
+func _provision_after_hiring() -> void:
+	if not await _load_fixture({
+		"save_version": 2, "current_day": 2, "current_rank": state.Rank.ZHONG_SHI, "king_storage": 1,
+		"reputation": 35, "food_storage": 2, "money": 45, "private_harvest_total": 1, "first_harvest_reviewed": true,
+		"retainers": [{"name": VisitorData.FIELD_KEEPER, "school": 2, "duty": RetainerData.Duty.HARVEST}],
+	}):
+		return
+	var visitor: Node2D = world.neighbor_actor(VisitorData.ROAD_KEEPER)
+	await _walk(world.player, [visitor.global_position + Vector2(0, 16)])
+	var dialog := await _talk_on_estate(VisitorData.ROAD_KEEPER)
+	if dialog == null:
+		return
+	var invite := _option(dialog, "招募")
+	if not _expect(invite != null and not invite.disabled and "每夜用粮 2 → 3 份 · 粮仓 2 份" in dialog.context_label.text,
+		"The forecast includes the current specialist's extra ration and leaves an ordinary hire available."):
+		return
+	await _snapshot("07-hiring-ration-preview")
+	await _button(invite)
+	var action: Button = ui.hud.opening_action
+	if not _expect(state.retainers.size() == 2 and state.food_storage == 2 and action.visible and action.text == "为新门客备粮",
+		"After hiring (retainers %d, grain %d), expected a visible provisioning shortcut, got '%s' (visible %s)." % [
+			state.retainers.size(), state.food_storage, action.text, action.visible]):
+		return
+	await _snapshot("08-provision-new-retainer")
+	await _button(action)
+	var night := ui.get_node_or_null("Control/NightRationsPanel") as Control
+	if not _expect(night != null and "今夜缺 1 份" in night.forecast.text, "The action opens the ordinary night forecast with the same shortage."):
+		return
+	await _button(night.get_node("%Market"))
+	var management: Control = ui.panel_manager.management_panel_instance
+	await _button(management.market_panel.buy_button)
+	await _button(management.close_button)
+	_expect(state.food_storage == 3 and action.text == "查看开垦筹备", "Buying one ration restores the survey shortcut.")
+	await _sleep_through(3)
+	_expect(state.night_rations.last.need == 3 and state.night_rations.last.served == 3,
+		"Ordinary sleep consumes the predicted rations and feeds both retainers.")
+	print("RECRUITMENT_PROVISION served=", state.night_rations.last.served, " retained=", state.retainers.size())
 
 func _play() -> void:
 	if not capture_path.is_empty():
@@ -172,5 +212,6 @@ func _play() -> void:
 	if await _recruit_at_market() and not legacy:
 		await _invite_after_shortage()
 		await _check_promotion_tradeoff()
+		await _provision_after_hiring()
 	tree.unload_current_scene()
 	await tree.process_frame

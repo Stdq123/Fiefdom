@@ -157,7 +157,11 @@ func _refresh_first_private_button() -> void:
 func _show_first_promotion() -> void:
 	var title := "晋升中士 · %d/%d 声望" % [Global.reputation, Global.promotion_reputation()]
 	if Global.eligible_for_promotion():
-		_describe(title, "声望和周礼已达标。过夜核定爵位，晋升后可扩建。")
+		var penalty := Global.tribute_penalty_tonight()
+		if penalty > 0 and Global.reputation - penalty < Global.promotion_reputation():
+			_describe(title, "今夜欠贡会扣 %d 声望。先纳贡，或补足声望后再过夜。" % penalty)
+		else:
+			_describe(title, "声望和周礼已达标。过夜核定爵位，晋升后可扩建。")
 	elif Global.reputation >= Global.promotion_reputation():
 		_describe(title, "晋升要求周礼中等或以上。当前周礼为「%s」。" % Global.zhou_li_score)
 	else:

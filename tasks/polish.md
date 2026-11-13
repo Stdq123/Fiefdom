@@ -1005,3 +1005,9 @@
 
 - 结尾字幕、路线结算和封地记事采用现有漆木、暗铜边饰。结算突出「继续经营」。选「读取通关前存档」先看将载入的档位、日期和时辰。默认选中「留在结算」，按 Esc 返回原按钮。确认读取后，通关前的进度和已保存的结局都可在存档列表查到。
 - 两条新档回放验证结算、取消读档、结局自动保存和续营。专项确认回到通关前的手动档后，两份存档均可读。结算和确认在 1920×1080 和 1024×768 的隔离桌面核对。101 项源码场景、31 项无窗口发行检查和隔离桌面发行回放通过。两次干净构建的 ZIP SHA-256 一致。 [Windows 1.0 x64](../build/polish-ending-ledger/Fiefdom-1.0.0-Windows-x64.zip) · [传统结算](../build/polish-ending-ledger/final-capture/1920x1080/ending-traditional.png) · [窄窗口确认](../build/polish-ending-ledger/final-capture/1024x768/pre-victory-confirmation.png) · [源码回归](../build/polish-ending-ledger/source/source-matrix.txt) · [发行校验](../build/polish-ending-ledger/final-headless/manifest.txt) · [重复构建](../build/polish-ending-ledger/rebuild.log)
+
+## 首茬收成后继续纳贡、招募与开垦
+
+- 首茬去处选定后，封地手记可带玩家去见当日尚未交谈的来客，或标出下一次纳贡的公田。公田成熟和当夜欠贡时优先提示可处理的公田田务。已有指路时保留玩家选择。达到晋升条件可直接看今夜安排，过夜晋升后可从手记打开开垦筹备。
+- 招募对话列出留任前后的总粮耗和粮仓余量。早期招募导致当夜口粮供不齐时，手记可直达今夜安排。布置收割岗的专项从每夜 2 份增加到 3 份，补买 1 份后过夜，全员吃到口粮。
+- 默认新档回放在第 6 天读档后循手记找到弋戎，交谈获得 5 声望，再沿标记播种公田。扩建回放从手记打开今夜安排，第 12 天升中士，第 13 天立桩，第 17 天读晨间档并耕作新井田。101 项源码场景和 35 项无窗口发行检查通过，含手动与委派备粮的双结局、退出重启、上一版续档与 90 秒连续运行。10 次隔离桌面运行核对两种尺寸的实际画面。 [Windows 1.0 x64](../build/polish-opening-bridge/Fiefdom-1.0.0-Windows-x64.zip) · [手记指路](../build/polish-opening-bridge/capture/1920x1080/13-next-reputation-step.png) · [招募预估](../build/polish-opening-bridge/capture/1024x768/07-hiring-ration-preview.png) · [源码回归](../build/polish-opening-bridge/source/source-matrix.txt) · [发行校验](../build/polish-opening-bridge/headless/manifest.txt)

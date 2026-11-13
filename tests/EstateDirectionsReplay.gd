@@ -119,10 +119,10 @@ func _meet(speaker: String) -> Control:
 	await _key(KEY_E)
 	return ui.get_node_or_null("Control/DialoguePanel") as Control
 
-func _visit_while_crop_grows(speaker: String) -> Control:
+func _follow_journal_visit(speaker: String) -> Control:
 	var invitation: Button = ui.hud.opening_action
 	if not _expect(invitation.is_visible_in_tree() and ("去见" + speaker) in invitation.text,
-		"The journal offers a way to find " + speaker + " while the public crop grows."):
+		"The journal offers a way to find " + speaker + "."):
 		return null
 	await _click(invitation.get_global_rect().get_center())
 	_expect(directions.tracked_neighbor == speaker and directions.visible,
@@ -237,7 +237,8 @@ func _private_crop_and_grain(spawn: Vector2) -> void:
 	await _key(KEY_LEFT)
 	await _key(KEY_ENTER)
 	_expect(state.food_storage == before_food + 1 and state.crop_stock.count("beans") == 0
-		and state.king_storage == 1 and not trade.visible and "晋升" in ui.hud.guide.heading.text,
+		and state.king_storage == 1 and (not trade.visible or trade.text != "首茬收成 · 安排去处")
+		and "晋升" in ui.hud.guide.heading.text,
 		"One private crop becomes one ration while the tribute and promotion goal stay in place.")
 	print("DIRECTION_FIRST_RATION day=", state.current_day, " private=", state.private_harvest_total,
 		" tribute=", state.king_storage, " grain=", before_food, "->", state.food_storage)
@@ -252,7 +253,8 @@ func _private_crop_and_grain(spawn: Vector2) -> void:
 	var panel: Control = ui.panel_manager.management_panel_instance
 	var book: Control = panel.season_order_panel
 	_expect(book.is_visible_in_tree() and "亭前备种" in book.order_title.text
-		and state.crop_stock.count("beans") == 1 and state.food_storage == before_food and not trade.visible,
+		and state.crop_stock.count("beans") == 1 and state.food_storage == before_food
+		and (not trade.visible or trade.text != "首茬收成 · 安排去处"),
 		"Keeping the crop opens the current order, leaves stock available, and completes the optional prompt.")
 	await _click(book.pin_button.get_global_rect().get_center())
 	await _capture("12-keep-the-beans")
@@ -261,10 +263,42 @@ func _private_crop_and_grain(spawn: Vector2) -> void:
 	_expect(state.food_storage == before_food - 1 and state.night_rations.last.served == 1
 		and state.crop_stock.count("beans") == 1, "The next night uses existing grain and keeps the bean for the order.")
 	await _save_and_continue()
-	_expect(not ui.hud.opening_action.visible and ui.hud.pinned_order.visible and state.crop_stock.count("beans") == 1,
-		"Continue preserves the chosen order and leaves the one-time prompt closed even with crops still in stock.")
+	_expect(ui.hud.pinned_order.visible and state.crop_stock.count("beans") == 1,
+		"Continue preserves the chosen order and the crop.")
 	print("DIRECTION_FIRST_HARVEST_ORDER day=", state.current_day, " bean=", state.crop_stock.count("beans"),
 		" grain=", state.food_storage, " tracked=", state.pinned_season_start)
+	await _next_reputation_step(spawn)
+
+func _next_reputation_step(spawn: Vector2) -> void:
+	var guest = world.current_visitor()
+	if not _expect(guest != null, "The morning after the first harvest has a visitor."):
+		return
+	var action: Button = ui.hud.opening_action
+	var before: int = state.reputation
+	if not _expect(action.visible and action.text.begins_with("去见" + guest.name)
+		and "可得 %d 声望" % state.balance.interaction_reputation_gain in action.tooltip_text,
+		"Continue restores the next reputation action after the first harvest review."):
+		return
+	await _capture("13-next-reputation-step")
+	var dialog := await _follow_journal_visit(guest.name)
+	if not _expect(dialog != null, "Follow the reputation action to the actual visitor."):
+		return
+	await _click(_button(dialog, "交谈").get_global_rect().get_center())
+	if not _expect(guest.talked_today() and state.reputation == before + state.balance.interaction_reputation_gain
+		and action.visible and "公田" in action.text and ui.hud.pinned_order.visible,
+		"Speaking awards reputation once, preserves the order pin and offers public-field work next."):
+		return
+	await _click(action.get_global_rect().get_center())
+	_expect(directions.tracked_plot == PUBLIC and not action.visible, "The farm action marks the public tile and yields to active directions.")
+	await Campaign.walk_to(tree, world.player, spawn)
+	await _click(_point_on_field())
+	await _click(_point_on_field())
+	if world.is_crop_dry(PUBLIC):
+		await _click(_point_on_field())
+	_expect(state.active_crops.has(PUBLIC) and state.crop_night_status(PUBLIC) in [state.NightGrowth.GROW, state.NightGrowth.RIPEN],
+		"The same marked field can be replanted and watered for the next tribute.")
+	print("DIRECTION_REPUTATION_HANDOFF day=", state.current_day, " visitor=", guest.name,
+		" reputation=", before, "->", state.reputation, " next_field=", directions.tracked_plot)
 
 func _finish() -> void:
 	tree.unload_current_scene()
@@ -314,7 +348,8 @@ func run(game_tree: SceneTree) -> void:
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Isolate the directions replay's save directory."):
 		await _finish()
 		return
-	capture_dir = OS.get_environment("FIEFDOM_DIRECTION_CAPTURES")
+	if capture_dir.is_empty():
+		capture_dir = OS.get_environment("FIEFDOM_DIRECTION_CAPTURES")
 	tree.root.notify_mouse_entered()
 	state = tree.root.get_node("Global")
 	tree.change_scene_to_file("res://scenes/Title.tscn")
@@ -358,7 +393,7 @@ func run(game_tree: SceneTree) -> void:
 	var gamepad = load("res://tests/GamepadReplay.gd").new()
 	gamepad.tree = tree
 	gamepad.pad = tree.root.get_node("GamepadInput")
-	var first_keeper_dialog := await _visit_while_crop_grows(KEEPER)
+	var first_keeper_dialog := await _follow_journal_visit(KEEPER)
 	if not await _read_handover_dialogue(first_keeper_dialog, gamepad):
 		await _finish()
 		return
@@ -371,7 +406,7 @@ func run(game_tree: SceneTree) -> void:
 	if world.is_crop_dry(PUBLIC):
 		await _click(_point_on_field())
 	await _capture("04c-day-two-visitor")
-	var road_dialog := await _visit_while_crop_grows(ROAD_KEEPER)
+	var road_dialog := await _follow_journal_visit(ROAD_KEEPER)
 	if not await _greet_first_visitor(road_dialog, gamepad):
 		await _finish()
 		return

@@ -14,6 +14,7 @@ var failures := 0
 var promoted_day := 0
 var commissioned_day := 0
 var checked_shortage := false
+var used_promotion_action := false
 var used_market_shortcut := false
 var construction_provision_clicks := 0
 var used_construction_reserve := false
@@ -133,11 +134,11 @@ func _check_opening() -> bool:
 	return true
 
 func _visit() -> void:
-	var visitor: VisitorData = world.current_visitor()
+	var visitor = world.current_visitor()
 	if visitor == null:
 		return
 	var actor: Node2D = world.neighbor_actor(visitor.name)
-	var speaker := visitor.name
+	var speaker: String = visitor.name
 	if state.current_day == 2:
 		var sheet := await _open_survey()
 		if not _expect(sheet != null and sheet.visitor_button.visible and "季青" in sheet.visitor_button.text,
@@ -282,7 +283,19 @@ func _use_construction_reserve(market: Control) -> void:
 func _night() -> void:
 	var yesterday: int = state.current_day
 	var rank: int = state.current_rank
-	await _button(ui.sleep_button)
+	var action: Button = ui.hud.opening_action
+	if rank == state.Rank.XIA_SHI and state.eligible_for_promotion():
+		if not _expect(action.visible and action.text == "查看今夜安排", "The first promotion has a shortcut to the night's plan."):
+			return
+		await _capture("02a-promotion-action")
+		await _button(action)
+		var night := ui.get_node_or_null("Control/NightRationsPanel") as Control
+		if not _expect(night != null and not night.show_previous, "The promotion action opens the current plan before advancing."):
+			return
+		await _button(night.get_node("%Sleep"))
+		used_promotion_action = true
+	else:
+		await _button(ui.sleep_button)
 	await tree.create_timer(0.56).timeout
 	var caption: String = ui.dawn_caption.text
 	var promoted: bool = promoted_day == 0 and rank < state.current_rank
@@ -303,8 +316,13 @@ func _night() -> void:
 			await _button(record.close_button)
 
 func _check_shortage() -> void:
-	var sheet := await _open_survey()
-	if not _expect(sheet != null, "Open the survey after a natural promotion."):
+	var action: Button = ui.hud.opening_action
+	if not _expect(action.visible and action.text == "查看开垦筹备", "The promoted estate's journal links to the new survey."):
+		return
+	await _capture("02b-first-expansion-action")
+	await _button(action)
+	var sheet := ui.get_node_or_null("Control/ReclamationPanel") as Control
+	if not _expect(sheet != null, "Open the survey from the journal after a natural promotion."):
 		return
 	await _click(_cell_point(EXPANSION))
 	_expect(sheet.plan.has_space and sheet.has_selection and sheet.reclaim_button.disabled and "0/9" in sheet.validity_label.text,
@@ -361,6 +379,7 @@ func _complete_expansion() -> void:
 	var tiles: TileMapLayer = world.tile_map
 	_expect(state.current_day == day and state.get_well_field(1).is_unlocked
 		and tiles.get_cell_tile_data(EXPANSION).get_custom_data("is_public_field"), "The dawn checkpoint restores the finished field.")
+	_expect(not ui.hud.opening_action.visible, "The opening shortcut clears after the second well is established.")
 	_expect("井田完工" in ui.hud.morning_button.text, "The calendar signals the opened field after Continue.")
 	await _button(ui.hud.morning_button)
 	var record: Control = ui.get_node_or_null("Control/NightRationsPanel")
@@ -379,7 +398,8 @@ func run(game_tree: SceneTree) -> void:
 		tree.quit(1)
 		return
 	state = tree.root.get_node("Global")
-	capture_dir = OS.get_environment("FIEFDOM_RECLAMATION_CAPTURES")
+	if capture_dir.is_empty():
+		capture_dir = OS.get_environment("FIEFDOM_RECLAMATION_CAPTURES")
 	seed(520)
 	if tree.root.size.x < 900:
 		tree.root.size = Vector2i(1280, 720)
@@ -390,6 +410,13 @@ func run(game_tree: SceneTree) -> void:
 			if state.retainers.size() < state.RECLAMATION_RETAINERS:
 				await _visit()
 			await _farm()
+			var action: Button = ui.hud.opening_action
+			if action.visible and action.text == "首茬收成 · 安排去处":
+				await _button(action)
+				var harvest := ui.get_node_or_null("Control/DialoguePanel") as Control
+				if not _expect(harvest != null, "The natural first private harvest offers its storage choice."):
+					break
+				await _button(_find_button(harvest, "用 1 份"))
 			var plan: Dictionary = state.reclamation_plan()
 			if plan.has_space and not plan.ready and not checked_shortage:
 				await _check_shortage()
@@ -400,7 +427,7 @@ func run(game_tree: SceneTree) -> void:
 					await _complete_expansion()
 				break
 			await _night()
-	_expect(promoted_day > 0 and commissioned_day > promoted_day and checked_shortage and used_market_shortcut,
+	_expect(promoted_day > 0 and used_promotion_action and commissioned_day > promoted_day and checked_shortage and used_market_shortcut,
 		"Complete promotion, recruiting, provisioning and the first expansion from the original new game.")
 	if state.has_method("reclamation_food_plan"):
 		_expect(used_construction_reserve and construction_provision_clicks == 1,

@@ -103,6 +103,7 @@ func _run() -> void:
 		"estate-directions", "estate-directions-legacy":
 			var replay = load("res://tests/EstateDirectionsReplay.gd").new()
 			replay.legacy = arguments[0] == "estate-directions-legacy"
+			replay.capture_dir = capture_directory
 			await replay.run(tree)
 		"tribute-plan", "tribute-plan-baseline", "tribute-plan-legacy":
 			var replay = load("res://tests/TributePlanReplay.gd").new()
@@ -163,6 +164,7 @@ func _run() -> void:
 			await replay.run_irrigation(tree, capture_directory)
 		"estate-progress":
 			var replay = load("res://tests/EstateProgressReplay.gd").new()
+			replay.capture_dir = capture_directory
 			await replay.run(tree)
 		"recruitment-ledger", "recruitment-ledger-legacy":
 			var replay = load("res://tests/RecruitmentLedgerReplay.gd").new()

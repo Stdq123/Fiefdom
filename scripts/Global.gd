@@ -1918,10 +1918,13 @@ func pending_neighbor_return(speaker: String) -> Dictionary:
 	var departure: Dictionary = neighbor_departures.get(speaker, {})
 	return departure if departure.get("returned_day", 0) == 0 else {}
 
+func recruitment_nightly_food() -> int:
+	return retainer_food_cost() + night_ration_for_duty(RetainerData.Duty.FIELD)
+
 func recruitment_food_requirement(speaker: String) -> int:
 	if (speaker == VisitorData.FIELD_KEEPER
 		or pending_neighbor_return(speaker).get("reason") == DepartureReason.HUNGER):
-		return retainer_food_cost() + 1
+		return recruitment_nightly_food()
 	return 0
 
 func recruitment_block(guest: VisitorData) -> RecruitmentBlock:

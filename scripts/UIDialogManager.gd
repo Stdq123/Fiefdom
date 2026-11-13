@@ -292,6 +292,10 @@ func _recruit_option(guest: VisitorData, block: Global.RecruitmentBlock, returni
 	return "%s（%s）" % [action, detail]
 
 func _recruitment_context(context: String, block: Global.RecruitmentBlock) -> String:
+	if block not in [Global.RecruitmentBlock.NONE, Global.RecruitmentBlock.FOOD]:
+		return context
+	context += "\n每夜用粮 %d → %d 份 · 粮仓 %d 份" % [
+		Global.retainer_food_cost(), Global.recruitment_nightly_food(), Global.food_storage]
 	if block == Global.RecruitmentBlock.NONE and Global.current_rank == Global.Rank.XIA_SHI and Global.eligible_for_promotion():
 		var remaining := Global.reputation - Global.balance.recruit_reputation_requirement
 		if remaining < Global.promotion_reputation():

@@ -28,6 +28,7 @@ var state_manager: UIStateManager
 var panel_manager: UIPanelManager
 var dialog_manager: UIDialogManager
 var sleep_tween: Tween
+var opening_action: Callable
 
 func _ready() -> void:
 	state_manager = UIStateManager.new()
@@ -122,6 +123,7 @@ func _process(_delta: float) -> void:
 	hud.guide.six_arts.disabled = hud.map_button.disabled
 	hud.handover_button.disabled = hud.map_button.disabled
 	hud.first_private_button.disabled = hud.map_button.disabled
+	hud.opening_action.disabled = hud.map_button.disabled
 	hud.tribute_button.disabled = hud.map_button.disabled
 	hud.raid_alert.disabled = blocked
 	var following_canal := (Global.field_route_status == Global.NightGrowth.BLOCKED
@@ -239,6 +241,7 @@ func _connect_signals() -> void:
 	GameEvents.tax_reform_triggered.connect(_on_council_invitation)
 	GameEvents.tax_reform_choice_made.connect(_refresh_opening_action.unbind(1))
 	GameEvents.tax_reform_choice_made.connect(update_ui.unbind(1))
+	GameEvents.campaign_ended.connect(_refresh_opening_action.unbind(1))
 	GameEvents.tax_envoy_interacted.connect(_on_tax_envoy_interacted)
 	GameEvents.channel_survey_learned.connect(hud.refresh_survey_button)
 	GameEvents.channel_survey_learned.connect(update_ui)
@@ -419,11 +422,7 @@ func _on_council_invitation() -> void:
 		directions.clear_tracking()
 	_refresh_opening_action()
 
-func _opening_neighbor() -> String:
-	if Global.tax_council_waiting():
-		return Global.TAX_ENVOY
-	if Global.private_harvest_total == 0 and Global.rotation_offer_ready() and world.neighbor_actor(VisitorData.FIELD_KEEPER):
-		return VisitorData.FIELD_KEEPER
+func _first_tribute_neighbor() -> String:
 	if not hud.guide.waiting_for_tribute_crop:
 		return ""
 	var visitor: VisitorData = world.current_visitor()
@@ -432,45 +431,118 @@ func _opening_neighbor() -> String:
 	return VisitorData.FIELD_KEEPER if is_instance_valid(world.neighbor_actor(VisitorData.FIELD_KEEPER)) else ""
 
 func _refresh_opening_action() -> void:
-	var speaker := _opening_neighbor()
-	var can_discuss_rotation := speaker == VisitorData.FIELD_KEEPER and Global.rotation_offer_ready()
-	var can_review_harvest := (not Global.first_harvest_reviewed and Global.get_current_year() == 1
-		and Global.current_rank == Global.Rank.XIA_SHI and Global.first_tribute_delivered()
-		and Global.private_harvest_total > 0 and Global.player_inventory > 0)
-	var action: Button = hud.opening_action
-	hud.handover_button.visible = Global.outcome == Global.Outcome.RUNNING and not Global.first_tribute_delivered()
-	action.visible = (Global.outcome == Global.Outcome.RUNNING and not hud.cancel_directions.visible
-		and (not speaker.is_empty() or can_review_harvest))
-	if not action.visible:
+	var running := Global.outcome == Global.Outcome.RUNNING
+	var first_tribute := Global.first_tribute_delivered()
+	hud.handover_button.visible = running and not first_tribute
+	if not running or hud.cancel_directions.visible:
+		hud.opening_action.hide()
 		return
-	if speaker.is_empty():
-		action.text = "首茬收成 · 安排去处"
-		action.tooltip_text = "查看今夜用粮与时令交货。"
-	elif speaker == Global.TAX_ENVOY:
-		action.text = "去见召简 · 堂前"
-		action.tooltip_text = "走到堂前，按 %s 议税。" % GamepadInput.interact_key()
-	elif can_discuss_rotation:
-		action.text = "找渠伯谈轮作"
-		action.tooltip_text = "沿标记走到渠伯身边，按 %s 交谈。" % GamepadInput.interact_key()
-	else:
-		var actor: Node2D = world.neighbor_actor(speaker)
-		var place := "田边"
-		if actor is Visitor:
-			place = actor.visit_note()
-		elif actor is Retainer:
-			place = world.duty_place(actor.data)
-		action.text = "去见%s · %s" % [speaker, place]
-		action.tooltip_text = "按地图标记走到近处，按 %s 交谈。" % GamepadInput.interact_key()
+	if Global.tax_council_waiting():
+		_show_opening_neighbor(Global.TAX_ENVOY)
+		return
+	if not first_tribute:
+		var speaker := _first_tribute_neighbor()
+		if speaker.is_empty():
+			hud.opening_action.hide()
+		else:
+			_show_opening_neighbor(speaker)
+		return
+	var early_estate := Global.tax_reform_choice == Global.TaxReformChoice.NONE and Global.well_fields.size() == 1
+	if early_estate and Global.last_recruit_day == Global.current_day and Global.food_storage < Global.retainer_food_cost():
+		var rations := Global.night_rations_plan()
+		if rations.served < rations.need:
+			_set_opening_action("为新门客备粮", "今夜口粮尚未供齐。打开今夜安排补粮。", _show_night_rations)
+			return
+	if (Global.private_harvest_total == 0 and Global.rotation_offer_ready()
+		and is_instance_valid(world.neighbor_actor(VisitorData.FIELD_KEEPER))):
+		_show_opening_neighbor(VisitorData.FIELD_KEEPER)
+		return
+	if not early_estate:
+		hud.opening_action.hide()
+		return
+	if (Global.current_rank == Global.Rank.XIA_SHI and not Global.first_harvest_reviewed
+		and Global.get_current_year() == 1 and Global.private_harvest_total > 0 and Global.player_inventory > 0):
+		_set_opening_action("首茬收成 · 安排去处", "查看今夜用粮与时令交货。", _review_first_harvest)
+		return
+	if Global.current_rank == Global.Rank.XIA_SHI and _show_promotion_action():
+		return
+	if Global.current_rank in [Global.Rank.ZHONG_SHI, Global.Rank.SHANG_SHI]:
+		_set_opening_action("查看开垦筹备", "查看第二块井田所需的门客、铜钱和粮食。", _on_reclaim_pressed)
+		return
+	hud.opening_action.hide()
+
+func _show_promotion_action() -> bool:
+	var qualified := Global.eligible_for_promotion()
+	if Global.private_harvest_total == 0 and not qualified:
+		return false
+	var plan := Global.tribute_field_plan()
+	var status: int = plan.get("status", -1)
+	var penalty := Global.tribute_penalty_tonight()
+	var can_promote_tonight := qualified and Global.reputation - penalty >= Global.promotion_reputation()
+	var ripe := status == Global.NightGrowth.READY
+	var can_tend: bool = (not plan.is_empty() and status not in [Global.NightGrowth.GROW, Global.NightGrowth.RIPEN]
+		and world.field_cost(world.field_action(plan.cell)) <= Global.current_stamina)
+	if can_tend and (ripe or penalty > 0):
+		_show_next_tribute(status)
+		return true
+	if can_promote_tonight:
+		_set_opening_action("查看今夜安排", "过夜核定爵位。先查看今夜的田务和口粮。", _show_night_rations)
+		return true
+	var guest: VisitorData = world.current_visitor()
+	if not guest or guest.talked_today():
+		guest = world.scheduled_visitor if not world.silk_trip_note().is_empty() else null
+	if guest and not guest.talked_today():
+		_show_opening_neighbor(guest.name, Global.balance.interaction_reputation_gain)
+		return true
+	if can_tend:
+		_show_next_tribute(status)
+		return true
+	return false
+
+func _show_next_tribute(status: int) -> void:
+	var label := "备下次纳贡 · 找公田"
+	match status:
+		Global.NightGrowth.READY: label = "收公田纳贡"
+		Global.NightGrowth.DRY: label = "给公田浇水"
+		Global.NightGrowth.BLOCKED: label = "查看断水公田"
+	var route := Global.TributeRoute.TEND if status < 0 else status
+	_set_opening_action(label, "标出井田中央的公田。收成入国库，并增加声望。", _follow_tribute_plot.bind(route))
+
+func _show_opening_neighbor(speaker: String, reputation_gain := 0) -> void:
+	var interact_key := GamepadInput.interact_key()
+	var guide_to_neighbor := _on_neighbor_directions_requested.bind(speaker)
+	if speaker == Global.TAX_ENVOY:
+		_set_opening_action("去见召简 · 堂前", "走到堂前，按 %s 议税。" % interact_key, guide_to_neighbor)
+		return
+	if speaker == VisitorData.FIELD_KEEPER and Global.rotation_offer_ready():
+		_set_opening_action("找渠伯谈轮作", "沿标记走到渠伯身边，按 %s 交谈。" % interact_key, guide_to_neighbor)
+		return
+	var actor: Node2D = world.neighbor_actor(speaker)
+	var place := "田边"
+	if actor is Visitor:
+		place = actor.visit_note()
+	elif actor is Retainer:
+		place = world.duty_place(actor.data)
+	elif speaker == VisitorData.SILK_MERCHANT:
+		place = world.silk_trip_stop().get("place", "西市")
+	var tip := "按地图标记走到近处，按 %s 交谈。" % interact_key
+	if reputation_gain > 0:
+		tip += "今日交谈可得 %d 声望。" % reputation_gain
+	_set_opening_action("去见%s · %s" % [speaker, place], tip, guide_to_neighbor)
+
+func _set_opening_action(label: String, tip: String, handler: Callable) -> void:
+	opening_action = handler
+	hud.opening_action.text = label
+	hud.opening_action.tooltip_text = tip
+	hud.opening_action.show()
+
+func _review_first_harvest() -> void:
+	var dialog := dialog_manager.show_first_harvest(_on_season_board_interacted)
+	dialog.option_selected.connect(_refresh_opening_action.unbind(1))
 
 func _on_opening_action() -> void:
-	if _estate_controls_blocked():
-		return
-	var speaker := _opening_neighbor()
-	if speaker.is_empty():
-		var dialog := dialog_manager.show_first_harvest(_on_season_board_interacted)
-		dialog.option_selected.connect(_refresh_opening_action.unbind(1))
-	else:
-		_on_neighbor_directions_requested(speaker)
+	if hud.opening_action.is_visible_in_tree() and not _map_controls_blocked():
+		opening_action.call()
 
 func _refresh_visitor_note() -> void:
 	_update_visitor_note(world.current_visitor())
