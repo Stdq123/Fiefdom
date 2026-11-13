@@ -1641,7 +1641,7 @@ func _night_meal(available: int) -> Dictionary:
 	return {"served": served, "fed": fed, "missed": missed}
 
 func _serve_night_rations(finished_day: int) -> Array[RetainerData]:
-	var plan := _night_rations_supply_plan(finished_day)
+	var plan := _night_rations_supply_plan(finished_day, night_rations)
 	var used: Dictionary = {}
 	var bought := 0
 	var copper := 0
@@ -2066,18 +2066,25 @@ func set_ration_priority(retainer: RetainerData) -> void:
 	GameEvents.night_rations_changed.emit()
 
 func night_rations_plan(finished_day := 0) -> Dictionary:
-	var plan := _night_rations_supply_plan(finished_day if finished_day > 0 else current_day)
+	var plan := _night_rations_supply_plan(finished_day if finished_day > 0 else current_day, night_rations)
 	plan.merge(_night_meal(food_storage + int(plan.supper) + int(plan.converted) + int(plan.bought)))
 	return plan
 
-func _night_rations_supply_plan(evening: int) -> Dictionary:
+func night_rations_offer() -> Dictionary:
+	var policy := NightRations.new()
+	policy.enabled = true
+	policy.copper_limit = NightRations.MAX_COPPER_LIMIT
+	policy.partial_meals = night_rations.partial_meals
+	return _night_rations_supply_plan(current_day, policy)
+
+func _night_rations_supply_plan(evening: int, policy: NightRations) -> Dictionary:
 	var schedule := season_order(evening + 1)
 	var upcoming := _pinned_order_after(schedule)
 	var need := retainer_food_cost()
 	var supper := mini(need, int(winter_supper_record(evening).get("portions", 0)))
 	var fee := research_fee_due(evening + 1)
 	var reserved := fee if money >= fee else 0
-	var plan := night_rations.plan(need, food_storage + supper, money - reserved, crop_stock,
+	var plan := policy.plan(need, food_storage + supper, money - reserved, crop_stock,
 		_order_stock_to_keep(schedule, upcoming), balance.market_food_price, _night_meal)
 	plan.supper = supper
 	plan.research_fee = fee

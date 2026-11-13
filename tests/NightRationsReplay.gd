@@ -105,13 +105,30 @@ func run(game_tree: SceneTree) -> void:
 		return
 	_expect(not state.night_rations.enabled and not panel.budget.editable and "缺 3 份" in panel.forecast.text,
 		"An old save starts in manual mode and shows the specialist meal shortage.")
+	_expect(panel.accept_offer.visible and "麻 2" in panel.night_offer.text and "5 铜钱" in panel.night_offer.text,
+		"The shortage offers the exact surplus and minimum copper cap.")
 	await _capture("01-before-delegation")
+	panel.scroll.ensure_control_visible(panel.accept_offer)
+	await tree.process_frame
+	await _click(panel.accept_offer)
+	_expect(state.night_rations.enabled and state.night_rations.copper_limit == 5 and state.money == 12,
+		"Accepting the initial quote enables the policy without spending copper yet.")
+	panel.scroll.ensure_control_visible(panel.delegate)
+	await tree.process_frame
 	await _click(panel.delegate)
+	await _click(panel.delegate)
+	await _enter_budget(panel, 0)
 	_expect(state.night_rations.enabled and panel.budget.editable and "还差 1 份" in panel.forecast.text,
 		"With a zero cap, reserved spring grain stays out of the plan.")
 	await _enter_budget(panel, 4)
 	_expect(state.night_rations.copper_limit == 4 and "还差 1 份" in panel.forecast.text,
 		"A cap below the price of one ration cannot buy it.")
+	_expect(panel.accept_offer.visible, "The quote can restore a sufficient cap.")
+	panel.scroll.ensure_control_visible(panel.accept_offer)
+	await tree.process_frame
+	await _click(panel.accept_offer)
+	_expect(state.night_rations.copper_limit == 5 and state.money == 12 and state.food_storage == 1,
+		"Accepting the quote sets only the cap until bedtime.")
 	await _enter_budget(panel, 5)
 	_expect(state.night_rations.copper_limit == 5 and "麻 2" in panel.forecast.text and "5 铜钱" in panel.forecast.text
 		and "亭前备种" in panel.keep.text and state.money == 12 and state.food_storage == 1 and state.player_inventory == 5,

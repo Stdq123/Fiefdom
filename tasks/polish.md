@@ -847,3 +847,8 @@
 
 - 南池、溪桥道、竹涧和鱼槽共用水面效果。深水和浅岸用不同水色，溪水沿溪流动，谷雨有涟漪，入冬岸边挂霜。西市主街与桥道西端共用石板，土路补了路肩。桥东草甸的高草换成成簇的草穗，割草后可见短茬。
 - 源码回放通过西市往返、木桥和浅滩、南池秋社以及割草过冬。1280×720 Vulkan 取帧在不可见桌面完成。 [源码冒烟](../build/polish-water-and-streets/godot-map-verified.log) · [谷雨竹涧](../build/polish-water-and-streets/verified-frames/08-rain.png) · [西市街面](../build/polish-water-and-streets/verified-frames/05-market-fish-lane.png)
+
+## 今夜安排的备粮报价
+
+- 当粮仓不足且手头物资可改善分餐时，账页列出能补的份数、可转用的作物和购粮费用。玩家可按报价启用夜间备粮或调高每夜上限。仍在过夜时结算，并沿用时令单留货、分餐与研究费的规则。
+- 回放从旧档的手动备粮进入报价。补三份需转两份麻和花五铜钱。确认后库存保持原数，过夜后完成四份分餐，留下春单所需作物。 [Godot 冒烟](../build/polish-ration-quote/godot-ration-quote.log)

@@ -36,6 +36,8 @@ const WINDOW_MARGIN := 16.0
 @onready var research_fee: Label = %ResearchFee
 @onready var forecast: Label = %Forecast
 @onready var keep: Label = %Keep
+@onready var night_offer: Label = %NightOffer
+@onready var accept_offer: Button = %AcceptOffer
 @onready var priority_row: HBoxContainer = %PriorityRow
 @onready var priority_picker: OptionButton = %Priority
 @onready var meal_forecast: Label = %MealForecast
@@ -62,6 +64,7 @@ func _ready() -> void:
 	delegate.toggled.connect(_change_policy.unbind(1))
 	budget.value_changed.connect(_change_policy.unbind(1))
 	partial_meals.toggled.connect(_change_policy.unbind(1))
+	accept_offer.pressed.connect(_accept_night_offer)
 	priority_picker.item_selected.connect(_select_priority)
 	body.minimum_size_changed.connect(_fit_body)
 	get_viewport().size_changed.connect(_fit_body)
@@ -124,6 +127,14 @@ func _fit_body() -> void:
 func _change_policy() -> void:
 	Global.set_night_rations(delegate.button_pressed, int(budget.value), partial_meals.button_pressed)
 
+func _accept_night_offer() -> void:
+	var had_focus := accept_offer.has_focus()
+	var offer := Global.night_rations_offer()
+	Global.set_night_rations(true, offer.copper, Global.night_rations.partial_meals)
+	AudioManager.play_ui_sfx()
+	if had_focus:
+		delegate.grab_focus()
+
 func _select_priority(index: int) -> void:
 	Global.set_ration_priority(priority_picker.get_item_metadata(index) as RetainerData)
 
@@ -172,6 +183,7 @@ func _refresh() -> void:
 		forecast.text = "今夜还差 %d 份。%s" % [plan.uncovered, rule]
 	if plan.supper > 0 and plan.supper < plan.need:
 		forecast.text = "围炉供 %d 份。%s" % [plan.supper, forecast.text]
+	_refresh_night_offer(plan)
 	var reservations := PackedStringArray()
 	if not plan.current_reserved.is_empty():
 		reservations.append("%s「%s」留货 · %s" % ["明日" if plan.new_order else "", plan.order_name,
@@ -209,6 +221,23 @@ func _refresh() -> void:
 	milestones.visible = not milestones.text.is_empty()
 	last_card.visible = receipt.visible or field_receipt.visible or silk_receipt.visible or milestones.visible
 	page_button.visible = last_card.visible
+
+func _refresh_night_offer(plan: Dictionary) -> void:
+	night_offer.hide()
+	accept_offer.hide()
+	if plan.uncovered == 0:
+		return
+	var policy := Global.night_rations
+	var offer := Global.night_rations_offer()
+	if offer.uncovered >= plan.uncovered:
+		return
+	var cost: int = offer.copper
+	var portions: int = offer.converted + offer.bought
+	var action := "可补 %d 份" % portions if offer.uncovered > 0 else "可补足 %d 份" % portions
+	night_offer.text = action + " · " + _describe_exchange(offer)
+	accept_offer.text = "启用夜间备粮" if not policy.enabled else "购粮上限调至 %d 铜钱" % cost
+	night_offer.show()
+	accept_offer.show()
 
 func _refresh_meal(plan: Dictionary) -> void:
 	var short: bool = not plan.missed.is_empty()
