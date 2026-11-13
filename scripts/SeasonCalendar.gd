@@ -118,7 +118,7 @@ func _show_date(index: int) -> void:
 	guide.text = "指路去" + _event_place(day)
 	if Global.is_autumn_exhibit_day(day):
 		var entry := Global.autumn_exhibit_record(day)
-		event_note.text = "秋社 · 东南空地\n备三种不同的私田作物，各一份。可摆样带回，也可留给乡邻。"
+		event_note.text = "秋社 · %s\n备三种不同的私田作物，各一份。可摆样带回，也可留给乡邻。" % EstateLayout.FESTIVAL_SITE_NAME
 		if not entry.is_empty():
 			event_note.text = "秋社已入簿 · %s\n谷样%s。" % [AutumnExhibit.names(entry.crops), "已分给乡邻" if entry.shared else "已带回"]
 	elif Global.is_gathering_day(day):
@@ -138,7 +138,7 @@ func _show_date(index: int) -> void:
 		elif day < Global.current_day:
 			event_note.text = "冬至围炉 · 今年这席已散。"
 		else:
-			event_note.text = "冬至围炉 · 东南空地 · 酉时点灯\n备一份麦，再带一份菽或一尾溪鱼。围炉饭供当晚门客。"
+			event_note.text = "冬至围炉 · %s · 酉时点灯\n备一份麦，再带一份菽或一尾溪鱼。围炉饭供当晚门客。" % EstateLayout.FESTIVAL_SITE_NAME
 
 func _event_place(day: int) -> String:
 	if Global.is_summer_raft_day(day):

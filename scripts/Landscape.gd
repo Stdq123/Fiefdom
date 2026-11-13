@@ -234,13 +234,26 @@ const ESTATE_PROPS := [
 	Vector3i(172, 530, Prop.TALL_BAMBOO), Vector3i(191, 548, Prop.LOGS), Vector3i(253, 555, Prop.JAR),
 	Vector3i(112, 594, Prop.OAK), Vector3i(136, 621, Prop.PINE), Vector3i(172, 609, Prop.GROVE_TREE),
 	Vector3i(37, 600, Prop.BAMBOO), Vector3i(23, 636, Prop.FLOWERS), Vector3i(4, 678, Prop.TALL_BAMBOO),
-	Vector3i(244, 637, Prop.OAK), Vector3i(263, 656, Prop.TALL_BAMBOO), Vector3i(290, 672, Prop.ROCK),
+	Vector3i(281, 633, Prop.GROVE_TREE), Vector3i(315, 635, Prop.TALL_BAMBOO), Vector3i(337, 648, Prop.RAVINE_ROCK),
 	Vector3i(278, 553, Prop.SIGNPOST), Vector3i(306, 545, Prop.BAMBOO), Vector3i(341, 539, Prop.GROVE_TREE),
 	Vector3i(400, 603, Prop.BLOSSOM_TREE), Vector3i(463, 539, Prop.PINE), Vector3i(457, 608, Prop.TALL_BAMBOO),
 	Vector3i(489, 612, Prop.PINE), Vector3i(483, 664, Prop.OAK),
-	Vector3i(452, 705, Prop.GROVE_TREE), Vector3i(402, 711, Prop.TALL_BAMBOO),
-	Vector3i(357, 721, Prop.PINE), Vector3i(303, 722, Prop.OAK), Vector3i(258, 734, Prop.PINE),
-	Vector3i(201, 717, Prop.GROVE_TREE), Vector3i(153, 733, Prop.PINE), Vector3i(110, 710, Prop.TALL_BAMBOO),
+	# Reeds mark the waterline. The open west bank is the approach to the clearing.
+	Vector3i(198, 663, Prop.RAVINE_RUSH), Vector3i(174, 697, Prop.BANK_GRASS),
+	Vector3i(190, 742, Prop.REEDS), Vector3i(219, 766, Prop.RAVINE_ROCK),
+	Vector3i(270, 766, Prop.BANK_GRASS), Vector3i(327, 735, Prop.REEDS),
+	Vector3i(368, 715, Prop.WILLOW), Vector3i(394, 741, Prop.RAVINE_ROCK),
+	Vector3i(452, 705, Prop.GROVE_TREE), Vector3i(467, 762, Prop.TALL_BAMBOO),
+	Vector3i(116, 680, Prop.PINE), Vector3i(96, 735, Prop.TALL_BAMBOO), Vector3i(123, 761, Prop.MOSS_STONE),
+	Vector3i(156, 807, Prop.GROVE_TREE), Vector3i(186, 823, Prop.FERN),
+	Vector3i(298, 800, Prop.TALL_BAMBOO), Vector3i(343, 791, Prop.OAK), Vector3i(401, 804, Prop.GROVE_CLUSTER),
+	Vector3i(215, 873, Prop.PINE), Vector3i(236, 906, Prop.SHRUB), Vector3i(463, 835, Prop.PINE),
+	Vector3i(480, 876, Prop.GROVE_TREE), Vector3i(467, 931, Prop.FENCE), Vector3i(470, 971, Prop.PINE),
+	Vector3i(278, 952, Prop.GROVE_TREE), Vector3i(308, 972, Prop.TALL_BAMBOO), Vector3i(369, 982, Prop.OAK),
+	Vector3i(190, 977, Prop.OAK), Vector3i(126, 939, Prop.GROVE_CLUSTER), Vector3i(89, 998, Prop.PINE),
+	Vector3i(31, 870, Prop.OAK), Vector3i(-44, 827, Prop.PINE), Vector3i(-85, 912, Prop.TALL_BAMBOO),
+	Vector3i(-149, 865, Prop.GROVE_CLUSTER), Vector3i(-206, 833, Prop.OAK), Vector3i(-292, 825, Prop.PINE),
+	Vector3i(-290, 944, Prop.GROVE_CLUSTER), Vector3i(-187, 974, Prop.PINE), Vector3i(-61, 991, Prop.OAK),
 	Vector3i(55, 728, Prop.OAK), Vector3i(-41, 726, Prop.PINE), Vector3i(-100, 710, Prop.TALL_BAMBOO),
 	Vector3i(-148, 722, Prop.PINE), Vector3i(-192, 712, Prop.OAK), Vector3i(-241, 723, Prop.PINE),
 	Vector3i(-290, 705, Prop.TALL_BAMBOO), Vector3i(-319, 670, Prop.PINE),
@@ -467,6 +480,8 @@ func _place_lanterns(layer: Node2D) -> void:
 		day_lighting.place_lamp(layer, SOUTH_PAVILION + Vector2(27, 12))
 		day_lighting.place_lamp(layer, EstateLayout.SOUTH_FORK + Vector2(-15, -14), 0.76)
 		day_lighting.place_lamp(layer, EstateLayout.FREIGHT_STOP + Vector2(37, -19), 0.80)
+		day_lighting.place_lamp(layer, EstateLayout.FESTIVAL_FORK + Vector2(13, 18), 0.74)
+		day_lighting.place_lamp(layer, EstateLayout.FESTIVAL_BANK_BEND + Vector2(-13, 20), 0.70)
 		day_lighting.place_lamp(layer, EstateLayout.DRIVING_START + Vector2(28, -14), 0.78)
 		day_lighting.place_lamp(layer, EstateLayout.DRIVING_FINISH + Vector2(-2, -27), 0.76)
 		day_lighting.place_lamp(layer, EstateLayout.RAVINE_TRAIL_GATE + Vector2(-16, -17), 0.72)
@@ -655,6 +670,7 @@ func _add_landmark_labels() -> void:
 		_label_at(Vector2(12, 181), "南路亭 ↓")
 		_label_at(EstateLayout.SOUTH_FORK + Vector2(22, -38), "西坡 ↙  ·  灶台 →")
 		_label_at(Vector2(278, 510), "竹涧小径 →")
+		_label_at(EstateLayout.FESTIVAL_FORK + Vector2(4, 46), "↙ 南池")
 
 func _label_at(center: Vector2, text: String) -> void:
 	var label := Label.new()
@@ -693,6 +709,8 @@ func _draw_ground() -> void:
 	if estate_terrain:
 		estate_terrain.draw_meadow(self, meadow, winter)
 		estate_terrain.draw_north_bank(self, MAP_BACKDROP.position.y, shade, sun, winter)
+		var pond_water: Color = WATER_TINTS[season]
+		estate_terrain.draw_pond(self, meadow, pond_water, winter)
 	var grass := shade.lightened(0.09)
 	for prop in props:
 		if prop.z in LEAFY_PROPS and (not winter or prop.z not in DORMANT_PROPS):
@@ -1000,6 +1018,11 @@ func _install_boundaries() -> void:
 		_block_water(terrain, bounds.position.y - 12, BRIDGE.y - CROSSING_HALF_DEPTH)
 		_block_water(terrain, BRIDGE.y + CROSSING_HALF_DEPTH, FORD.y - CROSSING_HALF_DEPTH)
 		_block_water(terrain, FORD.y + CROSSING_HALF_DEPTH, bounds.end.y + 12)
+	else:
+		var pond := CollisionPolygon2D.new()
+		pond.name = "SouthPond"
+		pond.polygon = estate_terrain.pond
+		terrain.add_child(pond)
 
 	var camera := player.get_node("Camera2D") as Camera2D
 	var view := bounds.grow(125)

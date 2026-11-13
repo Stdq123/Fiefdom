@@ -386,7 +386,7 @@ func _on_gathering_choice(index: int, day: int) -> void:
 
 func show_autumn_guest(guest: Node2D) -> void:
 	if not parent_node.has_node("DialoguePanel"):
-		_open(guest.speaker, "秋社 · 东南空地", guest.remark(), ["离开"], [], guest.icon)
+		_open(guest.speaker, "秋社 · " + EstateLayout.FESTIVAL_SITE_NAME, guest.remark(), ["离开"], [], guest.icon)
 
 func show_gathering_book() -> void:
 	if parent_node.has_node("DialoguePanel"):

@@ -379,13 +379,13 @@ horizontal_alignment = 1
 position = Vector2(221, 557)
 
 [node name="AutumnExhibit" parent="World" instance=ExtResource("32_autumn")]
-position = Vector2(353, 611)
+position = Vector2(338, 873)
 
 [node name="SheepfoldPen" parent="World" instance=ExtResource("38_sheep_pen")]
 position = Vector2(-248, 650)
 
 [node name="WinterSupper" parent="World" instance=ExtResource("40_winter_supper")]
-position = Vector2(353, 611)
+position = Vector2(338, 873)
 
 [node name="RoadRest" type="Node2D" parent="World"]
 position = Vector2(-25, 446)

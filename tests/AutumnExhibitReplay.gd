@@ -164,9 +164,9 @@ func _verify_south_route() -> void:
 	var map: Control = ui.estate_map
 	_expect(map.modal.visible and map.road_path.has(EstateLayout.BAMBOO_BEND)
 		and map.road_path.has(EstateLayout.PAVILION_TURN) and map.road_path.has(EstateLayout.SOUTH_FORK)
-		and map.road_path.has(EstateLayout.FESTIVAL_FORK)
+		and map.road_path.has(EstateLayout.FESTIVAL_FORK) and map.road_path.has(EstateLayout.FESTIVAL_BANK_BEND)
 		and map.target.point == approach.position + stand.position and map.captions.has("秋社展台"),
-		"The almanac route runs through the bamboo lane and the pavilion, then past the fork and hearth.")
+		"The almanac route passes the hearth and follows the west bank to the clearing.")
 	await _snapshot("01a-south-road-map")
 	await _key(KEY_ESCAPE)
 	var origin: Vector2 = world.player.position
@@ -189,14 +189,27 @@ func _verify_south_route() -> void:
 		"Continue past the pavilion to reach the unloading and pasture fork.")
 	await _snapshot("01b-south-fork")
 	var travelled := 0.0
+	var walking_frames := 0
 	for point: Vector2 in EstateLayout.HEARTH_LANE.slice(1) + EstateLayout.FESTIVAL_LANE.slice(1):
 		travelled += world.player.position.distance_to(point)
+		start = Engine.get_physics_frames()
 		await Campaign.walk_straight(tree, world.player, point)
+		walking_frames += Engine.get_physics_frames() - start
 		_expect(world.player.position.distance_to(point) < 3.0
 			and landscape._surface_at(world.player.position) == landscape.TERRAIN_AUDIO.Surface.TRACK,
 			"Reach the successive road turns on foot before arriving at the exhibition table.")
-	_expect(travelled > 380.0 and world.player.interaction_target == stand, "The fork and festival ground are distinct places.")
-	print("SOUTH_FESTIVAL_WALK fork_to_stand=", roundi(travelled), " arrival=", world.player.position)
+		if point == EstateLayout.FESTIVAL_BANK_BEND:
+			await _snapshot("01c-south-pond")
+			await Campaign.walk_straight(tree, world.player, point + Vector2(74, 0))
+			var shore: Vector2 = world.player.position
+			_expect(shore.x > point.x + 12.0 and shore.x < 175.0,
+				"The player can reach the shore and stops at the painted waterline.")
+			await Campaign.walk_straight(tree, world.player, point)
+			print("SOUTH_POND_SHORE ", shore)
+	_expect(travelled > 650.0 and world.player.interaction_target == stand,
+		"The pond separates the festival ground from the fork, and the path reaches the table.")
+	print("SOUTH_FESTIVAL_WALK fork_to_stand=", roundi(travelled),
+		" seconds=", walking_frames / float(Engine.physics_ticks_per_second), " arrival=", world.player.position)
 
 func _open_and_select() -> bool:
 	await _key(KEY_E)

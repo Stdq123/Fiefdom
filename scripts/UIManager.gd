@@ -284,11 +284,12 @@ func update_ui() -> void:
 	elif Global.is_summer_raft_day(Global.current_day + 1):
 		hud.gathering_label.text = "明日夏至试筏 · 竹涧西岸"
 	elif Global.is_autumn_exhibit_day():
-		hud.gathering_label.text = "今日秋社 · 东南空地" if Global.autumn_exhibit_record(Global.current_day).is_empty() else "今日秋社 · 已入簿"
+		hud.gathering_label.text = ("今日秋社 · " + EstateLayout.FESTIVAL_SITE_NAME
+			if Global.autumn_exhibit_record(Global.current_day).is_empty() else "今日秋社 · 已入簿")
 	elif Global.is_autumn_exhibit_day(Global.current_day + 1):
 		hud.gathering_label.text = "明日秋社 · 备三种私田收成"
 	elif Global.is_winter_supper_day():
-		hud.gathering_label.text = ("今日冬至围炉 · 东南空地" if Global.winter_supper_record().is_empty()
+		hud.gathering_label.text = ("今日冬至围炉 · " + EstateLayout.FESTIVAL_SITE_NAME if Global.winter_supper_record().is_empty()
 			else "冬至围炉 · 今夜已备饭")
 	elif Global.is_winter_supper_day(Global.current_day + 1):
 		hud.gathering_label.text = "明日冬至围炉 · 备麦和菽或鱼"

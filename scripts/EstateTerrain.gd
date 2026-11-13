@@ -21,11 +21,19 @@ const MEADOW_PATCHES := [
 	Rect2(-128, 292, 107, 54), Rect2(69, 290, 97, 69), Rect2(177, 397, 103, 86),
 	Rect2(-308, 513, 132, 58), Rect2(-309, 670, 111, 54), Rect2(-107, 664, 134, 61),
 	Rect2(82, 581, 106, 99), Rect2(204, 624, 77, 58), Rect2(386, 657, 116, 60),
+	Rect2(127, 739, 80, 64), Rect2(260, 795, 149, 71), Rect2(385, 899, 111, 65),
+]
+const POND_GLINTS := [
+	Vector2(227, 675), Vector2(284, 665), Vector2(202, 699), Vector2(262, 694),
+	Vector2(310, 706), Vector2(231, 726), Vector2(283, 733), Vector2(247, 749),
 ]
 
 var crest := PackedVector2Array()
 var north_edge: float
 var meadow_sprigs := PackedVector2Array()
+var pond := PackedVector2Array(EstateLayout.FESTIVAL_POND)
+var pond_bank := Geometry2D.offset_polygon(pond, 8.0)[0]
+var pond_depth := Geometry2D.offset_polygon(pond, -9.0)[0]
 
 func _init(north: float) -> void:
 	north_edge = north
@@ -83,6 +91,22 @@ func draw_meadow(canvas: CanvasItem, grass: Color, winter: bool) -> void:
 			continue
 		var ink := grass.lightened(0.17) if index % 3 == 0 else grass.darkened(0.12)
 		_stamp(canvas, meadow_sprigs[index], index, Color(ink, 0.59 if winter else 0.76))
+
+func draw_pond(canvas: CanvasItem, grass: Color, water: Color, winter: bool) -> void:
+	var mud := grass.lerp(Color("#a49673"), 0.56)
+	canvas.draw_colored_polygon(pond_bank, mud.darkened(0.10))
+	canvas.draw_colored_polygon(pond, water.lightened(0.13))
+	canvas.draw_colored_polygon(pond_depth, water.darkened(0.08))
+	for index in POND_GLINTS.size():
+		var at: Vector2 = POND_GLINTS[index]
+		var length := 8.0 + float(index % 4) * 3.0
+		canvas.draw_rect(Rect2(at, Vector2(length, 1)), Color(water.lightened(0.28), 0.72))
+		if index % 3 == 0:
+			canvas.draw_rect(Rect2(at + Vector2(5, 3), Vector2(length * 0.5, 1)), water.lightened(0.12))
+	for index in pond.size():
+		var at := pond[index].lerp(pond[(index + 1) % pond.size()], 0.55).round()
+		var rim := Color("#b1c3b6") if winter else mud.lightened(0.19)
+		canvas.draw_rect(Rect2(at - Vector2(2, 0), Vector2(4 + index % 3, 2)), Color(rim, 0.77))
 
 func draw_verge(canvas: CanvasItem, points: PackedVector2Array, width: float, grass: Color, winter: bool) -> void:
 	for index in range(3, points.size() - 2, 5):

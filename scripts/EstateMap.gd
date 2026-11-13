@@ -117,9 +117,10 @@ func _collect_places() -> void:
 		places.push_front(_entry(Category.PLACES, record_stand.record_name, "%s · 翻看通关当天的账目" % record_stand.place_name,
 			_node_point(record_stand), false, record_stand.texture))
 	if Global.is_autumn_exhibit_day():
-		places.append(_entry(Category.PLACES, "秋社展台", "摆三种私田收成", _node_point(world.get_node("AutumnExhibit/Approach")), true))
+		places.append(_entry(Category.PLACES, "秋社展台", "沿南池西岸到场，摆三种私田收成",
+			_node_point(world.get_node("AutumnExhibit/Approach")), true))
 	if Global.is_winter_supper_day():
-		var detail := "用私仓麦备当晚的饭" if Global.winter_supper_record().is_empty() else "已备饭，可回亭东围坐"
+		var detail := "沿南池西岸到场，用私仓麦备饭" if Global.winter_supper_record().is_empty() else "已备饭，可回南池畔围坐"
 		places.append(_entry(Category.PLACES, WinterSupper.PLACE, detail, _node_point(world.get_node("WinterSupper/Approach")), true))
 	if Global.sheepfold.owned():
 		var sheepfold_detail := "可剪毛" if Global.can_use_sheepfold(Sheepfold.Action.SHEAR) else "查看羊毛长势与草料"
@@ -188,7 +189,7 @@ func _collect_people() -> void:
 		_add_visitor(guest)
 	for guest: Node2D in world.get_node("AutumnExhibit/Guests").get_children():
 		if guest.is_visible_in_tree():
-			_add_person(guest.speaker, "秋社 · 东南空地", guest, guest.icon)
+			_add_person(guest.speaker, "秋社 · " + EstateLayout.FESTIVAL_SITE_NAME, guest, guest.icon)
 	for resident: RetainerData in Global.retainers:
 		var actor := world.retainer_instances.get(resident) as Retainer
 		if is_instance_valid(actor):
@@ -507,6 +508,11 @@ func _draw_landscape() -> void:
 		_draw_road_shape(track.shoulder, land, Color("#ad996b"))
 	for track in landscape.track_shapes:
 		_draw_road_shape(track.surface, land, Color("#c6ac7e"))
+	var pond := PackedVector2Array()
+	for point: Vector2 in EstateLayout.FESTIVAL_POND:
+		pond.append(_map_point(point))
+	chart.draw_colored_polygon(pond, Color("#80a6a0"))
+	_draw_text("南池", _map_point(Vector2(258, 705)), CAPTION_SIZE, Color("#263f3b"))
 
 func _draw_road_shape(outline: PackedVector2Array, land: PackedVector2Array, ink: Color) -> void:
 	for segment in Geometry2D.intersect_polygons(outline, land):

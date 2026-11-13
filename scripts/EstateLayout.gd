@@ -3,7 +3,7 @@ class_name EstateLayout
 
 const TILE_ORIGIN := Vector2(16, 24)
 const TILE_SIZE := 16.0
-const BOUNDS := Rect2(-330, -205, 840, 931)
+const BOUNDS := Rect2(-330, -205, 840, 1185)
 const FIELD_ENTRANCE_WIDTH := TILE_SIZE
 const EDGE_NORMALS := [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT]
 
@@ -52,7 +52,16 @@ const FREIGHT_JUNCTION := Vector2(-41, 574)
 const FREIGHT_APPROACH := FREIGHT_STOP + Vector2(0, 23)
 const HEARTH_APPROACH := Vector2(215, 571)
 const FESTIVAL_FORK := Vector2(257, 586)
-const FESTIVAL_GROUND := Vector2(353, 611)
+const FESTIVAL_BANK_BEND := Vector2(146, 704)
+const FESTIVAL_GROUND := Vector2(338, 873)
+const FESTIVAL_SITE_NAME := "南池畔"
+const FESTIVAL_POND := [
+	Vector2(183, 677), Vector2(196, 658), Vector2(222, 651), Vector2(247, 652),
+	Vector2(267, 644), Vector2(299, 645), Vector2(321, 657), Vector2(338, 680),
+	Vector2(342, 705), Vector2(327, 729), Vector2(309, 736), Vector2(295, 749),
+	Vector2(265, 763), Vector2(233, 764), Vector2(209, 756), Vector2(195, 745),
+	Vector2(182, 725), Vector2(175, 703),
+]
 const RAVINE_TRAIL_GATE := Vector2(477, 568)
 const RAVINE_TRAIL_ARRIVAL := Vector2(437, 574)
 const RAVINE_TRAIL_NAME := "竹涧小径"
@@ -109,8 +118,10 @@ const HEARTH_LANE := [
 	SOUTH_FORK, Vector2(76, 540), Vector2(131, 557), Vector2(178, 572), HEARTH_APPROACH, FESTIVAL_FORK,
 ]
 const FESTIVAL_LANE := [
-	FESTIVAL_FORK, Vector2(280, 603), Vector2(295, 638), Vector2(332, 660), Vector2(368, 662),
-	Vector2(368, 641), FESTIVAL_GROUND + Vector2(0, 18),
+	FESTIVAL_FORK, Vector2(241, 614), Vector2(206, 633), Vector2(172, 652), Vector2(150, 675),
+	FESTIVAL_BANK_BEND, Vector2(151, 736), Vector2(173, 766), Vector2(204, 789), Vector2(242, 809),
+	Vector2(273, 833), Vector2(280, 867), Vector2(287, 899), FESTIVAL_GROUND + Vector2(-23, 34),
+	FESTIVAL_GROUND + Vector2(0, 18),
 ]
 const RAVINE_TRAIL := [
 	FESTIVAL_FORK, Vector2(292, 580), Vector2(331, 566), Vector2(375, 560),
@@ -138,7 +149,7 @@ static func watch_relief_route() -> Array:
 
 static func festival_entrance() -> Array[Vector2]:
 	var path: Array[Vector2] = []
-	for point: Vector2 in FESTIVAL_LANE.slice(0, 4):
+	for point: Vector2 in FESTIVAL_LANE.slice(0, -1):
 		path.append(point - FESTIVAL_GROUND)
 	return path
 

@@ -1282,7 +1282,7 @@ func _ending_memories() -> Array[String]:
 	if not gathering_recitals.is_empty():
 		moments.append("南路亭的曲簿记下了你与商音的合奏。")
 	if not winter_suppers.is_empty():
-		moments.append("冬至时，你在东南空地备下的那锅热饭还有人记得。")
+		moments.append("冬至时，你在南池畔备下的那锅热饭还有人记得。")
 	if silk_sample_day > 0:
 		moments.append("陶辛把你织的样绸挂在西廊。")
 	var fields := well_fields.filter(func(field: Dictionary) -> bool: return field["is_unlocked"])
