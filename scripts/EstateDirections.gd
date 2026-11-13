@@ -4,8 +4,9 @@ enum Mark { PLOT, BUTTON, NEIGHBOR, EDGE, WORKSITE, PLACE }
 
 const CAMPAIGN_GUIDE := preload("res://scripts/CampaignGuide.gd")
 const ROAD_NETWORK := preload("res://scripts/RoadNetwork.gd")
+const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 const GOLD := Color("#f1d38b")
-const SHADOW := Color("#24352b")
+const SHADOW := Color("#382519")
 const FIELD_ROUTES := {
 	Global.NightGrowth.READY: {"task": "收获", "plot": "可收"},
 	Global.NightGrowth.DRY: {"task": "浇水", "plot": "待浇"},
@@ -26,7 +27,7 @@ var tracked_place := ""
 var tracked_place_point := Vector2.ZERO
 var following_raid := false
 var caption: Label
-var plate := StyleBoxFlat.new()
+var plate := HUD_THEME.get_stylebox(&"panel", &"HudRail")
 var mark := Mark.PLOT
 var outline := Rect2()
 var plaque := Rect2()
@@ -49,10 +50,6 @@ func setup(estate_world: Node2D, estate_hud: Control) -> void:
 	world.add_child(road_guide)
 	road_guide.draw.connect(_draw_road_guide)
 
-	plate.bg_color = Color("#203126f7")
-	plate.border_color = Color("#b8a26d")
-	plate.set_border_width_all(1)
-	plate.set_corner_radius_all(3)
 	caption = Label.new()
 	caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	caption.add_theme_font_size_override("font_size", 14)
@@ -329,15 +326,15 @@ func _mark_map(bounds: Rect2, label_text: String, style: Mark, near: bool) -> vo
 		mark = style
 		outline = bounds.grow(1.0) if style in [Mark.PLOT, Mark.WORKSITE] else bounds
 		if not near:
-			var badge_size := text_size + Vector2(16, 6)
+			var badge_size := text_size + Vector2(18, 10)
 			var clearance := bounds.size.y + 6.0 if style == Mark.PLOT else 7.0
 			plaque = Rect2(Vector2(bounds.get_center().x - badge_size.x / 2.0, bounds.end.y + clearance), badge_size)
 			if hud.map_space_clear(plaque):
-				caption.position = plaque.position + Vector2(8, 3)
+				caption.position = plaque.position + Vector2(9, 5)
 				caption.show()
 	else:
 		mark = Mark.EDGE
-		var badge_size := text_size + Vector2(32, 9)
+		var badge_size := text_size + Vector2(35, 10)
 		var safe := get_viewport_rect().grow(-17.0)
 		edge_direction = safe.get_center().direction_to(bounds.get_center())
 		var half := ((safe.size - badge_size) * 0.5).max(Vector2.ONE)
@@ -351,7 +348,7 @@ func _mark_map(bounds: Rect2, label_text: String, style: Mark, near: bool) -> vo
 				hide()
 				return
 			distance = maxf(0.0, distance - 8.0)
-		caption.position = plaque.position + Vector2(24, 4)
+		caption.position = plaque.position + Vector2(25, 5)
 		caption.show()
 	show()
 	queue_redraw()

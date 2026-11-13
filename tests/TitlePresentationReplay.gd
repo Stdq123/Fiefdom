@@ -101,6 +101,14 @@ func _first_harvest() -> void:
 	await _frame("04-first-field")
 	for step in 3:
 		await _click(public_point)
+	_expect(hud.opening_action.visible and not hud.visitor_label.is_visible_in_tree(),
+		"The first-day keeper shortcut is available with the journal collapsed.")
+	await _button(hud.journal_details)
+	_expect(hud.visitor_label.is_visible_in_tree() and "渠伯" in hud.visitor_label.text and hud.opening_action.visible,
+		"The expanded journal shows the keeper's whereabouts alongside his shortcut.")
+	await _frame("04a-journal-expanded")
+	await _button(hud.journal_details)
+	_expect(not hud.visitor_label.is_visible_in_tree(), "The same button collapses the visitor note.")
 	await _frame("04a-private-option")
 	await _button(hud.first_private_button)
 	var private_cell: Vector2i = hud.guide.opening_cell

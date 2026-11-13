@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 const GAME_THEME := preload("res://resources/game_theme.tres")
+const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 const ESTATE_ENDING := preload("res://scenes/EstateEnding.tscn")
 const BACKPACK := preload("res://scenes/Backpack.tscn")
 
@@ -11,10 +12,11 @@ var view: Control
 var health_label: Label
 var health_bar: ProgressBar
 var trail_stamina: Label
+var trail_stamina_bar: ProgressBar
+var trail_vitals: PanelContainer
 var trail_date: Label
 var outing_label: Label
 var ravine_label: Label
-var camera_hint: Label
 var notice: Label
 var notice_tween: Tween
 var management_open := false
@@ -81,6 +83,7 @@ func _setup_backpack_button() -> void:
 	else:
 		backpack_button = get_node(backpack_trigger)
 	backpack_button.focus_mode = Control.FOCUS_NONE
+	backpack_button.theme = HUD_THEME
 	backpack_button.icon = HUDIcons.icon(HUDIcons.Symbol.BACKPACK)
 	backpack_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	backpack_button.pressed.connect(_open_backpack)
@@ -131,9 +134,15 @@ func _refresh_notice_visibility() -> void:
 
 func _build_status() -> void:
 	var trail_note := PanelContainer.new()
-	trail_note.position = Vector2(16, 16)
+	trail_note.theme = HUD_THEME
+	trail_note.theme_type_variation = &"HudPanel"
 	trail_note.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	view.add_child(trail_note)
+	trail_note.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	trail_note.offset_left = -270.0
+	trail_note.offset_right = -16.0
+	trail_note.offset_top = 16.0
+	trail_note.offset_bottom = 16.0
 	var trail_text := VBoxContainer.new()
 	trail_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	trail_note.add_child(trail_text)
@@ -141,16 +150,20 @@ func _build_status() -> void:
 	trail_title.text = "竹涧"
 	trail_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	trail_title.add_theme_font_size_override("font_size", 22)
-	trail_title.add_theme_color_override("font_color", Color("#efd291"))
 	var title_row := HBoxContainer.new()
 	trail_text.add_child(title_row)
 	title_row.add_child(trail_title)
+	var weather_seal := PanelContainer.new()
+	weather_seal.theme_type_variation = &"HudWell"
+	weather_seal.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	title_row.add_child(weather_seal)
 	trail_weather = TextureRect.new()
-	trail_weather.custom_minimum_size = Vector2(20, 20)
+	trail_weather.custom_minimum_size = Vector2(18, 18)
 	trail_weather.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	trail_weather.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	trail_weather.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	title_row.add_child(trail_weather)
+	trail_weather.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	weather_seal.add_child(trail_weather)
 	trail_date = Label.new()
 	trail_date.add_theme_font_size_override("font_size", 14)
 	trail_text.add_child(trail_date)
@@ -164,37 +177,25 @@ func _build_status() -> void:
 	GameEvents.day_advanced.connect(_refresh_outing.unbind(1))
 	ravine_label = Label.new()
 	ravine_label.add_theme_font_size_override("font_size", 14)
-	ravine_label.add_theme_color_override("font_color", Color("#ebcf8d"))
+	ravine_label.add_theme_color_override("font_color", Color("#704223"))
 	trail_text.add_child(ravine_label)
 	GameEvents.ravine_journal_changed.connect(_refresh_ravine)
 	_refresh_ravine()
 
-	camera_hint = Label.new()
-	camera_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	camera_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	camera_hint.add_theme_font_size_override("font_size", 14)
-	camera_hint.add_theme_color_override("font_outline_color", Color("#21392d"))
-	camera_hint.add_theme_constant_override("outline_size", 3)
-	view.add_child(camera_hint)
-	camera_hint.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	camera_hint.offset_left = -260.0
-	camera_hint.offset_right = -20.0
-	camera_hint.offset_top = 66.0
-	camera_hint.offset_bottom = 106.0
+	trail_vitals = PanelContainer.new()
+	trail_vitals.theme = HUD_THEME
+	trail_vitals.theme_type_variation = &"HudPanel"
+	view.add_child(trail_vitals)
+	trail_vitals.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+	trail_vitals.offset_left = 16.0
+	trail_vitals.offset_top = -96.0
+	trail_vitals.offset_right = 202.0
+	trail_vitals.offset_bottom = -16.0
 	GamepadInput.changed.connect(_refresh_camera_hint)
 	_refresh_camera_hint()
-
-	var vitals := PanelContainer.new()
-	vitals.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	view.add_child(vitals)
-	vitals.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
-	vitals.offset_left = 16.0
-	vitals.offset_top = -96.0
-	vitals.offset_right = 202.0
-	vitals.offset_bottom = -16.0
 	var health_stack := VBoxContainer.new()
 	health_stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vitals.add_child(health_stack)
+	trail_vitals.add_child(health_stack)
 	health_label = Label.new()
 	health_label.add_theme_font_size_override("font_size", 14)
 	health_stack.add_child(health_label)
@@ -202,15 +203,17 @@ func _build_status() -> void:
 	health_bar.custom_minimum_size.y = 5.0
 	health_bar.show_percentage = false
 	health_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = Color("#bc765f")
-	fill.set_corner_radius_all(2)
-	health_bar.add_theme_stylebox_override("fill", fill)
+	health_bar.theme_type_variation = &"HudHealth"
 	health_stack.add_child(health_bar)
 	health_bar.max_value = Global.balance.player_max_health
 	trail_stamina = Label.new()
 	trail_stamina.add_theme_font_size_override("font_size", 14)
 	health_stack.add_child(trail_stamina)
+	trail_stamina_bar = ProgressBar.new()
+	trail_stamina_bar.custom_minimum_size.y = 5.0
+	trail_stamina_bar.show_percentage = false
+	trail_stamina_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	health_stack.add_child(trail_stamina_bar)
 	GameEvents.stamina_changed.connect(_update_trail_stamina)
 	GameEvents.health_changed.connect(_update_health)
 	_update_health(Global.health)
@@ -223,18 +226,20 @@ func _refresh_trail_date() -> void:
 
 func _update_trail_stamina(amount: int) -> void:
 	trail_stamina.text = "体力 %d/%d" % [amount, Global.max_stamina]
+	trail_stamina_bar.max_value = Global.max_stamina
+	trail_stamina_bar.value = amount
 	_refresh_outing()
 
 func _update_health(health: int) -> void:
 	health_label.text = "气血 %d/%d" % [health, Global.balance.player_max_health]
-	health_label.modulate = Color("#f19279") if health * 3 < Global.balance.player_max_health else Color.WHITE
+	health_label.add_theme_color_override("font_color", Color("#8d3529") if health * 3 < Global.balance.player_max_health else Color("#37291c"))
 	health_bar.value = health
 
 func _refresh_outing() -> void:
 	outing_label.text = Global.ravine_outing_status()
 
 func _refresh_camera_hint() -> void:
-	camera_hint.text = ("RT 射箭 · 见地面预警就横移\n按下左/右摇杆缩小/放大" if GamepadInput.active
+	trail_vitals.tooltip_text = ("RT 射箭 · 见地面预警就横移\n按下左/右摇杆缩小/放大" if GamepadInput.active
 		else "右键射箭 · 见地面预警就横移\n滚轮缩放视野")
 
 func _refresh_ravine() -> void:

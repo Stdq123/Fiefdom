@@ -66,7 +66,6 @@ var reclamation_mode := false
 var indoors := false
 var driving := false
 var channel_message := ""
-var visitor_note_available := false
 var sky_icons := HUDIcons.SKY.map(HUDIcons.icon)
 
 func map_space_clear(area: Rect2) -> bool:
@@ -154,12 +153,8 @@ func _ready() -> void:
 	refresh_morning_record()
 
 func _toggle_journal_details(expanded: bool) -> void:
-	visitor_label.visible = expanded and visitor_note_available
+	visitor_label.visible = expanded
 	journal_details.text = "收起来客" if expanded else "封地手记"
-
-func show_visitor_note(available: bool) -> void:
-	visitor_note_available = available
-	visitor_label.visible = journal_details.button_pressed and available
 
 func _toggle_ledger_details() -> void:
 	ledger_details.visible = not ledger_details.visible
@@ -202,6 +197,7 @@ func _refresh_pinned_order() -> void:
 		if harvest:
 			next_action = "收备货私田 · " + next_action
 		pinned_order.text = "下季备货   %s   ·   %s" % [amounts, next_action]
+		pinned_order.tooltip_text = pinned_order.text
 		return
 	var action := "第 %d 天截止" % schedule.end
 	if Global.can_deliver_season_order(schedule):
@@ -209,6 +205,7 @@ func _refresh_pinned_order() -> void:
 	elif harvest:
 		action = "收备货私田"
 	pinned_order.text = "时令单   %s   ·   %s" % [amounts, action]
+	pinned_order.tooltip_text = pinned_order.text
 
 func _refresh_silk_stock() -> void:
 	if not $WorkshopStatus.visible:
@@ -316,9 +313,6 @@ func _refresh_sleep_tooltip() -> void:
 
 func setup_seeds(ids: Array, select_seed: Callable) -> void:
 	var group := ButtonGroup.new()
-	var rest := _slot_style(Color("#2c392b"), Color("#697651"))
-	var hover := _slot_style(Color("#3b492f"), Color("#b6ba80"))
-	var selected := _slot_style(Color("#594931"), Color("#e2bf73"))
 	for i in ids.size():
 		var id: String = ids[i]
 		var crop := ItemManager.get_crop(id)
@@ -331,10 +325,7 @@ func setup_seeds(ids: Array, select_seed: Callable) -> void:
 		slot.focus_mode = Control.FOCUS_NONE # Each seed has its own shortcut.
 		slot.toggle_mode = true
 		slot.button_group = group
-		slot.add_theme_stylebox_override("normal", rest)
-		slot.add_theme_stylebox_override("hover", hover)
-		slot.add_theme_stylebox_override("pressed", selected)
-		slot.add_theme_stylebox_override("hover_pressed", selected)
+		slot.theme_type_variation = &"HudSlot"
 		seed_slots.add_child(slot)
 		slot.pressed.connect(select_seed.bind(id))
 		seed_buttons[id] = slot
@@ -368,15 +359,6 @@ func _slot_label(slot: Button, text: String, at: Vector2, font_size: int, ink: C
 	label.add_theme_color_override("font_color", ink)
 	slot.add_child(label)
 	return label
-
-func _slot_style(background: Color, edge: Color) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = background
-	style.border_color = edge
-	style.set_border_width_all(1)
-	style.border_width_bottom = 2
-	style.set_corner_radius_all(4)
-	return style
 
 func show_seed(seed_id: String) -> void:
 	var crop := ItemManager.get_crop(seed_id)
@@ -462,6 +444,6 @@ func show_field_gate_mode(active: bool) -> void:
 
 func _update_health(health: int) -> void:
 	health_label.text = "气血 %d / %d" % [health, Global.balance.player_max_health]
-	health_label.modulate = Color("#f19279") if health * 3 < Global.balance.player_max_health else Color.WHITE
+	health_label.add_theme_color_override("font_color", Color("#8d3529") if health * 3 < Global.balance.player_max_health else Color("#37291c"))
 	health_bar.max_value = Global.balance.player_max_health
 	health_bar.value = health

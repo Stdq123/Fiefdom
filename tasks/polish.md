@@ -965,3 +965,8 @@
 - 封地、竹涧、溪桥道和西市都有背包按钮。默认 I 打开或关闭，旧键位保留。面板读取已有库存，按私仓作物、鱼篓和工艺材料显示实际数量。随身路餐可直接食用。打开时暂停时辰，Esc 或手柄 B 关闭。 [背包](../build/polish-art-resolution/hud-pack-final-1024/02-private-crops.png)
 - 借鉴《星露谷物语》实机中分开的日期栏、快捷栏和详细菜单。封地右上常驻时辰、天气、铜钱和粮食，账目详情可展开，左上来客近况也可收起。七个种槽收窄，田务按钮优先显示可收、待浇和断水。气血、体力、背包和天气使用原创小图标。 [官方实机图库](https://www.stardewvalley.net/media/) · [封地 1280×720](../build/polish-art-resolution/hud-final-1280/04-first-field.png) · [1024×768 窗口](../build/polish-art-resolution/hud-final-1024/04b-private-plot.png)
 - 在两种窗口尺寸的独立桌面核对 HUD 和背包。回放覆盖手柄打开和关闭、舆图与设置互斥、保存后读档、旧键位和实际食用路餐。 [Windows 试玩包](../build/polish-hud/Fiefdom-1.0.0-Windows-x64.zip) · [Windows 验证](../build/polish-hud/windows-final/backpack.log)
+
+## 常驻界面的像素样式
+
+- 封地手记、时辰和气血改用竹纸像素框，种槽与操作键使用深木、铜钉和压下后的凹边。睡觉有暖色底，田格悬停和指路也用同一组描边。展开来客近况时可继续使用同一张手记上的指路按钮。
+- 西市、溪桥道与竹涧把当地时辰和天气集中在右上，舆图、背包和设置采用同一排按钮。背包的物品图、数量、页签与路餐在同样的竹纸和木框上显示。 [封地实机](../build/polish-art-resolution/hud-wood-final-1280/04-first-field.png) · [西市实机](../build/polish-art-resolution/travel-frame-market/02-market-arrival.png) · [背包实机](../build/polish-hud-bag-frame/frames-1024/02-private-crops.png)

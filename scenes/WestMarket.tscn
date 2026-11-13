@@ -21,6 +21,7 @@
 [ext_resource type="PackedScene" path="res://scenes/WestMarketMap.tscn" id="20_map"]
 [ext_resource type="Texture2D" path="res://assets/world/estate-storage.svg" id="21_storage"]
 [ext_resource type="Texture2D" path="res://assets/world/creek-trap.svg" id="22_creel"]
+[ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="23_hud"]
 
 [sub_resource type="RectangleShape2D" id="GateMouth"]
 size = Vector2(8, 20)
@@ -206,54 +207,89 @@ mouse_filter = 2
 theme = ExtResource("10_theme")
 
 [node name="MarketName" type="PanelContainer" parent="UI/Control"]
-layout_mode = 0
-offset_left = 16.0
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -270.0
 offset_top = 16.0
-offset_right = 240.0
-offset_bottom = 87.0
+offset_right = -16.0
+offset_bottom = 100.0
+grow_horizontal = 0
 mouse_filter = 2
+theme = ExtResource("23_hud")
+theme_type_variation = &"HudPanel"
 
 [node name="Stack" type="VBoxContainer" parent="UI/Control/MarketName"]
 layout_mode = 2
 mouse_filter = 2
+theme_override_constants/separation = 4
 
-[node name="Name" type="Label" parent="UI/Control/MarketName/Stack"]
+[node name="Header" type="HBoxContainer" parent="UI/Control/MarketName/Stack"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.94, 0.82, 0.55, 1)
-theme_override_font_sizes/font_size = 24
+mouse_filter = 2
+
+[node name="Name" type="Label" parent="UI/Control/MarketName/Stack/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 22
 text = "西市"
+
+[node name="WeatherWell" type="PanelContainer" parent="UI/Control/MarketName/Stack/Header"]
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_type_variation = &"HudWell"
+
+[node name="WeatherIcon" type="TextureRect" parent="UI/Control/MarketName/Stack/Header/WeatherWell"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+mouse_filter = 2
+texture_filter = 1
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Date" type="Label" parent="UI/Control/MarketName/Stack"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="Wallet" type="HBoxContainer" parent="UI/Control"]
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -341.0
-offset_top = 16.0
-offset_right = -16.0
-offset_bottom = 56.0
-grow_horizontal = 0
-mouse_filter = 2
-theme_override_constants/separation = 8
-alignment = 2
-
-[node name="Plate" type="PanelContainer" parent="UI/Control/Wallet"]
+[node name="StockRow" type="HBoxContainer" parent="UI/Control/MarketName/Stack"]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Stock" type="Label" parent="UI/Control/Wallet/Plate"]
+[node name="CoinIcon" type="TextureRect" parent="UI/Control/MarketName/Stack/StockRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture_filter = 1
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Stock" type="Label" parent="UI/Control/MarketName/Stack/StockRow"]
 unique_name_in_owner = true
 layout_mode = 2
+
+[node name="Wallet" type="HBoxContainer" parent="UI/Control"]
+layout_mode = 1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = 198.0
+offset_top = 16.0
+offset_right = 294.0
+offset_bottom = 56.0
+mouse_filter = 2
 
 [node name="SettingsButton" type="Button" parent="UI/Control/Wallet"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(81, 40)
 layout_mode = 2
+size_flags_horizontal = 3
 mouse_default_cursor_shape = 2
+theme = ExtResource("23_hud")
+theme_type_variation = &"HudButton"
 text = "设置"
 
 [node name="SettingsShade" type="ColorRect" parent="UI/Control"]

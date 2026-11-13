@@ -440,7 +440,6 @@ func _refresh_opening_action() -> void:
 	hud.handover_button.visible = Global.outcome == Global.Outcome.RUNNING and not Global.first_tribute_delivered()
 	action.visible = (Global.outcome == Global.Outcome.RUNNING and not hud.cancel_directions.visible
 		and (not speaker.is_empty() or can_review_harvest))
-	hud.show_visitor_note(speaker.is_empty() or not action.visible or can_discuss_rotation)
 	if not action.visible:
 		return
 	if speaker.is_empty():

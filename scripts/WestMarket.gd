@@ -26,6 +26,7 @@ const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
 var silk_guest: Visitor
 var silk_trip := VisitorData.SilkTrip.NONE
 var fish_reserved := false
+var sky_icons := HUDIcons.SKY.map(HUDIcons.icon)
 
 func _ready() -> void:
 	ground.place_scenery($Scenery)
@@ -42,8 +43,10 @@ func _ready() -> void:
 	player.arrive_at($EstateRoadArrival)
 	player.footstep.connect(_step)
 	market_map.setup(self, destinations, $MarketWaypoint)
+	market_map.open_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
 	$DialogManager.setup($UI/Control, player)
 	%SettingsButton.icon = HUDIcons.icon(HUDIcons.Symbol.SETTINGS)
+	%CoinIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
 	%SettingsButton.pressed.connect(settings.show)
 	counter.visibility_changed.connect(_update_modal)
 	settings.visibility_changed.connect(_update_modal)
@@ -114,6 +117,7 @@ func _update_modal() -> void:
 	player.conversation_open = settings.visible or counter.visible
 
 func _refresh_date() -> void:
+	%WeatherIcon.texture = sky_icons[HUDIcons.sky_index()]
 	date.text = "第 %d 天 · %s · %s%s" % [Global.current_day, Global.day_watch_label(), Global.get_current_solar_term(),
 		" · 雨" if Global.has_rain() else ""]
 

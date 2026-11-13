@@ -7,6 +7,7 @@ const ROAD_NETWORK := preload("res://scripts/RoadNetwork.gd")
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const RAFT_TRIAL := preload("res://scenes/RaftTrial.tscn")
 const SETTINGS_PANEL := preload("res://scripts/SettingsPanel.gd")
+const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 
 @onready var raft_landing: RaftLanding = $RaftLanding
 var ravine_map: Control
@@ -38,6 +39,7 @@ func _ready() -> void:
 		CreekTrap.PLACES[CreekFish.Site.SHOAL]: $ShoalTrap.position,
 	}
 	ravine_map.setup(directions, $Player, $Landscape, destinations)
+	ravine_map.open_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
 	_setup_settings($CampaignHUD.view)
 	$FishingUI/CreekTrapPanel.route_requested.connect(ravine_map.follow_place)
 	var goal := Global.ravine_trip_target
@@ -72,15 +74,17 @@ func _setup_settings(view: Control) -> void:
 	button.name = "SettingsButton"
 	button.text = "设置"
 	button.icon = HUDIcons.icon(HUDIcons.Symbol.SETTINGS)
+	button.theme = HUD_THEME
+	button.theme_type_variation = &"HudButton"
 	button.tooltip_text = "系统设置  Esc"
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	view.add_child(button)
 	view.move_child(button, ravine_map.get_index())
-	button.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	button.offset_left = -246.0
-	button.offset_right = -162.0
+	button.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	button.offset_left = 198.0
+	button.offset_right = 294.0
 	button.offset_top = 16.0
-	button.offset_bottom = 53.0
+	button.offset_bottom = 56.0
 	button.pressed.connect(_open_settings)
 
 	var shade := ColorRect.new()

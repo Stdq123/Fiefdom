@@ -1,5 +1,7 @@
 extends Node2D
 
+const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
+
 @onready var tile_map: TileMapLayer = get_parent()
 @onready var world = tile_map.get_parent()
 
@@ -16,15 +18,11 @@ func _ready() -> void:
 	hide()
 	caption.use_parent_material = true
 	caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var plate := StyleBoxFlat.new()
-	plate.bg_color = Color("#202c22fa")
-	plate.border_color = Color("#a3a577")
-	plate.set_border_width_all(1)
-	plate.set_corner_radius_all(4)
-	plate.content_margin_left = 8
-	plate.content_margin_right = 8
-	plate.content_margin_top = 3
-	plate.content_margin_bottom = 4
+	var plate := HUD_THEME.get_stylebox(&"panel", &"HudRail").duplicate() as StyleBox
+	plate.set_content_margin(SIDE_LEFT, 9)
+	plate.set_content_margin(SIDE_RIGHT, 9)
+	plate.set_content_margin(SIDE_TOP, 5)
+	plate.set_content_margin(SIDE_BOTTOM, 6)
 	caption.add_theme_stylebox_override("panel", plate)
 	add_child(caption)
 	label.add_theme_font_size_override("font_size", 15)
@@ -124,5 +122,5 @@ func _draw() -> void:
 	for corner in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]:
 		var tip: Vector2 = half_cell * corner
 		var stroke := PackedVector2Array([tip - Vector2(4 * corner.x, 0), tip, tip - Vector2(0, 4 * corner.y)])
-		draw_polyline(stroke, Color("#243229"), 2.6)
+		draw_polyline(stroke, Color("#382519"), 2.6)
 		draw_polyline(stroke, ink, 1.1)

@@ -7,7 +7,9 @@ enum Page { CROPS, FISH, CRAFT }
 const FLEECE := preload("res://assets/world/sheepfold/yard.svg")
 const SACK := preload("res://assets/world/estate-storage.svg")
 const SILK_MATERIALS := preload("res://assets/inventory/silk-materials.svg")
-const GOLD := Color("#efd291")
+const QUANTITY_INK := Color("#5f422d")
+
+@export var item_style: StyleBox
 
 @onready var close_button: Button = %Close
 @onready var crop_tab: Button = %CropTab
@@ -21,7 +23,6 @@ const GOLD := Color("#efd291")
 @onready var meal_notice: Label = %MealNotice
 @onready var items: GridContainer = %Items
 @onready var empty: Label = %Empty
-@onready var item_style: StyleBox = %Pockets.get_theme_stylebox("pocket", "PanelContainer")
 
 var page := Page.CROPS
 
@@ -120,7 +121,7 @@ func _add_item(id: String, label: String, quantity: String, texture: Texture2D) 
 	var count_label := Label.new()
 	count_label.name = "Quantity"
 	count_label.add_theme_font_size_override("font_size", 14)
-	count_label.add_theme_color_override("font_color", GOLD)
+	count_label.add_theme_color_override("font_color", QUANTITY_INK)
 	count_label.text = quantity
 	text.add_child(count_label)
 

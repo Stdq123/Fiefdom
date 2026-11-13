@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="32" viewBox="0 0 320 32" shape-rendering="crispEdges">
+  <defs>
+    <path id="outer" d="M4 0h24v1h2v2h1v2h1v22h-1v2h-1v2h-2v1H4v-1H2v-2H1v-2H0V5h1V3h1V1h2z"/>
+    <path id="rim" d="M4 1h24v1h2v2h1v23h-1v2h-2v2H4v-1H2v-2H1V5h1V3h2z"/>
+    <path id="inner" d="M5 4h22v1h1v1h1v20h-1v1h-1v1H5v-1H4v-1H3V6h1V5h1z"/>
+    <path id="face" d="M5 5h22v1h1v20h-1v1H5v-1H4V6h1z"/>
+    <path id="slot_face" d="M4 5h24v1h1v21h-1v1H4v-1H3V6h1z"/>
+    <path id="small_rim" d="M3 1h26v1h2v27h-1v1h-2v1H4v-1H2v-1H1V3h2z"/>
+    <path id="corners" d="M4 2h2v1H4zm-2 2h1v2H2zm24-2h2v1h-2zm3 2h1v2h-1zM3 26h1v2H3zm1 3h2v1H4zm24-2h1v2h-1zm-2 2h2v1h-2z"/>
+    <path id="rail_grain" d="M8 3h4v1H8zm7 0h3v1h-3zm6 0h3v1h-3zM9 28h5v1H9zm8 0h2v1h-2zm5 0h2v1h-2zM2 9h1v4H2zm0 8h1v3H2zm27-6h1v3h-1zm0 9h1v3h-1z"/>
+    <path id="pin_glints" d="M4 3h1v1H4zm23 0h1v1h-1zM4 28h1v1H4zm23 0h1v1h-1z"/>
+    <path id="bevel_light" d="M4 2h24v1H4zM2 5h1v19H2zM3 4h1v1H3zm25-1h1v1h-1z"/>
+    <path id="bevel_shadow" d="M4 29h24v1H4zm25-24h1v23h-1zm-1 23h1v1h-1z"/>
+  </defs>
+
+  <!-- Bamboo paper under a lacquered frame, with copper corner pins. -->
+  <g>
+    <use href="#outer" fill="#352319"/>
+    <use href="#rim" fill="#9a5730"/>
+    <use href="#bevel_light" fill="#e1a460"/>
+    <use href="#bevel_shadow" fill="#633820"/>
+    <use href="#inner" fill="#ac7544"/>
+    <use href="#face" fill="#ebcd91"/>
+    <path fill="#f4daa4" d="M5 5h22v1H5zM4 7h1v18H4zM6 7h1v1H6zM24 7h1v1h-1z"/>
+    <path fill="#d9af75" d="M27 7h1v19h-1zM5 26h22v1H5zM6 24h1v1H6zm19 0h1v1h-1z"/>
+    <path fill="#e6c486" d="M11 12h4v.5h-4zm8 5h3v.5h-3zm-4 4h5v.5h-5z"/>
+    <path fill="#f2d79f" d="M17 10h4v.5h-4zM10 18h3v.5h-3z"/>
+    <use href="#rail_grain" fill="#b87542"/>
+    <use href="#corners" fill="#c18649"/>
+    <use href="#pin_glints" fill="#efbe6c"/>
+  </g>
+
+  <!-- Deep lacquered wood, shared by status meters and the slot rail. -->
+  <g transform="translate(32 0)">
+    <use href="#outer" fill="#271d15"/>
+    <use href="#rim" fill="#805038"/>
+    <use href="#bevel_light" fill="#b98251"/>
+    <use href="#bevel_shadow" fill="#4c3223"/>
+    <use href="#inner" fill="#36261b"/>
+    <use href="#face" fill="#493023"/>
+    <path fill="#503629" d="M9 9h8v.5H9zm8 5h5v.5h-5zm-7 7h9v.5h-9zm9 3h4v.5h-4z"/>
+    <use href="#rail_grain" fill="#946044"/>
+    <use href="#corners" fill="#bf8551"/>
+    <use href="#pin_glints" fill="#e1ab62"/>
+  </g>
+
+  <!-- Ordinary wood command buttons. -->
+  <g transform="translate(64 0)">
+    <use href="#outer" fill="#2f2119"/>
+    <use href="#small_rim" fill="#966043"/>
+    <use href="#bevel_light" fill="#cf9a61"/>
+    <use href="#bevel_shadow" fill="#62412c"/>
+    <use href="#slot_face" fill="#744b32"/>
+    <path fill="#825739" d="M4 5h24v2H4zm5 4h10v.5H9zm12 16h5v.5h-5z"/>
+    <use href="#pin_glints" fill="#dba564"/>
+  </g>
+  <g transform="translate(96 0)">
+    <use href="#outer" fill="#362519"/>
+    <use href="#small_rim" fill="#ad7046"/>
+    <use href="#bevel_light" fill="#f1bf74"/>
+    <use href="#bevel_shadow" fill="#67422a"/>
+    <use href="#slot_face" fill="#875433"/>
+    <path fill="#9a613d" d="M4 5h24v2H4zm5 4h10v.5H9zm12 16h5v.5h-5z"/>
+    <use href="#pin_glints" fill="#f3c582"/>
+  </g>
+  <g transform="translate(128 0)">
+    <use href="#outer" fill="#30231a"/>
+    <use href="#small_rim" fill="#96613e"/>
+    <use href="#bevel_light" fill="#775035"/>
+    <use href="#bevel_shadow" fill="#bb824f"/>
+    <use href="#slot_face" fill="#5e3a29"/>
+    <path fill="#483024" d="M4 5h24v2H4z"/>
+    <path fill="#a26b43" d="M5 26h22v1H5z"/>
+  </g>
+  <g transform="translate(160 0)">
+    <use href="#outer" fill="#362e25"/>
+    <use href="#small_rim" fill="#796957"/>
+    <use href="#bevel_light" fill="#93816a"/>
+    <use href="#bevel_shadow" fill="#655647"/>
+    <use href="#slot_face" fill="#5c4e41"/>
+  </g>
+
+  <!-- The amber seal marks the primary action and the active quick slot. -->
+  <g transform="translate(192 0)">
+    <use href="#outer" fill="#422819"/>
+    <use href="#small_rim" fill="#b97e43"/>
+    <use href="#bevel_light" fill="#ffdb8a"/>
+    <use href="#bevel_shadow" fill="#8b552e"/>
+    <use href="#slot_face" fill="#eab86a"/>
+    <path fill="#f8cc7b" d="M4 5h24v2H4zm5 4h10v.5H9zm12 16h5v.5h-5z"/>
+    <use href="#pin_glints" fill="#fff0b1"/>
+  </g>
+  <g transform="translate(224 0)">
+    <use href="#outer" fill="#302117"/>
+    <use href="#small_rim" fill="#835334"/>
+    <use href="#bevel_light" fill="#3c291e"/>
+    <use href="#bevel_shadow" fill="#b37b4f"/>
+    <use href="#slot_face" fill="#4d3527"/>
+    <path fill="#39261d" d="M4 5h24v2H4zM3 7h1v17H3z"/>
+    <path fill="#573e2d" d="M5 26h22v1H5z"/>
+  </g>
+  <g transform="translate(256 0)">
+    <use href="#outer" fill="#43281a"/>
+    <use href="#small_rim" fill="#cb9250"/>
+    <use href="#bevel_light" fill="#ffdb87"/>
+    <use href="#bevel_shadow" fill="#a97339"/>
+    <use href="#slot_face" fill="#805332"/>
+    <path fill="#573621" d="M4 5h24v1H4zm0 2h1v18H4z"/>
+    <path fill="#c3894a" d="M5 26h22v1H5z"/>
+    <use href="#pin_glints" fill="#fff0a7"/>
+  </g>
+
+  <!-- A keyed, hollow outline stays visible over either frame material. -->
+  <g transform="translate(288 0)">
+    <path fill="#332419" d="M5 0h22v1h3v2h1v2h1v22h-1v2h-1v2h-3v1H5v-1H2v-2H1v-2H0V5h1V3h1V1h3zm0 3v1H4v1H3v22h1v1h1v1h22v-1h1v-1h1V5h-1V4h-1V3z"/>
+    <path fill="#fff2b4" d="M5 1h22v1h3v3h1v22h-1v3h-3v1H5v-1H2v-3H1V5h1V2h3zm0 2v1H4v1H3v22h1v1h1v1h22v-1h1v-1h1V5h-1V4h-1V3z"/>
+  </g>
+</svg>

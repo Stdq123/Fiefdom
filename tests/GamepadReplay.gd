@@ -251,7 +251,8 @@ func _fishing() -> void:
 	tree.change_scene_to_file(state.WILDERNESS_SCENE)
 	await tree.scene_changed
 	var trail := tree.current_scene
-	_expect(trail.get_node("CampaignHUD").camera_hint.text.begins_with("RT "), "The trail shows the controller's bow hint.")
+	_expect(trail.get_node("CampaignHUD").trail_vitals.tooltip_text.begins_with("RT "),
+		"The trail status gives the controller's bow and zoom controls on hover.")
 	var pool: Node2D = trail.get_node("WillowPool")
 	var angler: Player = trail.get_node("Player")
 	angler.arrive_at_position(pool.global_position + Vector2(0, 12), Vector2.UP)
