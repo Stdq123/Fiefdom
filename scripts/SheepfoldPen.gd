@@ -24,6 +24,7 @@ const PADDOCK := [Vector2(-43, 1), Vector2(42, 1), Vector2(44, 48),
 @onready var hint: Label = $Paddock/Hint
 
 var pose_time := 0.0
+var focused := false
 
 func _ready() -> void:
 	ground.draw.connect(_draw_yard)
@@ -101,11 +102,14 @@ func can_interact_from(foot: Vector2) -> bool:
 	return visible and global_position.distance_squared_to(foot) <= 26.0 * 26.0
 
 func set_interaction_focused(active: bool) -> void:
-	hint.visible = active
-	if active:
-		_refresh_hint()
+	focused = active
+	_refresh_hint()
 
 func _refresh_hint() -> void:
+	hint.visible = focused or clipping.visible
+	if clipping.visible:
+		hint.text = "羊毛 +1"
+		return
 	hint.text = GamepadInput.interact_hint("羊毛可剪" if $Paddock/Wool.visible else "西坡羊棚")
 
 func interact() -> void:
@@ -122,4 +126,8 @@ func _on_sheared() -> void:
 	fall.tween_property(clipping, "position:y", clipping.position.y - 4.0, 0.08)
 	fall.chain().tween_property(clipping, "position:y", landing.y, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	fall.chain().tween_property(clipping, "modulate:a", 0.0, 0.25).set_delay(0.85)
-	fall.chain().tween_callback(clipping.hide)
+	fall.chain().tween_callback(_finish_clipping)
+
+func _finish_clipping() -> void:
+	clipping.hide()
+	_refresh_hint()

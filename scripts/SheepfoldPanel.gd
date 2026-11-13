@@ -52,4 +52,3 @@ func _mix_fodder() -> void:
 func _shear() -> void:
 	if Global.use_sheepfold(Sheepfold.Action.SHEAR):
 		close_map()
-		GameEvents.world_notice.emit("羊毛 +1 · 可在西市绸摊出售或织衣")
