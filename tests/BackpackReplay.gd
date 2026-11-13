@@ -42,6 +42,16 @@ func _capture(name: String) -> void:
 	var image := tree.root.get_texture().get_image()
 	_expect(image.save_png(captures.path_join(name + ".png")) == OK, "Capture " + name)
 
+func _pad(index: JoyButton) -> void:
+	for pressed in [true, false]:
+		var event := InputEventJoypadButton.new()
+		event.button_index = index
+		event.pressed = pressed
+		Input.parse_input_event(event)
+		Input.flush_buffered_events()
+		await tree.process_frame
+	await tree.process_frame
+
 func _quit() -> void:
 	if failures == 0:
 		print("SCENARIO_OK")
@@ -145,6 +155,49 @@ func run(host: SceneTree, directory := "") -> void:
 			await _key(KEY_ESCAPE)
 			_expect(hud.backpack == null and not tree.paused and not tree.current_scene.settings.visible,
 				"Escape closes the backpack without opening the local settings.")
+	await _check_wild_herbs(hud)
 	print("BACKPACK_STOCK crop=", Global.crop_stock.count("millet"), " fish=", Global.fish_count("carp"),
 		" wool=", Global.sheepfold.wool, " meal_used=", Global.travel_meal.is_empty())
 	_quit()
+
+func _check_wild_herbs(hud: Node) -> void:
+	for enemy in tree.get_nodes_in_group("enemies"):
+		enemy.set_physics_process(false)
+	var herbs: Node2D = tree.current_scene.get_node("WildHerbs")
+	var player: Player = tree.current_scene.get_node("Player")
+	player.arrive_at_position(herbs.global_position + Vector2(0, 17), Vector2.UP)
+	await tree.physics_frame
+	await tree.physics_frame
+	var button: Button = herbs.pack_button
+	if not _expect(button.visible and "Shift+E" in button.text, "The medicine prompt includes its keyboard shortcut."):
+		return
+	await _capture("05-wild-herb-prompt")
+	await _pad(JOY_BUTTON_X)
+	_expect(not Global.wild_herbs_packed and Global.last_forage_day != Global.current_day
+		and button.text == "带走一份", "Controller interaction preserves the full-health choice and shows the pointer button.")
+	GamepadInput.cursor.position = button.get_global_transform_with_canvas() * (button.size * 0.5)
+	await _pad(JOY_BUTTON_A)
+	if not _expect(Global.wild_herbs_packed and not button.visible and Global.last_forage_day == Global.current_day,
+		"The controller pointer packs one dose through the actual terrain button."):
+		return
+	Global.current_day += 1
+	GameEvents.day_advanced.emit(Global.current_day)
+	_expect(not button.visible and "已带一份野药" in herbs.hint.text
+		and not Global.pack_wild_herbs() and Global.last_forage_day != Global.current_day,
+		"A carried dose hides the refill action on another day and preserves the fresh forage allowance.")
+	Global.travel_meal = TravelMeal.RICE_FISH
+	await _key(KEY_I)
+	var bag: Control = hud.backpack
+	if not _expect(is_instance_valid(bag) and bag.herb_pouch.visible and bag.eat_button.visible,
+		"A packed remedy and a road meal occupy separate pockets."):
+		return
+	var window: PanelContainer = bag.get_node("Center/Window")
+	_expect(tree.root.get_visible_rect().encloses(window.get_global_rect()), "Both supplies fit inside the visible backpack.")
+	await _capture("06-packed-wild-herbs")
+	await _key(KEY_TAB)
+	await _key(KEY_TAB)
+	await _key(KEY_TAB)
+	await _key(KEY_TAB)
+	await _key(KEY_TAB)
+	_expect(bag.use_herbs_button.has_focus(), "The remedy is included in the backpack's focus cycle.")
+	await _key(KEY_ESCAPE)

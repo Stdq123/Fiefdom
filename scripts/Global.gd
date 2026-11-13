@@ -89,6 +89,7 @@ var east_watch_day := 0
 var watch_snare_armed := false
 var watch_snare_relief_used_day := 0
 var last_forage_day := 0
+var wild_herbs_packed := false
 var last_fishing_day := 0
 var ravine_trip_target := ""
 var market_trip_target := ""
@@ -277,6 +278,7 @@ func _reset_campaign() -> void:
 	watch_snare_armed = false
 	watch_snare_relief_used_day = 0
 	last_forage_day = 0
+	wild_herbs_packed = false
 	last_fishing_day = 0
 	ravine_trip_target = ""
 	market_trip_target = ""
@@ -1553,7 +1555,9 @@ func ravine_place_detail(place: String) -> String:
 			return "野果 · 粮食 +%d" % balance.wild_food_yield
 		"望溪台":
 			var recovered := wild_herb_recovery()
-			return "野药 · 气血 +%d" % recovered if recovered > 0 else "野药 · 气血充足"
+			var treatment := "气血 +%d" % recovered if recovered > 0 else "气血充足"
+			var carry := "已带野药" if wild_herbs_packed else "可带一份"
+			return "野药 · %s · %s" % [treatment, carry]
 	var site := CreekFish.PLACES.find(place)
 	if site < 0:
 		return ""
@@ -1735,6 +1739,22 @@ func forage_herbs() -> void:
 		return
 	var recovered := _heal_with_herbs()
 	GameEvents.world_notice.emit("敷了野药 · 气血 +%d" % recovered)
+
+func pack_wild_herbs() -> bool:
+	if wild_herbs_packed or outcome != Outcome.RUNNING or not _take_forage_slot():
+		return false
+	wild_herbs_packed = true
+	GameEvents.wild_herbs_changed.emit()
+	GameEvents.world_notice.emit("野药已装入背包 · 受伤时可敷用")
+	return true
+
+func use_packed_wild_herbs() -> int:
+	if not wild_herbs_packed or outcome != Outcome.RUNNING or wild_herb_recovery() <= 0:
+		return 0
+	wild_herbs_packed = false
+	var recovered := _heal_with_herbs()
+	GameEvents.wild_herbs_changed.emit()
+	return recovered
 
 func wild_herb_recovery() -> int:
 	return mini(balance.wild_herb_healing, balance.player_max_health - health)
@@ -2847,6 +2867,7 @@ func _save_snapshot(origin: String) -> Error:
 		"watch_snare_armed": watch_snare_armed,
 		"watch_snare_relief_used_day": watch_snare_relief_used_day,
 		"last_forage_day": last_forage_day,
+		"wild_herbs_packed": wild_herbs_packed,
 		"last_fishing_day": last_fishing_day,
 		"ravine_trip_target": ravine_trip_target,
 		"market_trip_target": market_trip_target,
@@ -3329,6 +3350,7 @@ func load_game(path := "") -> Error:
 	watch_snare_armed = data.get("watch_snare_armed", false) == true
 	watch_snare_relief_used_day = clampi(_read_save_int(data.get("watch_snare_relief_used_day"), 0), 0, saved_day)
 	last_forage_day = clampi(_read_save_int(data.get("last_forage_day"), 0), 0, saved_day)
+	wild_herbs_packed = data.get("wild_herbs_packed", false) == true
 	# Old saves used one daily record for both activities.
 	last_fishing_day = clampi(_read_save_int(data.get("last_fishing_day"), last_forage_day), 0, saved_day)
 	_restore_fish_collection(data.get("fish_collection"), saved_day)

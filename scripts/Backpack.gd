@@ -7,6 +7,7 @@ enum Page { CROPS, FISH, CRAFT }
 const FLEECE := preload("res://assets/world/sheepfold/yard.svg")
 const SACK := preload("res://assets/world/estate-storage.svg")
 const SILK_MATERIALS := preload("res://assets/inventory/silk-materials.svg")
+const HERB_BED := preload("res://assets/world/bamboo-herb-bed.svg")
 const POCKET_MINIMUM := Vector2(216, 58)
 const ITEM_NAME_INK := Color("#ffe9bd")
 const QUANTITY_INK := Color("#e7bf96")
@@ -24,6 +25,10 @@ const QUANTITY_INK := Color("#e7bf96")
 @onready var meal_effect: Label = %MealEffect
 @onready var eat_button: Button = %Eat
 @onready var meal_notice: Label = %MealNotice
+@onready var herb_pouch: PanelContainer = %HerbPouch
+@onready var herb_effect: Label = %HerbEffect
+@onready var use_herbs_button: Button = %UseHerbs
+@onready var herb_notice: Label = %HerbNotice
 @onready var items: GridContainer = %Items
 @onready var empty_pockets: GridContainer = %EmptyPockets
 @onready var empty: Label = %Empty
@@ -33,6 +38,7 @@ var page := Page.CROPS
 func _ready() -> void:
 	%BagIcon.texture = HUDIcons.icon(HUDIcons.Symbol.BACKPACK)
 	%CoinIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
+	%HerbIcon.texture = _atlas(HERB_BED, Rect2(55, 5, 10, 13))
 	for index in CropStock.IDS.size():
 		var pocket := Panel.new()
 		pocket.custom_minimum_size = POCKET_MINIMUM
@@ -45,15 +51,18 @@ func _ready() -> void:
 	fish_tab.pressed.connect(select_page.bind(Page.FISH))
 	craft_tab.pressed.connect(select_page.bind(Page.CRAFT))
 	eat_button.pressed.connect(_eat)
+	use_herbs_button.pressed.connect(_use_herbs)
 	GameEvents.inventory_changed.connect(_refresh_items.unbind(1))
 	GameEvents.fish_changed.connect(_refresh_items)
 	GameEvents.silk_changed.connect(_refresh_items)
 	GameEvents.sheepfold_changed.connect(_refresh_items)
 	GameEvents.money_changed.connect(_refresh_wallet)
 	GameEvents.travel_meal_changed.connect(_refresh_meal)
+	GameEvents.wild_herbs_changed.connect(_refresh_herbs)
 	select_page(page)
 	_refresh_wallet(Global.money)
 	_refresh_meal()
+	_refresh_herbs()
 	close_button.grab_focus()
 
 func select_page(selected: Page) -> void:
@@ -160,9 +169,19 @@ func _refresh_meal() -> void:
 	if packed:
 		meal_icon.texture = TravelMeal.icon(meal)
 		meal_effect.text = TravelMeal.describe_recovery(TravelMeal.benefits(meal, Global.balance))
+	_refresh_focus()
+
+func _refresh_herbs() -> void:
+	herb_pouch.visible = Global.wild_herbs_packed
+	herb_effect.text = "最多恢复 %d 气血" % Global.balance.wild_herb_healing
+	_refresh_focus()
+
+func _refresh_focus() -> void:
 	var buttons: Array[Button] = [close_button, crop_tab, fish_tab, craft_tab]
-	if packed:
+	if eat_button.visible:
 		buttons.append(eat_button)
+	if herb_pouch.visible:
+		buttons.append(use_herbs_button)
 	for index in buttons.size():
 		var button := buttons[index]
 		button.focus_next = button.get_path_to(buttons[(index + 1) % buttons.size()])
@@ -178,3 +197,14 @@ func _eat() -> void:
 	else:
 		meal_notice.text = "眼下用不着这份路餐，先带着。"
 	meal_notice.show()
+
+func _use_herbs() -> void:
+	var recovered := Global.use_packed_wild_herbs()
+	if recovered > 0:
+		AudioManager.play_ui_sfx(0.86)
+		herb_notice.text = "敷了野药 · 气血 +%d" % recovered
+		close_button.grab_focus()
+		GamepadInput.snap_pointer_to_focus()
+	else:
+		herb_notice.text = "气血充足，先带着野药。"
+	herb_notice.show()

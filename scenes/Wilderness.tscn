@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://wilderness_scene_uid"]
+[gd_scene load_steps=19 format=3 uid="uid://wilderness_scene_uid"]
 
 [ext_resource type="Script" path="res://scripts/Wilderness.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="2_enemy"]
@@ -16,6 +16,7 @@
 [ext_resource type="Script" path="res://scripts/RaftLanding.gd" id="14_raft_landing"]
 [ext_resource type="Material" path="res://resources/world_hint_material.tres" id="15_hint"]
 [ext_resource type="PackedScene" path="res://scenes/RavineShortcutGate.tscn" id="16_south_trail"]
+[ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="17_hud"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(8, 14)
@@ -84,10 +85,26 @@ position = Vector2(-334, 20)
 position = Vector2(-139, -123)
 script = ExtResource("5_forage")
 
-[node name="WildHerbs" type="Node2D" parent="." groups=["interactable"]]
+[node name="WildHerbs" type="Node2D" parent="." node_paths=PackedStringArray("player") groups=["interactable"]]
 position = Vector2(446, -106)
 script = ExtResource("5_forage")
 medicinal = true
+player = NodePath("../Player")
+
+[node name="PackHerbs" type="Button" parent="WildHerbs"]
+visible = false
+material = ExtResource("15_hint")
+z_index = 3
+offset_left = 50.0
+offset_top = -27.0
+offset_right = 158.0
+offset_bottom = -7.0
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme = ExtResource("17_hud")
+theme_type_variation = &"HudPrimary"
+theme_override_font_sizes/font_size = 10
+text = "带走一份"
 
 [node name="RavineMarker" type="Node2D" parent="."]
 script = ExtResource("7_journal")

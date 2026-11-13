@@ -27,13 +27,15 @@ func _walk(destination: Vector2) -> void:
 func _walk_trail(destination: Vector2) -> void:
 	await Campaign.walk_ravine_to(self, current_scene, destination)
 
-func _gather() -> void:
-	var key := InputEventKey.new()
-	key.keycode = KEY_E
-	key.physical_keycode = KEY_E
-	key.pressed = true
-	root.push_input(key, true)
-	await process_frame
+func _gather(code: Key = KEY_E, pack := false) -> void:
+	for pressed in [true, false]:
+		var key := InputEventKey.new()
+		key.keycode = code
+		key.physical_keycode = code
+		key.shift_pressed = pack
+		key.pressed = pressed
+		root.push_input(key, true)
+		await process_frame
 
 func _enter_trail() -> bool:
 	var estate_player := current_scene.get_node("World/Player") as Node2D
@@ -110,6 +112,8 @@ func _run() -> void:
 	var injured: int = state.health
 	await _gather()
 	_expect(state.health == injured and "今日" in current_scene.get_node("WildHerbs").hint.text, "Food and medicine share the daily gathering slot.")
+	await _gather(KEY_E, true)
+	_expect(not state.wild_herbs_packed, "The packed dose shares the berries' daily gathering slot.")
 
 	await _walk_trail(RavineLayout.FORD_EAST)
 	await _walk(RavineLayout.FORD)
@@ -161,14 +165,66 @@ func _run() -> void:
 		"Rain reaches the estate after sleeping into the right solar term.")
 	if not await _enter_trail():
 		return
+	await _walk_trail(RavineLayout.HERBS + Vector2(0, 17))
+	var herbs: Node2D = current_scene.get_node("WildHerbs")
+	var preferences := root.get_node("Preferences")
+	_expect(state.health == full_health and herbs.pack_button.visible,
+		"The nearby herb patch offers one dose to a healthy player.")
+	_expect(preferences.set_binding(&"interact", KEY_G) == OK and "Shift+G" in herbs.pack_button.text,
+		"The carry shortcut follows the remapped interact key.")
+	await _gather(KEY_E, true)
+	_expect(not state.wild_herbs_packed and state.last_forage_day != state.current_day,
+		"An old interact binding no longer packs herbs.")
+	await _gather(KEY_G, true)
+	_expect(state.wild_herbs_packed and state.health == full_health and state.last_forage_day == state.current_day
+		and not herbs.pack_button.visible, "Packing a dose preserves health and spends the shared daily chance.")
+	_expect(preferences.set_binding(&"interact", KEY_E) == OK, "Restore the default interaction for the rest of the replay.")
 	await _walk_trail(RavineLayout.FRUIT + Vector2(-8, 16))
 	_expect(is_zero_approx(terrain.birds.volume_linear) and terrain.rain.volume_linear > 0.1,
 		"In rain, the grove layers rain in place of the dry-weather birdsong.")
+	var packed_food: int = state.food_storage
+	await _gather()
+	_expect(state.food_storage == packed_food, "Packing herbs also blocks a berry harvest that day.")
 	if not await _return_home():
 		return
 	current_scene.get_node("UI").sleep_button.pressed.emit()
 	await create_timer(1.15).timeout
 	_expect(not state.has_rain() and is_zero_approx(terrain.rain.volume_linear), "The rain fades away after the weather clears.")
+	var forage_day: int = state.last_forage_day
+	_expect(state.save_game() == OK and state.load_game() == OK, "A packed remedy saves after returning and sleeping.")
+	await scene_changed
+	_expect(state.wild_herbs_packed and state.last_forage_day == forage_day and state.current_day > forage_day,
+		"Reload restores the remedy alongside the refreshed daily allowance.")
+	await _gather(KEY_I)
+	var bag: Control = current_scene.get_node("CampaignHUD").backpack
+	if is_instance_valid(bag) and bag.herb_pouch.visible:
+		bag.use_herbs_button.pressed.emit()
+		_expect(state.wild_herbs_packed and "气血充足" in bag.herb_notice.text,
+			"Using the pouch at full health keeps the dose.")
+		state.hurt_player(11)
+		bag.use_herbs_button.pressed.emit()
+		_expect(not state.wild_herbs_packed and state.health == full_health and state.last_forage_day == forage_day
+			and not bag.herb_pouch.visible and "11" in bag.herb_notice.text,
+			"Using carried herbs heals only the missing health without spending the next day's forage.")
+		await _gather(KEY_ESCAPE)
+	else:
+		_expect(false, "The estate backpack shows the loaded herb dose.")
+	var legacy_path := "user://before-wild-herbs.json"
+	var snapshot: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(state.manual_save_path()))
+	snapshot.erase("wild_herbs_packed")
+	var legacy := FileAccess.open(legacy_path, FileAccess.WRITE)
+	if legacy != null:
+		legacy.store_string(JSON.stringify(snapshot))
+		legacy.close()
+		state.wild_herbs_packed = true
+		if state.load_game(legacy_path) == OK:
+			await scene_changed
+			_expect(not state.wild_herbs_packed and state.last_forage_day == forage_day,
+				"An earlier save defaults to an empty remedy slot and preserves its forage day.")
+		else:
+			_expect(false, "The earlier save still loads.")
+	else:
+		_expect(false, "Write the earlier save fixture.")
 	if not failed:
 		print("SCENARIO_OK")
 	quit(1 if failed else 0)
