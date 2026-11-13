@@ -8,7 +8,7 @@ const TURN_DISTANCE := 12.0
 const MERCHANT := VisitorData.SILK_MERCHANT
 const WAYPOINT_ARROWS := ["→", "↘", "↓", "↙", "←", "↖", "↑", "↗"]
 const STALL_COLORS := [Color("#b98b53"), Color("#678287"), Color("#a46048")]
-const STALL_SERVICES := ["作物换粮、买粮", "交留鱼单、卖鱼", "卖绸、交易羊毛"]
+const STALL_SERVICES := ["作物换粮、买口粮与时令作物", "交留鱼单、卖鱼", "卖绸、交易羊毛"]
 const LABELS_ABOVE := [MarketStall.TITLES[MarketStall.Kind.GRAIN], MarketStall.TITLES[MarketStall.Kind.FISH]]
 
 @onready var chart: Control = %Chart

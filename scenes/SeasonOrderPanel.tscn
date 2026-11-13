@@ -101,6 +101,12 @@ custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 
+[node name="ProduceRoute" type="Button" parent="Current/Content/Actions"]
+visible = false
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+
 [node name="Silk" type="Button" parent="Current/Content/Actions"]
 visible = false
 custom_minimum_size = Vector2(0, 36)

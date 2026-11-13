@@ -16,6 +16,7 @@ const SAVE_LOCATION_NAMES := {"ravine": "竹涧", "west_market": "西市", "west
 const RAVINE_TRIP_PLACES := ["野果坳", "望溪台", "柳湾", "砾滩", SummerRaft.PLACE]
 const MARKET_ORDERS := "收货牌"
 const MARKET_RETURN := "回封地"
+const MARKET_PRODUCE := ["beans", "rice", "sorghum", "wheat"]
 const TAX_ENVOY := "召简"
 const TAX_COUNCIL_YEAR := 3
 const TAX_COUNCIL_PETITION_ORDERS := 2
@@ -86,6 +87,7 @@ var last_forage_day := 0
 var last_fishing_day := 0
 var ravine_trip_target := ""
 var market_trip_target := ""
+var market_produce_bought_on := 0
 var restored_ravine_waypoint := ""
 var restored_ravine_south := false
 var restored_west_road_from_market := false
@@ -267,6 +269,7 @@ func _reset_campaign() -> void:
 	last_fishing_day = 0
 	ravine_trip_target = ""
 	market_trip_target = ""
+	market_produce_bought_on = 0
 	restored_ravine_waypoint = ""
 	restored_ravine_south = false
 	restored_west_road_from_market = false
@@ -2232,6 +2235,26 @@ func affordable_market_food() -> int:
 func buy_market_food(amount: int) -> bool:
 	return amount > 0 and amount <= affordable_market_food() and _market_exchange({}, amount * balance.market_food_price, amount)
 
+func market_produce_crop() -> String:
+	return MARKET_PRODUCE[season_index()]
+
+func market_produce_price() -> int:
+	return 2 * balance.market_crop_price
+
+func market_produce_available() -> bool:
+	return first_tribute_delivered() and market_produce_bought_on < season_order().start
+
+func buy_market_produce() -> bool:
+	var price := market_produce_price()
+	if outcome != Outcome.RUNNING or not market_produce_available() or money < price:
+		return false
+	market_produce_bought_on = current_day
+	money -= price
+	crop_stock.add(market_produce_crop(), 1)
+	GameEvents.inventory_changed.emit(player_inventory)
+	GameEvents.money_changed.emit(money)
+	return true
+
 func convert_inventory_to_food(amount: int, crop_id := "") -> bool:
 	var use := market_crop_plan(amount, crop_id)
 	return not use.is_empty() and _market_exchange(use, 0, amount)
@@ -2614,6 +2637,7 @@ func _save_snapshot(origin: String) -> Error:
 		"last_fishing_day": last_fishing_day,
 		"ravine_trip_target": ravine_trip_target,
 		"market_trip_target": market_trip_target,
+		"market_produce_bought_on": market_produce_bought_on,
 		"fish_collection": fish_collection,
 		"fish_order_receipt": fish_order_receipt,
 		"creek_trap": creek_trap,
@@ -3099,6 +3123,7 @@ func load_game(path := "") -> Error:
 	var saved_market_trip: Variant = data.get("market_trip_target")
 	var market_places := MarketStall.TITLES + [MARKET_ORDERS, MARKET_RETURN, VisitorData.SILK_MERCHANT, Sheepfold.MEADOW]
 	market_trip_target = saved_market_trip if saved_market_trip is String and saved_market_trip in market_places else ""
+	market_produce_bought_on = clampi(_read_save_int(data.get("market_produce_bought_on"), 0), 0, saved_day)
 	var saved_route := _read_save_int(data.get("field_route_status"), -1)
 	field_route_status = saved_route if saved_route in FIELD_ROUTE_STATES else -1
 	field_route_public_only = field_route_status == NightGrowth.READY and data.get("field_route_public_only", false) == true

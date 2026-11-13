@@ -6,6 +6,7 @@ extends Control
 @onready var keeper_card: PanelContainer = %KeeperCard
 @onready var keeper_portrait: TextureRect = %KeeperPortrait
 @onready var keeper_note: Label = %KeeperNote
+@onready var market_produce: Button = %MarketProduce
 @onready var grain: VBoxContainer = %Grain
 @onready var fish: VBoxContainer = %Fish
 @onready var silk: VBoxContainer = %Silk
@@ -23,9 +24,11 @@ func _ready() -> void:
 	GamepadInput.changed.connect(_refresh_close_hint)
 	_refresh_close_hint()
 	sell_silk.pressed.connect(_sell_silk)
+	market_produce.pressed.connect(_buy_market_produce)
 	%SheepTrade.pressed.connect(_open_sheep)
 	sheep.silk_requested.connect(open_for.bind(MarketStall.Kind.SILK))
 	GameEvents.silk_changed.connect(_refresh_silk)
+	GameEvents.money_changed.connect(_refresh_market_produce.unbind(1))
 	GameEvents.fish_changed.connect(func():
 		if fish.is_visible_in_tree():
 			keeper_note.text = _fish_keeper_note()
@@ -62,6 +65,7 @@ func _open_view(heading: String, active_view: Control, speaker := "") -> void:
 		card.custom_minimum_size.x += keeper_card.custom_minimum_size.x + counter_layout.get_theme_constant("separation")
 	for view: Control in [grain, fish, silk, orders, sheep]:
 		view.visible = view == active_view
+	_refresh_market_produce()
 	show()
 	close_button.grab_focus()
 	AudioManager.play_ui_sfx()
@@ -76,6 +80,26 @@ func _keeper_line(active_view: Control) -> String:
 	if VisitorData.silk_sample_on_display(Global.current_day):
 		return "我把你家的样绸挂在朝街一面，过路人一眼就看得见。"
 	return "把布边铺平给我看看。成匹的绸我收，零头你留着补衣。"
+
+func _refresh_market_produce() -> void:
+	market_produce.visible = grain.visible and Global.first_tribute_delivered()
+	if not market_produce.visible:
+		return
+	var crop := ItemManager.crop_label(Global.market_produce_crop())
+	var price := Global.market_produce_price()
+	var available := Global.market_produce_available()
+	market_produce.text = "买%s · %d 铜钱" % [crop, price] if available else "%s已售罄" % crop
+	market_produce.disabled = not available or Global.money < price or Global.outcome != Global.Outcome.RUNNING
+	market_produce.tooltip_text = "还差 %d 铜钱" % (price - Global.money) if available and Global.money < price else ""
+	keeper_note.text = ("乡亲托我带来一袋%s。今季只有这一份，买了可进私仓交单。" % crop if available else
+		"这季的%s给你了。换季再来，我会带一份新货。" % crop)
+
+func _buy_market_produce() -> void:
+	if Global.buy_market_produce():
+		grain.receipt.text = "%s已入私仓 · 铜钱 −%d" % [
+			ItemManager.crop_label(Global.market_produce_crop()), Global.market_produce_price()]
+		close_button.grab_focus()
+		AudioManager.play_ui_sfx(1.12)
 
 func _fish_keeper_note() -> String:
 	if not Global.knows_ravine_journal():

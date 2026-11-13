@@ -16,6 +16,8 @@ const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
 @onready var settings_shade: ColorRect = %SettingsShade
 @onready var date: Label = %Date
 @onready var stock: Label = %Stock
+@onready var produce_sack: Sprite2D = $Stalls/GrainStall/ProduceSack
+@onready var produce_tag: Sprite2D = $Stalls/GrainStall/ProduceSack/CropTag
 @onready var sample: Sprite2D = $Stalls/SilkStall/MarketSample
 @onready var fish_sign: Node2D = $Stalls/FishStall/FishOrderSign
 @onready var fish_icon: Sprite2D = $Stalls/FishStall/FishOrderSign/FishIcon
@@ -46,15 +48,22 @@ func _ready() -> void:
 	GameEvents.daylight_changed.connect(_refresh_date)
 	GameEvents.daylight_changed.connect(_refresh_silk_guest)
 	GameEvents.visitor_interacted.connect(_talk_to_silk_guest)
-	GameEvents.ravine_trip_requested.connect(_follow_ravine_trip)
+	GameEvents.ravine_trip_requested.connect(_follow_trip)
+	GameEvents.west_market_directions_requested.connect(_follow_trip)
 	GameEvents.retainer_recruited.connect(_refresh_silk_guest.unbind(1))
 	GameEvents.money_changed.connect(_refresh_stock.unbind(1))
 	GameEvents.food_changed.connect(_refresh_stock.unbind(1))
 	GameEvents.crop_harvested.connect(_refresh_stock.unbind(1))
+	GameEvents.crop_harvested.connect(_refresh_produce_sack.unbind(1))
+	GameEvents.inventory_changed.connect(_refresh_produce_sack.unbind(1))
 	GameEvents.fish_changed.connect(_refresh_fish_sign)
 	fish_sign.draw.connect(_draw_fish_sign)
 	_refresh_date()
 	_refresh_stock()
+	var produce := ItemManager.season_item_picture(Global.market_produce_crop())
+	produce_tag.texture = produce.texture
+	produce_tag.self_modulate = produce.tint
+	_refresh_produce_sack()
 	sample.visible = VisitorData.silk_sample_on_display(Global.current_day)
 	_refresh_silk_guest()
 	_refresh_fish_sign()
@@ -67,8 +76,8 @@ func _open_orders() -> void:
 	market_map.arrive_at(Global.MARKET_ORDERS)
 	counter.open_orders()
 
-func _follow_ravine_trip(place: String) -> void:
-	market_map.follow_ravine(place)
+func _follow_trip(place: String) -> void:
+	market_map.follow_region_destination(place)
 	counter.hide()
 
 func _process(delta: float) -> void:
@@ -103,6 +112,13 @@ func _refresh_date() -> void:
 
 func _refresh_stock() -> void:
 	stock.text = "%d 铜钱   ·   %d 粮食" % [Global.money, Global.food_storage]
+
+func _refresh_produce_sack() -> void:
+	var available := Global.market_produce_available()
+	produce_sack.visible = Global.first_tribute_delivered()
+	produce_sack.region_rect.position.x = 0.0 if available else 16.0
+	produce_sack.scale.y = 1.3 if available else 0.65
+	produce_tag.visible = available
 
 func _refresh_fish_sign() -> void:
 	fish_sign.visible = Global.knows_ravine_journal() or not Global.fish_collection.is_empty()

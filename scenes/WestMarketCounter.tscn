@@ -125,6 +125,13 @@ theme_override_constants/line_spacing = 3
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 
+[node name="MarketProduce" type="Button" parent="Center/Card/Inset/Body/CounterLayout/KeeperCard/Identity"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+
 [node name="Views" type="VBoxContainer" parent="Center/Card/Inset/Body/CounterLayout"]
 layout_mode = 2
 size_flags_horizontal = 3

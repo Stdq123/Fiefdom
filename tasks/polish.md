@@ -873,3 +873,8 @@
 
 - 春单到卸货场后，林蓼沿南路带种子去亭西。首次送达后开放小径，舆图可指路。菽和黍三夜长成，可从林蓼留的一袋里任选一份入私仓。季青的邻里手记和结局记事会记录种圃。参考了《星露谷物语》用委托改变地图的做法。 [ConcernedApe 开发日志](https://www.stardewvalley.net/dev-update-20/)
 - Windows 解压版从第 6 天晚交春单，次日走到卸货场问申禾，送种途中存档后接续。第 10 天领一份菽入私仓，国库仍为四份，读档后领取记录保留。双结局、交货、东岗巡粮和其他南路回放通过。1024×768 画面在不可见桌面取得。 [Windows 试玩包](../build/polish-seed-garden/Fiefdom-1.0.0-Windows-x64.zip) · [林蓼与种圃](../build/polish-seed-garden/final-1024x768/03-lin-liao.png) · [菽和黍成熟](../build/polish-seed-garden/final-1024x768/05-mature-plants.png) · [发行回放](../build/polish-seed-garden/windows-final-check/seed-garden.log)
+
+## 谷伯的时令作物
+
+- 首次纳贡后，谷伯每季带一份作物到西市，春菽、夏稻、秋稷、冬麦。交货簿缺该品种时可指路。买下一份进私仓，柜台和摊旁粮袋随之变为售罄，下一季补货。
+- 回放从新档实际收获开始，第 3 天花 10 铜钱补齐春单。公田纳贡、口粮和私田收获统计在购买时保持原数。回标题继续后仍售罄，第 7 天补上夏稻。Godot 资源导入、脚本加载、启动和三个相关场景通过。Windows 解压版通过双结局、战败恢复、延期研究及四个西市相关回放。1024×768 柜台和街景在不可见桌面核对。 [Windows 试玩包](../build/polish-market-produce/Fiefdom-1.0.0-Windows-x64.zip) · [谷伯柜台](../build/polish-market-produce/render-1024x768/02a-seasonal-produce.png) · [买走后的粮袋](../build/polish-market-produce/render-1024x768/02c-empty-sack.png) · [发行回放](../build/polish-market-produce/windows-check/west-market.log)

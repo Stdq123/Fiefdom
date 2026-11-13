@@ -16,6 +16,7 @@ const WAIT_INK := Color("#e3c289")
 @onready var food_button: Button = $Current/Content/Rewards/Food
 @onready var pin_button: Button = $Current/Content/Actions/Pin
 @onready var fish_route_button: Button = $Current/Content/Actions/FishRoute
+@onready var produce_route_button: Button = $Current/Content/Actions/ProduceRoute
 @onready var silk_button: Button = $Current/Content/Actions/Silk
 @onready var next_heading: Label = $Next/Content/HeadingRow/Heading
 @onready var next_plan_button: Button = $Next/Content/HeadingRow/Plan
@@ -33,6 +34,7 @@ func _ready() -> void:
 	pin_button.toggled.connect(Global.pin_season_order)
 	next_plan_button.toggled.connect(Global.pin_season_order.bind(true))
 	fish_route_button.pressed.connect(func(): GameEvents.ravine_trip_requested.emit(fish_route_target))
+	produce_route_button.pressed.connect(GameEvents.west_market_directions_requested.emit.bind(MarketStall.TITLES[MarketStall.Kind.GRAIN]))
 	silk_button.pressed.connect(silk_requested.emit)
 	next_silk_button.pressed.connect(silk_requested.emit)
 	visibility_changed.connect(_refresh)
@@ -40,6 +42,7 @@ func _ready() -> void:
 	GameEvents.daylight_changed.connect(_refresh)
 	GameEvents.day_advanced.connect(_refresh.unbind(1))
 	GameEvents.inventory_changed.connect(_refresh.unbind(1))
+	GameEvents.money_changed.connect(_refresh.unbind(1))
 	GameEvents.crop_harvested.connect(_refresh.unbind(1))
 	GameEvents.fish_changed.connect(_refresh)
 	GameEvents.stamina_changed.connect(_refresh.unbind(1))
@@ -69,6 +72,7 @@ func _refresh() -> void:
 	var pinned := Global.is_season_order_pinned(schedule)
 	pin_button.set_pressed_no_signal(pinned)
 	pin_button.text = "取消田边跟踪" if pinned else "在田边跟踪此单"
+	_refresh_produce_route(order)
 	silk_button.visible = not at_market and delivered_on == 0 and Global.outcome == Global.Outcome.RUNNING \
 		and int(order.get("silk", 0)) > Global.silk_workshop.bolts
 	var fish: String = order.get("fish", "")
@@ -129,6 +133,17 @@ func _refresh() -> void:
 	last_receipt.visible = delivered_on == 0 and not receipt.is_empty()
 	if last_receipt.visible:
 		last_receipt.text = "上次这张单在第 %d 天交齐。" % receipt.day
+
+func _refresh_produce_route(order: Dictionary) -> void:
+	var crop := Global.market_produce_crop()
+	var missing: int = order.need.get(crop, 0) - Global.crop_stock.count(crop)
+	produce_route_button.visible = pin_button.visible and missing > 0 and Global.market_produce_available()
+	if produce_route_button.visible:
+		var price := Global.market_produce_price()
+		var shortfall := price - Global.money
+		produce_route_button.text = ("粮摊买一份%s · %d 铜钱" % [ItemManager.crop_label(crop), price] if shortfall <= 0
+			else "粮摊有%s · 缺 %d 铜钱" % [ItemManager.crop_label(crop), shortfall])
+		produce_route_button.disabled = shortfall > 0
 
 func _preparation_notes(schedule: Dictionary) -> String:
 	var planted: Dictionary[String, Vector2i] = {}

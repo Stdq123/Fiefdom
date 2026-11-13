@@ -56,14 +56,17 @@ func _snapshot(name: String) -> void:
 	_expect(frame.save_png(capture_dir.path_join(name + ".png")) == OK, "Save market frame " + name)
 	print("MARKET_FRAME ", name, " window=", tree.root.size, " image=", frame.get_size())
 
-func _harvest(world: Node2D, ui: CanvasLayer) -> void:
+func _harvest(world: Node2D, ui: CanvasLayer, for_order := false) -> void:
 	var tiles := world.tile_map as TileMapLayer
+	var plots := PLOTS + [Vector2i(6, 5), Vector2i(5, 4)] if for_order else PLOTS
 	var points: Array[Vector2] = []
-	for cell: Vector2i in PLOTS:
+	for cell: Vector2i in plots:
 		points.append(tiles.get_global_transform_with_canvas() * tiles.map_to_local(cell))
-	for point in points:
-		await _click(point)
-		await _click(point)
+	for index in points.size():
+		if for_order and index == points.size() - 1:
+			await _key(KEY_5)
+		await _click(points[index])
+		await _click(points[index])
 	for night in 2:
 		for point in points:
 			await _click(point)
@@ -71,18 +74,21 @@ func _harvest(world: Node2D, ui: CanvasLayer) -> void:
 		await tree.create_timer(1.12).timeout
 	for point in points:
 		await _click(point)
-	_expect(state.current_day == 3 and state.king_storage == 1 and state.player_inventory == 2,
-		"Grow and harvest two private crops and one public crop through the farm controls.")
+	_expect(state.current_day == 3 and state.king_storage == 1 and state.player_inventory == (4 if for_order else 2),
+		"Grow and harvest the private and public crops through the farm controls.")
 	await _key(KEY_5)
 
 func _enter_market(world: Node2D, ui: CanvasLayer) -> bool:
 	await _button(ui.manage_button)
 	var management: Control = ui.panel_manager.management_panel_instance
-	management.show_market()
+	management.show_season_orders()
 	await tree.process_frame
-	await _button(management.market_panel.get_node("MarketHeader/MarketDirections"))
+	var order: Control = management.season_order_panel
+	_expect(order.copper_button.disabled and state.crop_stock.count("beans") == 1,
+		"One of the required beans has been grown.")
+	await _button(order.produce_route_button)
 	_expect(ui.directions.tracked_place == "西市 · 粮摊" and state.market_trip_target == "粮摊" and not management.visible,
-		"The market shortcut marks the west road and the grain stall.")
+		"The order book points through the west road to the grain stall for the missing beans.")
 	await _walk(world.player, [Vector2(-181, 54), Vector2(-181, 0), Vector2(-270, -21)])
 	return await _cross(&"ui_left", state.WEST_MARKET_SCENE)
 
@@ -201,7 +207,7 @@ func _shop(market: Node2D, fish_id: String) -> bool:
 	await _button(counter.grain.sell_button)
 	await _button(counter.grain.convert_button)
 	await _button(counter.grain.buy_button)
-	_expect(state.player_inventory == 0 and state.king_storage == 1 and state.food_storage == before_food + 2
+	_expect(state.player_inventory == 2 and state.king_storage == 1 and state.food_storage == before_food + 2
 		and state.money == before_money + state.balance.market_crop_price - state.balance.market_food_price,
 		"Sell, convert and buy at the grain stall at the existing prices.")
 	await _snapshot("02-grain-counter")
@@ -211,7 +217,8 @@ func _shop(market: Node2D, fish_id: String) -> bool:
 	_expect("立桩用粮 60" in counter.grain.reserve_label.text and counter.grain.reserve_button.disabled
 		and not counter.grain.survey_button.visible, "The grain stall can quote the same future field without an estate survey to return to.")
 	await _snapshot("05-stall-provisions")
-	await _key(KEY_ESCAPE)
+	await _buy_spring_produce(market)
+	await _deliver_spring_order(market)
 	if not await _stall(market, "FishStall", "03a-fish-lane"):
 		return false
 	if not _check_keeper(market, "FishStall", Vector2(48, 0)):
@@ -239,6 +246,38 @@ func _shop(market: Node2D, fish_id: String) -> bool:
 	await _button(counter.get_node("%BackToSilk"))
 	await _key(KEY_ESCAPE)
 	return true
+
+func _buy_spring_produce(market: Node2D) -> void:
+	var counter: Control = market.counter
+	var copper: int = state.money
+	var grain: int = state.food_storage
+	var harvested: int = state.private_harvest_total
+	_expect(market.produce_sack.visible and market.produce_tag.visible and state.crop_stock.count("beans") == 1,
+		"Gu Bo shows a full sack while the spring order is one bean short.")
+	await _snapshot("02a-seasonal-produce")
+	await _button(counter.market_produce)
+	_expect(state.crop_stock.count("beans") == 2 and state.money == copper - state.market_produce_price()
+		and state.food_storage == grain and state.king_storage == 1 and state.private_harvest_total == harvested,
+		"Buying produce fills the correct private stock without counting as a harvest, grain or tribute.")
+	_expect(counter.market_produce.disabled and "已售罄" in counter.market_produce.text
+		and market.produce_sack.visible and not market.produce_tag.visible and not state.buy_market_produce(),
+		"The sack empties and the same offer cannot be bought again.")
+	await _snapshot("02b-produce-sold")
+	await _key(KEY_ESCAPE)
+	await _snapshot("02c-empty-sack")
+	print("MARKET_PRODUCE day=", state.current_day, " stock=", state.crop_stock.lots, " copper=", state.money)
+
+func _deliver_spring_order(market: Node2D) -> void:
+	await Campaign.walk_market_to(tree, market, market.market_map.places[state.MARKET_ORDERS])
+	await _key(KEY_E)
+	var order: Control = market.counter.orders
+	var grain: int = state.food_storage
+	var reward: int = state.season_order_rewards(state.season_order()).food
+	await _button(order.food_button)
+	_expect(state.season_order_delivered_at(state.season_order()) == state.current_day
+		and state.food_storage == grain + reward and state.player_inventory == 0,
+		"The purchased crop completes the spring delivery at the order board.")
+	await _key(KEY_ESCAPE)
 
 func _continue_from_market(market: Node2D, fish_id: String) -> void:
 	await _button(market.get_node("UI/Control/Wallet/SettingsButton"))
@@ -273,6 +312,8 @@ func _continue_from_market(market: Node2D, fish_id: String) -> void:
 		and state.fish_count(fish_id) == 0 and state.silk_bolts_sold == 1, "The market checkpoint keeps the clock and receipts.")
 	_expect(market.get_node("Porter").position.distance_to(porter_position) < 5.0,
 		"Continue restores the porter on the same part of the route.")
+	_expect(not state.market_produce_available() and market.produce_sack.visible and not market.produce_tag.visible,
+		"Continue retains the empty sack for the rest of the season.")
 	print("MARKET_PORTER_RESTORED ", market.get_node("Porter").position, " clock=", state.day_progress)
 	if not await _night(market):
 		return
@@ -283,6 +324,15 @@ func _continue_from_market(market: Node2D, fish_id: String) -> void:
 			"Return by the west road with the estate and selected seed intact.")
 		print("MARKET_RETURN day=", state.current_day, " copper=", state.money, " grain=", state.food_storage,
 			" tribute=", state.king_storage, " seed=", world.current_seed_id)
+		await _reach_summer(tree.current_scene.get_node("UI"))
+
+func _reach_summer(ui: CanvasLayer) -> void:
+	for night in 4:
+		await _button(ui.sleep_button)
+		await tree.create_timer(1.12).timeout
+	_expect(state.current_day == 7 and state.market_produce_available() and state.market_produce_crop() == "rice",
+		"Gu Bo restocks with rice on the first day of summer.")
+	print("MARKET_RESTOCK day=", state.current_day, " crop=", state.market_produce_crop())
 
 func _play() -> void:
 	await _button(tree.current_scene.new_button)
@@ -290,7 +340,7 @@ func _play() -> void:
 		await tree.scene_changed
 	var world := tree.current_scene.get_node("World") as Node2D
 	var ui := tree.current_scene.get_node("UI") as CanvasLayer
-	await _harvest(world, ui)
+	await _harvest(world, ui, true)
 	# The fishing and silk replays cover earning these two lots.
 	state.talk_to_visitor(VisitorData.RAVINE_GUIDE)
 	var fish_id: String = state.land_creek_fish(CreekFish.Site.POOL, state.current_day)
