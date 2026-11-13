@@ -256,6 +256,7 @@ func _follow_harvester(guest: Node2D) -> void:
 	await _key(KEY_E)
 	var dialogue := ui.get_node_or_null("Control/DialoguePanel") as Control
 	if _expect(dialogue != null and dialogue.name_label.text == guest.speaker and "稷" in dialogue.text_label.text
+		and "冬至" in dialogue.text_label.text and "一份菽" in dialogue.text_label.text
 		and ui.directions.tracked_neighbor.is_empty(), "The marked neighbor talks about the crop they received."):
 		var portrait := dialogue.portrait.texture as AtlasTexture
 		_expect(guest.speaker == WinterSupper.HOST and portrait != null and portrait.atlas.resource_path == CharacterArt.TOWN_PORTRAITS
@@ -288,13 +289,25 @@ func _festival() -> void:
 	var tribute: int = state.king_storage
 	var reputation: int = state.reputation
 	var rites: int = state.player_stats.stats["RITES"]["xp"]
+	state.pin_season_order(true, true)
 	if not await _open_and_select():
 		return
+	var panel: Control = ui.autumn_exhibit_panel
+	_expect(panel.tradeoff.visible and "东岗秋粮" in panel.tradeoff.text and "稷 1、菽 1" in panel.tradeoff.text
+		and "黍 1" not in panel.tradeoff.text and "冬路粮与麻" not in panel.tradeoff.text,
+		"The fair previews the additional loss of autumn cargo if the samples are shared.")
+	await _button(panel.crop_buttons["beans"])
+	await _button(panel.crop_buttons["hemp"])
+	_expect("冬路粮与麻" in panel.tradeoff.text and "麻 1" in panel.tradeoff.text and "菽 1" not in panel.tradeoff.text,
+		"Replacing beans with hemp updates both the autumn and tracked winter reservations.")
+	await _button(panel.crop_buttons["hemp"])
+	await _button(panel.crop_buttons["beans"])
 	await _snapshot("02-choose-samples")
 	await _button(ui.autumn_exhibit_panel.take)
 	_expect(state.player_inventory == stock and state.reputation == reputation
+		and not state.winter_supper_bean_gift(22)
 		and state.player_stats.stats["RITES"]["xp"] == rites + state.balance.autumn_exhibit_rites,
-		"Taking samples home keeps the crops and grants rites experience.")
+		"Taking samples home keeps the crops and grants rites experience without promising a winter gift.")
 	_expect(_samples_visible(stand) == 3, "Taking crops home still shows the three samples.")
 	await tree.create_timer(AutumnExhibit.DISPLAY_SECONDS + 0.12).timeout
 	_expect(_samples_visible(stand) == 0 and _parcel_count(stand) == 0, "Only the shared crops go to neighbors.")
@@ -360,6 +373,11 @@ func _festival() -> void:
 	_expect("秋社已入簿" in ui.calendar.event_note.text and "已分给乡邻" in ui.calendar.event_note.text
 		and not ui.calendar.guide.visible, "The almanac shows the past festival and its outcome.")
 	await _snapshot("04-exhibit-record")
+	await _button(ui.calendar.seasons.get_node("Winter"))
+	await _button(ui.calendar.dates.get_child(3))
+	_expect("禾伯出菽" in ui.calendar.event_note.text and state.winter_supper_bean_gift(22)
+		and not state.winter_supper_bean_gift(46),
+		"The almanac previews the contribution for this year's solstice alone.")
 	await _key(KEY_ESCAPE)
 
 func _play() -> void:
@@ -405,6 +423,40 @@ func _second_year() -> void:
 	await _key(KEY_ESCAPE)
 	print("AUTUMN_RETURN day=", state.current_day, " prior_receipt=", previous_day)
 
+func _winter_return() -> void:
+	var checkpoint: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(state.manual_save_path()))
+	checkpoint.current_day = 22
+	checkpoint.crop_stock["wheat"] = 1
+	checkpoint.player_inventory += 1
+	var path := "user://autumn-to-winter.json"
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	file.store_string(JSON.stringify(checkpoint))
+	file.close()
+	if not _expect(state.load_game(path) == OK, "Bring the actual autumn receipt to a winter checkpoint."):
+		return
+	await tree.scene_changed
+	_estate()
+	var approach := world.get_node("WinterSupper/Approach") as Marker2D
+	await Campaign.walk_estate_road_to(tree, world, approach.global_position)
+	await _key(KEY_E)
+	var dialog := ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(dialog != null and dialog.name_label.text == WinterSupper.HOST
+		and "禾伯出菽" in dialog.text_label.text and state.crop_stock.count("beans") == 0,
+		"He Bo can prepare the bean supper with wheat and no beans in the player's store."):
+		return
+	await _snapshot("08-he-bo-winter-gift")
+	var tribute: int = state.king_storage
+	await _button(dialog.options_container.get_child(0))
+	var receipt: Dictionary = state.winter_supper_record()
+	_expect(receipt.get("recipe") == WinterSupper.BEAN and receipt.get("he_bo_beans") == true
+		and receipt.portions == state.balance.winter_bean_rations
+		and state.crop_stock.count("wheat") == 0 and state.crop_stock.count("beans") == 0 and state.king_storage == tribute,
+		"Cooking uses one private wheat and records He Bo's contribution without adding beans to stock.")
+	_expect(state.save_game() == OK, "Save the winter supper with the contribution recorded.")
+	await _continue()
+	_expect(state.winter_supper_record() == receipt, "The supper receipt preserves the contribution on reload.")
+	print("AUTUMN_WINTER_GIFT day=", state.current_day, " receipt=", state.winter_supper_record())
+
 func run(game_tree: SceneTree) -> void:
 	tree = game_tree
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated exhibit profile."):
@@ -419,6 +471,8 @@ func run(game_tree: SceneTree) -> void:
 	await _play()
 	if not failed and DisplayServer.get_name() == "headless":
 		await _second_year()
+	if not failed:
+		await _winter_return()
 	if not failed:
 		print("SCENARIO_OK")
 	tree.quit(1 if failed else 0)

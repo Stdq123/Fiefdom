@@ -786,19 +786,34 @@ func is_winter_supper_day(day := 0) -> bool:
 func winter_supper_record(day := 0) -> Dictionary:
 	return winter_suppers.get(day if day > 0 else current_day, {})
 
+func winter_supper_bean_gift(day := 0) -> bool:
+	var date := day if day > 0 else current_day
+	if not is_winter_supper_day(date):
+		return false
+	var terms_since_autumn := SOLAR_TERMS.find(WinterSupper.TERM) - SOLAR_TERMS.find(AutumnExhibit.TERM)
+	var harvest_day := date - terms_since_autumn * maxi(1, balance.days_per_solar_term)
+	return autumn_exhibit_record(harvest_day).get("shared", false)
+
+func _winter_supper_crops(recipe: String) -> Dictionary:
+	if recipe == WinterSupper.BEAN and winter_supper_bean_gift():
+		return {"wheat": 1}
+	return WinterSupper.RECIPES[recipe].crops
+
 func can_prepare_winter_supper(recipe: String, fish: String) -> bool:
 	return (outcome == Outcome.RUNNING and is_winter_supper_day() and not winter_suppers.has(current_day)
-		and crop_stock.can_spend(WinterSupper.RECIPES[recipe].crops)
+		and crop_stock.can_spend(_winter_supper_crops(recipe))
 		and (recipe != WinterSupper.FISH or fish_count(fish) > 0))
 
 func prepare_winter_supper(recipe: String, fish: String) -> bool:
 	if not can_prepare_winter_supper(recipe, fish):
 		return false
 	var dish: Dictionary = WinterSupper.RECIPES[recipe]
-	crop_stock.spend(dish.crops)
+	crop_stock.spend(_winter_supper_crops(recipe))
 	if recipe == WinterSupper.FISH:
 		fish_collection[fish].stock -= 1
 	winter_suppers[current_day] = {"recipe": recipe, "portions": WinterSupper.portions(recipe, balance)}
+	if recipe == WinterSupper.BEAN and winter_supper_bean_gift():
+		winter_suppers[current_day]["he_bo_beans"] = true
 	player_stats.add_xp(PlayerStats.Art.RITES, balance.winter_supper_rites)
 	GameEvents.inventory_changed.emit(player_inventory)
 	if recipe == WinterSupper.FISH:
@@ -3695,6 +3710,8 @@ func _restore_winter_suppers(record: Variant, saved_day: int) -> void:
 		var portions := _read_save_int(entry.get("portions"), 0)
 		if recipe is String and WinterSupper.RECIPES.has(recipe) and portions > 0:
 			winter_suppers[day] = {"recipe": recipe, "portions": portions}
+			if recipe == WinterSupper.BEAN and entry.get("he_bo_beans") == true:
+				winter_suppers[day]["he_bo_beans"] = true
 
 func _read_save_int(value: Variant, fallback: int) -> int:
 	var number := _read_save_number(value, float(fallback))

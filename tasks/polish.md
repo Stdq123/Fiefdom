@@ -903,3 +903,8 @@
 
 - 首次夏单到货后，南池西岸出现钓台及接到池岸路的短径。可从卸货场问申禾指路，也可在封地舆图选择。四季可钓鲫鱼，与竹涧共用每日一次的起鱼机会。鱼获结果可指路去灶台，鲫鱼可与稻做成稻鱼羹。
 - 新档交了两份自种稻后，回放将时辰推进到到货时间。第 10 天从申禾处沿路到南池，消耗 5 点体力钓到鲫鱼。续档保留钓台和首获地点，用鱼和在西市购得的一份稻做成路餐。Godot 与 Windows 解压版通过相关回放，包含默认规则的双结局、竹笼、秋社和留鱼单。1024×768 画面在不可见桌面取得。 [Windows 试玩包](../build/polish-pond-landing/Fiefdom-1.0.0-Windows-x64.zip) · [南池垂钓](../build/polish-pond-landing/final-1024x768/13-pond-fishing.png) · [鱼获与灶台指路](../build/polish-pond-landing/final-1024x768/14-pond-catch.png) · [发行回放](../build/polish-pond-landing/release-final/summer-rice.log)
+
+## 秋社分享与冬至围炉
+
+- 秋社选样时提示送出哪些本季或已跟踪下季的留货，换选即更新。摆样带回保留收成。分享后，禾伯在同年冬至往麦菽粥里添一份菽，玩家只需带一份麦，仍可给门客备三份粥。
+- 新档走到第 16 天，分别核对带回和分享。用分享后的存档准备第 22 天的验证档，确认私仓无菽时也能下锅，续档保留禾伯的贡献，隔年要再分享才会回赠。Godot 和 Windows 解压版通过节庆、交货和双结局相关回放。秋社和冬至画面在 1024×768 的不可见桌面核对。 [Windows 试玩包](../build/polish-harvest-supper/Fiefdom-1.0.0-Windows-x64.zip) · [秋社选样](../build/polish-harvest-supper/render-1024x768/02-choose-samples.png) · [冬至菜单](../build/polish-harvest-supper/render-1024x768/08-he-bo-winter-gift.png) · [发行回放](../build/polish-harvest-supper/windows-check/autumn-exhibit.log)

@@ -115,9 +115,11 @@ func show_winter_supper() -> void:
 	var need := Global.retainer_food_cost()
 	if not record.is_empty():
 		var dish: String = WinterSupper.RECIPES[record.recipe].name
-		_open(WinterSupper.HOST, WinterSupper.PLACE,
-			"这锅%s已经煮好。先给门客留 %d 份，余下的留给来围炉的人。坐近些，风就小了。" % [
-				dish, mini(need, int(record.portions))], ["坐一会"], [], null)
+		var serving := "这锅%s已经煮好。先给门客留 %d 份，余下的留给来围炉的人。坐近些，风就小了。" % [
+			dish, mini(need, int(record.portions))]
+		if record.get("he_bo_beans", false):
+			serving = "秋社你留了谷样，这锅粥也有我的一份菽。" + serving
+		_open(WinterSupper.HOST, WinterSupper.PLACE, serving, ["坐一会"], [], null)
 		return
 	var fish := Global.fish_for_travel_meal()
 	var fish_name: String = "溪鱼" if fish.is_empty() else CreekFish.SPECIES[fish].name
@@ -126,8 +128,12 @@ func show_winter_supper() -> void:
 	var welcome := ("天色晚了，今夜你家需 %d 份。" if Global.day_progress >= WinterSupper.EVENING else "灯亮就开席，今夜你家需 %d 份。") % need
 	if not previous.is_empty():
 		welcome = "还记得去年的%s。今夜需 %d 份。" % [WinterSupper.RECIPES[previous.recipe].name, need]
-	var speech := "%s\n麦菽粥 · 麦 1、菽 1 · 供 %d 份\n鱼麦羹 · 麦 1、%s 1 · 供 %d 份" % [
-		welcome, WinterSupper.portions(WinterSupper.BEAN, Global.balance), fish_name, WinterSupper.portions(WinterSupper.FISH, Global.balance)]
+	var beans := "菽 1"
+	if Global.winter_supper_bean_gift():
+		welcome = "秋社你留了谷样，我给今晚的粥添一份菽。今夜你家需 %d 份。" % need
+		beans = "禾伯出菽"
+	var speech := "%s\n麦菽粥 · 麦 1、%s · 供 %d 份\n鱼麦羹 · 麦 1、%s 1 · 供 %d 份" % [
+		welcome, beans, WinterSupper.portions(WinterSupper.BEAN, Global.balance), fish_name, WinterSupper.portions(WinterSupper.FISH, Global.balance)]
 	var stock := Global.crop_stock
 	var context := "%s · 私仓麦 %d、菽 %d" % [WinterSupper.PLACE, stock.count("wheat"), stock.count("beans")]
 	var order := Global.season_order()
