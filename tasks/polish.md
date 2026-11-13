@@ -852,3 +852,4 @@
 
 - 当粮仓不足且手头物资可改善分餐时，账页列出能补的份数、可转用的作物和购粮费用。玩家可按报价启用夜间备粮或调高每夜上限。仍在过夜时结算，并沿用时令单留货、分餐与研究费的规则。
 - 回放从旧档的手动备粮进入报价。补三份需转两份麻和花五铜钱。确认后库存保持原数，过夜后完成四份分餐，留下春单所需作物。 [Godot 冒烟](../build/polish-ration-quote/godot-ration-quote.log)
+- 田边按钮与账页使用同一个缺粮数，分餐明细另列实际能供给的整份口粮。 [Windows 试玩包](../build/windows-landscape/Fiefdom-1.0.0-Windows-x64.zip) · [报价截图](../build/windows-landscape/rations-final-1024x768/01-before-delegation.png)

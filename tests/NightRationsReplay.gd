@@ -103,7 +103,8 @@ func run(game_tree: SceneTree) -> void:
 	if not _expect(panel != null, "The HUD opens the nightly ration ledger."):
 		_end()
 		return
-	_expect(not state.night_rations.enabled and not panel.budget.editable and "缺 3 份" in panel.forecast.text,
+	_expect(not state.night_rations.enabled and not panel.budget.editable and "缺 3 份" in panel.forecast.text
+		and ui.hud.rations_button.text.ends_with("缺粮 3"),
 		"An old save starts in manual mode and shows the specialist meal shortage.")
 	_expect(panel.accept_offer.visible and "麻 2" in panel.night_offer.text and "5 铜钱" in panel.night_offer.text,
 		"The shortage offers the exact surplus and minimum copper cap.")

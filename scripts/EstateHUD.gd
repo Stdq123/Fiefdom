@@ -229,7 +229,7 @@ func refresh_rations() -> void:
 	var plan := Global.night_rations_plan()
 	var tone := Color("#e7ddbd")
 	if plan.uncovered > 0:
-		rations_button.text = "今夜安排 · 缺粮 %d" % (plan.need - plan.served)
+		rations_button.text = "今夜安排 · 缺粮 %d" % plan.uncovered
 		tone = Color("#efbf8a")
 	elif Global.tribute_penalty_tonight() > 0:
 		rations_button.text = "今夜安排 · 纳贡到期"
