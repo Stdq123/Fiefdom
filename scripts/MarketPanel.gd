@@ -65,12 +65,6 @@ func _ready() -> void:
 	)
 	_refresh()
 
-func focus_crop_conversion() -> void:
-	crop_choice.select(0)
-	quantity.value = 1
-	_refresh_trade()
-	convert_button.grab_focus()
-
 func show_reclamation_reserve(return_action: Callable) -> void:
 	return_to_survey = return_action
 	reserve_kind.select(ReserveKind.RECLAMATION)

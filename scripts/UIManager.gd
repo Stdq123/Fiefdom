@@ -412,18 +412,19 @@ func _opening_neighbor() -> String:
 func _refresh_opening_action() -> void:
 	var speaker := _opening_neighbor()
 	var can_discuss_rotation := speaker == VisitorData.FIELD_KEEPER and Global.rotation_offer_ready()
-	var can_trade := (Global.current_rank == Global.Rank.XIA_SHI and Global.first_tribute_delivered()
-		and Global.private_harvest_total > 0 and Global.player_inventory > 0 and not Global.retainers.is_empty())
+	var can_review_harvest := (not Global.first_harvest_reviewed and Global.get_current_year() == 1
+		and Global.current_rank == Global.Rank.XIA_SHI and Global.first_tribute_delivered()
+		and Global.private_harvest_total > 0 and Global.player_inventory > 0)
 	var action: Button = hud.opening_action
 	hud.handover_button.visible = Global.outcome == Global.Outcome.RUNNING and not Global.first_tribute_delivered()
 	action.visible = (Global.outcome == Global.Outcome.RUNNING and not hud.cancel_directions.visible
-		and (not speaker.is_empty() or can_trade))
+		and (not speaker.is_empty() or can_review_harvest))
 	hud.visitor_label.visible = speaker.is_empty() or not action.visible or can_discuss_rotation
 	if not action.visible:
 		return
 	if speaker.is_empty():
-		action.text = "用私田收成换口粮"
-		action.tooltip_text = "打开市场，查看作物转粮。"
+		action.text = "首茬收成 · 安排去处"
+		action.tooltip_text = "查看今夜用粮与时令交货。"
 	elif speaker == Global.TAX_ENVOY:
 		action.text = "去见召简 · 堂前"
 		action.tooltip_text = "走到堂前，按 %s 议税。" % GamepadInput.interact_key()
@@ -445,8 +446,8 @@ func _on_opening_action() -> void:
 		return
 	var speaker := _opening_neighbor()
 	if speaker.is_empty():
-		_show_market()
-		panel_manager.management_panel_instance.market_panel.focus_crop_conversion()
+		var dialog := dialog_manager.show_first_harvest(_on_season_board_interacted)
+		dialog.option_selected.connect(_refresh_opening_action.unbind(1))
 	else:
 		_on_neighbor_directions_requested(speaker)
 

@@ -174,7 +174,7 @@ text = "四周私田"
 
 [node name="Income" type="Label" parent="MapModal/Center/Sheet/Stack/Body/Field/Legend"]
 layout_mode = 2
-text = "收成归你，可到市场换口粮。"
+text = "收成归你，可换粮或交时令单。"
 
 [node name="FindKeeper" type="Button" parent="MapModal/Center/Sheet/Stack"]
 unique_name_in_owner = true

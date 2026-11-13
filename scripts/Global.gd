@@ -71,6 +71,7 @@ var pinned_season_start := 0
 var travel_meal := ""
 var king_storage: int
 var private_harvest_total: int
+var first_harvest_reviewed := false
 var money: int
 var reputation: int
 var max_stamina: int
@@ -256,6 +257,7 @@ func _reset_campaign() -> void:
 	travel_meal = ""
 	king_storage = 0
 	private_harvest_total = 0
+	first_harvest_reviewed = false
 	money = 0
 	reputation = 0
 	max_stamina = 100
@@ -2744,6 +2746,7 @@ func _save_snapshot(origin: String) -> Error:
 		"travel_meal": travel_meal,
 		"king_storage": king_storage,
 		"private_harvest_total": private_harvest_total,
+		"first_harvest_reviewed": first_harvest_reviewed,
 		"silk_bolts_sold": silk_bolts_sold,
 		"silk_bolts_offered": silk_bolts_offered,
 		"silk_sample_day": silk_sample_day,
@@ -3236,6 +3239,7 @@ func load_game(path := "") -> Error:
 	travel_meal = packed_meal if packed_meal is String and TravelMeal.RECIPES.has(packed_meal) else ""
 	king_storage = maxi(0, _read_save_int(data.get("king_storage"), 0))
 	private_harvest_total = maxi(0, _read_save_int(data.get("private_harvest_total"), player_inventory))
+	first_harvest_reviewed = data.get("first_harvest_reviewed", false) == true
 	silk_bolts_sold = maxi(0, _read_save_int(data.get("silk_bolts_sold"), 0))
 	silk_bolts_offered = maxi(0, _read_save_int(data.get("silk_bolts_offered"), 0))
 	silk_sample_day = clampi(_read_save_int(data.get("silk_sample_day"), 0), 0, saved_day)

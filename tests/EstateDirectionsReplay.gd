@@ -90,12 +90,13 @@ func _night() -> void:
 	await _click(ui.sleep_button.get_global_rect().get_center())
 	await tree.create_timer(1.12).timeout
 
-func _save_and_continue() -> void:
+func _save_and_continue(save := true) -> void:
 	await _click(ui.settings_button.get_global_rect().get_center())
 	var settings: Control = ui.panel_manager.settings_panel_instance
 	_expect(not directions.visible and settings.visible, "Settings covers the active map directions.")
-	await _click(_button(settings, "保存游戏").get_global_rect().get_center())
-	_expect(settings.save_status.text == "游戏已保存", "The watered plot is saved through Settings.")
+	if save:
+		await _click(_button(settings, "保存游戏").get_global_rect().get_center())
+		_expect(settings.save_status.text == "游戏已保存", "The estate is saved through Settings.")
 	await _click(_button(settings, "返回标题").get_global_rect().get_center())
 	var confirmation := settings.get_node("TitleConfirmation") as ConfirmationDialog
 	_expect(confirmation.visible, "Returning to the title asks for confirmation.")
@@ -215,26 +216,55 @@ func _private_crop_and_grain(spawn: Vector2) -> void:
 		and state.fertile_cells.has(cell) and state.field_rotation.beans_day == state.current_day,
 		"The private crop goes to the owner and fulfills the existing rotation step.")
 	var trade: Button = ui.hud.opening_action
-	if not _expect(trade.visible and trade.text == "用私田收成换口粮", "The journal points directly to the first crop exchange."):
+	if not _expect(trade.visible and trade.text == "首茬收成 · 安排去处", "The journal offers a choice for the first private harvest."):
 		return
 	await _capture("10-grain-invitation")
+	await _save_and_continue()
+	trade = ui.hud.opening_action
 	await _click(trade.get_global_rect().get_center())
-	var panel: Control = ui.panel_manager.management_panel_instance
-	var market: Control = panel.market_panel
-	_expect(market.is_visible_in_tree() and not market.convert_button.disabled and market.convert_button.has_focus(),
-		"The existing market opens to a usable one-crop conversion.")
-	await _capture("11-first-grain-trade")
-	await _click(market.convert_button.get_global_rect().get_center())
+	var dialog := ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(dialog != null, "Continue preserves the option to review the first harvest."):
+		return
+	_expect("粮仓 %d 份 · 今夜需 1 份" % before_food in dialog.text_label.text
+		and "「亭前备种」第 6 天截止 · 菽 1/2、黍 0/1" in dialog.text_label.text
+		and "转粮会用掉一份可交货的菽" in dialog.text_label.text
+		and _button(dialog, "稍后再说").has_focus(), "The prompt compares tonight's rations to the spring order and focuses the harmless choice.")
+	await _capture("11-first-harvest-choice")
+	await _key(KEY_ESCAPE)
+	_expect(trade.visible and state.food_storage == before_food and state.crop_stock.count("beans") == 1,
+		"Closing the prompt leaves the harvest undecided and both balances intact.")
+	await _click(trade.get_global_rect().get_center())
+	await _key(KEY_LEFT)
+	await _key(KEY_ENTER)
 	_expect(state.food_storage == before_food + 1 and state.crop_stock.count("beans") == 0
-		and state.king_storage == 1, "One private crop becomes one ration while the tribute remains in the treasury.")
+		and state.king_storage == 1 and not trade.visible and "晋升" in ui.hud.guide.heading.text,
+		"One private crop becomes one ration while the tribute and promotion goal stay in place.")
 	print("DIRECTION_FIRST_RATION day=", state.current_day, " private=", state.private_harvest_total,
 		" tribute=", state.king_storage, " grain=", before_food, "->", state.food_storage)
+
+	await _save_and_continue(false)
+	trade = ui.hud.opening_action
+	await _click(trade.get_global_rect().get_center())
+	dialog = ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(dialog != null, "Continue restores the same starting harvest for the other choice."):
+		return
+	await _click(_button(dialog, "留作物 · 看时令单").get_global_rect().get_center())
+	var panel: Control = ui.panel_manager.management_panel_instance
+	var book: Control = panel.season_order_panel
+	_expect(book.is_visible_in_tree() and "亭前备种" in book.order_title.text
+		and state.crop_stock.count("beans") == 1 and state.food_storage == before_food and not trade.visible,
+		"Keeping the crop opens the current order, leaves stock available, and completes the optional prompt.")
+	await _click(book.pin_button.get_global_rect().get_center())
+	await _capture("12-keep-the-beans")
 	await _click(panel.get_node("CloseButton").get_global_rect().get_center())
-	_expect(not trade.visible and "晋升" in ui.hud.guide.heading.text,
-		"The optional trade action clears with an empty stock, leaving promotion as the main direction.")
 	await _night()
-	_expect(state.food_storage == before_food and state.night_rations.last.served == 1,
-		"The next night's ordinary settlement uses one ration.")
+	_expect(state.food_storage == before_food - 1 and state.night_rations.last.served == 1
+		and state.crop_stock.count("beans") == 1, "The next night uses existing grain and keeps the bean for the order.")
+	await _save_and_continue()
+	_expect(not ui.hud.opening_action.visible and ui.hud.pinned_order.visible and state.crop_stock.count("beans") == 1,
+		"Continue preserves the chosen order and leaves the one-time prompt closed even with crops still in stock.")
+	print("DIRECTION_FIRST_HARVEST_ORDER day=", state.current_day, " bean=", state.crop_stock.count("beans"),
+		" grain=", state.food_storage, " tracked=", state.pinned_season_start)
 
 func _finish() -> void:
 	tree.unload_current_scene()
@@ -381,6 +411,7 @@ func run(game_tree: SceneTree) -> void:
 	await _click(journal.locate_button.get_global_rect().get_center())
 	var keeper_dialog := await _meet(KEEPER)
 	if _expect(keeper_dialog != null and directions.tracked_neighbor.is_empty(), "Reaching the keeper and pressing E clears the route."):
+		_expect("第 6 天收簿" in keeper_dialog.text_label.text, "The keeper mentions the spring deadline before the player sows the first private crop.")
 		await _capture("07-agree-to-rotate-crops")
 		await _click(_button(keeper_dialog, "约定试一回轮作").get_global_rect().get_center())
 	_expect(state.field_rotation.promise_day == 3, "The existing rotation story starts directly from the first harvest.")

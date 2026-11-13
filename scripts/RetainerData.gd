@@ -118,7 +118,7 @@ func resident_line() -> String:
 		if Global.first_tribute_delivered():
 			return "收进国库的头一捧谷，我看见了。我在田边歇脚，哪一格土色发白，就提桶过去。"
 		if Global.current_day == 1:
-			return "堂屋给你扫出来了，井里也汲得到水。打今儿起，这片采邑由你照管。\n中间一畦的谷要纳贡，四周的收成归你，留着换粮养人。"
+			return "堂屋给你扫出来了，井里也汲得到水。打今儿起，这片采邑由你照管。\n中间一畦的谷要纳贡，四周的收成归你，可以换粮，也能留给西市的时令单。"
 		return "木桶的箍我收紧了。井田中央那格要纳贡。下种后若还没浇水，我会去水口提一桶。"
 	match duty:
 		Duty.REEL:

@@ -888,3 +888,8 @@
 
 - 东岗可用换防送来的麻或一束私仓麻布索。每批到货可用一次。敌袭预告的「今夜安排」可指路去东岗。来敌踏到麻绳时停住，默认 2.4 秒，绳子松落并显示剩余时间。战报记下拦索是否生效，弋戎可回应这次守备。
 - 双井田回放走过西市交货、巡人送达和东岗布索。第 44 天的野狗过路被绊住，存读档恢复剩余时间，玩家射退野狗并保住一格成熟稷。另从旧式守备档核对一次扣一束私仓麻。Godot 攻防回归和 Windows 双结局、战败恢复、延期研究及换防回放通过。画面在不可见桌面取得。 [Windows 试玩包](../build/polish-watch-snare/Fiefdom-1.0.0-Windows-x64.zip) · [来敌被绊住](../build/polish-watch-snare/final-1024x768/09-raider-caught.png) · [守备牌](../build/polish-watch-snare/final-1024x768/10-snare-report.png) · [发行回放](../build/polish-watch-snare/windows-final-check/watch-relief.log)
+
+## 第一茬私田收成的去处
+
+- 首年第一次谈轮作时，渠伯会说起未交的春单和截止日。私田收成入仓后，手记可打开简短选择，比较粮仓、今夜用粮与时令单。玩家可以明确用哪份作物换粮，也可以留作物、打开交货簿。完成选择后收起指引，存档保留这个状态。
+- 开局回放第 5 天收菽。转粮分支用一份菽将粮仓从 6 加到 7。留货分支保留菽并跟踪春单，第 6 天续档仍有一份菽、五份口粮。Godot 导入、脚本加载、开局与交货回放通过。Windows 解压版验证两条结局、战败恢复、延期研究及开局。1024×768 的 Vulkan 画面在不可见桌面核对。 [Windows 试玩包](../build/polish-first-harvest-choice/Fiefdom-1.0.0-Windows-x64.zip) · [首茬收成选择](../build/polish-first-harvest-choice/render-1024x768/11-first-harvest-choice.png) · [发行回放](../build/polish-first-harvest-choice/windows-check/opening.log)

@@ -9,6 +9,7 @@ const ROTATION_BOOK := preload("res://scripts/FieldRotationBook.gd")
 const TRAVEL_HEARTH := preload("res://scripts/TravelHearth.gd")
 const WATER_SOURCE := preload("res://scripts/WaterSource.gd")
 const SEED_GARDEN := preload("res://scripts/SeedGarden.gd")
+const ESTATE_STORAGE := preload("res://assets/world/estate-storage.png")
 const HUNGER_RETURN_LINES := {
 	VisitorData.FIELD_KEEPER: "那夜没分到饭，我只好去南边借住。今早路过，还是想看看咱们那块田。",
 	VisitorData.ROAD_KEEPER: "那晚我拎着空碗出了门，是过路人分了我一把炒菽。我记得这份情，也惦记亭西的人。",
@@ -35,6 +36,45 @@ var player: Player
 func setup(host: Control, estate_player: Player) -> void:
 	parent_node = host
 	player = estate_player
+
+func show_first_harvest(open_orders: Callable) -> Control:
+	var use := Global.market_crop_plan(1)
+	var crop: String = use.keys()[0]
+	var crop_name := ItemManager.crop_label(crop)
+	var tonight := Global.night_rations_plan()
+	var rations := "粮仓 %d 份 · 今夜需 %d 份" % [Global.food_storage, tonight.need]
+	var extra: int = tonight.supper + tonight.converted + tonight.bought
+	if extra > 0:
+		rations += " · 另备 %d 份" % extra
+	if tonight.served < tonight.need:
+		rations += " · 仍缺 %d 份" % (tonight.need - tonight.served)
+	var lines := PackedStringArray([rations])
+	var schedule := Global.season_order()
+	if Global.season_order_delivered_at(schedule) == 0:
+		var rewards := Global.season_order_rewards(schedule)
+		lines.append("「%s」第 %d 天截止 · %s" % [
+			schedule.order.title, schedule.end, ItemManager.describe_season_order_progress(schedule)])
+		lines.append("交齐可领 %d 份口粮或 %d 铜钱。" % [rewards.food, rewards.copper])
+	else:
+		lines.append("本季时令单已交齐。")
+	if int(Global.season_order_crops_to_keep().get(crop, 0)) >= Global.crop_stock.count(crop):
+		lines.append("转粮会用掉一份可交货的%s。" % crop_name)
+
+	var sack := AtlasTexture.new()
+	sack.atlas = ESTATE_STORAGE
+	sack.region = Rect2(0, 0, 16, 16)
+	sack.filter_clip = true
+	var dialog := _open("首茬收成", "私仓", "\n".join(lines),
+		["留作物 · 看时令单", "用 1 份%s换口粮" % crop_name, "稍后再说"], [], sack)
+	dialog.option_selected.connect(func(index: int):
+		if index == 0:
+			Global.first_harvest_reviewed = true
+			open_orders.call()
+		elif index == 1 and Global.convert_inventory_to_food(1, crop):
+			Global.first_harvest_reviewed = true
+			GameEvents.world_notice.emit("%s转粮 · 口粮 +1" % crop_name)
+	)
+	return dialog
 
 func show_freight_arrival(speech: String, portrait: Texture2D, guide_hearth: Callable,
 		destination: String, guide_destination: Callable) -> void:
@@ -269,6 +309,9 @@ func _show_field_keeper(context: String, appearance: Texture2D, usual_line: Stri
 			text = "豆茬的肥还在地里。找有金角标的私田，种点别的。\n若赶上谷雨，旱苗还能省一回浇水。等收了咱们再记。"
 	elif Global.rotation_offer_ready():
 		text = "荒年我只敢种黍。邻人分我一把菽种，说这地也该喘口气。\n你肯留一格私田，先收菽，再在原地收一茬吗？"
+		var schedule := Global.season_order()
+		if schedule.start == 1 and Global.season_order_delivered_at(schedule) == 0:
+			text += "\n西市春单也收两份菽、一份黍，第 %d 天收簿。想交货的话，这两样可以一块下种。" % schedule.end
 		options.push_front("约定试一回轮作")
 		follow_up = Global.agree_to_rotation
 	if not evening.is_empty() and text != evening:
