@@ -1,0 +1,236 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/EstateInterior.gd" id="1_room"]
+[ext_resource type="Texture2D" path="res://assets/world/silk-interior.svg" id="2_art"]
+[ext_resource type="Script" path="res://scripts/SilkStation.gd" id="3_station"]
+[ext_resource type="Material" path="res://resources/world_hint_material.tres" id="4_unshaded"]
+
+[sub_resource type="AtlasTexture" id="Atlas_floor"]
+atlas = ExtResource("2_art")
+region = Rect2(0, 0, 224, 144)
+
+[sub_resource type="AtlasTexture" id="Atlas_trays"]
+atlas = ExtResource("2_art")
+region = Rect2(0, 144, 56, 40)
+
+[sub_resource type="AtlasTexture" id="Atlas_reel"]
+atlas = ExtResource("2_art")
+region = Rect2(56, 144, 58, 45)
+
+[sub_resource type="AtlasTexture" id="Atlas_loom"]
+atlas = ExtResource("2_art")
+region = Rect2(114, 144, 64, 48)
+
+[sub_resource type="RectangleShape2D" id="Shape_back"]
+size = Vector2(210, 18)
+
+[sub_resource type="RectangleShape2D" id="Shape_side"]
+size = Vector2(12, 94)
+
+[sub_resource type="RectangleShape2D" id="Shape_front"]
+size = Vector2(84, 10)
+
+[sub_resource type="RectangleShape2D" id="Shape_exit"]
+size = Vector2(18, 6)
+
+[sub_resource type="RectangleShape2D" id="Shape_tray"]
+size = Vector2(42, 22)
+
+[sub_resource type="RectangleShape2D" id="Shape_reel"]
+size = Vector2(46, 20)
+
+[sub_resource type="RectangleShape2D" id="Shape_loom"]
+size = Vector2(48, 29)
+
+[sub_resource type="Gradient" id="Gradient_glow"]
+offsets = PackedFloat32Array(0, 0.24, 0.57, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0.71, 0.71, 0.71, 1, 0.17, 0.17, 0.17, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="Texture_glow"]
+gradient = SubResource("Gradient_glow")
+width = 112
+height = 112
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[node name="SilkInterior" type="Node2D"]
+visible = false
+y_sort_enabled = true
+script = ExtResource("1_room")
+room_kind = 2
+facade_path = NodePath("../SilkShed")
+
+[node name="Backdrop" type="Polygon2D" parent="."]
+z_index = -3
+material = ExtResource("4_unshaded")
+color = Color(0.075, 0.093, 0.08, 1)
+polygon = PackedVector2Array(-512, -384, 512, -384, 512, 384, -512, 384)
+
+[node name="Floor" type="Sprite2D" parent="."]
+z_index = -2
+texture = SubResource("Atlas_floor")
+
+[node name="Walls" type="StaticBody2D" parent="."]
+collision_mask = 0
+
+[node name="Back" type="CollisionShape2D" parent="Walls"]
+position = Vector2(0, -37)
+shape = SubResource("Shape_back")
+
+[node name="Left" type="CollisionShape2D" parent="Walls"]
+position = Vector2(-104, 15)
+shape = SubResource("Shape_side")
+
+[node name="Right" type="CollisionShape2D" parent="Walls"]
+position = Vector2(104, 15)
+shape = SubResource("Shape_side")
+
+[node name="FrontLeft" type="CollisionShape2D" parent="Walls"]
+position = Vector2(-56, 56)
+shape = SubResource("Shape_front")
+
+[node name="FrontRight" type="CollisionShape2D" parent="Walls"]
+position = Vector2(56, 56)
+shape = SubResource("Shape_front")
+
+[node name="SilkwormTray" type="StaticBody2D" parent="." groups=["interactable"]]
+position = Vector2(-64, -3)
+collision_mask = 0
+script = ExtResource("3_station")
+
+[node name="Sprite" type="Sprite2D" parent="SilkwormTray"]
+position = Vector2(-28, -36)
+texture = SubResource("Atlas_trays")
+centered = false
+
+[node name="Details" type="Node2D" parent="SilkwormTray"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SilkwormTray"]
+position = Vector2(0, -12)
+shape = SubResource("Shape_tray")
+
+[node name="Hint" type="Label" parent="SilkwormTray"]
+visible = false
+z_index = 7
+material = ExtResource("4_unshaded")
+offset_left = -35.0
+offset_top = -47.0
+offset_right = 35.0
+offset_bottom = -31.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.89, 0.66, 1)
+theme_override_colors/font_outline_color = Color(0.20, 0.13, 0.095, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
+[node name="Reel" type="StaticBody2D" parent="." groups=["interactable"]]
+position = Vector2(0, 3)
+collision_mask = 0
+script = ExtResource("3_station")
+action = 2
+
+[node name="Sprite" type="Sprite2D" parent="Reel"]
+position = Vector2(-29, -41)
+texture = SubResource("Atlas_reel")
+centered = false
+
+[node name="Details" type="Node2D" parent="Reel"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Reel"]
+position = Vector2(-1, -8)
+shape = SubResource("Shape_reel")
+
+[node name="Hint" type="Label" parent="Reel"]
+visible = false
+z_index = 7
+material = ExtResource("4_unshaded")
+offset_left = -35.0
+offset_top = -52.0
+offset_right = 35.0
+offset_bottom = -36.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.89, 0.66, 1)
+theme_override_colors/font_outline_color = Color(0.20, 0.13, 0.095, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
+[node name="Loom" type="StaticBody2D" parent="." groups=["interactable"]]
+position = Vector2(64, -3)
+collision_mask = 0
+script = ExtResource("3_station")
+action = 3
+
+[node name="Sprite" type="Sprite2D" parent="Loom"]
+position = Vector2(-32, -44)
+texture = SubResource("Atlas_loom")
+centered = false
+
+[node name="Details" type="Node2D" parent="Loom"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Loom"]
+position = Vector2(0, -14)
+shape = SubResource("Shape_loom")
+
+[node name="Hint" type="Label" parent="Loom"]
+visible = false
+z_index = 7
+material = ExtResource("4_unshaded")
+offset_left = -35.0
+offset_top = -53.0
+offset_right = 35.0
+offset_bottom = -37.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.89, 0.66, 1)
+theme_override_colors/font_outline_color = Color(0.20, 0.13, 0.095, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
+[node name="Exit" type="Area2D" parent="."]
+position = Vector2(0, 62)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Exit"]
+shape = SubResource("Shape_exit")
+
+[node name="ExitHint" type="Label" parent="."]
+z_index = 7
+material = ExtResource("4_unshaded")
+offset_left = -42.0
+offset_top = 76.0
+offset_right = 42.0
+offset_bottom = 92.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.84, 0.77, 0.60, 1)
+theme_override_font_sizes/font_size = 9
+text = "南门 · 回封地"
+horizontal_alignment = 1
+
+[node name="Entry" type="Marker2D" parent="."]
+position = Vector2(0, 38)
+rotation = -1.5707964
+
+[node name="RoomCamera" type="Camera2D" parent="."]
+zoom = Vector2(3, 3)
+enabled = false
+
+[node name="Lamp" type="PointLight2D" parent="."]
+position = Vector2(38, -33)
+color = Color(1, 0.71, 0.45, 1)
+energy = 0.32
+range_z_min = -2
+texture = SubResource("Texture_glow")
+texture_scale = 1.55
+
+[node name="WindowLight" type="PointLight2D" parent="."]
+position = Vector2(0, -31)
+color = Color(0.73, 0.93, 1, 1)
+energy = 0.36
+range_z_min = -2
+texture = SubResource("Texture_glow")
+texture_scale = 1.68

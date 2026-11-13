@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72" shape-rendering="crispEdges">
+  <!-- Grain keeper: rest, tending the goods, blink. -->
+  <g transform="translate(0 0)">
+    <path fill="#3b332e" d="M7 14h10v2h3v3h1v5H3v-5h1v-3h3z"/>
+    <path fill="#52664f" d="M7 15h10v2h2v3h1v4H4v-4h1v-3h2z"/>
+    <path fill="#8c9b72" d="M8 15h3v2h2v2h-2v-1H9v-1H8zM15 15h2v2h-2z"/>
+    <rect fill="#8c9b72" x="5" y="20" width="3" height="2"/>
+    <rect fill="#8c9b72" x="16" y="20" width="3" height="2"/>
+    <g transform="translate(0 0)">
+      <path fill="#3b332e" d="M7 7h10v2h2v5h-2v2H7v-2H5V9h2z"/>
+      <path fill="#d0a07b" d="M7 10h10v1h1v3h-2v2H8v-2H6v-3h1z"/>
+      <path fill="#f1c59b" d="M8 10h8v3h-1v1H9v-1H8z"/>
+      <path fill="#3b332e" d="M9 11h1v2H9zM14 11h1v2h-1z"/>
+      <path fill="#968771" d="M8 14h8v2H8zM10 16h4v1h-4z"/>
+      <path fill="#3b332e" d="M5 6h2V4h10v2h2v5H5z"/>
+      <path fill="#797763" d="M7 6h1V5h8v1h1v2h1v2H6V8h1z"/>
+      <path fill="#c1b197" d="M8 5h8v1H8zM6 8h12v1H6z"/>
+    </g>
+  </g>
+  <g transform="translate(24 0)">
+    <path fill="#3b332e" d="M7 14h10v2h3v3h1v5H3v-5h1v-3h3z"/>
+    <path fill="#52664f" d="M7 15h10v2h2v3h1v4H4v-4h1v-3h2z"/>
+    <path fill="#8c9b72" d="M8 15h3v2h2v2h-2v-1H9v-1H8zM15 15h2v2h-2z"/>
+    <path fill="#3b332e" d="M13 18h4v1h4v3h-2v1h-6z"/>
+    <path fill="#8c9b72" d="M14 18h3v1h2v2h-5z"/>
+    <rect fill="#d0a07b" x="18" y="20" width="3" height="2"/>
+    <rect fill="#c89455" x="19" y="22" width="4" height="1"/>
+    <g transform="translate(1 1)">
+      <path fill="#3b332e" d="M7 7h10v2h2v5h-2v2H7v-2H5V9h2z"/>
+      <path fill="#d0a07b" d="M7 10h10v1h1v3h-2v2H8v-2H6v-3h1z"/>
+      <path fill="#f1c59b" d="M8 10h8v3h-1v1H9v-1H8z"/>
+      <path fill="#3b332e" d="M9 11h1v2H9zM14 11h1v2h-1z"/>
+      <path fill="#968771" d="M8 14h8v2H8zM10 16h4v1h-4z"/>
+      <path fill="#3b332e" d="M5 6h2V4h10v2h2v5H5z"/>
+      <path fill="#797763" d="M7 6h1V5h8v1h1v2h1v2H6V8h1z"/>
+      <path fill="#c1b197" d="M8 5h8v1H8zM6 8h12v1H6z"/>
+    </g>
+  </g>
+  <g transform="translate(48 0)">
+    <path fill="#3b332e" d="M7 14h10v2h3v3h1v5H3v-5h1v-3h3z"/>
+    <path fill="#52664f" d="M7 15h10v2h2v3h1v4H4v-4h1v-3h2z"/>
+    <path fill="#8c9b72" d="M8 15h3v2h2v2h-2v-1H9v-1H8zM15 15h2v2h-2z"/>
+    <rect fill="#8c9b72" x="5" y="20" width="3" height="2"/>
+    <rect fill="#8c9b72" x="16" y="20" width="3" height="2"/>
+    <g transform="translate(0 0)">
+      <path fill="#3b332e" d="M7 7h10v2h2v5h-2v2H7v-2H5V9h2z"/>
+      <path fill="#d0a07b" d="M7 10h10v1h1v3h-2v2H8v-2H6v-3h1z"/>
+      <path fill="#f1c59b" d="M8 10h8v3h-1v1H9v-1H8z"/>
+      <path fill="#aa765d" d="M8 12h3v1H8zM13 12h3v1h-3z"/>
+      <path fill="#968771" d="M8 14h8v2H8zM10 16h4v1h-4z"/>
+      <path fill="#3b332e" d="M5 6h2V4h10v2h2v5H5z"/>
+      <path fill="#797763" d="M7 6h1V5h8v1h1v2h1v2H6V8h1z"/>
+      <path fill="#c1b197" d="M8 5h8v1H8zM6 8h12v1H6z"/>
+    </g>
+  </g>
+  <!-- Fish keeper: rest, tending the goods, blink. -->
+  <g transform="translate(0 24)">
+    <path fill="#3b332e" d="M7 14h10v2h3v3h1v5H3v-5h1v-3h3z"/>
+    <path fill="#497085" d="M7 15h10v2h2v3h1v4H4v-4h1v-3h2z"/>
+    <path fill="#86a4a8" d="M8 15h3v2h2v2h-2v-1H9v-1H8zM15 15h2v2h-2z"/>
+    <rect fill="#86a4a8" x="5" y="20" width="3" height="2"/>
+    <rect fill="#86a4a8" x="16" y="20" width="3" height="2"/>
+    <g transform="translate(0 0)">
+      <path fill="#3b332e" d="M7 7h10v2h2v5h-2v2H7v-2H5V9h2z"/>
+      <path fill="#d0a07b" d="M7 10h10v1h1v3h-2v2H8v-2H6v-3h1z"/>
+      <path fill="#f1c59b" d="M8 10h8v3h-1v1H9v-1H8z"/>
+      <path fill="#3b332e" d="M9 11h1v2H9zM14 11h1v2h-1z"/>
+      <rect fill="#aa765d" x="11" y="14" width="2" height="1"/>
+      <path fill="#3b332e" d="M5 7h2V4h10v3h2v4H5z"/>
+      <path fill="#446177" d="M7 6h1V5h8v1h1v2h1v2H6V8h1z"/>
+      <path fill="#7caaa6" d="M6 8h12v2H6zM8 5h8v1H8z"/>
+    </g>
+  </g>
+  <g transform="translate(24 24)">
+    <path fill="#3b332e" d="M7 14h10v2h3v3h1v5H3v-5h1v-3h3z"/>
+    <path fill="#497085" d="M7 15h10v2h2v3h1v4H4v-4h1v-3h2z"/>
+    <path fill="#86a4a8" d="M8 15h3v2h2v2h-2v-1H9v-1H8zM15 15h2v2h-2z"/>
+    <path fill="#3b332e" d="M13 18h4v1h4v3h-2v1h-6z"/>
+    <path fill="#86a4a8" d="M14 18h3v1h2v2h-5z"/>
+    <rect fill="#d0a07b" x="18" y="20" width="3" height="2"/>
+    <rect fill="#92b4a6" x="19" y="22" width="4" height="1"/>
+    <g transform="translate(1 1)">
+      <path fill="#3b332e" d="M7 7h10v2h2v5h-2v2H7v-2H5V9h2z"/>
+      <path fill="#d0a07b" d="M7 10h10v1h1v3h-2v2H8v-2H6v-3h1z"/>
+      <path fill="#f1c59b" d="M8 10h8v3h-1v1H9v-1H8z"/>
+      <path fill="#3b332e" d="M9 11h1v2H9zM14 11h1v2h-1z"/>
+      <rect fill="#aa765d" x="11" y="14" width="2" height="1"/>
+      <path fill="#3b332e" d="M5 7h2V4h10v3h2v4H5z"/>
+      <path fill="#446177" d="M7 6h1V5h8v1h1v2h1v2H6V8h1z"/>
+      <path fill="#7caaa6" d="M6 8h12v2H6zM8 5h8v1H8z"/>
+    </g>
+  </g>
+  <g transform="translate(48 24)">
+    <path fill="#3b332e" d="M7 14h10v2h3v3h1v5H3v-5h1v-3h3z"/>
+    <path fill="#497085" d="M7 15h10v2h2v3h1v4H4v-4h1v-3h2z"/>
+    <path fill="#86a4a8" d="M8 15h3v2h2v2h-2v-1H9v-1H8zM15 15h2v2h-2z"/>
+    <rect fill="#86a4a8" x="5" y="20" width="3" height="2"/>
+    <rect fill="#86a4a8" x="16" y="20" width="3" height="2"/>
+    <g transform="translate(0 0)">
+      <path fill="#3b332e" d="M7 7h10v2h2v5h-2v2H7v-2H5V9h2z"/>
+      <path fill="#d0a07b" d="M7 10h10v1h1v3h-2v2H8v-2H6v-3h1z"/>
+      <path fill="#f1c59b" d="M8 10h8v3h-1v1H9v-1H8z"/>
+      <path fill="#aa765d" d="M8 12h3v1H8zM13 12h3v1h-3z"/>
+      <rect fill="#aa765d" x="11" y="14" width="2" height="1"/>
+      <path fill="#3b332e" d="M5 7h2V4h10v3h2v4H5z"/>
+      <path fill="#446177" d="M7 6h1V5h8v1h1v2h1v2H6V8h1z"/>
+      <path fill="#7caaa6" d="M6 8h12v2H6zM8 5h8v1H8z"/>
+    </g>
+  </g>
+  <!-- Silk keeper: rest, tending the goods, blink. -->
+  <g transform="translate(0 48)">
+    <path fill="#3b332e" d="M7 14h10v2h3v3h1v5H3v-5h1v-3h3z"/>
+    <path fill="#99647b" d="M7 15h10v2h2v3h1v4H4v-4h1v-3h2z"/>
+    <path fill="#d5a9a3" d="M8 15h3v2h2v2h-2v-1H9v-1H8zM15 15h2v2h-2z"/>
+    <rect fill="#d5a9a3" x="5" y="20" width="3" height="2"/>
+    <rect fill="#d5a9a3" x="16" y="20" width="3" height="2"/>
+    <g transform="translate(0 0)">
+      <path fill="#3b332e" d="M7 7h10v2h2v5h-2v2H7v-2H5V9h2z"/>
+      <path fill="#d0a07b" d="M7 10h10v1h1v3h-2v2H8v-2H6v-3h1z"/>
+      <path fill="#f1c59b" d="M8 10h8v3h-1v1H9v-1H8z"/>
+      <path fill="#3b332e" d="M9 11h1v2H9zM14 11h1v2h-1z"/>
+      <rect fill="#aa765d" x="11" y="14" width="2" height="1"/>
+      <path fill="#3b332e" d="M8 4h2V2h6v2h2v2h2v6H4V8h2V6h2z"/>
+      <path fill="#5f414a" d="M8 5h3V3h4v2h3v2h1v3H5V8h2z"/>
+      <path fill="#d5a366" d="M10 3h5v1h-5zM6 7h12v1H6zM16 6h3v1h-3z"/>
+    </g>
+  </g>
+  <g transform="translate(24 48)">
+    <path fill="#3b332e" d="M7 14h10v2h3v3h1v5H3v-5h1v-3h3z"/>
+    <path fill="#99647b" d="M7 15h10v2h2v3h1v4H4v-4h1v-3h2z"/>
+    <path fill="#d5a9a3" d="M8 15h3v2h2v2h-2v-1H9v-1H8zM15 15h2v2h-2z"/>
+    <path fill="#3b332e" d="M13 18h4v1h4v3h-2v1h-6z"/>
+    <path fill="#d5a9a3" d="M14 18h3v1h2v2h-5z"/>
+    <rect fill="#d0a07b" x="18" y="20" width="3" height="2"/>
+    <rect fill="#d59b81" x="19" y="22" width="4" height="1"/>
+    <g transform="translate(1 1)">
+      <path fill="#3b332e" d="M7 7h10v2h2v5h-2v2H7v-2H5V9h2z"/>
+      <path fill="#d0a07b" d="M7 10h10v1h1v3h-2v2H8v-2H6v-3h1z"/>
+      <path fill="#f1c59b" d="M8 10h8v3h-1v1H9v-1H8z"/>
+      <path fill="#3b332e" d="M9 11h1v2H9zM14 11h1v2h-1z"/>
+      <rect fill="#aa765d" x="11" y="14" width="2" height="1"/>
+      <path fill="#3b332e" d="M8 4h2V2h6v2h2v2h2v6H4V8h2V6h2z"/>
+      <path fill="#5f414a" d="M8 5h3V3h4v2h3v2h1v3H5V8h2z"/>
+      <path fill="#d5a366" d="M10 3h5v1h-5zM6 7h12v1H6zM16 6h3v1h-3z"/>
+    </g>
+  </g>
+  <g transform="translate(48 48)">
+    <path fill="#3b332e" d="M7 14h10v2h3v3h1v5H3v-5h1v-3h3z"/>
+    <path fill="#99647b" d="M7 15h10v2h2v3h1v4H4v-4h1v-3h2z"/>
+    <path fill="#d5a9a3" d="M8 15h3v2h2v2h-2v-1H9v-1H8zM15 15h2v2h-2z"/>
+    <rect fill="#d5a9a3" x="5" y="20" width="3" height="2"/>
+    <rect fill="#d5a9a3" x="16" y="20" width="3" height="2"/>
+    <g transform="translate(0 0)">
+      <path fill="#3b332e" d="M7 7h10v2h2v5h-2v2H7v-2H5V9h2z"/>
+      <path fill="#d0a07b" d="M7 10h10v1h1v3h-2v2H8v-2H6v-3h1z"/>
+      <path fill="#f1c59b" d="M8 10h8v3h-1v1H9v-1H8z"/>
+      <path fill="#aa765d" d="M8 12h3v1H8zM13 12h3v1h-3z"/>
+      <rect fill="#aa765d" x="11" y="14" width="2" height="1"/>
+      <path fill="#3b332e" d="M8 4h2V2h6v2h2v2h2v6H4V8h2V6h2z"/>
+      <path fill="#5f414a" d="M8 5h3V3h4v2h3v2h1v3H5V8h2z"/>
+      <path fill="#d5a366" d="M10 3h5v1h-5zM6 7h12v1H6zM16 6h3v1h-3z"/>
+    </g>
+  </g>
+</svg>

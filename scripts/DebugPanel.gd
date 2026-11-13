@@ -45,10 +45,12 @@ func update_debug_info() -> void:
 
 func _on_add_money() -> void:
 	Global.money += 1000
+	GameEvents.money_changed.emit(Global.money)
 	print("Debug: Added 1000 money")
 
 func _on_add_food() -> void:
 	Global.food_storage += 100
+	GameEvents.food_changed.emit(Global.food_storage)
 	print("Debug: Added 100 food")
 
 func _on_add_reputation() -> void:
@@ -66,17 +68,19 @@ func _on_promote() -> void:
 
 func _on_trigger_event() -> void:
 	# Set up conditions for tax reform event
-	Global.current_day = 72  # Year 3
+	Global.current_day = maxi(1, Global.balance.days_per_year) * 2 + 1
 	Global.current_rank = Global.Rank.DA_FU
 	Global.king_storage = 30
 	Global.player_inventory = 70
+	Global.private_harvest_total = 70
+	GameEvents.inventory_changed.emit(Global.player_inventory)
 
 	print("Debug: Triggering tax reform event...")
 	print("  - Day: %d (Year 3)" % Global.current_day)
 	print("  - Rank: %s" % Global.rank_names[Global.current_rank])
 	print("  - Public/Private ratio: %.0f%%" % [30.0 / (30.0 + 70.0) * 100])
 
-	EventManager.trigger_tax_reform_event()
+	EventManager.invite_if_eligible()
 
 func _on_add_retainer() -> void:
 	var retainer = RetainerData.generate_random()
@@ -88,10 +92,6 @@ func _on_toggle_visibility() -> void:
 	is_visible = not is_visible
 	$VBoxContainer.visible = is_visible
 	if is_visible:
-		toggle_visibility_btn.text = "隐藏 (H)"
+		toggle_visibility_btn.text = "收起内容"
 	else:
-		toggle_visibility_btn.text = "显示 (H)"
-
-func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_toggle_debug"):
-		_on_toggle_visibility()
+		toggle_visibility_btn.text = "展开内容"

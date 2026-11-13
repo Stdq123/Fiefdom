@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="48" viewBox="0 0 96 48" shape-rendering="crispEdges">
+  <!-- Reed mat, with dyed edges and a stitched border. -->
+  <path fill="#353e2e" opacity=".62" d="M2 4h91v24h-2v2H5v-1H2z"/>
+  <path fill="#6d5238" d="M3 2h88v2h2v21h-2v2H5v-2H3z"/>
+  <path fill="#a98650" d="M6 4h84v21H6z"/>
+  <path fill="#bf9f61" d="M7 5h82v2H7zm0 5h82v1H7zm0 4h82v1H7zm0 4h82v1H7zm0 4h82v1H7z"/>
+  <path fill="#795842" d="M10 4h3v21h-3zm7 0h2v21h-2zm59 0h2v21h-2zm7 0h3v21h-3z"/>
+  <path fill="#dfb778" d="M6 3h84v1H6zm0 21h84v1H6zM8 7h1v1H8zm0 7h1v1H8zm0 7h1v1H8zm79-14h1v1h-1zm0 7h1v1h-1zm0 7h1v1h-1z"/>
+  <!-- Folded leaf packet carried in the hands. -->
+  <path fill="#3f4232" d="M3 37h3v-2h8v2h3v2h2v6H2v-6h1z"/>
+  <path fill="#788052" d="M4 38h3v-2h6v2h3v2h2v4H3v-4h1z"/>
+  <path fill="#a0a464" d="M5 39h10v1H5zm0 2h11v1H5zm1 2h9v1H6z"/>
+  <path fill="#dab173" d="M9 36h2v8H9zm-3 3h8v1H6z"/>
+  <path fill="#efc791" d="M10 37h2v2h-2z"/>
+</svg>

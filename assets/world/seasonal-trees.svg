@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="96" viewBox="0 0 192 96" shape-rendering="crispEdges">
+  <!-- Spring broadleaf -->
+  <g>
+    <path fill="#2b4335" opacity=".76" d="M7 42h11v-3h15v2h8v4H7z"/>
+    <path fill="#554638" d="M21 20h7v19h3v5H16v-3h5zm-5 2h8v5h-8zm10 6h10v4H26z"/>
+    <path fill="#9b7c59" d="M22 28h3v13h-3zm-4 13h10v1H18z"/>
+    <path fill="#344b34" d="M4 20h4v-6h6V9h5V6h12v3h6v5h5v6h4v6h-5v6h-6v3h-8v-2h-7v2h-7v-4H7v-4H4z"/>
+    <path fill="#62804d" d="M6 20h4v-5h6v-4h5V8h9v3h6v5h4v6h4v3h-5v5h-7v3h-6v-3h-8v3h-4v-4H8v-4H6z"/>
+    <path fill="#8ca567" d="M13 17h4v-4h6V9h7v4h5v4h3v3h-7v3H20v3h-8v-3H8v-4h5z"/>
+    <path fill="#aec088" d="M21 12h7v2h-7zm-6 5h8v2h-8zm-3 5h6v1h-6zm15-2h4v2h-4z"/>
+    <path fill="#d3cb97" d="M16 15h2v2h-2zm12 2h2v2h-2zm10 6h2v2h-2z"/>
+    <path fill="#486a44" d="M10 27h7v2h-7zm10 2h6v2h-6zm11-1h8v2h-8z"/>
+  </g>
+  <!-- Summer broadleaf -->
+  <g transform="translate(48 0)">
+    <path fill="#213a2e" opacity=".84" d="M5 41h12v-3h18v3h9v5H5z"/>
+    <path fill="#5e4b38" d="M21 21h7v19h3v4H16v-3h5z"/>
+    <path fill="#9b7c59" d="M22 30h3v11h-3zm-4 11h10v1H18z"/>
+    <path fill="#244639" d="M2 22h3v-7h5v-5h6V6h8V4h9v3h6v4h5v6h3v13h-5v4h-8v3H16v-3H8v-4H3v-4H2z"/>
+    <path fill="#3d6847" d="M4 22h3v-5h5v-5h6V8h7V6h7v3h6v4h4v5h3v10h-5v4h-8v3H17v-3H9v-4H5z"/>
+    <path fill="#527d50" d="M9 17h5v-5h7V9h8V7h4v4h5v4h3v5h-7v4h-9v4H12v-3H8v-5h1z"/>
+    <path fill="#77985d" d="M21 10h7V8h4v3h5v4h-5v3H20v4h-8v-4h4v-4h5z"/>
+    <path fill="#8da568" d="M24 11h6v2h-6zm-7 5h8v2h-8zm-5 4h6v1h-6z"/>
+    <path fill="#315a46" d="M10 29h8v3h-8zm13 1h8v2h-8zm11-4h8v3h-8z"/>
+  </g>
+  <!-- Autumn broadleaf -->
+  <g transform="translate(96 0)">
+    <path fill="#3f4834" opacity=".8" d="M6 41h10v-2h19v2h7v4H6z"/>
+    <path fill="#544539" d="M20 19h7v20h4v5H16v-3h4zm-7 2h10v5H13zm12 8h11v5H25z"/>
+    <path fill="#9b7754" d="M21 26h3v15h-3zm6 4h5v2h-5z"/>
+    <path fill="#594634" d="M3 22h4v-6h5v-5h6V7h11v2h7v4h5v6h4v6h-4v4h-7v5h-9v-3h-6v2h-7v-4H6v-3H3z"/>
+    <path fill="#936b3d" d="M5 22h4v-5h6v-5h5V9h8v2h7v4h4v6h4v3h-4v3h-7v5h-6v-3h-8v2h-5v-4H8v-2H5z"/>
+    <path fill="#b98c4d" d="M12 17h6v-4h5v-3h6v3h5v4h4v4h-7v3H19v4h-5v-3H9v-5h3z"/>
+    <path fill="#d0a55e" d="M21 13h7v2h-7zm-5 5h9v2h-9zm11-1h5v2h-5z"/>
+    <path fill="#a1623e" d="M7 22h4v3H7zm20 4h8v3h-8zm11-4h4v2h-4zm-18 8h4v2h-4z"/>
+    <path fill="#c19759" d="M7 34h3v2H7zm29 3h4v1h-4zm-24 5h3v1h-3zm22-1h4v1h-4z"/>
+  </g>
+  <!-- Winter broadleaf -->
+  <g transform="translate(144 0)">
+    <path fill="#566966" opacity=".83" d="M7 41h9v-2h18v2h8v5H7z"/>
+    <path fill="#464b45" d="M20 40V27h-3v-3h-5v-4H8v-4H5v-5h2v4h4v3h5v4h5v-9h-2V8h2v4h3V6h2v10h2v7h4v-3h3v-5h4v-5h2v7h-3v5h-4v5h-6v13h4v4H16v-3h4z"/>
+    <path fill="#766b56" d="M22 40V25h2V15h2v12h2v13h2v2H19v-2h3zm-9-18h5v2h-5zm16 3h4v2h-4z"/>
+    <path fill="#4e574e" d="M9 22h3v3h4v3h-5v-3H7v-5h2zm24 7h5v-3h5v-4h2v6h-4v3h-8zM18 15h-4v-3h-2V8h2v3h3v3h2z"/>
+    <path fill="#c4d2c8" d="M7 15h4v1H7zm7 5h5v1h-5zm9-8h3v1h-3zm11 8h3v1h-3zm4-5h3v1h-3zm-21 25h6v2h-6zm10 1h6v1h-6z"/>
+    <path fill="#dce1d4" d="M10 41h5v1h-5zm24 2h4v1h-4z"/>
+  </g>
+  <!-- Spring blossom -->
+  <g transform="translate(0 48)">
+    <path fill="#334638" opacity=".78" d="M7 41h9v-2h16v2h9v4H7z"/>
+    <path fill="#604a3e" d="M21 21h7v19h3v4H16v-3h5zm-7 3h8v5h-8zm13 5h9v4h-9z"/>
+    <path fill="#a68161" d="M22 30h3v11h-3zm-4 11h10v1H18z"/>
+    <path fill="#524751" d="M3 20h4v-6h7v-4h4V6h12v3h7v4h5v6h4v8h-5v4h-6v4h-9v-2h-9v2h-5v-4H6v-4H3z"/>
+    <path fill="#976e7b" d="M5 20h4v-5h7v-3h4V8h9v3h7v4h4v6h4v4h-5v4h-7v4h-5v-3H15v2h-2v-3H8v-4H5z"/>
+    <path fill="#bd8c91" d="M10 17h6v-3h6v-4h8v3h6v4h4v4h-6v4h-8v3H13v-4H8v-5h2z"/>
+    <path fill="#ddafa5" d="M20 12h8v2h-8zm-5 5h8v2h-8zm12-1h7v2h-7zm-14 7h5v2h-5zm18 0h7v2h-7z"/>
+    <path fill="#eed0b6" d="M22 14h2v2h-2zm-7 5h2v2h-2zm17 0h2v2h-2zm-10 5h3v2h-3z"/>
+    <path fill="#676e4c" d="M9 26h5v2H9zm18 2h6v2h-6zm12-5h4v2h-4z"/>
+  </g>
+  <!-- Autumn red tree -->
+  <g transform="translate(48 48)">
+    <path fill="#424739" opacity=".8" d="M8 41h9v-2h17v2h7v4H8z"/>
+    <path fill="#5a443a" d="M21 18h7v22h3v4H16v-3h5zm-7 7h8v4h-8zm13 3h9v4h-9z"/>
+    <path fill="#987252" d="M22 26h3v15h-3zm-4 15h9v1h-9z"/>
+    <path fill="#694338" d="M3 18h6v-6h7V8h6V5h9v5h6v5h6v6h3v6h-7v4h-8v3h-6v-3H15v2h-5v-5H5v-5H3z"/>
+    <path fill="#9d5641" d="M5 19h6v-5h7v-4h6V7h6v5h6v5h5v6h3v2h-7v4h-8v3h-3v-3H13v2h-1v-5H7v-5H5z"/>
+    <path fill="#b97548" d="M12 16h6v-4h7V9h4v5h5v4h5v4h-8v4h-9v3h-7v-5H9v-5h3z"/>
+    <path fill="#d09758" d="M23 12h5v2h-5zm-8 5h8v2h-8zm13-1h5v2h-5zm-11 7h6v2h-6z"/>
+    <path fill="#c18a51" d="M9 36h3v1H9zm27 0h4v2h-4zm-22 6h3v1h-3z"/>
+  </g>
+  <!-- Frosted pine -->
+  <g transform="translate(96 48)">
+    <path fill="#526662" opacity=".86" d="M7 42h12v-3h18v2h5v5H7z"/>
+    <path fill="#6f6253" d="M21 30h7v13h3v2H18v-2h3z"/>
+    <path fill="#344e48" d="M23 2h3v6h3v6h4v6h4v7h5v6h4v6H4v-6h4v-6h5v-7h4v-6h3V8h3z"/>
+    <path fill="#4c6b60" d="M23 4h2v6h3v6h3v6h4v7h4v5h4v3H8v-4h4v-5h4v-7h4v-6h2V9h1z"/>
+    <path fill="#9fb5aa" d="M23 6h2v6h2v4h4v3H18v-3h3v-4h2zm-5 14h11v2h3v3h5v2H11v-2h5v-3h2zm-4 10h19v2h6v3H8v-2h6z"/>
+    <path fill="#c9d7cb" d="M23 7h1v6h2v2h-4v-3h1zm-4 13h7v2h-7zm-3 10h14v2H16zm-4 3h9v1h-9z"/>
+    <path fill="#677f73" d="M10 36h13v2H10zm17 0h13v2H27zm4-8h5v1h-5z"/>
+  </g>
+  <!-- Winter orchard tree -->
+  <g transform="translate(144 48)">
+    <path fill="#566965" opacity=".84" d="M7 41h10v-3h16v3h9v5H7z"/>
+    <path fill="#574c42" d="M21 39V28h-3v-3h-6v-3H8v-4H5v-5h2v4h4v3h5v3h5V13h-2V8h2v4h3V6h2v8h2v8h4v-5h4v-3h3V8h2v8h-3v4h-4v5h-6v15h4v4H16v-3h5z"/>
+    <path fill="#8b755b" d="M22 27h2V15h2v14h1v12h-6v-2h1zm-7-4h4v2h-4zm17-3h3v2h-3z"/>
+    <path fill="#786956" d="M10 25h5v2h4v2h-6v-2H8v-4h2zm21 4h4v-3h6v-5h2v7h-6v3h-6z"/>
+    <path fill="#cbd7ca" d="M7 17h4v1H7zm7 5h4v1h-4zm10-10h2v1h-2zm11 4h3v1h-3zm-18 25h6v1h-6zm12 1h7v1h-7z"/>
+  </g>
+</svg>

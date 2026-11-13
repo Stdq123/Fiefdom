@@ -1,0 +1,94 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/FishMarketOffer.gd" id="1_offer"]
+
+[sub_resource type="StyleBoxFlat" id="OfferCard"]
+content_margin_left = 12.0
+content_margin_top = 9.0
+content_margin_right = 12.0
+content_margin_bottom = 9.0
+bg_color = Color(0.165, 0.225, 0.168, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.572, 0.481, 0.300, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_left = 5
+corner_radius_bottom_right = 5
+
+[node name="FishMarketOffer" type="PanelContainer"]
+theme_override_styles/panel = SubResource("OfferCard")
+script = ExtResource("1_offer")
+
+[node name="Row" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="FishIcon" type="TextureRect" parent="Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(52, 52)
+layout_mode = 2
+size_flags_vertical = 4
+texture_filter = 1
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Details" type="VBoxContainer" parent="Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+theme_override_constants/separation = 3
+
+[node name="OfferTitle" type="Label" parent="Row/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.95, 0.84, 0.57, 1)
+
+[node name="OfferNote" type="Label" parent="Row/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+
+[node name="OfferStatus" type="Label" parent="Row/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.76, 0.84, 0.65, 1)
+autowrap_mode = 3
+
+[node name="Tradeoff" type="Label" parent="Row/Details"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.96, 0.78, 0.53, 1)
+autowrap_mode = 3
+
+[node name="Actions" type="VBoxContainer" parent="Row"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="TradeCopper" type="Button" parent="Row/Actions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(130, 33)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 14
+
+[node name="TradeFood" type="Button" parent="Row/Actions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(130, 33)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 14
+
+[node name="OfferDirections" type="Button" parent="Row/Actions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(130, 35)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 14

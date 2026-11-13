@@ -1,39 +1,140 @@
-[gd_scene load_steps=5 format=3 uid="uid://wilderness_scene_uid"]
+[gd_scene load_steps=18 format=3 uid="uid://wilderness_scene_uid"]
 
 [ext_resource type="Script" path="res://scripts/Wilderness.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/Enemy.tscn" id="2_enemy"]
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="3_player"]
+[ext_resource type="Script" path="res://scripts/CampaignHUD.gd" id="4_campaign"]
+[ext_resource type="Script" path="res://scripts/ForageSpot.gd" id="5_forage"]
+[ext_resource type="Script" path="res://scripts/Landscape.gd" id="6_land"]
+[ext_resource type="Script" path="res://scripts/RavineMarker.gd" id="7_journal"]
+[ext_resource type="Script" path="res://scripts/FishingSpot.gd" id="8_fishing"]
+[ext_resource type="Script" path="res://scripts/MeadowButterfly.gd" id="9_butterfly"]
+[ext_resource type="Script" path="res://scripts/CreekFrog.gd" id="10_frog"]
+[ext_resource type="Script" path="res://scripts/MapGate.gd" id="11_gate"]
+[ext_resource type="PackedScene" path="res://scenes/CreekTrapStand.tscn" id="12_trap_stand"]
+[ext_resource type="PackedScene" path="res://scenes/CreekTrapPanel.tscn" id="13_trap_panel"]
+[ext_resource type="Script" path="res://scripts/RaftLanding.gd" id="14_raft_landing"]
+[ext_resource type="Material" path="res://resources/world_hint_material.tres" id="15_hint"]
+[ext_resource type="PackedScene" path="res://scenes/RavineShortcutGate.tscn" id="16_south_trail"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
-size = Vector2(50, 50)
+size = Vector2(8, 14)
 
 [node name="Wilderness" type="Node2D"]
+y_sort_enabled = true
 script = ExtResource("1_script")
 
-[node name="Background" type="ColorRect" parent="."]
-offset_left = -1000.0
-offset_top = -1000.0
-offset_right = 1000.0
-offset_bottom = 1000.0
-color = Color(0.13, 0.25, 0.13, 1)
+[node name="Landscape" type="Node2D" parent="."]
+process_mode = 3
+z_index = -4
+script = ExtResource("6_land")
+wilderness = true
+
+[node name="Scenery" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="GroveButterfly" type="Node2D" parent="Scenery"]
+position = Vector2(-152, -103)
+script = ExtResource("9_butterfly")
+variety = 1
+
+[node name="CreekFrog" type="Node2D" parent="Scenery" node_paths=PackedStringArray("player")]
+position = Vector2(166, 165)
+script = ExtResource("10_frog")
+player = NodePath("../../Player")
 
 [node name="Enemy" parent="." instance=ExtResource("2_enemy")]
-position = Vector2(200, 0)
+position = Vector2(223, 1)
 
 [node name="Enemy2" parent="." instance=ExtResource("2_enemy")]
-position = Vector2(0, 200)
+position = Vector2(350, 245)
+type = 1
 
 [node name="ExitArea" type="Area2D" parent="."]
-position = Vector2(-200, 0)
-
-[node name="ColorRect" type="ColorRect" parent="ExitArea"]
-offset_left = -25.0
-offset_top = -25.0
-offset_right = 25.0
-offset_bottom = 25.0
-color = Color(0, 0, 1, 0.5)
+position = Vector2(-376, 20)
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("11_gate")
+destination = "res://scenes/Main.tscn"
+arrival_path = NodePath("World/EastArrival")
+player_path = NodePath("World/Player")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ExitArea"]
 shape = SubResource("RectangleShape2D_1")
 
+[node name="WestArrival" type="Marker2D" parent="."]
+position = Vector2(-334, 20)
+
+[node name="SouthTrailGate" parent="." instance=ExtResource("16_south_trail")]
+position = Vector2(205, 347)
+destination = "res://scenes/Main.tscn"
+arrival_path = NodePath("World/RavineTrailArrival")
+player_path = NodePath("World/Player")
+gate_name = "南路小径"
+southbound = true
+
+[node name="SouthTrailArrival" type="Marker2D" parent="."]
+position = Vector2(203, 310)
+rotation = -1.5707964
+
 [node name="Player" parent="." instance=ExtResource("3_player")]
+position = Vector2(-334, 20)
+
+[node name="WildFruit" type="Node2D" parent="." groups=["interactable"]]
+position = Vector2(-139, -123)
+script = ExtResource("5_forage")
+
+[node name="WildHerbs" type="Node2D" parent="." groups=["interactable"]]
+position = Vector2(446, -106)
+script = ExtResource("5_forage")
+medicinal = true
+
+[node name="RavineMarker" type="Node2D" parent="."]
+script = ExtResource("7_journal")
+
+[node name="WillowPool" type="Node2D" parent="." groups=["interactable"]]
+position = Vector2(190, -410)
+script = ExtResource("8_fishing")
+water = Vector2(36, 0)
+
+[node name="GravelShoal" type="Node2D" parent="." groups=["interactable"]]
+position = Vector2(277, 229)
+script = ExtResource("8_fishing")
+site = 1
+water = Vector2(-33, 0)
+
+[node name="PoolTrap" parent="." instance=ExtResource("12_trap_stand")]
+position = Vector2(155, -448)
+stake_offset = Vector2(17, -4)
+water_offset = Vector2(47, -4)
+
+[node name="ShoalTrap" parent="." instance=ExtResource("12_trap_stand")]
+position = Vector2(312, 283)
+site = 1
+stake_offset = Vector2(-17, -9)
+water_offset = Vector2(-45, -7)
+
+[node name="RaftLanding" type="Node2D" parent="." groups=["interactable"]]
+script = ExtResource("14_raft_landing")
+
+[node name="Hint" type="Label" parent="RaftLanding"]
+z_index = 6
+material = ExtResource("15_hint")
+offset_left = -47.0
+offset_top = -61.0
+offset_right = 49.0
+offset_bottom = -47.0
+mouse_filter = 2
+theme_override_colors/font_outline_color = Color(0.15, 0.23, 0.18, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
+[node name="CampaignHUD" type="CanvasLayer" parent="."]
+layer = 8
+script = ExtResource("4_campaign")
+
+[node name="FishingUI" type="CanvasLayer" parent="."]
+layer = 9
+
+[node name="CreekTrapPanel" parent="FishingUI" instance=ExtResource("13_trap_panel")]

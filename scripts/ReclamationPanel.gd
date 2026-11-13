@@ -1,163 +1,267 @@
 extends Control
 
-signal well_field_requested(center_pos: Vector2i)
+signal market_requested(site: Variant)
+signal visitor_requested(speaker: String)
+signal worksite_requested(field_id: int)
 
-@onready var title_label = $Panel/TitleLabel
-@onready var rank_label = $Panel/RankLabel
-@onready var fields_label = $Panel/FieldsLabel
-@onready var cost_label = $Panel/CostLabel
-@onready var reclaim_button = $Panel/ReclaimButton
-@onready var close_button = $Panel/CloseButton
-@onready var info_label = $Panel/InfoLabel
-@onready var validity_label = $Panel/ValidityLabel
+const READY_INK := Color("#c6dba5")
+const SHORT_INK := Color("#efbf8b")
+const HELP_INK := Color("#e5d6ac")
 
+@onready var subtitle: Label = %Subtitle
+@onready var rank_label: Label = %Rank
+@onready var workers_label: Label = %Workers
+@onready var copper_label: Label = %Copper
+@onready var grain_label: Label = %Grain
+@onready var reclaim_button: Button = $Panel/ReclaimButton
+@onready var info_label: Label = $Panel/InfoLabel
+@onready var validity_label: Label = $Panel/ValidityLabel
+@onready var market_button: Button = %MarketButton
+@onready var visitor_button: Button = %VisitorButton
+@onready var worksite_button: Button = %WorksiteButton
+
+var world: Node2D
 var tile_map: TileMapLayer
-var mouse_pos: Vector2
-var highlight_rect: ColorRect
-var current_grid_pos: Vector2i
-var is_position_valid: bool = false
+var highlight: Node2D
+var plan: Dictionary
+var visitor_name := ""
+var selected_cell := Vector2i.ZERO
+var has_selection := false
+var preview_center: Variant
+var preview_site := Global.ReclamationSite.OPEN
+var preview_watered: Array[Vector2i] = []
+var commissioned_site := -1
+var paid := Vector2i.ZERO
 
-func setup(tile_map_ref: TileMapLayer) -> void:
-	tile_map = tile_map_ref
-	_create_highlight_rect()
-	_update_ui()
-	set_process(true)
-
-func _create_highlight_rect() -> void:
-	# Create a semi-transparent highlight rectangle for the 3x3 area
-	highlight_rect = ColorRect.new()
-	highlight_rect.color = Color(0, 1, 0, 0.3)  # Green with transparency
-	highlight_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	highlight_rect.z_index = 100  # Draw on top
-	get_tree().current_scene.add_child(highlight_rect)
-	highlight_rect.visible = false
+func setup(estate_world: Node2D, previous_site: Variant = null) -> void:
+	world = estate_world
+	tile_map = world.tile_map
+	highlight = Node2D.new()
+	highlight.z_index = 100
+	highlight.draw.connect(_draw_preview)
+	tile_map.add_child(highlight)
+	reclaim_button.pressed.connect(_reclaim_selected)
+	$Panel/CloseButton.pressed.connect(queue_free)
+	market_button.pressed.connect(_open_market)
+	visitor_button.pressed.connect(_find_visitor)
+	worksite_button.pressed.connect(_find_worksite)
+	for changed in [GameEvents.rank_changed, GameEvents.retainer_recruited, GameEvents.retainer_departed,
+			GameEvents.money_changed, GameEvents.food_changed, GameEvents.reputation_changed, GameEvents.well_field_added,
+			GameEvents.retainer_duty_changed]:
+		changed.connect(_refresh.unbind(1))
+	GameEvents.channels_changed.connect(_refresh)
+	GameEvents.campaign_ended.connect(queue_free.unbind(1))
+	GameEvents.daylight_changed.connect(_refresh_ledger)
+	world.visitor_changed.connect(_refresh.unbind(1))
+	_refresh()
+	if previous_site != null and plan.has_space:
+		_select_site(previous_site)
 
 func _process(_delta: float) -> void:
-	if not visible or not tile_map:
-		highlight_rect.visible = false
+	if not tile_map or not plan.has_space or has_selection or commissioned_site >= 0:
 		return
-
-	# Get current mouse position in grid coordinates
-	mouse_pos = get_global_mouse_position()
-	current_grid_pos = tile_map.local_to_map(mouse_pos)
-
-	# Validate position
-	is_position_valid = _validate_position(current_grid_pos)
-
-	# Update highlight
-	_update_highlight()
-
-	# Update info labels
-	info_label.text = "鼠标位置: (%d, %d)" % [current_grid_pos.x, current_grid_pos.y]
-	if is_position_valid:
-		validity_label.text = "✓ 此处可以开垦"
-		validity_label.add_theme_color_override("font_color", Color(0, 1, 0))
-	else:
-		validity_label.text = "✗ 此处不适合开垦（需要3x3空地）"
-		validity_label.add_theme_color_override("font_color", Color(1, 0, 0))
-
-func _update_highlight() -> void:
-	if not highlight_rect:
+	if get_viewport().gui_get_hovered_control() != self:
+		if preview_center != null:
+			_clear_preview()
 		return
+	var cell := tile_map.local_to_map(tile_map.get_local_mouse_position())
+	if preview_center == null or cell != preview_center:
+		_show_preview(cell)
 
-	# Calculate world position of the 3x3 area
-	var top_left = current_grid_pos + Vector2i(-1, -1)
-	var world_pos = tile_map.map_to_local(top_left)
-	var cell_size = tile_map.get_tileset().tile_size
+func _gui_input(event: InputEvent) -> void:
+	if not tile_map or not plan.has_space:
+		return
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		var viewport_pos: Vector2 = get_global_transform_with_canvas() * event.position
+		var tile_pos: Vector2 = tile_map.get_global_transform_with_canvas().affine_inverse() * viewport_pos
+		_select_site(tile_map.local_to_map(tile_pos))
+		accept_event()
 
-	# Position and size the highlight rectangle
-	highlight_rect.position = world_pos - Vector2(cell_size.x * 0.5, cell_size.y * 0.5)
-	highlight_rect.size = cell_size * 3  # 3x3 area
-	highlight_rect.visible = true
+func _select_site(cell: Vector2i) -> void:
+	selected_cell = cell
+	has_selection = true
+	commissioned_site = -1
+	_show_preview(cell)
+	_refresh_ledger()
 
-	# Change color based on validity
-	if is_position_valid:
-		highlight_rect.color = Color(0, 1, 0, 0.3)  # Green
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not event.pressed or event.echo:
+		return
+	if event.is_action_pressed("ui_cancel"):
+		queue_free()
+		get_viewport().set_input_as_handled()
+	elif Preferences.matches(event, KeyBindings.INTERACT) or event.is_action_pressed("ui_accept"):
+		get_viewport().set_input_as_handled()
+
+func _refresh() -> void:
+	plan = Global.reclamation_plan()
+	_refresh_ledger()
+	if not plan.has_space:
+		_clear_preview()
+	elif preview_center != null:
+		_show_preview(preview_center)
 	else:
-		highlight_rect.color = Color(1, 0, 0, 0.3)  # Red
+		_update_validity()
+
+func _refresh_ledger() -> void:
+	var receipt := commissioned_site >= 0
+	var field_number := commissioned_site + 1 if receipt else Global.well_fields.size() + 1
+	subtitle.text = "井田 %d · 立桩后 %d 夜完工" % [field_number, Global.RECLAMATION_NIGHTS]
+	if receipt:
+		subtitle.text = "井田 %d · 已立桩" % field_number
+	elif not plan.has_space:
+		subtitle.text = ("井田 %d · 按%s田额估算费用" % [field_number, Global.rank_names[plan.cost_rank]]
+			if plan.possible else "封地井田已达最高田额")
+	_show_check(rank_label, "%s · %d/%d 块" % [
+		Global.rank_names[Global.current_rank], Global.well_fields.size(), Global.max_well_fields], receipt or plan.has_space)
+	if receipt:
+		_show_check(workers_label, "%d 人" % Global.retainers.size(), true)
+		_show_check(copper_label, "余 %d 枚 · 已扣 %d 枚" % [Global.money, paid.x], true)
+		_show_check(grain_label, "余 %d 份 · 已扣 %d 份" % [Global.food_storage, paid.y], true)
+	else:
+		_show_check(workers_label, "%d/%d 人" % [Global.retainers.size(), Global.RECLAMATION_RETAINERS], plan.workers_needed == 0)
+		_show_check(copper_label, "%d/%d 枚" % [Global.money, plan.copper], Global.money >= plan.copper)
+		_show_check(grain_label, "%d/%d 份" % [Global.food_storage, plan.grain], Global.food_storage >= plan.grain)
+	var seeking_workers: bool = not receipt and plan.possible and plan.workers_needed > 0
+	var candidate: Dictionary = world.recruitment_candidate() if seeking_workers and Global.last_recruit_day != Global.current_day else {}
+	visitor_name = candidate.guest.name if not candidate.is_empty() else ""
+	visitor_button.visible = not visitor_name.is_empty()
+	visitor_button.text = "去找" + visitor_name
+	market_button.visible = (not receipt and plan.possible
+		and (Global.money < plan.copper or Global.food_storage < plan.grain + plan.crew_food))
+	worksite_button.visible = receipt
+	info_label.text = _instructions(candidate)
+
+func _show_check(label: Label, value: String, ready: bool) -> void:
+	label.text = value
+	label.modulate = READY_INK if ready else SHORT_INK
+
+func _instructions(candidate: Dictionary) -> String:
+	if commissioned_site >= 0:
+		return "%d 夜后可耕种。余粮 %d 份，施工期间门客共需 %d 份。" % [
+			Global.RECLAMATION_NIGHTS, Global.food_storage, plan.crew_food]
+	if not plan.has_space:
+		if not plan.possible:
+			return "现有井田已用尽爵位可管的田额。"
+		return Global.promotion_summary() + "\n过夜时核定爵位。"
+	if plan.ready:
+		var instruction := "" if has_selection else "左键点选田址。"
+		return instruction + "立桩后余粮 %d 份，%d 夜口粮需 %d 份。" % [
+			Global.food_storage - plan.grain, Global.RECLAMATION_NIGHTS, plan.crew_food]
+	if plan.workers_needed > 0:
+		return _recruitment_instructions(candidate)
+	return "立桩用粮 %d 份，施工期间口粮另需 %d 份。可从市集按计划备粮。" % [plan.grain, plan.crew_food]
+
+func _recruitment_instructions(candidate: Dictionary) -> String:
+	if candidate.is_empty():
+		var today := "今日已留一位门客。" if Global.last_recruit_day == Global.current_day else "今日没有可拜访的来客。"
+		return today + "\n" + _next_visit_note()
+	var guest: VisitorData = candidate.guest
+	var block := Global.recruitment_block(guest)
+	var cost := "招募需 %d 声望" % Global.balance.recruit_reputation_requirement
+	if block != Global.RecruitmentBlock.NONE:
+		cost = Global.recruitment_block_note(guest, block)
+		if block == Global.RecruitmentBlock.REPUTATION and guest.name != VisitorData.FIELD_KEEPER and not guest.talked_today():
+			cost += "，今日交谈可得 %d" % Global.balance.interaction_reputation_gain
+	return "%s%s。\n%s。" % [guest.name, candidate.location, cost]
+
+func _next_visit_note() -> String:
+	var keeper_retained := Global.retainers.any(func(resident: RetainerData): return resident.name == VisitorData.FIELD_KEEPER)
+	var keeper_day := Global.next_field_keeper_visit()
+	if keeper_day == Global.current_day:
+		keeper_day += FieldRotation.VISIT_INTERVAL
+	# The regular round includes two rest days in a seven-day cycle.
+	for day in range(Global.current_day + 1, Global.current_day + 8):
+		var guest := Global.visitor_for_day(day)
+		if guest:
+			return "预计第 %d 天 · %s · %s" % [
+				day, guest.name, VisitorData.scheduled_stop(guest.name, guest.meeting_place, day)]
+		if not keeper_retained and day == keeper_day:
+			return "预计第 %d 天 · 渠伯 · 井田西南" % day
+	return "可先照料田地，筹措开垦所需的粮钱。"
+
+func _show_preview(center: Vector2i) -> void:
+	preview_center = center
+	preview_site = Global.reclamation_site(center)
+	preview_watered.clear()
+	if preview_site == Global.ReclamationSite.OPEN:
+		preview_watered = Global.irrigation.watered_footprint(center)
+	_update_validity()
+	highlight.queue_redraw()
+
+func _clear_preview() -> void:
+	preview_center = null
+	has_selection = false
+	preview_watered.clear()
+	_update_validity()
+	highlight.queue_redraw()
+
+func _update_validity() -> void:
+	reclaim_button.disabled = not plan.ready or not has_selection or preview_site != Global.ReclamationSite.OPEN
+	validity_label.modulate = HELP_INK
+	if not plan.has_space or commissioned_site >= 0:
+		validity_label.text = ""
+		return
+	if preview_center == null:
+		validity_label.text = "移动鼠标查看九格田界与渠水。"
+		return
+	validity_label.modulate = READY_INK if preview_site == Global.ReclamationSite.OPEN else SHORT_INK
+	match preview_site:
+		Global.ReclamationSite.EDGE: validity_label.text = "超出可开垦范围。请把九格田放在封地内侧。"
+		Global.ReclamationSite.NEAR_FIELD: validity_label.text = "离已有井田太近。请在田埂外多留几格。"
+		Global.ReclamationSite.SOURCE: validity_label.text = "田界会盖住水源。请挪开一格再看。"
+		Global.ReclamationSite.CANAL: validity_label.text = "田界会盖住水渠。可在渠边另选田址。"
+		Global.ReclamationSite.ROAD: validity_label.text = "田界会占用道路或路肩。请在路旁另选田址。"
+		Global.ReclamationSite.LANDMARK: validity_label.text = "田界会占用建筑或驾御场。请移到旁边空地。"
+		Global.ReclamationSite.OPEN:
+			var status := "已选田址" if has_selection else "此处可用"
+			validity_label.text = "%s · 可接现有渠水 %d/9 格" % [status, preview_watered.size()]
+
+func _draw_preview() -> void:
+	if preview_center == null:
+		return
+	var cell_size := Vector2(tile_map.tile_set.tile_size)
+	var area := Rect2(tile_map.map_to_local(preview_center) - cell_size * 1.5, cell_size * 3.0)
+	var edge := Color("#c3d391") if preview_site == Global.ReclamationSite.OPEN else Color("#ec9a80")
+	highlight.draw_rect(area, Color(edge, 0.19))
+	for cell in preview_watered:
+		var wet := Rect2(tile_map.map_to_local(cell) - cell_size / 2.0, cell_size).grow(-1.0)
+		highlight.draw_rect(wet, Color("#85d9c280"))
+		highlight.draw_rect(wet, Color("#a7e6d4"), false, 1.0)
+	for i: float in [1.0, 2.0]:
+		var x := area.position.x + cell_size.x * i
+		var y := area.position.y + cell_size.y * i
+		highlight.draw_line(Vector2(x, area.position.y), Vector2(x, area.end.y), Color(edge, 0.75))
+		highlight.draw_line(Vector2(area.position.x, y), Vector2(area.end.x, y), Color(edge, 0.75))
+	highlight.draw_rect(area, edge, false, 1.8 if has_selection else 1.2)
+	if has_selection:
+		for corner in [area.position, Vector2(area.end.x, area.position.y), area.end, Vector2(area.position.x, area.end.y)]:
+			highlight.draw_rect(Rect2(corner - Vector2(1.5, 1.5), Vector2(3, 3)), edge)
+
+func _reclaim_selected() -> void:
+	if not has_selection:
+		return
+	var order := Global.reclaim_well_field(selected_cell)
+	if not order.is_empty():
+		commissioned_site = order.field_id
+		paid = Vector2i(order.copper, order.grain)
+		_clear_preview()
+	_refresh()
+
+func _open_market() -> void:
+	market_requested.emit(selected_cell if has_selection else null)
+	queue_free()
+
+func _find_visitor() -> void:
+	if not visitor_name.is_empty():
+		visitor_requested.emit(visitor_name)
+		queue_free()
+
+func _find_worksite() -> void:
+	if commissioned_site >= 0:
+		worksite_requested.emit(commissioned_site)
+		queue_free()
 
 func _exit_tree() -> void:
-	if highlight_rect and is_instance_valid(highlight_rect):
-		highlight_rect.queue_free()
-
-func _update_ui() -> void:
-	var current_rank = Global.current_rank
-	var max_fields = Global.max_well_fields
-	var current_fields = Global.well_fields.size()
-
-	title_label.text = "开垦新井田"
-	rank_label.text = "当前爵位: %s" % Global.rank_names.get(current_rank, "未知")
-	fields_label.text = "井田数量: %d / %d" % [current_fields, max_fields]
-
-	# Calculate reclamation cost
-	var cost_money = 100 * (current_rank + 1)
-	var cost_food = 50 * (current_rank + 1)
-	var cost_retainers = 3
-
-	cost_label.text = "开垦消耗:\n铜钱: %d\n粮食: %d\n门客工时: %d天" % [cost_money, cost_food, cost_retainers]
-
-	# Enable/disable reclaim button
-	if current_fields >= max_fields:
-		reclaim_button.disabled = true
-		reclaim_button.text = "已达到爵位上限"
-		info_label.text = "提升爵位以解锁更多井田"
-	else:
-		reclaim_button.disabled = false
-		reclaim_button.text = "开垦新井田"
-
-func _on_reclaim_button_pressed() -> void:
-	if not tile_map:
-		print("Error: No tile map reference!")
-		return
-
-	# Use current grid position (from _process)
-	var grid_pos = current_grid_pos
-
-	# Calculate cost
-	var cost_money = 100 * (Global.current_rank + 1)
-	var cost_food = 50 * (Global.current_rank + 1)
-
-	# Check if player has enough resources
-	if Global.money < cost_money:
-		info_label.text = "铜钱不足！需要 %d" % cost_money
-		return
-
-	if Global.food_storage < cost_food:
-		info_label.text = "粮食不足！需要 %d" % cost_food
-		return
-
-	if Global.retainers.size() < 3:
-		info_label.text = "门客不足！需要 3 人"
-		return
-
-	# Check if position is valid
-	if not _validate_position(grid_pos):
-		info_label.text = "此处不适合开垦（需要3x3空地）"
-		return
-
-	# Deduct resources
-	Global.money -= cost_money
-	Global.food_storage -= cost_food
-
-	# Add new well field
-	if Global.add_well_field(grid_pos):
-		info_label.text = "开垦成功！井田 ID: %d，位置(%d, %d)" % [Global.well_fields.size(), grid_pos.x, grid_pos.y]
-		GameEvents.well_field_added.emit(Global.well_fields.size() - 1)
-		_update_ui()
-	else:
-		info_label.text = "开垦失败：无法添加更多井田"
-
-func _validate_position(center_pos: Vector2i) -> bool:
-	# Check if 3x3 area is clear
-	for x in range(-1, 2):
-		for y in range(-1, 2):
-			var coords = center_pos + Vector2i(x, y)
-			# Check if tile exists at this position
-			var tile_data = tile_map.get_cell_tile_data(coords)
-			if tile_data == null:
-				return false
-			# TODO: Add terrain type checking (plains only)
-	return true
-
-func _on_close_button_pressed() -> void:
-	queue_free()
+	if is_instance_valid(highlight) and highlight.is_inside_tree():
+		highlight.queue_free()

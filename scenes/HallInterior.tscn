@@ -1,0 +1,277 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/EstateInterior.gd" id="1_room"]
+[ext_resource type="Texture2D" path="res://assets/world/hall-interior.svg" id="2_art"]
+[ext_resource type="Script" path="res://scripts/HallFurnishing.gd" id="3_furniture"]
+[ext_resource type="Material" path="res://resources/world_hint_material.tres" id="4_unshaded"]
+[ext_resource type="Texture2D" path="res://assets/world/hall-clothes-rack.svg" id="5_clothes"]
+[ext_resource type="Texture2D" path="res://assets/world/hall-decor.svg" id="6_decor_art"]
+[ext_resource type="Script" path="res://scripts/HallDecorView.gd" id="7_decor_view"]
+
+[sub_resource type="AtlasTexture" id="Atlas_room"]
+atlas = ExtResource("2_art")
+region = Rect2(0, 0, 208, 144)
+
+[sub_resource type="AtlasTexture" id="Atlas_desk"]
+atlas = ExtResource("2_art")
+region = Rect2(0, 144, 48, 32)
+
+[sub_resource type="AtlasTexture" id="Atlas_bed"]
+atlas = ExtResource("2_art")
+region = Rect2(48, 144, 52, 48)
+
+[sub_resource type="AtlasTexture" id="Atlas_shelf"]
+atlas = ExtResource("6_decor_art")
+region = Rect2(150, 40, 42, 16)
+filter_clip = true
+
+[sub_resource type="RectangleShape2D" id="Shape_back"]
+size = Vector2(194, 18)
+
+[sub_resource type="RectangleShape2D" id="Shape_side"]
+size = Vector2(12, 94)
+
+[sub_resource type="RectangleShape2D" id="Shape_front"]
+size = Vector2(76, 10)
+
+[sub_resource type="RectangleShape2D" id="Shape_exit"]
+size = Vector2(18, 6)
+
+[sub_resource type="RectangleShape2D" id="Shape_desk"]
+size = Vector2(38, 14)
+
+[sub_resource type="RectangleShape2D" id="Shape_bed"]
+size = Vector2(40, 32)
+
+[sub_resource type="RectangleShape2D" id="Shape_clothes"]
+size = Vector2(28, 10)
+
+[sub_resource type="Gradient" id="Gradient_glow"]
+offsets = PackedFloat32Array(0, 0.22, 0.59, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0.76, 0.76, 0.76, 1, 0.2, 0.2, 0.2, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="Texture_glow"]
+gradient = SubResource("Gradient_glow")
+width = 112
+height = 112
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[node name="HallInterior" type="Node2D"]
+visible = false
+y_sort_enabled = true
+script = ExtResource("1_room")
+resume_path = NodePath("Wake")
+
+[node name="Backdrop" type="Polygon2D" parent="."]
+z_index = -3
+material = ExtResource("4_unshaded")
+color = Color(0.075, 0.093, 0.08, 1)
+polygon = PackedVector2Array(-512, -384, 512, -384, 512, 384, -512, 384)
+
+[node name="Floor" type="Sprite2D" parent="."]
+z_index = -2
+texture = SubResource("Atlas_room")
+
+[node name="Decor" type="Node2D" parent="."]
+script = ExtResource("7_decor_view")
+atlas = ExtResource("6_decor_art")
+
+[node name="Mat" type="Sprite2D" parent="Decor"]
+z_index = -1
+position = Vector2(-29, 5)
+centered = false
+
+[node name="Display" type="Sprite2D" parent="Decor"]
+z_index = -1
+position = Vector2(-12, -53)
+centered = false
+
+[node name="DecorShelf" type="Node2D" parent="." groups=["interactable"]]
+position = Vector2(0, -12)
+script = ExtResource("3_furniture")
+action = 3
+
+[node name="Sprite" type="Sprite2D" parent="DecorShelf"]
+z_index = -1
+position = Vector2(-21, -17)
+texture = SubResource("Atlas_shelf")
+centered = false
+
+[node name="Hint" type="Label" parent="DecorShelf"]
+visible = false
+z_index = 7
+material = ExtResource("4_unshaded")
+offset_left = -50.0
+offset_top = -53.0
+offset_right = 50.0
+offset_bottom = -38.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.88, 0.65, 1)
+theme_override_colors/font_outline_color = Color(0.20, 0.13, 0.095, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
+[node name="Walls" type="StaticBody2D" parent="."]
+collision_mask = 0
+
+[node name="Back" type="CollisionShape2D" parent="Walls"]
+position = Vector2(0, -37)
+shape = SubResource("Shape_back")
+
+[node name="Left" type="CollisionShape2D" parent="Walls"]
+position = Vector2(-96, 15)
+shape = SubResource("Shape_side")
+
+[node name="Right" type="CollisionShape2D" parent="Walls"]
+position = Vector2(96, 15)
+shape = SubResource("Shape_side")
+
+[node name="FrontLeft" type="CollisionShape2D" parent="Walls"]
+position = Vector2(-52, 56)
+shape = SubResource("Shape_front")
+
+[node name="FrontRight" type="CollisionShape2D" parent="Walls"]
+position = Vector2(52, 56)
+shape = SubResource("Shape_front")
+
+[node name="StudyDesk" type="StaticBody2D" parent="." groups=["interactable"]]
+position = Vector2(-54, -6)
+collision_mask = 0
+script = ExtResource("3_furniture")
+
+[node name="Sprite" type="Sprite2D" parent="StudyDesk"]
+position = Vector2(-24, -28)
+texture = SubResource("Atlas_desk")
+centered = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StudyDesk"]
+position = Vector2(0, -5)
+shape = SubResource("Shape_desk")
+
+[node name="Hint" type="Label" parent="StudyDesk"]
+visible = false
+z_index = 7
+material = ExtResource("4_unshaded")
+offset_left = -40.0
+offset_top = -39.0
+offset_right = 40.0
+offset_bottom = -24.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.88, 0.65, 1)
+theme_override_colors/font_outline_color = Color(0.20, 0.13, 0.095, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
+[node name="Bed" type="StaticBody2D" parent="." groups=["interactable"]]
+position = Vector2(55, 14)
+collision_mask = 0
+script = ExtResource("3_furniture")
+action = 1
+
+[node name="Sprite" type="Sprite2D" parent="Bed"]
+position = Vector2(-26, -42)
+texture = SubResource("Atlas_bed")
+centered = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Bed"]
+position = Vector2(0, -15)
+shape = SubResource("Shape_bed")
+
+[node name="Hint" type="Label" parent="Bed"]
+visible = false
+z_index = 7
+material = ExtResource("4_unshaded")
+offset_left = -40.0
+offset_top = -53.0
+offset_right = 40.0
+offset_bottom = -38.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.88, 0.65, 1)
+theme_override_colors/font_outline_color = Color(0.20, 0.13, 0.095, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
+[node name="ClothesRack" type="StaticBody2D" parent="." groups=["interactable"]]
+position = Vector2(-66, 33)
+collision_mask = 0
+script = ExtResource("3_furniture")
+action = 2
+
+[node name="Sprite" type="Sprite2D" parent="ClothesRack"]
+position = Vector2(-20, -30)
+texture = ExtResource("5_clothes")
+centered = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ClothesRack"]
+position = Vector2(0, -5)
+shape = SubResource("Shape_clothes")
+
+[node name="Hint" type="Label" parent="ClothesRack"]
+visible = false
+z_index = 7
+material = ExtResource("4_unshaded")
+offset_left = -42.0
+offset_top = 7.0
+offset_right = 42.0
+offset_bottom = 20.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.88, 0.65, 1)
+theme_override_colors/font_outline_color = Color(0.20, 0.13, 0.095, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
+[node name="Exit" type="Area2D" parent="."]
+position = Vector2(0, 62)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Exit"]
+shape = SubResource("Shape_exit")
+
+[node name="ExitHint" type="Label" parent="."]
+z_index = 7
+material = ExtResource("4_unshaded")
+offset_left = -42.0
+offset_top = 76.0
+offset_right = 42.0
+offset_bottom = 92.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.84, 0.77, 0.60, 1)
+theme_override_font_sizes/font_size = 9
+text = "南门 · 回封地"
+horizontal_alignment = 1
+
+[node name="Entry" type="Marker2D" parent="."]
+position = Vector2(0, 38)
+rotation = -1.5707964
+
+[node name="Wake" type="Marker2D" parent="."]
+position = Vector2(55, 35)
+rotation = 1.5707964
+
+[node name="RoomCamera" type="Camera2D" parent="."]
+zoom = Vector2(3, 3)
+enabled = false
+
+[node name="Lamp" type="PointLight2D" parent="."]
+position = Vector2(38, -34)
+color = Color(1, 0.68, 0.39, 1)
+energy = 0.32
+range_z_min = -2
+texture = SubResource("Texture_glow")
+texture_scale = 1.57
+
+[node name="WindowLight" type="PointLight2D" parent="."]
+position = Vector2(0, -31)
+color = Color(0.68, 0.89, 1, 1)
+energy = 0.36
+range_z_min = -2
+texture = SubResource("Texture_glow")
+texture_scale = 1.7

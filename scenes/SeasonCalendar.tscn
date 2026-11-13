@@ -1,0 +1,152 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/SeasonCalendar.gd" id="1_calendar"]
+
+[node name="SeasonCalendar" type="Control"]
+process_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("1_calendar")
+toggle_action = &"open_almanac"
+
+[node name="MapModal" type="ColorRect" parent="."]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.09, 0.07, 0.78)
+
+[node name="Center" type="CenterContainer" parent="MapModal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Book" type="PanelContainer" parent="MapModal/Center"]
+custom_minimum_size = Vector2(962, 494)
+layout_mode = 2
+
+[node name="Stack" type="VBoxContainer" parent="MapModal/Center/Book"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="Header" type="HBoxContainer" parent="MapModal/Center/Book/Stack"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="MapModal/Center/Book/Stack/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.82, 0.57, 1)
+theme_override_font_sizes/font_size = 30
+text = "历书"
+
+[node name="Year" type="Label" parent="MapModal/Center/Book/Stack/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.72, 0.81, 0.68, 1)
+
+[node name="CloseMap" type="Button" parent="MapModal/Center/Book/Stack/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(116, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "合上  Esc"
+
+[node name="Seasons" type="HBoxContainer" parent="MapModal/Center/Book/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Spring" type="Button" parent="MapModal/Center/Book/Stack/Seasons"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+toggle_mode = true
+text = "春"
+
+[node name="Summer" type="Button" parent="MapModal/Center/Book/Stack/Seasons"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+toggle_mode = true
+text = "夏"
+
+[node name="Autumn" type="Button" parent="MapModal/Center/Book/Stack/Seasons"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+toggle_mode = true
+text = "秋"
+
+[node name="Winter" type="Button" parent="MapModal/Center/Book/Stack/Seasons"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+toggle_mode = true
+text = "冬"
+
+[node name="Pages" type="HBoxContainer" parent="MapModal/Center/Book/Stack"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="Dates" type="VBoxContainer" parent="MapModal/Center/Book/Stack/Pages"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(334, 0)
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="Details" type="PanelContainer" parent="MapModal/Center/Book/Stack/Pages"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Column" type="VBoxContainer" parent="MapModal/Center/Book/Stack/Pages/Details"]
+layout_mode = 2
+theme_override_constants/separation = 11
+
+[node name="DateTitle" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.82, 0.57, 1)
+theme_override_font_sizes/font_size = 25
+
+[node name="Forecast" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.71, 0.82, 0.75, 1)
+
+[node name="Planting" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Rule" type="HSeparator" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+layout_mode = 2
+
+[node name="Order" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/line_spacing = 5
+
+[node name="Event" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.95, 0.82, 0.57, 1)
+theme_override_constants/line_spacing = 5
+autowrap_mode = 3
+
+[node name="Guide" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2

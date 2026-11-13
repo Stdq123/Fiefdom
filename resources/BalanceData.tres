@@ -1,0 +1,128 @@
+[gd_resource type="Resource" script_class="BalanceData" format=3 uid="uid://bmkjq2nvh8vxl"]
+
+[ext_resource type="Script" path="res://scripts/BalanceData.gd" id="1_abc12"]
+
+[resource]
+script = ExtResource("1_abc12")
+
+; 作物配置
+crop_price_multiplier = 1.0
+crop_growth_speed = 1.0
+
+millet_price = 5
+millet_growth_days = 2
+
+sorghum_price = 7
+sorghum_growth_days = 3
+
+rice_price = 12
+rice_growth_days = 4
+
+wheat_price = 8
+wheat_growth_days = 3
+
+beans_price = 4
+beans_growth_days = 2
+
+mulberry_price = 15
+mulberry_growth_days = 5
+
+hemp_price = 6
+hemp_growth_days = 2
+
+; 门客配置
+retainer_loyalty_min = 50
+retainer_loyalty_max = 100
+retainer_efficiency_min = 0.8
+retainer_efficiency_max = 1.5
+
+confucian_efficiency_bonus = 1.0
+mohist_efficiency_bonus = 1.2
+legalist_efficiency_bonus = 1.15
+agrarian_efficiency_bonus = 1.5
+military_efficiency_bonus = 1.3
+confucian_loyalty_aura = 0.3
+specialist_food_per_night = 1
+mohist_reel_bonus = 1
+confucian_teaching_reputation = 6
+confucian_teaching_rites_xp = 5
+
+; 经济系统
+base_tax_rate = 0.2
+reformed_tax_rate = 0.2
+trade_base_price = 5
+market_crop_price = 5
+market_food_price = 5
+season_order_copper_bonus = 6
+season_order_food_bonus = 2
+fish_order_copper_bonus = 4
+fish_order_food_bonus = 2
+recruit_reputation_requirement = 20
+reputation_gain_multiplier = 1.0
+
+; 桑蚕系统
+mulberry_leaves_per_harvest = 4
+silk_workshop_cost = 25
+silk_leaves_per_night = 2
+silk_batch_nights = 2
+silk_cocoons_per_batch = 2
+silk_thread_per_cocoon = 2
+silk_thread_per_bolt = 4
+silk_sell_price = 35
+silk_sample_bonus = 10
+silk_offer_reputation = 30
+
+; 惩罚系统
+no_contribution_penalty = 8
+no_contribution_threshold = 5
+rank_strip_threshold = -100
+
+; 攻防
+player_max_health = 100
+health_recovery_at_night = 20
+wild_dog_damage = 12
+scout_arrow_damage = 15
+dog_bite_windup = 0.55
+scout_shot_windup = 0.75
+raid_crop_windup = 1.2
+raid_snare_seconds = 2.4
+enemy_recovery = 1.65
+raid_first_day = 9
+raid_interval_days = 8
+wild_food_yield = 5
+wild_herb_healing = 18
+herb_garden_regrowth_days = 3
+
+; 井田系统
+well_field_min_distance = 4
+reclamation_cost_copper = 70
+reclamation_cost_food = 30
+irrigation_channel_cost = 4
+irrigation_field_gate_cost = 12
+
+; 爵位晋升
+middle_rank_reputation = 100
+upper_rank_reputation = 180
+grandee_rank_reputation = 320
+minister_rank_reputation = 700
+upper_rank_art_level = 3
+minister_rank_art_level = 5
+
+; 事件系统
+public_field_ratio_threshold = 0.3
+research_monthly_cost = 100
+tax_reform_legalist_loyalty_change = -50
+tax_reform_confucian_loyalty_change = 30
+
+; 六艺系统
+interaction_xp_gain = 10
+literacy_study_xp = 50
+interaction_reputation_gain = 5
+
+; 时间系统
+days_per_year = 24
+solar_terms_count = 24
+days_per_solar_term = 1
+seasonal_growth_reduction = 1
+daylight_seconds = 150.0
+rain_solar_term = "谷雨"

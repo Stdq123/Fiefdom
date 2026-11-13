@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="20" viewBox="0 0 48 20" shape-rendering="crispEdges">
+  <!-- Bank stake with its mooring ring. -->
+  <path fill="#304737" opacity=".78" d="M3 16h12v3H2v-2h1z"/>
+  <path fill="#4c4535" d="M6 2h6v14h1v2H5v-2h1z"/>
+  <path fill="#98734a" d="M7 3h4v13H7z"/>
+  <path fill="#b28e5a" d="M7 3h2v12H7zm0 13h4v1H7z"/>
+  <path fill="#695640" d="M8 8h3v2H8zm1 5h2v2H9z"/>
+  <path fill="#cfaa69" d="M6 7h7v3H6z"/>
+  <path fill="#7c573e" d="M7 8h4v1H7zm5 0h2v1h-2z"/>
+  <!-- Woven bamboo basket, drawn above its submerged shadow. -->
+  <path fill="#294d50" opacity=".65" d="M23 14h22v3H22v-2h1z"/>
+  <path fill="#554f36" d="M28 4h12v1h3v2h2v6h-2v2H26v-1h-3V8h2V6h3z"/>
+  <path fill="#9a8854" d="M28 6h13v2h2v4h-2v2H27v-1h-2V8h3z"/>
+  <path fill="#c4a467" d="M30 6h8v1h3v1h-3v1H27V8h3zM26 10h17v1H26zm1 2h15v1H27z"/>
+  <path fill="#73643f" d="M29 9h1v4h-1zm4 0h1v5h-1zm4 0h1v4h-1zm4 0h1v4h-1z"/>
+  <path fill="#514f37" d="M25 8h3v4h-3zM33 6h5v2h-5z"/>
+  <path fill="#cbb17b" d="M25 8h1v4h-1zm8-2h5v1h-5z"/>
+  <path fill="#e1c48a" d="M42 8h3v1h-3zm2 0h1v3h-1z"/>
+</svg>

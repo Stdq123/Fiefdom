@@ -1,0 +1,39 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/SeasonFreight.gd" id="1_freight"]
+[ext_resource type="Script" path="res://scripts/NeighborMotion.gd" id="2_motion"]
+[ext_resource type="Material" path="res://resources/world_hint_material.tres" id="3_hint"]
+
+[sub_resource type="RectangleShape2D" id="ParkedCart"]
+size = Vector2(60, 15)
+
+[node name="Freight" type="Node2D" groups=["interactable"]]
+script = ExtResource("1_freight")
+
+[node name="Cart" type="Sprite2D" parent="."]
+
+[node name="Cargo" type="Sprite2D" parent="."]
+visible = false
+
+[node name="Driver" type="Sprite2D" parent="."]
+script = ExtResource("2_motion")
+
+[node name="Stand" type="StaticBody2D" parent="."]
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape2D" parent="Stand"]
+position = Vector2(-2, -6)
+shape = SubResource("ParkedCart")
+disabled = true
+
+[node name="Sign" type="Label" parent="."]
+material = ExtResource("3_hint")
+z_index = 6
+offset_right = 68.0
+offset_bottom = 15.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.90, 0.83, 0.62, 1)
+theme_override_colors/font_outline_color = Color(0.15, 0.22, 0.15, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1

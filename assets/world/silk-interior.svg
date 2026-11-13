@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="224" height="192" viewBox="0 0 224 192" shape-rendering="crispEdges">
+  <!-- Workshop floor and cutaway walls, 224 × 144. -->
+  <g>
+    <path fill="#181b19" d="M6 12h212v122h-11v5h-72v4H89v-4H17v-5H6z"/>
+    <path fill="#493d30" d="M7 6h210v126h-10v5H17v-5H7z"/>
+    <path fill="#998361" d="M14 14h196v115H14z"/>
+    <path fill="#a99a6c" d="M16 15h192v29H16z"/>
+    <path fill="#bdaf81" d="M18 16h188v7H18z"/>
+    <path fill="#8a7f57" d="M19 28h186v1H19zM19 33h186v1H19zM19 38h186v1H19z"/>
+    <path fill="#9b8c5f" d="M34 23h2v16h-2zM55 23h2v16h-2zM76 23h2v16h-2zM145 23h2v16h-2zM166 23h2v16h-2zM187 23h2v16h-2z"/>
+    <path fill="#5b4b35" d="M10 10h204v5H10zM12 40h200v6H12zM16 14h5v29h-5zM72 14h5v29h-5zM145 14h5v29h-5zM203 14h5v29h-5z"/>
+    <path fill="#a8875c" d="M12 7h200v3H12zM14 42h196v2H14z"/>
+    <path fill="#453a2d" d="M83 16h58v23H83z"/>
+    <path fill="#819793" d="M87 19h50v17H87z"/>
+    <path fill="#aeb9a3" d="M87 19h50v5H87z"/>
+    <path fill="#597c75" d="M87 31h50v5H87z"/>
+    <path fill="#715b40" d="M87 26h50v2H87zM98 18h2v19h-2zM111 18h2v19h-2zM124 18h2v19h-2z"/>
+    <path fill="#bda57a" d="M84 16h56v2H84zM84 38h56v2H84z"/>
+    <path fill="#9f8460" d="M14 46h196v81H14z"/>
+    <path fill="#917554" d="M14 46h196v6H14zM14 60h196v7H14zM14 76h196v6H14zM14 92h196v6H14zM14 107h196v8H14zM14 123h196v4H14z"/>
+    <path fill="#755c43" d="M14 52h196v1H14zM14 60h196v1H14zM14 68h196v1H14zM14 76h196v1H14zM14 84h196v1H14zM14 92h196v1H14zM14 100h196v1H14zM14 108h196v1H14zM14 116h196v1H14zM14 124h196v1H14z"/>
+    <path fill="#80684c" d="M50 46h1v7h-1zM140 46h1v7h-1zM73 53h1v7h-1zM166 53h1v7h-1zM34 61h1v7h-1zM107 61h1v7h-1zM179 61h1v7h-1zM60 69h1v7h-1zM154 69h1v7h-1zM39 77h1v7h-1zM86 77h1v7h-1zM159 77h1v7h-1zM52 85h1v7h-1zM138 85h1v7h-1zM65 93h1v7h-1zM188 93h1v7h-1zM34 101h1v7h-1zM143 101h1v7h-1zM61 109h1v7h-1zM173 109h1v7h-1zM42 117h1v7h-1zM141 117h1v7h-1z"/>
+    <path fill="#b0956c" d="M27 56h24v1H27zM110 57h18v1h-18zM151 65h14v1h-14zM28 71h16v1H28zM76 72h19v1H76zM154 80h24v1h-24zM19 88h19v1H19zM166 96h19v1h-19zM44 104h12v1H44zM151 111h18v1h-18zM23 120h21v1H23zM164 120h21v1h-21z"/>
+    <path fill="#7d6749" d="M15 46h194v5H15zM14 49h4v77h-4zM206 49h4v77h-4z"/>
+    <!-- Reed foot mats leave a clear aisle between the tools and the door. -->
+    <path fill="#655b3e" d="M29 77h38v21H29zM89 83h46v23H89zM156 77h39v21h-39z"/>
+    <path fill="#ac9d69" d="M30 77h36v19H30zM90 83h44v21H90zM157 77h37v19h-37z"/>
+    <path fill="#918759" d="M31 80h34v1H31zM31 84h34v1H31zM31 88h34v1H31zM31 92h34v1H31zM91 86h42v1H91zM91 90h42v1H91zM91 94h42v1H91zM91 98h42v1H91zM158 80h35v1h-35zM158 84h35v1h-35zM158 88h35v1h-35zM158 92h35v1h-35z"/>
+    <!-- Storage against the wall, with an oil lamp between the reel and the loom. -->
+    <path fill="#634e39" d="M25 31h35v16H25zM157 30h36v17h-36zM145 44h12v3h-12z"/>
+    <path fill="#97734c" d="M25 31h35v2H25zM25 42h35v3H25zM157 30h36v2h-36zM157 42h36v3h-36zM147 40h8v4h-8z"/>
+    <path fill="#b6a273" d="M29 36h13v5H29zM44 35h11v6H44zM162 34h12v6h-12zM177 35h12v5h-12z"/>
+    <path fill="#7f7751" d="M32 37h8v1h-8zM163 37h9v1h-9zM178 37h10v1h-10z"/>
+    <path fill="#ecb767" d="M150 36h1v2h2v3h-5v-3h2z"/>
+    <path fill="#ffe3a0" d="M150 38h1v2h-1z"/>
+    <path fill="#5f4934" d="M7 43h7v89H7zM210 43h7v89h-7zM13 123h85v11H13zM126 123h85v11h-85z"/>
+    <path fill="#8a714e" d="M8 44h4v84H8zM211 44h4v84h-4zM14 123h84v4H14zM126 123h84v4h-84z"/>
+    <path fill="#645341" d="M96 122h32v11H96z"/>
+    <path fill="#938267" d="M98 125h28v5H98zM96 130h32v4H96zM93 134h38v4H93z"/>
+    <path fill="#b5a37c" d="M98 125h28v1H98zM96 130h32v1H96zM93 134h38v1H93z"/>
+    <path fill="#79634d" d="M91 138h42v2H91z"/>
+  </g>
+  <!-- Bamboo rack and trays, 56 × 40. -->
+  <g transform="translate(0 144)">
+    <path fill="#6d5a3e" d="M4 34h48v4H4z"/>
+    <path fill="#645238" d="M6 5h5v32H6zM45 5h5v32h-5zM8 18h40v4H8zM8 31h40v4H8z"/>
+    <path fill="#b29a60" d="M8 6h2v30H8zM46 6h2v30h-2zM10 18h36v1H10zM10 31h36v1H10z"/>
+    <path fill="#82693d" d="M13 6h30v2h6v9h-6v3H13v-3H7V8h6zM13 21h30v2h6v8h-6v3H13v-3H7v-8h6z"/>
+    <path fill="#c4a96d" d="M13 8h30v2h4v6h-4v2H13v-2H9v-6h4zM13 23h30v2h4v5h-4v2H13v-2H9v-5h4z"/>
+    <path fill="#9a8151" d="M15 11h26v1H15zM13 14h30v1H13zM15 26h26v1H15zM13 29h30v1H13z"/>
+    <path fill="#d9be80" d="M12 16h32v1H12zM12 30h32v1H12z"/>
+  </g>
+  <!-- Reel, its water bowl and wheel, 58 × 45. -->
+  <g transform="translate(56 144)">
+    <path fill="#6d583e" d="M3 39h51v4H3z"/>
+    <path fill="#583e2e" d="M14 26h36v9H14zM17 34h5v7h-5zM43 34h5v7h-5zM30 20h5v19h-5z"/>
+    <path fill="#8d6946" d="M14 26h36v5H14zM18 35h2v6h-2zM44 34h2v7h-2zM32 23h2v13h-2z"/>
+    <path fill="#bc9661" d="M17 26h31v1H17zM29 22h6v2h-6z"/>
+    <path fill="#5a402e" d="M26 3h12v3h5v5h3v11h-3v5h-5v3H26v-3h-5v-5h-3V11h3V6h5z"/>
+    <path fill="#a98255" d="M27 5h10v3h5v4h2v9h-3v5h-4v2H27v-3h-5v-4h-2v-9h3V8h4z"/>
+    <path fill="#564632" d="M27 8h10v2h4v4h1v5h-2v4h-4v3h-9v-3h-4v-4h-1v-5h2v-4h3z"/>
+    <path fill="#725842" d="M6 27h9v2h4v10h-3v3H5v-3H2V29h4z"/>
+    <path fill="#a48862" d="M6 27h9v2h4v3H2v-3h4z"/>
+    <path fill="#6f8178" d="M6 29h9v2H6z"/>
+    <path fill="#d0b180" d="M5 35h11v1H5zM7 39h7v1H7z"/>
+  </g>
+  <!-- Loom frame and weaving bed, 64 × 48. -->
+  <g transform="translate(114 144)">
+    <path fill="#6c553b" d="M4 40h56v5H4z"/>
+    <path fill="#60432f" d="M7 7h50v6H7zM9 9h6v35H9zM49 9h6v35h-6zM12 31h40v6H12z"/>
+    <path fill="#9b7049" d="M9 8h46v3H9zM11 12h2v31h-2zM51 12h2v31h-2zM15 32h34v2H15z"/>
+    <path fill="#8f7552" d="M16 14h32v17H16z"/>
+    <path fill="#baaa7c" d="M18 15h28v12H18z"/>
+    <path fill="#ded0a0" d="M20 15h1v13h-1zM24 15h1v13h-1zM28 15h1v13h-1zM32 15h1v13h-1zM36 15h1v13h-1zM40 15h1v13h-1zM44 15h1v13h-1z"/>
+    <path fill="#755138" d="M15 26h34v3H15zM14 36h36v3H14z"/>
+    <path fill="#b38b5a" d="M16 26h32v1H16zM16 36h32v1H16zM9 7h46v1H9z"/>
+    <path fill="#7d6447" d="M46 34h11v5H46zM45 39h13v3H45z"/>
+  </g>
+</svg>

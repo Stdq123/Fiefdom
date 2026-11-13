@@ -1,0 +1,894 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="96" height="672" viewBox="0 0 96 672" shape-rendering="crispEdges">
+  <!-- Seven outfits. Each 96 × 96 sheet keeps the original 32 px frame and foot anchor.
+       Rows are front, back and profile. Columns are idle and the two walk steps. -->
+  <defs>
+    <path fill="#151c1a" opacity=".32" d="M10 27h12v1h3v2H7v-2h3z" id="ground-shadow"/>
+  
+    <g id="left-boot">
+  <path fill="#24252a" d="M10 23h6v4h-1v2H9v-2h1z"/>
+  <path fill="#675148" d="M11 25h4v2h-2v1h-3v-1h1z"/>
+</g>
+  
+    <g id="right-boot">
+  <path fill="#24252a" d="M16 23h6v4h1v2h-6v-2h-1z"/>
+  <path fill="#675148" d="M17 25h4v2h1v1h-4v-1h-1z"/>
+</g>
+  
+    <g id="rust-front">
+  <path fill="#24252a" d="M11 12h10v2h3v2h2v5h-2v2h-2v3H10v-3H8v-2H6v-5h2v-2h3z"/>
+  <path fill="#854e3b" d="M11 14h10v2h3v4h-2v3h-1v2H11v-3H9v-2H7v-3h2v-1h2z"/>
+  <path fill="#b36c4b" d="M11 15h8v2h3v3h-2v2H10v-2H8v-2h2z"/>
+  <path fill="#673d36" d="M12 23h7v2h-7z"/>
+  <rect x="7" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="22" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="8" y="21" width="2" height="1" fill="#ab6e55"/>
+  <rect x="22" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path fill="#deac7e" d="M11 14h3v2h2v2h2v2h-3v-1h-2v-2h-2z"/>
+  <path fill="#57483f" d="M10 21h12v2H10z"/>
+  <rect x="15" y="21" width="3" height="2" fill="#9c724b"/>
+  <rect x="15" y="21" width="2" height="1" fill="#e7b878"/>
+  <path d="M9 17h2v1H9zm12 0h2v1h-2z" fill="#d48a59"/><path fill="#24252a" d="M13 2h6v2h2v2h2v3h1v4h-2v2h-3v1h-6v-1h-3v-2H8V9h1V6h2V4h2z"/>
+  <path fill="#2d292b" d="M14 3h4v2h2v2h2v2h1v3h-2v2H11v-1H9V9h1V7h2V5h2z"/>
+  <path fill="#493934" d="M14 4h4v1h-4z M11 7h9v1h-9z M10 9h3v1h-3z"/>
+  <path fill="#ab6e55" d="M12 9h8v1h2v3h-2v1h-2v1h-4v-1h-2v-1h-2v-2h2z"/>
+  <path fill="#dfac81" d="M12 10h3V9h3v1h2v1h1v2h-3v1h-4v-1h-3v-2h1z"/>
+  <rect x="13" y="10" width="5" height="1" fill="#f3c69b"/>
+  <rect x="12" y="11" width="2" height="1" fill="#24252a"/>
+  <rect x="18" y="11" width="2" height="1" fill="#24252a"/>
+  <rect x="15" y="13" width="2" height="1" fill="#ab6e55"/>
+  <rect x="11" y="5" width="10" height="1" fill="#a56c4c"/>
+  <rect x="19" y="5" width="2" height="1" fill="#dfab75"/>
+</g>
+
+    <g id="rust-back">
+  <path fill="#24252a" d="M11 12h10v2h3v2h2v5h-2v2h-2v3H10v-3H8v-2H6v-5h2v-2h3z"/>
+  <path fill="#854e3b" d="M11 14h10v2h3v4h-2v3h-1v2H11v-3H9v-2H7v-3h2v-1h2z"/>
+  <path fill="#b36c4b" d="M11 15h8v2h3v3h-2v2H10v-2H8v-2h2z"/>
+  <path fill="#673d36" d="M12 23h7v2h-7z"/>
+  <rect x="7" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="22" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="8" y="21" width="2" height="1" fill="#ab6e55"/>
+  <rect x="22" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path fill="#c58162" d="M12 15h8v1h-8z M15 17h2v4h-2z"/>
+  <path fill="#57483f" d="M10 21h12v2H10z"/>
+  <rect x="15" y="21" width="3" height="2" fill="#9c724b"/>
+  <rect x="15" y="21" width="2" height="1" fill="#e7b878"/>
+  <path d="M9 17h2v1H9zm12 0h2v1h-2z" fill="#d48a59"/><path fill="#24252a" d="M13 2h6v2h2v2h2v3h1v4h-2v2h-3v1h-6v-1h-3v-2H8V9h1V6h2V4h2z"/>
+  <path fill="#2d292b" d="M14 3h4v2h2v2h2v2h1v3h-2v2H11v-1H9V9h1V7h2V5h2z"/>
+  <path fill="#493934" d="M14 4h4v1h-4z M11 7h9v1h-9z M10 9h3v1h-3z"/>
+  <path fill="#493934" d="M12 9h7v1h2v2h-2v2h-6v-2h-2v-2h1z"/>
+  <rect x="10" y="11" width="1" height="2" fill="#ab6e55"/>
+  <rect x="21" y="11" width="1" height="2" fill="#ab6e55"/>
+  <rect x="14" y="12" width="3" height="2" fill="#66504a"/>
+  <rect x="11" y="5" width="10" height="1" fill="#a56c4c"/>
+  <rect x="19" y="5" width="2" height="1" fill="#dfab75"/>
+</g>
+
+    <g id="rust-side">
+  <path fill="#24252a" d="M12 12h9v2h3v3h1v5h-2v3H10v-2H8v-6h2v-3h2z"/>
+  <path fill="#7d4a3a" d="M12 14h9v2h2v5h-2v3H11v-2H9v-4h2v-3h1z"/>
+  <path fill="#ac674e" d="M13 15h6v2h-2v4h-4v2h-2v-3h-1v-2h1v-2h2z"/>
+  <path fill="#544239" d="M12 21h10v2H12z"/>
+  <rect x="18" y="21" width="2" height="1" fill="#9c724b"/>
+  <rect x="21" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="21" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path d="M12 17h2v1h-2z" fill="#d48a59"/><path fill="#24252a" d="M13 3h6v2h3v2h2v4h2v3h-3v2h-9v-2h-4V7h2V5h1z"/>
+  <path fill="#2d292b" d="M14 4h5v2h3v2h1v2h-5v3h-3v1h-4V8h1V6h2z"/>
+  <path fill="#ab6e55" d="M17 9h6v3h2v1h-3v2h-6v-2h-1v-2h2z"/>
+  <path fill="#dfac81" d="M19 9h4v3h2v1h-4v1h-3v-2h-1v-1h2z"/>
+  <rect x="22" y="10" width="1" height="1" fill="#24252a"/>
+  <rect x="20" y="9" width="2" height="1" fill="#f3c69b"/>
+  <path fill="#493934" d="M14 5h4v2h-4z M12 8h4v1h-4z"/>
+  <rect x="15" y="5" width="8" height="1" fill="#b17d4b"/>
+</g>
+
+    <g id="hemp-front">
+  <path fill="#24252a" d="M11 12h10v2h3v2h2v5h-2v2h-2v3H10v-3H8v-2H6v-5h2v-2h3z"/>
+  <path fill="#847447" d="M11 14h10v2h3v4h-2v3h-1v2H11v-3H9v-2H7v-3h2v-1h2z"/>
+  <path fill="#a89a62" d="M11 15h8v2h3v3h-2v2H10v-2H8v-2h2z"/>
+  <path fill="#615932" d="M12 23h7v2h-7z"/>
+  <rect x="7" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="22" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="8" y="21" width="2" height="1" fill="#ab6e55"/>
+  <rect x="22" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path fill="#d7c393" d="M11 14h3v2h2v2h2v2h-3v-1h-2v-2h-2z"/>
+  <path fill="#565841" d="M10 21h12v2H10z"/>
+  <rect x="15" y="21" width="3" height="2" fill="#8a794d"/>
+  <rect x="15" y="21" width="2" height="1" fill="#d5be86"/>
+  <path d="M9 16h3v1H9zm11 0h3v1h-3zM12 23h8v1h-8z" fill="#cfbc81"/><path fill="#24252a" d="M13 2h6v2h2v2h2v3h1v4h-2v2h-3v1h-6v-1h-3v-2H8V9h1V6h2V4h2z"/>
+  <path fill="#2d292b" d="M14 3h4v2h2v2h2v2h1v3h-2v2H11v-1H9V9h1V7h2V5h2z"/>
+  <path fill="#493934" d="M14 4h4v1h-4z M11 7h9v1h-9z M10 9h3v1h-3z"/>
+  <path fill="#ab6e55" d="M12 9h8v1h2v3h-2v1h-2v1h-4v-1h-2v-1h-2v-2h2z"/>
+  <path fill="#dfac81" d="M12 10h3V9h3v1h2v1h1v2h-3v1h-4v-1h-3v-2h1z"/>
+  <rect x="13" y="10" width="5" height="1" fill="#f3c69b"/>
+  <rect x="12" y="11" width="2" height="1" fill="#24252a"/>
+  <rect x="18" y="11" width="2" height="1" fill="#24252a"/>
+  <rect x="15" y="13" width="2" height="1" fill="#ab6e55"/>
+  <rect x="11" y="5" width="10" height="1" fill="#b3a16f"/>
+  <rect x="19" y="5" width="2" height="1" fill="#e3d3a9"/>
+<path d="M10 5h12v1H10z" fill="#d7c393"/></g>
+
+    <g id="hemp-back">
+  <path fill="#24252a" d="M11 12h10v2h3v2h2v5h-2v2h-2v3H10v-3H8v-2H6v-5h2v-2h3z"/>
+  <path fill="#847447" d="M11 14h10v2h3v4h-2v3h-1v2H11v-3H9v-2H7v-3h2v-1h2z"/>
+  <path fill="#a89a62" d="M11 15h8v2h3v3h-2v2H10v-2H8v-2h2z"/>
+  <path fill="#615932" d="M12 23h7v2h-7z"/>
+  <rect x="7" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="22" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="8" y="21" width="2" height="1" fill="#ab6e55"/>
+  <rect x="22" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path fill="#c5b47b" d="M12 15h8v1h-8z M15 17h2v4h-2z"/>
+  <path fill="#565841" d="M10 21h12v2H10z"/>
+  <rect x="15" y="21" width="3" height="2" fill="#8a794d"/>
+  <rect x="15" y="21" width="2" height="1" fill="#d5be86"/>
+  <path d="M9 16h3v1H9zm11 0h3v1h-3zM12 23h8v1h-8z" fill="#cfbc81"/><path fill="#24252a" d="M13 2h6v2h2v2h2v3h1v4h-2v2h-3v1h-6v-1h-3v-2H8V9h1V6h2V4h2z"/>
+  <path fill="#2d292b" d="M14 3h4v2h2v2h2v2h1v3h-2v2H11v-1H9V9h1V7h2V5h2z"/>
+  <path fill="#493934" d="M14 4h4v1h-4z M11 7h9v1h-9z M10 9h3v1h-3z"/>
+  <path fill="#493934" d="M12 9h7v1h2v2h-2v2h-6v-2h-2v-2h1z"/>
+  <rect x="10" y="11" width="1" height="2" fill="#ab6e55"/>
+  <rect x="21" y="11" width="1" height="2" fill="#ab6e55"/>
+  <rect x="14" y="12" width="3" height="2" fill="#66504a"/>
+  <rect x="11" y="5" width="10" height="1" fill="#b3a16f"/>
+  <rect x="19" y="5" width="2" height="1" fill="#e3d3a9"/>
+<path d="M10 5h12v1H10z" fill="#d7c393"/></g>
+
+    <g id="hemp-side">
+  <path fill="#24252a" d="M12 12h9v2h3v3h1v5h-2v3H10v-2H8v-6h2v-3h2z"/>
+  <path fill="#78673f" d="M12 14h9v2h2v5h-2v3H11v-2H9v-4h2v-3h1z"/>
+  <path fill="#9e8e5c" d="M13 15h6v2h-2v4h-4v2h-2v-3h-1v-2h1v-2h2z"/>
+  <path fill="#56533a" d="M12 21h10v2H12z"/>
+  <rect x="18" y="21" width="2" height="1" fill="#8a794d"/>
+  <rect x="21" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="21" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path d="M12 16h4v1h-4zm1 7h6v1h-6z" fill="#cfbc81"/><path fill="#24252a" d="M13 3h6v2h3v2h2v4h2v3h-3v2h-9v-2h-4V7h2V5h1z"/>
+  <path fill="#2d292b" d="M14 4h5v2h3v2h1v2h-5v3h-3v1h-4V8h1V6h2z"/>
+  <path fill="#ab6e55" d="M17 9h6v3h2v1h-3v2h-6v-2h-1v-2h2z"/>
+  <path fill="#dfac81" d="M19 9h4v3h2v1h-4v1h-3v-2h-1v-1h2z"/>
+  <rect x="22" y="10" width="1" height="1" fill="#24252a"/>
+  <rect x="20" y="9" width="2" height="1" fill="#f3c69b"/>
+  <path fill="#493934" d="M14 5h4v2h-4z M12 8h4v1h-4z"/>
+  <rect x="15" y="5" width="8" height="1" fill="#b17d4b"/>
+<path d="M11 6h10v1H11z" fill="#d7c393"/></g>
+
+    <g id="silk-front">
+  <path fill="#24252a" d="M11 12h10v2h3v2h2v5h-2v2h-2v3H10v-3H8v-2H6v-5h2v-2h3z"/>
+  <path fill="#306572" d="M11 14h10v2h3v4h-2v3h-1v2H11v-3H9v-2H7v-3h2v-1h2z"/>
+  <path fill="#539997" d="M11 15h8v2h3v3h-2v2H10v-2H8v-2h2z"/>
+  <path fill="#244f5d" d="M12 23h7v2h-7z"/>
+  <rect x="7" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="22" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="8" y="21" width="2" height="1" fill="#ab6e55"/>
+  <rect x="22" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path fill="#bbdfc0" d="M11 14h3v2h2v2h2v2h-3v-1h-2v-2h-2z"/>
+  <path fill="#304e63" d="M10 21h12v2H10z"/>
+  <rect x="15" y="21" width="3" height="2" fill="#719a85"/>
+  <rect x="15" y="21" width="2" height="1" fill="#d3dfb2"/>
+  <path d="M18 16h2v1h-2zm1 1h2v1h-2zM12 23h8v1h-8z" fill="#8fc6aa"/><path fill="#24252a" d="M13 2h6v2h2v2h2v3h1v4h-2v2h-3v1h-6v-1h-3v-2H8V9h1V6h2V4h2z"/>
+  <path fill="#2d292b" d="M14 3h4v2h2v2h2v2h1v3h-2v2H11v-1H9V9h1V7h2V5h2z"/>
+  <path fill="#493934" d="M14 4h4v1h-4z M11 7h9v1h-9z M10 9h3v1h-3z"/>
+  <path fill="#ab6e55" d="M12 9h8v1h2v3h-2v1h-2v1h-4v-1h-2v-1h-2v-2h2z"/>
+  <path fill="#dfac81" d="M12 10h3V9h3v1h2v1h1v2h-3v1h-4v-1h-3v-2h1z"/>
+  <rect x="13" y="10" width="5" height="1" fill="#f3c69b"/>
+  <rect x="12" y="11" width="2" height="1" fill="#24252a"/>
+  <rect x="18" y="11" width="2" height="1" fill="#24252a"/>
+  <rect x="15" y="13" width="2" height="1" fill="#ab6e55"/>
+  <rect x="11" y="5" width="10" height="1" fill="#52998b"/>
+  <rect x="19" y="5" width="2" height="1" fill="#abdbc1"/>
+<path d="M10 5h12v1H10zm9-1h2v1h-2z" fill="#95cda6"/></g>
+
+    <g id="silk-back">
+  <path fill="#24252a" d="M11 12h10v2h3v2h2v5h-2v2h-2v3H10v-3H8v-2H6v-5h2v-2h3z"/>
+  <path fill="#306572" d="M11 14h10v2h3v4h-2v3h-1v2H11v-3H9v-2H7v-3h2v-1h2z"/>
+  <path fill="#539997" d="M11 15h8v2h3v3h-2v2H10v-2H8v-2h2z"/>
+  <path fill="#244f5d" d="M12 23h7v2h-7z"/>
+  <rect x="7" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="22" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="8" y="21" width="2" height="1" fill="#ab6e55"/>
+  <rect x="22" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path fill="#77bab0" d="M12 15h8v1h-8z M15 17h2v4h-2z"/>
+  <path fill="#304e63" d="M10 21h12v2H10z"/>
+  <rect x="15" y="21" width="3" height="2" fill="#719a85"/>
+  <rect x="15" y="21" width="2" height="1" fill="#d3dfb2"/>
+  <path d="M11 16h2v4h-2zm8 0h2v4h-2zM12 23h8v1h-8z" fill="#8fc6aa"/><path fill="#24252a" d="M13 2h6v2h2v2h2v3h1v4h-2v2h-3v1h-6v-1h-3v-2H8V9h1V6h2V4h2z"/>
+  <path fill="#2d292b" d="M14 3h4v2h2v2h2v2h1v3h-2v2H11v-1H9V9h1V7h2V5h2z"/>
+  <path fill="#493934" d="M14 4h4v1h-4z M11 7h9v1h-9z M10 9h3v1h-3z"/>
+  <path fill="#493934" d="M12 9h7v1h2v2h-2v2h-6v-2h-2v-2h1z"/>
+  <rect x="10" y="11" width="1" height="2" fill="#ab6e55"/>
+  <rect x="21" y="11" width="1" height="2" fill="#ab6e55"/>
+  <rect x="14" y="12" width="3" height="2" fill="#66504a"/>
+  <rect x="11" y="5" width="10" height="1" fill="#52998b"/>
+  <rect x="19" y="5" width="2" height="1" fill="#abdbc1"/>
+<path d="M10 5h12v1H10zm2-1h2v1h-2z" fill="#95cda6"/></g>
+
+    <g id="silk-side">
+  <path fill="#24252a" d="M12 12h9v2h3v3h1v5h-2v3H10v-2H8v-6h2v-3h2z"/>
+  <path fill="#2a606d" d="M12 14h9v2h2v5h-2v3H11v-2H9v-4h2v-3h1z"/>
+  <path fill="#52968f" d="M13 15h6v2h-2v4h-4v2h-2v-3h-1v-2h1v-2h2z"/>
+  <path fill="#29495d" d="M12 21h10v2H12z"/>
+  <rect x="18" y="21" width="2" height="1" fill="#719a85"/>
+  <rect x="21" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="21" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path d="M14 16h1v4h-1zm-2 7h6v1h-6z" fill="#8fc6aa"/><path fill="#24252a" d="M13 3h6v2h3v2h2v4h2v3h-3v2h-9v-2h-4V7h2V5h1z"/>
+  <path fill="#2d292b" d="M14 4h5v2h3v2h1v2h-5v3h-3v1h-4V8h1V6h2z"/>
+  <path fill="#ab6e55" d="M17 9h6v3h2v1h-3v2h-6v-2h-1v-2h2z"/>
+  <path fill="#dfac81" d="M19 9h4v3h2v1h-4v1h-3v-2h-1v-1h2z"/>
+  <rect x="22" y="10" width="1" height="1" fill="#24252a"/>
+  <rect x="20" y="9" width="2" height="1" fill="#f3c69b"/>
+  <path fill="#493934" d="M14 5h4v2h-4z M12 8h4v1h-4z"/>
+  <rect x="15" y="5" width="8" height="1" fill="#b17d4b"/>
+<path d="M10 6h12v1H10zm9-1h2v1h-2z" fill="#95cda6"/></g>
+
+    <g id="dyed-front">
+  <path fill="#24252a" d="M11 12h10v2h3v2h2v5h-2v2h-2v3H10v-3H8v-2H6v-5h2v-2h3z"/>
+  <path fill="#783b51" d="M11 14h10v2h3v4h-2v3h-1v2H11v-3H9v-2H7v-3h2v-1h2z"/>
+  <path fill="#ab596e" d="M11 15h8v2h3v3h-2v2H10v-2H8v-2h2z"/>
+  <path fill="#592a46" d="M12 23h7v2h-7z"/>
+  <rect x="7" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="22" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="8" y="21" width="2" height="1" fill="#ab6e55"/>
+  <rect x="22" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path fill="#f0c59a" d="M11 14h3v2h2v2h2v2h-3v-1h-2v-2h-2z"/>
+  <path fill="#434d61" d="M10 21h12v2H10z"/>
+  <rect x="15" y="21" width="3" height="2" fill="#c6895a"/>
+  <rect x="15" y="21" width="2" height="1" fill="#f0c285"/>
+  <path d="M19 16h1v1h-1zm-1 1h3v1h-3zm1 1h1v1h-1zM12 23h2v1h-2zm4 0h2v1h-2z" fill="#f1c29c"/><path fill="#24252a" d="M13 2h6v2h2v2h2v3h1v4h-2v2h-3v1h-6v-1h-3v-2H8V9h1V6h2V4h2z"/>
+  <path fill="#2d292b" d="M14 3h4v2h2v2h2v2h1v3h-2v2H11v-1H9V9h1V7h2V5h2z"/>
+  <path fill="#493934" d="M14 4h4v1h-4z M11 7h9v1h-9z M10 9h3v1h-3z"/>
+  <path fill="#ab6e55" d="M12 9h8v1h2v3h-2v1h-2v1h-4v-1h-2v-1h-2v-2h2z"/>
+  <path fill="#dfac81" d="M12 10h3V9h3v1h2v1h1v2h-3v1h-4v-1h-3v-2h1z"/>
+  <rect x="13" y="10" width="5" height="1" fill="#f3c69b"/>
+  <rect x="12" y="11" width="2" height="1" fill="#24252a"/>
+  <rect x="18" y="11" width="2" height="1" fill="#24252a"/>
+  <rect x="15" y="13" width="2" height="1" fill="#ab6e55"/>
+  <rect x="11" y="5" width="10" height="1" fill="#ad5b65"/>
+  <rect x="19" y="5" width="2" height="1" fill="#e6a476"/>
+</g>
+
+    <g id="dyed-back">
+  <path fill="#24252a" d="M11 12h10v2h3v2h2v5h-2v2h-2v3H10v-3H8v-2H6v-5h2v-2h3z"/>
+  <path fill="#783b51" d="M11 14h10v2h3v4h-2v3h-1v2H11v-3H9v-2H7v-3h2v-1h2z"/>
+  <path fill="#ab596e" d="M11 15h8v2h3v3h-2v2H10v-2H8v-2h2z"/>
+  <path fill="#592a46" d="M12 23h7v2h-7z"/>
+  <rect x="7" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="22" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="8" y="21" width="2" height="1" fill="#ab6e55"/>
+  <rect x="22" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path fill="#ca7b87" d="M12 15h8v1h-8z M15 17h2v4h-2z"/>
+  <path fill="#434d61" d="M10 21h12v2H10z"/>
+  <rect x="15" y="21" width="3" height="2" fill="#c6895a"/>
+  <rect x="15" y="21" width="2" height="1" fill="#f0c285"/>
+  <path d="M15 16h2v1h-2zm-2 1h6v1h-6zm2 1h2v1h-2zM12 23h2v1h-2zm4 0h2v1h-2z" fill="#f1c29c"/><path fill="#24252a" d="M13 2h6v2h2v2h2v3h1v4h-2v2h-3v1h-6v-1h-3v-2H8V9h1V6h2V4h2z"/>
+  <path fill="#2d292b" d="M14 3h4v2h2v2h2v2h1v3h-2v2H11v-1H9V9h1V7h2V5h2z"/>
+  <path fill="#493934" d="M14 4h4v1h-4z M11 7h9v1h-9z M10 9h3v1h-3z"/>
+  <path fill="#493934" d="M12 9h7v1h2v2h-2v2h-6v-2h-2v-2h1z"/>
+  <rect x="10" y="11" width="1" height="2" fill="#ab6e55"/>
+  <rect x="21" y="11" width="1" height="2" fill="#ab6e55"/>
+  <rect x="14" y="12" width="3" height="2" fill="#66504a"/>
+  <rect x="11" y="5" width="10" height="1" fill="#ad5b65"/>
+  <rect x="19" y="5" width="2" height="1" fill="#e6a476"/>
+</g>
+
+    <g id="dyed-side">
+  <path fill="#24252a" d="M12 12h9v2h3v3h1v5h-2v3H10v-2H8v-6h2v-3h2z"/>
+  <path fill="#6b364a" d="M12 14h9v2h2v5h-2v3H11v-2H9v-4h2v-3h1z"/>
+  <path fill="#a25468" d="M13 15h6v2h-2v4h-4v2h-2v-3h-1v-2h1v-2h2z"/>
+  <path fill="#3a4559" d="M12 21h10v2H12z"/>
+  <rect x="18" y="21" width="2" height="1" fill="#c6895a"/>
+  <rect x="21" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="21" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path d="M13 17h3v1h-3zm1 1h1v1h-1zM12 23h2v1h-2zm3 0h2v1h-2z" fill="#f1c29c"/><path fill="#24252a" d="M13 3h6v2h3v2h2v4h2v3h-3v2h-9v-2h-4V7h2V5h1z"/>
+  <path fill="#2d292b" d="M14 4h5v2h3v2h1v2h-5v3h-3v1h-4V8h1V6h2z"/>
+  <path fill="#ab6e55" d="M17 9h6v3h2v1h-3v2h-6v-2h-1v-2h2z"/>
+  <path fill="#dfac81" d="M19 9h4v3h2v1h-4v1h-3v-2h-1v-1h2z"/>
+  <rect x="22" y="10" width="1" height="1" fill="#24252a"/>
+  <rect x="20" y="9" width="2" height="1" fill="#f3c69b"/>
+  <path fill="#493934" d="M14 5h4v2h-4z M12 8h4v1h-4z"/>
+  <rect x="15" y="5" width="8" height="1" fill="#b17d4b"/>
+</g>
+
+    <g id="brocade-front">
+  <path fill="#24252a" d="M11 12h10v2h3v2h2v5h-2v2h-2v3H10v-3H8v-2H6v-5h2v-2h3z"/>
+  <path fill="#563f72" d="M11 14h10v2h3v4h-2v3h-1v2H11v-3H9v-2H7v-3h2v-1h2z"/>
+  <path fill="#795f9e" d="M11 15h8v2h3v3h-2v2H10v-2H8v-2h2z"/>
+  <path fill="#473252" d="M12 23h7v2h-7z"/>
+  <rect x="7" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="22" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="8" y="21" width="2" height="1" fill="#ab6e55"/>
+  <rect x="22" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path fill="#e9c47e" d="M11 14h3v2h2v2h2v2h-3v-1h-2v-2h-2z"/>
+  <path fill="#423552" d="M10 21h12v2H10z"/>
+  <rect x="15" y="21" width="3" height="2" fill="#c89152"/>
+  <rect x="15" y="21" width="2" height="1" fill="#f8d58a"/>
+  <path d="M8 16h3v1H8zm13 0h3v1h-3zM19 16h1v1h-1zm-1 1h3v1h-3zm1 1h1v1h-1zM12 24h8v1h-8z" fill="#d5a665"/><path fill="#24252a" d="M13 2h6v2h2v2h2v3h1v4h-2v2h-3v1h-6v-1h-3v-2H8V9h1V6h2V4h2z"/>
+  <path fill="#2d292b" d="M14 3h4v2h2v2h2v2h1v3h-2v2H11v-1H9V9h1V7h2V5h2z"/>
+  <path fill="#493934" d="M14 4h4v1h-4z M11 7h9v1h-9z M10 9h3v1h-3z"/>
+  <path fill="#ab6e55" d="M12 9h8v1h2v3h-2v1h-2v1h-4v-1h-2v-1h-2v-2h2z"/>
+  <path fill="#dfac81" d="M12 10h3V9h3v1h2v1h1v2h-3v1h-4v-1h-3v-2h1z"/>
+  <rect x="13" y="10" width="5" height="1" fill="#f3c69b"/>
+  <rect x="12" y="11" width="2" height="1" fill="#24252a"/>
+  <rect x="18" y="11" width="2" height="1" fill="#24252a"/>
+  <rect x="15" y="13" width="2" height="1" fill="#ab6e55"/>
+  <rect x="11" y="5" width="10" height="1" fill="#bc9259"/>
+  <rect x="19" y="5" width="2" height="1" fill="#ebc576"/>
+<path d="M11 4h10v1h1v3h-2V7h-8v1h-2V5h1z" fill="#3c2f4b"/><path d="M11 6h10v1H11z" fill="#e5b872"/></g>
+
+    <g id="brocade-back">
+  <path fill="#24252a" d="M11 12h10v2h3v2h2v5h-2v2h-2v3H10v-3H8v-2H6v-5h2v-2h3z"/>
+  <path fill="#563f72" d="M11 14h10v2h3v4h-2v3h-1v2H11v-3H9v-2H7v-3h2v-1h2z"/>
+  <path fill="#795f9e" d="M11 15h8v2h3v3h-2v2H10v-2H8v-2h2z"/>
+  <path fill="#473252" d="M12 23h7v2h-7z"/>
+  <rect x="7" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="22" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="8" y="21" width="2" height="1" fill="#ab6e55"/>
+  <rect x="22" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path fill="#a68bc1" d="M12 15h8v1h-8z M15 17h2v4h-2z"/>
+  <path fill="#423552" d="M10 21h12v2H10z"/>
+  <rect x="15" y="21" width="3" height="2" fill="#c89152"/>
+  <rect x="15" y="21" width="2" height="1" fill="#f8d58a"/>
+  <path d="M8 16h3v1H8zm13 0h3v1h-3zM15 16h2v1h-2zm-2 1h6v1h-6zm2 1h2v1h-2zM12 24h8v1h-8z" fill="#d5a665"/><path fill="#24252a" d="M13 2h6v2h2v2h2v3h1v4h-2v2h-3v1h-6v-1h-3v-2H8V9h1V6h2V4h2z"/>
+  <path fill="#2d292b" d="M14 3h4v2h2v2h2v2h1v3h-2v2H11v-1H9V9h1V7h2V5h2z"/>
+  <path fill="#493934" d="M14 4h4v1h-4z M11 7h9v1h-9z M10 9h3v1h-3z"/>
+  <path fill="#493934" d="M12 9h7v1h2v2h-2v2h-6v-2h-2v-2h1z"/>
+  <rect x="10" y="11" width="1" height="2" fill="#ab6e55"/>
+  <rect x="21" y="11" width="1" height="2" fill="#ab6e55"/>
+  <rect x="14" y="12" width="3" height="2" fill="#66504a"/>
+  <rect x="11" y="5" width="10" height="1" fill="#bc9259"/>
+  <rect x="19" y="5" width="2" height="1" fill="#ebc576"/>
+<path d="M11 4h10v1h1v3h-2V7h-8v1h-2V5h1z" fill="#3c2f4b"/><path d="M11 6h10v1H11z" fill="#e5b872"/></g>
+
+    <g id="brocade-side">
+  <path fill="#24252a" d="M12 12h9v2h3v3h1v5h-2v3H10v-2H8v-6h2v-3h2z"/>
+  <path fill="#4c376b" d="M12 14h9v2h2v5h-2v3H11v-2H9v-4h2v-3h1z"/>
+  <path fill="#74568f" d="M13 15h6v2h-2v4h-4v2h-2v-3h-1v-2h1v-2h2z"/>
+  <path fill="#3d304b" d="M12 21h10v2H12z"/>
+  <rect x="18" y="21" width="2" height="1" fill="#c89152"/>
+  <rect x="21" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="21" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path d="M10 17h3v1h-3zm4 0h2v1h-2zm-1 1h4v1h-4zm1 1h2v1h-2zM11 23h8v1h-8z" fill="#d5a665"/><path fill="#24252a" d="M13 3h6v2h3v2h2v4h2v3h-3v2h-9v-2h-4V7h2V5h1z"/>
+  <path fill="#2d292b" d="M14 4h5v2h3v2h1v2h-5v3h-3v1h-4V8h1V6h2z"/>
+  <path fill="#ab6e55" d="M17 9h6v3h2v1h-3v2h-6v-2h-1v-2h2z"/>
+  <path fill="#dfac81" d="M19 9h4v3h2v1h-4v1h-3v-2h-1v-1h2z"/>
+  <rect x="22" y="10" width="1" height="1" fill="#24252a"/>
+  <rect x="20" y="9" width="2" height="1" fill="#f3c69b"/>
+  <path fill="#493934" d="M14 5h4v2h-4z M12 8h4v1h-4z"/>
+  <rect x="15" y="5" width="8" height="1" fill="#b17d4b"/>
+<path d="M12 4h7v1h3v2h2v2h-2V8H11V6h1z" fill="#3c2f4b"/><path d="M12 7h9v1h-9z" fill="#e5b872"/></g>
+
+    <g id="fur-front">
+  <path fill="#24252a" d="M11 12h10v2h3v2h2v5h-2v2h-2v3H10v-3H8v-2H6v-5h2v-2h3z"/>
+  <path fill="#805b42" d="M11 14h10v2h3v4h-2v3h-1v2H11v-3H9v-2H7v-3h2v-1h2z"/>
+  <path fill="#a67650" d="M11 15h8v2h3v3h-2v2H10v-2H8v-2h2z"/>
+  <path fill="#603c36" d="M12 23h7v2h-7z"/>
+  <rect x="7" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="22" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="8" y="21" width="2" height="1" fill="#ab6e55"/>
+  <rect x="22" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path fill="#eac792" d="M11 14h3v2h2v2h2v2h-3v-1h-2v-2h-2z"/>
+  <path fill="#523d3a" d="M10 21h12v2H10z"/>
+  <rect x="15" y="21" width="3" height="2" fill="#c8904c"/>
+  <rect x="15" y="21" width="2" height="1" fill="#f6cf7b"/>
+  <path d="M9 14h4v1h1v2h-2v1H9v1H7v-3h2zm10 0h4v2h2v3h-2v-1h-3v-1h-2v-2h1zM12 23h8v2h-8z" fill="#dbba8a"/><path fill="#24252a" d="M13 2h6v2h2v2h2v3h1v4h-2v2h-3v1h-6v-1h-3v-2H8V9h1V6h2V4h2z"/>
+  <path fill="#2d292b" d="M14 3h4v2h2v2h2v2h1v3h-2v2H11v-1H9V9h1V7h2V5h2z"/>
+  <path fill="#493934" d="M14 4h4v1h-4z M11 7h9v1h-9z M10 9h3v1h-3z"/>
+  <path fill="#ab6e55" d="M12 9h8v1h2v3h-2v1h-2v1h-4v-1h-2v-1h-2v-2h2z"/>
+  <path fill="#dfac81" d="M12 10h3V9h3v1h2v1h1v2h-3v1h-4v-1h-3v-2h1z"/>
+  <rect x="13" y="10" width="5" height="1" fill="#f3c69b"/>
+  <rect x="12" y="11" width="2" height="1" fill="#24252a"/>
+  <rect x="18" y="11" width="2" height="1" fill="#24252a"/>
+  <rect x="15" y="13" width="2" height="1" fill="#ab6e55"/>
+  <rect x="11" y="5" width="10" height="1" fill="#b89556"/>
+  <rect x="19" y="5" width="2" height="1" fill="#f3d68f"/>
+<path d="M8 3h16v2h-2v3h-2V7h-8v1h-2V5H8z" fill="#4b3936"/><path d="M9 3h14v1H9zm2 4h1v3h-1zm9 0h1v3h-1z" fill="#e5b872"/></g>
+
+    <g id="fur-back">
+  <path fill="#24252a" d="M11 12h10v2h3v2h2v5h-2v2h-2v3H10v-3H8v-2H6v-5h2v-2h3z"/>
+  <path fill="#805b42" d="M11 14h10v2h3v4h-2v3h-1v2H11v-3H9v-2H7v-3h2v-1h2z"/>
+  <path fill="#a67650" d="M11 15h8v2h3v3h-2v2H10v-2H8v-2h2z"/>
+  <path fill="#603c36" d="M12 23h7v2h-7z"/>
+  <rect x="7" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="22" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="8" y="21" width="2" height="1" fill="#ab6e55"/>
+  <rect x="22" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path fill="#d8a975" d="M12 15h8v1h-8z M15 17h2v4h-2z"/>
+  <path fill="#523d3a" d="M10 21h12v2H10z"/>
+  <rect x="15" y="21" width="3" height="2" fill="#c8904c"/>
+  <rect x="15" y="21" width="2" height="1" fill="#f6cf7b"/>
+  <path d="M9 14h5v1h4v-1h5v2h2v3h-3v-1H10v1H7v-3h2zM12 23h8v2h-8z" fill="#dbba8a"/><path fill="#24252a" d="M13 2h6v2h2v2h2v3h1v4h-2v2h-3v1h-6v-1h-3v-2H8V9h1V6h2V4h2z"/>
+  <path fill="#2d292b" d="M14 3h4v2h2v2h2v2h1v3h-2v2H11v-1H9V9h1V7h2V5h2z"/>
+  <path fill="#493934" d="M14 4h4v1h-4z M11 7h9v1h-9z M10 9h3v1h-3z"/>
+  <path fill="#493934" d="M12 9h7v1h2v2h-2v2h-6v-2h-2v-2h1z"/>
+  <rect x="10" y="11" width="1" height="2" fill="#ab6e55"/>
+  <rect x="21" y="11" width="1" height="2" fill="#ab6e55"/>
+  <rect x="14" y="12" width="3" height="2" fill="#66504a"/>
+  <rect x="11" y="5" width="10" height="1" fill="#b89556"/>
+  <rect x="19" y="5" width="2" height="1" fill="#f3d68f"/>
+<path d="M8 3h16v2h-2v3h-2V7h-8v1h-2V5H8z" fill="#4b3936"/><path d="M9 3h14v1H9zm2 4h1v3h-1zm9 0h1v3h-1z" fill="#e5b872"/></g>
+
+    <g id="fur-side">
+  <path fill="#24252a" d="M12 12h9v2h3v3h1v5h-2v3H10v-2H8v-6h2v-3h2z"/>
+  <path fill="#754e37" d="M12 14h9v2h2v5h-2v3H11v-2H9v-4h2v-3h1z"/>
+  <path fill="#a06f47" d="M13 15h6v2h-2v4h-4v2h-2v-3h-1v-2h1v-2h2z"/>
+  <path fill="#503637" d="M12 21h10v2H12z"/>
+  <rect x="18" y="21" width="2" height="1" fill="#c8904c"/>
+  <rect x="21" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="21" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path d="M11 14h6v1h4v1h2v2h-4v-1h-4v2h-4v-1H9v-2h2zM11 22h9v2h-9z" fill="#dbba8a"/><path fill="#24252a" d="M13 3h6v2h3v2h2v4h2v3h-3v2h-9v-2h-4V7h2V5h1z"/>
+  <path fill="#2d292b" d="M14 4h5v2h3v2h1v2h-5v3h-3v1h-4V8h1V6h2z"/>
+  <path fill="#ab6e55" d="M17 9h6v3h2v1h-3v2h-6v-2h-1v-2h2z"/>
+  <path fill="#dfac81" d="M19 9h4v3h2v1h-4v1h-3v-2h-1v-1h2z"/>
+  <rect x="22" y="10" width="1" height="1" fill="#24252a"/>
+  <rect x="20" y="9" width="2" height="1" fill="#f3c69b"/>
+  <path fill="#493934" d="M14 5h4v2h-4z M12 8h4v1h-4z"/>
+  <rect x="15" y="5" width="8" height="1" fill="#b17d4b"/>
+<path d="M9 3h16v2h-3v3h-2V7h-8v2h-2V5H9z" fill="#4b3936"/><path d="M10 3h14v1H10zm1 4h1v3h-1zm9 0h1v2h-1z" fill="#e5b872"/></g>
+
+    <g id="wool-front">
+  <path fill="#24252a" d="M11 12h10v2h3v2h2v5h-2v2h-2v3H10v-3H8v-2H6v-5h2v-2h3z"/>
+  <path fill="#576c73" d="M11 14h10v2h3v4h-2v3h-1v2H11v-3H9v-2H7v-3h2v-1h2z"/>
+  <path fill="#7e9598" d="M11 15h8v2h3v3h-2v2H10v-2H8v-2h2z"/>
+  <path fill="#42585f" d="M12 23h7v2h-7z"/>
+  <rect x="7" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="22" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="8" y="21" width="2" height="1" fill="#ab6e55"/>
+  <rect x="22" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path fill="#ccbea6" d="M11 14h3v2h2v2h2v2h-3v-1h-2v-2h-2z"/>
+  <path fill="#4a5656" d="M10 21h12v2H10z"/>
+  <rect x="15" y="21" width="3" height="2" fill="#a18c6b"/>
+  <rect x="15" y="21" width="2" height="1" fill="#d4c2a0"/>
+  <path d="M9 14h4v1h1v2h-2v1H9v1H7v-3h2zm10 0h4v2h2v3h-2v-1h-3v-1h-2v-2h1zM12 23h8v2h-8z" fill="#e1d3ba"/><path fill="#24252a" d="M13 2h6v2h2v2h2v3h1v4h-2v2h-3v1h-6v-1h-3v-2H8V9h1V6h2V4h2z"/>
+  <path fill="#2d292b" d="M14 3h4v2h2v2h2v2h1v3h-2v2H11v-1H9V9h1V7h2V5h2z"/>
+  <path fill="#493934" d="M14 4h4v1h-4z M11 7h9v1h-9z M10 9h3v1h-3z"/>
+  <path fill="#ab6e55" d="M12 9h8v1h2v3h-2v1h-2v1h-4v-1h-2v-1h-2v-2h2z"/>
+  <path fill="#dfac81" d="M12 10h3V9h3v1h2v1h1v2h-3v1h-4v-1h-3v-2h1z"/>
+  <rect x="13" y="10" width="5" height="1" fill="#f3c69b"/>
+  <rect x="12" y="11" width="2" height="1" fill="#24252a"/>
+  <rect x="18" y="11" width="2" height="1" fill="#24252a"/>
+  <rect x="15" y="13" width="2" height="1" fill="#ab6e55"/>
+  <rect x="11" y="5" width="10" height="1" fill="#81735b"/>
+  <rect x="19" y="5" width="2" height="1" fill="#c0aa80"/>
+</g>
+
+    <g id="wool-back">
+  <path fill="#24252a" d="M11 12h10v2h3v2h2v5h-2v2h-2v3H10v-3H8v-2H6v-5h2v-2h3z"/>
+  <path fill="#576c73" d="M11 14h10v2h3v4h-2v3h-1v2H11v-3H9v-2H7v-3h2v-1h2z"/>
+  <path fill="#7e9598" d="M11 15h8v2h3v3h-2v2H10v-2H8v-2h2z"/>
+  <path fill="#42585f" d="M12 23h7v2h-7z"/>
+  <rect x="7" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="22" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="8" y="21" width="2" height="1" fill="#ab6e55"/>
+  <rect x="22" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path fill="#a7b0a0" d="M12 15h8v1h-8z M15 17h2v4h-2z"/>
+  <path fill="#4a5656" d="M10 21h12v2H10z"/>
+  <rect x="15" y="21" width="3" height="2" fill="#a18c6b"/>
+  <rect x="15" y="21" width="2" height="1" fill="#d4c2a0"/>
+  <path d="M9 14h5v1h4v-1h5v2h2v3h-3v-1H10v1H7v-3h2zM12 23h8v2h-8z" fill="#e1d3ba"/><path fill="#24252a" d="M13 2h6v2h2v2h2v3h1v4h-2v2h-3v1h-6v-1h-3v-2H8V9h1V6h2V4h2z"/>
+  <path fill="#2d292b" d="M14 3h4v2h2v2h2v2h1v3h-2v2H11v-1H9V9h1V7h2V5h2z"/>
+  <path fill="#493934" d="M14 4h4v1h-4z M11 7h9v1h-9z M10 9h3v1h-3z"/>
+  <path fill="#493934" d="M12 9h7v1h2v2h-2v2h-6v-2h-2v-2h1z"/>
+  <rect x="10" y="11" width="1" height="2" fill="#ab6e55"/>
+  <rect x="21" y="11" width="1" height="2" fill="#ab6e55"/>
+  <rect x="14" y="12" width="3" height="2" fill="#66504a"/>
+  <rect x="11" y="5" width="10" height="1" fill="#81735b"/>
+  <rect x="19" y="5" width="2" height="1" fill="#c0aa80"/>
+</g>
+
+    <g id="wool-side">
+  <path fill="#24252a" d="M12 12h9v2h3v3h1v5h-2v3H10v-2H8v-6h2v-3h2z"/>
+  <path fill="#50636a" d="M12 14h9v2h2v5h-2v3H11v-2H9v-4h2v-3h1z"/>
+  <path fill="#748b91" d="M13 15h6v2h-2v4h-4v2h-2v-3h-1v-2h1v-2h2z"/>
+  <path fill="#3c5055" d="M12 21h10v2H12z"/>
+  <rect x="18" y="21" width="2" height="1" fill="#a18c6b"/>
+  <rect x="21" y="19" width="3" height="2" fill="#dfac81"/>
+  <rect x="21" y="21" width="2" height="1" fill="#ab6e55"/>
+  <path d="M11 14h6v1h4v1h2v2h-4v-1h-4v2h-4v-1H9v-2h2zM11 22h9v2h-9z" fill="#e1d3ba"/><path fill="#24252a" d="M13 3h6v2h3v2h2v4h2v3h-3v2h-9v-2h-4V7h2V5h1z"/>
+  <path fill="#2d292b" d="M14 4h5v2h3v2h1v2h-5v3h-3v1h-4V8h1V6h2z"/>
+  <path fill="#ab6e55" d="M17 9h6v3h2v1h-3v2h-6v-2h-1v-2h2z"/>
+  <path fill="#dfac81" d="M19 9h4v3h2v1h-4v1h-3v-2h-1v-1h2z"/>
+  <rect x="22" y="10" width="1" height="1" fill="#24252a"/>
+  <rect x="20" y="9" width="2" height="1" fill="#f3c69b"/>
+  <path fill="#493934" d="M14 5h4v2h-4z M12 8h4v1h-4z"/>
+  <rect x="15" y="5" width="8" height="1" fill="#b17d4b"/>
+</g>
+
+  </defs>
+  <!-- rust -->
+  <g transform="translate(0 0)">
+    <g transform="translate(0 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#rust-front" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#rust-front" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#rust-front" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(0 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#rust-back" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#rust-back" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#rust-back" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(0 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#rust-side" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#rust-side" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#rust-side" transform="translate(0 -1)"/>
+    </g>
+  </g>
+  <!-- hemp -->
+  <g transform="translate(0 96)">
+    <g transform="translate(0 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#hemp-front" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#hemp-front" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#hemp-front" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(0 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#hemp-back" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#hemp-back" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#hemp-back" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(0 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#hemp-side" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#hemp-side" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#hemp-side" transform="translate(0 -1)"/>
+    </g>
+  </g>
+  <!-- silk -->
+  <g transform="translate(0 192)">
+    <g transform="translate(0 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#silk-front" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#silk-front" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#silk-front" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(0 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#silk-back" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#silk-back" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#silk-back" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(0 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#silk-side" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#silk-side" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#silk-side" transform="translate(0 -1)"/>
+    </g>
+  </g>
+  <!-- dyed -->
+  <g transform="translate(0 288)">
+    <g transform="translate(0 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#dyed-front" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#dyed-front" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#dyed-front" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(0 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#dyed-back" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#dyed-back" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#dyed-back" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(0 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#dyed-side" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#dyed-side" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#dyed-side" transform="translate(0 -1)"/>
+    </g>
+  </g>
+  <!-- brocade -->
+  <g transform="translate(0 384)">
+    <g transform="translate(0 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#brocade-front" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#brocade-front" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#brocade-front" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(0 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#brocade-back" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#brocade-back" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#brocade-back" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(0 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#brocade-side" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#brocade-side" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#brocade-side" transform="translate(0 -1)"/>
+    </g>
+  </g>
+  <!-- fur -->
+  <g transform="translate(0 480)">
+    <g transform="translate(0 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#fur-front" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#fur-front" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#fur-front" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(0 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#fur-back" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#fur-back" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#fur-back" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(0 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#fur-side" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#fur-side" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#fur-side" transform="translate(0 -1)"/>
+    </g>
+  </g>
+  <!-- wool -->
+  <g transform="translate(0 576)">
+    <g transform="translate(0 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#wool-front" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#wool-front" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 0)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#wool-front" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(0 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#wool-back" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#wool-back" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 32)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#wool-back" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(0 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 0)"/>
+      <use xlink:href="#right-boot" transform="translate(0 0)"/>
+      <use xlink:href="#wool-side" transform="translate(0 0)"/>
+    </g>
+    <g transform="translate(32 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#wool-side" transform="translate(0 -1)"/>
+    </g>
+    <g transform="translate(64 64)">
+      <use xlink:href="#ground-shadow"/>
+      <use xlink:href="#left-boot" transform="translate(0 -1)"/>
+      <use xlink:href="#right-boot" transform="translate(0 1)"/>
+      <use xlink:href="#wool-side" transform="translate(0 -1)"/>
+    </g>
+  </g>
+</svg>

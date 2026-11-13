@@ -1,0 +1,24 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/CreekTrapStand.gd" id="1_stand"]
+[ext_resource type="Material" path="res://resources/world_hint_material.tres" id="2_hint"]
+
+[node name="CreekTrapStand" type="Node2D" groups=["interactable"]]
+visible = false
+texture_filter = 1
+script = ExtResource("1_stand")
+
+[node name="Hint" type="Label" parent="."]
+visible = false
+z_index = 6
+material = ExtResource("2_hint")
+offset_left = -53.0
+offset_top = 9.0
+offset_right = 53.0
+offset_bottom = 22.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.88, 0.64, 1)
+theme_override_colors/font_outline_color = Color(0.15, 0.21, 0.17, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1

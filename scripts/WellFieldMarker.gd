@@ -1,120 +1,65 @@
 extends Node2D
 class_name WellFieldMarker
 
-# Visual marker for well-field boundaries
+const WORKSITE := preload("res://scripts/FieldWorksite.gd")
+const ENTRANCE_WIDTH := EstateLayout.FIELD_ENTRANCE_WIDTH
+
 @onready var tile_map: TileMapLayer = get_parent()
+@onready var landscape: Node2D = tile_map.get_parent().get_node("Landscape")
 
-var border_lines: Array[Line2D] = []
-
-func _ready() -> void:
-	if not tile_map:
-		print("Error: WellFieldMarker must be child of TileMapLayer!")
-		return
-
-	# Create markers for all well fields
-	refresh_markers()
-
-	GameEvents.well_field_added.connect(_on_well_field_added)
-	GameEvents.well_field_reclaimed.connect(_on_well_field_reclaimed)
+var marker_nodes: Dictionary[int, Node2D] = {}
 
 func refresh_markers() -> void:
-	# Clear existing markers
-	for line in border_lines:
-		if is_instance_valid(line):
-			line.queue_free()
-	border_lines.clear()
-
-	# Create new markers
 	for field_data in Global.well_fields:
-		_create_field_marker(field_data)
+		_update_marker(field_data["field_id"])
 
-func _create_field_marker(field_data: Dictionary) -> void:
-	var center = field_data["center_pos"]
-	var field_id = field_data["field_id"]
+func _update_marker(field_id: int) -> void:
+	var field := Global.get_well_field(field_id)
+	if field.is_empty():
+		return
+	if marker_nodes.has(field_id):
+		var previous := marker_nodes[field_id]
+		remove_child(previous)
+		previous.queue_free()
+	var marker := Node2D.new()
+	marker.name = "WellField%d" % (field_id + 1)
+	marker.position = tile_map.map_to_local(field["center_pos"])
+	add_child(marker)
+	marker_nodes[field_id] = marker
 
-	# Create a 3x3 border around the well field
-	var line = Line2D.new()
-	line.width = 3.0
-	line.default_color = _get_field_color(field_id)
-	line.z_index = 50  # Draw above tiles but below UI
+	var cell_size := Vector2(tile_map.tile_set.tile_size)
+	var half_span := cell_size * 1.5
+	var entrance: Vector2 = landscape.field_entrance(field_id)
+	var title := "井田 %d" % (field_id + 1)
+	if field["is_unlocked"]:
+		var line := Line2D.new()
+		line.name = "Boundary"
+		line.points = EstateLayout.field_boundary(Rect2(-half_span, half_span * 2.0), entrance, ENTRANCE_WIDTH)
+		line.width = 1.0
+		line.default_color = Color("#a29467")
+		line.z_index = 50
+		marker.add_child(line)
+	else:
+		var worksite := WORKSITE.new()
+		worksite.name = "Worksite"
+		worksite.stage = field["reclamation_progress"]
+		worksite.scale = cell_size / 16.0
+		worksite.z_index = 1
+		marker.add_child(worksite)
+		title = "%s · 余 %d 夜" % [
+			Global.reclamation_stage(worksite.stage), Global.RECLAMATION_NIGHTS - worksite.stage]
 
-	# Calculate the 4 corners of the 3x3 area
-	var top_left = center + Vector2i(-1, -1)
-	var top_right = center + Vector2i(1, -1)
-	var bottom_left = center + Vector2i(-1, 1)
-	var bottom_right = center + Vector2i(1, 1)
-
-	# Convert to world positions
-	var p1 = tile_map.map_to_local(top_left)
-	var p2 = tile_map.map_to_local(top_right)
-	var p3 = tile_map.map_to_local(bottom_right)
-	var p4 = tile_map.map_to_local(bottom_left)
-
-	# Add points to create a rectangle
-	line.add_point(p1)
-	line.add_point(p2)
-	line.add_point(p3)
-	line.add_point(p4)
-	line.add_point(p1)  # Close the loop
-
-	# Add to scene
-	add_child(line)
-	border_lines.append(line)
-
-	# Add field ID label
-	var label = Label.new()
-	label.text = "#%d" % field_id
-	label.position = tile_map.map_to_local(center)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 20)
-	label.add_theme_color_override("font_color", Color(1, 1, 1, 1))
-	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
+	var label := Label.new()
+	label.material = preload("res://resources/world_hint_material.tres")
+	label.name = "Status"
+	label.text = title
+	label.position = -half_span + Vector2(0, -15)
+	if entrance == Vector2.UP:
+		label.position.y = half_span.y + 2.0
+	label.add_theme_font_size_override("font_size", 11)
+	label.add_theme_color_override("font_color", Color("#e1ddbb"))
+	label.add_theme_color_override("font_outline_color", Color("#263d2e"))
 	label.add_theme_constant_override("outline_size", 2)
 	label.z_index = 51
-	add_child(label)
-	border_lines.append(label)
-
-	# Add public field marker (center tile)
-	var public_marker = ColorRect.new()
-	var center_pos = tile_map.map_to_local(center)
-	var cell_size = tile_map.get_tileset().tile_size
-	public_marker.position = center_pos - Vector2(cell_size.x * 0.5, cell_size.y * 0.5)
-	public_marker.size = cell_size
-	public_marker.color = Color(1, 0.8, 0, 0.3)  # Golden color for public field
-	public_marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	public_marker.z_index = 49
-	add_child(public_marker)
-	border_lines.append(public_marker)
-
-func _get_field_color(field_id: int) -> Color:
-	# Different colors for different well fields
-	var colors = [
-		Color(0, 1, 0, 0.8),    # Green
-		Color(0, 0, 1, 0.8),    # Blue
-		Color(1, 0, 1, 0.8),    # Magenta
-		Color(1, 1, 0, 0.8),    # Yellow
-		Color(0, 1, 1, 0.8),    # Cyan
-		Color(1, 0.5, 0, 0.8),  # Orange
-		Color(0.5, 0, 1, 0.8),  # Purple
-		Color(1, 0, 0.5, 0.8),  # Pink
-		Color(0.5, 1, 0, 0.8),  # Lime
-	]
-	if field_id < colors.size():
-		return colors[field_id]
-	return Color(1, 1, 1, 0.8)
-
-func _on_well_field_added(field_id: int) -> void:
-	if field_id < Global.well_fields.size():
-		_create_field_marker(Global.well_fields[field_id])
-
-func _on_well_field_reclaimed(field_id: int, progress: int) -> void:
-	# Update visual to show reclamation progress
-	print("Field %d reclamation progress: %d/4" % [field_id, progress])
-	# TODO: Add progress indicator
-
-func _exit_tree() -> void:
-	for line in border_lines:
-		if is_instance_valid(line):
-			line.queue_free()
-	border_lines.clear()
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	marker.add_child(label)

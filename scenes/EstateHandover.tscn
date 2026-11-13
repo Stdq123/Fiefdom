@@ -1,0 +1,186 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/EstateHandover.gd" id="1_handover"]
+
+[sub_resource type="StyleBoxFlat" id="Style_handover"]
+content_margin_left = 24.0
+content_margin_top = 22.0
+content_margin_right = 24.0
+content_margin_bottom = 24.0
+bg_color = Color(0.101, 0.15, 0.125, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.64, 0.54, 0.36, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_left = 6
+corner_radius_bottom_right = 6
+shadow_color = Color(0, 0, 0, 0.32)
+shadow_size = 8
+
+[sub_resource type="StyleBoxFlat" id="Style_note"]
+content_margin_left = 18.0
+content_margin_top = 15.0
+content_margin_right = 18.0
+content_margin_bottom = 15.0
+bg_color = Color(0.159, 0.211, 0.166, 1)
+border_width_left = 3
+border_color = Color(0.61, 0.50, 0.32, 1)
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+
+[sub_resource type="StyleBoxFlat" id="Style_public"]
+bg_color = Color(0.37, 0.276, 0.154, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.91, 0.77, 0.49, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_left = 3
+corner_radius_bottom_right = 3
+
+[sub_resource type="StyleBoxFlat" id="Style_private"]
+bg_color = Color(0.21, 0.294, 0.203, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 2
+border_color = Color(0.46, 0.53, 0.35, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_left = 3
+corner_radius_bottom_right = 3
+
+[node name="EstateHandover" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("1_handover")
+toggle_action = &""
+public_plot = SubResource("Style_public")
+private_plot = SubResource("Style_private")
+
+[node name="MapModal" type="ColorRect" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.048, 0.065, 0.054, 0.72)
+
+[node name="Center" type="CenterContainer" parent="MapModal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Sheet" type="PanelContainer" parent="MapModal/Center"]
+custom_minimum_size = Vector2(900, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("Style_handover")
+
+[node name="Stack" type="VBoxContainer" parent="MapModal/Center/Sheet"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Header" type="HBoxContainer" parent="MapModal/Center/Sheet/Stack"]
+layout_mode = 2
+
+[node name="HandoverTitle" type="Label" parent="MapModal/Center/Sheet/Stack/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.96, 0.83, 0.59, 1)
+theme_override_font_sizes/font_size = 29
+
+[node name="CloseMap" type="Button" parent="MapModal/Center/Sheet/Stack/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 38)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+text = "回封地  Esc"
+
+[node name="Body" type="HBoxContainer" parent="MapModal/Center/Sheet/Stack"]
+layout_mode = 2
+theme_override_constants/separation = 27
+
+[node name="Note" type="PanelContainer" parent="MapModal/Center/Sheet/Stack/Body"]
+custom_minimum_size = Vector2(394, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Style_note")
+
+[node name="Text" type="VBoxContainer" parent="MapModal/Center/Sheet/Stack/Body/Note"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Letter" type="Label" parent="MapModal/Center/Sheet/Stack/Body/Note/Text"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.91, 0.88, 0.76, 1)
+theme_override_font_sizes/font_size = 19
+theme_override_constants/line_spacing = 6
+text = "堂屋我已扫好，水就在田西。\n今春你领了这片采邑，先种中央那畦。\n有不明白的，到田边来找我。"
+autowrap_mode = 3
+
+[node name="Signature" type="Label" parent="MapModal/Center/Sheet/Stack/Body/Note/Text"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.80, 0.66, 1)
+text = "渠伯"
+horizontal_alignment = 2
+
+[node name="Field" type="HBoxContainer" parent="MapModal/Center/Sheet/Stack/Body"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 16
+
+[node name="WellFieldSketch" type="GridContainer" parent="MapModal/Center/Sheet/Stack/Body/Field"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+columns = 3
+
+[node name="Legend" type="VBoxContainer" parent="MapModal/Center/Sheet/Stack/Body/Field"]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 4
+
+[node name="Public" type="Label" parent="MapModal/Center/Sheet/Stack/Body/Field/Legend"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.82, 0.57, 1)
+theme_override_font_sizes/font_size = 19
+text = "中央公田"
+
+[node name="Tribute" type="Label" parent="MapModal/Center/Sheet/Stack/Body/Field/Legend"]
+layout_mode = 2
+text = "收成入国库，记作纳贡。"
+
+[node name="Private" type="Label" parent="MapModal/Center/Sheet/Stack/Body/Field/Legend"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.82, 0.59, 1)
+theme_override_font_sizes/font_size = 19
+text = "四周私田"
+
+[node name="Income" type="Label" parent="MapModal/Center/Sheet/Stack/Body/Field/Legend"]
+layout_mode = 2
+text = "收成归你，可换粮或交时令单。"
+
+[node name="FindKeeper" type="Button" parent="MapModal/Center/Sheet/Stack"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(144, 40)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.97, 0.83, 0.57, 1)
+text = "去见渠伯"

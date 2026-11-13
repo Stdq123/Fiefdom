@@ -1,0 +1,100 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/RaftTrial.gd" id="1_trial"]
+[ext_resource type="Theme" path="res://resources/game_theme.tres" id="2_theme"]
+[ext_resource type="AudioStream" path="res://assets/audio/water-1.wav" id="3_water"]
+
+[node name="RaftTrial" type="Node2D"]
+process_mode = 3
+z_index = 2
+script = ExtResource("1_trial")
+
+[node name="Camera" type="Camera2D" parent="."]
+position = Vector2(167, -48)
+zoom = Vector2(3, 3)
+
+[node name="Paddle" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3_water")
+volume_db = -15.0
+bus = &"SFX"
+
+[node name="Interface" type="CanvasLayer" parent="."]
+layer = 11
+
+[node name="Frame" type="Control" parent="Interface"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("2_theme")
+
+[node name="Panel" type="PanelContainer" parent="Interface/Frame"]
+layout_mode = 1
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -420.0
+offset_top = -141.0
+offset_right = -28.0
+offset_bottom = 141.0
+grow_vertical = 2
+
+[node name="Stack" type="VBoxContainer" parent="Interface/Frame/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Interface/Frame/Panel/Stack"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.84, 0.6, 1)
+theme_override_font_sizes/font_size = 27
+text = "夏至试筏"
+
+[node name="Status" type="Label" parent="Interface/Frame/Panel/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 21
+
+[node name="Rule" type="HSeparator" parent="Interface/Frame/Panel/Stack"]
+layout_mode = 2
+
+[node name="Steps" type="HBoxContainer" parent="Interface/Frame/Panel/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 9
+
+[node name="Detail" type="Label" parent="Interface/Frame/Panel/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+autowrap_mode = 3
+
+[node name="Keys" type="Label" parent="Interface/Frame/Panel/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.83, 0.68, 1)
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="Actions" type="HBoxContainer" parent="Interface/Frame/Panel/Stack"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Start" type="Button" parent="Interface/Frame/Panel/Stack/Actions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+text = "登筏"
+
+[node name="Leave" type="Button" parent="Interface/Frame/Panel/Stack/Actions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(118, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+text = "回岸  Esc"

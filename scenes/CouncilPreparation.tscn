@@ -1,0 +1,316 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/CouncilPreparation.gd" id="1_prep"]
+
+[sub_resource type="StyleBoxFlat" id="Ledger"]
+content_margin_left = 24.0
+content_margin_top = 19.0
+content_margin_right = 24.0
+content_margin_bottom = 20.0
+bg_color = Color(0.101, 0.15, 0.125, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.64, 0.54, 0.36, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_left = 6
+corner_radius_bottom_right = 6
+shadow_color = Color(0, 0, 0, 0.32)
+shadow_size = 8
+
+[sub_resource type="StyleBoxFlat" id="Card"]
+content_margin_left = 14.0
+content_margin_top = 10.0
+content_margin_right = 14.0
+content_margin_bottom = 11.0
+bg_color = Color(0.153, 0.203, 0.163, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.30, 0.37, 0.27, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_left = 4
+corner_radius_bottom_right = 4
+
+[node name="CouncilPreparation" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("1_prep")
+toggle_action = &""
+
+[node name="MapModal" type="ColorRect" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.048, 0.065, 0.054, 0.72)
+
+[node name="Center" type="CenterContainer" parent="MapModal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Ledger" type="PanelContainer" parent="MapModal/Center"]
+custom_minimum_size = Vector2(852, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("Ledger")
+
+[node name="Stack" type="VBoxContainer" parent="MapModal/Center/Ledger"]
+layout_mode = 2
+theme_override_constants/separation = 13
+
+[node name="Header" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="MapModal/Center/Ledger/Stack/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.96, 0.83, 0.59, 1)
+theme_override_font_sizes/font_size = 29
+text = "初税亩筹备"
+
+[node name="CloseMap" type="Button" parent="MapModal/Center/Ledger/Stack/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(112, 37)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "返回  Esc"
+
+[node name="Gates" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Date" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/Gates"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Card")
+
+[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/Gates/Date"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="DateLine" type="Label" parent="MapModal/Center/Ledger/Stack/Gates/Date/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 19
+
+[node name="DateStatus" type="Label" parent="MapModal/Center/Ledger/Stack/Gates/Date/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+
+[node name="Rank" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/Gates"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Card")
+
+[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/Gates/Rank"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="RankLine" type="Label" parent="MapModal/Center/Ledger/Stack/Gates/Rank/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 19
+
+[node name="RankStatus" type="Label" parent="MapModal/Center/Ledger/Stack/Gates/Rank/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="Tribute" type="PanelContainer" parent="MapModal/Center/Ledger/Stack"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("Card")
+
+[node name="Row" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack/Tribute"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/Tribute/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 5
+
+[node name="Contribution" type="Label" parent="MapModal/Center/Ledger/Stack/Tribute/Row/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.83, 0.59, 1)
+theme_override_font_sizes/font_size = 22
+
+[node name="Account" type="Label" parent="MapModal/Center/Ledger/Stack/Tribute/Row/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+
+[node name="ContributionStatus" type="Label" parent="MapModal/Center/Ledger/Stack/Tribute/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 18
+
+[node name="PetitionCard" type="PanelContainer" parent="MapModal/Center/Ledger/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/panel = SubResource("Card")
+
+[node name="Row" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack/PetitionCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/PetitionCard/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="PetitionHeading" type="Label" parent="MapModal/Center/Ledger/Stack/PetitionCard/Row/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 19
+
+[node name="PetitionDetail" type="Label" parent="MapModal/Center/Ledger/Stack/PetitionCard/Row/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="OrdersButton" type="Button" parent="MapModal/Center/Ledger/Stack/PetitionCard/Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(136, 36)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+text = "查看时令单"
+
+[node name="PetitionButton" type="Button" parent="MapModal/Center/Ledger/Stack/PetitionCard/Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(136, 36)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+text = "请召简议税"
+
+[node name="Preview" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PreviewHeading" type="Label" parent="MapModal/Center/Ledger/Stack/Preview"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+
+[node name="Options" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack/Preview"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PublicCard" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/Preview/Options"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Card")
+
+[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/Preview/Options/PublicCard"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Title" type="Label" parent="MapModal/Center/Ledger/Stack/Preview/Options/PublicCard/Details"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+text = "只收熟公田"
+
+[node name="PublicPreview" type="Label" parent="MapModal/Center/Ledger/Stack/Preview/Options/PublicCard/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+
+[node name="PublicResult" type="Label" parent="MapModal/Center/Ledger/Stack/Preview/Options/PublicCard/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+
+[node name="MixedCard" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/Preview/Options"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("Card")
+
+[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/Preview/Options/MixedCard"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="MixedTitle" type="Label" parent="MapModal/Center/Ledger/Stack/Preview/Options/MixedCard/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+
+[node name="MixedPreview" type="Label" parent="MapModal/Center/Ledger/Stack/Preview/Options/MixedCard/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+
+[node name="MixedResult" type="Label" parent="MapModal/Center/Ledger/Stack/Preview/Options/MixedCard/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+
+[node name="Silk" type="PanelContainer" parent="MapModal/Center/Ledger/Stack"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("Card")
+
+[node name="Row" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack/Silk"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/Silk/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="SilkStock" type="Label" parent="MapModal/Center/Ledger/Stack/Silk/Row/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 19
+
+[node name="SilkNote" type="Label" parent="MapModal/Center/Ledger/Stack/Silk/Row/Details"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+text = "两案都用得上丝绸。可先织好，定案后再进献或出售。"
+
+[node name="SilkButton" type="Button" parent="MapModal/Center/Ledger/Stack/Silk/Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(136, 36)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+text = "准备丝绸"
+
+[node name="Actions" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 8
+
+[node name="ArtsButton" type="Button" parent="MapModal/Center/Ledger/Stack/Actions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(124, 36)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "打开六艺"
+
+[node name="FieldButton" type="Button" parent="MapModal/Center/Ledger/Stack/Actions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(136, 36)
+layout_mode = 2
+mouse_default_cursor_shape = 2

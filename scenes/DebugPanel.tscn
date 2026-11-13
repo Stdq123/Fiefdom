@@ -1,13 +1,19 @@
-[gd_scene load_steps=2 format=3 uid="uid://debug_panel_uid"]
+[gd_scene format=3 uid="uid://b7vb8kpnfa35f"]
 
-[ext_resource type="Script" path="res://scripts/DebugPanel.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://qniwji5tq78m" path="res://scripts/DebugPanel.gd" id="1_script"]
 
-[node name="DebugPanel" type="Panel"]
-offset_right = 250.0
-offset_bottom = 400.0
+[node name="DebugPanel" type="Panel" unique_id=512361577]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -270.0
+offset_top = 80.0
+offset_right = -20.0
+offset_bottom = 480.0
+grow_horizontal = 0
 script = ExtResource("1_script")
 
-[node name="TitleLabel" type="Label" parent="."]
+[node name="TitleLabel" type="Label" parent="." unique_id=1063614173]
 layout_mode = 0
 offset_left = 10.0
 offset_top = 10.0
@@ -17,7 +23,7 @@ theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
 theme_override_font_sizes/font_size = 20
 text = "DEBUG面板"
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1093850460]
 layout_mode = 0
 offset_left = 10.0
 offset_top = 45.0
@@ -25,51 +31,51 @@ offset_right = 240.0
 offset_bottom = 360.0
 theme_override_constants/separation = 5
 
-[node name="DayLabel" type="Label" parent="VBoxContainer"]
+[node name="DayLabel" type="Label" parent="VBoxContainer" unique_id=9924678]
 layout_mode = 2
 text = "Day: 1"
 
-[node name="MoneyLabel" type="Label" parent="VBoxContainer"]
+[node name="MoneyLabel" type="Label" parent="VBoxContainer" unique_id=1865390117]
 layout_mode = 2
 text = "Money: 0"
 
-[node name="FoodLabel" type="Label" parent="VBoxContainer"]
+[node name="FoodLabel" type="Label" parent="VBoxContainer" unique_id=59394610]
 layout_mode = 2
 text = "Food: 0"
 
-[node name="ReputationLabel" type="Label" parent="VBoxContainer"]
+[node name="ReputationLabel" type="Label" parent="VBoxContainer" unique_id=1415701941]
 layout_mode = 2
 text = "Reputation: 0"
 
-[node name="RankLabel" type="Label" parent="VBoxContainer"]
+[node name="RankLabel" type="Label" parent="VBoxContainer" unique_id=820575428]
 layout_mode = 2
 text = "Rank: Unknown"
 
-[node name="AddMoneyButton" type="Button" parent="VBoxContainer"]
+[node name="AddMoneyButton" type="Button" parent="VBoxContainer" unique_id=1905003752]
 layout_mode = 2
 text = "+1000 铜钱"
 
-[node name="AddFoodButton" type="Button" parent="VBoxContainer"]
+[node name="AddFoodButton" type="Button" parent="VBoxContainer" unique_id=733299123]
 layout_mode = 2
 text = "+100 粮食"
 
-[node name="AddRepButton" type="Button" parent="VBoxContainer"]
+[node name="AddRepButton" type="Button" parent="VBoxContainer" unique_id=1759202609]
 layout_mode = 2
 text = "+500 声望"
 
-[node name="PromoteButton" type="Button" parent="VBoxContainer"]
+[node name="PromoteButton" type="Button" parent="VBoxContainer" unique_id=11121581]
 layout_mode = 2
 text = "提升爵位"
 
-[node name="TriggerEventButton" type="Button" parent="VBoxContainer"]
+[node name="TriggerEventButton" type="Button" parent="VBoxContainer" unique_id=673981265]
 layout_mode = 2
 text = "触发初税亩事件"
 
-[node name="AddRetainerButton" type="Button" parent="VBoxContainer"]
+[node name="AddRetainerButton" type="Button" parent="VBoxContainer" unique_id=9464770]
 layout_mode = 2
 text = "添加随机门客"
 
-[node name="ToggleVisibilityButton" type="Button" parent="."]
+[node name="ToggleVisibilityButton" type="Button" parent="." unique_id=2034212851]
 layout_mode = 0
 anchor_left = 1.0
 anchor_top = 1.0
@@ -78,4 +84,4 @@ anchor_bottom = 1.0
 offset_left = -120.0
 offset_top = -35.0
 offset_right = -10.0
-text = "隐藏 (H)"
+text = "收起内容"

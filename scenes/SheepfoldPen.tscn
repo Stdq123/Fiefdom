@@ -1,0 +1,152 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/SheepfoldPen.gd" id="1_pen"]
+[ext_resource type="Texture2D" path="res://assets/world/sheepfold/yard.svg" id="2_art"]
+[ext_resource type="Material" path="res://resources/world_hint_material.tres" id="3_hint"]
+
+[sub_resource type="AtlasTexture" id="Shed"]
+atlas = ExtResource("2_art")
+region = Rect2(0, 0, 78, 52)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="RearFence"]
+atlas = ExtResource("2_art")
+region = Rect2(0, 56, 94, 62)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="FrontFence"]
+atlas = ExtResource("2_art")
+region = Rect2(96, 56, 94, 16)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Trough"]
+atlas = ExtResource("2_art")
+region = Rect2(80, 0, 26, 14)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Feed"]
+atlas = ExtResource("2_art")
+region = Rect2(108, 0, 26, 14)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="ShortCoat"]
+atlas = ExtResource("2_art")
+region = Rect2(80, 18, 18, 14)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Tuft"]
+atlas = ExtResource("2_art")
+region = Rect2(102, 18, 18, 16)
+filter_clip = true
+
+[sub_resource type="RectangleShape2D" id="ShedBase"]
+size = Vector2(62, 16)
+
+[sub_resource type="RectangleShape2D" id="RearRail"]
+size = Vector2(90, 5)
+
+[sub_resource type="RectangleShape2D" id="SideRail"]
+size = Vector2(4, 50)
+
+[sub_resource type="RectangleShape2D" id="FrontRail"]
+size = Vector2(30, 5)
+
+[node name="SheepfoldPen" type="Node2D" groups=["interactable"]]
+visible = false
+y_sort_enabled = true
+texture_filter = 1
+script = ExtResource("1_pen")
+
+[node name="Paddock" type="Node2D" parent="."]
+position = Vector2(0, -65)
+y_sort_enabled = true
+
+[node name="Yard" type="Node2D" parent="Paddock"]
+z_index = -2
+
+[node name="RearFence" type="Sprite2D" parent="Paddock"]
+texture = SubResource("RearFence")
+centered = false
+offset = Vector2(-47, -7)
+
+[node name="Shed" type="Sprite2D" parent="Paddock"]
+position = Vector2(0, 1)
+texture = SubResource("Shed")
+centered = false
+offset = Vector2(-39, -50)
+
+[node name="Sheep" type="Sprite2D" parent="Paddock"]
+position = Vector2(-12, 7)
+texture = SubResource("ShortCoat")
+offset = Vector2(0, -6)
+
+[node name="Trough" type="Sprite2D" parent="Paddock"]
+position = Vector2(16, 15)
+texture = SubResource("Trough")
+centered = false
+offset = Vector2(-13, -11)
+
+[node name="Fodder" type="Sprite2D" parent="Paddock/Trough"]
+visible = false
+texture = SubResource("Feed")
+centered = false
+offset = Vector2(-13, -11)
+
+[node name="Wool" type="Sprite2D" parent="Paddock"]
+visible = false
+position = Vector2(28, 9)
+texture = SubResource("Tuft")
+
+[node name="FrontFence" type="Sprite2D" parent="Paddock"]
+position = Vector2(0, 52)
+texture = SubResource("FrontFence")
+centered = false
+offset = Vector2(-47, -10)
+
+[node name="Barriers" type="StaticBody2D" parent="Paddock"]
+collision_mask = 0
+
+[node name="ShedBase" type="CollisionShape2D" parent="Paddock/Barriers"]
+position = Vector2(0, -8)
+shape = SubResource("ShedBase")
+disabled = true
+
+[node name="RearRail" type="CollisionShape2D" parent="Paddock/Barriers"]
+position = Vector2(0, 2)
+shape = SubResource("RearRail")
+disabled = true
+
+[node name="WestRail" type="CollisionShape2D" parent="Paddock/Barriers"]
+position = Vector2(-43, 27)
+shape = SubResource("SideRail")
+disabled = true
+
+[node name="EastRail" type="CollisionShape2D" parent="Paddock/Barriers"]
+position = Vector2(42, 27)
+shape = SubResource("SideRail")
+disabled = true
+
+[node name="FrontLeft" type="CollisionShape2D" parent="Paddock/Barriers"]
+position = Vector2(-30, 52)
+shape = SubResource("FrontRail")
+disabled = true
+
+[node name="FrontRight" type="CollisionShape2D" parent="Paddock/Barriers"]
+position = Vector2(30, 52)
+shape = SubResource("FrontRail")
+disabled = true
+
+[node name="Hint" type="Label" parent="Paddock"]
+visible = false
+z_index = 6
+material = ExtResource("3_hint")
+offset_left = -62.0
+offset_top = -61.0
+offset_right = 62.0
+offset_bottom = -47.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.99, 0.87, 0.59, 1)
+theme_override_colors/font_outline_color = Color(0.13, 0.21, 0.16, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1

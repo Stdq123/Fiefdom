@@ -1,0 +1,138 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/SheepfoldPanel.gd" id="1_panel"]
+[ext_resource type="Texture2D" path="res://assets/world/sheepfold/farm-sheep.webp" id="2_sheep"]
+
+[node name="SheepfoldPanel" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_panel")
+toggle_action = &""
+
+[node name="MapModal" type="ColorRect" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.09, 0.07, 0.60)
+
+[node name="Center" type="CenterContainer" parent="MapModal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Card" type="PanelContainer" parent="MapModal/Center"]
+custom_minimum_size = Vector2(572, 0)
+layout_mode = 2
+
+[node name="Inset" type="MarginContainer" parent="MapModal/Center/Card"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 13
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 14
+
+[node name="Body" type="VBoxContainer" parent="MapModal/Center/Card/Inset"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Header" type="HBoxContainer" parent="MapModal/Center/Card/Inset/Body"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Animal" type="TextureRect" parent="MapModal/Center/Card/Inset/Body/Header"]
+custom_minimum_size = Vector2(74, 57)
+layout_mode = 2
+texture_filter = 1
+texture = ExtResource("2_sheep")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Heading" type="VBoxContainer" parent="MapModal/Center/Card/Inset/Body/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Title" type="Label" parent="MapModal/Center/Card/Inset/Body/Header/Heading"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.82, 0.57, 1)
+theme_override_font_sizes/font_size = 25
+text = "西坡羊棚"
+
+[node name="WoolGrowth" type="Label" parent="MapModal/Center/Card/Inset/Body/Header/Heading"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+
+[node name="CloseMap" type="Button" parent="MapModal/Center/Card/Inset/Body/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(105, 38)
+layout_mode = 2
+size_flags_vertical = 0
+mouse_default_cursor_shape = 2
+text = "离开  Esc"
+
+[node name="Rule" type="HSeparator" parent="MapModal/Center/Card/Inset/Body"]
+layout_mode = 2
+
+[node name="Stock" type="Label" parent="MapModal/Center/Card/Inset/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.84, 0.65, 1)
+theme_override_font_sizes/font_size = 17
+
+[node name="Forecast" type="Label" parent="MapModal/Center/Card/Inset/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.81, 0.87, 0.73, 1)
+theme_override_constants/line_spacing = 5
+
+[node name="Actions" type="HBoxContainer" parent="MapModal/Center/Card/Inset/Body"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MixFodder" type="Button" parent="MapModal/Center/Card/Inset/Body/Actions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+
+[node name="Shear" type="Button" parent="MapModal/Center/Card/Inset/Body/Actions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+text = "剪毛 · 羊毛 +1"
+
+[node name="Receipt" type="Label" parent="MapModal/Center/Card/Inset/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.76, 0.85, 0.64, 1)
+autowrap_mode = 3
+
+[node name="MeadowRoute" type="HBoxContainer" parent="MapModal/Center/Card/Inset/Body"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Meadow" type="Button" parent="MapModal/Center/Card/Inset/Body/MeadowRoute"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "指路去桥东草甸"
+
+[node name="MeadowStatus" type="Label" parent="MapModal/Center/Card/Inset/Body/MeadowRoute"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.81, 0.87, 0.73, 1)

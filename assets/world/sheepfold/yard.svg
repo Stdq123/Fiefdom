@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="120" viewBox="0 0 192 120" shape-rendering="crispEdges">
+  <!-- Thatched shelter, with an open bay at the left. -->
+  <path fill="#26362a" opacity=".58" d="M3 43h71v4h4v4H0v-3h3z"/>
+  <path fill="#3e3629" d="M9 24h61v23H8v-9h1z"/>
+  <path fill="#906e46" d="M12 27h54v17H12z"/>
+  <path fill="#b68c55" d="M12 28h54v3H12zm28 7h25v2H40zm0 6h25v2H40z"/>
+  <path fill="#3c3c2c" d="M17 30h21v15H17z"/>
+  <path fill="#50472d" d="M19 39h17v7H19z"/>
+  <path fill="#ba995b" d="M20 42h9v1h-9zm8 2h7v1h-7zm-7 3h14v1H21z"/>
+  <path fill="#755238" d="M12 27h4v20h-4zm26 0h4v20h-4zm23 0h5v20h-5z"/>
+  <path fill="#d0a66b" d="M13 31h1v13h-1zm26 1h1v11h-1zm23 2h1v10h-1z"/>
+  <path fill="#4c402e" d="M3 23h4v-5h4v-5h5V9h8V5h10V2h10v3h10v4h8v4h5v5h4v5h4v6H3z"/>
+  <path fill="#8a673c" d="M7 22h5v-5h4v-4h7V9h9V6h14v3h9v4h7v4h4v5h5v4H7z"/>
+  <path fill="#b08a4c" d="M12 21h5v-4h5v-3h8V9h17v5h8v3h5v4h5v3H12z"/>
+  <path fill="#c7a262" d="M21 19h38v2H21zm8-7h22v2H29zm7-5h7v2h-7zM8 24h62v2H8z"/>
+  <path fill="#e0b978" d="M33 8h13v1H33zm-8 8h8v1h-8zm15 0h10v1H40zm12 4h8v1h-8zm-28 3h9v1h-9z"/>
+  <path fill="#735236" d="M9 27h60v2H9zm37 4h12v2H46z"/>
+  <path fill="#66533c" d="M12 46h8v3h-8zm22 0h10v3H34zm25 0h9v3h-9z"/>
+  <path fill="#a59570" d="M13 46h6v1h-6zm22 0h8v1h-8zm25 0h7v1h-7z"/>
+  <!-- Trough and the separate fodder fill. -->
+  <path fill="#2d392b" opacity=".56" d="M82 11h23v2H81z"/>
+  <path fill="#54412d" d="M81 3h24v7h-3v2h-3v-2H87v2h-3v-2h-3z"/>
+  <path fill="#866640" d="M83 4h20v5H83z"/>
+  <path fill="#342e23" d="M85 4h16v3H85z"/>
+  <path fill="#a08252" d="M82 3h22v1H82zm1 5h20v1H83z"/>
+  <path fill="#8b773c" d="M112 5h2V4h5V3h3v1h6v1h1v3h-17z"/>
+  <path fill="#c6a955" d="M113 5h7v1h-7zm4-1h5v1h-5zm4 2h7v1h-7z"/>
+  <!-- Short coat. The body and hooves share the imported sheep's scale and foot anchor. -->
+  <path fill="#403e33" d="M82 23h2v-2h8v1h2v-2h2v-1h1v3h1v4h-2v2h-2v3h-2v-3h-6v3h-2v-3h-2v-2h-2v-2h2z"/>
+  <path fill="#8e846c" d="M83 23h2v-1h7v1h2v3h-1v2h-8v-1h-2z"/>
+  <path fill="#b2a78c" d="M85 22h6v1h2v2h-9v-2h1z"/>
+  <path fill="#625d4a" d="M94 22h3v4h-2v1h-1zm-9 7h1v2h-1zm8 0h1v2h-1z"/>
+  <path fill="#e1d8bc" d="M95 23h1v1h-1zm-11 0h1v1h-1z"/>
+  <!-- Tuft icon. -->
+  <path fill="#504b3a" d="M103 26h2v-4h3v-2h4v1h4v3h2v5h-2v2h-11v-2h-2z"/>
+  <path fill="#b5a58a" d="M104 26h2v-3h3v-2h3v1h4v3h1v4h-2v1h-9v-2h-2z"/>
+  <path fill="#e5d7b9" d="M106 24h3v-2h3v1h3v2h1v2h-2v1h-7v-2h-2z"/>
+  <path fill="#f8ead0" d="M110 23h3v1h-3zm-2 2h2v1h-2zm5 0h2v1h-2z"/>
+  <!-- Rear and side rails. Front rails use a separate y-sort anchor. -->
+  <path fill="#423c2b" d="M2 63h90v2H2zm0 5h90v2H2zM3 67h3v47H3zm85 0h3v47h-3z"/>
+  <path fill="#8c7147" d="M4 62h86v2H4zm0 5h86v2H4zM4 70h1v43H4zm85 0h1v43h-1z"/>
+  <path fill="#594a32" d="M2 59h5v17H2zm20 0h5v13h-5zm43 0h5v13h-5zm20 0h6v17h-6zM2 78h5v12H2zm0 16h5v12H2zm83-16h6v12h-6zm0 16h6v12h-6z"/>
+  <path fill="#b18d55" d="M3 60h2v12H3zm20 0h2v10h-2zm43 0h2v10h-2zm20 0h2v12h-2zM3 79h2v9H3zm0 16h2v9H3zm83-16h2v9h-2zm0 16h2v9h-2z"/>
+  <path fill="#423c2b" d="M98 61h30v4H98zm0 6h30v3H98zm60-6h30v4h-30zm0 6h30v3h-30z"/>
+  <path fill="#9d7d4d" d="M99 61h28v2H99zm0 6h28v1H99zm60-6h28v2h-28zm0 6h28v1h-28z"/>
+  <path fill="#5f4a31" d="M98 58h5v14h-5zm26 0h5v14h-5zm33 0h5v14h-5zm26 0h5v14h-5z"/>
+  <path fill="#be9a5d" d="M99 58h2v11h-2zm26 0h2v11h-2zm33 0h2v11h-2zm26 0h2v11h-2z"/>
+</svg>

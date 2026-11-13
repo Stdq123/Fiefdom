@@ -1,0 +1,279 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/WestMarketCounter.gd" id="1_counter"]
+[ext_resource type="PackedScene" path="res://scenes/MarketPanel.tscn" id="2_grain"]
+[ext_resource type="Script" path="res://scripts/FishLedger.gd" id="3_fish"]
+[ext_resource type="Texture2D" path="res://assets/world/west-court-sample.svg" id="4_silk"]
+[ext_resource type="PackedScene" path="res://scenes/SeasonOrderPanel.tscn" id="5_orders"]
+[ext_resource type="Script" path="res://scripts/SheepTrade.gd" id="6_sheep"]
+[ext_resource type="Texture2D" path="res://assets/world/sheepfold/farm-sheep.webp" id="7_animal"]
+
+[sub_resource type="StyleBoxFlat" id="KeeperCardStyle"]
+content_margin_left = 12.0
+content_margin_top = 12.0
+content_margin_right = 12.0
+content_margin_bottom = 12.0
+bg_color = Color(0.18, 0.225, 0.17, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.46, 0.46, 0.31, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_left = 5
+corner_radius_bottom_right = 5
+
+[node name="Counter" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_counter")
+
+[node name="Shade" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.064, 0.101, 0.083, 0.68)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Card" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(624, 0)
+layout_mode = 2
+
+[node name="Inset" type="MarginContainer" parent="Center/Card"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 14
+
+[node name="Body" type="VBoxContainer" parent="Center/Card/Inset"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Heading" type="HBoxContainer" parent="Center/Card/Inset/Body"]
+layout_mode = 2
+
+[node name="CounterTitle" type="Label" parent="Center/Card/Inset/Body/Heading"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.94, 0.81, 0.55, 1)
+theme_override_font_sizes/font_size = 24
+
+[node name="CloseCounter" type="Button" parent="Center/Card/Inset/Body/Heading"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(100, 36)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "离开  Esc"
+
+[node name="Rule" type="HSeparator" parent="Center/Card/Inset/Body"]
+layout_mode = 2
+
+[node name="CounterLayout" type="HBoxContainer" parent="Center/Card/Inset/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="KeeperCard" type="PanelContainer" parent="Center/Card/Inset/Body/CounterLayout"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(168, 0)
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("KeeperCardStyle")
+
+[node name="Identity" type="VBoxContainer" parent="Center/Card/Inset/Body/CounterLayout/KeeperCard"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 9
+
+[node name="KeeperPortrait" type="TextureRect" parent="Center/Card/Inset/Body/CounterLayout/KeeperCard/Identity"]
+unique_name_in_owner = true
+texture_filter = 1
+custom_minimum_size = Vector2(96, 96)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="KeeperNote" type="Label" parent="Center/Card/Inset/Body/CounterLayout/KeeperCard/Identity"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.86, 0.83, 0.69, 1)
+theme_override_constants/line_spacing = 3
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="MarketProduce" type="Button" parent="Center/Card/Inset/Body/CounterLayout/KeeperCard/Identity"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+
+[node name="Views" type="VBoxContainer" parent="Center/Card/Inset/Body/CounterLayout"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Grain" parent="Center/Card/Inset/Body/CounterLayout/Views" instance=ExtResource("2_grain")]
+unique_name_in_owner = true
+layout_mode = 2
+at_stall = true
+
+[node name="Fish" type="VBoxContainer" parent="Center/Card/Inset/Body/CounterLayout/Views"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+script = ExtResource("3_fish")
+at_stall = true
+
+[node name="Silk" type="VBoxContainer" parent="Center/Card/Inset/Body/CounterLayout/Views"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Display" type="HBoxContainer" parent="Center/Card/Inset/Body/CounterLayout/Views/Silk"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Bolts" type="TextureRect" parent="Center/Card/Inset/Body/CounterLayout/Views/Silk/Display"]
+custom_minimum_size = Vector2(84, 72)
+layout_mode = 2
+texture_filter = 1
+texture = ExtResource("4_silk")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Stock" type="VBoxContainer" parent="Center/Card/Inset/Body/CounterLayout/Views/Silk/Display"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="SilkStock" type="Label" parent="Center/Card/Inset/Body/CounterLayout/Views/Silk/Display/Stock"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 21
+
+[node name="Sample" type="Label" parent="Center/Card/Inset/Body/CounterLayout/Views/Silk/Display/Stock"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.72, 0.52, 1)
+autowrap_mode = 3
+text = "陶辛在西廊等一匹样绸。"
+
+[node name="SellSilk" type="Button" parent="Center/Card/Inset/Body/CounterLayout/Views/Silk"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+
+[node name="SilkReceipt" type="Label" parent="Center/Card/Inset/Body/CounterLayout/Views/Silk"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.74, 0.83, 0.61, 1)
+
+[node name="SheepTrade" type="Button" parent="Center/Card/Inset/Body/CounterLayout/Views/Silk"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "羊与羊毛  →"
+
+[node name="Sheep" type="VBoxContainer" parent="Center/Card/Inset/Body/CounterLayout/Views"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+script = ExtResource("6_sheep")
+
+[node name="SheepHeader" type="HBoxContainer" parent="Center/Card/Inset/Body/CounterLayout/Views/Sheep"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Animal" type="TextureRect" parent="Center/Card/Inset/Body/CounterLayout/Views/Sheep/SheepHeader"]
+custom_minimum_size = Vector2(76, 58)
+layout_mode = 2
+texture_filter = 1
+texture = ExtResource("7_animal")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SheepAccount" type="Label" parent="Center/Card/Inset/Body/CounterLayout/Views/Sheep/SheepHeader"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 3
+
+[node name="BuySheep" type="Button" parent="Center/Card/Inset/Body/CounterLayout/Views/Sheep"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+
+[node name="TradeGoods" type="HBoxContainer" parent="Center/Card/Inset/Body/CounterLayout/Views/Sheep"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BuyFodder" type="Button" parent="Center/Card/Inset/Body/CounterLayout/Views/Sheep/TradeGoods"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+
+[node name="SellWool" type="Button" parent="Center/Card/Inset/Body/CounterLayout/Views/Sheep/TradeGoods"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+
+[node name="WeaveCoat" type="Button" parent="Center/Card/Inset/Body/CounterLayout/Views/Sheep"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+
+[node name="SheepReceipt" type="Label" parent="Center/Card/Inset/Body/CounterLayout/Views/Sheep"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.74, 0.83, 0.61, 1)
+autowrap_mode = 3
+
+[node name="BackToSilk" type="Button" parent="Center/Card/Inset/Body/CounterLayout/Views/Sheep"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(112, 36)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+text = "← 丝绸交易"
+
+[node name="Orders" parent="Center/Card/Inset/Body/CounterLayout/Views" instance=ExtResource("5_orders")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+at_market = true

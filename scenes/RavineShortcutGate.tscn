@@ -1,0 +1,38 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/RavineShortcutGate.gd" id="1_gate"]
+[ext_resource type="Material" path="res://resources/world_hint_material.tres" id="2_hint"]
+
+[sub_resource type="RectangleShape2D" id="Rectangle_sensor"]
+size = Vector2(16, 26)
+
+[sub_resource type="RectangleShape2D" id="Rectangle_barrier"]
+size = Vector2(6, 26)
+
+[node name="RavineShortcutGate" type="Area2D"]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_gate")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("Rectangle_sensor")
+
+[node name="Barrier" type="StaticBody2D" parent="."]
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape2D" parent="Barrier"]
+shape = SubResource("Rectangle_barrier")
+
+[node name="Caption" type="Label" parent="."]
+z_index = 6
+material = ExtResource("2_hint")
+offset_left = -61.0
+offset_top = -43.0
+offset_right = 61.0
+offset_bottom = -29.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.90, 0.84, 0.65, 1)
+theme_override_colors/font_outline_color = Color(0.13, 0.18, 0.15, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
