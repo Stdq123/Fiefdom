@@ -106,6 +106,11 @@ func resident_line() -> String:
 	if name == VisitorData.WATER_GUIDE:
 		return VisitorData.water_guide_line()
 	if name == VisitorData.FIELD_KEEPER and duty == Duty.FIELD:
+		match Global.tax_reform_choice:
+			Global.TaxReformChoice.TRADITIONAL:
+				return "收谷的时候，公仓的筐我还会单放在门边。来收谷的人一到，就照咱们说定的数给。"
+			Global.TaxReformChoice.REFORMED:
+				return "从前井田中央那一捧谷得另装。如今筐都送去私仓，铜钱按新册结。"
 		if Global.first_tribute_delivered():
 			return "收进国库的头一捧谷，我看见了。我在田边歇脚，哪一格土色发白，就提桶过去。"
 		if Global.current_day == 1:

@@ -910,16 +910,16 @@ func harvest_field_crop(cell: Vector2i) -> Dictionary:
 		crop.watered = false
 	else:
 		active_crops.erase(cell)
-	var before := money
-	var units := add_item(public_plot, data.sell_price, rotation, crop_id)
+	var proceeds := harvest_proceeds(public_plot, data.sell_price, rotation, tax_reform_choice, tax_rate)
+	_record_harvest(proceeds, crop_id)
 	player_stats.add_xp(PlayerStats.Art.MATH, 5)
-	var leaves := collect_mulberry_leaves(units) if not public_plot and crop_id == "mulberry" else 0
+	var leaves := collect_mulberry_leaves(proceeds.stock) if not public_plot and crop_id == "mulberry" else 0
 	if not public_plot and (rotation > 0 or data.restores_fertility):
 		note_rotation_harvest(cell, data, crop_id, rotation > 0)
 	GameEvents.crop_harvested.emit(public_plot)
-	return {"crop": data.crop_name, "public": public_plot, "first_tribute": first_tribute,
-		"tribute": units if public_plot else 0, "stock": units if not public_plot else 0,
-		"copper": money - before, "leaves": leaves, "rotated": rotation > 0, "fertile": data.restores_fertility}
+	proceeds.merge({"crop": data.crop_name, "public": public_plot, "first_tribute": first_tribute,
+		"leaves": leaves, "rotated": rotation > 0, "fertile": data.restores_fertility})
+	return proceeds
 
 func advance_away_field_work(seconds: float) -> void:
 	if outcome != Outcome.RUNNING or tilled_cells.is_empty():
@@ -1780,24 +1780,24 @@ func harvest_proceeds(is_public: bool, unit_price: int, extra_yield: int,
 		choice: TaxReformChoice, rate: float) -> Dictionary:
 	var amount := 1 + maxi(0, extra_yield)
 	if choice == TaxReformChoice.REFORMED:
-		return {"tribute": 0, "stock": amount, "copper": int(unit_price * (1.0 - rate)) * amount}
+		var net_unit := int(unit_price * (1.0 - rate))
+		return {"tribute": 0, "stock": amount, "copper": net_unit * amount, "levy": (unit_price - net_unit) * amount}
 	if is_public:
-		return {"tribute": amount, "stock": 0, "copper": 0}
+		return {"tribute": amount, "stock": 0, "copper": 0, "levy": 0}
 	var yield_bonus := 0.0
 	for retainer in retainers:
 		if retainer.school == RetainerData.School.AGRARIAN:
 			yield_bonus += 0.5
 	amount += ceili(yield_bonus)
-	return {"tribute": 0, "stock": amount, "copper": unit_price * amount}
+	return {"tribute": 0, "stock": amount, "copper": unit_price * amount, "levy": 0}
 
-func add_item(is_public: bool, unit_price: int, extra_yield := 0, crop_id := "") -> int:
-	var proceeds := harvest_proceeds(is_public, unit_price, extra_yield, tax_reform_choice, tax_rate)
-	if proceeds["stock"] > 0:
-		crop_stock.add(crop_id, proceeds["stock"])
-		private_harvest_total += proceeds["stock"]
-		money += proceeds["copper"]
-		print("Added to Player Inventory. Amount: %d, Money: %d" % [proceeds["stock"], money])
-		return proceeds["stock"]
+func _record_harvest(proceeds: Dictionary, crop_id: String) -> void:
+	if proceeds.stock > 0:
+		crop_stock.add(crop_id, proceeds.stock)
+		private_harvest_total += proceeds.stock
+		money += proceeds.copper
+		print("Added to Player Inventory. Amount: %d, Money: %d" % [proceeds.stock, money])
+		return
 
 	var tax_multiplier := 1.0
 	if tax_reform_choice == TaxReformChoice.TRADITIONAL:
@@ -1818,7 +1818,6 @@ func add_item(is_public: bool, unit_price: int, extra_yield := 0, crop_id := "")
 			reputation += TRIBUTE_QUEST_REPUTATION
 			print("Quest Completed!")
 			GameEvents.reputation_changed.emit(reputation)
-	return amount
 
 func collect_mulberry_leaves(harvest_units: int) -> int:
 	var amount := harvest_units * balance.mulberry_leaves_per_harvest

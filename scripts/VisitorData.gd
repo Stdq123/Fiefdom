@@ -278,6 +278,8 @@ static func road_keeper_line(resident := false) -> String:
 		return "你留下的路粮，我放在亭边的木匣里了。谁赶路时饿了，尽管取一捧。我下次来，也会往里添一些。"
 	if Global.road_provisions_requested():
 		return "听说头一把谷已经入了国库。南路还有人赶着走，常错过一顿。若你手头有余，可匀一份私田收成作路粮。"
+	if Global.tax_reform_choice == Global.TaxReformChoice.REFORMED:
+		return "在下季青，借南路亭歇脚。沿路都在说你这儿换了税册，收下的谷如今由各家入仓。"
 	if not Global.visitor_encounters.has(ROAD_KEEPER):
 		return "在下季青，借南路亭歇脚。井田中央收的谷要入国库，四周的才归各家。我下回还想来看看这块地。"
 	if resident:

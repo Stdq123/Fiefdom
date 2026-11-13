@@ -56,6 +56,7 @@ var sweep_pointer := Vector2.ZERO
 var swept_cells: Dictionary[Vector2i, bool] = {}
 var sweep_harvests := 0
 var sweep_gains := Vector4i.ZERO
+var sweep_levy := 0
 var sweep_popup: Label
 
 func _ready() -> void:
@@ -295,11 +296,15 @@ func _on_channel_survey_learned() -> void:
 	spawn_floating_text(Global.irrigation.source_cell, "立起量水尺 · 可用放样", Color("#ade2cc"))
 
 func _on_tax_reform_choice_made(choice: Global.TaxReformChoice) -> void:
-	if choice == Global.TaxReformChoice.REFORMED:
-		for field in Global.well_fields:
-			if field["is_unlocked"]:
-				_draw_well_field(field["center_pos"])
-		$TileMapLayer/WellFieldMarker.refresh_markers()
+	match choice:
+		Global.TaxReformChoice.REFORMED:
+			for field in Global.well_fields:
+				if field["is_unlocked"]:
+					_draw_well_field(field["center_pos"])
+			$TileMapLayer/WellFieldMarker.refresh_markers()
+			GameEvents.world_notice.emit("新税册已启用 · 收成入私仓，铜钱扣税后入账")
+		Global.TaxReformChoice.TRADITIONAL:
+			GameEvents.world_notice.emit("已定旧制 · 继续收公田纳贡，可在蚕桑页进献丝绸")
 
 func is_crop_dry(grid_pos: Vector2i) -> bool:
 	return Global.field_crop_is_dry(grid_pos)
@@ -370,7 +375,7 @@ func is_crop_ripe(grid_pos: Vector2i) -> bool:
 	return Global.field_crop_is_ripe(grid_pos)
 
 func council_harvest_forecast(choice: Global.TaxReformChoice) -> Dictionary:
-	var totals := {"plots": 0, "tribute": 0, "stock": 0, "copper": 0, "leaves": 0}
+	var totals := {"plots": 0, "tribute": 0, "stock": 0, "copper": 0, "leaves": 0, "levy": 0}
 	var rate := clampf(Global.balance.reformed_tax_rate, 0.0, 1.0)
 	for cell: Vector2i in active_crops:
 		var tile := tile_map.get_cell_tile_data(cell)
@@ -381,7 +386,7 @@ func council_harvest_forecast(choice: Global.TaxReformChoice) -> Dictionary:
 		var proceeds := Global.harvest_proceeds(Global.is_public_plot(cell), data.sell_price,
 			Global.crop_rotation_bonus(cell, data), choice, rate)
 		totals["plots"] += 1
-		for resource in ["tribute", "stock", "copper"]:
+		for resource in ["tribute", "stock", "copper", "levy"]:
 			totals[resource] += proceeds[resource]
 		if crop["id"] == "mulberry":
 			totals["leaves"] += proceeds["stock"] * Global.balance.mulberry_leaves_per_harvest
@@ -553,6 +558,7 @@ func _end_sweep() -> void:
 	swept_cells.clear()
 	sweep_harvests = 0
 	sweep_gains = Vector4i.ZERO
+	sweep_levy = 0
 	sweep_popup = null
 
 func field_at(viewport_point: Vector2) -> Vector2i:
@@ -735,6 +741,8 @@ func harvest_crop(grid_pos: Vector2i, worker: Retainer = null) -> bool:
 	var harvest := Global.harvest_field_crop(grid_pos)
 	var message := "国库 +%d" % harvest.tribute if harvest.public else (
 		"%s +%d · 铜钱 +%d" % [harvest.crop, harvest.stock, harvest.copper])
+	if harvest.levy > 0:
+		message += "（税 %d）" % harvest.levy
 	var tone := Color("#efce80") if harvest.public else Color("#d2de9e")
 	if harvest.leaves > 0:
 		message += " · 桑叶 +%d" % harvest.leaves
@@ -752,6 +760,7 @@ func harvest_crop(grid_pos: Vector2i, worker: Retainer = null) -> bool:
 	elif sweep_action == FieldAction.HARVEST:
 		sweep_harvests += 1
 		sweep_gains += Vector4i(harvest.tribute, harvest.stock, harvest.copper, harvest.leaves)
+		sweep_levy += harvest.levy
 		if is_instance_valid(sweep_popup):
 			sweep_popup.queue_free()
 		if sweep_harvests > 1:
@@ -760,6 +769,8 @@ func harvest_crop(grid_pos: Vector2i, worker: Retainer = null) -> bool:
 			for i in names.size():
 				if sweep_gains[i] > 0:
 					totals.append("%s +%d" % [names[i], sweep_gains[i]])
+			if sweep_levy > 0:
+				totals.append("已扣税 %d 铜钱" % sweep_levy)
 			message = " · ".join(totals)
 		sweep_popup = spawn_floating_text(grid_pos, message, tone, HARVEST_TEXT_OFFSET)
 	else:
@@ -768,6 +779,7 @@ func harvest_crop(grid_pos: Vector2i, worker: Retainer = null) -> bool:
 	if not worker:
 		player.show_action(Player.Action.HARVEST, to_global(get_crop_world_pos(grid_pos)))
 	if harvest.first_tribute:
+		AudioManager.play_event_sound("first_tribute")
 		var receipt := "首份纳贡已入库"
 		if Global.rotation_offer_ready() and neighbor_actor(VisitorData.FIELD_KEEPER):
 			receipt += " · 可找渠伯谈轮作"

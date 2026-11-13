@@ -173,6 +173,7 @@
   议税面板并排显示三案。看过本局成熟作物的预估收益、门客去留和每夜粮耗后，选一案再点「定案」。按 Esc 可清除预选，「离席」后可以回来继续议税。
   召简会等到定案，存档后仍可回来见他。当天须先定案才能过夜。
   传统路线继续纳贡并进献丝绸。改革路线经营计税收成、售绸和铜钱。两条路线都需要守住封地。
+  改革后收成入私仓，扣税后的铜钱和实扣税额会显示在收割提示中。季青和陶辛在议税后几日也会谈起新定的办法。
   定案后点左上角封地手记的「结局目标」，可逐项查看进度并打开井田舆图、蚕桑、市场或守备入口。改革路线的铜钱进度取当前余额，购买物资后会回落。
   暂缓方案列出首笔扣款日、费用和期限。研究开始后，封地手记会显示剩余时间和下次费用。经费不足或期满时，召简会回到堂前说明缘由，请你在两案中定案。
   两条路线各有约七秒的结局演出。传统路线从公田移向堂前交谷帛，改革路线移向南路亭交新税册。按 Esc 或「跳过」可直接查看结算。
@@ -273,7 +274,7 @@
   https://commons.wikimedia.org/wiki/File:Sheep_bleat.ogg
   夏秋夜虫鸣 crickets.wav，Sclolex / Freesound。节选、滤波并交叉淡化成循环，随夜色与离草丛的距离渐变。
   https://freesound.org/people/Sclolex/sounds/210540/
-  迎客曲和编钟练习的敲击声 Handbell F3 - Rung.mp3，CUMCHB6652 / Freesound。节选手铃起音，变调为四拍。
+  编钟和战役提示的铃声 Handbell F3 - Rung.mp3，CUMCHB6652 / Freesound。节选手铃起音，用于迎客曲、首份纳贡、井田完工和召简到场。
   https://freesound.org/people/CUMCHB6652/sounds/557142/
   浮标水花 Water Splash，Allan Legemaate（alegemaate）/ Freesound。节选入水声，用于抛竿、咬钩和起鱼。
   https://freesound.org/people/alegemaate/sounds/364700/

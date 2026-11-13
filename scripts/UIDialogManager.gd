@@ -17,6 +17,17 @@ const HUNGER_RETURN_LINES := {
 	VisitorData.EAST_WATCHER: "那夜我把弓靠在门边，空手去了东头讨一碗饭。今天走旧路，还是先往田埂上看了一眼。",
 }
 
+const COUNCIL_REACTIONS := {
+	VisitorData.ROAD_KEEPER: [
+		"我去堂前看了一眼，贡簿还摊在原处。等公仓这茬入账，我替你把记数的木筹收好。",
+		"我在亭下听见有人问新税怎么算。收谷归谁、扣了几文，最好让拿镰的人也能看见。",
+	],
+	VisitorData.SILK_MERCHANT: [
+		"若有绸要送往王庭，我能找块干布来裹。西市的好价，等交完谷帛再慢慢谈。",
+		"蔡娘问起新册。我说田里的铜钱照新法算，摊上的绸仍要看布边和经线。",
+	],
+}
+
 var parent_node: Control
 var player: Player
 
@@ -138,6 +149,8 @@ func show_visitor_dialog(data: VisitorData, place: String, at_pavilion := false)
 		speech = data.silk_bridge_line()
 	if returning:
 		speech = _return_speech(data.name, speech if favor.is_valid() else "")
+	elif not favor.is_valid() and place not in [VisitorData.SILK_MARKET_PLACE, VisitorData.SILK_BRIDGE_PLACE]:
+		speech = _council_reaction(data.name, speech)
 	var context := _recruitment_context(data.get_school_name() + " · " + place, block)
 	var dialog = _open(data.name, context,
 		speech, options, disabled, data.get_appearance_texture())
@@ -205,6 +218,8 @@ func show_retainer_dialog(data: RetainerData, at_pavilion := false) -> void:
 	var speech := data.resident_line()
 	if at_pavilion:
 		speech = evening + "\n" + speech if favor.is_valid() else evening
+	if not favor.is_valid():
+		speech = _council_reaction(data.name, speech)
 	var dialog = _open(data.name, context, speech,
 		options, disabled, data.get_appearance_texture())
 	if favor.is_valid():
@@ -256,6 +271,17 @@ func _show_field_keeper(context: String, appearance: Texture2D, usual_line: Stri
 			elif index == return_index:
 				Global.recruit_visitor(guest)
 		)
+
+func _council_reaction(speaker: String, usual_line: String) -> String:
+	var days := Global.current_day - Global.tax_reform_day
+	if not COUNCIL_REACTIONS.has(speaker) or days >= SeasonOrders.TERMS_PER_SEASON * maxi(1, Global.balance.days_per_solar_term):
+		return usual_line
+	match Global.tax_reform_choice:
+		Global.TaxReformChoice.TRADITIONAL:
+			return COUNCIL_REACTIONS[speaker][0]
+		Global.TaxReformChoice.REFORMED:
+			return COUNCIL_REACTIONS[speaker][1]
+	return usual_line
 
 func _field_keeper_season_line() -> String:
 	if Global.field_rotation.signed_day == Global.current_day:

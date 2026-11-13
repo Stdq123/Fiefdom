@@ -97,6 +97,7 @@ func _show_away_field_report() -> void:
 	var notice := "今日外出田务 · " + Global.away_field_summary(Global.AWAY_FIELD_JOBS)
 	if report.first_tribute:
 		report.first_tribute = false
+		AudioManager.play_event_sound("first_tribute")
 		if Global.rotation_offer_ready() and world.neighbor_actor(VisitorData.FIELD_KEEPER):
 			notice += " · 可找渠伯谈轮作"
 	GameEvents.world_notice.emit(notice)

@@ -129,8 +129,9 @@ func _describe_harvest(result: Dictionary) -> String:
 	if result["plots"] == 0:
 		return "当前暂无成熟作物。"
 	var leaves := " · 桑叶 +%d" % result["leaves"] if result["leaves"] > 0 else ""
-	return "收齐已熟 %d 格\n国库 +%d · 私仓 +%d\n铜钱 +%d%s" % [
-		result["plots"], result["tribute"], result["stock"], result["copper"], leaves]
+	var levy := "（税 %d）" % result["levy"] if result["levy"] > 0 else ""
+	return "收齐已熟 %d 格\n国库 +%d · 私仓 +%d\n铜钱 +%d%s%s" % [
+		result["plots"], result["tribute"], result["stock"], result["copper"], levy, leaves]
 
 func _goal_preview(choice: Global.TaxReformChoice) -> String:
 	var lines := PackedStringArray()

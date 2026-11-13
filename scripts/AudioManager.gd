@@ -9,6 +9,8 @@ const FIELD_SOUND_PATHS := [
 	"res://assets/audio/farm/harvest.wav",
 ]
 const FIELD_REPEAT_SECONDS := 0.09
+const CEREMONY_BELL := preload("res://assets/audio/music/bronze-bell.wav")
+const BAMBOO_SLIPS := preload("res://assets/audio/rotation-slip.wav")
 const TITLE_SCORE := "res://assets/audio/music/score-title.ogg"
 const RAVINE_SCORE := "res://assets/audio/music/score-ravine.ogg"
 const SEASON_SCORES := [
@@ -38,7 +40,9 @@ func _ready() -> void:
 	# Connect to game events
 	GameEvents.rank_changed.connect(_on_rank_changed)
 	GameEvents.tax_reform_triggered.connect(_on_tax_reform_triggered)
+	GameEvents.tax_reform_choice_made.connect(_on_tax_reform_choice)
 	GameEvents.well_field_added.connect(_on_well_field_added)
+	GameEvents.well_field_reclaimed.connect(_on_well_field_reclaimed)
 	GameEvents.campaign_ended.connect(_on_campaign_ended)
 	GameEvents.day_advanced.connect(_sync_score.unbind(1))
 	get_tree().scene_changed.connect(_sync_score)
@@ -163,14 +167,14 @@ func play_field_action(action: int) -> void:
 	sfx_player.stream = sound
 	sfx_player.play()
 
-func play_sfx(stream: AudioStream) -> void:
+func play_sfx(stream: AudioStream, volume := 0.0, pitch := 1.0) -> void:
 	if DisplayServer.get_name() == "headless":
 		return
-	# For overlapping SFX, we might need a pool, but for now single player is fine for simple stuff
-	# Or instantiate temporary players
-	var player = AudioStreamPlayer.new()
+	var player := AudioStreamPlayer.new()
 	player.bus = "SFX"
 	player.stream = stream
+	player.volume_db = volume
+	player.pitch_scale = pitch
 	player.finished.connect(player.queue_free)
 	add_child(player)
 	player.play()
@@ -203,15 +207,11 @@ func play_event_sound(event_type: String) -> void:
 		"rank_up":
 			# Ascending tone
 			_play_tone_sequence([440, 554, 659], 0.1)  # A4, C#5, E5 (A major chord)
-		"event_triggered":
-			# Dramatic chord
-			_play_tone_sequence([220, 277, 330, 440], 0.2)  # A3, C#4, E4, A4
 		"well_field_added":
 			# Pleasant notification
 			_play_tone_sequence([523, 659], 0.15)  # C5, E5
-		"tax_reform":
-			# Serious tone
-			_play_tone_sequence([196, 196, 220], 0.3)  # G3, G3, A3
+		"first_tribute":
+			play_sfx(CEREMONY_BELL, -12.0, 1.26)
 		"hurt":
 			_play_tone_sequence([185, 130], 0.055)
 
@@ -242,12 +242,18 @@ func _on_rank_changed(new_rank: Global.Rank) -> void:
 	play_event_sound("rank_up")
 
 func _on_tax_reform_triggered() -> void:
-	print("Audio: Playing tax reform event sound!")
-	play_event_sound("tax_reform")
+	play_sfx(CEREMONY_BELL, -12.0, 0.78)
+
+func _on_tax_reform_choice(_choice: Global.TaxReformChoice) -> void:
+	play_sfx(BAMBOO_SLIPS, -8.0)
 
 func _on_well_field_added(field_id: int) -> void:
 	print("Audio: Playing well field added sound!")
 	play_event_sound("well_field_added")
+
+func _on_well_field_reclaimed(_field_id: int, progress: int) -> void:
+	if progress == Global.RECLAMATION_NIGHTS:
+		play_sfx(CEREMONY_BELL, -14.0, 1.0)
 
 func _on_campaign_ended(result: Global.Outcome) -> void:
 	if result in [Global.Outcome.DEFEAT_COMBAT, Global.Outcome.DEFEAT_ESTATE]:
