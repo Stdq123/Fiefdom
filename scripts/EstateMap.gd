@@ -117,8 +117,9 @@ func _collect_places() -> void:
 		_add_built_place("亭西歇脚处", "在长凳旁休息", "RoadRest")
 	var record_stand := world.get_node("Scenery/EndingRecord")
 	if record_stand.visible:
-		places.push_front(_entry(Category.PLACES, record_stand.record_name, "%s · 翻看通关当天的账目" % record_stand.place_name,
-			_node_point(record_stand), false, record_stand.texture))
+		var task := "翻看通关当天的账目" if record_stand.archived else "呈交账簿，开启结尾"
+		places.push_front(_entry(Category.PLACES, record_stand.record_name, "%s · %s" % [record_stand.place_name, task],
+			_node_point(record_stand), not record_stand.archived, record_stand.texture))
 	if Global.is_autumn_exhibit_day():
 		places.append(_entry(Category.PLACES, "秋社展台", "沿南池西岸到场，摆三种私田收成",
 			_node_point(world.get_node("AutumnExhibit/Approach")), true))

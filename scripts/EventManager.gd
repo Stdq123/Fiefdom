@@ -5,11 +5,8 @@ var active_panel: Control
 
 func _ready() -> void:
 	GameEvents.day_advanced.connect(_on_day_advanced)
-	GameEvents.crop_harvested.connect(_check_progress.unbind(1), CONNECT_DEFERRED)
-	GameEvents.money_changed.connect(_check_progress.unbind(1), CONNECT_DEFERRED)
-	GameEvents.silk_changed.connect(_check_progress, CONNECT_DEFERRED)
-	GameEvents.raid_defeated.connect(_check_progress, CONNECT_DEFERRED)
-	get_tree().scene_changed.connect(_check_progress)
+	GameEvents.crop_harvested.connect(_check_council.unbind(1), CONNECT_DEFERRED)
+	get_tree().scene_changed.connect(_check_council)
 
 func _on_day_advanced(_day: int) -> void:
 	if Global.outcome != Global.Outcome.RUNNING:
@@ -17,25 +14,12 @@ func _on_day_advanced(_day: int) -> void:
 	if Global.tax_reform_choice == Global.TaxReformChoice.DELAYED:
 		_process_research()
 	else:
-		_check_progress()
+		_check_council()
 
-func _check_progress() -> void:
-	if Global.outcome != Global.Outcome.RUNNING:
-		return
+func _check_council() -> void:
 	var scene := get_tree().current_scene
-	if scene == null or scene.scene_file_path != Global.ESTATE_SCENE:
-		return
-	match Global.tax_reform_choice:
-		Global.TaxReformChoice.NONE:
-			invite_if_eligible()
-		Global.TaxReformChoice.DELAYED:
-			return
-		_:
-			for goal in Global.route_objectives():
-				if goal["value"] < goal["target"]:
-					return
-			var ending := Global.Outcome.TRADITIONAL if Global.tax_reform_choice == Global.TaxReformChoice.TRADITIONAL else Global.Outcome.REFORMED
-			Global.finish_campaign(ending)
+	if scene != null and scene.scene_file_path == Global.ESTATE_SCENE:
+		invite_if_eligible()
 
 func invite_if_eligible() -> void:
 	if Global.current_day >= Global.tax_council_start_day() and Global.tax_council_qualified():

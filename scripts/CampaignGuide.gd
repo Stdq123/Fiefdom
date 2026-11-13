@@ -42,6 +42,7 @@ func _ready() -> void:
 func setup(estate_world: ESTATE_WORLD) -> void:
 	world = estate_world
 	world.seed_selected.connect(refresh.unbind(1))
+	world.get_node("Scenery/EndingRecord").visibility_changed.connect(refresh)
 	Global.player_stats.level_up.connect(refresh.unbind(2))
 	GameEvents.stamina_changed.connect(refresh.unbind(1))
 	refresh()
@@ -62,7 +63,7 @@ func refresh() -> void:
 	var can_petition := council_prep.visible and Global.can_petition_tax_council()
 	council_prep.text = "请议已就绪" if can_petition else "查议税条件"
 	var record_stand := world.get_node("Scenery/EndingRecord")
-	if record_stand.visible:
+	if record_stand.archived:
 		var route := "守礼安邦" if Global.ending_record["outcome"] == Global.Outcome.TRADITIONAL else "税亩富民"
 		_describe(route + " · 已通关", "到%s翻看%s。" % [record_stand.place_name, record_stand.record_name])
 		return
@@ -72,11 +73,14 @@ func refresh() -> void:
 		var route := "守礼安邦" if Global.tax_reform_choice == Global.TaxReformChoice.TRADITIONAL else "税亩富民"
 		var pending := goals.filter(func(goal: Dictionary) -> bool: return goal.value < goal.target)
 		var next := "已达成全部目标"
+		if record_stand.ready_to_present:
+			next = "到%s呈交%s。" % [record_stand.place_name, record_stand.record_name]
 		if not pending.is_empty():
 			var goal: Dictionary = pending.front()
 			next = "%s %d/%d" % [goal.label, goal.value, goal.target]
 		_describe(route, next)
-		route_progress.text = "结局目标 · %d/%d 项" % [goals.size() - pending.size(), goals.size()]
+		route_progress.text = ("指路呈交%s" % record_stand.record_name if record_stand.ready_to_present
+			else "结局目标 · %d/%d 项" % [goals.size() - pending.size(), goals.size()])
 	elif Global.tax_reform_choice == Global.TaxReformChoice.DELAYED:
 		_describe("暂缓议税 · 还剩 %d 天" % Global.research_days_remaining(),
 			"%d 天后缴 %d 铜钱研究费。经费不足时须抉择。" % [

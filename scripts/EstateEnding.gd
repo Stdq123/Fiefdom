@@ -7,6 +7,7 @@ enum Shot { FIELD, CEREMONY, RECORD }
 
 const ENVOY := preload("res://assets/characters/envoy-motion.svg")
 const PROPS := preload("res://assets/world/ending-ceremonies.svg")
+const RECORD_STAND := preload("res://scripts/EstateRecordStand.gd")
 const TRADITIONAL_SCORE := preload("res://assets/audio/music/ending-traditional.ogg")
 const REFORMED_SCORE := preload("res://assets/audio/music/ending-reformed.ogg")
 const UNITS := {"新增公田纳贡": "份", "进献丝绸": "匹", "新增计税收成": "份",
@@ -46,6 +47,7 @@ var field_focus: Vector2
 var ceremony_focus: Vector2
 var walk_start: Vector2
 var walk_end: Vector2
+var presenter: Sprite2D
 var accounts: Array = []
 var has_route_totals := false
 var archive_open := false
@@ -62,7 +64,7 @@ func present(estate_world: Node2D, already_finished: bool) -> void:
 	if already_finished:
 		_show_record()
 	else:
-		_play()
+		_play(true)
 
 func open_archive() -> void:
 	archive_open = true
@@ -107,10 +109,10 @@ func _build_stage() -> void:
 		field_focus = estate.tile_map.to_global(estate.tile_map.map_to_local(field["center_pos"])) + Vector2(-4, -12)
 	else:
 		field_focus = estate.player.global_position
-	var stage_at := Vector2(5, 65) if traditional else EstateLayout.SOUTH_PAVILION + Vector2(74, 16)
-	ceremony_focus = estate.to_global(stage_at + (Vector2(-30, -28) if traditional else Vector2(-41, -19)))
-	walk_start = Vector2(100, -6) if traditional else Vector2(-100, 6)
-	walk_end = Vector2(36, 2) if traditional else Vector2(-37, 2)
+	var stage_at := RECORD_STAND.TRIBUTE_POINT if traditional else RECORD_STAND.TAX_POINT
+	ceremony_focus = estate.to_global(stage_at + Vector2(0, -17))
+	walk_start = Vector2(78, -6) if traditional else Vector2(-78, 9)
+	walk_end = Vector2(24, 0) if traditional else Vector2(-29, 0)
 
 	stage = Node2D.new()
 	stage.name = "EndingCeremony"
@@ -125,8 +127,16 @@ func _build_stage() -> void:
 	props.region = Rect2(0 if traditional else 64, 0, 64, 44)
 	props.filter_clip = true
 	artwork.texture = props
-	artwork.position.y = -18.0
+	artwork.position = Vector2(12 if traditional else -1, -18)
 	stage.add_child(artwork)
+	var player_sprite: Sprite2D = estate.player.get_node("Sprite2D")
+	presenter = player_sprite.duplicate(0) as Sprite2D
+	presenter.offset = player_sprite.position
+	presenter.position = Vector2(-9, 18) if traditional else Vector2(5, 18)
+	presenter.frame_coords = Vector2i(0, Player.Facing.BACK)
+	presenter.flip_h = false
+	stage.add_child(presenter)
+	estate.player.hide()
 	envoy = Node2D.new()
 	envoy.name = "ZhaoJian"
 	stage.add_child(envoy)
@@ -144,38 +154,53 @@ func _build_stage() -> void:
 	camera.make_current()
 	score.stream = TRADITIONAL_SCORE if traditional else REFORMED_SCORE
 
-func _play() -> void:
+func _play(from_handoff := false) -> void:
 	if motion and motion.is_running():
 		motion.kill()
 	report.hide()
 	shade.hide()
 	film.show()
 	status.text = ""
+	envoy.position = walk_start
+	walk_sprite.stand()
+	walk_sprite.face(walk_end - walk_start)
+	if from_handoff:
+		_show_ceremony()
+		camera.global_position = ceremony_focus
+		camera.zoom = Vector2.ONE * 3.05
+	else:
+		_show_fields()
+		camera.global_position = field_focus
+		camera.zoom = Vector2.ONE * 2.65
+	camera.force_update_scroll()
+	if DisplayServer.get_name() != "headless":
+		score.play()
+	skip_button.grab_focus()
+	motion = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	if not from_handoff:
+		motion.tween_property(camera, "global_position", field_focus + Vector2(12, -3), FIELD_HOLD)
+		motion.tween_property(camera, "global_position", ceremony_focus, PAN_SECONDS).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		motion.parallel().tween_property(camera, "zoom", Vector2.ONE * 3.05, PAN_SECONDS).set_trans(Tween.TRANS_SINE)
+		motion.tween_callback(_show_ceremony)
+	motion.tween_method(_walk_to_table, 0.0, 1.0, WALK_SECONDS)
+	motion.tween_callback(_finish_handoff)
+	motion.tween_interval(CEREMONY_HOLD)
+	if from_handoff:
+		motion.tween_callback(_show_fields)
+		motion.tween_interval(FIELD_HOLD)
+	motion.tween_callback(_show_record)
+
+func _show_fields() -> void:
 	shot = Shot.FIELD
 	place.text = "井田 · 谷入公仓" if traditional else "井田 · 按亩入册"
 	if has_route_totals:
 		caption.text = ("自定下守礼之议，公田新入国库 %d 份谷粟。" if traditional else
 			"新法施行后，已有 %d 份收成记入税册。") % accounts[0]["value"]
 	else:
-		caption.text = "收下的公田谷粟，送往堂前点验。" if traditional else "收过的各户田亩，重新编入税册。"
-	envoy.position = walk_start
-	walk_sprite.stand()
-	walk_sprite.face(walk_end - walk_start)
+		caption.text = "收下的公田谷粟，已送往堂前点验。" if traditional else "收过的各户田亩，已重新编入税册。"
 	camera.global_position = field_focus
 	camera.zoom = Vector2.ONE * 2.65
 	camera.force_update_scroll()
-	if DisplayServer.get_name() != "headless":
-		score.play()
-	skip_button.grab_focus()
-	motion = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	motion.tween_property(camera, "global_position", field_focus + Vector2(12, -3), FIELD_HOLD)
-	motion.tween_property(camera, "global_position", ceremony_focus, PAN_SECONDS).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	motion.parallel().tween_property(camera, "zoom", Vector2.ONE * 3.3, PAN_SECONDS).set_trans(Tween.TRANS_SINE)
-	motion.tween_callback(_show_ceremony)
-	motion.tween_method(_walk_to_table, 0.0, 1.0, WALK_SECONDS)
-	motion.tween_callback(_finish_handoff)
-	motion.tween_interval(CEREMONY_HOLD)
-	motion.tween_callback(_show_record)
 
 func _show_ceremony() -> void:
 	shot = Shot.CEREMONY
@@ -190,6 +215,8 @@ func _walk_to_table(progress: float) -> void:
 
 func _finish_handoff() -> void:
 	walk_sprite.stand()
+	walk_sprite.face(presenter.position - envoy.position)
+	AudioManager.play_event_sound("present_ledger")
 	caption.text = ("召简接过贡簿，准封地照旧耕种，续行旧礼。" if traditional else
 		"召简收下新册。往后各户照册纳税，市上按实成交。")
 

@@ -102,6 +102,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ResearchRationsReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldStrokeReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ManagementNavigationReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/EndingFilmReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RecruitmentLedgerReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RavineShortcutReplay.gd') -Destination $testDirectory
     foreach ($file in 'MarketOrderReplay.gd', 'AutumnExhibitReplay.gd', 'SheepfoldReplay.gd', 'RavineMapReplay.gd', 'CreekTrapReplay.gd', 'FieldNightReplay.gd', 'CouncilSilkReplay.gd') {
@@ -162,6 +163,7 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'council-petition' -Name 'council-petition' -Replay 'council-petition'
         Start-VerifiedGame -Directory $release -Profile 'council-silk' -Name 'council-silk' -Replay 'council-silk'
         Start-VerifiedGame -Directory $release -Profile 'route-goals' -Name 'route-goals' -Replay 'route-goals'
+        Start-VerifiedGame -Directory $release -Profile 'ending-film' -Name 'ending-film' -Replay 'ending-film'
     }
     if ($Opening) {
         Start-VerifiedGame -Directory $release -Profile 'opening' -Name 'opening' -Replay 'estate-directions'

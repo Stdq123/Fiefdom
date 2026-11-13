@@ -257,7 +257,7 @@ func _check_reform() -> void:
 	await tree.process_frame
 	var mulberry: CropData = tree.root.get_node("ItemManager").get_crop("mulberry")
 	var tax_payment := int(mulberry.sell_price * (1.0 - state.tax_rate))
-	# The last ripe crop can win just as the player starts to sleep.
+	# The last ripe crop can make the handoff available while sleep is pending.
 	state.private_harvest_total += state.balance.ending_reformed_private - 1
 	state.money = state.balance.ending_reformed_wealth - tax_payment
 	state.silk_bolts_sold += state.balance.ending_silk_target
@@ -280,10 +280,10 @@ func _check_reform() -> void:
 	print("HARVEST_REFORM tribute=", state.king_storage - initial.tribute, " private=", state.private_harvest_total - initial.private,
 		" copper=", state.money - initial.money, " leaves=", state.silk_workshop.leaves, " day=", state.current_day,
 		" food_spent=", food - state.food_storage, " outcome=", state.outcome)
-	var ending: Control = tree.current_scene.get_node("CampaignHUD").summary
-	_expect(state.outcome == state.Outcome.REFORMED and ending != null and ending.film.visible
-		and tree.paused and state.current_day == day and state.food_storage == food,
-		"The final delegated harvest opens the ending before a pending sleep can advance the day or charge food.")
+	var stand: Sprite2D = world.get_node("Scenery/EndingRecord")
+	_expect(state.outcome == state.Outcome.RUNNING and stand.visible and not stand.archived
+		and not tree.paused and state.current_day == day + 1 and state.food_storage == food - state.retainer_food_cost(),
+		"Delegated harvest opens the handoff while the requested night still advances and charges food once.")
 
 func run(game_tree: SceneTree) -> void:
 	tree = game_tree

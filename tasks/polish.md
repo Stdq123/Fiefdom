@@ -863,3 +863,8 @@
 
 - 第二块井田完工后，可让一名门客负责一块田的收割、浇水和续播。默认每夜两份口粮。管理页可直接选择负责的井田，封地概览随之切换，田格仍可安排原有轮作和稻种。
 - 回放从第 32 天的双井田档开始。季青接管第二块井田并在续档后收公田。玩家去西市期间，他补播稷、浇水并采私田桑叶，第一块井田的空畦保留。核对了实际口粮、收割岗重叠和旧职责的外出田务。Windows 解压版通过双结局和委派回放，1024×768 画面在不可见桌面取得。 [Windows 试玩包](../build/polish-field-steward/Fiefdom-1.0.0-Windows-x64.zip) · [委派画面](../build/polish-field-steward/render-1024x768/01-steward-assignment.png) · [发行回放](../build/polish-field-steward/windows-check/field-steward.log)
+
+## 堂前交贡簿与南路亭呈税册
+
+- 路线目标齐备后，封地手记和舆图可指路。传统线到堂前呈交贡簿，改革线到南路亭呈交新税册。互动后，召简在同一处接册，镜头回望井田，随后打开结算。结算选取本局近期的邻里、节令和时令交货记录。续营后回到原处可翻阅通关时的账簿。
+- Windows 解压版从新档分别在第 56 天和第 59 天步行交接，覆盖交接前续档、结局存读、跳过重看和继续经营。门客回归核对了最后一茬收割后照常过夜。两段结尾与记事在不可见桌面以 1024×768 核对。 [Windows 试玩包](../build/polish-ending-handoff/Fiefdom-1.0.0-Windows-x64.zip) · [回放清单](../build/polish-ending-handoff/windows-release.log) · [堂前交接](../build/polish-ending-handoff/render-1024x768/traditional-ceremony.png) · [改革结算](../build/polish-ending-handoff/render-1024x768/reformed-ledger.png)

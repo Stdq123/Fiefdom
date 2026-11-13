@@ -31,6 +31,9 @@ func _run() -> void:
 		"traditional-rations", "reformed-rations":
 			var replay = load("res://tests/CampaignReplay.gd").new()
 			await replay.run(tree, arguments[0].trim_suffix("-rations"), true, capture_directory, true)
+		"ending-film":
+			var replay = load("res://tests/EndingFilmReplay.gd").new()
+			await replay.run(tree, capture_directory)
 		"night-rations":
 			var replay = load("res://tests/NightRationsReplay.gd").new()
 			await replay.run(tree)

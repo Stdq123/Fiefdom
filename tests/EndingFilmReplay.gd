@@ -1,6 +1,7 @@
 extends RefCounted
 
 const TITLE := "res://scenes/Title.tscn"
+const Campaign := preload("res://tests/CampaignReplay.gd")
 
 var tree: SceneTree
 var state: Node
@@ -90,6 +91,7 @@ func _stage_result(traditional: bool) -> void:
 		state.road_rest_paid_day = 12
 		state.last_defense = {"day": 33, "kind": 0, "losses": 0, "guard": "弋戎"}
 		state.east_watch_day = 34
+		state.season_order_receipts["winter_woven_goods"] = {"day": 45, "dispatch_day": 45, "paid_in_food": false}
 	var cell: Vector2i = state.well_fields[0]["center_pos"]
 	state.tilled_cells[cell] = true
 	if _expect(world.sow_crop(cell, "millet"), "Prepare a ripe crop for play after the ending."):
@@ -99,6 +101,8 @@ func _stage_result(traditional: bool) -> void:
 	events.crop_harvested.emit(traditional)
 	await tree.process_frame
 	await tree.process_frame
+	if _expect(state.route_ready_to_present() and not tree.paused, "Stage a playable ledger handoff."):
+		await Campaign.present_ledger(tree)
 
 func _record_rows(ending: Control) -> Array[String]:
 	var rows: Array[String] = []
@@ -122,8 +126,8 @@ func _watch_film(ending: Control, branch: String) -> void:
 	var first_position: Vector2 = ending.camera.global_position
 	var sampled_move := false
 	var reached := false
+	var saw_fields := false
 	var first_audio: bool = DisplayServer.get_name() == "headless" or ending.score.playing
-	await _capture(branch + "-fields", capture_dir)
 	var frames := 0
 	var next_sample := Time.get_ticks_msec()
 	while ending.film.visible:
@@ -131,10 +135,14 @@ func _watch_film(ending: Control, branch: String) -> void:
 		if ending.shot == ending.Shot.CEREMONY:
 			if not reached and ending.envoy.position.is_equal_approx(ending.walk_end):
 				reached = true
-				_expect(ending.camera.global_position.distance_to(first_position) > 70.0, "The view moves to a distinct location.")
+				_expect(ending.camera.global_position.is_equal_approx(first_position), "The handoff stays where the player presented the ledger.")
 				await _capture(branch + "-ceremony", capture_dir)
 			if ending.walk_sprite.walking and ending.walk_sprite.frame_coords.x in [1, 2]:
 				sampled_move = true
+		elif ending.shot == ending.Shot.FIELD and not saw_fields:
+			saw_fields = true
+			_expect(ending.camera.global_position.distance_to(first_position) > 70.0, "The film then shows the fields.")
+			await _capture(branch + "-fields", capture_dir)
 		if recording and Time.get_ticks_msec() >= next_sample:
 			await _capture("frame-%03d" % frames, frames_dir)
 			frames += 1
@@ -145,7 +153,8 @@ func _watch_film(ending: Control, branch: String) -> void:
 		_expect(track != null and track.save_to_wav(frames_dir.path_join("score")) == OK,
 			"Capture the score from the live music bus.")
 		AudioServer.remove_bus_effect(bus, slot)
-	_expect(reached and sampled_move and first_audio and ending.report.visible, "The envoy walks into view, then the film opens the ledger.")
+	_expect(reached and sampled_move and saw_fields and first_audio and ending.report.visible,
+		"The envoy walks into view, the film shows the fields, then opens the ledger.")
 	await _capture(branch + "-ledger", capture_dir)
 	print("ENDING_FILM branch=", branch, " arrival=", reached, " footsteps=", sampled_move, " sampled_frames=", frames)
 
@@ -155,7 +164,7 @@ func _play_ending(traditional: bool) -> void:
 	var branch := "traditional" if traditional else "reformed"
 	var hud := tree.current_scene.get_node("CampaignHUD")
 	var ending: Control = hud.summary
-	if not _expect(ending != null and tree.paused and ending.shot == ending.Shot.FIELD, "The finished route starts on its fields."):
+	if not _expect(ending != null and tree.paused and ending.shot == ending.Shot.CEREMONY, "The finished route starts at its handoff."):
 		return
 	await _watch_film(ending, branch)
 	var rows := _record_rows(ending)
@@ -164,7 +173,8 @@ func _play_ending(traditional: bool) -> void:
 			and not rows.has("季青和你在南路亭西修了歇脚处。"), "The traditional record reflects its actual deeds.")
 	else:
 		_expect(rows[0].begins_with("新增计税收成 15 /") and "季青和你在南路亭西修了歇脚处。" in rows
-			and "弋戎把守田的战果留在东岗。" in rows, "The reform record reflects its actual deeds.")
+			and "弋戎把守田的战果留在东岗。" in rows and "西市收下了你备齐的「岁末麦帛」。" in rows,
+			"The reform record reflects its actual deeds and completed seasonal order.")
 	await _press(ending.save_button)
 	_expect(hud.status.text == "结局已存档。", "The ledger can be stored.")
 	_expect(ending.restore_button.disabled, "A finished record or another estate cannot supply a playable checkpoint.")
@@ -270,13 +280,13 @@ func _verify_old_record() -> void:
 	_expect(ending.report.visible and not ending.has_route_totals and rows[0].begins_with("国库 44"),
 		"An old finished save shows its known totals without inventing route deltas.")
 
-func run(game_tree: SceneTree) -> void:
+func run(game_tree: SceneTree, directory := "") -> void:
 	tree = game_tree
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Isolate the ending replay's profile."):
 		tree.quit(1)
 		return
 	tree.root.notify_mouse_entered()
-	capture_dir = OS.get_environment("FIEFDOM_ENDING_CAPTURES")
+	capture_dir = directory if not directory.is_empty() else OS.get_environment("FIEFDOM_ENDING_CAPTURES")
 	film_dir = OS.get_environment("FIEFDOM_ENDING_FILMS")
 	state = tree.root.get_node("Global")
 	await _play_ending(true)

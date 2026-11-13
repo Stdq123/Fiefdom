@@ -212,6 +212,8 @@ func play_event_sound(event_type: String) -> void:
 			_play_tone_sequence([523, 659], 0.15)  # C5, E5
 		"first_tribute":
 			play_sfx(CEREMONY_BELL, -12.0, 1.26)
+		"present_ledger":
+			play_sfx(BAMBOO_SLIPS, -10.0)
 		"hurt":
 			_play_tone_sequence([185, 130], 0.055)
 

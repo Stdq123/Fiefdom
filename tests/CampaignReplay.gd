@@ -122,6 +122,21 @@ static func meet_tax_envoy(tree: SceneTree) -> Control:
 		await tree.physics_frame
 	return null
 
+static func present_ledger(tree: SceneTree) -> void:
+	var estate := tree.current_scene
+	var world := estate.get_node("World")
+	var stand: Sprite2D = world.get_node("Scenery/EndingRecord")
+	var approach := stand.global_position + Vector2(0, 12)
+	await walk_estate_road_to(tree, world, approach)
+	if world.player.interaction_target == stand:
+		var event := InputEventKey.new()
+		event.keycode = KEY_E
+		event.physical_keycode = KEY_E
+		event.pressed = true
+		tree.root.push_input(event, true)
+		await tree.process_frame
+		await tree.process_frame
+
 func _expect(condition: bool, message: String) -> bool:
 	if not condition:
 		failures += 1
@@ -434,7 +449,7 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 		return
 	await _save_return_continue()
 	var last_day: int = state.current_day + 28
-	while state.current_day < last_day and state.outcome == state.Outcome.RUNNING:
+	while state.current_day < last_day and state.outcome == state.Outcome.RUNNING and not state.route_ready_to_present():
 		_harvest_and_tend(FIRST, KEY_1 if state.fertile_cells.has(FIRST) else KEY_5, true)
 		_harvest_and_tend(SECOND, KEY_1 if state.fertile_cells.has(SECOND) else KEY_5, true)
 		for x in range(8, 11):
@@ -444,11 +459,32 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 					_harvest_and_tend(cell, KEY_7, branch == "reformed" or x == 8)
 		_provision(state.retainer_food_cost())
 		await tree.process_frame
-		if state.outcome == state.Outcome.RUNNING:
+		if state.outcome == state.Outcome.RUNNING and not state.route_ready_to_present():
 			await _sleep()
+	if not _expect(state.route_ready_to_present() and not tree.paused, "All goals lead to a playable handoff."):
+		print("CAMPAIGN_MISSING ", state.route_objectives())
+		_end(true)
+		return
+	if branch == "reformed":
+		var earned: int = state.money
+		ui.hud.route_progress.pressed.emit()
+		state.money = state.balance.ending_reformed_wealth - 1
+		var events := tree.root.get_node("GameEvents")
+		events.money_changed.emit(state.money)
+		_expect(not state.route_ready_to_present() and ui.directions.tracked_place.is_empty(),
+			"Dropping below the copper target closes the handoff and clears its directions.")
+		state.money = earned
+		events.money_changed.emit(state.money)
+	await _save_return_continue()
+	var stand: Sprite2D = world.get_node("Scenery/EndingRecord")
+	_expect(stand.visible and stand.ready_to_present and not stand.archived
+		and ui.hud.route_progress.text.begins_with("指路呈交"), "Continue restores the pending handoff and its directions.")
+	ui.hud.route_progress.pressed.emit()
+	_expect(ui.directions.tracked_place_point == world.to_local(stand.global_position), "The journal marks the route's actual ledger.")
+	await present_ledger(tree)
 	var expected: int = state.Outcome.TRADITIONAL if branch == "traditional" else state.Outcome.REFORMED
 	await tree.process_frame
-	if not _expect(state.outcome == expected and tree.paused, "The corresponding ending appears after its actual objectives are met."):
+	if not _expect(state.outcome == expected and tree.paused, "Presenting the ledger opens the earned ending."):
 		print("CAMPAIGN_MISSING ", state.route_objectives())
 		_end(true)
 		return
@@ -463,15 +499,18 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 			"Nightly rations operate through the campaign and survive its save and continue.")
 	var outcome_view := tree.current_scene.get_node("CampaignHUD")
 	var ending: Control = outcome_view.summary
-	if not _expect(ending != null and ending.shot == ending.Shot.FIELD and ending.film.visible and not ui.visible,
-			"The victory starts its film on the working estate."):
+	if not _expect(ending != null and ending.shot == ending.Shot.CEREMONY and ending.film.visible and not ui.visible
+			and ending.stage.global_position == stand.global_position,
+			"The film starts at the same ledger the player just presented."):
 		_end(true)
 		return
 	if not capture_directory.is_empty():
-		await _capture_ending(capture_directory, "ending-" + branch + "-fields")
-		await tree.create_timer(5.35).timeout
-		_expect(ending.shot == ending.Shot.CEREMONY, "The camera reaches the route's ceremony.")
+		await tree.create_timer(2.0).timeout
+		_expect(ending.shot == ending.Shot.CEREMONY, "The ceremony starts with the envoy's arrival.")
 		await _capture_ending(capture_directory, "ending-" + branch + "-ceremony")
+		await tree.create_timer(2.1).timeout
+		_expect(ending.shot == ending.Shot.FIELD, "The film returns to the fields after the handoff.")
+		await _capture_ending(capture_directory, "ending-" + branch + "-fields")
 		if not ending.report.visible:
 			await ending.film_finished
 		await _capture_ending(capture_directory, "ending-" + branch)

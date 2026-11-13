@@ -1297,6 +1297,16 @@ func hurt_player(damage: int) -> void:
 	if health == 0:
 		finish_campaign(Outcome.DEFEAT_COMBAT)
 
+func route_ready_to_present() -> bool:
+	if outcome != Outcome.RUNNING or not ending_record.is_empty():
+		return false
+	var goals := route_objectives()
+	return not goals.is_empty() and goals.all(func(goal: Dictionary) -> bool: return goal.value >= goal.target)
+
+func present_route_ledger() -> void:
+	if route_ready_to_present():
+		finish_campaign(Outcome.TRADITIONAL if tax_reform_choice == TaxReformChoice.TRADITIONAL else Outcome.REFORMED)
+
 func finish_campaign(result: Outcome) -> void:
 	if outcome != Outcome.RUNNING or result == Outcome.RUNNING:
 		return
@@ -1327,21 +1337,45 @@ func _capture_ending(result: Outcome) -> Dictionary:
 	}
 
 func _ending_memories() -> Array[String]:
-	var moments: Array[String] = []
+	var events: Array[Dictionary] = []
 	if field_rotation.signed_day > 0:
-		moments.append("渠伯把%s的收成记进轮作簿。" % rotation_crop_name())
+		events.append({"day": field_rotation.signed_day, "text": "渠伯把%s的收成记进轮作簿。" % rotation_crop_name()})
 	if ravine_journal.garden_day > 0:
-		moments.append("蒲宁收下溪行手记，在竹径留了药圃。")
+		events.append({"day": ravine_journal.garden_day, "text": "蒲宁收下溪行手记，在竹径留了药圃。"})
 	if road_rest_built():
-		moments.append("季青和你在南路亭西修了歇脚处。")
-	if east_watch_day > 0:
-		moments.append("弋戎把守田的战果留在东岗。")
+		events.append({"day": road_rest_paid_day + 1, "text": "季青和你在南路亭西修了歇脚处。"})
+	var relief := watch_relief_day()
+	if relief > 0:
+		events.append({"day": relief, "text": "你备下的巡粮到了东岗，岗旗换上新麻绳。"})
+	elif east_watch_day > 0:
+		events.append({"day": east_watch_day, "text": "弋戎把守田的战果留在东岗。"})
 	if not gathering_recitals.is_empty():
-		moments.append("南路亭的曲簿记下了你与商音的合奏。")
+		events.append({"day": gathering_recitals.keys().max(), "text": "南路亭的曲簿记下了你与商音的合奏。"})
+	if not summer_raft_results.is_empty():
+		events.append({"day": summer_raft_results.keys().max(), "text": "溪边的筏簿记下了你在夏至走过的水路。"})
+	if not autumn_exhibits.is_empty():
+		var day: int = autumn_exhibits.keys().max()
+		var note := "秋社那天，南池畔摆过你带来的三样收成。"
+		if autumn_exhibits[day].shared:
+			note = "秋社那天，乡邻分走了你留在展台的收成。"
+		events.append({"day": day, "text": note})
 	if not winter_suppers.is_empty():
-		moments.append("冬至时，你在南池畔备下的那锅热饭还有人记得。")
+		events.append({"day": winter_suppers.keys().max(), "text": "冬至时，你在南池畔备下的那锅热饭还有人记得。"})
 	if silk_sample_day > 0:
-		moments.append("陶辛把你织的样绸挂在西廊。")
+		events.append({"day": silk_sample_day, "text": "陶辛把你织的样绸挂在西廊。"})
+	var latest_order: Dictionary = {}
+	for order: Dictionary in SeasonOrders.ORDERS + SeasonOrders.FOLLOW_UP_ORDERS:
+		var receipt: Dictionary = season_order_receipts.get(order.id, {})
+		var day: int = receipt.get("day", 0)
+		if day > latest_order.get("day", 0) and (order.id != SeasonOrders.WATCH_RELIEF or relief < day):
+			latest_order = {"day": day, "text": "西市收下了你备齐的「%s」。" % order.title}
+	if not latest_order.is_empty():
+		events.append(latest_order)
+	events.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return a.text < b.text if a.day == b.day else a.day > b.day)
+	var moments: Array[String] = []
+	for event: Dictionary in events.slice(0, 3):
+		moments.append(event.text)
 	var fields := well_fields.filter(func(field: Dictionary) -> bool: return field["is_unlocked"])
 	moments.append("%d 块井田已经耕成，%d 位门客留任。" % [fields.size(), retainers.size()])
 	var irrigated := irrigated_well_fields()

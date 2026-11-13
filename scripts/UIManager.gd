@@ -67,6 +67,7 @@ func _ready() -> void:
 	handover.find_keeper_requested.connect(_on_neighbor_directions_requested.bind(VisitorData.FIELD_KEEPER))
 	hud.route_progress.pressed.connect(_open_route_goals)
 	route_goals.action_requested.connect(_on_route_goal_action)
+	world.get_node("Scenery/EndingRecord").visibility_changed.connect(_refresh_ledger_route)
 	council_preparation.world = world
 	hud.council_prep_button.pressed.connect(_open_council_preparation)
 	hud.guide.six_arts.pressed.connect(_show_six_arts)
@@ -140,8 +141,20 @@ func _map_controls_blocked() -> bool:
 	return _estate_controls_blocked() or world.player.training_cart.visible
 
 func _open_route_goals() -> void:
-	if not _map_controls_blocked():
+	if _map_controls_blocked():
+		return
+	if Global.route_ready_to_present():
+		var stand := world.get_node("Scenery/EndingRecord") as Sprite2D
+		directions.follow_place(stand.record_name, world.to_local(stand.global_position))
+		if Global.is_indoors():
+			hud.practice_label.text = "从南门出去，再去%s。" % stand.place_name
+	else:
 		route_goals.open_map()
+
+func _refresh_ledger_route() -> void:
+	var stand := world.get_node("Scenery/EndingRecord") as Sprite2D
+	if not stand.visible and not stand.record_name.is_empty() and directions.tracked_place == stand.record_name:
+		directions.clear_tracking()
 
 func _open_council_preparation() -> void:
 	if not _map_controls_blocked():
