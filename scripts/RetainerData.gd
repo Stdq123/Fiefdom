@@ -41,6 +41,39 @@ const EVENING_LINES := {
 	],
 }
 
+const RAIN_EVENING_LINES := {
+	VisitorData.FIELD_KEEPER: [
+		"蓑衣挂到柱外去吧。席是季青刚铺的，别让咱们带回来的水先坐下了。",
+		"落到田里的雨是好事，落到饭碗里就嫌多。我把两只碗往里挪了挪。",
+		"往年碰上下雨，我就在田埂上插把锄头记水线。今夜有人替我留了席，明早再去看也不迟。",
+	],
+	VisitorData.ROAD_KEEPER: [
+		"我把靠外的席卷起来了。待会儿若有赶路的人，让他先坐靠灯的这一张。",
+		"刚才雨里有人问哪儿有水喝。我把瓮沿擦干，挪到了柱后。你也喝一碗。",
+		"屋檐下说话得靠近些。小时候家里下雨，也是几个人挤在一盏灯旁等饭熟。",
+	],
+	VisitorData.WATER_GUIDE: [
+		"檐滴把石头冲出一道浅沟。你看，连半块瓦都晓得怎么引水。",
+		"我在檐外放了个破陶碗。等雨歇了去瞧瞧，和田口的水痕能不能对上。",
+		"绳子沾雨就缩，方才拿它量柱子，短了一指。明天去水口前得先晾干。",
+	],
+	VisitorData.SILK_MERCHANT: [
+		"蔡娘教我把绸裹两层，外头一层沾雨，里头一层只贴着绸。今晚试过，果然管用。",
+		"听檐下的雨，像织机上有人换梭。倒让我想起年轻时守着铺子等母亲收工。",
+		"西市一落雨，卖布的人便都往同一处檐下挤。平日不肯透露的花样，这时候反倒肯讲两句。",
+	],
+	VisitorData.RAVINE_GUIDE: [
+		"雨从竹叶上落下来，一阵密一阵疏。从瓦上落下来倒齐整，我坐着听了一会儿。",
+		"你看那道水，过了亭柱就往竹径去了。我在涧里认路，也常先看雨水往哪边流。",
+		"我带回几片干竹叶，夹在手记里。你要把湿鞋搁到檐边，垫上一片就不沾泥了。",
+	],
+	VisitorData.EAST_WATCHER: [
+		"弓放在里侧，别让滴水碰到弦。东岗有人值守，我才得空坐这一会儿。",
+		"泥地上先听见水，再听见脚步。你从路口过来时，我已经把干席给你往里推了。",
+		"从前夜里遇上大雨，我们轮流抱着弓借火。今夜亭里灯是干的，够大家坐一阵。",
+	],
+}
+
 @export var name: String = "无名氏"
 @export var profession: String = "农夫" # Peasant, Scholar, etc.
 @export var portrait: Texture2D
@@ -91,8 +124,9 @@ func duty_name() -> String:
 func works_fields() -> bool:
 	return duty in [Duty.FIELD, Duty.HARVEST, Duty.STEWARD]
 
-func evening_line() -> String:
-	var lines: Array = EVENING_LINES[name]
+func evening_line(in_rain := false) -> String:
+	var greetings := RAIN_EVENING_LINES if in_rain else EVENING_LINES
+	var lines: Array = greetings[name]
 	return lines[posmod(Global.current_day + Global.season_index(), lines.size())]
 
 func resident_line() -> String:

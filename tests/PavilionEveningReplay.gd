@@ -1,6 +1,7 @@
 extends "res://tests/WestMarketReplay.gd"
 
 const PRIVATE := Vector2i(6, 5)
+const RAIN_PRIVATE := Vector2i(6, 4)
 
 var legacy := false
 var capture_path := ""
@@ -32,12 +33,13 @@ func _move_pointer_off_the_field() -> void:
 	tree.root.push_input(motion, true)
 	await tree.process_frame
 
-func _settled(actor: Retainer) -> bool:
-	for frame in 540:
+func _settled(actor: Retainer, frames := 540) -> bool:
+	for frame in frames:
 		if actor.resting_at_pavilion():
 			return _expect(actor.position == world.pavilion_rest.seat_for(actor.data), "The resident settles on the assigned mat.")
 		await tree.physics_frame
-	return _expect(false, actor.data.name + " reaches the pavilion after work.")
+	return _expect(false, "%s reaches the pavilion after work (position %s, next stop %s)." % [
+		actor.data.name, actor.position, actor.navigation_agent.target_position])
 
 func _check_first_walk() -> bool:
 	_expect(not world.pavilion_rest.visible and keeper.pavilion_note().is_empty(), "The first morning starts with the keeper at his duty station.")
@@ -155,7 +157,7 @@ func _evening_conversation() -> bool:
 	await _key(KEY_ESCAPE)
 	return true
 
-func _resume_and_travel() -> void:
+func _save_and_continue() -> bool:
 	await _button(ui.settings_button)
 	var settings: Control = ui.panel_manager.settings_panel_instance
 	for button: Button in settings.find_children("*", "Button", true, false):
@@ -163,34 +165,141 @@ func _resume_and_travel() -> void:
 			await _button(button)
 			break
 	if not _expect(settings.save_status.text == "游戏已保存", "Save after the residents have settled."):
-		return
+		return false
 	await _button(settings.close_button)
 	tree.change_scene_to_file(state.TITLE_SCENE)
 	await tree.scene_changed
 	await _button(tree.current_scene.continue_button)
-	if not await _bind_estate():
-		return
+	return await _bind_estate()
+
+func _resume_and_travel() -> bool:
+	if not await _save_and_continue():
+		return false
 	var teacher := world.neighbor_actor(VisitorData.ROAD_KEEPER) as Retainer
 	_expect(state.current_day == 2 and keeper.resting_at_pavilion() and teacher.resting_at_pavilion(), "Continue restores the late-evening positions.")
 	await _walk(world.player, [Vector2(-181, 54), Vector2(-181, 0), Vector2(-270, -21)])
 	if not await _cross(&"ui_left", state.WEST_MARKET_SCENE):
-		return
+		return false
 	var market := tree.current_scene as Node2D
 	await Campaign.walk_to_market_exit(tree, market)
 	if not await _cross(&"ui_right", state.ESTATE_SCENE) or not await _bind_estate():
-		return
+		return false
 	teacher = world.neighbor_actor(VisitorData.ROAD_KEEPER) as Retainer
 	_expect(keeper.resting_at_pavilion() and teacher.resting_at_pavilion() and teacher.position == world.pavilion_rest.seat_for(teacher.data),
 		"Returning from the market after dusk restores the same activity.")
 	print("PAVILION_EVENING_RETURN day=", state.current_day, " keeper=", keeper.position, " teacher=", teacher.position)
-	state.current_day = 6 # Exercise the rainy evening without replaying the prior four days.
-	await _time_at(0.88)
-	_expect(state.has_rain() and not world.pavilion_rest.visible and not keeper.resting_at_pavilion(), "The outdoor table closes in the rain.")
-	state.current_day = 7
-	state.raid_day = 7
-	await _time_at(0.88)
-	_expect(not state.has_rain() and not world.pavilion_rest.visible, "A raid holds the evening gathering.")
-	print("PAVILION_EVENING_WEATHER rain_closed=true raid_closed=true")
+	return true
+
+func _rain_walk() -> bool:
+	var table: PavilionRest = world.pavilion_rest
+	var clear_seat := table.seat_for(keeper.data)
+	# Enter the first rainy day by sleeping, preserving the recruited household.
+	state.current_day = 5
+	state.food_storage = 20
+	await _button(ui.sleep_button)
+	await tree.create_timer(1.18).timeout
+	if not _expect(state.current_day == 6 and state.has_rain() and not table.visible
+		and keeper.pavilion_note().is_empty(), "The rainy morning starts at the duty station."):
+		return false
+	var tiles := world.tile_map as TileMapLayer
+	await Campaign.walk_estate_road_to(tree, world, tiles.to_global(tiles.map_to_local(PUBLIC)) + Vector2(-32, 8))
+	await _click(tiles.get_global_transform_with_canvas() * tiles.map_to_local(PUBLIC))
+	await _click(tiles.get_global_transform_with_canvas() * tiles.map_to_local(RAIN_PRIVATE))
+	if not _expect(state.rotation_offer_ready() and state.tilled_cells.has(RAIN_PRIVATE),
+		"Harvest a public crop for the rotation offer and prepare a plot for a wet-evening assignment."):
+		return false
+	keeper.set_physics_process(false)
+	state.set_field_seed_plan(RAIN_PRIVATE, "millet")
+	await _time_at(PavilionRest.START + 0.003)
+	keeper.set_physics_process(true)
+	var worked := false
+	var walked := false
+	for frame in 600:
+		worked = worked or keeper.current_state == Retainer.State.WORK
+		if keeper.sprite.walking and "避雨" in keeper.pavilion_note():
+			walked = true
+			break
+		await tree.physics_frame
+	var teacher := world.neighbor_actor(VisitorData.ROAD_KEEPER) as Retainer
+	var guard := world.neighbor_actor(VisitorData.EAST_WATCHER) as Retainer
+	if not _expect(worked and walked and state.active_crops.has(RAIN_PRIVATE),
+		"The resident completes his sowing assignment before walking to the rainy shelter.") \
+		or not await _settled(keeper) or not await _settled(teacher):
+		return false
+	return _expect(table.is_rain_shelter() and keeper.position != clear_seat and keeper.position != teacher.position
+		and guard.position == guard.home_position and not table.seat_for(guard.data).is_finite(),
+		"The two residents occupy different covered mats and the guard keeps the east road.")
+
+func _rain_conversation() -> bool:
+	var table: PavilionRest = world.pavilion_rest
+	await _button(ui.hud.map_button)
+	var map: Control = ui.estate_map
+	await _button(map.tabs.get_node("People"))
+	var place: Array = map.places.filter(func(entry: Dictionary) -> bool: return entry.title == PavilionRest.RAIN_PLACE)
+	var person: Array = map.people.filter(func(entry: Dictionary) -> bool: return entry.title == VisitorData.FIELD_KEEPER)
+	_expect(place.size() == 1 and place[0].point == table.gathering_approach()
+		and person.size() == 1 and person[0].point == keeper.position and "避雨" in person[0].detail,
+		"The chart shows the rain shelter approach and the seated resident.")
+	await _button(map.close_button)
+	await Campaign.walk_estate_road_to(tree, world, world.to_global(table.gathering_approach()))
+	var audio = tree.root.get_node("AudioManager").terrain_audio
+	await tree.create_timer(0.65).timeout
+	var outside: float = audio.rain.volume_linear
+	await Campaign.walk_straight(tree, world.player, keeper.global_position + Vector2(0, 9))
+	await tree.create_timer(0.65).timeout
+	var under_roof: float = audio.rain.volume_linear
+	_expect(outside > 0.30 and under_roof < 0.20,
+		"The same rain grows quieter as the player steps under the roof.")
+	print("PAVILION_EVENING_RAIN keeper=", keeper.position, " outside=", snappedf(outside, 0.01),
+		" under_roof=", snappedf(under_roof, 0.01))
+	await _move_pointer_off_the_field()
+	await _snapshot("06-rain-shelter")
+	await _key(KEY_E)
+	var dialogue := ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(dialogue != null and dialogue.name_label.text == VisitorData.FIELD_KEEPER
+		and "檐下避雨" in dialogue.context_label.text and keeper.data.evening_line(true) in dialogue.text_label.text
+		and "约定试一回轮作" == dialogue.options_container.get_child(0).text,
+		"Speak to the keeper beneath the roof, hear his rain line and keep the rotation option."):
+		return false
+	await _snapshot("07-rain-conversation")
+	await _key(KEY_ESCAPE)
+	return true
+
+func _rain_continue_and_sleep() -> void:
+	if not await _save_and_continue():
+		return
+	var table: PavilionRest = world.pavilion_rest
+	var teacher := world.neighbor_actor(VisitorData.ROAD_KEEPER) as Retainer
+	if not _expect(state.current_day == 6 and table.is_rain_shelter() and keeper.resting_at_pavilion()
+		and keeper.position == table.seat_for(keeper.data) and teacher.resting_at_pavilion(),
+		"Continue restores the covered seats and the rainy evening."):
+		return
+	var events := tree.root.get_node("GameEvents")
+	state.raid_day = state.current_day
+	events.raid_started.emit()
+	await tree.physics_frame
+	await tree.physics_frame
+	_expect(not table.visible and keeper.pavilion_note().is_empty() and teacher.pavilion_note().is_empty(),
+		"An active raid interrupts the shelter gathering.")
+	state.raid_day = 0
+	events.raid_defeated.emit()
+	# The interrupted residents can walk back to duty before taking the longer shelter lane again.
+	if not await _settled(keeper, 720) or not await _settled(teacher, 720):
+		return
+	await Campaign.walk_estate_road_to(tree, world, world.to_global(table.gathering_approach()))
+	var food: int = state.food_storage
+	var need: int = state.night_rations_plan().need
+	await _key(KEY_E)
+	var plan := ui.get_node_or_null("Control/NightRationsPanel") as Control
+	if not _expect(plan != null and state.food_storage == food, "The rain shelter table opens the ordinary nightly plan."):
+		return
+	await _button(plan.get_node("%Sleep"))
+	await tree.create_timer(1.18).timeout
+	_expect(state.current_day == 7 and not table.visible and keeper.pavilion_note().is_empty()
+		and teacher.pavilion_note().is_empty() and state.food_storage == food - need
+		and state.active_crops.get(RAIN_PRIVATE, {}).get("age", 0) == 1,
+		"Sleeping from the rain shelter feeds the same household, grows the watered crop and resumes morning duty.")
+	print("PAVILION_EVENING_WEATHER rain_shelter=true raid_interrupted=true dawn=", state.current_day)
 
 func _play() -> void:
 	capture_dir = capture_path
@@ -215,5 +324,7 @@ func _play() -> void:
 		print("PAVILION_EVENING_LEGACY day=", state.current_day, " watch=", state.day_watch_label(),
 			" keeper=", keeper.position, " food=", state.food_storage, " crops=", state.active_crops.size())
 		return
-	if await _check_first_walk() and await _first_night() and await _recruit_and_settle() and await _evening_conversation():
-		await _resume_and_travel()
+	if (await _check_first_walk() and await _first_night() and await _recruit_and_settle()
+		and await _evening_conversation() and await _resume_and_travel()
+		and await _rain_walk() and await _rain_conversation()):
+		await _rain_continue_and_sleep()

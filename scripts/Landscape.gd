@@ -123,7 +123,7 @@ const ESTATE_TRACKS := EstateLayout.ROADS + EstateLayout.SOUTH_ROADS + [
 ] + EstateLayout.DRIVING_ROADS
 const WILD_TRACKS := RavineLayout.TRACKS
 const ESTATE_TRACK_WIDTHS: Array[float] = EstateLayout.ROAD_WIDTHS + [
-	18.0, 13.0, 17.0, 14.0, 17.0, 15.0, 13.0, 16.0, 41.0, 30.0, 19.0, 34.0,
+	18.0, 13.0, 17.0, 14.0, 17.0, 15.0, 13.0, 16.0, 14.0, 41.0, 30.0, 19.0, 34.0,
 ]
 const GARDEN_TRACK := [EstateLayout.PAVILION_TURN, Vector2(39, 396), Vector2(58, 402), Vector2(78, 407), Vector2(101, 408)]
 const ROAD_REST_TRACK := [EstateLayout.PAVILION_JUNCTION, Vector2(9, 432), Vector2(-7, 442)]
@@ -469,6 +469,8 @@ func _prepare_map() -> void:
 	var rain := RAIN_VEIL.new()
 	rain.name = "Rain"
 	rain.z_index = 11
+	if not wilderness:
+		rain.shelter_bounds = EstateLayout.PAVILION_SHELTER_BOUNDS
 	add_child(rain)
 	_add_landmark_labels()
 	_install_boundaries()
@@ -563,7 +565,8 @@ func _process(delta: float) -> void:
 	var creek_distance := absf(foot.x - creek_x(foot.y)) if wilderness else INF
 	var birds_distance := foot.distance_to(BERRY_GROVE) if wilderness else INF
 	var cricket_distance := foot.distance_to(BERRY_GROVE if wilderness else SOUTH_PAVILION)
-	AudioManager.set_world_ambience(creek_distance, birds_distance, cricket_distance)
+	var under_roof := not wilderness and EstateLayout.PAVILION_SHELTER_FLOOR.has_point(foot)
+	AudioManager.set_world_ambience(creek_distance, birds_distance, cricket_distance, under_roof)
 	for sprite in scenery:
 		if not sprite.visible:
 			continue
@@ -624,7 +627,8 @@ func _surface_at(foot: Vector2) -> TERRAIN_AUDIO.Surface:
 		if absf(foot.y - FORD.y) < CROSSING_HALF_DEPTH and absf(foot.x - creek_x(foot.y)) < WATER_HALF_WIDTH:
 			return TERRAIN_AUDIO.Surface.SHALLOWS
 	else:
-		if get_parent().irrigation_overlay.footbridge_at(to_global(foot)):
+		if EstateLayout.PAVILION_SHELTER_FLOOR.has_point(foot) \
+				or get_parent().irrigation_overlay.footbridge_at(to_global(foot)):
 			return TERRAIN_AUDIO.Surface.PLANK
 		for field in Global.well_fields:
 			if _field_bounds(field["center_pos"]).has_point(foot):

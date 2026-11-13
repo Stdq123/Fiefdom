@@ -84,7 +84,7 @@ func _wait_for_progress(progress: float) -> void:
 func _lamps_on(lighting: CanvasModulate) -> int:
 	var count := 0
 	for lamp in lighting.lamps:
-		if lamp.visible and lamp.glow.enabled:
+		if lamp.is_visible_in_tree() and lamp.glow.enabled:
 			count += 1
 	return count
 
@@ -203,8 +203,10 @@ func _rest_at_hall() -> bool:
 	var hall := world.get_node("HallRest") as Node2D
 	var lighting: CanvasModulate = world.get_node("Landscape/DayLighting")
 	await Campaign.walk_to(tree, world.player, hall.global_position + Vector2(4, 14))
+	var visible_lamps: Array = lighting.lamps.filter(func(lamp: Node2D) -> bool: return lamp.is_visible_in_tree())
 	_expect(hall.get_node("InteractionHint").visible and ui.hud.watch_label.text == "亥时"
-		and _lamps_on(lighting) == lighting.lamps.size(), "The estate remains lit at night and the hall offers its evening action.")
+		and not visible_lamps.is_empty() and _lamps_on(lighting) == visible_lamps.size(),
+		"The estate remains lit at night and the hall offers its evening action.")
 	await _capture("04-hall-night")
 	await _key(KEY_E)
 	var plan := ui.get_node_or_null("Control/NightRationsPanel") as Control

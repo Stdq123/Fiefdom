@@ -223,9 +223,10 @@ func duty_place(data: RetainerData) -> String:
 	return DUTY_STATIONS[data.duty]["place"]
 
 func path_to_pavilion_seat(from: Vector2, seat: Vector2) -> Array[Vector2]:
-	var table := pavilion_rest.position
+	var table := pavilion_rest.gathering_center()
 	var path: Array[Vector2] = []
-	if from.distance_to(table) > 56.0:
+	var coming_from_road := from.distance_to(table) > 56.0
+	if coming_from_road:
 		var start := from
 		if start.x < 0.0 and start.y < 146.0:
 			start.x = 17.0 # Pass the east side of the silk shed.
@@ -235,6 +236,13 @@ func path_to_pavilion_seat(from: Vector2, seat: Vector2) -> Array[Vector2]:
 			start = LANDSCAPE.EAST_LANE_JUNCTION
 		path.append_array(Array(_follow_lane(LANDSCAPE.ESTATE_SOUTH_LANE, start, EstateLayout.PAVILION_JUNCTION)))
 		path.append_array(EstateLayout.PAVILION_COURT.slice(0, -1))
+	if pavilion_rest.is_rain_shelter():
+		var approach := pavilion_rest.gathering_approach()
+		if coming_from_road:
+			path.append_array(EstateLayout.PAVILION_SHELTER_PATH)
+		elif from.y >= approach.y:
+			path.append(approach)
+	elif coming_from_road:
 		if seat.y < table.y:
 			path.append(table + Vector2(-27, -14))
 		elif seat.x > table.x:

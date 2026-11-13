@@ -375,7 +375,8 @@ func _on_retainer_interacted(data: RetainerData) -> void:
 	directions.arrive_at(data.name)
 	world.set_channel_mode(false)
 	var actor := world.retainer_instances.get(data) as Retainer
-	dialog_manager.show_retainer_dialog(data, actor != null and actor.resting_at_pavilion())
+	var rest := actor.pavilion_note() if actor and actor.resting_at_pavilion() else ""
+	dialog_manager.show_retainer_dialog(data, rest)
 
 func _on_rotation_book_interacted() -> void:
 	world.set_channel_mode(false)
@@ -503,6 +504,13 @@ func _update_visitor_note(data: VisitorData) -> void:
 		hud.visitor_label.text = "%s已留下，可到%s找他。" % [resident.name, world.duty_place(resident)]
 	else:
 		hud.visitor_label.text = "今日无客来访。"
+	if world.pavilion_rest.is_rain_shelter() and Global.current_day != 1:
+		var sheltered: PackedStringArray = []
+		for resident: Retainer in world.retainer_instances.values():
+			if resident.resting_at_pavilion():
+				sheltered.append(resident.data.name)
+		if not sheltered.is_empty():
+			hud.visitor_label.text += "\n%s在南路亭避雨。" % "、".join(sheltered)
 	if Global.defense_review_ready():
 		if data and data.name == VisitorData.EAST_WATCHER:
 			hud.visitor_label.text += " 可复盘守备。"

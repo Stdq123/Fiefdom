@@ -303,11 +303,12 @@ func _return_speech(speaker: String, following: String) -> String:
 		speech += "\n" + following
 	return speech
 
-func show_retainer_dialog(data: RetainerData, at_pavilion := false) -> void:
+func show_retainer_dialog(data: RetainerData, pavilion_note: String) -> void:
 	if parent_node.has_node("DialoguePanel") or not Global.retainers.has(data):
 		return
-	var context := "门客 · 南路亭" if at_pavilion else "门客 · " + data.duty_name()
-	var evening := data.evening_line() if at_pavilion else ""
+	var at_pavilion := not pavilion_note.is_empty()
+	var context := pavilion_note if at_pavilion else "门客 · " + data.duty_name()
+	var evening := data.evening_line(Global.has_rain()) if at_pavilion else ""
 	if data.name == VisitorData.FIELD_KEEPER:
 		_show_field_keeper(context, data.get_appearance_texture(), data.resident_line(), evening)
 		return
@@ -315,11 +316,13 @@ func show_retainer_dialog(data: RetainerData, at_pavilion := false) -> void:
 	var disabled: Array[int] = []
 	var favor := _add_favor_option(data.name, options, disabled)
 	options.append("离开")
-	var speech := data.resident_line()
-	if at_pavilion:
-		speech = evening + "\n" + speech if favor.is_valid() else evening
+	var usual := data.resident_line()
+	var speech := usual
 	if not favor.is_valid():
 		speech = _council_reaction(data.name, speech)
+	if at_pavilion:
+		var has_follow_up := favor.is_valid() or speech != usual
+		speech = evening + "\n" + speech if has_follow_up else evening
 	var dialog = _open(data.name, context, speech,
 		options, disabled, data.get_appearance_texture())
 	if favor.is_valid():

@@ -82,12 +82,13 @@ func _ready() -> void:
 			field_sounds.append(load(path))
 	_sync_score.call_deferred()
 
-func set_world_ambience(creek_distance: float, birds_distance: float, cricket_distance: float) -> void:
+func set_world_ambience(creek_distance: float, birds_distance: float, cricket_distance: float,
+		under_roof := false) -> void:
 	var season := Global.season_index()
 	var birds := birds_distance if season != Global.Season.WINTER else INF
 	var crickets := cricket_distance if season in [Global.Season.SUMMER, Global.Season.AUTUMN] else INF
 	terrain_audio.set_ambience(creek_distance, Global.has_rain(), birds, crickets,
-		Global.dusk_amount(), Global.is_indoors())
+		Global.dusk_amount(), under_roof or Global.is_indoors())
 
 func _sync_score() -> void:
 	var scene := get_tree().current_scene

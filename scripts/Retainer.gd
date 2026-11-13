@@ -52,7 +52,7 @@ func _physics_process(delta: float) -> void:
 	if is_queued_for_deletion():
 		return
 	if evening_seat.is_finite():
-		if not get_parent().pavilion_rest.visible:
+		if get_parent().pavilion_rest.seat_for(data) != evening_seat:
 			set_state(State.IDLE)
 		elif is_instance_valid(observer) and observer.conversation_open:
 			velocity = Vector2.ZERO
@@ -78,8 +78,8 @@ func _stand_at_stop() -> void:
 	if current_state != State.WORK and not tool_gesture.visible and is_instance_valid(observer):
 		sprite.face(observer.global_position - global_position)
 	elif resting_at_pavilion():
-		var table: Node2D = get_parent().pavilion_rest
-		sprite.face(table.global_position - global_position)
+		var pavilion: PavilionRest = get_parent().pavilion_rest
+		sprite.face(pavilion.gathering_center() - position)
 	sprite.stand(Vector2(0, 2) if resting_at_pavilion() else tool_gesture.body_lean)
 
 func resting_at_pavilion() -> bool:
@@ -88,6 +88,8 @@ func resting_at_pavilion() -> bool:
 func pavilion_note() -> String:
 	if not evening_seat.is_finite():
 		return ""
+	if Global.has_rain():
+		return "南路亭 · 檐下避雨" if resting_at_pavilion() else "正往南路亭避雨"
 	return "南路亭 · 灯下歇脚" if resting_at_pavilion() else "正往南路亭"
 
 func restore_evening() -> void:

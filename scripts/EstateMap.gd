@@ -109,8 +109,8 @@ func _collect_places() -> void:
 		places.insert(2, _entry(Category.PLACES, "堂前", "进屋可研读、歇息和更衣", _node_point(hall), true, icons.get(LANDSCAPE.Prop.HALL)))
 	var pavilion: PavilionRest = world.pavilion_rest
 	if pavilion.visible:
-		var approach := world.to_local(pavilion.to_global(PavilionRest.APPROACH))
-		places.append(_entry(Category.PLACES, PavilionRest.PLACE, "与门客说话、查看今夜口粮", approach))
+		var detail := "门客在亭檐下避雨，可交谈或查看今夜口粮" if pavilion.is_rain_shelter() else "与门客说话、查看今夜口粮"
+		places.append(_entry(Category.PLACES, pavilion.gathering_name(), detail, pavilion.gathering_approach()))
 	_add_built_place("药圃", "采药处", "HerbGarden")
 	var relief := Global.watch_relief_day() > 0
 	var watch_detail := "拦索已备" if Global.watch_snare_armed else ("巡粮已到，查看到货记录" if relief else "查看守备口信")

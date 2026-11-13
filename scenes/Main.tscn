@@ -21,6 +21,7 @@
 [ext_resource type="Texture2D" path="res://assets/world/gathering-bell-rack.svg" id="17_bell_rack"]
 [ext_resource type="Script" path="res://scripts/RoadRest.gd" id="18_road_rest"]
 [ext_resource type="Script" path="res://scripts/PavilionRest.gd" id="41_pavilion_rest"]
+[ext_resource type="Texture2D" uid="uid://bmdm6ik4ep8rr" path="res://assets/world/pavilion-rain-shelter.svg" id="pavilion_rain_shelter"]
 [ext_resource type="Script" path="res://scripts/FieldRotationBook.gd" id="19_rotation_book"]
 [ext_resource type="Script" path="res://scripts/MeadowButterfly.gd" id="20_butterfly"]
 [ext_resource type="Script" path="res://scripts/EstateDirections.gd" id="21_directions"]
@@ -453,12 +454,24 @@ theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
 
+[node name="PavilionRainShelter" type="Sprite2D" parent="World"]
+texture_filter = 1
+position = Vector2(260, 397)
+z_index = -2
+texture = ExtResource("pavilion_rain_shelter")
+centered = false
+offset = Vector2(-46, -45)
+
 [node name="PavilionRest" type="Node2D" parent="World" groups=["interactable"]]
 position = Vector2(151, 436)
 script = ExtResource("41_pavilion_rest")
 
 [node name="Mats" type="Node2D" parent="World/PavilionRest"]
 z_index = -1
+
+[node name="DryLamps" type="Node2D" parent="World/PavilionRest"]
+
+[node name="RainLamps" type="Node2D" parent="World/PavilionRest"]
 
 [node name="Hint" type="Label" parent="World/PavilionRest"]
 visible = false

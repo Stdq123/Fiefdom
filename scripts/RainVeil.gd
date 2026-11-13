@@ -1,6 +1,7 @@
 extends Node2D
 
 var elapsed := 0.0
+var shelter_bounds := Rect2()
 
 func _ready() -> void:
 	GameEvents.day_advanced.connect(_refresh.unbind(1))
@@ -24,5 +25,9 @@ func _draw() -> void:
 		var x := fposmod(float(drop * 137) - elapsed * (61.0 + 7.0 * lane), view_size.x + 40.0)
 		var y := fposmod(float(drop * 109) + elapsed * (232.0 + 23.0 * lane), view_size.y + 40.0)
 		var point := Vector2(x - 20.0, y - 20.0).floor()
-		draw_line(screen_to_map * point, screen_to_map * (point + Vector2(-4, 13 + lane * 3)),
+		var start := screen_to_map * point
+		var finish := screen_to_map * (point + Vector2(-4, 13 + lane * 3))
+		if shelter_bounds.has_point(start) or shelter_bounds.has_point(finish):
+			continue
+		draw_line(start, finish,
 			Color(0.69, 0.81, 0.78, 0.23 + lane * 0.055), 0.6)
