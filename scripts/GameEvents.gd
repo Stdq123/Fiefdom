@@ -59,6 +59,7 @@ signal raid_started()
 signal raid_defeated()
 signal east_watch_built()
 signal east_watch_read_requested()
+signal watch_snare_changed()
 
 # Phase 3 Signals
 signal visitor_interacted(data: VisitorData)

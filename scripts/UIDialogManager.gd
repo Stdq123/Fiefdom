@@ -392,11 +392,29 @@ func show_east_watch() -> void:
 		context = "第 %d 天 · %s" % [note["day"], Global.get_current_solar_term(note["day"])]
 		lines.append("击退%s，%s。%s。\n封地至今击退 %d 次敌袭。" % [
 			Global.raid_name(note["kind"]), defender, Global.defense_loss_note(), Global.raids_defeated])
+		if note.get("snare", false):
+			lines.append("东路拦索绊住了来敌，给守田的人留出了放箭的工夫。")
 	var relief := Global.watch_relief_day()
 	if relief > 0:
 		lines.append("第 %d 天，南路送到两份稷、一份菽和一束麻。巡粮已分袋，新麻绳系上了岗旗。" % relief)
 	if not lines.is_empty():
-		_open(title, context, "\n\n".join(lines), ["合上"], [], preload("res://assets/world/east-watch.svg"))
+		lines.append(Global.watch_snare_status())
+		var options: Array[String] = ["合上"]
+		var disabled: Array[int] = []
+		if Global.can_prepare_watch_snare():
+			var from_relief := Global.watch_snare_relief_available()
+			options.push_front("布拦索（用换防麻）" if from_relief else "布拦索（麻 ×1）")
+			if not from_relief and Global.crop_stock.count("hemp") == 0:
+				disabled.append(0)
+		var can_arm := options.size() == 2
+		var dialog := _open(title, context, "\n\n".join(lines), options, disabled, preload("res://assets/world/east-watch.svg"))
+		if not disabled.is_empty():
+			dialog.options_container.get_child(0).tooltip_text = "私仓还缺一束麻"
+		if can_arm:
+			dialog.option_selected.connect(func(index: int):
+				if index == 0:
+					Global.prepare_watch_snare()
+			)
 
 func show_gathering_guest(data: VisitorData) -> void:
 	if parent_node.has_node("DialoguePanel") or not Global.is_gathering_day():

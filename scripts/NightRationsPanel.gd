@@ -6,6 +6,7 @@ signal dry_plot_requested
 signal harvest_requested
 signal tribute_field_requested
 signal sleep_requested
+signal east_watch_requested
 
 const GOOD := Color("#c7dcaf")
 const SHORT := Color("#efbf8a")
@@ -20,6 +21,7 @@ const WINDOW_MARGIN := 16.0
 @onready var raid_plan: PanelContainer = %RaidPlan
 @onready var raid_heading: Label = %RaidHeading
 @onready var raid_instructions: Label = %RaidInstructions
+@onready var find_watch: Button = %FindWatch
 @onready var tribute_plan: PanelContainer = %TributePlan
 @onready var tribute_deadline: Label = %TributeDeadline
 @onready var tribute_details: Label = %TributeDetails
@@ -72,6 +74,10 @@ func _ready() -> void:
 	find_plot.pressed.connect(dry_plot_requested.emit)
 	find_harvest.pressed.connect(harvest_requested.emit)
 	find_tribute.pressed.connect(tribute_field_requested.emit)
+	find_watch.pressed.connect(func():
+		queue_free()
+		east_watch_requested.emit()
+	)
 	page_button.pressed.connect(func(): _show_page(not show_previous))
 	%Market.pressed.connect(func():
 		queue_free()
@@ -101,6 +107,7 @@ func _ready() -> void:
 	GameEvents.day_advanced.connect(_refresh.unbind(1))
 	GameEvents.raid_started.connect(_refresh_raid_plan)
 	GameEvents.raid_defeated.connect(_refresh_raid_plan)
+	GameEvents.watch_snare_changed.connect(_refresh_raid_plan)
 	_refresh()
 	_show_page(show_previous)
 	close_button.grab_focus()
@@ -296,6 +303,9 @@ func _refresh_raid_plan() -> void:
 		instructions = "过夜前可先收成熟作物。" + instructions
 	if Global.retainers.any(func(worker: RetainerData) -> bool: return worker.can_take_duty(RetainerData.Duty.GUARD)):
 		instructions += "\n可在「管理」中安排兵家门客守卫。"
+	if Global.watch_snare_armed or Global.raid_snare_left >= 0.0 or (not active and Global.can_prepare_watch_snare()):
+		instructions += "\n" + Global.watch_snare_status()
+	find_watch.visible = not active and Global.can_prepare_watch_snare()
 	raid_instructions.text = instructions
 
 func _refresh_fields() -> void:

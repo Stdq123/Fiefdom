@@ -129,6 +129,7 @@ class_name BalanceData
 @export_range(0.1, 3.0, 0.05) var dog_bite_windup := 0.55
 @export_range(0.1, 3.0, 0.05) var scout_shot_windup := 0.75
 @export_range(0.1, 4.0, 0.05) var raid_crop_windup := 1.2
+@export_range(0.5, 5.0, 0.1) var raid_snare_seconds := 2.4
 @export_range(0.1, 5.0, 0.05) var enemy_recovery := 1.65
 @export_range(1, 10000) var raid_first_day: int = 9
 @export_range(1, 10000) var raid_interval_days: int = 8

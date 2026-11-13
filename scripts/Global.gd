@@ -79,10 +79,13 @@ var health: int
 var raid_day := 0
 var raid_kind := 0
 var raid_health := -1
+var raid_snare_left := -1.0 # Negative until the raid reaches the snare.
 var raids_defeated := 0
 var raid_crop_losses := 0
 var last_defense: Dictionary = {}
 var east_watch_day := 0
+var watch_snare_armed := false
+var watch_snare_relief_used_day := 0
 var last_forage_day := 0
 var last_fishing_day := 0
 var ravine_trip_target := ""
@@ -262,10 +265,13 @@ func _reset_campaign() -> void:
 	raid_day = 0
 	raid_kind = 0
 	raid_health = -1
+	raid_snare_left = -1.0
 	raids_defeated = 0
 	raid_crop_losses = 0
 	last_defense.clear()
 	east_watch_day = 0
+	watch_snare_armed = false
+	watch_snare_relief_used_day = 0
 	last_forage_day = 0
 	last_fishing_day = 0
 	ravine_trip_target = ""
@@ -1423,6 +1429,7 @@ func begin_raid(day: int) -> bool:
 	raid_day = day
 	raid_kind = raid_kind_on(day)
 	raid_health = -1
+	raid_snare_left = -1.0
 	raid_crop_losses = 0
 	GameEvents.raid_started.emit()
 	return true
@@ -1430,9 +1437,11 @@ func begin_raid(day: int) -> bool:
 func defeat_raid(guard_name := "") -> void:
 	if raid_day == 0:
 		return
-	last_defense = {"day": current_day, "kind": raid_kind, "losses": raid_crop_losses, "guard": guard_name}
+	last_defense = {"day": current_day, "kind": raid_kind, "losses": raid_crop_losses, "guard": guard_name,
+		"snare": raid_snare_left >= 0.0}
 	raid_day = 0
 	raid_health = -1
+	raid_snare_left = -1.0
 	raid_crop_losses = 0
 	raids_defeated += 1
 	GameEvents.raid_defeated.emit()
@@ -1454,6 +1463,43 @@ func review_defense() -> bool:
 func defense_loss_note() -> String:
 	var losses: int = last_defense.get("losses", 0)
 	return "作物全保住了" if losses == 0 else "损失 %d 格作物" % losses
+
+func can_prepare_watch_snare() -> bool:
+	return (outcome == Outcome.RUNNING and raid_day == 0 and not watch_snare_armed
+		and (east_watch_day > 0 or watch_relief_day() > 0))
+
+func watch_snare_relief_available() -> bool:
+	return watch_relief_day() > watch_snare_relief_used_day
+
+func watch_snare_status() -> String:
+	if raid_day > 0 and raid_snare_left >= 0.0:
+		return "来敌正被拦索绊住。" if raid_snare_left > 0.0 else "拦索已用，来敌已经挣开。"
+	if watch_snare_armed:
+		return "拦索已架在东路，来敌经过时绊住一次。"
+	if watch_snare_relief_available():
+		return "换防留下的麻可布一次拦索。"
+	return "用一束私仓麻布拦索，可在来敌过路时绊住它。"
+
+func prepare_watch_snare() -> bool:
+	if not can_prepare_watch_snare():
+		return false
+	var relief := watch_snare_relief_available()
+	if relief:
+		watch_snare_relief_used_day = watch_relief_day()
+	elif not crop_stock.spend({"hemp": 1}):
+		return false
+	watch_snare_armed = true
+	if not relief:
+		GameEvents.inventory_changed.emit(player_inventory)
+	GameEvents.watch_snare_changed.emit()
+	GameEvents.world_notice.emit("东路已布拦索 · 来敌经过时绊住一次")
+	return true
+
+func spring_watch_snare() -> void:
+	watch_snare_armed = false
+	raid_snare_left = balance.raid_snare_seconds
+	GameEvents.watch_snare_changed.emit()
+	GameEvents.world_notice.emit("%s被东路拦索绊住 · 趁现在射箭" % raid_name(raid_kind))
 
 func forage_food() -> void:
 	if not _take_forage_slot():
@@ -2668,10 +2714,13 @@ func _save_snapshot(origin: String) -> Error:
 		"raid_day": raid_day,
 		"raid_kind": raid_kind,
 		"raid_health": raid_health,
+		"raid_snare_left": raid_snare_left,
 		"raids_defeated": raids_defeated,
 		"raid_crop_losses": raid_crop_losses,
 		"last_defense": last_defense,
 		"east_watch_day": east_watch_day,
+		"watch_snare_armed": watch_snare_armed,
+		"watch_snare_relief_used_day": watch_snare_relief_used_day,
 		"last_forage_day": last_forage_day,
 		"last_fishing_day": last_fishing_day,
 		"ravine_trip_target": ravine_trip_target,
@@ -3146,10 +3195,13 @@ func load_game(path := "") -> Error:
 	raid_day = clampi(_read_save_int(data.get("raid_day"), 0), 0, saved_day)
 	raid_kind = clampi(_read_save_int(data.get("raid_kind"), 0), 0, 1)
 	raid_health = maxi(-1, _read_save_int(data.get("raid_health"), -1))
+	raid_snare_left = clampf(_read_save_number(data.get("raid_snare_left"), -1.0), -1.0, balance.raid_snare_seconds) if raid_day > 0 else -1.0
 	raids_defeated = maxi(0, _read_save_int(data.get("raids_defeated"), 0))
 	raid_crop_losses = maxi(0, _read_save_int(data.get("raid_crop_losses"), 0)) if raid_day > 0 else 0
 	last_defense = _restore_defense(data.get("last_defense"), saved_day)
 	east_watch_day = clampi(_read_save_int(data.get("east_watch_day"), 0), 0, saved_day) if not last_defense.is_empty() else 0
+	watch_snare_armed = data.get("watch_snare_armed", false) == true
+	watch_snare_relief_used_day = clampi(_read_save_int(data.get("watch_snare_relief_used_day"), 0), 0, saved_day)
 	last_forage_day = clampi(_read_save_int(data.get("last_forage_day"), 0), 0, saved_day)
 	# Old saves used one daily record for both activities.
 	last_fishing_day = clampi(_read_save_int(data.get("last_fishing_day"), last_forage_day), 0, saved_day)
@@ -3442,6 +3494,7 @@ func _restore_defense(record: Variant, saved_day: int) -> Dictionary:
 		"kind": clampi(_read_save_int(record.get("kind"), 0), 0, 1),
 		"losses": maxi(0, _read_save_int(record.get("losses"), 0)),
 		"guard": guard.left(32) if guard is String else "",
+		"snare": record.get("snare", false) == true,
 	}
 
 func _restore_ravine_journal(record: Variant, saved_day: int) -> RavineJournal:

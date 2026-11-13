@@ -334,6 +334,8 @@ static func east_watch_line(on_guard := false) -> String:
 			shot, Global.defense_loss_note()]
 	if Global.east_watch_day == Global.current_day:
 		return "守备牌立好了。去东路岗翻开竹简，就知道上回是谁放了末一箭，田里又剩下多少。"
+	if Global.last_defense.get("snare", false) and Global.last_defense.day == Global.current_day:
+		return "来敌一脚绊在东路，那几息够我们站稳放箭。岗上的拦索用过了，改日要再架一条。"
 	var relief := Global.watch_relief_day()
 	if relief > 0 and Global.current_day - relief < SeasonOrders.TERMS_PER_SEASON:
 		return "你送的稷和菽已经分给了换岗的人。我用那束麻换了旗绳。下回从田边往东走，远远就能看见旗。"

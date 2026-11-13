@@ -883,3 +883,8 @@
 
 - 跟石墨勘渠后可在完工井田选一侧装闸，默认 12 铜钱。预览标出田沟和供水变化。木闸引水过三格，包括中央田格，可减少每天手浇。断渠和拆闸会在施工前列出停长的稻，田闸的供水状态也可在舆图查看。
 - 双井田回放花 12 铜钱接通额外两格，中央公田播稻。断水后过夜并续档，再补渠复长。第 13 天从公田收一份入国库，从渠边私田收一份入私仓。拆闸后渠边仍通水。Godot 水利回放和 Windows 双结局、战败恢复、延期研究通过。1024×768 田沟与闸口画面在不可见桌面复核。 [Windows 试玩包](../build/polish-field-gates/Fiefdom-1.0.0-Windows-x64.zip) · [装闸预览](../build/polish-field-gates/final-1024x768/07-field-gate-preview.png) · [断水画面](../build/polish-field-gates/final-1024x768/05-line-dry-again.png) · [收获回放](../build/polish-field-gates/final-1024x768/render.log)
+
+## 东岗换防与来敌拦索
+
+- 东岗可用换防送来的麻或一束私仓麻布索。每批到货可用一次。敌袭预告的「今夜安排」可指路去东岗。来敌踏到麻绳时停住，默认 2.4 秒，绳子松落并显示剩余时间。战报记下拦索是否生效，弋戎可回应这次守备。
+- 双井田回放走过西市交货、巡人送达和东岗布索。第 44 天的野狗过路被绊住，存读档恢复剩余时间，玩家射退野狗并保住一格成熟稷。另从旧式守备档核对一次扣一束私仓麻。Godot 攻防回归和 Windows 双结局、战败恢复、延期研究及换防回放通过。画面在不可见桌面取得。 [Windows 试玩包](../build/polish-watch-snare/Fiefdom-1.0.0-Windows-x64.zip) · [来敌被绊住](../build/polish-watch-snare/final-1024x768/09-raider-caught.png) · [守备牌](../build/polish-watch-snare/final-1024x768/10-snare-report.png) · [发行回放](../build/polish-watch-snare/windows-final-check/watch-relief.log)

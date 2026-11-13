@@ -34,6 +34,7 @@ param(
     [switch]$MorningRecord,
     [switch]$PavilionEvening,
     [switch]$SouthRoad,
+    [switch]$WatchRelief,
     [switch]$RavineLayout,
     [switch]$FishMarketOrders,
     [switch]$MarketWayfinding
@@ -217,6 +218,9 @@ try {
     }
     if ($PavilionEvening) {
         Start-VerifiedGame -Directory $release -Profile 'pavilion-evening' -Name 'pavilion-evening' -Replay 'pavilion-evening'
+    }
+    if ($WatchRelief) {
+        Start-VerifiedGame -Directory $release -Profile 'watch-relief' -Name 'watch-relief' -Replay 'watch-relief'
     }
     if ($SouthRoad) {
         foreach ($name in 'market-orders', 'order-preparation', 'watch-relief', 'seed-garden', 'autumn-exhibit', 'sheepfold', 'meadow-fodder') {

@@ -555,6 +555,7 @@ func _show_night_rations(show_previous := false) -> void:
 	panel.dry_plot_requested.connect(_on_night_plot_requested.bind(panel, Global.NightGrowth.DRY))
 	panel.harvest_requested.connect(_on_night_plot_requested.bind(panel, Global.NightGrowth.READY))
 	panel.tribute_field_requested.connect(_on_tribute_field_requested.bind(panel))
+	panel.east_watch_requested.connect(_guide_east_watch)
 	panel.sleep_requested.connect(func():
 		panel_manager.hide_management_panel()
 		_on_sleep_pressed()
@@ -673,6 +674,8 @@ func _on_seed_garden_requested() -> void:
 
 func _guide_east_watch() -> void:
 	directions.follow_place("东路岗", EstateLayout.EAST_WATCH)
+	if Global.is_indoors():
+		hud.practice_label.text = "已标出东路岗 · 从南门回封地"
 
 func _on_east_watch_read() -> void:
 	if directions.tracked_place == "东路岗":

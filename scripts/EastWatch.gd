@@ -3,6 +3,9 @@ extends Node2D
 const BOARD := preload("res://assets/world/east-watch.svg")
 const STORAGE := preload("res://assets/world/estate-storage.png")
 const POLE := EstateLayout.WATCH_RELIEF_POST - EstateLayout.EAST_WATCH
+const SNARE := EstateLayout.EAST_RAID_SNARE - EstateLayout.EAST_WATCH
+const SNARE_NORTH := Vector2(-1, -16)
+const SNARE_SOUTH := Vector2(1, 15)
 
 var hint: Label
 var focused := false
@@ -25,6 +28,7 @@ func _ready() -> void:
 	GameEvents.raid_started.connect(_refresh)
 	GameEvents.raid_defeated.connect(_refresh)
 	GameEvents.inventory_changed.connect(_refresh.unbind(1))
+	GameEvents.watch_snare_changed.connect(_refresh)
 	_refresh()
 
 func _refresh() -> void:
@@ -41,6 +45,8 @@ func _refresh() -> void:
 	hint.text = "东岗守备牌" if has_board else "东岗巡粮簿"
 	if Global.raid_day > 0:
 		hint.text = "东岗警旗 · 来敌"
+	elif Global.watch_snare_armed:
+		hint.text = "东岗 · 拦索已备"
 	hint.position.x = -75.0 if relief_day > 0 else -64.0
 	if readable and focused:
 		hint.text = GamepadInput.interact_hint(hint.text)
@@ -71,6 +77,29 @@ func _draw() -> void:
 		draw_line(Vector2(9, -28), Vector2(-6, -26), Color("#e28d68"), 1.0)
 	if relief_day > 0:
 		_draw_relief()
+	if Global.watch_snare_armed or Global.raid_snare_left >= 0.0:
+		_draw_snare()
+
+func _draw_snare() -> void:
+	var north := SNARE + SNARE_NORTH
+	var south := SNARE + SNARE_SOUTH
+	var anchor := north + Vector2(0, -4)
+	var stake := south + Vector2(0, -5)
+	if Global.watch_snare_armed:
+		draw_line(north + Vector2(1, 0), south + Vector2(1, 0), Color("#68513b"), 2.0)
+		draw_line(anchor, stake, Color("#513b2a"), 3.0)
+		draw_line(anchor, stake, Color("#e2b970"), 1.2)
+		var pennant := anchor.lerp(stake, 0.32)
+		draw_colored_polygon(PackedVector2Array([pennant - Vector2(1, 2), pennant + Vector2(6, 1),
+			pennant + Vector2(0, 4)]), Color("#b9684e"))
+	else:
+		draw_polyline(PackedVector2Array([anchor, north + Vector2(4, 3), SNARE + Vector2(5, -2)]), Color("#bb9361"), 1.4)
+		draw_line(stake, south + Vector2(5, -7), Color("#bb9361"), 1.4)
+	for foot: Vector2 in [north, south]:
+		draw_rect(Rect2(foot + Vector2(-3, -1), Vector2(8, 3)), Color("#72583c"))
+		draw_rect(Rect2(foot + Vector2(-2, -10), Vector2(4, 11)), Color("#594230"))
+		draw_rect(Rect2(foot + Vector2(-1, -10), Vector2(2, 8)), Color("#a0784b"))
+		draw_rect(Rect2(foot + Vector2(-2, -6), Vector2(4, 2)), Color("#c9a675"))
 
 func _draw_relief() -> void:
 	draw_rect(Rect2(POLE + Vector2(-16, -1), Vector2(26, 5)), Color("#3e4940"))

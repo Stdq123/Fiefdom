@@ -6,6 +6,7 @@ const POST_DAY := 43
 const POST_APPROACH := EstateLayout.EAST_WATCH + Vector2(-15, 0)
 const POST_CLOCK := 0.32
 const CARGO := {"sorghum": 2, "beans": 1, "hemp": 1}
+const SNARE_CROP := Vector2i(6, 5)
 
 var baseline := false
 var from_older_save := false
@@ -29,6 +30,8 @@ func run(game_tree: SceneTree) -> void:
 		elif await _follow_patrol() and await _inspect_post("04-new-flag"):
 			await _thank_the_player()
 			if not failed:
+				await _defend_with_watch_snare()
+			if not failed:
 				await _next_year()
 	if not failed:
 		print("SCENARIO_OK")
@@ -36,7 +39,8 @@ func run(game_tree: SceneTree) -> void:
 
 func _prepare_autumn() -> bool:
 	return await _fixture(AUTUMN_END, {"crop_stock": CARGO, "player_inventory": 4,
-		"retainers": [{"name": "弋戎", "school": RetainerData.School.MILITARY, "duty": RetainerData.Duty.GUARD}],
+		"active_crops": {"6,5": {"id": "sorghum", "age": 1, "growth_nights": 2, "watered": true}},
+		"retainers": [{"name": "弋戎", "school": RetainerData.School.MILITARY, "duty": RetainerData.Duty.FIELD}],
 		"east_watch_day": 10, "raids_defeated": 1, "last_defense": {"day": 9, "kind": 0, "losses": 0, "guard": "弋戎"}})
 
 func _set_clock(at: float) -> void:
@@ -147,7 +151,7 @@ func _inspect_post(frame: String) -> bool:
 		and "新麻绳" in dialog.text_label.text, "Read both the original defence and the new dated delivery from the post."):
 		return false
 	await _capture("05-watch-log")
-	await _button(dialog.options_container.get_child(0))
+	await _button(dialog.options_container.get_child(-1))
 	await _key(KEY_M)
 	var entry: Array = ui.estate_map.places.filter(func(place: Dictionary): return place.title == "东路岗")
 	_expect(entry.size() == 1 and "巡粮已到" in entry[0].detail, "The actual map shows where the delivered provisions are.")
@@ -164,6 +168,105 @@ func _thank_the_player() -> void:
 		"The actual named guard acknowledges the completed shipment."):
 		await _capture("06-guard-thanks")
 		await _button(dialog.options_container.get_child(0))
+
+func _defend_with_watch_snare() -> void:
+	state.balance.raid_first_day = 44
+	ui.hud._refresh_raid_alert()
+	await _button(ui.hud.raid_alert)
+	var prep: Control = ui.get_node_or_null("Control/NightRationsPanel")
+	if not _expect(prep != null, "The raid warning opens the evening preparation panel."):
+		return
+	await _capture("07-watch-preparation")
+	await _button(prep.find_watch)
+	_expect(ui.directions.tracked_place == "东路岗", "The warning can guide the player to prepare at the watch.")
+	await Campaign.walk_estate_road_to(tree, world, POST_APPROACH)
+	await _key(KEY_E)
+	var dialog: Control = ui.get_node_or_null("Control/DialoguePanel")
+	if not _expect(dialog != null and dialog.options_container.get_child(0).text == "布拦索（用换防麻）",
+		"The delivered hemp is offered once as the material for the snare."):
+		return
+	var tribute: int = state.king_storage
+	var hemp: int = state.crop_stock.count("hemp")
+	var food: int = state.food_storage
+	await _button(dialog.options_container.get_child(0))
+	_expect(state.watch_snare_armed and not state.watch_snare_relief_available() and state.crop_stock.count("hemp") == hemp
+		and state.food_storage == food, "Setting the snare spends the delivered hemp instead of private stock or food.")
+	await Campaign.walk_estate_road_to(tree, world, EstateLayout.EAST_RAID_SNARE + Vector2(-26, 0))
+	await _capture("08-snare-ready")
+	if not _expect(state.save_game() == OK, "Save with the snare still armed.") or not await _continue_estate():
+		return
+	_expect(state.watch_snare_armed and not state.watch_snare_relief_available(), "Continue restores the armed snare and the used shipment.")
+	await _night()
+	var enemy := tree.get_first_node_in_group("estate_raiders") as Node2D
+	if not _expect(enemy != null and state.raid_day == 44, "The next dawn starts a real estate raid."):
+		return
+	for frame in 90:
+		if not state.watch_snare_armed:
+			break
+		await tree.physics_frame
+	if not _expect(state.raid_snare_left > 0.0 and not state.watch_snare_armed and enemy.pending_attack == enemy.Attack.NONE,
+		"The raider stops at the visible snare before an attack can start."):
+		return
+	var caught_at := enemy.position
+	await tree.create_timer(0.25).timeout
+	_expect(enemy.position.distance_to(caught_at) < 0.1 and state.raid_crop_losses == 0,
+		"The raider stays in place while the snare runs down.")
+	if not _expect(state.save_game() == OK, "Save while the raider is held.") or not await _continue_estate():
+		return
+	enemy = tree.get_first_node_in_group("estate_raiders") as Node2D
+	if not _expect(enemy != null and enemy.position.distance_to(caught_at) <= 4.0
+		and state.raid_snare_left > 0.0 and state.raid_snare_left < state.balance.raid_snare_seconds,
+		"Continue restores the stopped raider and only its remaining snare time."):
+		return
+	await Campaign.walk_straight(tree, world.player, Vector2(209, 151))
+	await _capture("09-raider-caught")
+	var point := enemy.get_global_transform_with_canvas().origin + Vector2(0, -5)
+	var shot := InputEventMouseButton.new()
+	shot.position = point
+	shot.global_position = point
+	shot.button_index = MOUSE_BUTTON_RIGHT
+	shot.pressed = true
+	tree.root.push_input(shot, true)
+	shot = shot.duplicate()
+	shot.pressed = false
+	tree.root.push_input(shot, true)
+	await tree.create_timer(0.24).timeout
+	if not _expect(state.raid_day == 0 and state.raids_defeated == 2 and state.last_defense.get("snare", false)
+		and state.raid_snare_left < 0.0 and state.king_storage == tribute
+		and state.active_crops.has(SNARE_CROP) and state.last_defense.losses == 0,
+		"The real shot ends the raid, preserves the standing crop and credits the snare."):
+		return
+	await Campaign.walk_estate_road_to(tree, world, POST_APPROACH)
+	await _key(KEY_E)
+	dialog = ui.get_node_or_null("Control/DialoguePanel")
+	if _expect(dialog != null and "拦索绊住了来敌" in dialog.text_label.text
+		and "来敌正被拦索绊住" not in dialog.text_label.text
+		and dialog.options_container.get_child(0).disabled, "The watch board recalls the snare and the shipment cannot be used again."):
+		await _capture("10-snare-report")
+		await _button(dialog.options_container.get_child(-1))
+	var guard: Node2D = world.neighbor_actor(VisitorData.EAST_WATCHER)
+	await Campaign.walk_estate_road_to(tree, world, guard.global_position + Vector2(16, 0))
+	await _key(KEY_E)
+	dialog = ui.get_node_or_null("Control/DialoguePanel")
+	if _expect(dialog != null and "一脚绊在东路" in dialog.text_label.text, "The named defender acknowledges the actual snare."):
+		await _button(dialog.options_container.get_child(-1))
+	print("WATCH_SNARE day=", state.current_day, " relief=", state.watch_snare_relief_used_day, " raid_won=", state.raids_defeated)
+
+func _prepare_from_private_stock() -> void:
+	var old_record := {"day": 9, "kind": 0, "losses": 0, "guard": ""}
+	if not await _fixture(17, {"east_watch_day": 10, "last_defense": old_record,
+			"crop_stock": {"hemp": 2}, "player_inventory": 2, "retainers": []}):
+		return
+	await Campaign.walk_estate_road_to(tree, world, POST_APPROACH)
+	await _key(KEY_E)
+	var dialog: Control = ui.get_node_or_null("Control/DialoguePanel")
+	if _expect(dialog != null and dialog.options_container.get_child(0).text == "布拦索（麻 ×1）",
+		"An existing watch without a shipment offers a one-hemp purchase."):
+		await _button(dialog.options_container.get_child(0))
+		_expect(state.watch_snare_armed and not state.prepare_watch_snare()
+			and state.crop_stock.count("hemp") == 1 and state.king_storage == 4,
+			"Only one private hemp is used and a second placement cannot spend another.")
+		print("WATCH_SNARE_PRIVATE day=", state.current_day, " hemp=", state.crop_stock.count("hemp"))
 
 func _next_year() -> void:
 	if not await _fixture(61, {"player_inventory": 4, "crop_stock": CARGO,
@@ -185,3 +288,5 @@ func _next_year() -> void:
 	_expect(dialog != null and dialog.name_label.text == "东岗巡粮簿" and "第 61 天" in dialog.text_label.text,
 		"With no defence board, the new handoff date is readable on its own.")
 	print("WATCH_RELIEF_REPEAT previous=43 latest=", state.watch_relief_day())
+	if not failed:
+		await _prepare_from_private_stock()

@@ -121,6 +121,8 @@ func _spawn_raider() -> void:
 	enemy.type = Global.raid_kind
 	enemy.raid = true
 	enemy.position = Vector2(264, 152)
+	if Global.raid_snare_left > 0.0:
+		enemy.position = EstateLayout.EAST_RAID_SNARE
 	add_child(enemy)
 	print("Raid on day ", Global.raid_day, " enemy ", enemy.type)
 

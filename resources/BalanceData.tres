@@ -85,6 +85,7 @@ scout_arrow_damage = 15
 dog_bite_windup = 0.55
 scout_shot_windup = 0.75
 raid_crop_windup = 1.2
+raid_snare_seconds = 2.4
 enemy_recovery = 1.65
 raid_first_day = 9
 raid_interval_days = 8

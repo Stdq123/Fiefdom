@@ -8,9 +8,11 @@ const ARROW_SCENE := preload("res://scenes/Arrow.tscn")
 const ARROW := preload("res://scripts/Arrow.gd")
 const FLOATING_TEXT := preload("res://scenes/FloatingText.tscn")
 const GROWL := preload("res://assets/audio/combat/dog-windup.wav")
+const SNARE_SNAP := preload("res://assets/audio/plank-2.wav")
 const NO_CROP := Vector2i(-1, -1)
 const BITE_REACH := 36.0
 const BITE_HALF_ANGLE := PI / 5.0
+const SNARE_REACH := 3.0
 const WINDUP_INK := Color("#f1bc73")
 const STRIKE_INK := Color("#f08d6b")
 
@@ -32,6 +34,8 @@ var aim := Vector2.RIGHT
 var aim_point := Vector2.ZERO
 var pose_tween: Tween
 var hit_tween: Tween
+var crossing_snare := false
+var raid_player: Player
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var attack_cue: Node2D = $AttackCue
@@ -45,9 +49,15 @@ func _ready() -> void:
 	state = State.PATROL
 	if raid:
 		add_to_group("estate_raiders")
+		raid_player = world_ref.player
 		if Global.raid_health > 0:
 			health = Global.raid_health
-		_find_crop()
+		crossing_snare = Global.watch_snare_armed
+		if crossing_snare or Global.raid_snare_left > 0.0:
+			sprite.flip_h = true
+			set_collision_mask_value(2, false)
+		else:
+			_find_crop()
 
 func _setup_stats() -> void:
 	match type:
@@ -63,6 +73,20 @@ func _setup_stats() -> void:
 			sprite.texture = CharacterArt.scout()
 
 func _physics_process(delta: float) -> void:
+	if is_queued_for_deletion():
+		return
+	if raid and (crossing_snare or Global.raid_snare_left > 0.0) and raid_player.world_controls_blocked():
+		return
+	if raid and Global.raid_snare_left > 0.0:
+		Global.raid_snare_left = maxf(0.0, Global.raid_snare_left - delta)
+		attack_cue.queue_redraw()
+		if Global.raid_snare_left == 0.0:
+			_release_snare()
+			GameEvents.watch_snare_changed.emit()
+		return
+	if crossing_snare:
+		_cross_snare()
+		return
 	attack_cooldown = maxf(0.0, attack_cooldown - delta)
 	if pending_attack != Attack.NONE:
 		windup_left = maxf(0.0, windup_left - delta)
@@ -111,6 +135,24 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	if not is_zero_approx(velocity.x):
 		sprite.flip_h = velocity.x < 0.0
+
+func _cross_snare() -> void:
+	var destination := EstateLayout.EAST_RAID_SNARE
+	velocity = position.direction_to(destination) * speed
+	sprite.flip_h = velocity.x < 0.0
+	move_and_slide()
+	if position.distance_squared_to(destination) <= SNARE_REACH * SNARE_REACH:
+		crossing_snare = false
+		velocity = Vector2.ZERO
+		Global.spring_watch_snare()
+		AudioManager.play_world_sfx(SNARE_SNAP, self, -7.0, 280.0)
+		attack_cue.queue_redraw()
+
+func _release_snare() -> void:
+	set_collision_mask_value(2, true)
+	_resume_patrol()
+	if is_instance_valid(player_ref):
+		state = State.CHASE
 
 func _resume_patrol() -> void:
 	velocity = Vector2.ZERO
@@ -192,6 +234,9 @@ func _inside_bite(point: Vector2) -> bool:
 	return offset.length_squared() <= BITE_REACH * BITE_REACH and absf(aim.angle_to(offset)) <= BITE_HALF_ANGLE
 
 func _draw_attack_cue() -> void:
+	if raid and Global.raid_snare_left > 0.0:
+		_draw_snare_cue()
+		return
 	if pending_attack == Attack.NONE:
 		return
 	var progress := 1.0 - windup_left / windup_duration
@@ -221,16 +266,25 @@ func _draw_attack_cue() -> void:
 			var start := tile.position + Vector2(1, 13)
 			attack_cue.draw_line(start, start + Vector2(14 * progress, 0), ink, 1.5)
 
+func _draw_snare_cue() -> void:
+	var fraction := Global.raid_snare_left / Global.balance.raid_snare_seconds
+	attack_cue.draw_arc(Vector2(0, 1), 13.0, 0.0, TAU, 24, Color("#e8c58c9e"), 1.25)
+	var y := -41.0 if type == Type.SCOUT else -24.0
+	attack_cue.draw_rect(Rect2(-12, y, 24, 4), Color("#392d26"))
+	attack_cue.draw_rect(Rect2(-11, y + 1.0, 22.0 * fraction, 2), Color("#f4c878"))
+	attack_cue.draw_polyline(PackedVector2Array([Vector2(-7, 4), Vector2(-1, -3), Vector2(5, 5),
+		Vector2(-7, 4)]), Color("#d7b37a"), 1.1)
+
 func _on_detection_area_body_entered(body: Node2D) -> void:
 	if body is Player:
 		player_ref = body
-		if pending_attack == Attack.NONE:
+		if pending_attack == Attack.NONE and not crossing_snare:
 			state = State.CHASE
 
 func _on_detection_area_body_exited(body: Node2D) -> void:
 	if body == player_ref:
 		player_ref = null
-		if pending_attack == Attack.NONE:
+		if pending_attack == Attack.NONE and not crossing_snare:
 			_resume_patrol()
 
 func is_under_bow_pointer(world_point: Vector2) -> bool:
