@@ -210,7 +210,7 @@ func _opening_field_step(cell: Vector2i, is_public: bool) -> String:
 			return ("公田成熟了。%s收获，作物直接送入国库。" % act if is_public
 				else "私田成熟了。%s收获，作物收入私仓，也会赚到铜钱。" % act)
 		ESTATE_WORLD.FieldAction.DRY_RICE:
-			return "这格稻田断水了。接通相邻水渠后再过夜。"
+			return "这格稻田断水了。恢复供水后再过夜。"
 		ESTATE_WORLD.FieldAction.WATER:
 			var crop: Dictionary = Global.active_crops[cell]
 			return "%s浇水（%d/%d）。" % [point, crop["age"], crop["growth_nights"]]

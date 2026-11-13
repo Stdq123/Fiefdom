@@ -878,3 +878,8 @@
 
 - 首次纳贡后，谷伯每季带一份作物到西市，春菽、夏稻、秋稷、冬麦。交货簿缺该品种时可指路。买下一份进私仓，柜台和摊旁粮袋随之变为售罄，下一季补货。
 - 回放从新档实际收获开始，第 3 天花 10 铜钱补齐春单。公田纳贡、口粮和私田收获统计在购买时保持原数。回标题继续后仍售罄，第 7 天补上夏稻。Godot 资源导入、脚本加载、启动和三个相关场景通过。Windows 解压版通过双结局、战败恢复、延期研究及四个西市相关回放。1024×768 柜台和街景在不可见桌面核对。 [Windows 试玩包](../build/polish-market-produce/Fiefdom-1.0.0-Windows-x64.zip) · [谷伯柜台](../build/polish-market-produce/render-1024x768/02a-seasonal-produce.png) · [买走后的粮袋](../build/polish-market-produce/render-1024x768/02c-empty-sack.png) · [发行回放](../build/polish-market-produce/windows-check/west-market.log)
+
+## 田口闸把渠水引到井田中央
+
+- 跟石墨勘渠后可在完工井田选一侧装闸，默认 12 铜钱。预览标出田沟和供水变化。木闸引水过三格，包括中央田格，可减少每天手浇。断渠和拆闸会在施工前列出停长的稻，田闸的供水状态也可在舆图查看。
+- 双井田回放花 12 铜钱接通额外两格，中央公田播稻。断水后过夜并续档，再补渠复长。第 13 天从公田收一份入国库，从渠边私田收一份入私仓。拆闸后渠边仍通水。Godot 水利回放和 Windows 双结局、战败恢复、延期研究通过。1024×768 田沟与闸口画面在不可见桌面复核。 [Windows 试玩包](../build/polish-field-gates/Fiefdom-1.0.0-Windows-x64.zip) · [装闸预览](../build/polish-field-gates/final-1024x768/07-field-gate-preview.png) · [断水画面](../build/polish-field-gates/final-1024x768/05-line-dry-again.png) · [收获回放](../build/polish-field-gates/final-1024x768/render.log)

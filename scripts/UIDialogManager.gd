@@ -353,6 +353,8 @@ func show_water_source(starter_tiles: int, open_study: Callable, open_technology
 				watered += Global.irrigation.watered_footprint(field["center_pos"]).size()
 		context = "已有 %d 块井田接水" % Global.irrigated_well_fields()
 		text = "渠水供到 %d 格田。接水的作物过夜能长，断水的稻会停长。" % watered
+		if Global.channel_survey_day > 0:
+			text += "\n在挖渠时可从通水的一侧装田口闸，把水引过三格田。"
 		choice = "进入挖渠"
 		action = begin_digging
 		if starter_tiles > 0:

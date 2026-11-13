@@ -27,6 +27,7 @@ param(
     [switch]$AmbienceTravel,
     [switch]$EstateTerrain,
     [switch]$CanalDoors,
+    [switch]$CanalFlow,
     [switch]$FieldWorksites,
     [switch]$FieldStroke,
     [switch]$FieldRoutes,
@@ -194,6 +195,9 @@ try {
     }
     if ($EstateTerrain) {
         Start-VerifiedGame -Directory $release -Profile 'estate-terrain' -Name 'estate-terrain' -Replay 'estate-terrain'
+    }
+    if ($CanalFlow) {
+        Start-VerifiedGame -Directory $release -Profile 'canal-flow' -Name 'canal-flow' -Replay 'canal-flow'
     }
     if ($CanalDoors) {
         Start-VerifiedGame -Directory $release -Profile 'canal-doors' -Name 'canal-doors' -Replay 'canal-doors'

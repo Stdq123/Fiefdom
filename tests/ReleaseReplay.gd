@@ -137,6 +137,9 @@ func _run() -> void:
 			replay.title_art = arguments[0] == "estate-terrain-art"
 			replay.capture_path = capture_directory
 			await replay.run(tree)
+		"canal-flow":
+			var replay = load("res://tests/CanalFlowReplay.gd").new()
+			await replay.run(tree, false, capture_directory)
 		"canal-doors", "canal-doors-legacy":
 			var replay = load("res://tests/CanalDoorReplay.gd").new()
 			replay.legacy = arguments[0] == "canal-doors-legacy"

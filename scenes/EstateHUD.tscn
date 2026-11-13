@@ -567,6 +567,15 @@ custom_minimum_size = Vector2(82, 35)
 mouse_default_cursor_shape = 2
 text = "放样"
 
+[node name="FieldGateButton" type="Button" parent="SeedBelt/Stack/CanalControls"]
+visible = false
+layout_mode = 2
+unique_name_in_owner = true
+custom_minimum_size = Vector2(88, 35)
+mouse_default_cursor_shape = 2
+text = "装田口闸"
+tooltip_text = "从已通水的田边引水，沿田沟润过三格"
+
 [node name="Tools" type="HBoxContainer" parent="."]
 layout_mode = 1
 anchor_left = 0.5

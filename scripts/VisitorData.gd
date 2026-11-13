@@ -253,7 +253,7 @@ func greeting() -> String:
 
 static func water_guide_line() -> String:
 	if Global.water_review_ready():
-		return "第 %d 天，田苗靠渠水长了一夜。咱们在水口立把尺，我教你用绳放样，先看新渠要花多少钱、能润几格田。" % Global.first_channel_growth_day
+		return "第 %d 天，田苗靠渠水长了一夜。咱们在水口立把尺，我教你用绳放样。再在通水的田边装一道木闸，把水送进井田中间。" % Global.first_channel_growth_day
 	if Global.channel_survey_day > 0:
 		var fields := Global.irrigated_well_fields()
 		if fields == 0:

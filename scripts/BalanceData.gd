@@ -149,6 +149,7 @@ class_name BalanceData
 
 ## 每格水渠的建造费用
 @export_range(0, 100) var irrigation_channel_cost: int = 4
+@export_range(0, 100) var irrigation_field_gate_cost: int = 12
 
 @export_group("Rank Progression")
 @export var middle_rank_reputation: int = 100

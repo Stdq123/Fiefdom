@@ -145,6 +145,7 @@ var silk_bolts_offered := 0
 var sheepfold := Sheepfold.new()
 
 enum ChannelSite { AVAILABLE, LOCKED, BLOCKED, ALREADY_BUILT, NO_FUNDS, FOUNDATION }
+enum FieldGateSite { AVAILABLE, LOCKED, NOT_EDGE, NO_WATER, ALREADY_BUILT, NO_FUNDS }
 enum ReclamationSite { OPEN, EDGE, NEAR_FIELD, SOURCE, CANAL, ROAD, LANDMARK }
 enum CropWater { DRY, BLOCKED, HAND, CANAL, RAIN }
 enum NightGrowth { READY, DRY, BLOCKED, GROW, RIPEN }
@@ -2507,6 +2508,41 @@ func fill_channel(cell: Vector2i) -> bool:
 	GameEvents.channels_changed.emit()
 	return true
 
+func field_gate_plan(edge: Vector2i) -> Dictionary:
+	if channel_survey_day == 0 or outcome != Outcome.RUNNING:
+		return {"site": FieldGateSite.LOCKED}
+	for field in well_fields:
+		var center: Vector2i = field.center_pos
+		var side := edge - center
+		if not field.is_unlocked or not Irrigation.NEIGHBORS.has(side):
+			continue
+		var inlet := edge + side
+		var price := balance.irrigation_field_gate_cost
+		var site := FieldGateSite.AVAILABLE
+		if irrigation.field_gates.get(center) == inlet:
+			site = FieldGateSite.ALREADY_BUILT
+		elif not irrigation.gate_is_wet(inlet):
+			site = FieldGateSite.NO_WATER
+		elif money < price:
+			site = FieldGateSite.NO_FUNDS
+		return {"site": site, "center": center, "inlet": inlet, "price": price}
+	return {"site": FieldGateSite.NOT_EDGE}
+
+func build_field_gate(edge: Vector2i) -> Dictionary:
+	var plan := field_gate_plan(edge)
+	if plan.site == FieldGateSite.AVAILABLE:
+		irrigation.set_field_gate(plan.center, plan.inlet)
+		money -= plan.price
+		GameEvents.money_changed.emit(money)
+		GameEvents.channels_changed.emit()
+	return plan
+
+func remove_field_gate(center: Vector2i) -> bool:
+	if outcome != Outcome.RUNNING or not irrigation.remove_field_gate(center):
+		return false
+	GameEvents.channels_changed.emit()
+	return true
+
 func water_review_ready() -> bool:
 	return first_channel_growth_day > 0 and channel_survey_day == 0
 
@@ -2589,6 +2625,9 @@ func _save_snapshot(origin: String) -> Error:
 	var saved_channels := []
 	for cell in irrigation.channels:
 		saved_channels.append(_cell_key(cell))
+	var saved_field_gates := {}
+	for center in irrigation.field_gates:
+		saved_field_gates[_cell_key(center)] = _cell_key(irrigation.field_gates[center])
 
 	var saved_retainers := []
 	for retainer in retainers:
@@ -2677,6 +2716,7 @@ func _save_snapshot(origin: String) -> Error:
 		"field_seed_plans": saved_seed_plans,
 		"fertile_cells": saved_fertility,
 		"irrigation_channels": saved_channels,
+		"irrigation_field_gates": saved_field_gates,
 		"first_channel_growth_day": first_channel_growth_day,
 		"channel_survey_day": channel_survey_day,
 		"silk_workshop": {
@@ -3159,7 +3199,7 @@ func load_game(path := "") -> Error:
 	fertile_cells = restored_fertility
 	well_fields = restored_fields
 	last_dawn = _restore_dawn(data.get("last_dawn"), saved_day)
-	irrigation.restore(water_source, restored_channels)
+	irrigation.restore(water_source, restored_channels, _restore_field_gates(data.get("irrigation_field_gates")))
 	first_channel_growth_day = clampi(_read_save_int(data.get("first_channel_growth_day"), 0), 0, saved_day)
 	var saved_survey := _read_save_int(data.get("channel_survey_day"), 0)
 	channel_survey_day = mini(saved_survey, saved_day) if first_channel_growth_day > 0 and saved_survey >= first_channel_growth_day else 0
@@ -3422,6 +3462,16 @@ func _restore_ravine_journal(record: Variant, saved_day: int) -> RavineJournal:
 			if harvest_day >= garden_day:
 				journal.garden_harvest_day = harvest_day
 	return journal
+
+func _restore_field_gates(record: Variant) -> Dictionary[Vector2i, Vector2i]:
+	var gates: Dictionary[Vector2i, Vector2i] = {}
+	if record is Dictionary:
+		for field in well_fields:
+			var center: Vector2i = field.center_pos
+			var inlet: Variant = _read_save_cell(record.get(_cell_key(center)))
+			if field.is_unlocked and inlet != null and Irrigation.gate_side(center, inlet) != Vector2i.ZERO:
+				gates[center] = inlet
+	return gates
 
 func _cell_key(cell: Vector2i) -> String:
 	return "%d,%d" % [cell.x, cell.y]

@@ -36,6 +36,7 @@ extends Control
 @onready var canal_controls: HBoxContainer = %CanalControls
 @onready var canal_preview: Label = %CanalPreview
 @onready var survey_button: Button = %SurveyButton
+@onready var field_gate_button: Button = %FieldGateButton
 @onready var seed_slots: HBoxContainer = %SeedSlots
 @onready var manage_button: Button = %ManageButton
 @onready var sleep_button: Button = %SleepButton
@@ -363,7 +364,7 @@ func refresh_seed_calendar() -> void:
 			if saving > 0:
 				slot.tooltip_text += " · %s播少等 %d 夜" % [Global.SEASON_NAMES[crop.favored_season], saving]
 		if crop.is_water_crop:
-			slot.tooltip_text += "\n相邻水渠通水后才能种稻。断水时停长。"
+			slot.tooltip_text += "\n有渠水的田格才能种稻。断水时停长。"
 		elif crop.is_perennial:
 			slot.tooltip_text += "\n收叶后保留桑树。当令加成用于初栽。"
 		elif crop.restores_fertility:
@@ -394,6 +395,8 @@ func refresh_channel_help() -> void:
 	if survey_button.text == "取消放样":
 		keys = ("A 定起点或确认 · Menu 换弯 · B 取消" if pad
 			else "左键定起点或确认 · %s 换弯 · Esc 取消" % Preferences.key_label(KeyBindings.ROTATE))
+	elif field_gate_button.text == "取消装闸":
+		keys = "A 在金框处装闸 · B 取消" if pad else "左键在金框处装闸 · Esc 取消"
 	else:
 		keys = ("A 挖渠（%d 铜钱/格） · LT+A 填渠 · B 退出" % Global.channel_cost() if pad
 			else "左键挖渠（%d 铜钱/格） · %s+左键填渠 · Esc 退出" % [Global.channel_cost(), Preferences.key_label(KeyBindings.FILL)])
@@ -401,12 +404,17 @@ func refresh_channel_help() -> void:
 
 func refresh_survey_button() -> void:
 	survey_button.disabled = Global.channel_survey_day == 0
+	field_gate_button.visible = not survey_button.disabled
 	survey_button.tooltip_text = ("定渠线起点，查看价格再确认施工" if not survey_button.disabled else
 		"让渠水养苗过一夜，再找石墨学习放样。")
 
 func show_survey_mode(active: bool) -> void:
 	survey_button.text = "取消放样" if active else "放样"
 	show_channel_help("放样 · 先定渠线起点" if active else "把水渠接到水源")
+
+func show_field_gate_mode(active: bool) -> void:
+	field_gate_button.text = "取消装闸" if active else "装田口闸"
+	show_channel_help("选通水一侧的田边中格 · 每块井田一闸" if active else "把水渠接到水源")
 
 func _update_health(health: int) -> void:
 	health_label.text = "气血 %d / %d" % [health, Global.balance.player_max_health]

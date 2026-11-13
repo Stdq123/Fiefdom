@@ -97,6 +97,7 @@ well_field_min_distance = 4
 reclamation_cost_copper = 70
 reclamation_cost_food = 30
 irrigation_channel_cost = 4
+irrigation_field_gate_cost = 12
 
 ; 爵位晋升
 middle_rank_reputation = 100

@@ -174,6 +174,9 @@ func _collect_fields() -> void:
 						Global.NightGrowth.DRY: dry += 1
 						Global.NightGrowth.BLOCKED: blocked += 1
 			detail = "渠水 %d/9 格 · 可收 %d 格" % [watered.size(), ripe]
+			if Global.irrigation.field_gates.has(center):
+				var inlet: Vector2i = Global.irrigation.field_gates[center]
+				needs.append("田口闸通水" if Global.irrigation.gate_is_wet(inlet) else "田口闸断水")
 			if dry > 0:
 				needs.append("待浇 %d" % dry)
 			if blocked > 0:

@@ -268,7 +268,11 @@ func _connect_signals() -> void:
 	world.channel_feedback.connect(hud.show_channel_help)
 	world.irrigation_overlay.preview_changed.connect(func(message: String): hud.canal_preview.text = message)
 	world.irrigation_overlay.survey_changed.connect(hud.show_survey_mode)
+	world.irrigation_overlay.gate_mode_changed.connect(hud.show_field_gate_mode)
 	hud.survey_button.pressed.connect(world.irrigation_overlay.toggle_survey)
+	hud.field_gate_button.pressed.connect(func():
+		world.irrigation_overlay.set_gate_mode(not world.irrigation_overlay.gate_mode)
+	)
 	world.visitor_changed.connect(_update_visitor_note)
 	hud.cancel_directions.visibility_changed.connect(_refresh_opening_action)
 	hud.opening_action.pressed.connect(_on_opening_action)

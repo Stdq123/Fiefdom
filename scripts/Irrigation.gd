@@ -7,12 +7,34 @@ const UNLOCK_LITERACY_LEVEL := 3
 
 var source_cell: Vector2i = SOURCE_CANDIDATES[0]
 var channels: Dictionary[Vector2i, bool] = {}
+var field_gates: Dictionary[Vector2i, Vector2i] = {}
 var _wet_channels: Dictionary[Vector2i, int] = {}
+var _gate_water: Dictionary[Vector2i, bool] = {}
 
-func restore(source: Vector2i, saved_channels: Dictionary[Vector2i, bool]) -> void:
+func restore(source: Vector2i, saved_channels: Dictionary[Vector2i, bool], saved_gates: Dictionary[Vector2i, Vector2i] = {}) -> void:
 	source_cell = source
 	channels = saved_channels
+	field_gates = saved_gates
 	_update_flow()
+
+func set_field_gate(center: Vector2i, inlet: Vector2i) -> void:
+	field_gates[center] = inlet
+	_gate_water = gate_water(_wet_channels, field_gates)
+
+func remove_field_gate(center: Vector2i) -> bool:
+	if not field_gates.erase(center):
+		return false
+	_gate_water = gate_water(_wet_channels, field_gates)
+	return true
+
+func field_gate_center_at(edge: Vector2i) -> Variant:
+	for center in field_gates:
+		if center + (field_gates[center] - center).sign() == edge:
+			return center
+	return null
+
+func gate_is_wet(inlet: Vector2i) -> bool:
+	return inlet == source_cell or is_channel_wet(inlet)
 
 func add_channel(cell: Vector2i) -> void:
 	add_channels([cell])
@@ -35,13 +57,30 @@ func flow_distance(cell: Vector2i) -> int:
 	return 0 if cell == source_cell else _wet_channels.get(cell, -1)
 
 func supplies(cell: Vector2i) -> bool:
-	return supplied_by(cell, _wet_channels)
+	return _gate_water.has(cell) or supplied_by(cell, _wet_channels)
 
 static func supplied_by(cell: Vector2i, wet: Dictionary) -> bool:
 	for direction: Vector2i in NEIGHBORS:
 		if wet.has(cell + direction):
 			return true
 	return false
+
+func gate_water(wet: Dictionary, gates: Dictionary[Vector2i, Vector2i]) -> Dictionary[Vector2i, bool]:
+	var watered: Dictionary[Vector2i, bool] = {}
+	for center in gates:
+		var inlet := gates[center]
+		if inlet == source_cell or wet.has(inlet):
+			for cell in gate_row(center, inlet):
+				watered[cell] = true
+	return watered
+
+static func gate_row(center: Vector2i, inlet: Vector2i) -> Array[Vector2i]:
+	var side := (inlet - center).sign()
+	return [center + side, center, center - side]
+
+static func gate_side(center: Vector2i, inlet: Vector2i) -> Vector2i:
+	var offset := inlet - center
+	return offset.sign() if offset in [Vector2i(-2, 0), Vector2i(0, -2), Vector2i(2, 0), Vector2i(0, 2)] else Vector2i.ZERO
 
 func watered_footprint(center: Vector2i) -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
@@ -75,6 +114,7 @@ func repair_gaps(dry_cell: Vector2i) -> Array[Vector2i]:
 
 func _update_flow() -> void:
 	_wet_channels = _reachable(channels, source_cell)
+	_gate_water = gate_water(_wet_channels, field_gates)
 
 static func _reachable(graph: Dictionary[Vector2i, bool], origin: Vector2i) -> Dictionary[Vector2i, int]:
 	var reached: Dictionary[Vector2i, int] = {origin: 0}

@@ -293,7 +293,7 @@ func _on_herb_garden_feedback(message: String) -> void:
 	spawn_floating_text(cell, message, Color("#bad29a"))
 
 func _on_channel_survey_learned() -> void:
-	spawn_floating_text(Global.irrigation.source_cell, "立起量水尺 · 可用放样", Color("#ade2cc"))
+	spawn_floating_text(Global.irrigation.source_cell, "立起量水尺 · 可放样和装田口闸", Color("#ade2cc"))
 
 func _on_tax_reform_choice_made(choice: Global.TaxReformChoice) -> void:
 	match choice:
@@ -458,6 +458,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			if irrigation_overlay.survey_mode:
 				irrigation_overlay.cancel_survey()
 				channel_feedback.emit("放样已取消")
+			elif irrigation_overlay.gate_mode:
+				irrigation_overlay.set_gate_mode(false)
 			else:
 				set_channel_mode(false)
 			get_viewport().set_input_as_handled()
@@ -596,8 +598,15 @@ func _edit_channel(cell: Vector2i, fill: bool) -> void:
 	if irrigation_overlay.survey_mode:
 		channel_feedback.emit(irrigation_overlay.select_survey_cell(cell))
 		return
+	if irrigation_overlay.gate_mode:
+		channel_feedback.emit(irrigation_overlay.place_field_gate(cell))
+		return
 	if fill:
-		channel_feedback.emit("水渠已填平" if Global.fill_channel(cell) else "这里没有水渠")
+		var gate_center: Variant = Global.irrigation.field_gate_center_at(cell)
+		if gate_center != null and Global.remove_field_gate(gate_center):
+			channel_feedback.emit("田口闸已拆下")
+		else:
+			channel_feedback.emit("水渠已填平" if Global.fill_channel(cell) else "这里没有水渠")
 		return
 	match Global.build_channel(cell):
 		Global.ChannelSite.AVAILABLE:

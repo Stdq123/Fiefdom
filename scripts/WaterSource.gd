@@ -36,7 +36,8 @@ func _draw() -> void:
 	draw_texture(ART, Vector2(-13, -14))
 	var network := Global.irrigation
 	for direction: Vector2i in Irrigation.NEIGHBORS:
-		if network.channels.has(network.source_cell + direction):
+		var direct_gate: bool = network.field_gates.get(network.source_cell + direction * 2) == network.source_cell
+		if network.channels.has(network.source_cell + direction) or direct_gate:
 			var axis := Vector2(direction)
 			draw_line(axis * 4.0, axis * 9.0, Color("#455a48"), 7.0)
 			draw_line(axis * 3.0, axis * 9.0, WATER, 5.0)

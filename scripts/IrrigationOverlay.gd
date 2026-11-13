@@ -2,6 +2,7 @@ extends Node2D
 
 signal preview_changed(message: String)
 signal survey_changed(active: bool)
+signal gate_mode_changed(active: bool)
 
 const BANK_SHADOW := Color("#394636")
 const BANK := Color("#9c8259")
@@ -23,6 +24,7 @@ var cursor := Vector2i.ZERO
 var pointer := Vector2.ZERO
 var preview_fill := false
 var survey_mode := false
+var gate_mode := false
 var survey_start: Variant
 var horizontal_first := true
 var preview_route: Array[Vector2i] = []
@@ -34,6 +36,8 @@ var future_water: Dictionary[Vector2i, int] = {}
 var preview_site: int = Global.ChannelSite.BLOCKED
 var blocked_cell := Vector2i.ZERO
 var starter_canal: Array[Vector2i] = []
+var gate_candidates: Dictionary[Vector2i, bool] = {}
+var gate_row: Array[Vector2i] = []
 @onready var flow_ink := Node2D.new()
 @onready var crop_icons := Node2D.new()
 @onready var plan_ink := Node2D.new()
@@ -76,6 +80,8 @@ func set_editing(enabled: bool) -> void:
 		starter_canal.clear()
 		if survey_mode:
 			cancel_survey()
+		if gate_mode:
+			set_gate_mode(false)
 	_refresh_tiles()
 	_refresh_plan()
 
@@ -128,6 +134,8 @@ func toggle_survey() -> void:
 	if survey_mode:
 		cancel_survey()
 	elif editing and Global.channel_survey_day > 0:
+		if gate_mode:
+			set_gate_mode(false)
 		survey_mode = true
 		horizontal_first = true
 		survey_changed.emit(true)
@@ -142,6 +150,30 @@ func cancel_survey() -> void:
 func flip_survey() -> void:
 	horizontal_first = not horizontal_first
 	_refresh_plan()
+
+func set_gate_mode(active: bool) -> void:
+	if active and survey_mode:
+		cancel_survey()
+	gate_mode = active
+	gate_mode_changed.emit(active)
+	_refresh_plan()
+
+func place_field_gate(edge: Vector2i) -> String:
+	var plan := Global.build_field_gate(edge)
+	if plan.site == Global.FieldGateSite.AVAILABLE:
+		set_gate_mode(false)
+		AudioManager.play_ui_sfx(1.08)
+		return "田口闸已装好 · 渠水沿田沟流过三格"
+	return _gate_feedback(plan)
+
+func _gate_feedback(plan: Dictionary) -> String:
+	match plan.site:
+		Global.FieldGateSite.LOCKED: return "随石墨勘渠后可装田口闸"
+		Global.FieldGateSite.NOT_EDGE: return "选择井田边线的中间一格"
+		Global.FieldGateSite.NO_WATER: return "这一侧还没通水 · 先接上外渠"
+		Global.FieldGateSite.ALREADY_BUILT: return "这一侧已有闸口"
+		Global.FieldGateSite.NO_FUNDS: return "田口闸还差 %d 铜钱" % (plan.price - Global.money)
+		_: return ""
 
 func select_survey_cell(cell: Vector2i) -> String:
 	if cell != Global.irrigation.source_cell and not Global.RECLAMATION_BOUNDS.has_point(cell):
@@ -183,11 +215,16 @@ func _refresh_plan() -> void:
 	preview_route.clear()
 	repair_cells.clear()
 	planned_additions.clear()
+	gate_candidates.clear()
+	gate_row.clear()
 	affected_fields.clear()
 	affected_channels.clear()
 	plan_ink.queue_redraw()
 	flow_ink.queue_redraw()
 	if not editing:
+		return
+	if gate_mode:
+		_preview_gate()
 		return
 	if cursor != Global.irrigation.source_cell and not Global.RECLAMATION_BOUNDS.has_point(cursor):
 		preview_changed.emit("移到封地内的地格，查看渠水变化。")
@@ -197,27 +234,77 @@ func _refresh_plan() -> void:
 	else:
 		_preview_dig()
 
+func _preview_gate() -> void:
+	var network := Global.irrigation
+	for field: Dictionary in Global.well_fields:
+		if not field.is_unlocked:
+			continue
+		var center: Vector2i = field.center_pos
+		for direction: Vector2i in Irrigation.NEIGHBORS:
+			var inlet := center + direction * 2
+			if network.gate_is_wet(inlet) and network.field_gates.get(center) != inlet:
+				gate_candidates[center + direction] = true
+	var plan := Global.field_gate_plan(cursor)
+	if plan.has("center"):
+		gate_row = Irrigation.gate_row(plan.center, plan.inlet)
+	if plan.site not in [Global.FieldGateSite.AVAILABLE, Global.FieldGateSite.NO_FUNDS]:
+		preview_changed.emit(_gate_feedback(plan))
+		return
+	var gates := network.field_gates.duplicate()
+	gates[plan.center] = plan.inlet
+	_compare_flow(network.projected_flow([]), gates)
+	var added := 0
+	var lost := 0
+	for supplied in affected_fields.values():
+		if supplied:
+			added += 1
+		else:
+			lost += 1
+	var text := "移闸" if network.field_gates.has(plan.center) else "装闸"
+	text += " · %d 铜钱 · 接水 +%d 格" % [plan.price, added]
+	if lost > 0:
+		text += " · 失水 %d 格" % lost
+		text += _stalled_rice_note()
+	if plan.site == Global.FieldGateSite.NO_FUNDS:
+		text += " · 差 %d 铜钱" % (plan.price - Global.money)
+	preview_changed.emit(text)
+
 func _preview_fill() -> void:
 	preview_route = [cursor]
-	var exists := Global.irrigation.channels.has(cursor)
+	var network := Global.irrigation
+	var gate_center: Variant = network.field_gate_center_at(cursor)
+	if gate_center != null:
+		var gates := network.field_gates.duplicate()
+		gates.erase(gate_center)
+		preview_site = Global.ChannelSite.AVAILABLE
+		_compare_flow(network.projected_flow([]), gates)
+		preview_changed.emit("拆闸 · 失水 %d 格%s" % [affected_fields.size(), _stalled_rice_note()])
+		return
+	var exists := network.channels.has(cursor)
 	preview_site = Global.ChannelSite.AVAILABLE if exists else Global.ChannelSite.BLOCKED
 	blocked_cell = cursor
 	if not exists:
 		preview_changed.emit("填渠 · 这里是空地")
 		return
-	_compare_flow(Global.irrigation.projected_flow([], cursor))
+	_compare_flow(network.projected_flow([], cursor), network.field_gates)
+	var action := "填暗渠" if culverts.has(cursor) else "填渠"
+	preview_changed.emit("%s · 失水 %d 格%s" % [action, affected_fields.size(), _stalled_rice_note()])
+
+func _stalled_rice_note() -> String:
 	var stalled := 0
 	for cell in affected_fields:
 		var crop: Dictionary = Global.active_crops.get(cell, {})
-		if crop.get("requires_channel", false) and crop["age"] < crop["growth_nights"]:
+		if not affected_fields[cell] and crop.get("requires_channel", false) and crop.age < crop.growth_nights:
 			stalled += 1
-	var action := "填暗渠" if culverts.has(cursor) else "填渠"
-	preview_changed.emit("%s · 失水 %d 格%s" % [
-		action, affected_fields.size(), " · %d 格稻暂停" % stalled if stalled > 0 else ""])
+	return " · %d 格稻暂停" % stalled if stalled > 0 else ""
 
 func _preview_dig() -> void:
 	if not survey_mode and cursor == Global.irrigation.source_cell:
 		preview_changed.emit("水源 · 从相邻的空地引水")
+		return
+	if not survey_mode and Global.irrigation.field_gate_center_at(cursor) != null:
+		var key := "LT" if GamepadInput.active else Preferences.key_label(KeyBindings.FILL)
+		preview_changed.emit("田口闸 · 按 %s 查看拆闸影响" % key)
 		return
 	if not survey_mode and Global.irrigation.channels.has(cursor):
 		for gap in Global.irrigation.repair_gaps(cursor):
@@ -243,7 +330,7 @@ func _preview_dig() -> void:
 	elif planned_additions.is_empty():
 		preview_changed.emit("可从水源或已有水渠起步" if survey_start == null else "这段已有水渠")
 	else:
-		_compare_flow(Global.irrigation.projected_flow(planned_additions))
+		_compare_flow(Global.irrigation.projected_flow(planned_additions), Global.irrigation.field_gates)
 		var price := "%d 铜钱" % plan["cost"]
 		if preview_site == Global.ChannelSite.NO_FUNDS:
 			price += " · 差 %d" % (plan["cost"] - Global.money)
@@ -251,13 +338,14 @@ func _preview_dig() -> void:
 		var coverage := "供水 +%d 格" % affected_fields.size() if supplied else "仍需接通"
 		preview_changed.emit("挖 %d 格 · %s · %s" % [planned_additions.size(), price, coverage])
 
-func _compare_flow(next: Dictionary[Vector2i, int]) -> void:
+func _compare_flow(next: Dictionary[Vector2i, int], gates: Dictionary[Vector2i, Vector2i]) -> void:
 	future_water = next
+	var gate_water := Global.irrigation.gate_water(next, gates)
 	for cell in Global.irrigation.channels:
 		if Global.irrigation.is_channel_wet(cell) != next.has(cell):
 			affected_channels[cell] = next.has(cell)
 	for cell in tile_map.get_used_cells():
-		var supplied := Irrigation.supplied_by(cell, next)
+		var supplied := gate_water.has(cell) or Irrigation.supplied_by(cell, next)
 		if Global.irrigation.supplies(cell) != supplied:
 			affected_fields[cell] = supplied
 
@@ -312,6 +400,15 @@ func _draw_plan() -> void:
 		return
 	var gain := Color("#a0e4d3")
 	var loss := Color("#edaa83")
+	for cell in gate_candidates:
+		plan_ink.draw_rect(_cell_rect(cell).grow(-2), Color("#d5bb6f"), false, 1.4)
+	if not gate_row.is_empty():
+		var first := tile_map.map_to_local(gate_row.front())
+		var last := tile_map.map_to_local(gate_row.back())
+		var ink := gain if gate_candidates.has(cursor) else Color("#b0976a")
+		plan_ink.draw_line(first, last, ink, 1.3)
+		for cell in gate_row:
+			plan_ink.draw_circle(tile_map.map_to_local(cell), 2.0, ink)
 	for cell in culverts:
 		var cover := _cell_rect(cell).grow(-2)
 		plan_ink.draw_rect(cover, Color("#ad9b7650"))
@@ -417,7 +514,32 @@ func _draw() -> void:
 			var corner := _cell_rect(cell).position + Vector2(2, 12)
 			draw_rect(Rect2(corner, Vector2(4, 2)), Color("#dbb773"))
 
+	for center in network.field_gates:
+		_draw_field_gate(center, network.field_gates[center], network)
 	_draw_footbridges()
+
+func _draw_field_gate(center: Vector2i, inlet: Vector2i, network: Irrigation) -> void:
+	var side := (inlet - center).sign()
+	var axis := Vector2(side)
+	var across := Vector2(-axis.y, axis.x)
+	var middle := tile_map.map_to_local(center)
+	var half_span := tile_size.dot(axis.abs()) * 1.5
+	var mouth := (middle + axis * half_span).round()
+	var end := middle - axis * (half_span - 3.0)
+	var wet := network.gate_is_wet(inlet)
+	var from_outside := 0.0
+	if wet:
+		from_outside = 1.0 if inlet == network.source_cell else tile_size.dot(axis.abs()) * 0.5
+	var start := mouth + axis * from_outside
+	draw_line(start, end, BED, 4.0)
+	draw_line(start, end, WATER if wet else DRY, 2.0)
+	draw_line(mouth - across * 5.0, mouth + across * 5.0, Color("#44372a"), 5.0)
+	draw_line(mouth - across * 5.0, mouth + across * 5.0, Color("#a9814e"), 3.0)
+	for direction: float in [-1.0, 1.0]:
+		var post := mouth + across * 4.5 * direction
+		draw_rect(Rect2(post - Vector2(1, 3), Vector2(3, 6)), Color("#665038"))
+		draw_rect(Rect2(post - Vector2(0, 3), Vector2(2, 3)), Color("#d1ac73"))
+	draw_rect(Rect2(mouth - Vector2(1, 2), Vector2(3, 2)), WATER_LIGHT if wet else Color("#b68c57"))
 
 func _channel_shape(cell: Vector2i, width: float, ink: Color, offset := Vector2.ZERO) -> void:
 	var network := Global.irrigation
@@ -462,6 +584,19 @@ func _draw_flow() -> void:
 				continue
 			var streak := Vector2(3, 1) if direction.x != 0 else Vector2(1, 3)
 			flow_ink.draw_rect(Rect2(point - (streak * 0.5).floor(), streak), WATER_LIGHT)
+	for center in network.field_gates:
+		var inlet := network.field_gates[center]
+		if network.gate_is_wet(inlet):
+			var axis := Vector2((inlet - center).sign())
+			var run := tile_size.dot(axis.abs()) * 3.0
+			var mouth := tile_map.map_to_local(center) + axis * run * 0.5
+			var traveled := fposmod(water_frame - network.flow_distance(inlet) * 2.0, RIPPLE_SPACING)
+			while traveled < run - 4.0:
+				if traveled > 4.0:
+					var point := (mouth - axis * traveled).round()
+					var streak := Vector2.ONE + axis.abs() * 2.0
+					flow_ink.draw_rect(Rect2(point - (streak * 0.5).floor(), streak), WATER_LIGHT)
+				traveled += RIPPLE_SPACING
 	if editing and not preview_fill and not survey_mode:
 		for cell in starter_canal:
 			var bed := _cell_rect(cell).grow(-2)
