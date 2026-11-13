@@ -88,6 +88,16 @@ func _first_harvest() -> void:
 	var hud: Control = ui.hud
 	var public_point := tiles.get_global_transform_with_canvas() * tiles.map_to_local(PUBLIC)
 	estate.get_node("World").retainer_instances[state.retainers[0]].set_physics_process(false)
+	var journal: Control = hud.get_node("Journal")
+	var calendar: Control = hud.get_node("Calendar")
+	await tree.process_frame
+	_expect(journal.get_global_rect().end.y < 240 and calendar.get_global_rect().end.y < 190,
+		"The fresh estate HUD leaves the terrain visible below both top cards.")
+	await _button(hud.ledger_toggle)
+	_expect(hud.ledger_details.visible and hud.king_label.is_visible_in_tree(), "The ledger expands to show the treasury.")
+	await _button(hud.ledger_toggle)
+	_expect(not hud.ledger_details.visible and calendar.get_global_rect().end.y < 190,
+		"Collapsing the ledger releases the map space it covered.")
 	await _frame("04-first-field")
 	for step in 3:
 		await _click(public_point)

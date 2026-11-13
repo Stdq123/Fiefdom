@@ -631,3 +631,4 @@ vertical_alignment = 1
 layer = 8
 script = ExtResource("10_campaign")
 show_field_status = false
+backpack_trigger = NodePath("../UI/Control/EstateHUD/Tools/BackpackButton")

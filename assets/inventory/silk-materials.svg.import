@@ -1,0 +1,13 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://3uv4njyuby3g"
+path="res://.godot/imported/silk-materials.svg-b9216b368c42d01d410f5cd5d52bcd3e.res"
+
+[deps]
+
+source_file="res://assets/inventory/silk-materials.svg"
+dest_files=["res://.godot/imported/silk-materials.svg-b9216b368c42d01d410f5cd5d52bcd3e.res"]
+
+[params]

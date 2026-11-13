@@ -4,6 +4,7 @@ const MUSIC := preload("res://scripts/MusicPractice.gd")
 const REASSIGNED := {
 	KeyBindings.UP: KEY_I, KeyBindings.INTERACT: KEY_G, KeyBindings.MAP: KEY_J,
 	KeyBindings.ALMANAC: KEY_K, KeyBindings.MEAL: KEY_L, KeyBindings.RHYTHM: KEY_P,
+	KeyBindings.BACKPACK: KEY_V,
 	KeyBindings.FILL: KEY_T, KeyBindings.ROTATE: KEY_U, &"seed_1": KEY_5, &"seed_5": KEY_1,
 }
 
@@ -77,8 +78,9 @@ func _frame(name: String) -> void:
 
 func _configure(settings: Panel) -> void:
 	var page: VBoxContainer = settings.bindings_page
-	_expect(page.keys.size() == 18 and preferences.binding(KeyBindings.MAP) == KEY_M,
-		"An existing settings file without a controls section exposes all 18 defaults.")
+	_expect(page.keys.size() == KeyBindings.DEFAULTS.size() and preferences.binding(KeyBindings.MAP) == KEY_M
+		and preferences.binding(KeyBindings.UP) == KEY_I and preferences.binding(KeyBindings.BACKPACK) == KEY_B,
+		"The settings page offers Backpack on B while an older movement binding keeps I.")
 	await _button(page.keys[KeyBindings.MAP])
 	await _key(KEY_UP)
 	_expect(page.pending == KeyBindings.MAP and preferences.binding(KeyBindings.MAP) == KEY_M,
@@ -220,6 +222,23 @@ func run(host: SceneTree, directory := "", reload := false, same_process := fals
 		var old := ConfigFile.new()
 		old.set_value("audio", "master", 0.65)
 		old.set_value("game", "autosave", false)
+		_expect(old.save(preferences.PATH) == OK, "Save the settings fixture without any controls section.")
+		preferences.restore()
+		_expect(preferences.binding(KeyBindings.UP) == KEY_W and preferences.binding(KeyBindings.BACKPACK) == KEY_I,
+			"A settings file without remapped controls uses I for Backpack.")
+		old.set_value("controls", KeyBindings.UP, KEY_I)
+		old.set_value("controls", KeyBindings.LEFT, KEY_B)
+		_expect(old.save(preferences.PATH) == OK, "Save an older settings fixture that already uses I and B.")
+		preferences.restore()
+		_expect(preferences.binding(KeyBindings.UP) == KEY_I and preferences.binding(KeyBindings.LEFT) == KEY_B
+			and preferences.binding(KeyBindings.BACKPACK) == KEY_A,
+			"The next available key is used when an older file already uses both I and B.")
+		old.set_value("controls", KeyBindings.LEFT, KEY_I)
+		_expect(old.save(preferences.PATH) == OK, "Save a fixture with a duplicate older movement key.")
+		preferences.restore()
+		_expect(preferences.binding(KeyBindings.UP) == KEY_W and preferences.binding(KeyBindings.BACKPACK) == KEY_I,
+			"An older file with duplicate movement bindings still restores the defaults.")
+		old.erase_section_key("controls", KeyBindings.LEFT)
 		_expect(old.save(preferences.PATH) == OK, "Save the legacy settings fixture.")
 		preferences.restore()
 	tree.change_scene_to_file("res://scenes/Title.tscn")

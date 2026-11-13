@@ -71,6 +71,7 @@ func _setup_settings(view: Control) -> void:
 	var button := Button.new()
 	button.name = "SettingsButton"
 	button.text = "设置"
+	button.icon = HUDIcons.icon(HUDIcons.Symbol.SETTINGS)
 	button.tooltip_text = "系统设置  Esc"
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	view.add_child(button)

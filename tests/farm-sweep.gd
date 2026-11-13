@@ -102,11 +102,11 @@ func _run() -> void:
 	await _sweep(CENTER, CENTER)
 	await _sweep(LEFT, RIGHT)
 	_expect_row_feedback(ToolGesture.Action.WATER)
-	_expect(state.current_stamina == 85 and "待浇 0" in ui.hud.farm_status.text,
+	_expect(state.current_stamina == 85 and "待浇 0" in ui.hud.farm_status.tooltip_text,
 		"A watering sweep skips the already-watered center without charging again.")
 	await _sleep()
 	await _sweep(LEFT, RIGHT)
-	_expect("今夜成熟 3" in ui.hud.farm_status.text, "Tonight's forecast uses the three actual watered crops.")
+	_expect("今夜成熟 3" in ui.hud.farm_status.tooltip_text, "Tonight's forecast uses the three actual watered crops.")
 	await _sleep()
 	_expect("可收 3" in ui.hud.farm_status.text, "The morning marks all three crops as ripe.")
 	await _motion(LEFT, false)

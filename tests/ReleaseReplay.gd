@@ -77,6 +77,9 @@ func _run() -> void:
 		"title-presentation":
 			var replay = load("res://tests/TitlePresentationReplay.gd").new()
 			await replay.run(tree, capture_directory)
+		"backpack":
+			var replay = load("res://tests/BackpackReplay.gd").new()
+			await replay.run(tree, capture_directory)
 		"hall-decor", "hall-decor-legacy":
 			var replay = load("res://tests/HallDecorReplay.gd").new()
 			replay.legacy = arguments[0] == "hall-decor-legacy"

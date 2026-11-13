@@ -43,6 +43,7 @@ func _ready() -> void:
 	$Waypoint.draw.connect(_draw_waypoint)
 	player.footstep.connect(_step)
 	settings.save_resume_hint = "续档时从溪桥道较近的一侧路口继续。"
+	%SettingsButton.icon = HUDIcons.icon(HUDIcons.Symbol.SETTINGS)
 	%SettingsButton.pressed.connect(settings.show)
 	settings.visibility_changed.connect(_update_modal)
 	region_map.setup(SURVEY.Region.ROAD, func(): return player.conversation_open, Global.regional_destination,
@@ -102,7 +103,8 @@ func resume_from_market() -> bool:
 	return player.position.distance_squared_to(LAYOUT.MARKET_GATE) < player.position.distance_squared_to(LAYOUT.ESTATE_GATE)
 
 func _refresh_clock() -> void:
-	%Date.text = "第 %d 天  ·  %s  ·  %s" % [Global.current_day, Global.get_current_solar_term(), Global.day_watch_label()]
+	%Date.text = "第 %d 天 · %s · %s%s" % [Global.current_day, Global.day_watch_label(), Global.get_current_solar_term(),
+		" · 雨" if Global.has_rain() else ""]
 
 func _refresh_scheduled_guest() -> void:
 	scheduled_guest = Global.visitor_for_day(Global.current_day)

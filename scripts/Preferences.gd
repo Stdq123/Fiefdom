@@ -113,13 +113,22 @@ func _save_bindings(next: Dictionary[StringName, Key]) -> Error:
 func _read_bindings(settings: ConfigFile) -> Dictionary[StringName, Key]:
 	var keys := KeyBindings.DEFAULTS.duplicate()
 	var used := {}
+	var needs_backpack_key := not settings.has_section_key("controls", KeyBindings.BACKPACK)
 	for action in keys:
+		if needs_backpack_key and action == KeyBindings.BACKPACK:
+			continue
 		var value: Variant = settings.get_value("controls", action, keys[action])
 		if value is int and KeyBindings.accepts(action, value as Key):
 			keys[action] = value as Key
 		if used.has(keys[action]):
 			return KeyBindings.DEFAULTS.duplicate()
 		used[keys[action]] = true
+	if needs_backpack_key and used.has(keys[KeyBindings.BACKPACK]):
+		# Older settings may already use I. Reserve their keys before assigning the new action.
+		for candidate: int in [KEY_B] + range(KEY_A, KEY_Z + 1):
+			if not used.has(candidate):
+				keys[KeyBindings.BACKPACK] = candidate as Key
+				break
 	return keys
 
 func _install_bindings() -> void:

@@ -97,8 +97,8 @@ script = ExtResource("1_hud")
 layout_mode = 1
 offset_left = 16.0
 offset_top = 16.0
-offset_right = 348.0
-offset_bottom = 152.0
+offset_right = 332.0
+offset_bottom = 16.0
 theme_override_styles/panel = SubResource("Journal")
 
 [node name="Stack" type="VBoxContainer" parent="Journal"]
@@ -110,13 +110,16 @@ theme_override_constants/separation = 4
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Kicker" type="Label" parent="Journal/Stack/JournalHeader"]
+[node name="JournalDetails" type="Button" parent="Journal/Stack/JournalHeader"]
+unique_name_in_owner = true
 layout_mode = 2
-mouse_filter = 2
 size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+toggle_mode = true
 theme_override_font_sizes/font_size = 13
 theme_override_colors/font_color = Color(0.749, 0.7804, 0.6353, 1)
 text = "封地手记"
+tooltip_text = "展开或收起今日来客和人物近况"
 
 [node name="NeighborsButton" type="Button" parent="Journal/Stack/JournalHeader"]
 unique_name_in_owner = true
@@ -252,6 +255,7 @@ text = "兼种一格私田"
 
 [node name="VisitorLabel" type="Label" parent="Journal/Stack"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.72, 0.83, 0.69, 1)
@@ -310,10 +314,10 @@ horizontal_alignment = 1
 layout_mode = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -294.0
+offset_left = -258.0
 offset_top = 16.0
 offset_right = -16.0
-offset_bottom = 148.0
+offset_bottom = 16.0
 theme_override_styles/panel = SubResource("Ledger")
 
 [node name="Stack" type="VBoxContainer" parent="Calendar"]
@@ -333,28 +337,41 @@ unique_name_in_owner = true
 theme_override_font_sizes/font_size = 22
 text = "第 1 天"
 
-[node name="CalendarLabel" type="Label" parent="Calendar/Stack/Date"]
+[node name="WatchLabel" type="Label" parent="Calendar/Stack/Date"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 19
+theme_override_colors/font_color = Color(0.94, 0.82, 0.57, 1)
+horizontal_alignment = 2
+
+[node name="WeatherIcon" type="TextureRect" parent="Calendar/Stack/Date"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture_filter = 1
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CalendarLabel" type="Label" parent="Calendar/Stack"]
 layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(0.9373, 0.8235, 0.5686, 1)
 size_flags_horizontal = 3
-horizontal_alignment = 2
+horizontal_alignment = 0
 
 [node name="Daylight" type="HBoxContainer" parent="Calendar/Stack"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="WatchLabel" type="Label" parent="Calendar/Stack/Daylight"]
-unique_name_in_owner = true
-layout_mode = 2
-mouse_filter = 2
-theme_override_font_sizes/font_size = 14
-theme_override_colors/font_color = Color(0.9373, 0.8235, 0.5686, 1)
-
 [node name="ForecastLabel" type="Label" parent="Calendar/Stack/Daylight"]
+visible = false
 layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
@@ -367,9 +384,19 @@ horizontal_alignment = 2
 unique_name_in_owner = true
 custom_minimum_size = Vector2(68, 25)
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 13
 mouse_default_cursor_shape = 2
 text = "历书 C"
+
+[node name="LedgerToggle" type="Button" parent="Calendar/Stack/Daylight"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(76, 27)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 13
+text = "账目"
+tooltip_text = "查看爵位、声望、国库和井田"
 
 [node name="GatheringLabel" type="Label" parent="Calendar/Stack"]
 unique_name_in_owner = true
@@ -380,18 +407,25 @@ theme_override_font_sizes/font_size = 13
 theme_override_colors/font_color = Color(0.96, 0.82, 0.57, 1)
 horizontal_alignment = 2
 
-[node name="Status" type="HBoxContainer" parent="Calendar/Stack"]
+[node name="LedgerDetails" type="VBoxContainer" parent="Calendar/Stack"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Status" type="HBoxContainer" parent="Calendar/Stack/LedgerDetails"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="RankLabel" type="Label" parent="Calendar/Stack/Status"]
+[node name="RankLabel" type="Label" parent="Calendar/Stack/LedgerDetails/Status"]
 layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
 theme_override_colors/font_color = Color(0.9373, 0.8235, 0.5686, 1)
 
-[node name="ReputationLabel" type="Label" parent="Calendar/Stack/Status"]
+[node name="ReputationLabel" type="Label" parent="Calendar/Stack/LedgerDetails/Status"]
 layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
@@ -405,33 +439,43 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
+[node name="CoinIcon" type="TextureRect" parent="Calendar/Stack/Treasury"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture_filter = 1
+expand_mode = 1
+stretch_mode = 5
+
 [node name="MoneyLabel" type="Label" parent="Calendar/Stack/Treasury"]
 layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
 theme_override_font_sizes/font_size = 16
 
-[node name="KingLabel" type="Label" parent="Calendar/Stack/Treasury"]
+[node name="InventoryLabel" type="Label" parent="Calendar/Stack/Treasury"]
 layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
-theme_override_font_sizes/font_size = 16
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
 horizontal_alignment = 2
 
-[node name="Supplies" type="HBoxContainer" parent="Calendar/Stack"]
+[node name="Supplies" type="HBoxContainer" parent="Calendar/Stack/LedgerDetails"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="InventoryLabel" type="Label" parent="Calendar/Stack/Supplies"]
+[node name="KingLabel" type="Label" parent="Calendar/Stack/LedgerDetails/Supplies"]
 layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
 theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.7882, 0.8118, 0.6863, 1)
 
-[node name="WellFieldLabel" type="Label" parent="Calendar/Stack/Supplies"]
+[node name="WellFieldLabel" type="Label" parent="Calendar/Stack/LedgerDetails/Supplies"]
 layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
@@ -450,12 +494,22 @@ mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 14
 text = "昨夜结算"
 
-[node name="SaveNotice" type="Label" parent="Calendar/Stack"]
+[node name="SaveNotice" type="Label" parent="."]
 unique_name_in_owner = true
 visible = false
-layout_mode = 2
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -242.0
+offset_right = -16.0
+offset_top = -123.0
+offset_bottom = -102.0
 mouse_filter = 2
 theme_override_font_sizes/font_size = 14
+theme_override_colors/font_outline_color = Color(0.09, 0.14, 0.11, 1)
+theme_override_constants/outline_size = 3
 horizontal_alignment = 2
 
 [node name="Vitals" type="PanelContainer" parent="."]
@@ -463,9 +517,10 @@ layout_mode = 1
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 16.0
-offset_top = -113.0
-offset_right = 216.0
+offset_top = -16.0
+offset_right = 196.0
 offset_bottom = -16.0
+grow_vertical = 0
 theme_override_styles/panel = SubResource("Vitals")
 
 [node name="Stack" type="VBoxContainer" parent="Vitals"]
@@ -473,7 +528,21 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="HealthLabel" type="Label" parent="Vitals/Stack"]
+[node name="Health" type="HBoxContainer" parent="Vitals/Stack"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="HealthIcon" type="TextureRect" parent="Vitals/Stack/Health"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture_filter = 1
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HealthLabel" type="Label" parent="Vitals/Stack/Health"]
 layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
@@ -487,7 +556,21 @@ custom_minimum_size = Vector2(0, 6)
 show_percentage = false
 theme_override_styles/fill = SubResource("HealthFill")
 
-[node name="StaminaLabel" type="Label" parent="Vitals/Stack"]
+[node name="Stamina" type="HBoxContainer" parent="Vitals/Stack"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="StaminaIcon" type="TextureRect" parent="Vitals/Stack/Stamina"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(16, 16)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture_filter = 1
+expand_mode = 1
+stretch_mode = 5
+
+[node name="StaminaLabel" type="Label" parent="Vitals/Stack/Stamina"]
 layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
@@ -506,9 +589,9 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -226.0
-offset_top = -121.0
-offset_right = 226.0
+offset_left = -207.0
+offset_top = -16.0
+offset_right = 207.0
 offset_bottom = -16.0
 grow_vertical = 0
 theme_override_styles/panel = SubResource("Belt")
@@ -516,7 +599,7 @@ theme_override_styles/panel = SubResource("Belt")
 [node name="Stack" type="VBoxContainer" parent="SeedBelt"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 5
+theme_override_constants/separation = 4
 
 [node name="PinnedOrder" type="Button" parent="SeedBelt/Stack"]
 unique_name_in_owner = true
@@ -526,32 +609,35 @@ layout_mode = 2
 mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 14
 
-[node name="HelpLabel" type="Label" parent="SeedBelt/Stack"]
+[node name="BeltHeader" type="HBoxContainer" parent="SeedBelt/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 9
+
+[node name="HelpLabel" type="Label" parent="SeedBelt/Stack/BeltHeader"]
 layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
-horizontal_alignment = 1
-size_flags_vertical = 3
+size_flags_horizontal = 3
 vertical_alignment = 1
 theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.8784, 0.8353, 0.6863, 1)
 autowrap_mode = 3
 
-[node name="SeedSlots" type="HBoxContainer" parent="SeedBelt/Stack"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_constants/separation = 5
-unique_name_in_owner = true
-alignment = 1
-
-[node name="FarmStatus" type="Button" parent="SeedBelt/Stack"]
+[node name="FarmStatus" type="Button" parent="SeedBelt/Stack/BeltHeader"]
 layout_mode = 2
 unique_name_in_owner = true
-size_flags_horizontal = 4
 mouse_default_cursor_shape = 2
 tooltip_text = "打开舆图查看田务并指路"
 theme_override_font_sizes/font_size = 13
 theme_override_colors/font_color = Color(0.745, 0.83, 0.718, 1)
+
+[node name="SeedSlots" type="HBoxContainer" parent="SeedBelt/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+unique_name_in_owner = true
+alignment = 1
 
 [node name="CanalControls" type="HBoxContainer" parent="SeedBelt/Stack"]
 visible = false
@@ -590,11 +676,12 @@ tooltip_text = "从已通水的田边引水，沿田沟润过三格"
 layout_mode = 1
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -215.0
+offset_left = -258.0
 offset_top = 16.0
-offset_right = 215.0
+offset_right = 258.0
 offset_bottom = 55.0
 mouse_filter = 2
+grow_horizontal = 2
 theme_override_constants/separation = 7
 alignment = 1
 
@@ -621,6 +708,12 @@ custom_minimum_size = Vector2(99, 0)
 mouse_default_cursor_shape = 2
 text = "舆图  M"
 tooltip_text = "查看封地、井田和来客"
+
+[node name="BackpackButton" type="Button" parent="Tools"]
+layout_mode = 2
+custom_minimum_size = Vector2(99, 0)
+mouse_default_cursor_shape = 2
+text = "背包  I"
 
 [node name="SettingsButton" type="Button" parent="Tools"]
 layout_mode = 2
@@ -697,9 +790,9 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -224.0
-offset_top = -106.0
+offset_top = -93.0
 offset_right = -16.0
-offset_bottom = -72.0
+offset_bottom = -62.0
 mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 16
 text = "今夜安排"
@@ -711,7 +804,7 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = -224.0
-offset_top = -64.0
+offset_top = -54.0
 offset_right = -16.0
 offset_bottom = -16.0
 mouse_filter = 2
@@ -721,7 +814,7 @@ theme_override_constants/separation = 8
 layout_mode = 2
 unique_name_in_owner = true
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 mouse_default_cursor_shape = 2
 text = "管理"
 tooltip_text = "查看门客、物资和六艺"
@@ -730,7 +823,7 @@ tooltip_text = "查看门客、物资和六艺"
 layout_mode = 2
 unique_name_in_owner = true
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 mouse_default_cursor_shape = 2
 text = "睡觉"
 tooltip_text = "结束今天，恢复体力"

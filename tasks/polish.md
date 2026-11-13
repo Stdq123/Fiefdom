@@ -959,3 +959,9 @@
 
 - 第一天浇好公田后，可在手记里兼种一格私田，也可继续按原指引走。回放第三天完成首贡和首茬私收，国库和私仓各得一份，另赚 5 铜钱。「今夜安排」可从田务预测直接标出成熟田格。 [兼种指引](../build/polish-art-resolution/opening-1024/04b-private-plot.png) · [第三天收成](../build/polish-art-resolution/opening-final-1280/04c-same-morning-harvests.png)
 - 修正了西廊等处因登记顺序靠后而未点亮的夜灯。堂屋、蚕棚提示在 3× 镜头下使用清晰字体。Godot 的开局、昼夜、田务、手柄输入与室内回放通过。实机画面在独立桌面核对。 [西廊灯笼对照](../build/hall-daylight/west-court-before-after.png) · [蚕棚织机提示](../build/polish-world-text/silk-1280/04-first-bolt.png) · [Windows 试玩包](../build/polish-opening-followup/Fiefdom-1.0.0-Windows-x64.zip)
+
+## 背包与常驻界面
+
+- 封地、竹涧、溪桥道和西市都有背包按钮。默认 I 打开或关闭，旧键位保留。面板读取已有库存，按私仓作物、鱼篓和工艺材料显示实际数量。随身路餐可直接食用。打开时暂停时辰，Esc 或手柄 B 关闭。 [背包](../build/polish-art-resolution/hud-pack-final-1024/02-private-crops.png)
+- 借鉴《星露谷物语》实机中分开的日期栏、快捷栏和详细菜单。封地右上常驻时辰、天气、铜钱和粮食，账目详情可展开，左上来客近况也可收起。七个种槽收窄，田务按钮优先显示可收、待浇和断水。气血、体力、背包和天气使用原创小图标。 [官方实机图库](https://www.stardewvalley.net/media/) · [封地 1280×720](../build/polish-art-resolution/hud-final-1280/04-first-field.png) · [1024×768 窗口](../build/polish-art-resolution/hud-final-1024/04b-private-plot.png)
+- 在两种窗口尺寸的独立桌面核对 HUD 和背包。回放覆盖手柄打开和关闭、舆图与设置互斥、保存后读档、旧键位和实际食用路餐。 [Windows 试玩包](../build/polish-hud/Fiefdom-1.0.0-Windows-x64.zip) · [Windows 验证](../build/polish-hud/windows-final/backpack.log)

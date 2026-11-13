@@ -148,6 +148,12 @@ func _estate_flow() -> bool:
 	_expect(state.current_day == 3 and state.king_storage == 1 and state.player_inventory == 1 and state.money == 5,
 		"The first controller harvest sends public grain to tribute and private grain and proceeds to the player.")
 	print("GAMEPAD_FARM day=", state.current_day, " public=", state.king_storage, " private=", state.player_inventory, " copper=", state.money)
+	var campaign_hud := tree.current_scene.get_node("CampaignHUD")
+	await _click(campaign_hud.backpack_button)
+	_expect(tree.paused and campaign_hud.backpack != null and campaign_hud.backpack.items.has_node("millet"),
+		"The controller opens the backpack and sees the freshly harvested millet.")
+	await _tap(JOY_BUTTON_B)
+	_expect(not tree.paused and campaign_hud.backpack == null, "B closes the backpack and returns to the estate.")
 
 	await _tap(JOY_BUTTON_Y)
 	_expect(tree.paused and ui.estate_map.modal.visible and ui.estate_map.close_button.text.ends_with("  B"),

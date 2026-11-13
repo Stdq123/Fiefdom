@@ -43,6 +43,7 @@ func _ready() -> void:
 	player.footstep.connect(_step)
 	market_map.setup(self, destinations, $MarketWaypoint)
 	$DialogManager.setup($UI/Control, player)
+	%SettingsButton.icon = HUDIcons.icon(HUDIcons.Symbol.SETTINGS)
 	%SettingsButton.pressed.connect(settings.show)
 	counter.visibility_changed.connect(_update_modal)
 	settings.visibility_changed.connect(_update_modal)
@@ -113,7 +114,8 @@ func _update_modal() -> void:
 	player.conversation_open = settings.visible or counter.visible
 
 func _refresh_date() -> void:
-	date.text = "第 %d 天  ·  %s  ·  %s" % [Global.current_day, Global.get_current_solar_term(), Global.day_watch_label()]
+	date.text = "第 %d 天 · %s · %s%s" % [Global.current_day, Global.day_watch_label(), Global.get_current_solar_term(),
+		" · 雨" if Global.has_rain() else ""]
 
 func _refresh_stock() -> void:
 	stock.text = "%d 铜钱   ·   %d 粮食" % [Global.money, Global.food_storage]

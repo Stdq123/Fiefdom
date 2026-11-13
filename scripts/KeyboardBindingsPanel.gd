@@ -2,7 +2,7 @@ extends VBoxContainer
 
 const WALK_AND_ACTIONS: Array[StringName] = [
 	KeyBindings.UP, KeyBindings.LEFT, KeyBindings.DOWN, KeyBindings.RIGHT,
-	KeyBindings.INTERACT, KeyBindings.MAP, KeyBindings.ALMANAC, KeyBindings.MEAL, KeyBindings.RHYTHM,
+	KeyBindings.INTERACT, KeyBindings.MAP, KeyBindings.BACKPACK, KeyBindings.ALMANAC, KeyBindings.MEAL, KeyBindings.RHYTHM,
 ]
 const INSTRUCTIONS := "点击要改的键位，再按单键。已占用的键可以互换。"
 const MENU_NOTE := "方向键、回车、Tab 和 Esc 可用于通用菜单。"

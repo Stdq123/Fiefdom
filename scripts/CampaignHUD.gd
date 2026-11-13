@@ -2,8 +2,10 @@ extends CanvasLayer
 
 const GAME_THEME := preload("res://resources/game_theme.tres")
 const ESTATE_ENDING := preload("res://scenes/EstateEnding.tscn")
+const BACKPACK := preload("res://scenes/Backpack.tscn")
 
 @export var show_field_status := true
+@export var backpack_trigger: NodePath
 
 var view: Control
 var health_label: Label
@@ -20,6 +22,10 @@ var settings_open := false
 var modal_open := false
 var summary: Control
 var status: Label
+var backpack: Control
+var backpack_button: Button
+var trail_weather: TextureRect
+var sky_icons := HUDIcons.SKY.map(HUDIcons.icon)
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -31,6 +37,7 @@ func _ready() -> void:
 
 	if show_field_status:
 		_build_status()
+	_setup_backpack_button()
 	notice = Label.new()
 	notice.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	notice.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -61,6 +68,64 @@ func _ready() -> void:
 	if Global.outcome != Global.Outcome.RUNNING:
 		_show_outcome.call_deferred(Global.outcome, true)
 
+func _setup_backpack_button() -> void:
+	if backpack_trigger.is_empty():
+		backpack_button = Button.new()
+		backpack_button.name = "BackpackButton"
+		view.add_child(backpack_button)
+		backpack_button.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+		backpack_button.offset_left = 92.0
+		backpack_button.offset_right = 188.0
+		backpack_button.offset_top = 16.0
+		backpack_button.offset_bottom = 56.0
+	else:
+		backpack_button = get_node(backpack_trigger)
+	backpack_button.focus_mode = Control.FOCUS_NONE
+	backpack_button.icon = HUDIcons.icon(HUDIcons.Symbol.BACKPACK)
+	backpack_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	backpack_button.pressed.connect(_open_backpack)
+	GamepadInput.changed.connect(_refresh_backpack_shortcuts)
+	Preferences.bindings_changed.connect(_refresh_backpack_shortcuts)
+	_refresh_backpack_shortcuts()
+
+func _refresh_backpack_shortcuts() -> void:
+	backpack_button.text = "背包" if GamepadInput.active else "背包  " + Preferences.key_label(KeyBindings.BACKPACK)
+	if backpack:
+		backpack.close_button.text = "关闭  B" if GamepadInput.active else "关闭  Esc"
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_pressed() and not event.is_echo() and Preferences.matches(event, KeyBindings.BACKPACK):
+		if _open_backpack():
+			get_viewport().set_input_as_handled()
+
+func _input(event: InputEvent) -> void:
+	if not backpack or not event.is_pressed() or event.is_echo():
+		return
+	if event.is_action_pressed("ui_cancel") or Preferences.matches(event, KeyBindings.BACKPACK):
+		get_viewport().set_input_as_handled()
+		_close_backpack()
+
+func _open_backpack() -> bool:
+	var player := get_tree().get_first_node_in_group("player") as Player
+	if get_tree().paused or Global.outcome != Global.Outcome.RUNNING or modal_open or settings_open or management_open \
+			or not player or player.world_controls_blocked() or player.training_cart.visible:
+		return false
+	get_tree().paused = true
+	backpack = BACKPACK.instantiate()
+	view.add_child(backpack)
+	backpack.close_requested.connect(_close_backpack)
+	_refresh_backpack_shortcuts()
+	GamepadInput.snap_pointer_to_focus()
+	GameEvents.modal_visibility_changed.emit(true)
+	return true
+
+func _close_backpack() -> void:
+	backpack.hide()
+	backpack.queue_free()
+	backpack = null
+	get_tree().paused = Global.outcome != Global.Outcome.RUNNING
+	GameEvents.modal_visibility_changed.emit(false)
+
 func _refresh_notice_visibility() -> void:
 	notice.visible = not (management_open or settings_open or modal_open)
 
@@ -74,9 +139,18 @@ func _build_status() -> void:
 	trail_note.add_child(trail_text)
 	var trail_title := Label.new()
 	trail_title.text = "竹涧"
+	trail_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	trail_title.add_theme_font_size_override("font_size", 22)
 	trail_title.add_theme_color_override("font_color", Color("#efd291"))
-	trail_text.add_child(trail_title)
+	var title_row := HBoxContainer.new()
+	trail_text.add_child(title_row)
+	title_row.add_child(trail_title)
+	trail_weather = TextureRect.new()
+	trail_weather.custom_minimum_size = Vector2(20, 20)
+	trail_weather.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	trail_weather.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	trail_weather.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	title_row.add_child(trail_weather)
 	trail_date = Label.new()
 	trail_date.add_theme_font_size_override("font_size", 14)
 	trail_text.add_child(trail_date)
@@ -143,6 +217,7 @@ func _build_status() -> void:
 	_update_trail_stamina(Global.current_stamina)
 
 func _refresh_trail_date() -> void:
+	trail_weather.texture = sky_icons[HUDIcons.sky_index()]
 	trail_date.text = "第 %d 天 · %s · %s · %s" % [Global.current_day, Global.get_current_solar_term(),
 		Global.day_watch_label(), "雨" if Global.has_rain() else "晴"]
 
@@ -179,6 +254,8 @@ func _show_world_notice(message: String) -> void:
 func _show_outcome(outcome: Global.Outcome, saved_ending := false) -> void:
 	if is_instance_valid(summary):
 		return
+	if backpack:
+		_close_backpack()
 	get_tree().paused = true
 	if outcome in [Global.Outcome.TRADITIONAL, Global.Outcome.REFORMED]:
 		_show_ending(saved_ending)

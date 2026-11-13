@@ -301,9 +301,9 @@ func update_ui() -> void:
 	hud.refresh_rations()
 	hud.refresh_tribute()
 	hud.reputation_label.text = "声望 %d" % Global.reputation
-	hud.calendar_label.text = "第 %d 年 · %s · %s · %s" % [
-		Global.get_current_year(), Global.SEASON_NAMES[Global.season_index()], Global.get_current_solar_term(),
-		"雨润旱田" if Global.has_rain() else "晴"]
+	hud.calendar_label.text = "第 %d 年 · %s · %s" % [
+		Global.get_current_year(), Global.get_current_solar_term(),
+		"雨" if Global.has_rain() else "晴"]
 	hud.gathering_label.text = ""
 	if Global.is_gathering_day():
 		hud.gathering_label.text = "今日谷雨亭集 · 迎客曲已入簿" if Global.gathering_score() > 0 else "今日谷雨亭集 · 南路亭东"
@@ -440,7 +440,7 @@ func _refresh_opening_action() -> void:
 	hud.handover_button.visible = Global.outcome == Global.Outcome.RUNNING and not Global.first_tribute_delivered()
 	action.visible = (Global.outcome == Global.Outcome.RUNNING and not hud.cancel_directions.visible
 		and (not speaker.is_empty() or can_review_harvest))
-	hud.visitor_label.visible = speaker.is_empty() or not action.visible or can_discuss_rotation
+	hud.show_visitor_note(speaker.is_empty() or not action.visible or can_discuss_rotation)
 	if not action.visible:
 		return
 	if speaker.is_empty():

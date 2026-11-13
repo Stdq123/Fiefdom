@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="16" viewBox="0 0 48 16" shape-rendering="crispEdges">
+  <!-- Mulberry leaves, cocoons and a skein of reeled silk. -->
+  <path fill="#3e5d43" d="M2 8h1V5h2V3h2V2h5v2h2v4h-1v3h-2v2H8v1H5v1H4v-3H2z"/>
+  <path fill="#729457" d="M3 7h2V5h2V3h5v2h1v3h-1v2h-2v2H7v1H5v-2H3z"/>
+  <path fill="#b5c77d" d="M5 11h1v-1h1V8h1V7h1V5h1v1h2v.5H9.5V8H11v.5H8.5V10H7v1H6v2H5zM5 7h.5v2H5z"/>
+  <path fill="#6c5b44" d="M18 8h1V6h2V4h4v1h2v2h2v2h1v4h-2v1h-5v-1h-3v-1h-2z"/>
+  <path fill="#e1cfa3" d="M19 8h1V6h2V5h3v1h2v2h1v2h1v2h-2v1h-4v-1h-3v-1h-1z"/>
+  <path fill="#fff0c8" d="M21 7h1V6h3v.5h-2V8h-1v1h-1zM24 9h1V8h2v.5h-1V10h2v.5h-3v1h-1z"/>
+  <path fill="#b9a16f" d="M19.5 10.5h2V12h-1v-.5h-1zm4 1h1V13h-1zm3.5 0h2v.5h-2z"/>
+  <path fill="#6b543e" d="M35 4h2V3h6v1h2v2h1v6h-1v2H35v-1h-1V6h1z"/>
+  <path fill="#cbb78c" d="M36 5h2V4h4v1h2v1h1v6h-1v1h-8v-1h-1V7h1z"/>
+  <path fill="#eee0b9" d="M36 7h1V6h7v.5h-6v1h-2zM36 9h2V8h7v.5h-6v1h-3zM36 11h2v-1h7v.5h-6v1h-3z"/>
+  <path fill="#97754e" d="M39.5 4h1v9h-1zm-1 5h3v.5h-3zm4 3h1v.5h-1z"/>
+</svg>
