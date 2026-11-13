@@ -223,7 +223,7 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'watch-relief' -Name 'watch-relief' -Replay 'watch-relief'
     }
     if ($SouthRoad) {
-        foreach ($name in 'market-orders', 'order-preparation', 'watch-relief', 'seed-garden', 'autumn-exhibit', 'sheepfold', 'meadow-fodder') {
+        foreach ($name in 'market-orders', 'summer-rice', 'order-preparation', 'watch-relief', 'seed-garden', 'autumn-exhibit', 'sheepfold', 'meadow-fodder') {
             Start-VerifiedGame -Directory $release -Profile $name -Name $name -Replay $name
         }
     }

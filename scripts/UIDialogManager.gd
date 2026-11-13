@@ -384,7 +384,8 @@ func show_rotation_book(highlight_soil: Callable, open_plans: Callable) -> void:
 			open_plans.call()
 	)
 
-func show_water_source(starter_tiles: int, open_study: Callable, open_technology: Callable, begin_digging: Callable) -> void:
+func show_water_source(starter_tiles: int, rice_plots: int, open_study: Callable,
+		open_technology: Callable, begin_digging: Callable) -> void:
 	var context := "田边 · 水利"
 	var text := "通水渠能给相邻田格供水。稻要靠渠水才能播种。"
 	var choice := "去研读"
@@ -406,6 +407,9 @@ func show_water_source(starter_tiles: int, open_study: Callable, open_technology
 			if Global.money < cost:
 				text += "还差 %d 铜钱。" % (cost - Global.money)
 			choice = "标出引水位置"
+			if rice_plots > 0:
+				text += "\n这段渠可再给 %d 格私田供水，用来备稻。" % rice_plots
+				choice = "标出备稻渠线"
 	else:
 		var level := Global.player_stats.get_level(PlayerStats.Art.LITERACY)
 		var needed := Irrigation.UNLOCK_LITERACY_LEVEL
@@ -415,7 +419,7 @@ func show_water_source(starter_tiles: int, open_study: Callable, open_technology
 			action = open_technology
 		else:
 			text += "\n书艺 %d/%d 级。每天可研读一次。" % [level, needed]
-	var dialog := _open("水源", context, text, [choice, "离开"], [], WATER_SOURCE.ART)
+	var dialog := _open(Global.WATER_SOURCE, context, text, [choice, "离开"], [], WATER_SOURCE.ART)
 	dialog.option_selected.connect(func(index: int):
 		if index == 0:
 			action.call()

@@ -90,7 +90,7 @@ func _collect_places() -> void:
 			icons[landscape.scenery[sprite]] = sprite.texture
 	places = [
 		_entry(Category.PLACES, "东关", "通往竹涧", _node_point(world.get_node("EastGate")), true, icons.get(LANDSCAPE.Prop.GATE)),
-		_entry(Category.PLACES, "水源", "到泉边可查看水利研习和渠水覆盖", _cell_point(Global.irrigation.source_cell), true),
+		_entry(Category.PLACES, Global.WATER_SOURCE, "到泉边可查看水利研习和渠水覆盖", _cell_point(Global.irrigation.source_cell), true),
 		_entry(Category.PLACES, DrivingPractice.PLACE, "东关前沿坡道下行，上车穿旗门", DrivingPractice.START_POINT, true),
 		_entry(Category.PLACES, "西廊", "西关内的歇脚处，陶辛在这里理绸", EstateLayout.WEST_COURT, true,
 			icons.get(LANDSCAPE.SCENE_WEST_COURT)),
@@ -341,7 +341,10 @@ func _select(entry: Dictionary) -> void:
 			else:
 				directions.follow_place(entry.title, entry.point)
 		Category.PLACES:
-			directions.follow_place(entry.title, entry.point)
+			if entry.title == Global.WATER_SOURCE:
+				directions.follow_water_source()
+			else:
+				directions.follow_place(entry.title, entry.point)
 		Category.RAVINE:
 			directions.follow_ravine(entry.title)
 	if category == entry.kind:
@@ -354,7 +357,9 @@ func _clear_directions() -> void:
 	_refresh_destination()
 
 func follow_region_destination(place: String) -> bool:
-	if place in Global.ravine_trip_places():
+	if place == Global.WATER_SOURCE:
+		directions.follow_water_source()
+	elif place in Global.ravine_trip_places():
 		directions.follow_ravine(place)
 	else:
 		directions.follow_market(place)
@@ -607,7 +612,7 @@ func _draw_field_task(cell: Vector2i, task: int) -> void:
 
 func _draw_place(place: Dictionary) -> void:
 	var at := _map_point(place.point)
-	var color := WATER if place.title == "水源" else INK
+	var color := WATER if place.title == Global.WATER_SOURCE else INK
 	if captions.has(place.title):
 		var label := captions[place.title]
 		var connection := at.clamp(label.position, label.end)

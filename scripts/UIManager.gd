@@ -55,6 +55,8 @@ func _ready() -> void:
 		directions.follow_ravine(Global.ravine_trip_target)
 	elif Global.market_trip_target == Global.MARKET_RETURN:
 		Global.market_trip_target = ""
+	elif Global.market_trip_target == Global.WATER_SOURCE:
+		directions.follow_water_source()
 	elif Global.market_trip_target == VisitorData.SILK_MERCHANT:
 		if not directions.follow_neighbor(VisitorData.SILK_MERCHANT):
 			Global.market_trip_target = ""
@@ -226,6 +228,7 @@ func _connect_signals() -> void:
 	GameEvents.road_rest_interacted.connect(_on_road_rest_interacted)
 	GameEvents.rotation_book_interacted.connect(_on_rotation_book_interacted)
 	GameEvents.water_source_interacted.connect(_on_water_source_interacted)
+	GameEvents.water_source_directions_requested.connect(_guide_water_source)
 	GameEvents.east_watch_read_requested.connect(_on_east_watch_read)
 	GameEvents.east_watch_built.connect(update_ui)
 	GameEvents.tax_reform_triggered.connect(_on_council_invitation)
@@ -335,6 +338,9 @@ func _on_channel_mode_changed(enabled: bool) -> void:
 	if enabled:
 		hud.show_channel_help("把水渠接到水源")
 	else:
+		if world.irrigation_overlay.rice_plot_highlight.any(
+				func(cell: Vector2i) -> bool: return Global.irrigation.supplies(cell)):
+			world.select_seed("rice")
 		hud.show_seed(world.current_seed_id)
 
 func _refresh_control_hints() -> void:
@@ -371,11 +377,20 @@ func _on_rotation_book_interacted() -> void:
 	dialog_manager.show_rotation_book(world.irrigation_overlay.highlight_fertile_cells, _show_estate_management)
 
 func _on_water_source_interacted() -> void:
-	if directions.tracked_place == "水源":
+	if directions.tracked_place == Global.WATER_SOURCE:
 		directions.clear_tracking()
 	world.set_channel_mode(false)
 	var starter: Array[Vector2i] = world.irrigation_overlay.starter_canal_cells()
-	dialog_manager.show_water_source(starter.size(), _show_six_arts, _show_water_technology, _dig_from_water_source.bind(starter))
+	var rice_plots: int = world.irrigation_overlay.starter_rice_plots(starter).size()
+	dialog_manager.show_water_source(starter.size(), rice_plots,
+		_show_six_arts, _show_water_technology, _dig_from_water_source.bind(starter))
+
+func _guide_water_source() -> void:
+	world.set_channel_mode(false)
+	directions.follow_water_source()
+	panel_manager.hide_management_panel()
+	if Global.is_indoors():
+		hud.practice_label.text = "已标出水源 · 从南门回封地"
 
 func _show_water_technology() -> void:
 	panel_manager.show_management_panel()
@@ -385,7 +400,8 @@ func _dig_from_water_source(starter: Array[Vector2i]) -> void:
 	world.set_channel_mode(true)
 	if not starter.is_empty():
 		world.irrigation_overlay.show_starter_canal(starter)
-		hud.show_channel_help("从泉口沿金框挖到田边")
+		var plots: Array[Vector2i] = world.irrigation_overlay.rice_plot_highlight
+		hud.show_channel_help("从泉口沿金框挖到田边" if plots.is_empty() else "沿金框挖渠 · 青框标出备稻的私田")
 
 func _on_tax_envoy_interacted() -> void:
 	world.set_channel_mode(false)

@@ -148,6 +148,9 @@ func _refresh_route() -> void:
 	elif target == Global.MARKET_RETURN:
 		%Route.text = "回封地 →"
 		route_direction = Vector2.RIGHT
+	elif target == Global.WATER_SOURCE:
+		%Route.text = "封地 · 水源 →"
+		route_direction = Vector2.RIGHT
 	elif tracking_guest and silk_guest:
 		var foot := silk_guest.position
 		route_direction = Vector2(signf(foot.x - player.position.x), 0)

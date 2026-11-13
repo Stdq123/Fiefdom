@@ -17,10 +17,12 @@ const WAIT_INK := Color("#e3c289")
 @onready var pin_button: Button = $Current/Content/Actions/Pin
 @onready var fish_route_button: Button = $Current/Content/Actions/FishRoute
 @onready var produce_route_button: Button = $Current/Content/Actions/ProduceRoute
+@onready var water_route_button: Button = $Current/Content/Actions/WaterRoute
 @onready var silk_button: Button = $Current/Content/Actions/Silk
 @onready var next_heading: Label = $Next/Content/HeadingRow/Heading
 @onready var next_plan_button: Button = $Next/Content/HeadingRow/Plan
 @onready var next_silk_button: Button = $Next/Content/HeadingRow/Silk
+@onready var next_water_button: Button = $Next/Content/HeadingRow/WaterRoute
 @onready var next_details: Label = $Next/Content/Details
 @onready var last_receipt: Label = $LastReceipt
 
@@ -35,6 +37,8 @@ func _ready() -> void:
 	next_plan_button.toggled.connect(Global.pin_season_order.bind(true))
 	fish_route_button.pressed.connect(func(): GameEvents.ravine_trip_requested.emit(fish_route_target))
 	produce_route_button.pressed.connect(GameEvents.west_market_directions_requested.emit.bind(MarketStall.TITLES[MarketStall.Kind.GRAIN]))
+	water_route_button.pressed.connect(_follow_water_source)
+	next_water_button.pressed.connect(_follow_water_source.bind(true))
 	silk_button.pressed.connect(silk_requested.emit)
 	next_silk_button.pressed.connect(silk_requested.emit)
 	visibility_changed.connect(_refresh)
@@ -44,6 +48,8 @@ func _ready() -> void:
 	GameEvents.inventory_changed.connect(_refresh.unbind(1))
 	GameEvents.money_changed.connect(_refresh.unbind(1))
 	GameEvents.crop_harvested.connect(_refresh.unbind(1))
+	GameEvents.farm_state_changed.connect(_refresh)
+	GameEvents.channels_changed.connect(_refresh)
 	GameEvents.fish_changed.connect(_refresh)
 	GameEvents.stamina_changed.connect(_refresh.unbind(1))
 	GameEvents.silk_changed.connect(_refresh)
@@ -73,6 +79,8 @@ func _refresh() -> void:
 	pin_button.set_pressed_no_signal(pinned)
 	pin_button.text = "取消田边跟踪" if pinned else "在田边跟踪此单"
 	_refresh_produce_route(order)
+	var rice_water_gap := Global.rice_order_water_gap(schedule) if pin_button.visible else 0
+	water_route_button.visible = rice_water_gap > 0
 	silk_button.visible = not at_market and delivered_on == 0 and Global.outcome == Global.Outcome.RUNNING \
 		and int(order.get("silk", 0)) > Global.silk_workshop.bolts
 	var fish: String = order.get("fish", "")
@@ -111,7 +119,7 @@ func _refresh() -> void:
 		if silk > 0 and Global.silk_workshop.bolts - silk < target and Global.tax_reform_choice == Global.TaxReformChoice.NONE:
 			status.text += "\n交货后余 %d 匹丝绸。议税两案都要备 %d 匹。" % [Global.silk_workshop.bolts - silk, target]
 	else:
-		status.text = _preparation_notes(schedule)
+		status.text = _preparation_notes(schedule, rice_water_gap)
 	if delivered_on == 0 and not fish.is_empty() and Global.fish_count(fish) == 1:
 		var offer := Global.fish_market_offer()
 		if offer.fish == fish and offer.receipt.is_empty():
@@ -122,12 +130,14 @@ func _refresh() -> void:
 	next_heading.text = "下季预告 · 第 %d–%d 天" % [upcoming.start, upcoming.end]
 	next_details.text = "%s · %s   可留 %s" % [
 		upcoming.order.speaker, upcoming.order.title, ItemManager.describe_season_order_progress(upcoming)]
-	if upcoming.order.need.has("rice"):
+	var needs_next_water := Global.rice_order_water_gap(upcoming) > 0
+	if needs_next_water:
 		next_details.text += " · 稻须接通水渠"
 	var planning := Global.is_season_order_pinned(upcoming)
 	next_plan_button.set_pressed_no_signal(planning)
 	next_plan_button.text = "取消下季备货" if planning else "跟踪下季备货"
 	next_plan_button.visible = Global.outcome == Global.Outcome.RUNNING
+	next_water_button.visible = next_plan_button.visible and needs_next_water
 	next_silk_button.visible = next_plan_button.visible and not at_market \
 		and int(upcoming.order.get("silk", 0)) > Global.season_order_stock_for(upcoming, SeasonOrders.SILK_ITEM)
 	last_receipt.visible = delivered_on == 0 and not receipt.is_empty()
@@ -145,7 +155,11 @@ func _refresh_produce_route(order: Dictionary) -> void:
 			else "粮摊有%s · 缺 %d 铜钱" % [ItemManager.crop_label(crop), shortfall])
 		produce_route_button.disabled = shortfall > 0
 
-func _preparation_notes(schedule: Dictionary) -> String:
+func _follow_water_source(upcoming := false) -> void:
+	Global.pin_season_order(true, upcoming)
+	GameEvents.water_source_directions_requested.emit()
+
+func _preparation_notes(schedule: Dictionary, rice_water_gap: int) -> String:
 	var planted: Dictionary[String, Vector2i] = {}
 	for cell: Vector2i in Global.active_crops:
 		var crop: Dictionary = Global.active_crops[cell]
@@ -165,10 +179,12 @@ func _preparation_notes(schedule: Dictionary) -> String:
 			line += " · 私田有 %d 格已熟" % plots.x
 		if plots.y > 0:
 			line += " · 私田 %d 格未熟" % plots.y
-		line += (" · 今日播种最早第 %d 天收" % harvest_day
-			if harvest_day <= schedule.end else " · 今日新播已赶不上本季")
-		if crop.is_water_crop:
-			line += " · 需渠水"
+		if harvest_day > schedule.end:
+			line += " · 今日新播已赶不上本季"
+		elif crop.is_water_crop and rice_water_gap > 0:
+			line += " · 通渠后播种，最快第 %d 天收" % harvest_day
+		else:
+			line += " · 今日播种最早第 %d 天收" % harvest_day
 		notes.append(line)
 	var fish: String = schedule.order.get("fish", "")
 	if not fish.is_empty() and Global.fish_count(fish) == 0:

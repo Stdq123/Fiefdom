@@ -34,7 +34,8 @@ func _resume() -> void:
 func _open_sheep_trade() -> Control:
 	if world.player.position.y >= EstateLayout.FIELD_LANE_TURN.y:
 		await Campaign.walk_estate_road_to(tree, world, world.to_global(Vector2(66, 98)))
-	if not await _enter_market(world, ui):
+	await _walk(world.player, [Vector2(-181, 54), Vector2(-181, 0), Vector2(-270, -21)])
+	if not await _cross(&"ui_left", state.WEST_MARKET_SCENE):
 		return null
 	var market := tree.current_scene
 	await Campaign.walk_market_to(tree, market, market.market_map.places["绸摊"])

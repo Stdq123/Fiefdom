@@ -130,6 +130,10 @@ func follow_ravine(place: String) -> void:
 	follow_place("竹涧 · " + place, ravine_gate_point(place))
 	Global.ravine_trip_target = place
 
+func follow_water_source() -> void:
+	follow_place(Global.WATER_SOURCE, _cell_position(Global.irrigation.source_cell))
+	Global.market_trip_target = Global.WATER_SOURCE
+
 func ravine_gate_point(place: String) -> Vector2:
 	var south: bool = (Global.ravine_shortcut_open() and world.estate_player_point().y >= EstateLayout.BAMBOO_BEND.y
 		and place in [CreekFish.PLACES[CreekFish.Site.SHOAL], CreekTrap.PLACES[CreekFish.Site.SHOAL]])

@@ -14,6 +14,7 @@ const CULVERT_STONE := Color("#898475")
 const RIPPLE_SPACING := 23.0
 const RIPPLE_SPEED := 11.0
 const FERTILITY_HIGHLIGHT_SECONDS := 12.0
+const RICE_MARK := Color("#abdcc8")
 
 @onready var tile_map: TileMapLayer = get_parent()
 @onready var tile_size := Vector2(tile_map.tile_set.tile_size)
@@ -36,6 +37,7 @@ var future_water: Dictionary[Vector2i, int] = {}
 var preview_site: int = Global.ChannelSite.BLOCKED
 var blocked_cell := Vector2i.ZERO
 var starter_canal: Array[Vector2i] = []
+var rice_plot_highlight: Array[Vector2i] = []
 var gate_candidates: Dictionary[Vector2i, bool] = {}
 var gate_row: Array[Vector2i] = []
 @onready var flow_ink := Node2D.new()
@@ -68,11 +70,13 @@ func _ready() -> void:
 	GameEvents.farm_state_changed.connect(_refresh_tiles)
 	GameEvents.day_advanced.connect(_refresh_tiles.unbind(1))
 	GameEvents.day_advanced.connect(_clear_fertility_highlight.unbind(1))
+	GameEvents.day_advanced.connect(_clear_rice_plot_highlight.unbind(1))
 
 func set_editing(enabled: bool) -> void:
 	editing = enabled
 	if editing:
 		_clear_fertility_highlight()
+		_clear_rice_plot_highlight()
 	pointer = get_viewport().get_mouse_position()
 	preview_fill = Input.is_action_pressed(KeyBindings.FILL) or GamepadInput.filling
 	cursor = _pointer_cell()
@@ -88,9 +92,10 @@ func set_editing(enabled: bool) -> void:
 func starter_canal_cells() -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
 	var network := Global.irrigation
-	var field: Vector2i = Global.well_fields[0]["center_pos"]
-	var offset := field - network.source_cell
-	if (offset.x != 0 and offset.y != 0) or not network.watered_footprint(field).is_empty():
+	var center: Vector2i = Global.well_fields[0].center_pos
+	var offset := center - network.source_cell
+	var rice_gap := Global.pinned_rice_water_gap()
+	if (offset.x != 0 and offset.y != 0) or (rice_gap == 0 and not network.watered_footprint(center).is_empty()):
 		return cells
 	var axis := offset.sign()
 	# The field edge is one tile from its center. The canal ends just outside it.
@@ -98,15 +103,48 @@ func starter_canal_cells() -> Array[Vector2i]:
 		var cell := network.source_cell + axis * step
 		if not network.channels.has(cell):
 			cells.append(cell)
+	if rice_gap > 0:
+		var bank := center - axis * 2
+		var along := Vector2i(-axis.y, axis.x)
+		var plots := Global.private_rice_plots()
+		var rice := ItemManager.get_crop("rice")
+		# Continue along the outside edge so the same ditch can supply another plot.
+		for side: Vector2i in [along, -along]:
+			var yield_count := 0
+			for plot in starter_rice_plots(cells):
+				yield_count += 1 + Global.crop_rotation_bonus(plot, rice)
+			if yield_count >= rice_gap:
+				break
+			var cell := bank + side
+			var plot := cell + axis
+			if plot in plots and not network.supplies(plot) and Global.crop_night_status(plot) != Global.NightGrowth.READY \
+					and Global.check_channel_site(cell) in [Global.ChannelSite.AVAILABLE, Global.ChannelSite.NO_FUNDS]:
+				cells.append(cell)
+		if starter_rice_plots(cells).is_empty():
+			cells.clear()
 	var plan := Global.channel_build_plan(cells)
 	if plan.site not in [Global.ChannelSite.AVAILABLE, Global.ChannelSite.NO_FUNDS]:
 		cells.clear()
 	return cells
 
+func starter_rice_plots(cells: Array[Vector2i]) -> Array[Vector2i]:
+	var plots: Array[Vector2i] = []
+	if cells.is_empty() or Global.pinned_rice_water_gap() == 0:
+		return plots
+	var network := Global.irrigation
+	var projected := network.projected_flow(cells)
+	for cell in Global.private_rice_plots():
+		if (not network.supplies(cell) and Global.crop_night_status(cell) != Global.NightGrowth.READY
+				and Irrigation.supplied_by(cell, projected)):
+			plots.append(cell)
+	return plots
+
 func show_starter_canal(cells: Array[Vector2i]) -> void:
 	starter_canal = cells
+	rice_plot_highlight = starter_rice_plots(cells)
 	flow_ink.queue_redraw()
-	preview_changed.emit("引水需挖 %d 格 · 共 %d 铜钱" % [cells.size(), cells.size() * Global.channel_cost()])
+	var work := "引水需挖" if rice_plot_highlight.is_empty() else "备稻渠需挖"
+	preview_changed.emit("%s %d 格 · 共 %d 铜钱" % [work, cells.size(), cells.size() * Global.channel_cost()])
 
 func track_pointer(at: Vector2, fill: bool) -> void:
 	pointer = at
@@ -453,6 +491,10 @@ func _clear_fertility_highlight() -> void:
 		fertility_highlight = null
 		crop_icons.queue_redraw()
 
+func _clear_rice_plot_highlight() -> void:
+	rice_plot_highlight.clear()
+	crop_icons.queue_redraw()
+
 func _draw_crop_icons() -> void:
 	if editing:
 		return
@@ -462,6 +504,9 @@ func _draw_crop_icons() -> void:
 			crop_icons.draw_rect(area, Color("#ddbb6f34"))
 			crop_icons.draw_rect(area, Color("#4b4432"), false, 2.4)
 			crop_icons.draw_rect(area, Color("#f4d99c"), false, 1.0)
+	for cell in rice_plot_highlight:
+		if not Global.active_crops.has(cell) and Global.irrigation.supplies(cell):
+			crop_icons.draw_rect(_cell_rect(cell).grow(-1.5), RICE_MARK, false, 1.25)
 	for cell in Global.active_crops:
 		var crop: Dictionary = Global.active_crops[cell]
 		var at := tile_map.map_to_local(cell) + Vector2(5, 5)
@@ -602,6 +647,8 @@ func _draw_flow() -> void:
 			var bed := _cell_rect(cell).grow(-2)
 			flow_ink.draw_rect(bed, Color("#b590544d"))
 			flow_ink.draw_rect(bed, Color("#f3cd7a"), false, 1.3)
+		for cell in rice_plot_highlight:
+			flow_ink.draw_rect(_cell_rect(cell).grow(-1.5), RICE_MARK, false, 1.25)
 
 func _draw_footbridges() -> void:
 	for deck in footbridges:

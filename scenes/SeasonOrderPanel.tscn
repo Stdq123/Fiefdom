@@ -107,6 +107,14 @@ custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 
+[node name="WaterRoute" type="Button" parent="Current/Content/Actions"]
+visible = false
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+tooltip_text = "跟踪此单并指路去封地水源。"
+mouse_default_cursor_shape = 2
+text = "备稻 · 去水源"
+
 [node name="Silk" type="Button" parent="Current/Content/Actions"]
 visible = false
 custom_minimum_size = Vector2(0, 36)
@@ -145,6 +153,14 @@ layout_mode = 2
 mouse_default_cursor_shape = 2
 toggle_mode = true
 text = "跟踪下季备货"
+
+[node name="WaterRoute" type="Button" parent="Next/Content/HeadingRow"]
+visible = false
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+tooltip_text = "跟踪下季备货并指路去封地水源。"
+mouse_default_cursor_shape = 2
+text = "备稻 · 去水源"
 
 [node name="Details" type="Label" parent="Next/Content"]
 layout_mode = 2

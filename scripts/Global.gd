@@ -16,6 +16,7 @@ const SAVE_LOCATION_NAMES := {"ravine": "竹涧", "west_market": "西市", "west
 const RAVINE_TRIP_PLACES := ["野果坳", "望溪台", "柳湾", "砾滩", SummerRaft.PLACE]
 const MARKET_ORDERS := "收货牌"
 const MARKET_RETURN := "回封地"
+const WATER_SOURCE := "水源"
 const MARKET_PRODUCE := ["beans", "rice", "sorghum", "wheat"]
 const TAX_ENVOY := "召简"
 const TAX_COUNCIL_YEAR := 3
@@ -2071,6 +2072,37 @@ func season_order_stock_for(schedule: Dictionary, id: String) -> int:
 		stock -= int(SeasonOrders.cargo(current.order).get(id, 0))
 	return maxi(0, stock)
 
+func private_rice_plots() -> Array[Vector2i]:
+	var plots: Array[Vector2i] = []
+	for field in well_fields:
+		if not field.is_unlocked:
+			continue
+		var center: Vector2i = field.center_pos
+		for y in range(-1, 2):
+			for x in range(-1, 2):
+				var cell := center + Vector2i(x, y)
+				var planted: String = active_crops.get(cell, {}).get("id", "")
+				if not is_public_plot(cell) and planted in ["", "rice"]:
+					plots.append(cell)
+	return plots
+
+func rice_order_water_gap(schedule: Dictionary) -> int:
+	var needed: int = schedule.order.need.get("rice", 0)
+	if needed == 0:
+		return 0
+	var missing := needed - season_order_stock_for(schedule, "rice")
+	if missing <= 0:
+		return 0
+	var rice := ItemManager.get_crop("rice")
+	for cell in private_rice_plots():
+		if irrigation.supplies(cell) or crop_night_status(cell) == NightGrowth.READY:
+			missing -= 1 + crop_rotation_bonus(cell, rice)
+	return maxi(0, missing)
+
+func pinned_rice_water_gap() -> int:
+	var schedule := pinned_season_order()
+	return 0 if schedule.is_empty() else rice_order_water_gap(schedule)
+
 func can_deliver_season_order(schedule: Dictionary) -> bool:
 	if (outcome != Outcome.RUNNING or current_day < schedule.start or current_day > schedule.end
 			or season_order_delivered_at(schedule) > 0):
@@ -3216,7 +3248,7 @@ func load_game(path := "") -> Error:
 	var saved_waypoint: Variant = data.get("ravine_waypoint")
 	restored_ravine_waypoint = saved_waypoint if resume_scene == WILDERNESS_SCENE and saved_waypoint is String else ""
 	var saved_market_trip: Variant = data.get("market_trip_target")
-	var market_places := MarketStall.TITLES + [MARKET_ORDERS, MARKET_RETURN, VisitorData.SILK_MERCHANT, Sheepfold.MEADOW]
+	var market_places := MarketStall.TITLES + [MARKET_ORDERS, MARKET_RETURN, WATER_SOURCE, VisitorData.SILK_MERCHANT, Sheepfold.MEADOW]
 	market_trip_target = saved_market_trip if saved_market_trip is String and saved_market_trip in market_places else ""
 	market_produce_bought_on = clampi(_read_save_int(data.get("market_produce_bought_on"), 0), 0, saved_day)
 	var saved_route := _read_save_int(data.get("field_route_status"), -1)

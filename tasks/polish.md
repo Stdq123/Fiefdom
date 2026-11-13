@@ -893,3 +893,8 @@
 
 - 首年第一次谈轮作时，渠伯会说起未交的春单和截止日。私田收成入仓后，手记可打开简短选择，比较粮仓、今夜用粮与时令单。玩家可以明确用哪份作物换粮，也可以留作物、打开交货簿。完成选择后收起指引，存档保留这个状态。
 - 开局回放第 5 天收菽。转粮分支用一份菽将粮仓从 6 加到 7。留货分支保留菽并跟踪春单，第 6 天续档仍有一份菽、五份口粮。Godot 导入、脚本加载、开局与交货回放通过。Windows 解压版验证两条结局、战败恢复、延期研究及开局。1024×768 的 Vulkan 画面在不可见桌面核对。 [Windows 试玩包](../build/polish-first-harvest-choice/Fiefdom-1.0.0-Windows-x64.zip) · [首茬收成选择](../build/polish-first-harvest-choice/render-1024x768/11-first-harvest-choice.png) · [发行回放](../build/polish-first-harvest-choice/windows-check/opening.log)
+
+## 从西市春单到夏稻引水
+
+- 交货簿在夏单缺稻、现有私田供水不足时提供水源指路。本季和下季均可跟踪，路径经西市东口、溪桥道和封地西关接到泉边。泉边提供原有的研读、科技和引水操作。跟踪夏单时，渠线可沿首块井田外缘多接一格私田，报价按实际需要挖的格数计算。金框标渠，青框标出备稻私田。通水后退出施工选中稻种。
+- 从新档交春单并在西市续档，第 7 天用 12 铜钱挖三格渠，接通两格私田。第 10 天在西市交两份自种稻，国库保有首份纳贡。此专项延后敌袭，攻防继续由默认规则的双结局和东岗回放验证。水利、四季交货、备货和 Windows 南路相关回放通过。1024×768 Vulkan 画面在不可见桌面核对。 [Windows 试玩包](../build/polish-summer-rice/Fiefdom-1.0.0-Windows-x64.zip) · [溪桥道指路](../build/polish-summer-rice/delivered-1024x768/05-spring-route-on-bridge.png) · [两格私田接水](../build/polish-summer-rice/delivered-1024x768/09-two-plots-supplied.png) · [交货回放](../build/polish-summer-rice/release/summer-rice.log)

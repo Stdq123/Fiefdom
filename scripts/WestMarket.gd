@@ -50,6 +50,7 @@ func _ready() -> void:
 	GameEvents.visitor_interacted.connect(_talk_to_silk_guest)
 	GameEvents.ravine_trip_requested.connect(_follow_trip)
 	GameEvents.west_market_directions_requested.connect(_follow_trip)
+	GameEvents.water_source_directions_requested.connect(_follow_trip.bind(Global.WATER_SOURCE))
 	GameEvents.retainer_recruited.connect(_refresh_silk_guest.unbind(1))
 	GameEvents.money_changed.connect(_refresh_stock.unbind(1))
 	GameEvents.food_changed.connect(_refresh_stock.unbind(1))
