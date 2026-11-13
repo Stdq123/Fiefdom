@@ -88,6 +88,7 @@ func _record_bus(name: String, bus_name: StringName, seconds: float) -> void:
 func _night() -> void:
 	var sleep: Button = tree.current_scene.get_node("UI").sleep_button
 	await _button(sleep)
+	Campaign.confirm_optional_tribute_warning(tree.current_scene.get_node("UI"))
 	await _wait(1.07)
 
 func _check_fade(previous: AudioStreamPlayer, next: AudioStreamPlayer) -> void:

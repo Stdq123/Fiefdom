@@ -1411,7 +1411,15 @@ func _ending_memories() -> Array[String]:
 	for order: Dictionary in SeasonOrders.ORDERS + SeasonOrders.FOLLOW_UP_ORDERS:
 		var receipt: Dictionary = season_order_receipts.get(order.id, {})
 		var day: int = receipt.get("day", 0)
-		var received := relief if order.id == SeasonOrders.WATCH_RELIEF else garden_day if order.id in SeasonOrders.SEED_ORDERS else 0
+		var received := 0
+		match order.id:
+			SeasonOrders.WATCH_RELIEF: received = relief
+			SeasonOrders.WINTER_WOVEN_GOODS: received = rations_day
+			_:
+				if order.id in SeasonOrders.SEED_ORDERS:
+					received = garden_day
+				elif order.id in SeasonOrders.POND_ORDERS:
+					received = pond_day
 		if day > latest_order.get("day", 0) and received < day:
 			latest_order = {"day": day, "text": "西市收下了你备齐的「%s」。" % order.title}
 	if not latest_order.is_empty():

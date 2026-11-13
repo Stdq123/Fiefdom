@@ -89,6 +89,7 @@ func _next_season() -> bool:
 	var evening_food: int = state.food_storage
 	var meals: int = state.retainer_food_cost()
 	await _button(ui.sleep_button)
+	Campaign.confirm_optional_tribute_warning(ui)
 	await tree.create_timer(1.20).timeout
 	if not _expect(state.current_day == 31 and state.food_storage == evening_food - meals
 		and state.field_crop_is_ripe(MANUAL) and not state.active_crops.has(RICE),

@@ -21,6 +21,12 @@ func _move(action: StringName, frames: int) -> void:
 	Input.action_release(action)
 	await Campaign.wait_for_map_change(self)
 
+func _sleep() -> void:
+	var ui := current_scene.get_node("UI")
+	ui.sleep_button.pressed.emit()
+	Campaign.confirm_optional_tribute_warning(ui)
+	await create_timer(1.15).timeout
+
 func _walk(destination: Vector2) -> void:
 	await Campaign.walk_to(self, walker, destination)
 
@@ -126,8 +132,7 @@ func _run() -> void:
 	_expect(is_zero_approx(terrain.creek.volume_linear) and is_zero_approx(terrain.birds.volume_linear),
 		"Leaving Bamboo Ravine fades the local creek and birds on the shared players.")
 	_expect(state.active_crops.has(planted) and state.active_crops[planted]["watered"], "A day trip preserves the farm.")
-	current_scene.get_node("UI").sleep_button.pressed.emit()
-	await create_timer(1.15).timeout
+	await _sleep()
 	if not await _enter_trail():
 		return
 
@@ -159,8 +164,7 @@ func _run() -> void:
 	for night in range(state.SOLAR_TERMS.size() * state.balance.days_per_solar_term):
 		if state.has_rain():
 			break
-		current_scene.get_node("UI").sleep_button.pressed.emit()
-		await create_timer(1.15).timeout
+		await _sleep()
 	_expect(state.has_rain() and terrain.rain.volume_linear > 0.1 and is_zero_approx(terrain.creek.volume_linear),
 		"Rain reaches the estate after sleeping into the right solar term.")
 	if not await _enter_trail():
@@ -187,8 +191,7 @@ func _run() -> void:
 	_expect(state.food_storage == packed_food, "Packing herbs also blocks a berry harvest that day.")
 	if not await _return_home():
 		return
-	current_scene.get_node("UI").sleep_button.pressed.emit()
-	await create_timer(1.15).timeout
+	await _sleep()
 	_expect(not state.has_rain() and is_zero_approx(terrain.rain.volume_linear), "The rain fades away after the weather clears.")
 	var forage_day: int = state.last_forage_day
 	_expect(state.save_game() == OK and state.load_game() == OK, "A packed remedy saves after returning and sleeping.")

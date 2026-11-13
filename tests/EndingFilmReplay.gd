@@ -173,8 +173,10 @@ func _play_ending(traditional: bool) -> void:
 			and not rows.has("季青和你在南路亭西修了歇脚处。"), "The traditional record reflects its actual deeds.")
 	else:
 		_expect(rows[0].begins_with("新增计税收成 15 /") and "季青和你在南路亭西修了歇脚处。" in rows
-			and "弋戎把守田的战果留在东岗。" in rows and "西市收下了你备齐的「岁末麦帛」。" in rows,
-			"The reform record reflects its actual deeds and completed seasonal order.")
+			and "弋戎把守田的战果留在东岗。" in rows
+			and "阿绥把你送的麦帛搬到亭前，赶路人有了麦饼和行囊。" in rows
+			and "西市收下了你备齐的「岁末麦帛」。" not in rows,
+			"The reform ledger records the winter delivery once and leaves room for other events.")
 	await _press(ending.save_button)
 	_expect(hud.status.text == "结局已存档。", "The ledger can be stored.")
 	_expect(ending.restore_button.disabled, "A finished record or another estate cannot supply a playable checkpoint.")

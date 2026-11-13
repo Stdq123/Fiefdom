@@ -63,6 +63,7 @@ func _key(key: Key) -> void:
 func _sleep() -> void:
 	var next: int = state.current_day + 1
 	await _button(ui.sleep_button)
+	Campaign.confirm_optional_tribute_warning(ui)
 	for frame in range(240):
 		if state.current_day == next and ui.fader.mouse_filter == Control.MOUSE_FILTER_IGNORE:
 			return

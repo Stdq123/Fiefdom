@@ -45,6 +45,9 @@ param(
 $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).ProviderPath
 $packagePath = (Resolve-Path -LiteralPath $Package).ProviderPath
+if ($Capture -and -not ('Fiefdom.Tools.IsolatedDesktop' -as [type])) {
+    Add-Type -Path (Join-Path $PSScriptRoot 'IsolatedDesktop.cs')
+}
 if (-not $EvidenceDirectory) {
     $name = [IO.Path]::GetFileNameWithoutExtension($packagePath)
     $EvidenceDirectory = Join-Path $repo "build/$name-verification"
@@ -69,7 +72,7 @@ function Start-VerifiedGame {
     $arguments += if ($Replay -eq 'soak') { '--max-fps', '60', '--audio-driver', 'Dummy' } else { '--fixed-fps', '60' }
     if ($Resolution) {
         $screens = (New-Item -ItemType Directory -Force -Path (Join-Path $evidence $Resolution)).FullName
-        $arguments += @('--windowed', '--position', '-16000,-16000', '--resolution', $Resolution)
+        $arguments += @('--windowed', '--disable-vsync', '--resolution', $Resolution)
     } else {
         $arguments += '--headless'
     }
@@ -78,17 +81,29 @@ function Start-VerifiedGame {
         if ($Resolution) { $arguments += ('"' + $screens + '"') }
     }
     Write-Host "== $Name =="
-    $process = Start-Process -FilePath (Join-Path $Directory 'Fiefdom.exe') -WorkingDirectory $Directory -WindowStyle Hidden -PassThru -ArgumentList $arguments
-    if (-not $process.WaitForExit(180000)) {
-        $process.Kill()
-        $process.WaitForExit()
-        throw "$Name timed out. See $log"
+    $executable = Join-Path $Directory 'Fiefdom.exe'
+    if ($Resolution) {
+        $isolation = ''
+        $exitCode = [Fiefdom.Tools.IsolatedDesktop]::Run($executable, ($arguments -join ' '), $Directory, 180000, [ref]$isolation)
+        Write-Host $isolation
+    } else {
+        $process = Start-Process -FilePath $executable -WorkingDirectory $Directory -WindowStyle Hidden -PassThru -ArgumentList $arguments
+        try {
+            if (-not $process.WaitForExit(180000)) {
+                $process.Kill()
+                $process.WaitForExit()
+                throw "$Name timed out. See $log"
+            }
+            $exitCode = $process.ExitCode
+        } finally {
+            $process.Dispose()
+        }
     }
     $lines = Get-Content -LiteralPath $log -Encoding utf8
     $marker = if ($Replay) { 'SCENARIO_OK' } else { 'Fiefdom title ready' }
     $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|RESEARCH_RATIONS_|GAMEPAD_|DRIVING_|BOW_AIM_|WINTER_|BINDING_|RAFT_|TITLE_|BACKPACK_|DECOR_|ROUTE_|COUNCIL_PREP_|COUNCIL_SILK_|DIRECTION_|PLAN_|TRIBUTE_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|CANAL_DOOR_|SPRING_|ESTATE_PROGRESS_|ESTATE_PROVISIONS|FIELD_ACCESS_|FIELD_STROKE_|WORKSITE_|FIELD_ROUTE_|FIELD_NIGHT_|MORNING_|PAVILION_EVENING_|FISH_MARKET_|RAVINE_MAP_|SHORTCUT_|TRAP_|MARKET_WAYFINDING_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
-    if ($process.ExitCode -ne 0 -or $lines -cnotcontains $marker -or $lines -cmatch '^\s*(?:SCRIPT ERROR|USER ERROR|ERROR|WARNING):') {
-        throw "$Name failed (exit $($process.ExitCode)). See $log"
+    if ($exitCode -ne 0 -or $lines -cnotcontains $marker -or $lines -cmatch '^\s*(?:SCRIPT ERROR|USER ERROR|ERROR|WARNING):') {
+        throw "$Name failed (exit $exitCode). See $log"
     }
 }
 
@@ -120,8 +135,6 @@ run/main_scene="res://tests/ReleaseReplay.tscn"
 
 [display]
 window/size/no_focus=true
-window/size/initial_position_type=0
-window/size/initial_position=Vector2i(-16000, -16000)
 '@ | Set-Content -LiteralPath (Join-Path $Directory 'override.cfg') -Encoding utf8
 }
 
@@ -162,7 +175,7 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'summer-raft' -Name 'summer-raft' -Replay 'summer-raft'
     }
     if ($TitlePresentation) {
-        Start-VerifiedGame -Directory $release -Profile 'title-presentation' -Name 'title-presentation' -Replay 'title-presentation'
+        Start-VerifiedGame -Directory $release -Profile 'title-presentation' -Name 'title-presentation' -Replay 'title-presentation' -Resolution $fullResolution
     }
     if ($Backpack) {
         Start-VerifiedGame -Directory $release -Profile 'backpack' -Name 'backpack' -Replay 'backpack'
@@ -269,7 +282,9 @@ try {
         Start-VerifiedGame -Directory $release -Profile "legacy-$oldName" -Name "legacy-continue-$oldName" -Replay 'legacy-continue'
     }
     if ($Capture) {
-        Start-VerifiedGame -Directory $release -Profile "render-$fullResolution" -Name "render-$fullResolution" -Replay 'visual' -Resolution $fullResolution
+        foreach ($size in $fullResolution, '1024x768') {
+            Start-VerifiedGame -Directory $release -Profile "render-$size" -Name "render-$size" -Replay 'visual' -Resolution $size
+        }
     }
     if ($Soak) {
         Start-VerifiedGame -Directory $release -Profile 'soak' -Name 'soak' -Replay 'soak'

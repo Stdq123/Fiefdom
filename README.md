@@ -18,7 +18,7 @@
 
 同一源码、引擎和 PowerShell 环境下，两次干净构建的 ZIP SHA-256 一致。导出保留文本场景和资源，ZIP 使用固定的条目顺序和时间戳。 [Godot 导出设置](https://docs.godotengine.org/en/stable/classes/class_projectsettings.html#class-projectsettings-property-editor-export-convert-text-resources-to-binary)
 
-以下命令在临时目录用解压出的正式程序验证两条新档路线、战败恢复和 90 秒连续运行。用 `-LegacyPackage` 传入已有的 0.1.x ZIP，还可以在旧版本中生成存档，再由 1.0 读取。日志、截图和校验清单写入 `build/Fiefdom-1.0.0-Windows-x64-verification/`。 [1.0 执行清单](tasks/todo.md)
+以下命令在临时目录用解压出的正式程序验证两条新档路线、战败恢复和 90 秒连续运行。`-Capture` 在隔离的 Windows 桌面采集 1920×1080 和 1024×768 画面，其余检查使用无窗口模式。用 `-LegacyPackage` 传入已有的 0.1.x ZIP，还可以在旧版本中生成存档，再由 1.0 读取。日志、截图和校验清单写入 `build/Fiefdom-1.0.0-Windows-x64-verification/`。 [1.0 执行清单](tasks/todo.md)
 
 ```powershell
 & ./tools/Test-WindowsRelease.ps1 -Package ./build/Fiefdom-1.0.0-Windows-x64.zip -Capture -Soak

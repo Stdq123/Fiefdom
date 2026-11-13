@@ -23,6 +23,7 @@ func _estate() -> void:
 func _sleep() -> void:
 	var tomorrow: int = state.current_day + 1
 	ui.sleep_button.pressed.emit()
+	Campaign.confirm_optional_tribute_warning(ui)
 	for frame in range(240):
 		await process_frame
 		if state.current_day == tomorrow and ui.fader.mouse_filter == Control.MOUSE_FILTER_IGNORE:

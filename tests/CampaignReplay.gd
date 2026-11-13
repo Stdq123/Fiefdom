@@ -20,6 +20,11 @@ var delegated_nights := 0
 var nights_short := 0
 var use_night_rations := false
 
+static func confirm_optional_tribute_warning(ui: Node) -> void:
+	var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
+	if warning != null and warning.name_label.text == "过夜前" and warning.choices.back().text == "仍然过夜":
+		warning.choices.back().pressed.emit()
+
 static func walk_to(tree: SceneTree, actor: Node2D, destination: Vector2) -> void:
 	var speed: float = actor.SPEED
 	for axis in [Vector2.RIGHT, Vector2.DOWN]:
@@ -340,7 +345,8 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 		_end(true)
 		return
 	print("CAMPAIGN_START branch=", branch, " debug=", OS.is_debug_build())
-	tree.root.size = Vector2i(1280, 720)
+	if capture_directory.is_empty():
+		tree.root.size = Vector2i(1280, 720)
 	seed(325)
 	tree.change_scene_to_file(TITLE)
 	await tree.scene_changed

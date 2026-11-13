@@ -1,5 +1,7 @@
 extends RefCounted
 
+const Campaign := preload("res://tests/CampaignReplay.gd")
+
 var tree: SceneTree
 var state: Node
 var world: Node
@@ -56,6 +58,7 @@ func _close_journal() -> void:
 
 func _night() -> void:
 	ui.sleep_button.pressed.emit()
+	Campaign.confirm_optional_tribute_warning(ui)
 	await tree.create_timer(1.1).timeout
 
 func _reload_at(day: int) -> bool:

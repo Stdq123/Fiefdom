@@ -57,6 +57,7 @@ func _return_home() -> bool:
 
 func _night() -> void:
 	ui.sleep_button.pressed.emit()
+	Campaign.confirm_optional_tribute_warning(ui)
 	await create_timer(1.12).timeout
 
 func _open_fishing(spot: Node2D) -> Control:

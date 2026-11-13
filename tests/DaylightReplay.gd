@@ -49,6 +49,17 @@ func _key(code: Key) -> void:
 	await tree.process_frame
 	await tree.process_frame
 
+func _request_sleep(button: Button) -> bool:
+	var penalty: int = state.tribute_penalty_tonight()
+	await _button(button)
+	if penalty > 0 and not state.first_tribute_delivered():
+		var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
+		if not _expect(warning != null and ("声望 −%d" % penalty) in warning.text_label.text,
+			"The first tribute warning shows the actual penalty before the test advances."):
+			return false
+		await _button(warning.choices.back())
+	return true
+
 func _move(action: StringName, frames: int) -> void:
 	Input.action_press(action)
 	for frame in frames:
@@ -219,7 +230,8 @@ func _rest_at_hall() -> bool:
 	await _capture("05-hall-plan")
 	var grain: int = state.food_storage
 	state.balance.daylight_seconds = 150.0
-	await _button(sleep)
+	if not await _request_sleep(sleep):
+		return false
 	await _wait(0.55)
 	_expect("卯时" in ui.dawn_caption.text and state.current_day == 8, "Rest shows the next morning and its first watch.")
 	await _wait(0.57)
@@ -268,14 +280,8 @@ func _play_day() -> void:
 	_expect(state.current_day == 1 and state.day_progress > 0.004 and ui.hud.watch_label.text == "卯时",
 		"Real gameplay time begins advancing on the first morning.")
 	for day in range(2, 8):
-		var penalty: int = state.tribute_penalty_tonight()
-		await _button(ui.sleep_button)
-		if penalty > 0:
-			var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
-			if not _expect(warning != null and ("声望 −%d" % penalty) in warning.text_label.text,
-				"An overdue first tribute must be acknowledged on the way to summer."):
-				return
-			await _button(warning.choices.back())
+		if not await _request_sleep(ui.sleep_button):
+			return
 		await _wait(1.07)
 		if not _expect(state.current_day == day, "Reach summer through normal nights."):
 			return

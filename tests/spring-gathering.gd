@@ -49,6 +49,7 @@ func _click(button: Button) -> void:
 func _night() -> void:
 	var tomorrow: int = state.current_day + 1
 	ui.sleep_button.pressed.emit()
+	Campaign.confirm_optional_tribute_warning(ui)
 	for frame in range(240):
 		if state.current_day == tomorrow and ui.fader.mouse_filter == Control.MOUSE_FILTER_IGNORE:
 			return
