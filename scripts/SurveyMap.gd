@@ -2,6 +2,9 @@ extends Control
 
 @export var toggle_action: StringName = KeyBindings.MAP
 
+const REGION_SCENE := "res://scenes/RegionMap.tscn"
+enum Region { MARKET, ROAD, ESTATE, RAVINE }
+
 @onready var modal: Control = %MapModal
 @onready var close_button: Button = %CloseMap
 @onready var close_caption := close_button.text.trim_suffix("  Esc")
@@ -22,9 +25,26 @@ func open_map() -> void:
 	if get_tree().paused or Global.outcome != Global.Outcome.RUNNING or not _map_available():
 		return
 	get_tree().paused = true
+	_show_map()
+	GameEvents.modal_visibility_changed.emit(true)
+
+func switch_to(next: Control) -> void:
+	owns_pause = false
+	modal.hide()
+	next._show_map()
+
+func add_region_map(region: Region, blocked: Callable, active: Callable, choose: Callable, clear: Callable,
+		south: Callable = Callable()) -> Control:
+	var overview: Control = (load(REGION_SCENE) as PackedScene).instantiate()
+	get_parent().add_child(overview)
+	toggle_action = &""
+	overview.setup(region, blocked, active, choose, clear, self, south)
+	%RegionMap.pressed.connect(switch_to.bind(overview))
+	return overview
+
+func _show_map() -> void:
 	owns_pause = true
 	modal.show()
-	GameEvents.modal_visibility_changed.emit(true)
 	_refresh_on_open()
 	close_button.grab_focus()
 
@@ -54,8 +74,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		if modal.visible:
 			close_map()
 		else:
-			open_map()
+			_open_from_shortcut()
 		get_viewport().set_input_as_handled()
+
+func _open_from_shortcut() -> void:
+	open_map()
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if modal.visible and event.is_action_pressed("ui_cancel"):

@@ -6,12 +6,14 @@ const TRACK_AUDIO := preload("res://scripts/TerrainAudio.gd")
 const VISITOR := preload("res://scenes/Visitor.tscn")
 const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
 const TRACK_DIRECTION := preload("res://scripts/RoadNetwork.gd")
+const SURVEY := preload("res://scripts/SurveyMap.gd")
 const SIGN_MATERIAL := preload("res://resources/world_hint_material.tres")
 const GOLD := Color("#f0cc7b")
 
 @onready var player: Player = $Player
 @onready var ground: GROUND = $Ground
 @onready var settings: Panel = %Settings
+@onready var region_map: Control = $UI/Control/RegionMap
 @onready var audio: TRACK_AUDIO = AudioManager.terrain_audio
 
 var route_direction := Vector2.ZERO
@@ -41,6 +43,8 @@ func _ready() -> void:
 	settings.save_resume_hint = "续档时从溪桥道较近的一侧路口继续。"
 	%SettingsButton.pressed.connect(settings.show)
 	settings.visibility_changed.connect(_update_modal)
+	region_map.setup(SURVEY.Region.ROAD, func(): return player.conversation_open, Global.regional_destination,
+		_follow_region_destination, _clear_regional_trip, null, Callable(), _map_road_progress)
 	GameEvents.daylight_changed.connect(_refresh_clock)
 	GameEvents.visitor_interacted.connect(_talk_to_silk_guest)
 	GameEvents.retainer_recruited.connect(_refresh_scheduled_guest.unbind(1))
@@ -66,6 +70,25 @@ func _unhandled_key_input(event: InputEvent) -> void:
 func _update_modal() -> void:
 	%SettingsShade.visible = settings.visible
 	player.conversation_open = settings.visible
+
+func _follow_region_destination(place: String) -> bool:
+	if place in Global.ravine_trip_places():
+		Global.market_trip_target = ""
+		Global.ravine_trip_target = place
+	else:
+		Global.ravine_trip_target = ""
+		Global.market_trip_target = place
+	Global.field_route_status = -1
+	_refresh_route()
+	return true
+
+func _clear_regional_trip() -> void:
+	Global.market_trip_target = ""
+	Global.ravine_trip_target = ""
+	_refresh_route()
+
+func _map_road_progress() -> float:
+	return clampf(inverse_lerp(LAYOUT.MARKET_GATE.x, LAYOUT.ESTATE_GATE.x, player.position.x), 0.0, 1.0)
 
 func resume_from_market() -> bool:
 	return player.position.distance_squared_to(LAYOUT.MARKET_GATE) < player.position.distance_squared_to(LAYOUT.ESTATE_GATE)

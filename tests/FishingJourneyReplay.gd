@@ -171,7 +171,15 @@ func _start_from_market() -> bool:
 	_expect("白鲦" in offer.title.text and "13 铜钱" in offer.status.text and offer.directions.text == "去柳湾钓鱼",
 		"The fish counter shows the quote and can start the same trip.")
 	await _snapshot("02-fish-stall-departure")
-	await _button(offer.directions)
+	await _key(KEY_ESCAPE)
+	await _key(KEY_M)
+	await _button(chart.get_node("%RegionMap"))
+	var overview: Control = chart.region_map
+	await _button(overview.region_buttons.get_node("Ravine"))
+	await _button(overview.destination_buttons[WILLOW])
+	_expect(overview.route_label.text == "西市 → 溪桥道 → 封地 → 竹涧 · 经东关",
+		"The regional map previews the two gates and all four locations.")
+	await _button(overview.route_button)
 	await _button(market.get_node("UI/Control/Wallet/SettingsButton"))
 	if not await _save_and_continue(market.settings):
 		return false
@@ -224,6 +232,18 @@ func _choose_return() -> bool:
 	await _snapshot("06-ravine-return-chart")
 	await _button(map.clear_button)
 	_expect(state.market_trip_target.is_empty() and guide.route.is_empty(), "Cancelling the return clears the market destination.")
+	await _button(map.get_node("%RegionMap"))
+	var overview: Control = map.region_map
+	await _button(overview.region_buttons.get_node("WestMarket"))
+	await _button(overview.destination_buttons[FISH_STALL])
+	_expect(overview.route_label.text == "竹涧 → 封地 → 溪桥道 → 西市 · 经西门",
+		"The regional map previews the actual route from the ravine's west gate to the fish stall.")
+	await _snapshot("06a-ravine-to-market")
+	await _button(overview.route_button)
+	_expect(not tree.paused and state.market_trip_target == FISH_STALL and guide.destination_name == "西门回封地",
+		"Selecting the fish stall resumes the existing exit guide.")
+	await _key(KEY_M)
+	await _button(map.clear_button)
 	var gamepad = load("res://tests/GamepadReplay.gd").new()
 	gamepad.tree = tree
 	gamepad.pad = tree.root.get_node("GamepadInput")

@@ -29,6 +29,7 @@ var network: ROAD_NETWORK
 var route := PackedVector2Array()
 var route_origin := Vector2.INF
 var route_target := Vector2.INF
+var region_map: Control
 
 func setup(street: Node2D, destinations: Dictionary[String, Vector2], waypoint: Node2D) -> void:
 	market = street
@@ -55,6 +56,8 @@ func setup(street: Node2D, destinations: Dictionary[String, Vector2], waypoint: 
 	chart.resized.connect(_layout_markers)
 	paper.draw.connect(_draw_chart)
 	_refresh_destination()
+	region_map = add_region_map(Region.MARKET, func(): return not _map_available(),
+		Global.regional_destination, follow_region_destination, _clear)
 
 func _refresh_shortcuts() -> void:
 	super._refresh_shortcuts()
@@ -129,6 +132,13 @@ func follow_ravine(place: String) -> void:
 	Global.ravine_trip_target = place
 	Global.field_route_status = -1
 	_refresh_destination()
+
+func follow_region_destination(place: String) -> bool:
+	if place in Global.ravine_trip_places():
+		follow_ravine(place)
+	else:
+		_select_place(place)
+	return true
 
 func _select_place(place: String) -> void:
 	Global.market_trip_target = place

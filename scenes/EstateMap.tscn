@@ -84,6 +84,13 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.76, 0.8, 0.68, 1)
 
+[node name="RegionMap" type="Button" parent="MapModal/Center/Panel/Layout/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(116, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "区域舆图"
+
 [node name="CloseMap" type="Button" parent="MapModal/Center/Panel/Layout/Header"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(136, 38)

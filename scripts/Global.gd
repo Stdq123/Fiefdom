@@ -1401,6 +1401,9 @@ func creek_traps_unlocked() -> bool:
 func ravine_trip_places() -> Array:
 	return RAVINE_TRIP_PLACES + CreekTrap.PLACES if creek_traps_unlocked() else RAVINE_TRIP_PLACES
 
+func regional_destination() -> String:
+	return market_trip_target if ravine_trip_target.is_empty() else ravine_trip_target
+
 func creek_trap_site() -> int:
 	return creek_trap.get("site", -1)
 

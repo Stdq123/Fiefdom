@@ -39,6 +39,7 @@ var row_buttons: Dictionary[Button, Dictionary] = {}
 var captions: Dictionary[String, Rect2] = {}
 var target: Dictionary = {}
 var road_path := PackedVector2Array()
+var region_map: Control
 
 func setup(estate_world: Node2D, guide: Control, blocked: Callable) -> void:
 	world = estate_world
@@ -57,6 +58,8 @@ func setup(estate_world: Node2D, guide: Control, blocked: Callable) -> void:
 	chart.gui_input.connect(_chart_input)
 	chart.resized.connect(_layout_chart)
 	clear_button.pressed.connect(_clear_directions)
+	region_map = add_region_map(Region.ESTATE, controls_blocked, Global.regional_destination, follow_region_destination,
+		_clear_directions, _regional_south_trail)
 
 func open_fields() -> void:
 	if modal.visible:
@@ -339,6 +342,18 @@ func _select(entry: Dictionary) -> void:
 func _clear_directions() -> void:
 	directions.clear_tracking()
 	_refresh_destination()
+
+func follow_region_destination(place: String) -> bool:
+	if place in Global.ravine_trip_places():
+		directions.follow_ravine(place)
+	else:
+		directions.follow_market(place)
+	return true
+
+func _regional_south_trail(place: String) -> bool:
+	var point: Vector2 = (directions.tracked_place_point if place == Global.ravine_trip_target
+		else directions.ravine_gate_point(place))
+	return point == EstateLayout.RAVINE_TRAIL_GATE
 
 func _refresh_destination() -> void:
 	target = directions.destination()

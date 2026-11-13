@@ -23,6 +23,7 @@ var player: Player
 var landscape: LANDSCAPE
 var places: Dictionary[String, Vector2] = {}
 var markers: Dictionary[String, Button] = {}
+var region_map: Control
 
 func _refresh_shortcuts() -> void:
 	super._refresh_shortcuts()
@@ -66,6 +67,8 @@ func setup(trail_guide: Node2D, walker: Player, terrain: LANDSCAPE, destinations
 	_refresh_journal()
 	_refresh_traps()
 	_refresh_route()
+	region_map = add_region_map(Region.RAVINE, func(): return not _map_available(),
+		_regional_trip, follow_region_destination, guide.clear)
 
 func _map_available() -> bool:
 	return is_instance_valid(player) and not player.conversation_open and not MapTravel.active
@@ -105,6 +108,20 @@ func restore_waypoint(place: String) -> void:
 
 func follow_market(place: String) -> bool:
 	return guide.follow(ESTATE_EXIT, places[ESTATE_EXIT], place)
+
+func follow_region_destination(place: String) -> bool:
+	if place == Global.MARKET_RETURN:
+		return guide.follow(ESTATE_EXIT, places[ESTATE_EXIT])
+	if places.has(place):
+		return guide.follow(place, places[place])
+	return follow_market(place)
+
+func _regional_trip() -> String:
+	if not Global.market_trip_target.is_empty():
+		return Global.market_trip_target
+	if guide.destination_name == ESTATE_EXIT:
+		return Global.MARKET_RETURN
+	return guide.destination_name
 
 func _select_market(place: String) -> void:
 	if follow_market(place):

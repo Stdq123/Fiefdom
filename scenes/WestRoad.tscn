@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://scenes/SeasonFreight.tscn" id="9_freight"]
 [ext_resource type="Script" path="res://scripts/CampaignHUD.gd" id="10_campaign"]
 [ext_resource type="Script" path="res://scripts/UIDialogManager.gd" id="11_dialog"]
+[ext_resource type="PackedScene" path="res://scenes/RegionMap.tscn" id="12_region"]
 
 [sub_resource type="RectangleShape2D" id="GateMouth"]
 size = Vector2(8, 34)
@@ -179,5 +180,7 @@ color = Color(0.064, 0.101, 0.083, 0.68)
 unique_name_in_owner = true
 visible = false
 script = ExtResource("7_settings")
+
+[node name="RegionMap" parent="UI/Control" instance=ExtResource("12_region")]
 
 [editable path="Player"]

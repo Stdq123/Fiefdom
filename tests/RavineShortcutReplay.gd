@@ -61,6 +61,14 @@ func _hand_in_survey() -> bool:
 func _choose_shoal_from_estate() -> void:
 	await _key(KEY_M)
 	var chart: Control = ui.estate_map
+	await _button(chart.get_node("%RegionMap"))
+	var overview: Control = chart.region_map
+	await _button(overview.region_buttons.get_node("Ravine"))
+	await _button(overview.destination_buttons[SHOAL])
+	_expect(overview.route_label.text == "封地 → 竹涧 · 经竹涧小径", "The regional map names the unlocked southern route.")
+	await _snapshot("03a-region-shortcut")
+	await _button(overview.route_button)
+	await _key(KEY_M)
 	await _button(chart.tabs.get_node("Ravine"))
 	for row: Button in chart.row_buttons:
 		if chart.row_buttons[row].title == SHOAL:

@@ -121,6 +121,13 @@ custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 
+[node name="RegionMap" type="Button" parent="MapModal/Center/Panel/Layout/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(116, 36)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "区域舆图"
+
 [node name="CloseMap" type="Button" parent="MapModal/Center/Panel/Layout/Header"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(124, 38)
