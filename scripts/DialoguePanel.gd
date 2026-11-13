@@ -52,7 +52,11 @@ func _link_choices() -> void:
 		choice.focus_next = next
 	if not choices.is_empty():
 		choices.back().grab_focus()
-		GamepadInput.snap_pointer_to_focus.call_deferred()
+		if GamepadInput.active:
+			# The container positions the new buttons before the next frame.
+			await get_tree().process_frame
+			if choices.has(get_viewport().gui_get_focus_owner()):
+				GamepadInput.snap_pointer_to_focus()
 
 func move_choice(step: int) -> void:
 	if choices.is_empty():

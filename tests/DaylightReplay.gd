@@ -268,7 +268,14 @@ func _play_day() -> void:
 	_expect(state.current_day == 1 and state.day_progress > 0.004 and ui.hud.watch_label.text == "卯时",
 		"Real gameplay time begins advancing on the first morning.")
 	for day in range(2, 8):
+		var penalty: int = state.tribute_penalty_tonight()
 		await _button(ui.sleep_button)
+		if penalty > 0:
+			var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
+			if not _expect(warning != null and ("声望 −%d" % penalty) in warning.text_label.text,
+				"An overdue first tribute must be acknowledged on the way to summer."):
+				return
+			await _button(warning.choices.back())
 		await _wait(1.07)
 		if not _expect(state.current_day == day, "Reach summer through normal nights."):
 			return

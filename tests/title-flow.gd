@@ -112,7 +112,7 @@ func _run() -> void:
 		_expect("水已到田" in guide.text, "Watering points the player to the sleep button.")
 		await _click(ui.sleep_button.get_global_rect().get_center())
 		await create_timer(1.1).timeout
-	_expect("成熟" in guide.text, "Ripening explains how to deliver the first tribute.")
+	_expect("收割" in guide.text and "入国库" in guide.text, "Ripening explains how to deliver the first tribute.")
 	await _hover(_point(map, tribute))
 	_expect("收获" in cursor.label.text and "−3 体力" in cursor.label.text, "Mature crops show their harvest cost.")
 	await _click(_point(map, tribute))

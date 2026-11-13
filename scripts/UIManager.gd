@@ -284,7 +284,7 @@ func _connect_signals() -> void:
 	world.visitor_changed.connect(_update_visitor_note)
 	hud.cancel_directions.visibility_changed.connect(_refresh_opening_action)
 	hud.opening_action.pressed.connect(_on_opening_action)
-	sleep_button.pressed.connect(_on_sleep_pressed)
+	sleep_button.pressed.connect(_request_sleep)
 	hud.rations_button.pressed.connect(_show_night_rations)
 	hud.tribute_button.pressed.connect(_show_night_rations)
 	hud.morning_button.pressed.connect(_show_night_rations.bind(true))
@@ -587,7 +587,8 @@ func _show_night_rations(show_previous := false) -> void:
 	panel.east_watch_requested.connect(_guide_east_watch)
 	panel.sleep_requested.connect(func():
 		panel_manager.hide_management_panel()
-		_on_sleep_pressed()
+		# The night sheet releases the player's conversation lock on exit.
+		panel.tree_exited.connect(_request_sleep, CONNECT_DEFERRED | CONNECT_ONE_SHOT)
 	)
 	panel.tree_exited.connect(func():
 		GameEvents.modal_visibility_changed.emit(false)
@@ -604,14 +605,19 @@ func _on_night_plot_requested(panel: Control, status: Global.NightGrowth) -> voi
 			hud.practice_label.text = "已标出%s · 从南门回田边" % plot
 
 func _on_tribute_field_requested(panel: Control) -> void:
-	if not directions.follow_field_route(Global.TributeRoute.TEND):
-		return
-	var seed: String = Global.tribute_field_plan().seed_id
-	if not seed.is_empty():
-		world.select_seed(seed)
-	panel.queue_free()
+	if _follow_tribute_plot(Global.TributeRoute.TEND):
+		panel.queue_free()
+
+func _follow_tribute_plot(route: int) -> bool:
+	if not directions.follow_field_route(route, route != Global.TributeRoute.TEND):
+		return false
+	if route == Global.TributeRoute.TEND:
+		var seed: String = Global.tribute_field_plan().seed_id
+		if not seed.is_empty():
+			world.select_seed(seed)
 	if Global.is_indoors():
-		hud.practice_label.text = "已标出公田 · 从门口回田边"
+		hud.practice_label.text = "已标出公田 · 从南门回田边"
+	return true
 
 func _guide_driving_practice() -> void:
 	if world.player.training_cart.visible:
@@ -844,6 +850,44 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		if is_instance_valid(management) and management.visible:
 			panel_manager.hide_management_panel()
 			get_viewport().set_input_as_handled()
+
+func _request_sleep() -> void:
+	if _estate_controls_busy() or Global.outcome != Global.Outcome.RUNNING:
+		return
+	if not Global.tax_council_waiting() and not Global.first_tribute_delivered() and _warn_before_first_tribute():
+		return
+	_on_sleep_pressed()
+
+func _warn_before_first_tribute() -> bool:
+	var plan := Global.tribute_field_plan()
+	if plan.is_empty():
+		return false
+	var penalty := Global.tribute_penalty_tonight()
+	var route: int = plan.status
+	var action: int = world.field_action(plan.cell)
+	var cost: int = world.field_cost(action)
+	if penalty == 0 and cost > Global.current_stamina:
+		return false
+	var message: String
+	match route:
+		Global.NightGrowth.DRY:
+			message = "公田待浇。现在过夜，这一茬今晚不会生长。"
+		Global.NightGrowth.BLOCKED:
+			message = "公田断水。接通水渠前，稻苗过夜也不会生长。"
+		Global.NightGrowth.READY:
+			message = "公田已熟。收割后，收成直接入国库。"
+		_:
+			if penalty == 0:
+				return false
+			route = Global.TributeRoute.TEND
+			message = "公田还没播种。" if not plan.seed_id.is_empty() else "公田尚未成熟，今天还不能收割。"
+	if cost > Global.current_stamina:
+		message += "\n当前体力不足，田务需要 %d 点。" % cost
+	if penalty > 0:
+		message += "\n若今夜仍无纳贡，声望 −%d。" % penalty
+	world.set_channel_mode(false)
+	dialog_manager.show_tribute_bedtime(message, _follow_tribute_plot.bind(route), _on_sleep_pressed)
+	return true
 
 func _on_sleep_pressed() -> void:
 	if MapTravel.active or (sleep_tween and sleep_tween.is_running()):

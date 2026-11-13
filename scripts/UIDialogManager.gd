@@ -37,6 +37,16 @@ func setup(host: Control, estate_player: Player) -> void:
 	parent_node = host
 	player = estate_player
 
+func show_tribute_bedtime(message: String, mark_plot: Callable, sleep: Callable) -> void:
+	var dialog := _open("过夜前", "第一次纳贡", message, ["标出公田", "仍然过夜"], [], null)
+	dialog.choices[0].grab_focus()
+	dialog.option_selected.connect(func(index: int):
+		if index == 0:
+			mark_plot.call()
+		else:
+			sleep.call()
+	)
+
 func show_first_harvest(open_orders: Callable) -> Control:
 	var use := Global.market_crop_plan(1)
 	var crop: String = use.keys()[0]

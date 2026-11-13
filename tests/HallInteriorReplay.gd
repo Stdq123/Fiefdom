@@ -218,11 +218,33 @@ func _resume_dawn() -> bool:
 		and state.day_watch_label() == "卯时" and state.active_crops[PRIVATE].age == 1,
 		"Title Continue wakes beside the bed with the dawn crop state.")
 	await _snapshot("05-morning-inside")
+	world.retainer_instances[state.retainers.front()].set_physics_process(false)
+	if not await _mark_public_plot_from_bed():
+		return false
 	if not await _leave():
 		return false
-	_expect(player.camera.zoom.is_equal_approx(Vector2(3, 3)), "Leaving restores the preferred map zoom.")
+	_expect(player.camera.zoom.is_equal_approx(Vector2(3, 3)) and ui.directions.visible
+		and ui.directions.tracked_plot == PUBLIC and ui.hud.practice_label.text.is_empty(),
+		"Leaving restores the preferred zoom and shows the marked public field.")
 	print("HALL_RESTORE day=", state.current_day, " exterior=", player.global_position, " zoom=", player.camera.zoom)
 	return true
+
+func _mark_public_plot_from_bed() -> bool:
+	var plan := await _bed_plan()
+	if plan == null:
+		return false
+	var grain: int = state.food_storage
+	await _press(plan.get_node("%Sleep"))
+	await tree.process_frame
+	var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(not is_instance_valid(plan) and warning != null and "公田待浇" in warning.text_label.text
+		and player.conversation_open, "Sleeping from the bed replaces the night plan with the first-tribute warning."):
+		return false
+	await _snapshot("05a-bedtime-warning")
+	await _press(warning.choices.front())
+	return _expect(not player.conversation_open and state.current_day == 2 and state.food_storage == grain
+		and ui.directions.tracked_plot == PUBLIC and not ui.directions.visible
+		and "从南门回田边" in ui.hud.practice_label.text, "Marking the public plot stays in the room and points out the exit.")
 
 func _harvest() -> void:
 	await Campaign.walk_to(tree, player, world.to_global(Vector2(66, 98)))

@@ -983,3 +983,9 @@
 - 谷雨当天，收工的渠伯和季青走南路到亭东檐下，谷雨亭集在原处继续。檐下沿用同一场雨的音轨并降低音量。舆图标出席位，邻里手记显示实际去处。回放从晴夜到雨夜，覆盖田务优先、交谈接续轮作、存档继续、守卫留岗、来敌撤席及过夜。 [1080p 檐下](../build/polish-art-resolution/rain-east-1080/06-rain-shelter.png) · [渠伯雨夜对白](../build/polish-art-resolution/rain-east-1080/07-rain-conversation.png)
 - 望溪台可就地敷野药，也可装入背包，沿用与野果共用的每日采集机会。一份药可与路餐并存，返程、过夜、保存后继续可敷用。回放覆盖键位重绑、手柄指针和旧存档的空药格。 [望溪台](../build/polish-art-resolution/herbs-1080-final/05-wild-herb-prompt.png) · [背包](../build/polish-art-resolution/herbs-1080-final/06-packed-wild-herbs.png)
 - Windows 双路线、战败、夜间口粮、南路亭、背包和西市往返回放通过。画面按默认 1920×1080 在隔离桌面检查。 [Windows 试玩包](../build/polish-rain-and-herbs/Fiefdom-1.0.0-Windows-x64.zip) · [发行验证](../build/polish-rain-and-herbs/release.log) · [源码验证](../build/polish-rain-and-herbs/godot.log)
+
+## 第一次纳贡前的过夜提醒
+
+- 手记显示首贡期限及还需供水的夜数。首贡前若公田待浇、断水或已熟，睡觉和床榻的「今夜安排」可提示对应田务。首贡到期当天还会提示声望损失，即使公田尚未播种。默认选中「标出公田」，在堂屋会提示从南门回田边。选择「仍然过夜」按正常规则结算。
+- 新档回放覆盖按键和手柄取消、第三天公私田同收、故意漏浇及床榻指路。断水稻田的公田指引可随旧格式进度续存。用到期日存档核对扣 8 点声望并写入「昨夜结算」。默认 1920×1080 与 1024×768 画面均在隔离桌面核对。 [待浇提醒](../build/polish-art-resolution/tribute-bedtime-final-1080/04-dry-public-before-bed.png) · [到期提醒](../build/polish-art-resolution/tribute-bedtime-final-1024/04-first-tribute-due.png)
+- Windows 解压版在无窗口模式下通过 19 项检查。手动和委派备粮均在第 56 天走到传统结局、第 59 天走到改革结局。上一版生成的存档可在本版继续，90 秒连续运行到第 8 天并保留三份晨间档。 [Windows 试玩包](../build/polish-first-tribute-bedtime/Fiefdom-1.0.0-Windows-x64.zip) · [发行校验](../build/polish-first-tribute-bedtime/windows-release/manifest.txt) · [连续运行](../build/polish-first-tribute-bedtime/windows-release/soak.log) · [上一版存档](../build/polish-first-tribute-bedtime/previous-release.log)

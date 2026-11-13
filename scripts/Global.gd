@@ -3367,7 +3367,8 @@ func load_game(path := "") -> Error:
 	market_produce_bought_on = clampi(_read_save_int(data.get("market_produce_bought_on"), 0), 0, saved_day)
 	var saved_route := _read_save_int(data.get("field_route_status"), -1)
 	field_route_status = saved_route if saved_route in FIELD_ROUTE_STATES else -1
-	field_route_public_only = field_route_status == NightGrowth.READY and data.get("field_route_public_only", false) == true
+	field_route_public_only = (field_route_status in [NightGrowth.READY, NightGrowth.DRY, NightGrowth.BLOCKED]
+		and data.get("field_route_public_only", false) == true)
 	ravine_journal = _restore_ravine_journal(data.get("ravine_journal"), saved_day)
 	restored_ravine_south = (resume_scene == WILDERNESS_SCENE and ravine_shortcut_open()
 		and data.get("ravine_south_arrival", false) == true)

@@ -126,7 +126,11 @@ func refresh() -> void:
 	_refresh_first_private_button()
 
 func _show_first_tribute() -> void:
-	var public_step := _opening_field_step(Global.well_fields[0]["center_pos"], true)
+	var public_cell: Vector2i = Global.well_fields[0].center_pos
+	var public_step := _opening_field_step(public_cell, true)
+	var due := Global.tribute_deadline()
+	if due > 0 and not Global.active_crops.has(public_cell):
+		public_step += "\n首贡期限 · 第 %d 天过夜前" % due
 	_describe("第一次纳贡", public_step)
 	if not waiting_for_tribute_crop or Global.private_harvest_total > 0:
 		return
@@ -238,24 +242,27 @@ func _opening_field_step(cell: Vector2i, is_public: bool) -> String:
 			return "%s翻地。\n收成归你，可换口粮或留作时令交货。" % point
 		ESTATE_WORLD.FieldAction.SOW:
 			var seed := ItemManager.get_crop(world.current_seed_id)
-			return "%s播种「%s」。%s" % [point, seed.crop_name, "LB/RB 换种。" if pad else "可在下方换种。"]
+			return "%s播种「%s」。供水 %d 夜可收。\n%s" % [
+				point, seed.crop_name, Global.sowing_nights(seed), "LB/RB 换种。" if pad else "可在下方换种。"]
 		ESTATE_WORLD.FieldAction.RICE_SEED:
 			opening_cue = OpeningCue.SEED
 			opening_seed_id = "millet"
 			return "稻种需要渠水。\n先按 %s 或点「黍」换种。" % _seed_shortcut("millet")
 		ESTATE_WORLD.FieldAction.HARVEST:
-			return ("公田成熟了。%s收获，作物直接送入国库。" % act if is_public
+			return ("公田已熟。%s收割，收成入国库。" % act if is_public
 				else "私田成熟了。%s收获，作物收入私仓，也会赚到铜钱。" % act)
 		ESTATE_WORLD.FieldAction.DRY_RICE:
 			return "这格稻田断水了。恢复供水后再过夜。"
 		ESTATE_WORLD.FieldAction.WATER:
 			var crop: Dictionary = Global.active_crops[cell]
-			return "%s浇水（%d/%d）。" % [point, crop["age"], crop["growth_nights"]]
+			return "%s浇水。还需供水 %d 夜。\n今晚缺水就会停长。" % [point, crop.growth_nights - crop.age]
 		ESTATE_WORLD.FieldAction.CHANNEL, ESTATE_WORLD.FieldAction.RAIN, ESTATE_WORLD.FieldAction.WATERED:
 			var crop: Dictionary = Global.active_crops[cell]
 			opening_cue = OpeningCue.SLEEP
 			waiting_for_tribute_crop = is_public
-			return "水已到田（%d/%d），过夜后生长。" % [crop["age"], crop["growth_nights"]]
+			if crop.growth_nights - crop.age == 1:
+				return "水已到田，过夜后这格%s就能收。" % opening_plot_name
+			return "水已到田，过夜后生长。\n还需供水 %d 夜。" % (crop.growth_nights - crop.age)
 	return "井田中央用于纳贡，四周的田由你经营。"
 
 func _seed_shortcut(crop_id: String) -> String:

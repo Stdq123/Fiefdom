@@ -139,6 +139,19 @@ func _estate_flow() -> bool:
 		"Holding A tills both plots once and only charges each plot's cost.")
 	await _sweep()
 	_expect(state.active_crops.size() == 2 and state.current_stamina == 92, "A new sweep plants both plots without watering them.")
+	await _click(ui.sleep_button)
+	var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(warning != null, "The controller opens the first-tribute warning."):
+		return false
+	var mark: Button = warning.choices.front()
+	_expect(mark.has_focus() and mark.get_global_rect().has_point(pad.cursor.position),
+		"The safe choice has focus and the pointer. focus=%s button=%s pointer=%s" % [
+			tree.root.gui_get_focus_owner(), mark.get_global_rect(), pad.cursor.position])
+	await _tap(JOY_BUTTON_DPAD_RIGHT)
+	_expect(warning.choices.back().has_focus(), "The D-pad can move to the deliberate overnight choice.")
+	await _tap(JOY_BUTTON_B)
+	_expect(not world.player.conversation_open and state.current_day == 1 and state.field_crop_is_dry(PUBLIC),
+		"B closes the warning and leaves the public crop for watering.")
 	await _sweep()
 	_expect(state.current_stamina == 90, "Watering both newly sown plots costs two stamina.")
 	await _sleep()

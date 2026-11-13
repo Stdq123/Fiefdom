@@ -35,6 +35,32 @@ func _button(button: Button) -> void:
 			"Use the visible %s button." % button.text):
 		await _click(rect.get_center())
 
+func _key(code: Key) -> void:
+	for pressed in [true, false]:
+		var event := InputEventKey.new()
+		event.keycode = code
+		event.physical_keycode = code
+		event.pressed = pressed
+		tree.root.push_input(event, true)
+		await tree.process_frame
+
+func _sleep_warning(ui: Node, detail: String) -> Control:
+	var day: int = state.current_day
+	var food: int = state.food_storage
+	await _button(ui.sleep_button)
+	var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(warning != null and warning.name_label.text == "过夜前"
+		and "公田" in warning.text_label.text and detail in warning.text_label.text,
+		"Sleep explains what remains on the first public plot before advancing."):
+		return null
+	var choices: Container = warning.options_container
+	_expect(choices.get_child_count() == 2 and choices.get_child(0).text == "标出公田"
+		and choices.get_child(1).text == "仍然过夜" and choices.get_child(0).has_focus(),
+		"The warning focuses returning to the plot and offers an explicit overnight choice.")
+	_expect(state.current_day == day and state.food_storage == food,
+		"Opening the warning spends no day or household grain.")
+	return warning
+
 func _find_button(panel: Control, text: String) -> Button:
 	for button: Button in panel.find_children("*", "Button", true, false):
 		if button.text == text and button.get_window() == tree.root:
@@ -99,8 +125,16 @@ func _first_harvest() -> void:
 	_expect(not hud.ledger_details.visible and calendar.get_global_rect().end.y < 190,
 		"Collapsing the ledger releases the map space it covered.")
 	await _frame("04-first-field")
-	for step in 3:
+	for step in 2:
 		await _click(public_point)
+	if not await _sleep_warning(ui, "待浇"):
+		return
+	await _frame("04-dry-public-before-bed")
+	await _key(KEY_ENTER)
+	_expect(not ui.has_node("Control/DialoguePanel") and state.current_day == 1
+		and state.field_crop_is_dry(PUBLIC) and ui.directions.outline.has_point(public_point),
+		"Enter returns to the marked dry public plot without spending the night.")
+	await _click(public_point)
 	_expect(hud.opening_action.visible and not hud.visitor_label.is_visible_in_tree(),
 		"The first-day keeper shortcut is available with the journal collapsed.")
 	await _button(hud.journal_details)
@@ -132,6 +166,14 @@ func _first_harvest() -> void:
 	await _click(private_point)
 	await _button(ui.sleep_button)
 	await tree.create_timer(1.12).timeout
+	_expect(state.current_day == 3 and state.field_crop_is_ripe(PUBLIC),
+		"Watered public crops still allow one-click sleep and mature after two nights.")
+	if not await _sleep_warning(ui, "已熟"):
+		return
+	await _frame("04-ripe-public-before-bed")
+	await _key(KEY_ESCAPE)
+	_expect(not ui.has_node("Control/DialoguePanel") and state.current_day == 3
+		and state.field_crop_is_ripe(PUBLIC), "Escape leaves the ripe crop available to harvest.")
 	await _click(public_point)
 	await _click(private_point)
 	_expect(state.current_day == 3 and state.king_storage == 1 and state.player_inventory == 1 and state.money == 5,
@@ -180,6 +222,27 @@ func _save_menu() -> void:
 		and state.current_day == 1 and state.active_crops.is_empty(), "The Continue action loads the same estate its caption names.")
 	print("TITLE_RESUME name=", state.campaign_name, " day=", state.current_day)
 
+func _sleep_by_choice() -> void:
+	var estate := tree.current_scene
+	var world := estate.get_node("World")
+	var ui := estate.get_node("UI")
+	var tiles := world.get_node("TileMapLayer") as TileMapLayer
+	world.retainer_instances[state.retainers[0]].set_physics_process(false)
+	var public_point := tiles.get_global_transform_with_canvas() * tiles.map_to_local(PUBLIC)
+	for step in 2:
+		await _click(public_point)
+	var warning := await _sleep_warning(ui, "待浇")
+	if warning == null:
+		return
+	var food: int = state.food_storage
+	var need: int = state.night_rations_plan().need
+	await _button(warning.options_container.get_child(1))
+	await tree.create_timer(1.12).timeout
+	_expect(state.current_day == 2 and state.food_storage == food - need
+		and state.field_crop_is_dry(PUBLIC) and state.active_crops[PUBLIC].age == 0,
+		"An explicit decision to sleep spends the usual grain and leaves the dry public crop unadvanced.")
+	print("TITLE_FIRST_SLEEP day=", state.current_day, " public_age=", state.active_crops[PUBLIC].age)
+
 func run(host: SceneTree, directory := "") -> void:
 	tree = host
 	state = tree.root.get_node("Global")
@@ -194,7 +257,10 @@ func run(host: SceneTree, directory := "") -> void:
 		await tree.scene_changed
 	if _expect(tree.current_scene.scene_file_path == state.ESTATE_SCENE, "New Game opens the estate directly."):
 		await _first_harvest()
-		await _save_menu()
+		if failures == 0:
+			await _save_menu()
+		if failures == 0:
+			await _sleep_by_choice()
 	if failures == 0:
 		print("SCENARIO_OK")
 	tree.quit(1 if failures > 0 else 0)

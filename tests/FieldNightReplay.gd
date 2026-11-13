@@ -59,14 +59,24 @@ func _open_previous_night() -> Control:
 	return ui.get_node_or_null("Control/NightRationsPanel") as Control
 
 func _capture(name: String) -> void:
-	if capture_dir.is_empty():
+	if capture_dir.is_empty() or DisplayServer.get_name() == "headless":
 		return
 	await RenderingServer.frame_post_draw
 	var image := tree.root.get_texture().get_image()
 	_expect(image.save_png(capture_dir.path_join(name + ".png")) == OK, "Save the rendered morning frame " + name)
 
-func _sleep() -> String:
+func _sleep(leave_public_dry := false) -> String:
 	await _button(ui.sleep_button)
+	if leave_public_dry:
+		var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
+		if not _expect(warning != null and "待浇" in warning.text_label.text,
+				"Sleeping before watering the first public crop offers a choice."):
+			return ""
+		var proceed := warning.options_container.get_child(1) as Button
+		if not _expect(proceed.is_visible_in_tree() and not proceed.disabled and proceed.text == "仍然过夜",
+				"The warning allows the player to proceed explicitly."):
+			return ""
+		await _button(proceed)
 	await tree.create_timer(0.60).timeout
 	var caption: String = ui.dawn_caption.text
 	await tree.create_timer(0.51).timeout
@@ -93,7 +103,7 @@ func _first_night() -> bool:
 		"The shortcut favors the dry public plot and points back toward the farm from the southern path.")
 	print("FIELD_NIGHT_LOCATE cell=", ui.directions.tracked_plot, " mark=", ui.directions.mark, " player=", world.player.position)
 	await _move(&"ui_up", 139)
-	await _sleep()
+	await _sleep(true)
 	_expect(state.current_day == 2 and state.active_crops[PUBLIC].age == 0 and state.active_crops[EARLY_PRIVATE].age == 1
 		and state.active_crops[LATE_PRIVATE].age == 0 and state.food_storage == 9 and world.current_visitor().name == VisitorData.ROAD_KEEPER,
 		"The first night advances only the wet crop, serves one ration, and brings Ji Qing to the estate.")
@@ -198,22 +208,27 @@ func _tend_and_harvest() -> bool:
 	print("MORNING_HARVEST day=", state.current_day, " public=", state.king_storage, " private=", state.player_inventory)
 	return true
 
-func _rain_and_rice() -> void:
-	# Load a legacy save with a disconnected rice plot and a rain-fed former public plot.
-	var path := "user://field-night-legacy.json"
+func _load_fixture(data: Dictionary) -> bool:
+	var path := "user://field-night-fixture.json"
 	var file := FileAccess.open(path, FileAccess.WRITE)
-	file.store_string(JSON.stringify({
+	file.store_string(JSON.stringify(data))
+	file.close()
+	if not _expect(state.load_game(path) == OK, "Load the field fixture through the legacy save reader."):
+		return false
+	await tree.scene_changed
+	await _use_estate()
+	return true
+
+func _rain_and_rice() -> void:
+	# A rain-fed former public plot and a disconnected private rice plot.
+	if not await _load_fixture({
 		"current_day": 6, "king_storage": 1, "tax_reform_choice": state.TaxReformChoice.REFORMED,
 		"active_crops": {
 			"5,5": {"id": "millet", "age": 1, "growth_nights": 2},
 			"4,5": {"id": "rice", "age": 0, "growth_nights": 2, "requires_channel": true},
 		},
-	}))
-	file.close()
-	if not _expect(state.load_game(path) == OK, "Load a save predating the field receipt."):
+	}):
 		return
-	await tree.scene_changed
-	await _use_estate()
 	var plan := await _open_plan()
 	if not _expect(plan != null and state.last_field_night.is_empty() and not ui.hud.morning_button.visible,
 		"The legacy save opens without a fabricated previous night."):
@@ -230,6 +245,66 @@ func _rain_and_rice() -> void:
 	if _expect(plan != null and "1 格稻田断水停长" in plan.field_receipt.text, "The receipt distinguishes interrupted rice from missed hand watering."):
 		print("FIELD_NIGHT_RAIN ", plan.field_receipt.text)
 		await _button(plan.close_button)
+
+func _first_rice() -> void:
+	if not await _load_fixture({
+		"current_day": 4,
+		"active_crops": {
+			"5,5": {"id": "rice", "age": 0, "growth_nights": 2, "requires_channel": true},
+			"6,5": {"id": "rice", "age": 0, "growth_nights": 2, "requires_channel": true},
+		},
+	}):
+		return
+	await _button(ui.sleep_button)
+	var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(warning != null and "公田断水" in warning.text_label.text,
+		"A disconnected first tribute names the need for a canal."):
+		return
+	await _button(warning.choices.front())
+	_expect(state.field_route_public_only and ui.directions.tracked_plot == PUBLIC,
+		"The shortcut marks the public plot when both rice plots lack water.")
+	if not _expect(state.save_game() == OK and state.load_game(state.manual_save_path()) == OK,
+		"Save and reload the public-only irrigation route."):
+		return
+	await tree.scene_changed
+	await _use_estate()
+	await tree.process_frame
+	_expect(state.field_route_public_only and ui.directions.tracked_plot == PUBLIC,
+		"The public-only route resumes on the same rice plot. status=%s public_only=%s plot=%s" % [
+			state.field_route_status, state.field_route_public_only, ui.directions.tracked_plot])
+
+func _first_deadline() -> void:
+	var deadline: int = state.balance.no_contribution_threshold
+	if not await _load_fixture({
+		"current_day": deadline,
+		"days_without_contribution": deadline - 1,
+		"reputation": 20,
+		"food_storage": 10,
+	}):
+		return
+	var penalty: int = state.tribute_penalty_tonight()
+	var reputation: int = state.reputation
+	_expect("首贡期限" in ui.hud.guide.text, "The opening journal gives the first deadline before planting.")
+	await _button(ui.sleep_button)
+	var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(warning != null and "还没播种" in warning.text_label.text and penalty > 0
+		and ("声望 −%d" % penalty) in warning.text_label.text,
+		"The first deadline warns about an empty public field and shows the actual penalty."):
+		return
+	await _capture("04-first-tribute-due")
+	await _button(warning.choices.front())
+	_expect(ui.directions.tracked_plot == PUBLIC and state.field_route_status == state.TributeRoute.TEND
+		and world.current_seed_id == state.tribute_seed() and state.current_day == deadline
+		and state.reputation == reputation, "The warning can mark the unplanted plot and select a suitable seed.")
+	await _button(ui.sleep_button)
+	warning = ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(warning != null, "Requesting sleep again offers the same deliberate choice."):
+		return
+	await _button(warning.choices.back())
+	await tree.create_timer(1.12).timeout
+	_expect(state.current_day == deadline + 1 and state.reputation == reputation - penalty
+		and state.last_dawn.tribute_penalty == penalty, "Continuing applies the normal penalty once and records it.")
+	print("FIELD_NIGHT_FIRST_DEADLINE day=", state.current_day, " penalty=", state.last_dawn.get("tribute_penalty", 0))
 
 func run(game_tree: SceneTree, capture := "") -> void:
 	tree = game_tree
@@ -249,6 +324,10 @@ func run(game_tree: SceneTree, capture := "") -> void:
 	await _use_estate()
 	if await _first_night() and await _tend_and_harvest():
 		await _rain_and_rice()
+	if failures == 0:
+		await _first_rice()
+	if failures == 0:
+		await _first_deadline()
 	tree.unload_current_scene()
 	for stream in tree.root.get_node("AudioManager").get_children():
 		if stream is AudioStreamPlayer:
