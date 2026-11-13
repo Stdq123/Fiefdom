@@ -84,6 +84,7 @@ func _setup_backpack_button() -> void:
 		backpack_button = get_node(backpack_trigger)
 	backpack_button.focus_mode = Control.FOCUS_NONE
 	backpack_button.theme = HUD_THEME
+	backpack_button.theme_type_variation = &"HudButton"
 	backpack_button.icon = HUDIcons.icon(HUDIcons.Symbol.BACKPACK)
 	backpack_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	backpack_button.pressed.connect(_open_backpack)
@@ -135,7 +136,7 @@ func _refresh_notice_visibility() -> void:
 func _build_status() -> void:
 	var trail_note := PanelContainer.new()
 	trail_note.theme = HUD_THEME
-	trail_note.theme_type_variation = &"HudPanel"
+	trail_note.theme_type_variation = &"HudCalendar"
 	trail_note.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	view.add_child(trail_note)
 	trail_note.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
@@ -148,6 +149,7 @@ func _build_status() -> void:
 	trail_note.add_child(trail_text)
 	var trail_title := Label.new()
 	trail_title.text = "竹涧"
+	trail_title.theme_type_variation = &"HudBronzeInk"
 	trail_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	trail_title.add_theme_font_size_override("font_size", 22)
 	var title_row := HBoxContainer.new()
@@ -165,11 +167,13 @@ func _build_status() -> void:
 	trail_weather.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	weather_seal.add_child(trail_weather)
 	trail_date = Label.new()
+	trail_date.theme_type_variation = &"HudBronzeInk"
 	trail_date.add_theme_font_size_override("font_size", 14)
 	trail_text.add_child(trail_date)
 	GameEvents.daylight_changed.connect(_refresh_trail_date)
 	_refresh_trail_date()
 	outing_label = Label.new()
+	outing_label.theme_type_variation = &"HudBronzeInk"
 	outing_label.add_theme_font_size_override("font_size", 14)
 	trail_text.add_child(outing_label)
 	GameEvents.forage_taken.connect(_refresh_outing)
@@ -177,7 +181,7 @@ func _build_status() -> void:
 	GameEvents.day_advanced.connect(_refresh_outing.unbind(1))
 	ravine_label = Label.new()
 	ravine_label.add_theme_font_size_override("font_size", 14)
-	ravine_label.add_theme_color_override("font_color", Color("#704223"))
+	ravine_label.add_theme_color_override("font_color", Color("#f2c596"))
 	trail_text.add_child(ravine_label)
 	GameEvents.ravine_journal_changed.connect(_refresh_ravine)
 	_refresh_ravine()

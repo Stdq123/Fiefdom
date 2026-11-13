@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="224" height="64" viewBox="0 0 224 64" shape-rendering="crispEdges">
+  <defs>
+    <g id="slip_seam">
+      <path fill="#c3a476" d="M0 0h1v48H0z"/>
+      <path fill="#e9ce9d" d="M1 0h1v48H1z"/>
+    </g>
+    <g id="cord_loop">
+      <path fill="#65422f" d="M-1-1h3v4h-3z"/>
+      <path fill="#a67650" d="M0-1h2v1H0zm1 1h1v1H1z"/>
+    </g>
+    <g id="cord">
+      <path fill="#5a3929" d="M0 0h64v2H0z"/>
+      <path fill="#9d6945" d="M1 0h62v1H1z"/>
+      <use href="#cord_loop" x="4"/>
+      <use href="#cord_loop" x="12"/>
+      <use href="#cord_loop" x="20"/>
+      <use href="#cord_loop" x="28"/>
+      <use href="#cord_loop" x="36"/>
+      <use href="#cord_loop" x="44"/>
+      <use href="#cord_loop" x="52"/>
+      <use href="#cord_loop" x="60"/>
+    </g>
+    <path id="slip_ends" d="M4 5h1V3h6v1h2V2h6v1h2v2h6V3h2V2h6v2h2v1h6V3h2V2h6v2h2v1h6v2h1v4H4z"/>
+    <path id="plate" d="M7 1h18v2h3v2h2v4h2v14h-2v4h-2v2h-3v2H7v-2H4v-2H2v-4H0V9h2V5h2V3h3z"/>
+    <path id="plate_inset" d="M8 3h16v2h3v2h1v4h2v10h-2v4h-1v2h-3v2H8v-2H5v-2H4v-4H2V11h2V7h1V5h3z"/>
+    <path id="plate_face" d="M8 5h16v2h2v2h1v3h2v8h-2v3h-1v2h-2v2H8v-2H6v-2H5v-3H3v-8h2V9h1V7h2z"/>
+    <path id="plate_glint" d="M8 3h16v1H8zM5 5h3v1H5zM3 9h1v3H3zm21-4h3v1h-3zM4 16l3-3 3 3-3 3zm18 0 3-3 3 3-3 3z"/>
+    <path id="portrait_coil" d="M4 9h2V5h5v2H8v4H6v4H4zm3 3h3V9h4v2h-2v4H9v3H7z"/>
+  </defs>
+  <!-- Uneven slip ends leave space for the cord above and below the words. -->
+  <g>
+    <rect x="3" y="8" width="59" height="50" fill="#251a14" opacity=".56"/>
+    <rect x="2" y="8" width="60" height="48" fill="#64452d"/>
+    <rect x="4" y="8" width="56" height="48" fill="#d7bd8e"/>
+    <path fill="#ddc697" d="M12 8h8v48h-8zm24 0h8v48h-8z"/>
+    <path fill="#d4b98a" d="M20 8h8v48h-8zm24 0h8v48h-8z"/>
+    <path fill="#cbb082" d="M8 15h.5v11H8zm8 13h.5v8H16zm9 10h.5v12H25zm8-18h.5v11H33zm8 9h.5v10H41zm9-4h.5v12H50zm7-11h.5v13H57z"/>
+    <use href="#slip_seam" x="12" y="8"/>
+    <use href="#slip_seam" x="20" y="8"/>
+    <use href="#slip_seam" x="28" y="8"/>
+    <use href="#slip_seam" x="36" y="8"/>
+    <use href="#slip_seam" x="44" y="8"/>
+    <use href="#slip_seam" x="52" y="8"/>
+    <use href="#slip_ends" fill="#6d4c32" transform="translate(-1 1)"/>
+    <use href="#slip_ends" fill="#d9c08d"/>
+    <use href="#slip_ends" fill="#785437" transform="rotate(180 32 32) translate(-1 -1)"/>
+    <use href="#slip_ends" fill="#c8aa78" transform="rotate(180 32 32)"/>
+    <use href="#cord" y="8"/>
+    <use href="#cord" y="55"/>
+  </g>
+  <!-- Cast portrait mount, with a coil at each corner and a dark lacquer well. -->
+  <g transform="translate(64)">
+    <path fill="#3c2b22" d="M7 0h50v2h4v3h2v5h1v44h-1v5h-2v3h-4v2H7v-2H3v-3H1v-5H0V10h1V5h2V2h4z"/>
+    <path fill="#a97a4c" d="M7 2h50v2h4v5h1v46h-2v4h-3v3H7v-2H4v-4H2V9h1V5h4z"/>
+    <path fill="#536251" d="M8 4h48v2h4v5h1v42h-1v5h-4v2H8v-2H4v-5H3V11h1V6h4z"/>
+    <path fill="#76816a" d="M9 5h46v1H9zM4 12h1v39H4zm54 0h1v39h-1z"/>
+    <path fill="#342c24" d="M13 9h38v2h2v2h2v38h-2v2h-2v2H13v-2h-2v-2H9V13h2v-2h2z"/>
+    <path fill="#4f362e" d="M13 11h38v2h2v38h-2v2H13v-2h-2V13h2z"/>
+    <path fill="#77604b" d="M14 12h36v1H14zm-2 3h1v34h-1z"/>
+    <path fill="#392b24" d="M50 15h2v34h-2zm-35 35h35v2H15z"/>
+    <g fill="#bd9460">
+      <use href="#portrait_coil"/>
+      <use href="#portrait_coil" transform="rotate(90 32 32)"/>
+      <use href="#portrait_coil" transform="rotate(180 32 32)"/>
+      <use href="#portrait_coil" transform="rotate(270 32 32)"/>
+    </g>
+  </g>
+  <!-- Lacquer choices. The clipped ends retain their shape at every label width. -->
+  <g transform="translate(128)">
+    <use href="#plate" fill="#37241d"/>
+    <use href="#plate_inset" fill="#a16745"/>
+    <use href="#plate_face" fill="#633a2d"/>
+    <use href="#plate_glint" fill="#c48d59"/>
+  </g>
+  <g transform="translate(160)">
+    <use href="#plate" fill="#4c2820"/>
+    <use href="#plate_inset" fill="#cb8e55"/>
+    <use href="#plate_face" fill="#814330"/>
+    <use href="#plate_glint" fill="#e4ad69"/>
+  </g>
+  <g transform="translate(128 32)">
+    <use href="#plate" fill="#3d261d"/>
+    <use href="#plate_inset" fill="#9b6448"/>
+    <use href="#plate_face" fill="#65392b"/>
+    <path fill="#513028" d="M9 5h14v2H9zM6 7h3v2H6z"/>
+    <path fill="#bd8854" d="M8 27h16v2H8zm-3-2h3v2H5zm19 0h3v2h-3z"/>
+  </g>
+  <g transform="translate(160 32)">
+    <use href="#plate" fill="#6b5440"/>
+    <use href="#plate_inset" fill="#ab8d65"/>
+    <use href="#plate_face" fill="#7a654b"/>
+    <use href="#plate_glint" fill="#bea47b"/>
+  </g>
+  <g transform="translate(192)">
+    <path fill="#442a21" d="M7 0h18v2h3v2h2v4h2v16h-2v4h-2v2h-3v2H7v-2H4v-2H2v-4H0V8h2V4h2V2h3zm1 3v2H5v4H3v14h2v4h3v2h16v-2h3v-4h2V9h-2V5h-3V3z" fill-rule="evenodd"/>
+    <path fill="#fff1ac" d="M7 1h18v2h3v2h1v4h2v14h-2v4h-1v2h-3v2H7v-2H4v-2H3v-4H1V9h2V5h1V3h3zm1 2v2H5v4H3v14h2v4h3v2h16v-2h3v-4h2V9h-2V5h-3V3z" fill-rule="evenodd"/>
+  </g>
+  <g transform="translate(192 32)">
+    <path fill="#583226" d="M5 3h22v2h3v2h1v18h-1v2h-3v2H5v-2H2v-2H1V7h1V5h3z"/>
+    <path fill="#a3523d" d="M5 5h22v2h2v18h-2v2H5v-2H3V7h2z"/>
+    <path fill="#d39261" d="M6 5h20v1H6zm-3 3h1v16H3z"/>
+    <path fill="#793c2e" d="M28 8h1v16h-1zM6 26h20v1H6z"/>
+    <path fill="#d8a275" d="M6 8h2v2H6zm18 14h2v2h-2z"/>
+  </g>
+</svg>

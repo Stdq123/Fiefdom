@@ -154,7 +154,7 @@ offset_bottom = 89.0
 grow_horizontal = 0
 mouse_filter = 2
 theme = ExtResource("15_hud")
-theme_type_variation = &"HudPanel"
+theme_type_variation = &"HudCalendar"
 
 [node name="Stack" type="VBoxContainer" parent="UI/Control/RoadName"]
 layout_mode = 2
@@ -215,6 +215,7 @@ stretch_mode = 5
 [node name="Date" type="Label" parent="UI/Control/RoadName/Stack"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
 
 [node name="RouteRow" type="HBoxContainer" parent="UI/Control/RoadName/Stack"]
 unique_name_in_owner = true
@@ -237,7 +238,7 @@ stretch_mode = 5
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.38, 0.22, 0.12, 1)
+theme_override_colors/font_color = Color(0.95, 0.77, 0.59, 1)
 autowrap_mode = 3
 
 [node name="SettingsButton" type="Button" parent="UI/Control"]

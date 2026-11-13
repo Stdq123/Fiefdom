@@ -975,3 +975,5 @@
 
 - 常驻界面补绘青铜卷蛇纹、绳纹和铜绿，简册可辨出竹片与编绳。朱漆标出选中种槽、爵位与外出地名。铜钱图标取春秋空首布的铲形，历书和舆图使用编绳简册，背包画成竹编行箧。
 - 封地铜盘有十二个刻点，亮点随地支时辰移动。昼夜回放核对酉时盘面与西廊灯笼，旧档继续时按存档时辰绘制。 [封地实机](../build/polish-art-resolution/hud-spring-release-1280/04-first-field.png) · [窄窗口实机](../build/polish-art-resolution/hud-spring-release-1024/04a-journal-expanded.png) · [Windows 试玩包](../build/polish-hud-spring-autumn/Fiefdom-1.0.0-Windows-x64.zip)
+- 封地手记露出上下束绳与竹片接缝，历书和外出日期牌改用暗铜底，工具栏改为系绳木牌。背包打开后显示黑漆朱绘分格匣，角色对白展开编绳简册。两处在同屏分别呈现所需的物品、回复和焦点。
+- Windows 默认窗口为 1920×1080。发行包在隔离桌面按默认尺寸启动，核对实际窗口和截图均为 1920×1080。 [封地 HUD](../build/polish-art-resolution/hud-1080-estate/04-first-field.png) · [背包](../build/polish-art-resolution/hud-1080-bag/02-private-crops.png) · [角色对话](../build/polish-art-resolution/hud-1080-dialogue/02a-reputation-needed.png) · [Windows 试玩包](../build/polish-hud-1080p/Fiefdom-1.0.0-Windows-x64.zip)

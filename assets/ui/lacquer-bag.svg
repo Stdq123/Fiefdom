@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="48" viewBox="0 0 288 48" shape-rendering="crispEdges">
+  <defs>
+    <path id="case" d="M8 0h32v2h4v2h2v4h2v32h-2v4h-2v2h-4v2H8v-2H4v-2H2v-4H0V8h2V4h2V2h4z"/>
+    <path id="rim" d="M8 2h32v2h4v4h2v32h-2v4h-4v2H8v-2H4v-4H2V8h2V4h4z"/>
+    <path id="shoulders" d="M9 4h30v2h-5v2h-2V6H16v2h-2V6H9zm-3 5h2v6H6zm34 0h2v6h-2zM6 33h2v6H6zm34 0h2v6h-2zM9 42h6v-2h2v2h14v-2h2v2h6v2H9z"/>
+    <path id="paint" d="M12 8h5v2h4V8h6v2h4V8h5v2h-3v2h-8v-2h-2v2h-8v-2h-3z"/>
+    <path id="wood_grain" d="M14 15h13v1H14zm15 2h5v1h-5zM9 21h6v1H9zm6 2h14v1H15zm13 2h7v1h-7zM10 30h7v1h-7zm9 2h13v1H19z"/>
+    <path id="well" d="M5 1h38v2h3v3h1v36h-1v3h-3v2H5v-2H2v-3H1V6h1V3h3z"/>
+    <path id="well_face" d="M6 5h36v2h2v34h-2v2H6v-2H4V7h2z"/>
+    <path id="slip" d="M9 1h30v1h3v3h2v6h3v26h-3v6h-2v3h-3v1H9v-1H6v-3H4v-6H1V11h3V5h2V2h3z"/>
+    <g id="bamboo_tag">
+      <use href="#slip" fill="#291b15"/>
+      <path fill="#92623b" d="M8 3h32v2h2v7h2v24h-2v7h-2v2H8v-2H6v-7H4V12h2V5h2z"/>
+      <path fill="#cfaa75" d="M9 4h30v2h2v36h-2v2H9v-2H7V6h2z"/>
+      <path fill="#e5c28a" d="M10 5h28v2H10zm-2 4h1v29H8zm9 2h12v1H17zm-3 26h22v1H14z"/>
+      <path fill="#a88151" d="M10 42h28v2H10zm29-32h1v29h-1zM18 8h14v1H18zm4 33h13v1H22z"/>
+      <path fill="#643c29" d="M3 13h4v3H3zm0 19h4v3H3zm38-19h4v3h-4zm0 19h4v3h-4z"/>
+      <path fill="#966346" d="M4 13h3v1H4zm37 0h3v1h-3zM4 32h3v1H4zm37 0h3v1h-3z"/>
+    </g>
+  </defs>
+
+  <!-- Black lacquer with a red-painted linked border and stepped wooden joints. -->
+  <g>
+    <use href="#case" fill="#170f0d"/>
+    <use href="#rim" fill="#3c251c"/>
+    <path fill="#27201b" d="M8 7h32v2h2v30h-2v2H8v-2H6V9h2z"/>
+    <use href="#shoulders" fill="#744537"/>
+    <path fill="#9f5e43" d="M9 3h30v1H9zM3 9h1v30H3zM8 5h1v1H8zM5 8h1v1H5z"/>
+    <path fill="#1c1410" d="M9 44h30v1H9zm35-35h1v30h-1z"/>
+    <use href="#paint" fill="#97503c"/>
+    <use href="#paint" fill="#9b4c37" transform="rotate(180 24 24)"/>
+    <use href="#paint" fill="#784032" transform="rotate(90 24 24)"/>
+    <use href="#paint" fill="#784032" transform="rotate(-90 24 24)"/>
+    <use href="#wood_grain" fill="#32231c"/>
+    <path fill="#ac7650" d="M8 7h2v2H8zm30 0h2v2h-2zM8 39h2v2H8zm30 0h2v2h-2z"/>
+  </g>
+
+  <!-- The oxblood liner and raised compartment walls. -->
+  <g transform="translate(48 0)">
+    <use href="#well" fill="#1a110e"/>
+    <path fill="#5e3228" d="M5 2h38v2h3v40h-3v2H5v-2H2V4h3z"/>
+    <use href="#well_face" fill="#43251e"/>
+    <path fill="#331c18" d="M6 5h36v2H6zM4 7h2v34H4z"/>
+    <path fill="#8b4b36" d="M6 44h36v1H6zm38-37h1v34h-1z"/>
+    <use href="#wood_grain" fill="#482922"/>
+  </g>
+
+  <!-- An empty well remains visible when its contents are absent. -->
+  <g transform="translate(96 0)">
+    <use href="#well" fill="#512b23"/>
+    <use href="#well_face" fill="#341e19"/>
+    <path fill="#231512" d="M6 5h36v2H6zM4 7h2v34H4z"/>
+    <path fill="#6d3829" d="M6 43h36v2H6zm38-36h1v34h-1z"/>
+    <path fill="#4c2a23" d="M8 39h2v2H8zm30 0h2v2h-2zM8 8h2v2H8zm30 0h2v2h-2z"/>
+  </g>
+
+  <!-- Occupied compartments have a warmer interior to reveal dark item sprites. -->
+  <g transform="translate(144 0)">
+    <use href="#well" fill="#241612"/>
+    <path fill="#92503a" d="M5 2h38v2h3v40h-3v2H5v-2H2V4h3z"/>
+    <use href="#well_face" fill="#624234"/>
+    <path fill="#54332a" d="M6 5h36v2H6zM4 7h2v34H4z"/>
+    <path fill="#a66043" d="M6 44h36v1H6zm38-37h1v34h-1z"/>
+    <path fill="#b47550" d="M8 8h2v2H8zm30 0h2v2h-2zM8 39h2v2H8zm30 0h2v2h-2z"/>
+  </g>
+
+  <!-- Bamboo stock labels, lashed down near the chamfered ends. -->
+  <g transform="translate(192 0)">
+    <use href="#bamboo_tag"/>
+  </g>
+  <g transform="translate(240 0)">
+    <use href="#bamboo_tag"/>
+    <path fill="#f0ce95" d="M10 7h28v31H10z"/>
+    <path fill="#f7dca5" d="M11 8h17v1H11zm1 27h12v1H12z"/>
+    <path fill="#a14e38" d="M8 39h32v4H8z"/>
+    <path fill="#ba6649" d="M8 39h32v1H8z"/>
+  </g>
+</svg>

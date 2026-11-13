@@ -1,40 +1,122 @@
 [gd_scene format=3 uid="uid://dialogue_panel_uid"]
 
 [ext_resource type="Script" path="res://scripts/DialoguePanel.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/ui/dialogue-slips.svg" id="2_slips"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dialogue"]
+[sub_resource type="StyleBoxTexture" id="Slips"]
 content_margin_left = 22.0
-content_margin_top = 16.0
+content_margin_top = 20.0
 content_margin_right = 22.0
-content_margin_bottom = 15.0
-bg_color = Color(0.103, 0.158, 0.128, 0.99)
-border_width_left = 1
-border_width_top = 2
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.64, 0.53, 0.34, 1)
-corner_radius_top_left = 7
-corner_radius_top_right = 7
-corner_radius_bottom_right = 7
-corner_radius_bottom_left = 7
-shadow_color = Color(0.04, 0.08, 0.05, 0.4)
-shadow_size = 9
+content_margin_bottom = 20.0
+texture = ExtResource("2_slips")
+texture_margin_left = 8.0
+texture_margin_top = 14.0
+texture_margin_right = 8.0
+texture_margin_bottom = 14.0
+axis_stretch_horizontal = 1
+region_rect = Rect2(0, 0, 64, 64)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_portrait"]
+[sub_resource type="StyleBoxTexture" id="PortraitMount"]
 content_margin_left = 12.0
 content_margin_top = 12.0
 content_margin_right = 12.0
 content_margin_bottom = 12.0
-bg_color = Color(0.19, 0.24, 0.17, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.43, 0.46, 0.30, 1)
-corner_radius_top_left = 5
-corner_radius_top_right = 5
-corner_radius_bottom_right = 5
-corner_radius_bottom_left = 5
+texture = ExtResource("2_slips")
+texture_margin_left = 15.0
+texture_margin_top = 15.0
+texture_margin_right = 15.0
+texture_margin_bottom = 15.0
+region_rect = Rect2(64, 0, 64, 64)
+
+[sub_resource type="StyleBoxTexture" id="ContextPlaque"]
+content_margin_left = 10.0
+content_margin_top = 5.0
+content_margin_right = 10.0
+content_margin_bottom = 5.0
+texture = ExtResource("2_slips")
+texture_margin_left = 8.0
+texture_margin_top = 6.0
+texture_margin_right = 8.0
+texture_margin_bottom = 6.0
+region_rect = Rect2(192, 32, 32, 32)
+
+[sub_resource type="StyleBoxTexture" id="Choice"]
+content_margin_left = 16.0
+content_margin_top = 5.0
+content_margin_right = 16.0
+content_margin_bottom = 5.0
+texture = ExtResource("2_slips")
+texture_margin_left = 10.0
+texture_margin_top = 8.0
+texture_margin_right = 10.0
+texture_margin_bottom = 8.0
+region_rect = Rect2(128, 0, 32, 32)
+
+[sub_resource type="StyleBoxTexture" id="ChoiceHover"]
+content_margin_left = 16.0
+content_margin_top = 5.0
+content_margin_right = 16.0
+content_margin_bottom = 5.0
+texture = ExtResource("2_slips")
+texture_margin_left = 10.0
+texture_margin_top = 8.0
+texture_margin_right = 10.0
+texture_margin_bottom = 8.0
+region_rect = Rect2(160, 0, 32, 32)
+
+[sub_resource type="StyleBoxTexture" id="ChoicePressed"]
+content_margin_left = 16.0
+content_margin_top = 6.0
+content_margin_right = 16.0
+content_margin_bottom = 4.0
+texture = ExtResource("2_slips")
+texture_margin_left = 10.0
+texture_margin_top = 8.0
+texture_margin_right = 10.0
+texture_margin_bottom = 8.0
+region_rect = Rect2(128, 32, 32, 32)
+
+[sub_resource type="StyleBoxTexture" id="ChoiceUnavailable"]
+content_margin_left = 16.0
+content_margin_top = 5.0
+content_margin_right = 16.0
+content_margin_bottom = 5.0
+texture = ExtResource("2_slips")
+texture_margin_left = 10.0
+texture_margin_top = 8.0
+texture_margin_right = 10.0
+texture_margin_bottom = 8.0
+region_rect = Rect2(160, 32, 32, 32)
+
+[sub_resource type="StyleBoxTexture" id="ChoiceFocus"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+texture = ExtResource("2_slips")
+texture_margin_left = 10.0
+texture_margin_top = 8.0
+texture_margin_right = 10.0
+texture_margin_bottom = 8.0
+expand_margin_left = 1.0
+expand_margin_top = 1.0
+expand_margin_right = 1.0
+expand_margin_bottom = 1.0
+region_rect = Rect2(192, 0, 32, 32)
+
+[sub_resource type="Theme" id="DialogueChoices"]
+Button/colors/font_color = Color(1, 0.93, 0.76, 1)
+Button/colors/font_focus_color = Color(1, 0.93, 0.76, 1)
+Button/colors/font_hover_color = Color(1, 0.93, 0.76, 1)
+Button/colors/font_pressed_color = Color(1, 0.93, 0.76, 1)
+Button/colors/font_hover_pressed_color = Color(1, 0.93, 0.76, 1)
+Button/colors/font_disabled_color = Color(1, 0.93, 0.76, 1)
+Button/styles/normal = SubResource("Choice")
+Button/styles/hover = SubResource("ChoiceHover")
+Button/styles/pressed = SubResource("ChoicePressed")
+Button/styles/hover_pressed = SubResource("ChoicePressed")
+Button/styles/disabled = SubResource("ChoiceUnavailable")
+Button/styles/focus = SubResource("ChoiceFocus")
 
 [node name="DialoguePanel" type="Control" groups=["dialogue_panel"]]
 layout_mode = 3
@@ -53,7 +135,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.08, 0.12, 0.09, 0.28)
+color = Color(0.10, 0.075, 0.056, 0.30)
 
 [node name="Panel" type="PanelContainer" parent="."]
 layout_mode = 1
@@ -65,7 +147,8 @@ offset_top = -23.0
 offset_right = -116.0
 offset_bottom = -23.0
 grow_vertical = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_dialogue")
+texture_filter = 1
+theme_override_styles/panel = SubResource("Slips")
 
 [node name="Content" type="HBoxContainer" parent="Panel"]
 layout_mode = 2
@@ -73,10 +156,11 @@ mouse_filter = 2
 theme_override_constants/separation = 22
 
 [node name="PortraitFrame" type="PanelContainer" parent="Panel/Content"]
+unique_name_in_owner = true
 layout_mode = 2
-size_flags_vertical = 4
+size_flags_vertical = 0
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_portrait")
+theme_override_styles/panel = SubResource("PortraitMount")
 
 [node name="Portrait" type="TextureRect" parent="Panel/Content/PortraitFrame"]
 unique_name_in_owner = true
@@ -93,30 +177,32 @@ size_flags_horizontal = 3
 mouse_filter = 2
 theme_override_constants/separation = 9
 
-[node name="Identity" type="VBoxContainer" parent="Panel/Content/Body"]
+[node name="Identity" type="HBoxContainer" parent="Panel/Content/Body"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 1
+theme_override_constants/separation = 12
 
 [node name="NameLabel" type="Label" parent="Panel/Content/Body/Identity"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.95, 0.82, 0.55, 1)
+theme_override_colors/font_color = Color(0.20, 0.10, 0.062, 1)
 theme_override_font_sizes/font_size = 27
 
 [node name="ContextLabel" type="Label" parent="Panel/Content/Body/Identity"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_vertical = 4
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.71, 0.80, 0.66, 1)
+theme_override_colors/font_color = Color(1, 0.94, 0.79, 1)
 theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("ContextPlaque")
 
 [node name="TextLabel" type="RichTextLabel" parent="Panel/Content/Body"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/default_color = Color(0.92, 0.90, 0.79, 1)
+theme_override_colors/default_color = Color(0.19, 0.11, 0.072, 1)
 theme_override_constants/line_separation = 4
 theme_override_font_sizes/normal_font_size = 18
 fit_content = true
@@ -126,6 +212,7 @@ scroll_active = false
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
+theme = SubResource("DialogueChoices")
 theme_override_constants/h_separation = 9
 theme_override_constants/v_separation = 7
 
@@ -133,6 +220,6 @@ theme_override_constants/v_separation = 7
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.76, 0.80, 0.67, 1)
+theme_override_colors/font_color = Color(0.32, 0.20, 0.13, 1)
 theme_override_font_sizes/font_size = 14
 horizontal_alignment = 2

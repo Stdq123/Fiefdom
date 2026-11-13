@@ -327,7 +327,7 @@ func setup_seeds(ids: Array, select_seed: Callable) -> void:
 		slot.focus_mode = Control.FOCUS_NONE # Each seed has its own shortcut.
 		slot.toggle_mode = true
 		slot.button_group = group
-		slot.theme_type_variation = &"HudSlot"
+		slot.theme_type_variation = &"HudSeedPocket"
 		seed_slots.add_child(slot)
 		slot.pressed.connect(select_seed.bind(id))
 		seed_buttons[id] = slot

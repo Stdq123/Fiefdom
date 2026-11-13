@@ -30,6 +30,45 @@ axis_stretch_horizontal = 1
 axis_stretch_vertical = 1
 region_rect = Rect2(32, 0, 32, 32)
 
+[sub_resource type="StyleBoxTexture" id="Slips"]
+content_margin_left = 12.0
+content_margin_top = 14.0
+content_margin_right = 12.0
+content_margin_bottom = 14.0
+texture = ExtResource("1_frame")
+texture_margin_left = 4.0
+texture_margin_top = 10.0
+texture_margin_right = 4.0
+texture_margin_bottom = 10.0
+axis_stretch_horizontal = 1
+region_rect = Rect2(0, 32, 32, 32)
+
+[sub_resource type="StyleBoxTexture" id="CalendarTablet"]
+content_margin_left = 12.0
+content_margin_top = 9.0
+content_margin_right = 12.0
+content_margin_bottom = 9.0
+texture = ExtResource("1_frame")
+texture_margin_left = 7.0
+texture_margin_top = 7.0
+texture_margin_right = 7.0
+texture_margin_bottom = 7.0
+axis_stretch_horizontal = 1
+region_rect = Rect2(32, 32, 32, 32)
+
+[sub_resource type="StyleBoxTexture" id="LacquerTray"]
+content_margin_left = 10.0
+content_margin_top = 7.0
+content_margin_right = 10.0
+content_margin_bottom = 7.0
+texture = ExtResource("1_frame")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+axis_stretch_horizontal = 1
+region_rect = Rect2(192, 32, 32, 32)
+
 [sub_resource type="StyleBoxTexture" id="Well"]
 content_margin_left = 5.0
 content_margin_top = 3.0
@@ -154,49 +193,6 @@ axis_stretch_vertical = 1
 modulate_color = Color(0.86, 0.78, 0.72, 1)
 region_rect = Rect2(192, 0, 32, 32)
 
-[sub_resource type="StyleBoxTexture" id="Slot"]
-content_margin_left = 4.0
-content_margin_top = 3.0
-content_margin_right = 4.0
-content_margin_bottom = 4.0
-texture = ExtResource("1_frame")
-texture_margin_left = 6.0
-texture_margin_top = 6.0
-texture_margin_right = 6.0
-texture_margin_bottom = 6.0
-axis_stretch_horizontal = 1
-axis_stretch_vertical = 1
-region_rect = Rect2(224, 0, 32, 32)
-
-[sub_resource type="StyleBoxTexture" id="SlotHover"]
-content_margin_left = 4.0
-content_margin_top = 3.0
-content_margin_right = 4.0
-content_margin_bottom = 4.0
-texture = ExtResource("1_frame")
-texture_margin_left = 6.0
-texture_margin_top = 6.0
-texture_margin_right = 6.0
-texture_margin_bottom = 6.0
-axis_stretch_horizontal = 1
-axis_stretch_vertical = 1
-modulate_color = Color(1.23, 1.17, 1.10, 1)
-region_rect = Rect2(224, 0, 32, 32)
-
-[sub_resource type="StyleBoxTexture" id="SlotSelected"]
-content_margin_left = 4.0
-content_margin_top = 3.0
-content_margin_right = 4.0
-content_margin_bottom = 4.0
-texture = ExtResource("1_frame")
-texture_margin_left = 6.0
-texture_margin_top = 6.0
-texture_margin_right = 6.0
-texture_margin_bottom = 6.0
-axis_stretch_horizontal = 1
-axis_stretch_vertical = 1
-region_rect = Rect2(256, 0, 32, 32)
-
 [sub_resource type="StyleBoxTexture" id="Focus"]
 content_margin_left = 0.0
 content_margin_top = 0.0
@@ -213,23 +209,111 @@ expand_margin_right = 1.0
 expand_margin_bottom = 1.0
 region_rect = Rect2(288, 0, 32, 32)
 
-[sub_resource type="StyleBoxFlat" id="MeterTrack"]
-bg_color = Color(0.157, 0.101, 0.073, 1)
-border_width_top = 1
-border_width_bottom = 1
-border_width_left = 1
-border_width_right = 1
-border_color = Color(0.54, 0.365, 0.231, 1)
+[sub_resource type="StyleBoxTexture" id="Tag"]
+content_margin_left = 13.0
+content_margin_top = 5.0
+content_margin_right = 13.0
+content_margin_bottom = 6.0
+texture = ExtResource("1_frame")
+texture_margin_left = 8.0
+texture_margin_top = 9.0
+texture_margin_right = 8.0
+texture_margin_bottom = 9.0
+region_rect = Rect2(64, 32, 32, 32)
 
-[sub_resource type="StyleBoxFlat" id="MeterFill"]
-bg_color = Color(0.638, 0.709, 0.371, 1)
-border_width_top = 1
-border_color = Color(0.817, 0.839, 0.497, 1)
+[sub_resource type="StyleBoxTexture" id="TagHover"]
+content_margin_left = 13.0
+content_margin_top = 5.0
+content_margin_right = 13.0
+content_margin_bottom = 6.0
+texture = ExtResource("1_frame")
+texture_margin_left = 8.0
+texture_margin_top = 9.0
+texture_margin_right = 8.0
+texture_margin_bottom = 9.0
+region_rect = Rect2(96, 32, 32, 32)
 
-[sub_resource type="StyleBoxFlat" id="HealthFill"]
-bg_color = Color(0.753, 0.315, 0.243, 1)
-border_width_top = 1
-border_color = Color(0.925, 0.479, 0.365, 1)
+[sub_resource type="StyleBoxTexture" id="TagPressed"]
+content_margin_left = 13.0
+content_margin_top = 6.0
+content_margin_right = 13.0
+content_margin_bottom = 5.0
+texture = ExtResource("1_frame")
+texture_margin_left = 8.0
+texture_margin_top = 9.0
+texture_margin_right = 8.0
+texture_margin_bottom = 9.0
+region_rect = Rect2(128, 32, 32, 32)
+
+[sub_resource type="StyleBoxTexture" id="TagDisabled"]
+content_margin_left = 13.0
+content_margin_top = 5.0
+content_margin_right = 13.0
+content_margin_bottom = 6.0
+texture = ExtResource("1_frame")
+texture_margin_left = 8.0
+texture_margin_top = 9.0
+texture_margin_right = 8.0
+texture_margin_bottom = 9.0
+region_rect = Rect2(160, 32, 32, 32)
+
+[sub_resource type="StyleBoxTexture" id="SeedPocket"]
+content_margin_left = 4.0
+content_margin_top = 3.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+texture = ExtResource("1_frame")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+region_rect = Rect2(224, 32, 32, 32)
+
+[sub_resource type="StyleBoxTexture" id="SeedPocketHover"]
+content_margin_left = 4.0
+content_margin_top = 3.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+texture = ExtResource("1_frame")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+modulate_color = Color(1.26, 1.17, 1.1, 1)
+region_rect = Rect2(224, 32, 32, 32)
+
+[sub_resource type="StyleBoxTexture" id="SeedPocketSelected"]
+content_margin_left = 4.0
+content_margin_top = 3.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+texture = ExtResource("1_frame")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+region_rect = Rect2(256, 32, 32, 32)
+
+[sub_resource type="StyleBoxTexture" id="MeterTrack"]
+texture = ExtResource("1_frame")
+texture_margin_left = 4.0
+texture_margin_right = 4.0
+axis_stretch_horizontal = 1
+region_rect = Rect2(288, 32, 32, 6)
+
+[sub_resource type="StyleBoxTexture" id="MeterFill"]
+texture = ExtResource("1_frame")
+texture_margin_left = 4.0
+texture_margin_right = 4.0
+axis_stretch_horizontal = 1
+region_rect = Rect2(320, 32, 32, 6)
+
+[sub_resource type="StyleBoxTexture" id="HealthFill"]
+texture = ExtResource("1_frame")
+texture_margin_left = 4.0
+texture_margin_right = 4.0
+axis_stretch_horizontal = 1
+region_rect = Rect2(320, 40, 32, 6)
 
 [resource]
 default_font_size = 16
@@ -255,6 +339,14 @@ ProgressBar/styles/fill = SubResource("MeterFill")
 HudHealth/base_type = &"ProgressBar"
 HudHealth/styles/fill = SubResource("HealthFill")
 HudPanel/base_type = &"PanelContainer"
+HudSlips/base_type = &"PanelContainer"
+HudSlips/styles/panel = SubResource("Slips")
+HudCalendar/base_type = &"PanelContainer"
+HudCalendar/styles/panel = SubResource("CalendarTablet")
+HudBronzeInk/base_type = &"Label"
+HudBronzeInk/colors/font_color = Color(0.99, 0.91, 0.72, 1)
+HudLacquerTray/base_type = &"PanelContainer"
+HudLacquerTray/styles/panel = SubResource("LacquerTray")
 HudRail/base_type = &"PanelContainer"
 HudRail/styles/panel = SubResource("Rail")
 HudWell/base_type = &"PanelContainer"
@@ -265,6 +357,14 @@ HudSealLabel/base_type = &"Label"
 HudSealLabel/styles/normal = SubResource("Seal")
 HudSealLabel/colors/font_color = Color(0.98, 0.898, 0.71, 1)
 HudButton/base_type = &"Button"
+HudButton/styles/normal = SubResource("Tag")
+HudButton/styles/hover = SubResource("TagHover")
+HudButton/styles/pressed = SubResource("TagPressed")
+HudButton/styles/hover_pressed = SubResource("TagPressed")
+HudButton/styles/disabled = SubResource("TagDisabled")
+HudNight/base_type = &"HudButton"
+HudNight/styles/normal = SubResource("TagPressed")
+HudNight/styles/hover = SubResource("TagHover")
 HudPrimary/base_type = &"Button"
 HudPrimary/colors/font_color = Color(0.224, 0.145, 0.106, 1)
 HudPrimary/colors/font_hover_color = Color(0.224, 0.145, 0.106, 1)
@@ -280,8 +380,8 @@ HudPrimary/styles/normal = SubResource("Amber")
 HudPrimary/styles/hover = SubResource("AmberHover")
 HudPrimary/styles/pressed = SubResource("AmberPressed")
 HudPrimary/styles/hover_pressed = SubResource("AmberPressed")
-HudSlot/base_type = &"Button"
-HudSlot/styles/normal = SubResource("Slot")
-HudSlot/styles/hover = SubResource("SlotHover")
-HudSlot/styles/pressed = SubResource("SlotSelected")
-HudSlot/styles/hover_pressed = SubResource("SlotSelected")
+HudSeedPocket/base_type = &"Button"
+HudSeedPocket/styles/normal = SubResource("SeedPocket")
+HudSeedPocket/styles/hover = SubResource("SeedPocketHover")
+HudSeedPocket/styles/pressed = SubResource("SeedPocketSelected")
+HudSeedPocket/styles/hover_pressed = SubResource("SeedPocketSelected")

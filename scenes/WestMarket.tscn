@@ -218,7 +218,7 @@ offset_bottom = 100.0
 grow_horizontal = 0
 mouse_filter = 2
 theme = ExtResource("23_hud")
-theme_type_variation = &"HudPanel"
+theme_type_variation = &"HudCalendar"
 
 [node name="Stack" type="VBoxContainer" parent="UI/Control/MarketName"]
 layout_mode = 2
@@ -279,6 +279,7 @@ stretch_mode = 5
 [node name="Date" type="Label" parent="UI/Control/MarketName/Stack"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
 
 [node name="StockRow" type="HBoxContainer" parent="UI/Control/MarketName/Stack"]
 layout_mode = 2
@@ -297,6 +298,7 @@ stretch_mode = 5
 [node name="Stock" type="Label" parent="UI/Control/MarketName/Stack/StockRow"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
 
 [node name="Wallet" type="HBoxContainer" parent="UI/Control"]
 layout_mode = 1

@@ -7,9 +7,12 @@ enum Page { CROPS, FISH, CRAFT }
 const FLEECE := preload("res://assets/world/sheepfold/yard.svg")
 const SACK := preload("res://assets/world/estate-storage.svg")
 const SILK_MATERIALS := preload("res://assets/inventory/silk-materials.svg")
-const QUANTITY_INK := Color("#5f422d")
+const POCKET_MINIMUM := Vector2(216, 58)
+const ITEM_NAME_INK := Color("#ffe9bd")
+const QUANTITY_INK := Color("#e7bf96")
 
 @export var item_style: StyleBox
+@export var empty_pocket_style: StyleBox
 
 @onready var close_button: Button = %Close
 @onready var crop_tab: Button = %CropTab
@@ -22,11 +25,21 @@ const QUANTITY_INK := Color("#5f422d")
 @onready var eat_button: Button = %Eat
 @onready var meal_notice: Label = %MealNotice
 @onready var items: GridContainer = %Items
+@onready var empty_pockets: GridContainer = %EmptyPockets
 @onready var empty: Label = %Empty
 
 var page := Page.CROPS
 
 func _ready() -> void:
+	%BagIcon.texture = HUDIcons.icon(HUDIcons.Symbol.BACKPACK)
+	%CoinIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
+	for index in CropStock.IDS.size():
+		var pocket := Panel.new()
+		pocket.custom_minimum_size = POCKET_MINIMUM
+		pocket.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		pocket.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		pocket.add_theme_stylebox_override("panel", empty_pocket_style)
+		empty_pockets.add_child(pocket)
 	close_button.pressed.connect(close_requested.emit)
 	crop_tab.pressed.connect(select_page.bind(Page.CROPS))
 	fish_tab.pressed.connect(select_page.bind(Page.FISH))
@@ -54,6 +67,7 @@ func _refresh_items() -> void:
 	for row in items.get_children():
 		items.remove_child(row)
 		row.queue_free()
+	var empty_caption := ""
 	match page:
 		Page.CROPS:
 			for id: String in CropStock.IDS:
@@ -63,17 +77,17 @@ func _refresh_items() -> void:
 				var icon: Texture2D = (_atlas(SACK, Rect2(16, 0, 16, 16)) if id == CropStock.MIXED
 					else ItemManager.crop_picture(ItemManager.get_crop(id)).texture)
 				_add_item(id, ItemManager.crop_label(id), "%d 份" % count, icon)
-			empty.text = "私仓暂无作物"
+			empty_caption = "私仓暂无作物"
 		Page.FISH:
 			for id: String in CreekFish.IDS:
 				var count := Global.fish_count(id)
 				if count > 0:
 					_add_item(id, CreekFish.SPECIES[id].name, "%d 尾" % count, CreekFish.portrait(id))
-			empty.text = "鱼篓里还没有鱼"
+			empty_caption = "鱼篓里还没有鱼"
 		Page.CRAFT:
 			_add_craft_items()
-			empty.text = "暂无工艺材料"
-	empty.visible = items.get_child_count() == 0
+			empty_caption = "暂无工艺材料"
+	empty.text = empty_caption if items.get_child_count() == 0 else ""
 
 func _add_craft_items() -> void:
 	var workshop := Global.silk_workshop
@@ -91,7 +105,7 @@ func _add_craft_items() -> void:
 func _add_item(id: String, label: String, quantity: String, texture: Texture2D) -> void:
 	var slot := PanelContainer.new()
 	slot.name = id
-	slot.custom_minimum_size = Vector2(0, 64)
+	slot.custom_minimum_size = POCKET_MINIMUM
 	slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	slot.add_theme_stylebox_override("panel", item_style)
@@ -116,6 +130,7 @@ func _add_item(id: String, label: String, quantity: String, texture: Texture2D) 
 	row.add_child(text)
 	var name_label := Label.new()
 	name_label.name = "Name"
+	name_label.add_theme_color_override("font_color", ITEM_NAME_INK)
 	name_label.text = label
 	text.add_child(name_label)
 	var count_label := Label.new()

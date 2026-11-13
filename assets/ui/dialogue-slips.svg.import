@@ -1,0 +1,13 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://cakkb7pvdsp2m"
+path="res://.godot/imported/dialogue-slips.svg-47024e133c00066e85499c3c53961f28.res"
+
+[deps]
+
+source_file="res://assets/ui/dialogue-slips.svg"
+dest_files=["res://.godot/imported/dialogue-slips.svg-47024e133c00066e85499c3c53961f28.res"]
+
+[params]

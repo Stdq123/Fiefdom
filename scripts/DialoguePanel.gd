@@ -14,8 +14,10 @@ var choices: Array[Button] = []
 func setup(speaker: String, context: String, text: String, options: Array[String], disabled_options: Array[int], appearance: Texture2D) -> void:
 	name_label.text = speaker
 	context_label.text = context
+	context_label.visible = not context.is_empty()
 	text_label.text = text
 	portrait.texture = appearance
+	%PortraitFrame.visible = appearance != null
 	for i in options.size():
 		var btn := Button.new()
 		btn.text = options[i]

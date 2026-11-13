@@ -135,7 +135,7 @@ try {
     Start-VerifiedGame -Directory $release -Profile 'startup' -Name 'startup'
     # The fixture lives alongside the unpacked files. The distributed EXE and PCK are used byte for byte.
     Install-Replay $release
-    $fullResolution = if ($Capture) { '1280x720' } else { '' }
+    $fullResolution = if ($Capture) { '1920x1080' } else { '' }
     foreach ($route in 'traditional', 'reformed', 'defeat') {
         Start-VerifiedGame -Directory $release -Profile $route -Name $route -Replay $route -Resolution $fullResolution
     }
@@ -269,9 +269,7 @@ try {
         Start-VerifiedGame -Directory $release -Profile "legacy-$oldName" -Name "legacy-continue-$oldName" -Replay 'legacy-continue'
     }
     if ($Capture) {
-        foreach ($resolution in '1280x720', '1024x768') {
-            Start-VerifiedGame -Directory $release -Profile "render-$resolution" -Name "render-$resolution" -Replay 'visual' -Resolution $resolution
-        }
+        Start-VerifiedGame -Directory $release -Profile "render-$fullResolution" -Name "render-$fullResolution" -Replay 'visual' -Resolution $fullResolution
     }
     if ($Soak) {
         Start-VerifiedGame -Directory $release -Profile 'soak' -Name 'soak' -Replay 'soak'
