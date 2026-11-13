@@ -7,6 +7,7 @@ extends Control
 @onready var keeper_portrait: TextureRect = %KeeperPortrait
 @onready var keeper_note: Label = %KeeperNote
 @onready var market_produce: Button = %MarketProduce
+@onready var order_route: Button = %OrderRoute
 @onready var grain: VBoxContainer = %Grain
 @onready var fish: VBoxContainer = %Fish
 @onready var silk: VBoxContainer = %Silk
@@ -25,10 +26,14 @@ func _ready() -> void:
 	_refresh_close_hint()
 	sell_silk.pressed.connect(_sell_silk)
 	market_produce.pressed.connect(_buy_market_produce)
+	order_route.pressed.connect(GameEvents.west_market_directions_requested.emit.bind(Global.MARKET_ORDERS))
 	%SheepTrade.pressed.connect(_open_sheep)
 	sheep.silk_requested.connect(open_for.bind(MarketStall.Kind.SILK))
 	GameEvents.silk_changed.connect(_refresh_silk)
 	GameEvents.money_changed.connect(_refresh_market_produce.unbind(1))
+	GameEvents.inventory_changed.connect(_refresh_order_route.unbind(1))
+	GameEvents.silk_changed.connect(_refresh_order_route)
+	GameEvents.fish_changed.connect(_refresh_order_route)
 	GameEvents.fish_changed.connect(func():
 		if fish.is_visible_in_tree():
 			keeper_note.text = _fish_keeper_note()
@@ -66,6 +71,7 @@ func _open_view(heading: String, active_view: Control, speaker := "") -> void:
 	for view: Control in [grain, fish, silk, orders, sheep]:
 		view.visible = view == active_view
 	_refresh_market_produce()
+	_refresh_order_route()
 	show()
 	close_button.grab_focus()
 	AudioManager.play_ui_sfx()
@@ -100,6 +106,9 @@ func _buy_market_produce() -> void:
 			ItemManager.crop_label(Global.market_produce_crop()), Global.market_produce_price()]
 		close_button.grab_focus()
 		AudioManager.play_ui_sfx(1.12)
+
+func _refresh_order_route() -> void:
+	order_route.visible = grain.visible and Global.can_deliver_season_order(Global.season_order())
 
 func _fish_keeper_note() -> String:
 	if not Global.knows_ravine_journal():

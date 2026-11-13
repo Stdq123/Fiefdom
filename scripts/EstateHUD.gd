@@ -119,6 +119,7 @@ func _ready() -> void:
 	GameEvents.crop_harvested.connect(_refresh_pinned_order.unbind(1))
 	GameEvents.fish_changed.connect(_refresh_pinned_order)
 	GameEvents.silk_changed.connect(_refresh_pinned_order)
+	GameEvents.tax_reform_choice_made.connect(_refresh_pinned_order.unbind(1))
 	GameEvents.campaign_ended.connect(_refresh_pinned_order.unbind(1))
 	GameEvents.day_advanced.connect(_refresh_raid_alert.unbind(1))
 	GameEvents.raid_started.connect(_refresh_raid_alert)
@@ -158,10 +159,18 @@ func _refresh_pinned_order() -> void:
 	if not pinned_order.visible:
 		return
 	var amounts := ItemManager.describe_season_order_progress(schedule)
+	var harvest := Global.has_season_order_harvest(schedule)
 	if schedule.start > Global.current_day:
-		pinned_order.text = "下季备货   %s   ·   第 %d 天开收" % [amounts, schedule.start]
+		var next_action := "第 %d 天开收" % schedule.start
+		if harvest:
+			next_action = "收备货私田 · " + next_action
+		pinned_order.text = "下季备货   %s   ·   %s" % [amounts, next_action]
 		return
-	var action := "去西市交货" if Global.can_deliver_season_order(schedule) else "第 %d 天截止" % schedule.end
+	var action := "第 %d 天截止" % schedule.end
+	if Global.can_deliver_season_order(schedule):
+		action = "去西市交货"
+	elif harvest:
+		action = "收备货私田"
 	pinned_order.text = "时令单   %s   ·   %s" % [amounts, action]
 
 func _refresh_silk_stock() -> void:

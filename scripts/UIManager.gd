@@ -658,11 +658,16 @@ func _on_ravine_trip_requested(place: String) -> void:
 		hud.practice_label.text = "已标出东关 · 从南门回封地"
 
 func _on_pinned_order_pressed() -> void:
-	var current := Global.season_order()
-	if Global.is_season_order_pinned(current) and Global.can_deliver_season_order(current):
+	var order := Global.pinned_season_order()
+	if not order.is_empty() and Global.can_deliver_season_order(order):
 		_on_west_market_directions_requested(Global.MARKET_ORDERS)
-	else:
-		_on_season_board_interacted()
+		return
+	if directions.follow_field_route(Global.OrderFieldRoute.HARVEST):
+		panel_manager.hide_management_panel()
+		if Global.is_indoors():
+			hud.practice_label.text = "已标出备货私田 · 从南门回田边"
+		return
+	_on_season_board_interacted()
 
 func _on_season_board_interacted() -> void:
 	world.set_channel_mode(false)

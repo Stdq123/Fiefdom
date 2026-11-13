@@ -913,3 +913,8 @@
 
 - 封地概览可逐格或批量安排「按时令续播」。春播菽，夏播稻，无渠水则播黍，秋播稷，冬播麦。田格预览当天的续播品种，没有照料门客或管事的井田显示等待状态。
 - 回放从第 35 天的双井田档接续。第二块井田的管事在玩家去西市时补播夏黍，换季后收完这茬，到第 38 天换播秋稷。三晚用 12 份口粮，公田实收两份，玩家未手动耕作。批量安排预览核对了同一井田的通水与旱地选种。Godot 田务回放、Windows 解压版双结局及备粮回放通过，早期存档中的固定播种安排照常读取。1024×768 画面在不可见桌面核对。 [Windows 试玩包](../build/polish-seasonal-sowing/Fiefdom-1.0.0-Windows-x64.zip) · [续播安排](../build/polish-seasonal-sowing/final-1024x768/02-seasonal-private-plans.png) · [秋季接种](../build/polish-seasonal-sowing/final-1024x768/03-autumn-resowing.png) · [发行回放](../build/polish-seasonal-sowing/windows-final/field-steward.log)
+
+## 从备货私田走到西市收货牌
+
+- 交货簿按品种列出已熟、明日熟、待浇或断水的私田。跟踪的单缺货且有对应熟田时，点田边进度可逐格指路。够量后收割标记清除，开收的时令单接到西市收货牌。谷伯补齐最后一份后，粮摊可直接指路去交货。
+- 新档第 3 天沿指引收三格备货私田，半途存读档，随后另收公田入国库。另一段新档回放走到谷伯粮摊，买一份菽并沿街交春单。Godot 冒烟、四季交货与田务指路通过。Windows 解压版通过双结局、战败恢复、延期研究、南路与西市回放。两处界面在 1024×768 不可见桌面核对。 [Windows 试玩包](../build/polish-order-harvest/Fiefdom-1.0.0-Windows-x64.zip) · [田边备货指路](../build/polish-order-harvest/farm-1024x768/02c-harvest-directions.png) · [谷伯粮摊](../build/polish-order-harvest/market-1024x768/02b-produce-sold.png) · [发行回放](../build/polish-order-harvest/windows-check.log)

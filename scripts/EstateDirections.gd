@@ -14,6 +14,7 @@ const FIELD_ROUTES := {
 	Global.MulberryRoute.WATER: {"task": "浇桑", "plot": "待浇"},
 	Global.MulberryRoute.HARVEST: {"task": "采桑叶", "plot": "可收"},
 	Global.TributeRoute.TEND: {"task": "照料公田"},
+	Global.OrderFieldRoute.HARVEST: {"task": "收交货作物", "plot": "备货"},
 }
 
 var world: Node2D

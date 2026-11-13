@@ -4,6 +4,13 @@ signal silk_requested
 
 const READY_INK := Color("#b8d29a")
 const WAIT_INK := Color("#e3c289")
+const CROP_PROGRESS := {
+	Global.NightGrowth.READY: "%d 格已熟",
+	Global.NightGrowth.RIPEN: "%d 格明日熟",
+	Global.NightGrowth.DRY: "%d 格待浇",
+	Global.NightGrowth.BLOCKED: "%d 格断水",
+	Global.NightGrowth.GROW: "%d 格生长中",
+}
 
 @export var at_market := false
 
@@ -50,6 +57,7 @@ func _ready() -> void:
 	GameEvents.crop_harvested.connect(_refresh.unbind(1))
 	GameEvents.farm_state_changed.connect(_refresh)
 	GameEvents.channels_changed.connect(_refresh)
+	GameEvents.tax_reform_choice_made.connect(_refresh.unbind(1))
 	GameEvents.fish_changed.connect(_refresh)
 	GameEvents.stamina_changed.connect(_refresh.unbind(1))
 	GameEvents.silk_changed.connect(_refresh)
@@ -162,25 +170,28 @@ func _follow_water_source(upcoming := false) -> void:
 	GameEvents.water_source_directions_requested.emit()
 
 func _preparation_notes(schedule: Dictionary, rice_water_gap: int) -> String:
-	var planted: Dictionary[String, Vector2i] = {}
+	var planted: Dictionary[String, Dictionary] = {}
 	for cell: Vector2i in Global.active_crops:
 		var crop: Dictionary = Global.active_crops[cell]
 		if not Global.is_public_plot(cell) and schedule.order.need.has(crop.id):
-			var growth := Vector2i(1, 0) if crop.age >= crop.growth_nights else Vector2i(0, 1)
-			planted[crop.id] = planted.get(crop.id, Vector2i.ZERO) + growth
+			var growth := Global.crop_night_status(cell)
+			var counts: Dictionary = planted.get_or_add(crop.id, {})
+			counts[growth] = int(counts.get(growth, 0)) + 1
 	var notes := PackedStringArray()
 	for id: String in schedule.order.need:
-		var missing: int = schedule.order.need[id] - Global.crop_stock.count(id)
-		if missing <= 0:
+		var missing := Global.season_order_crop_gap(schedule, id)
+		if missing == 0:
 			continue
 		var crop := ItemManager.get_crop(id)
 		var harvest_day := Global.current_day + Global.sowing_nights(crop)
 		var line := "%s 缺 %d 份" % [crop.crop_name, missing]
-		var plots: Vector2i = planted.get(id, Vector2i.ZERO)
-		if plots.x > 0:
-			line += " · 私田有 %d 格已熟" % plots.x
-		if plots.y > 0:
-			line += " · 私田 %d 格未熟" % plots.y
+		var fields := PackedStringArray()
+		var counts: Dictionary = planted.get(id, {})
+		for growth: int in CROP_PROGRESS:
+			if counts.has(growth):
+				fields.append(CROP_PROGRESS[growth] % counts[growth])
+		if not fields.is_empty():
+			line += " · 私田 " + "、".join(fields)
 		if harvest_day > schedule.end:
 			line += " · 今日新播已赶不上本季"
 		elif crop.is_water_crop and rice_water_gap > 0:

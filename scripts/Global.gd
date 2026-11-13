@@ -156,8 +156,9 @@ enum CropWater { DRY, BLOCKED, HAND, CANAL, RAIN }
 enum NightGrowth { READY, DRY, BLOCKED, GROW, RIPEN }
 enum MulberryRoute { PLANT = 5, WATER, HARVEST }
 enum TributeRoute { TEND = 8 }
+enum OrderFieldRoute { HARVEST = 9 }
 const FIELD_ROUTE_STATES := [NightGrowth.READY, NightGrowth.DRY, NightGrowth.BLOCKED,
-	MulberryRoute.PLANT, MulberryRoute.WATER, MulberryRoute.HARVEST, TributeRoute.TEND]
+	MulberryRoute.PLANT, MulberryRoute.WATER, MulberryRoute.HARVEST, TributeRoute.TEND, OrderFieldRoute.HARVEST]
 enum Season { SPRING, SUMMER, AUTUMN, WINTER }
 const SEASON_NAMES := ["春", "夏", "秋", "冬"]
 
@@ -2095,6 +2096,20 @@ func season_order_stock_for(schedule: Dictionary, id: String) -> int:
 	if season_order_delivered_at(current) == 0:
 		stock -= int(SeasonOrders.cargo(current.order).get(id, 0))
 	return maxi(0, stock)
+
+func season_order_crop_gap(schedule: Dictionary, id: String) -> int:
+	var needed: int = schedule.order.need.get(id, 0)
+	return maxi(0, needed - season_order_stock_for(schedule, id)) if needed > 0 else 0
+
+func is_season_order_harvest(cell: Vector2i, schedule: Dictionary) -> bool:
+	return (field_crop_is_ripe(cell) and not is_public_plot(cell)
+		and season_order_crop_gap(schedule, active_crops[cell].id) > 0)
+
+func has_season_order_harvest(schedule: Dictionary) -> bool:
+	for cell: Vector2i in active_crops:
+		if is_season_order_harvest(cell, schedule):
+			return true
+	return false
 
 func private_rice_plots() -> Array[Vector2i]:
 	var plots: Array[Vector2i] = []

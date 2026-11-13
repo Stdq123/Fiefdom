@@ -336,6 +336,9 @@ func find_field_task(status: int, public_only := false) -> Variant:
 func matches_field_route(cell: Vector2i, status: int) -> bool:
 	if status == Global.TributeRoute.TEND:
 		return Global.is_public_plot(cell)
+	if status == Global.OrderFieldRoute.HARVEST:
+		var schedule := Global.pinned_season_order()
+		return not schedule.is_empty() and Global.is_season_order_harvest(cell, schedule)
 	if status == Global.MulberryRoute.PLANT:
 		return (tile_map.get_cell_source_id(cell) >= 0 and not Global.is_public_plot(cell)
 			and not active_crops.has(cell) and not Global.field_seed_plans.has(cell))

@@ -254,6 +254,7 @@ func _buy_spring_produce(market: Node2D) -> void:
 	var harvested: int = state.private_harvest_total
 	_expect(market.produce_sack.visible and market.produce_tag.visible and state.crop_stock.count("beans") == 1,
 		"Gu Bo shows a full sack while the spring order is one bean short.")
+	_expect(not counter.order_route.visible, "The grain stall waits until every item is ready.")
 	await _snapshot("02a-seasonal-produce")
 	await _button(counter.market_produce)
 	_expect(state.crop_stock.count("beans") == 2 and state.money == copper - state.market_produce_price()
@@ -263,7 +264,9 @@ func _buy_spring_produce(market: Node2D) -> void:
 		and market.produce_sack.visible and not market.produce_tag.visible and not state.buy_market_produce(),
 		"The sack empties and the same offer cannot be bought again.")
 	await _snapshot("02b-produce-sold")
-	await _key(KEY_ESCAPE)
+	await _button(counter.order_route)
+	_expect(not counter.visible and state.market_trip_target == state.MARKET_ORDERS
+		and market.market_map.cancel_button.visible, "The grain stall marks the actual receiving board.")
 	await _snapshot("02c-empty-sack")
 	print("MARKET_PRODUCE day=", state.current_day, " stock=", state.crop_stock.lots, " copper=", state.money)
 
