@@ -123,6 +123,12 @@ func _summer_trade() -> bool:
 	print("FISH_MARKET_SUMMER day=", state.current_day, " copper=", state.money - money, " held=", state.fish_count("minnow"))
 	await _snapshot("05-summer-receipt")
 	await _key(KEY_ESCAPE)
+	var swimming: Sprite2D = market.ground.held_fish
+	var before := swimming.position
+	await tree.create_timer(0.35).timeout
+	_expect(swimming.visible and swimming.position != before and swimming.texture.region.position.x == 16.0,
+		"The delivered minnow swims in the stall basin.")
+	_expect(not market.get_node("Porter/Creel").visible, "The porter has yet to collect the fish.")
 	await _snapshot("06-stall-plaque")
 	return true
 
@@ -146,14 +152,34 @@ func _continue_market() -> bool:
 	if not await _stall(market, "FishStall", ""):
 		return false
 	_expect("铜钱 +13" in market.counter.fish.market_offer.status.text and market.fish_reserved
-		and state.fish_count("minnow") == 0, "The counter and plaque show the saved delivery after Continue.")
+		and state.fish_count("minnow") == 0 and market.ground.held_fish.visible,
+		"The counter, plaque and fish basin restore the same pending delivery after Continue.")
 	print("FISH_MARKET_CONTINUE receipt_day=", state.fish_order_receipt.day, " amount=", state.fish_order_receipt.amount)
 	await _key(KEY_ESCAPE)
+	await _porter_pickup()
 	await Campaign.walk_to_market_exit(tree, market)
 	if not await _cross(&"ui_right", state.ESTATE_SCENE):
 		return false
 	await _estate()
 	return true
+
+func _porter_pickup() -> void:
+	var porter := market.get_node("Porter") as Node2D
+	var creel := porter.get_node("Creel") as Sprite2D
+	await _time_at(CreekFish.ORDER_PICKUP - 0.012)
+	_expect(market.ground.held_fish.visible and not creel.visible and porter.position.distance_to(Vector2(-198, -91)) < 2.0,
+		"Near dusk the porter approaches the basin while the fish is still swimming.")
+	await _time_at(CreekFish.ORDER_PICKUP - 0.002)
+	await tree.create_timer(0.50).timeout
+	_expect(not market.ground.held_fish.visible and creel.visible,
+		"The fish leaves the basin when the porter lifts his creel.")
+	await _snapshot("06a-porter-at-basin")
+	var pickup := porter.position
+	await _time_at(0.744)
+	_expect(creel.visible and porter.position.distance_to(pickup) > 60.0,
+		"The porter walks toward the gate with the fish basket.")
+	print("FISH_PORTER_PICKUP day=", state.current_day, " basin=", pickup, " departing=", porter.position)
+	await _snapshot("06b-porter-departs")
 
 func _next_day() -> void:
 	await _button(ui.sleep_button)
@@ -194,11 +220,17 @@ func _autumn_trade() -> void:
 	if not await _market_from_book() or not await _stall(market, "FishStall", ""):
 		return
 	card = market.counter.fish.market_offer
+	await _key(KEY_ESCAPE)
+	await _time_at(0.865)
+	if not await _stall(market, "FishStall", ""):
+		return
 	var food: int = state.food_storage
 	var money: int = state.money
 	await _button(card.food_button)
 	_expect(state.food_storage == food + offer.food and state.money == money and state.fish_count("perch") == 0
 		and "粮食 +7" in card.status.text and state.fish_order_receipt.day == 37, "The new offer settles in food at the advertised rate.")
+	_expect(not market.ground.held_fish.visible and not market.get_node("Porter").visible
+		and "打烊后" in market.counter.keeper_note.text, "A late delivery remains with the stall keeper.")
 	print("FISH_MARKET_AUTUMN day=", state.current_day, " food=", state.food_storage - food)
 	await _snapshot("08-autumn-receipt")
 

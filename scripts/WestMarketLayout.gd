@@ -2,6 +2,7 @@ extends RefCounted
 
 const BOUNDS := Rect2(-435, -200, 870, 426)
 const BASIN := Rect2(-250, -145, 60, 38)
+const FISH_PICKUP := Vector2(-198, -91)
 const CART_STOP := Vector2(-262, 180)
 const EAST_GATE := Vector2(392, 36)
 const EAST_OUTSIDE := Vector2(526, 36)

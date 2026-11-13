@@ -4,8 +4,13 @@ const ART := preload("res://assets/characters/market-porter.svg")
 const LAYOUT := preload("res://scripts/WestMarketLayout.gd")
 const GRAIN_STOP := Vector2(-355, 134)
 const FISH_STOP := Vector2(-129, -90)
+const NET_START := CreekFish.ORDER_PICKUP - 0.045
+const AT_BASIN := CreekFish.ORDER_PICKUP - 0.023
+const LEAVE_BASIN := 0.706
+const LEAVE_MARKET := 0.845
 
 @onready var body: NeighborMotion = $Body
+@onready var creel: Sprite2D = $Creel
 
 var route := PackedVector3Array()
 
@@ -16,7 +21,10 @@ func _ready() -> void:
 	_append_leg([Vector2(-396, 145), GRAIN_STOP], 0.0, 0.014)
 	_append_leg([GRAIN_STOP] + LAYOUT.MAIN_ROAD.slice(0, fork + 1) + fish_lane + [FISH_STOP], 0.235, 0.324)
 	fish_lane.reverse()
-	_append_leg([FISH_STOP] + fish_lane + LAYOUT.MAIN_ROAD.slice(fork) + [LAYOUT.EAST_OUTSIDE], 0.670, 0.810)
+	var apron := Vector2(-171, -96)
+	_append_leg([FISH_STOP, apron, LAYOUT.FISH_PICKUP], NET_START, AT_BASIN)
+	_append_leg([LAYOUT.FISH_PICKUP, apron] + fish_lane + LAYOUT.MAIN_ROAD.slice(fork) + [LAYOUT.EAST_OUTSIDE],
+		LEAVE_BASIN, LEAVE_MARKET)
 	_follow_clock(false)
 
 func _append_leg(points: Array, start: float, finish: float) -> void:
@@ -36,6 +44,7 @@ func _follow_clock(animate: bool) -> void:
 	visible = progress <= route[-1].z
 	if not visible:
 		return
+	creel.visible = progress >= CreekFish.ORDER_PICKUP and Global.fish_order_for_porter()
 	var segment := 1
 	while progress > route[segment].z:
 		segment += 1
@@ -51,3 +60,4 @@ func _follow_clock(animate: bool) -> void:
 	else:
 		body.stand()
 		body.face(Vector2.UP if from == to else to - from)
+	creel.position.x = -8.0 if body.flip_h else 8.0

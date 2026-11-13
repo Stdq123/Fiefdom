@@ -141,7 +141,7 @@ func _time_at(progress: float) -> void:
 
 func _dusk(market: Node2D) -> void:
 	await Campaign.walk_market_to(tree, market, Vector2(-42, 18))
-	await _time_at(0.700)
+	await _time_at(0.737)
 	var porter: Node2D = market.get_node("Porter")
 	var from := porter.position
 	await tree.create_timer(0.36).timeout

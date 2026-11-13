@@ -79,6 +79,8 @@ var paving: PackedVector2Array
 var main_path: PackedVector2Array
 var verge_art := TERRAIN.new(LAYOUT.BOUNDS.position.y)
 var weather := ROAD_WEATHER.new(RAIN_PUDDLES, SNOW_DRIFTS)
+var held_fish := Sprite2D.new()
+var fish_swim := 0.0
 
 func _ready() -> void:
 	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
@@ -105,8 +107,32 @@ func _ready() -> void:
 	surface.name = "BasinWater"
 	add_child(surface)
 	surface.set_weather(Color("#527d79"), Global.has_rain())
+	held_fish.name = "HeldFish"
+	held_fish.texture_filter = TEXTURE_FILTER_NEAREST
+	held_fish.self_modulate = Color("#cee0d8eb")
+	held_fish.hide()
+	add_child(held_fish)
+	set_process(false)
 	weather.name = "RoadWeather"
 	add_child(weather)
+
+func show_held_fish(species: String) -> void:
+	if species.is_empty():
+		held_fish.hide()
+		set_process(false)
+		return
+	held_fish.texture = CreekFish.portrait(species)
+	held_fish.show()
+	_move_fish()
+	set_process(true)
+
+func _process(delta: float) -> void:
+	fish_swim = fposmod(fish_swim + delta * 1.6, TAU)
+	_move_fish()
+
+func _move_fish() -> void:
+	held_fish.position = (LAYOUT.BASIN.get_center() + Vector2(12.0 * sin(fish_swim), 5.0 * cos(fish_swim))).round()
+	held_fish.flip_h = cos(fish_swim) >= 0.0
 
 func _road_outline(points: PackedVector2Array, radius: float) -> PackedVector2Array:
 	return Geometry2D.offset_polyline(points, radius, Geometry2D.JOIN_ROUND, Geometry2D.END_ROUND)[0]

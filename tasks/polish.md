@@ -928,3 +928,8 @@
 
 - 谷雨时，桥头土路和西市的石板、摊边泥地出现浅水洼，走过可听见水声并踩出水纹。冬天桥头、主街路肩和支巷有积雪，脚印在几秒内淡去。石板中线和木桥仍可辨认。
 - 回放从封地走过溪桥道到西市，核对积水的脚步和水纹、桥面的木板声。用冬日存档从西市续玩，走过石板和两处积雪。Godot 和 Windows 解压版通过相关回放，发行版双结局、战败恢复和研究也通过。雨雪画面在 1024×768 的独立桌面核对。 [Windows 试玩包](../build/polish-west-weather/Fiefdom-1.0.0-Windows-x64.zip) · [谷雨的桥头](../build/polish-west-weather/render-1024x768/02a-bridge-puddle.png) · [冬至的西市](../build/polish-west-weather/render-1024x768/05-market-snow.png) · [发行回放](../build/polish-west-weather/windows-check/ambience-travel.log)
+
+## 渔生留鱼与伙计取鱼
+
+- 酉时前交的鱼会在西市摊边鱼槽游动。酉时背筐伙计带竹篓到槽边取鱼，沿北巷走上石板街出东关。酉时以后交的鱼由渔生打烊后送。两种时段都在交鱼时结算，鱼槽和伙计按收据日期、交鱼时刻与当前时辰恢复。
+- 第 35 天从柳湾钓白鲦，沿路去鱼摊换 13 铜钱。回标题续玩仍能看见鱼，酉时取走后鱼槽空出。第 37 天酉时后交鳜鱼换 7 份粮，由渔生收下。Godot 的交鱼、西市和指路回放通过。Windows 解压版通过留鱼、双结局、战败恢复及研究。鱼槽、取鱼和离场在独立桌面核对。 [Windows 试玩包](../build/polish-fish-porter/Fiefdom-1.0.0-Windows-x64.zip) · [鱼槽里的白鲦](../build/polish-fish-porter/render-1024x768/06-stall-plaque.png) · [酉时取鱼](../build/polish-fish-porter/render-1024x768/06a-porter-at-basin.png) · [发行回放](../build/polish-fish-porter/windows-check/fish-market-orders.log)

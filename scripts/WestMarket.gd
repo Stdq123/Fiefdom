@@ -48,6 +48,7 @@ func _ready() -> void:
 	settings.visibility_changed.connect(_update_modal)
 	GameEvents.daylight_changed.connect(_refresh_date)
 	GameEvents.daylight_changed.connect(_refresh_silk_guest)
+	GameEvents.daylight_changed.connect(_refresh_held_fish)
 	GameEvents.visitor_interacted.connect(_talk_to_silk_guest)
 	GameEvents.ravine_trip_requested.connect(_follow_trip)
 	GameEvents.west_market_directions_requested.connect(_follow_trip)
@@ -59,6 +60,7 @@ func _ready() -> void:
 	GameEvents.crop_harvested.connect(_refresh_produce_sack.unbind(1))
 	GameEvents.inventory_changed.connect(_refresh_produce_sack.unbind(1))
 	GameEvents.fish_changed.connect(_refresh_fish_sign)
+	GameEvents.fish_changed.connect(_refresh_held_fish)
 	fish_sign.draw.connect(_draw_fish_sign)
 	_refresh_date()
 	_refresh_stock()
@@ -69,6 +71,7 @@ func _ready() -> void:
 	sample.visible = VisitorData.silk_sample_on_display(Global.current_day)
 	_refresh_silk_guest()
 	_refresh_fish_sign()
+	_refresh_held_fish()
 
 func _open_stall(kind: MarketStall.Kind) -> void:
 	market_map.arrive_at(MarketStall.TITLES[kind])
@@ -130,6 +133,10 @@ func _refresh_fish_sign() -> void:
 		fish_icon.texture = CreekFish.portrait(offer.receipt.fish if fish_reserved else offer.fish)
 		fish_icon.modulate = Color.WHITE if fish_reserved else Color("#a9af9e")
 		fish_sign.queue_redraw()
+
+func _refresh_held_fish() -> void:
+	var waiting := Global.day_progress < CreekFish.ORDER_PICKUP and Global.fish_order_for_porter()
+	ground.show_held_fish(Global.fish_order_receipt.fish if waiting else "")
 
 func _draw_fish_sign() -> void:
 	fish_sign.draw_rect(Rect2(-11, -7, 22, 15), Color("#49382c"))

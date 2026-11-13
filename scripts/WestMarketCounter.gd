@@ -113,8 +113,14 @@ func _refresh_order_route() -> void:
 func _fish_keeper_note() -> String:
 	if not Global.knows_ravine_journal():
 		return "想下竿，去南边竹径找蒲宁。他知道竹涧两岸的水深。"
-	if not Global.fish_market_offer().receipt.is_empty():
-		return "今季留的那尾鱼收好了。多的鱼可以留作口粮，也可以卖给我。"
+	var receipt: Dictionary = Global.fish_market_offer().receipt
+	if not receipt.is_empty():
+		if receipt.day == Global.current_day:
+			if not Global.fish_order_for_porter():
+				return "鱼收好了。伙计收工了，我打烊后给人送去。"
+			if Global.day_progress < CreekFish.ORDER_PICKUP:
+				return "鱼收好了，先养在摊边的槽里。酉时伙计会来取。"
+		return "鱼收好了，已经送给客人。多的鱼可以留作口粮，或卖给我。"
 	return "留鱼单只要一尾。交单时可以领铜钱，也可以换今夜的粮。"
 
 func _refresh_silk() -> void:

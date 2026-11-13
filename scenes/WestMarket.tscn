@@ -20,6 +20,7 @@
 [ext_resource type="Script" path="res://scripts/UIDialogManager.gd" id="19_dialog"]
 [ext_resource type="PackedScene" path="res://scenes/WestMarketMap.tscn" id="20_map"]
 [ext_resource type="Texture2D" path="res://assets/world/estate-storage.png" id="21_storage"]
+[ext_resource type="Texture2D" path="res://assets/world/creek-trap.svg" id="22_creel"]
 
 [sub_resource type="RectangleShape2D" id="GateMouth"]
 size = Vector2(8, 20)
@@ -106,6 +107,16 @@ script = ExtResource("16_porter")
 [node name="Body" type="Sprite2D" parent="Porter"]
 offset = Vector2(0, -13)
 script = ExtResource("17_motion")
+
+[node name="Creel" type="Sprite2D" parent="Porter"]
+visible = false
+texture_filter = 1
+position = Vector2(8, -7)
+scale = Vector2(0.65, 0.65)
+texture = ExtResource("22_creel")
+region_enabled = true
+region_rect = Rect2(20, 0, 28, 20)
+region_filter_clip_enabled = true
 
 [node name="EstateRoad" type="Area2D" parent="."]
 position = Vector2(392, 36)

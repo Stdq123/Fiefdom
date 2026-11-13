@@ -1682,6 +1682,9 @@ func fish_market_offer() -> Dictionary:
 		"thanks": request.thanks, "receipt": fish_order_receipt if fish_order_receipt.get("day", 0) >= window.start else {},
 		"food": fish.food + balance.fish_order_food_bonus, "copper": fish.copper + balance.fish_order_copper_bonus}
 
+func fish_order_for_porter() -> bool:
+	return fish_order_receipt.get("day", 0) == current_day and fish_order_receipt.get("watch", 0.0) < CreekFish.ORDER_PICKUP
+
 func fish_delivery_places(caught := "") -> Array[String]:
 	var places: Array[String] = []
 	var offer := fish_market_offer()
@@ -1699,7 +1702,8 @@ func deliver_fish_order(start_day: int, for_food: bool) -> bool:
 	if outcome != Outcome.RUNNING or offer.start != start_day or not offer.receipt.is_empty() or fish_count(offer.fish) < 1:
 		return false
 	var amount: int = offer.food if for_food else offer.copper
-	fish_order_receipt = {"day": current_day, "fish": offer.fish, "for_food": for_food, "amount": amount}
+	fish_order_receipt = {"day": current_day, "watch": day_progress, "fish": offer.fish,
+		"for_food": for_food, "amount": amount}
 	_settle_fish_exchange(offer.fish, for_food, amount)
 	return true
 
@@ -3560,7 +3564,8 @@ func _restore_fish_order_receipt(record: Variant, saved_day: int) -> Dictionary:
 	var amount := _read_save_int(record.get("amount"), 0)
 	var fish: Variant = record.get("fish")
 	if day > 0 and day <= saved_day and amount > 0 and CreekFish.SPECIES.has(fish):
-		return {"day": day, "fish": fish, "for_food": record.get("for_food") == true, "amount": amount}
+		return {"day": day, "watch": clampf(_read_save_number(record.get("watch"), 0.0), 0.0, 1.0),
+			"fish": fish, "for_food": record.get("for_food") == true, "amount": amount}
 	return {}
 
 func _restore_creek_trap(record: Variant, saved_day: int) -> Dictionary:
