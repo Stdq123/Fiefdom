@@ -13,6 +13,7 @@ var state: Node
 var world: Node2D
 var ui: CanvasLayer
 var capture_dir := ""
+var steward_capture_path := ""
 var failed := false
 var steward_story := false
 
@@ -63,7 +64,7 @@ func _fixture() -> bool:
 	if not _expect(state.start_new_game() == OK, "Start a normal estate for the prepared expansion fixture."):
 		return false
 	await tree.scene_changed
-	state.current_day = 32
+	state.current_day = 35 if steward_story else 32
 	state.day_progress = 0.16
 	state.current_rank = state.Rank.ZHONG_SHI
 	state._update_max_well_fields()
@@ -112,14 +113,16 @@ func _plan(panel: Control, cell: Vector2i, id: String) -> Button:
 	var picker: OptionButton = panel.seed_plan_picker
 	for index in range(1, picker.item_count):
 		if picker.get_item_metadata(index) == id:
-			if id == "beans":
+			if id in ["beans", FieldSeedPlan.SEASONAL]:
 				await _button(picker)
 				var menu := picker.get_popup()
 				_expect(menu.visible, "The seed picker opens its crop menu.")
-				await _snapshot("00-seed-menu")
+				if id == "beans":
+					await _snapshot("00-seed-menu")
 				menu.hide()
 				await tree.process_frame
 			picker.select(index)
+			picker.item_selected.emit(index)
 			break
 	var tile := _plot(panel, cell)
 	await _button(tile)
@@ -273,8 +276,49 @@ func _choose_from_menu(picker: OptionButton, item_id: int) -> void:
 		menu.hide()
 		await tree.process_frame
 
+func _steward_handover() -> void:
+	var panel := await _management()
+	var keeper: RetainerData = state.retainers[0]
+	var other: RetainerData = state.retainers[1]
+	var public: Vector2i = state.FIRST_FIELD_CENTER
+	state.tilled_cells[public] = true
+	state.set_field_seed_plan(RICE, "rice")
+	var current_rations: int = state.retainer_food_cost()
+	await _field(panel, 0)
+	await _choose_from_menu(panel.steward_picker, 0)
+	_expect(keeper.duty == RetainerData.Duty.FIELD and not state.field_seed_plans.has(public)
+		and not state.field_seed_plans.has(SITE), "Previewing a handover leaves the roster and crops alone.")
+	_expect("公田 1 格" in panel.steward_preview.text and "私田 3 格" in panel.steward_preview.text
+		and str(state.balance.specialist_food_per_night) in panel.steward_preview.text,
+		"The quote lists the fillable public and private plots and the ration change.")
+	var public_seed: String = state.tribute_seed()
+	await _snapshot("00a-steward-handover")
+	await _button(panel.apply_steward)
+	_expect(keeper.duty == RetainerData.Duty.STEWARD and keeper.assigned_area == public
+		and state.field_seed_plans.get(public) == public_seed and state.field_seed_plans.get(RICE) == "rice"
+		and state.field_seed_plans.get(SITE) == FieldSeedPlan.SEASONAL and not state.field_seed_plans.has(PUBLIC)
+		and state.retainer_food_cost() == current_rations + state.balance.specialist_food_per_night,
+		"One handover fills only unplanned tilled plots of the selected field and preserves fixed rice.")
+	await _field(panel, 1)
+	state.tax_reform_choice = state.TaxReformChoice.REFORMED
+	tree.root.get_node("GameEvents").tax_reform_choice_made.emit(state.tax_reform_choice)
+	await _choose_from_menu(panel.steward_picker, 1)
+	_expect("公田 1 格" not in panel.steward_preview.text and "私田 1 格" in panel.steward_preview.text,
+		"After reform the tilled center is eligible for private sowing and the perennial mulberry is excluded.")
+	await _button(panel.apply_steward)
+	_expect(other.duty == RetainerData.Duty.STEWARD and other.assigned_area == PUBLIC
+		and state.field_seed_plans.get(PUBLIC) == FieldSeedPlan.SEASONAL and not state.field_seed_plans.has(ORCHARD)
+		and state.active_crops[PUBLIC].id == "millet" and state.active_crops[ORCHARD].id == "mulberry",
+		"The second field uses the private plan after reform and preserves both standing crops.")
+	await _button(panel.get_node("CloseButton"))
+	print("FIELD_STEWARD_HANDOVER public=", public_seed, " fixed_rice=", state.field_seed_plans[RICE],
+		" reformed_center=", state.field_seed_plans[PUBLIC], " ration=", state.retainer_food_cost())
+
 func _steward_work() -> void:
 	var steward: RetainerData = state.retainers[1]
+	_expect(FieldSeedPlan.seasonal_seed(state.Season.SPRING, false) == "beans"
+		and FieldSeedPlan.seasonal_seed(state.Season.WINTER, false) == "wheat",
+		"Spring uses beans to restore the soil and winter uses wheat.")
 	var outside: Vector2i = state.FIRST_FIELD_CENTER
 	state.tilled_cells[outside] = true
 	state.set_field_seed_plan(outside, "millet")
@@ -296,15 +340,31 @@ func _steward_work() -> void:
 	_expect(steward.assigned_area == PUBLIC and panel.well_field_selector.get_selected_id() == 1
 		and "季青" in panel.steward_note.text and item.get_global_rect().encloses(item.field_picker.get_global_rect()),
 		"Reassign from the roster and show who manages the second field.")
-	await _plan(panel, PUBLIC, "sorghum")
+	var public_tile := await _plan(panel, PUBLIC, FieldSeedPlan.SEASONAL)
+	_expect("公田" in public_tile.text and "时令续播 · 黍" in public_tile.text
+		and "夏稻（无渠水种黍）" in panel.seed_timing.text and not panel.rotate_seed.button_pressed,
+		"The summer plan shows millet on the dry public plot and previews all four seasons.")
 	await _snapshot("01-steward-assignment")
+	var canal: Array[Vector2i] = [Vector2i(2, 5), Vector2i(3, 5)]
+	if not _expect(state.build_channel_path(canal) == state.ChannelSite.AVAILABLE and state.irrigation.supplies(RICE),
+		"Supply the west edge of the first field for the irrigated summer plan."):
+		return
+	await _field(panel, 0)
+	var rice_tile := await _plan(panel, RICE, FieldSeedPlan.SEASONAL)
+	await _button(panel.apply_private_plan)
+	_expect("时令续播 · 稻" in rice_tile.text and state.field_seed_plans.get(SITE) == FieldSeedPlan.SEASONAL
+		and state.field_seed_plans.get(outside) == "millet" and "续播在等" in panel.steward_note.text,
+		"The private batch previews rice and shows that the first field is still waiting for a worker.")
+	await _snapshot("02-seasonal-private-plans")
 	await _button(panel.get_node("CloseButton"))
 	if not _expect(state.save_game() == OK and state.load_game() == OK, "Save and reload the assigned steward."):
 		return
 	await tree.scene_changed
 	_estate()
 	steward = state.retainers[1]
-	_expect(steward.duty == RetainerData.Duty.STEWARD and steward.assigned_area == PUBLIC,
+	_expect(steward.duty == RetainerData.Duty.STEWARD and steward.assigned_area == PUBLIC
+		and state.field_seed_plans.get(PUBLIC) == FieldSeedPlan.SEASONAL
+		and state.field_seed_plans.get(RICE) == FieldSeedPlan.SEASONAL,
 		"The saved role and its field survive reload.")
 	var worker: Retainer = world.retainer_instances[steward]
 	if not await _wait_for(func(): return state.king_storage == 1,
@@ -313,7 +373,7 @@ func _steward_work() -> void:
 	worker.set_physics_process(false)
 	await _button(ui.sleep_button)
 	await tree.create_timer(1.2).timeout
-	_expect(state.current_day == 33 and state.food_storage == 24 - ordinary_need and not state.active_crops.has(outside),
+	_expect(state.current_day == 36 and state.food_storage == 24 - ordinary_need and not state.active_crops.has(outside),
 		"The steward does not plant the other field and consumes the quoted nightly ration.")
 	await Campaign.walk_estate_road_to(tree, world, Vector2(-270, -21))
 	if not await _cross(&"ui_left", state.WEST_MARKET_SCENE):
@@ -323,12 +383,37 @@ func _steward_work() -> void:
 		return
 	if not await _wait_for(func(): return state.player_inventory == 1, "The steward also harvests the private orchard."):
 		return
-	_expect(state.active_crops[PUBLIC].id == "sorghum" and not state.active_crops.has(outside)
+	_expect(state.active_crops[PUBLIC].id == "millet" and not state.active_crops.has(outside)
+		and not state.active_crops.has(RICE)
 		and state.king_storage == 1 and state.silk_workshop.leaves > 0 and state.away_field_report.sown == 1
 		and state.away_field_report.tribute == 0 and state.away_field_report.stock == 1,
 		"The private mulberry harvest and the public tribute settle once, and the other field stays clear.")
 	print("FIELD_STEWARD day=", state.current_day, " field=2 tribute=", state.king_storage,
 		" private=", state.player_inventory, " meal=", ordinary_need, " next_crop=", state.active_crops[PUBLIC].id)
+	await Campaign.walk_to_market_exit(tree, tree.current_scene)
+	if not await _cross(&"ui_right", state.ESTATE_SCENE):
+		return
+	_estate()
+	await _button(ui.sleep_button)
+	await tree.create_timer(1.2).timeout
+	_expect(state.current_day == 37 and state.active_crops[PUBLIC].id == "millet"
+		and state.active_crops[PUBLIC].age == 1, "Autumn begins while the summer millet keeps growing.")
+	if not await _wait_for(func() -> bool: return not state.field_crop_is_dry(PUBLIC), "The steward waters the millet in autumn."):
+		return
+	await _button(ui.sleep_button)
+	await tree.create_timer(1.2).timeout
+	var autumn_sown := func() -> bool: return state.active_crops.get(PUBLIC, {}).get("id") == "sorghum"
+	if not await _wait_for(autumn_sown, "After harvest the steward sows the autumn crop.", 15.0):
+		return
+	_expect(state.current_day == 38 and state.king_storage == 2 and state.food_storage == 24 - ordinary_need * 3
+		and state.current_stamina == state.max_stamina and not state.active_crops.has(RICE),
+		"Across the change of season, the steward keeps public tribute and rations and costs no player stamina.")
+	panel = await _management()
+	await _field(panel, 1)
+	_expect("时令续播 · 稷" in _plot(panel, PUBLIC).text, "The overview now previews autumn sorghum.")
+	await _snapshot("03-autumn-resowing")
+	print("FIELD_STEWARD_SEASON day=", state.current_day, " tribute=", state.king_storage,
+		" food_spent=", 24 - state.food_storage, " autumn_crop=", state.active_crops[PUBLIC].id, " manual_farming_clicks=0")
 
 func run(game_tree: SceneTree) -> void:
 	tree = game_tree
@@ -336,12 +421,17 @@ func run(game_tree: SceneTree) -> void:
 		tree.quit(1)
 		return
 	state = tree.root.get_node("Global")
-	capture_dir = OS.get_environment("FIEFDOM_SEED_CAPTURES")
+	capture_dir = steward_capture_path if not steward_capture_path.is_empty() else OS.get_environment("FIEFDOM_SEED_CAPTURES")
 	tree.root.notify_mouse_entered()
 	seed(3112)
 	if await _fixture():
 		if steward_story:
-			await _steward_work()
+			if state.has_method("night_ration_for_duty"):
+				await _steward_handover()
+				if not failed and await _fixture():
+					await _steward_work()
+			else:
+				await _steward_work()
 		elif not state.has_method("planned_field_seed"):
 			if await _market():
 				await tree.create_timer(13.0).timeout

@@ -903,3 +903,77 @@
 
 - 首次夏单到货后，南池西岸出现钓台及接到池岸路的短径。可从卸货场问申禾指路，也可在封地舆图选择。四季可钓鲫鱼，与竹涧共用每日一次的起鱼机会。鱼获结果可指路去灶台，鲫鱼可与稻做成稻鱼羹。
 - 新档交了两份自种稻后，回放将时辰推进到到货时间。第 10 天从申禾处沿路到南池，消耗 5 点体力钓到鲫鱼。续档保留钓台和首获地点，用鱼和在西市购得的一份稻做成路餐。Godot 与 Windows 解压版通过相关回放，包含默认规则的双结局、竹笼、秋社和留鱼单。1024×768 画面在不可见桌面取得。 [Windows 试玩包](../build/polish-pond-landing/Fiefdom-1.0.0-Windows-x64.zip) · [南池垂钓](../build/polish-pond-landing/final-1024x768/13-pond-fishing.png) · [鱼获与灶台指路](../build/polish-pond-landing/final-1024x768/14-pond-catch.png) · [发行回放](../build/polish-pond-landing/release-final/summer-rice.log)
+
+## 秋社分享与冬至围炉
+
+- 秋社选样时提示送出哪些本季或已跟踪下季的留货，换选即更新。摆样带回保留收成。分享后，禾伯在同年冬至往麦菽粥里添一份菽，玩家只需带一份麦，仍可给门客备三份粥。
+- 新档走到第 16 天，分别核对带回和分享。用分享后的存档准备第 22 天的验证档，确认私仓无菽时也能下锅，续档保留禾伯的贡献，隔年要再分享才会回赠。Godot 和 Windows 解压版通过节庆、交货和双结局相关回放。秋社和冬至画面在 1024×768 的不可见桌面核对。 [Windows 试玩包](../build/polish-harvest-supper/Fiefdom-1.0.0-Windows-x64.zip) · [秋社选样](../build/polish-harvest-supper/render-1024x768/02-choose-samples.png) · [冬至菜单](../build/polish-harvest-supper/render-1024x768/08-he-bo-winter-gift.png) · [发行回放](../build/polish-harvest-supper/windows-check/autumn-exhibit.log)
+
+## 照料门客与管事按时令续播
+
+- 封地概览可逐格或批量安排「按时令续播」。春播菽，夏播稻，无渠水则播黍，秋播稷，冬播麦。田格预览当天的续播品种，没有照料门客或管事的井田显示等待状态。
+- 回放从第 35 天的双井田档接续。第二块井田的管事在玩家去西市时补播夏黍，换季后收完这茬，到第 38 天换播秋稷。三晚用 12 份口粮，公田实收两份，玩家未手动耕作。批量安排预览核对了同一井田的通水与旱地选种。Godot 田务回放、Windows 解压版双结局及备粮回放通过，早期存档中的固定播种安排照常读取。1024×768 画面在不可见桌面核对。 [Windows 试玩包](../build/polish-seasonal-sowing/Fiefdom-1.0.0-Windows-x64.zip) · [续播安排](../build/polish-seasonal-sowing/final-1024x768/02-seasonal-private-plans.png) · [秋季接种](../build/polish-seasonal-sowing/final-1024x768/03-autumn-resowing.png) · [发行回放](../build/polish-seasonal-sowing/windows-final/field-steward.log)
+
+## 从备货私田走到西市收货牌
+
+- 交货簿按品种列出已熟、明日熟、待浇或断水的私田。跟踪的单缺货且有对应熟田时，点田边进度可逐格指路。够量后收割标记清除，开收的时令单接到西市收货牌。谷伯补齐最后一份后，粮摊可直接指路去交货。
+- 新档第 3 天沿指引收三格备货私田，半途存读档，随后另收公田入国库。另一段新档回放走到谷伯粮摊，买一份菽并沿街交春单。Godot 冒烟、四季交货与田务指路通过。Windows 解压版通过双结局、战败恢复、延期研究、南路与西市回放。两处界面在 1024×768 不可见桌面核对。 [Windows 试玩包](../build/polish-order-harvest/Fiefdom-1.0.0-Windows-x64.zip) · [田边备货指路](../build/polish-order-harvest/farm-1024x768/02c-harvest-directions.png) · [谷伯粮摊](../build/polish-order-harvest/market-1024x768/02b-produce-sold.png) · [发行回放](../build/polish-order-harvest/windows-check.log)
+
+## 亭西种圃开案分种
+
+- 菽和黍长成后，林蓼回来摆案。阿绥和禾伯沿小径来领种，拿着包裹离开，田里留下短茬。舆图和木签可查日期，撞上谷雨亭集就顺延。玩家可当面挑一份，也可散场后到木签旁取。把小径旁的橡树移到种圃西侧，给人物和分种案留出视线。
+- 回放从第 6 天的待交货档开始，经历卸货、送种、三夜生长、第 10 天分种和散场。午时续档还原两人领完的状态，散场后取得一份菽，国库仍有四份。Godot 和 Windows 解压版通过南路、节庆和双结局相关回放，1024×768 画面在不可见桌面核对。 [Windows 试玩包](../build/polish-seed-sharing/Fiefdom-1.0.0-Windows-x64.zip) · [沿小径来领种](../build/polish-seed-sharing/final-1024x768/05a-arriving-for-seed.png) · [分种场景](../build/polish-seed-sharing/final-1024x768/06-neighbors-collect.png) · [发行回放](../build/polish-seed-sharing/windows-final/seed-garden.log)
+
+## 溪桥道与西市的雨雪路面
+
+- 谷雨时，桥头土路和西市的石板、摊边泥地出现浅水洼，走过可听见水声并踩出水纹。冬天桥头、主街路肩和支巷有积雪，脚印在几秒内淡去。石板中线和木桥仍可辨认。
+- 回放从封地走过溪桥道到西市，核对积水的脚步和水纹、桥面的木板声。用冬日存档从西市续玩，走过石板和两处积雪。Godot 和 Windows 解压版通过相关回放，发行版双结局、战败恢复和研究也通过。雨雪画面在 1024×768 的独立桌面核对。 [Windows 试玩包](../build/polish-west-weather/Fiefdom-1.0.0-Windows-x64.zip) · [谷雨的桥头](../build/polish-west-weather/render-1024x768/02a-bridge-puddle.png) · [冬至的西市](../build/polish-west-weather/render-1024x768/05-market-snow.png) · [发行回放](../build/polish-west-weather/windows-check/ambience-travel.log)
+
+## 渔生留鱼与伙计取鱼
+
+- 酉时前交的鱼会在西市摊边鱼槽游动。酉时背筐伙计带竹篓到槽边取鱼，沿北巷走上石板街出东关。酉时以后交的鱼由渔生打烊后送。两种时段都在交鱼时结算，鱼槽和伙计按收据日期、交鱼时刻与当前时辰恢复。
+- 第 35 天从柳湾钓白鲦，沿路去鱼摊换 13 铜钱。回标题续玩仍能看见鱼，酉时取走后鱼槽空出。第 37 天酉时后交鳜鱼换 7 份粮，由渔生收下。Godot 的交鱼、西市和指路回放通过。Windows 解压版通过留鱼、双结局、战败恢复及研究。鱼槽、取鱼和离场在独立桌面核对。 [Windows 试玩包](../build/polish-fish-porter/Fiefdom-1.0.0-Windows-x64.zip) · [鱼槽里的白鲦](../build/polish-fish-porter/render-1024x768/06-stall-plaque.png) · [酉时取鱼](../build/polish-fish-porter/render-1024x768/06a-porter-at-basin.png) · [发行回放](../build/polish-fish-porter/windows-check/fish-market-orders.log)
+
+## 岁末麦帛送到亭前路粮案
+
+- 阿绥从卸货场把麦和绸搬到南路亭。到货后可从申禾或封地舆图指路。案上每批留一份麦饼，用过后可用一份私仓麦做。麦饼占现有路餐位，默认恢复 24 体力。
+- 回放在第二年自种麦和织绸，第 45 天交货，走到亭前领麦饼并续档食用。第 48 天晚交的另一批跨年送达，领完后再用一份私仓麦做，国库保持四份。Godot 与 Windows 解压版通过专项回放，发行版双结局、战败恢复、延期研究和冬至围炉通过。两次送达的画面在独立桌面核对。 [Windows 试玩包](../build/polish-winter-rations/Fiefdom-1.0.0-Windows-x64.zip) · [亭前到货](../build/polish-winter-rations/final-1024x768/08-winter-rations-at-pavilion.png) · [跨年到货](../build/polish-winter-rations/final-1024x768/11-next-year-arrival.png) · [发行回放](../build/polish-winter-rations/windows-check/winter-road-rations.log)
+
+## 井田管事当页交接
+
+- 在封地概览选井田和门客，当页看到门客原岗位、每夜口粮和要补齐的续播格数。确认后任命，并只补已翻且未安排的格子。公田用纳贡指引推荐的短茬旱作，私田按时令续播。
+- 回放在同一页任命渠伯，核对固定稻作保留、第二井田未被改动、夜耗增加一份。改革后任命季青时，中央格用私田时令方案，已在地里的黍和桑仍在。原有管事回放另核对续档、跨季补播和三夜公私田分仓。 [交接画面](../build/polish-sheep-and-steward/field-steward-1024x768/00a-steward-handover.png) · [发行回放](../build/polish-sheep-and-steward/windows-check/field-steward.log)
+
+## 羊棚草料与剪毛
+
+- 冬日与雨天有草料时，羊会在日间从棚里走到食槽低头进食，再回棚。棚边最多陈列三捆干草，余量仍在羊棚账上显示。点剪毛后回到棚外，可看到短毛和落下的羊毛。
+- Godot 回放覆盖秋季放牧、冬雨进食、缺草、收剪及草甸过冬。Windows 解压版完成售毛、制衣和试穿，并通过井田、南路相关回放和双结局。1024×768 画面在独立桌面核对。 [Windows 试玩包](../build/polish-sheep-and-steward/Fiefdom-1.0.0-Windows-x64.zip) · [冬日槽边吃草](../build/polish-sheep-and-steward/sheepfold-1024x768/02b-winter-feeding.png) · [发行回放](../build/polish-sheep-and-steward/windows-check/sheepfold.log)
+
+## 地图、人物与标题贴图细化
+
+- 游戏内的 SVG 和 11 张原低分辨率 PNG 以双倍分辨率导入。人物、对话头像、堂屋、蚕棚、西市、羊棚、树木及农事道具补绘衣褶、瓦缝和经纬等细节。七种作物各有三张原生 32×32 的生长图，公私田仍使用同一套 16×16 格线。
+- 原有高像素密度的筏、绵羊和作物字形使用原素材。标题的清晨、薄暮画面以 2560×1440 实机重新拍摄。
+- Godot 通过建筑比例、封地地形、读档、换装、田间计划、种圃、西市、丝坊和羊棚回放。Windows 解压版通过双结局、战败恢复、研究和相关场景回放。封地和丝坊实机截图在独立桌面核对。旧版和本版的昼夜回放均可复现夜间大厅断言。 [Windows 试玩包](../build/polish-art-resolution/Fiefdom-1.0.0-Windows-x64.zip) · [封地](../build/polish-art-resolution/estate-art/estate-morning.png) · [标题](../build/polish-art-resolution/title-final/01-morning-title.png) · [丝坊](../build/polish-art-resolution/silk-art/04-first-bolt.png)
+
+## 首轮公私田与场景可读性
+
+- 第一天浇好公田后，可在手记里兼种一格私田，也可继续按原指引走。回放第三天完成首贡和首茬私收，国库和私仓各得一份，另赚 5 铜钱。「今夜安排」可从田务预测直接标出成熟田格。 [兼种指引](../build/polish-art-resolution/opening-1024/04b-private-plot.png) · [第三天收成](../build/polish-art-resolution/opening-final-1280/04c-same-morning-harvests.png)
+- 修正了西廊等处因登记顺序靠后而未点亮的夜灯。堂屋、蚕棚提示在 3× 镜头下使用清晰字体。Godot 的开局、昼夜、田务、手柄输入与室内回放通过。实机画面在独立桌面核对。 [西廊灯笼对照](../build/hall-daylight/west-court-before-after.png) · [蚕棚织机提示](../build/polish-world-text/silk-1280/04-first-bolt.png) · [Windows 试玩包](../build/polish-opening-followup/Fiefdom-1.0.0-Windows-x64.zip)
+
+## 背包与常驻界面
+
+- 封地、竹涧、溪桥道和西市都有背包按钮。默认 I 打开或关闭，旧键位保留。面板读取已有库存，按私仓作物、鱼篓和工艺材料显示实际数量。随身路餐可直接食用。打开时暂停时辰，Esc 或手柄 B 关闭。 [背包](../build/polish-art-resolution/hud-pack-final-1024/02-private-crops.png)
+- 借鉴《星露谷物语》实机中分开的日期栏、快捷栏和详细菜单。封地右上常驻时辰、天气、铜钱和粮食，账目详情可展开，左上来客近况也可收起。七个种槽收窄，田务按钮优先显示可收、待浇和断水。气血、体力、背包和天气使用原创小图标。 [官方实机图库](https://www.stardewvalley.net/media/) · [封地 1280×720](../build/polish-art-resolution/hud-final-1280/04-first-field.png) · [1024×768 窗口](../build/polish-art-resolution/hud-final-1024/04b-private-plot.png)
+- 在两种窗口尺寸的独立桌面核对 HUD 和背包。回放覆盖手柄打开和关闭、舆图与设置互斥、保存后读档、旧键位和实际食用路餐。 [Windows 试玩包](../build/polish-hud/Fiefdom-1.0.0-Windows-x64.zip) · [Windows 验证](../build/polish-hud/windows-final/backpack.log)
+
+## 常驻界面的像素样式
+
+- 封地手记、时辰和气血改用竹纸像素框，种槽与操作键使用深木、铜钉和压下后的凹边。睡觉有暖色底，田格悬停和指路也用同一组描边。展开来客近况时可继续使用同一张手记上的指路按钮。
+- 西市、溪桥道与竹涧把当地时辰和天气集中在右上，舆图、背包和设置采用同一排按钮。背包的物品图、数量、页签与路餐在同样的竹纸和木框上显示。 [封地实机](../build/polish-art-resolution/hud-wood-final-1280/04-first-field.png) · [西市实机](../build/polish-art-resolution/travel-frame-market/02-market-arrival.png) · [背包实机](../build/polish-hud-bag-frame/frames-1024/02-private-crops.png)
+
+## 春秋青铜与竹简界面
+
+- 常驻界面补绘青铜卷蛇纹、绳纹和铜绿，简册可辨出竹片与编绳。朱漆标出选中种槽、爵位与外出地名。铜钱图标取春秋空首布的铲形，历书和舆图使用编绳简册，背包画成竹编行箧。
+- 封地铜盘有十二个刻点，亮点随地支时辰移动。昼夜回放核对酉时盘面与西廊灯笼，旧档继续时按存档时辰绘制。 [封地实机](../build/polish-art-resolution/hud-spring-release-1280/04-first-field.png) · [窄窗口实机](../build/polish-art-resolution/hud-spring-release-1024/04a-journal-expanded.png) · [Windows 试玩包](../build/polish-hud-spring-autumn/Fiefdom-1.0.0-Windows-x64.zip)
+- 封地手记露出上下束绳与竹片接缝，历书和外出日期牌改用暗铜底，工具栏改为系绳木牌。背包打开后显示黑漆朱绘分格匣，角色对白展开编绳简册。两处在同屏分别呈现所需的物品、回复和焦点。
+- Windows 默认窗口为 1920×1080。发行包在隔离桌面按默认尺寸启动，核对实际窗口和截图均为 1920×1080。 [封地 HUD](../build/polish-art-resolution/hud-1080-estate/04-first-field.png) · [背包](../build/polish-art-resolution/hud-1080-bag/02-private-crops.png) · [角色对话](../build/polish-art-resolution/hud-1080-dialogue/02a-reputation-needed.png) · [Windows 试玩包](../build/polish-hud-1080p/Fiefdom-1.0.0-Windows-x64.zip)

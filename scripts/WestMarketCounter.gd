@@ -7,6 +7,7 @@ extends Control
 @onready var keeper_portrait: TextureRect = %KeeperPortrait
 @onready var keeper_note: Label = %KeeperNote
 @onready var market_produce: Button = %MarketProduce
+@onready var order_route: Button = %OrderRoute
 @onready var grain: VBoxContainer = %Grain
 @onready var fish: VBoxContainer = %Fish
 @onready var silk: VBoxContainer = %Silk
@@ -25,10 +26,14 @@ func _ready() -> void:
 	_refresh_close_hint()
 	sell_silk.pressed.connect(_sell_silk)
 	market_produce.pressed.connect(_buy_market_produce)
+	order_route.pressed.connect(GameEvents.west_market_directions_requested.emit.bind(Global.MARKET_ORDERS))
 	%SheepTrade.pressed.connect(_open_sheep)
 	sheep.silk_requested.connect(open_for.bind(MarketStall.Kind.SILK))
 	GameEvents.silk_changed.connect(_refresh_silk)
 	GameEvents.money_changed.connect(_refresh_market_produce.unbind(1))
+	GameEvents.inventory_changed.connect(_refresh_order_route.unbind(1))
+	GameEvents.silk_changed.connect(_refresh_order_route)
+	GameEvents.fish_changed.connect(_refresh_order_route)
 	GameEvents.fish_changed.connect(func():
 		if fish.is_visible_in_tree():
 			keeper_note.text = _fish_keeper_note()
@@ -66,6 +71,7 @@ func _open_view(heading: String, active_view: Control, speaker := "") -> void:
 	for view: Control in [grain, fish, silk, orders, sheep]:
 		view.visible = view == active_view
 	_refresh_market_produce()
+	_refresh_order_route()
 	show()
 	close_button.grab_focus()
 	AudioManager.play_ui_sfx()
@@ -101,11 +107,20 @@ func _buy_market_produce() -> void:
 		close_button.grab_focus()
 		AudioManager.play_ui_sfx(1.12)
 
+func _refresh_order_route() -> void:
+	order_route.visible = grain.visible and Global.can_deliver_season_order(Global.season_order())
+
 func _fish_keeper_note() -> String:
 	if not Global.knows_ravine_journal():
 		return "想下竿，去南边竹径找蒲宁。他知道竹涧两岸的水深。"
-	if not Global.fish_market_offer().receipt.is_empty():
-		return "今季留的那尾鱼收好了。多的鱼可以留作口粮，也可以卖给我。"
+	var receipt: Dictionary = Global.fish_market_offer().receipt
+	if not receipt.is_empty():
+		if receipt.day == Global.current_day:
+			if not Global.fish_order_for_porter():
+				return "鱼收好了。伙计收工了，我打烊后给人送去。"
+			if Global.day_progress < CreekFish.ORDER_PICKUP:
+				return "鱼收好了，先养在摊边的槽里。酉时伙计会来取。"
+		return "鱼收好了，已经送给客人。多的鱼可以留作口粮，或卖给我。"
 	return "留鱼单只要一尾。交单时可以领铜钱，也可以换今夜的粮。"
 
 func _refresh_silk() -> void:

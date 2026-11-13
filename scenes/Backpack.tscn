@@ -1,0 +1,345 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/Backpack.gd" id="1_script"]
+[ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="2_theme"]
+[ext_resource type="Texture2D" path="res://assets/ui/lacquer-bag.svg" id="3_lacquer"]
+
+[sub_resource type="StyleBoxTexture" id="LacquerCase"]
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+texture = ExtResource("3_lacquer")
+texture_margin_left = 12.0
+texture_margin_top = 12.0
+texture_margin_right = 12.0
+texture_margin_bottom = 12.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+region_rect = Rect2(0, 0, 48, 48)
+
+[sub_resource type="StyleBoxTexture" id="Tray"]
+content_margin_left = 9.0
+content_margin_top = 9.0
+content_margin_right = 9.0
+content_margin_bottom = 9.0
+texture = ExtResource("3_lacquer")
+texture_margin_left = 7.0
+texture_margin_top = 7.0
+texture_margin_right = 7.0
+texture_margin_bottom = 7.0
+region_rect = Rect2(48, 0, 48, 48)
+
+[sub_resource type="StyleBoxEmpty" id="WellArea"]
+
+[sub_resource type="StyleBoxTexture" id="EmptyPocket"]
+texture = ExtResource("3_lacquer")
+texture_margin_left = 10.0
+texture_margin_top = 9.0
+texture_margin_right = 10.0
+texture_margin_bottom = 10.0
+region_rect = Rect2(96, 0, 48, 48)
+
+[sub_resource type="StyleBoxTexture" id="Pocket"]
+content_margin_left = 12.0
+content_margin_top = 7.0
+content_margin_right = 12.0
+content_margin_bottom = 7.0
+texture = ExtResource("3_lacquer")
+texture_margin_left = 10.0
+texture_margin_top = 9.0
+texture_margin_right = 10.0
+texture_margin_bottom = 10.0
+region_rect = Rect2(144, 0, 48, 48)
+
+[sub_resource type="StyleBoxTexture" id="Tag"]
+content_margin_left = 14.0
+content_margin_top = 6.0
+content_margin_right = 14.0
+content_margin_bottom = 7.0
+texture = ExtResource("3_lacquer")
+texture_margin_left = 10.0
+texture_margin_top = 10.0
+texture_margin_right = 10.0
+texture_margin_bottom = 10.0
+region_rect = Rect2(192, 0, 48, 48)
+
+[sub_resource type="StyleBoxTexture" id="TagMarked"]
+content_margin_left = 14.0
+content_margin_top = 6.0
+content_margin_right = 14.0
+content_margin_bottom = 7.0
+texture = ExtResource("3_lacquer")
+texture_margin_left = 10.0
+texture_margin_top = 10.0
+texture_margin_right = 10.0
+texture_margin_bottom = 10.0
+region_rect = Rect2(240, 0, 48, 48)
+
+[sub_resource type="StyleBoxTexture" id="TagHover"]
+content_margin_left = 14.0
+content_margin_top = 6.0
+content_margin_right = 14.0
+content_margin_bottom = 7.0
+texture = ExtResource("3_lacquer")
+texture_margin_left = 10.0
+texture_margin_top = 10.0
+texture_margin_right = 10.0
+texture_margin_bottom = 10.0
+modulate_color = Color(1.13, 1.13, 1.13, 1)
+region_rect = Rect2(192, 0, 48, 48)
+
+[sub_resource type="Theme" id="TagTheme"]
+default_font_size = 16
+Button/colors/font_color = Color(0.22, 0.133, 0.086, 1)
+Button/colors/font_hover_color = Color(0.22, 0.133, 0.086, 1)
+Button/colors/font_focus_color = Color(0.22, 0.133, 0.086, 1)
+Button/colors/font_pressed_color = Color(0.22, 0.133, 0.086, 1)
+Button/colors/font_hover_pressed_color = Color(0.22, 0.133, 0.086, 1)
+Button/styles/normal = SubResource("Tag")
+Button/styles/hover = SubResource("TagHover")
+Button/styles/pressed = SubResource("TagMarked")
+Button/styles/hover_pressed = SubResource("TagMarked")
+
+[node name="Backpack" type="Control"]
+process_mode = 3
+texture_filter = 1
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_script")
+item_style = SubResource("Pocket")
+empty_pocket_style = SubResource("EmptyPocket")
+
+[node name="Shade" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.055, 0.089, 0.066, 0.67)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Window" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(742, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("LacquerCase")
+
+[node name="Body" type="VBoxContainer" parent="Center/Window"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Header" type="HBoxContainer" parent="Center/Window/Body"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BagIcon" type="TextureRect" parent="Center/Window/Body/Header"]
+unique_name_in_owner = true
+texture_filter = 1
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="Center/Window/Body/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.973, 0.857, 0.65, 1)
+theme_override_font_sizes/font_size = 30
+text = "背包"
+
+[node name="Close" type="Button" parent="Center/Window/Body/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(86, 36)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+text = "关闭"
+
+[node name="Contents" type="HBoxContainer" parent="Center/Window/Body"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Stock" type="VBoxContainer" parent="Center/Window/Body/Contents"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Tabs" type="HBoxContainer" parent="Center/Window/Body/Contents/Stock"]
+layout_mode = 2
+theme = SubResource("TagTheme")
+theme_override_constants/separation = 8
+
+[node name="CropTab" type="Button" parent="Center/Window/Body/Contents/Stock/Tabs"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 37)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+toggle_mode = true
+text = "私仓作物"
+
+[node name="FishTab" type="Button" parent="Center/Window/Body/Contents/Stock/Tabs"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 37)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+toggle_mode = true
+text = "鱼篓"
+
+[node name="CraftTab" type="Button" parent="Center/Window/Body/Contents/Stock/Tabs"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 37)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+toggle_mode = true
+text = "工艺材料"
+
+[node name="Pockets" type="PanelContainer" parent="Center/Window/Body/Contents/Stock"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("Tray")
+
+[node name="Stack" type="VBoxContainer" parent="Center/Window/Body/Contents/Stock/Pockets"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Wells" type="PanelContainer" parent="Center/Window/Body/Contents/Stock/Pockets/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("WellArea")
+
+[node name="EmptyPockets" type="GridContainer" parent="Center/Window/Body/Contents/Stock/Pockets/Stack/Wells"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+columns = 2
+
+[node name="Items" type="GridContainer" parent="Center/Window/Body/Contents/Stock/Pockets/Stack/Wells"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+columns = 2
+
+[node name="Empty" type="Label" parent="Center/Window/Body/Contents/Stock/Pockets/Stack"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.93, 0.83, 0.67, 1)
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Carry" type="VBoxContainer" parent="Center/Window/Body/Contents"]
+custom_minimum_size = Vector2(212, 0)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Coins" type="PanelContainer" parent="Center/Window/Body/Contents/Carry"]
+custom_minimum_size = Vector2(0, 37)
+layout_mode = 2
+theme_override_styles/panel = SubResource("Tray")
+
+[node name="CoinRow" type="HBoxContainer" parent="Center/Window/Body/Contents/Carry/Coins"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="CoinIcon" type="TextureRect" parent="Center/Window/Body/Contents/Carry/Coins/CoinRow"]
+unique_name_in_owner = true
+texture_filter = 1
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CoinLabel" type="Label" parent="Center/Window/Body/Contents/Carry/Coins/CoinRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.95, 0.87, 0.67, 1)
+text = "铜钱"
+
+[node name="Wallet" type="Label" parent="Center/Window/Body/Contents/Carry/Coins/CoinRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.82, 0.57, 1)
+theme_override_font_sizes/font_size = 18
+
+[node name="Meal" type="PanelContainer" parent="Center/Window/Body/Contents/Carry"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("Tray")
+
+[node name="MealDetails" type="VBoxContainer" parent="Center/Window/Body/Contents/Carry/Meal"]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="MealTitle" type="Label" parent="Center/Window/Body/Contents/Carry/Meal/MealDetails"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.87, 0.67, 1)
+text = "随身路餐"
+
+[node name="MealIcon" type="TextureRect" parent="Center/Window/Body/Contents/Carry/Meal/MealDetails"]
+unique_name_in_owner = true
+visible = false
+texture_filter = 1
+custom_minimum_size = Vector2(88, 88)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="MealName" type="Label" parent="Center/Window/Body/Contents/Carry/Meal/MealDetails"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.82, 0.57, 1)
+theme_override_font_sizes/font_size = 20
+
+[node name="MealEffect" type="Label" parent="Center/Window/Body/Contents/Carry/Meal/MealDetails"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.89, 0.79, 0.64, 1)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+
+[node name="Eat" type="Button" parent="Center/Window/Body/Contents/Carry/Meal/MealDetails"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_type_variation = &"HudPrimary"
+mouse_default_cursor_shape = 2
+text = "食用"
+
+[node name="MealNotice" type="Label" parent="Center/Window/Body/Contents/Carry/Meal/MealDetails"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.89, 0.79, 0.64, 1)
+autowrap_mode = 3

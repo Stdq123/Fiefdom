@@ -1,0 +1,13 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://3xbfoqtra6mj"
+path="res://.godot/imported/lacquer-bag.svg-7e6d947a417c5030e489bb5e2f1df164.res"
+
+[deps]
+
+source_file="res://assets/ui/lacquer-bag.svg"
+dest_files=["res://.godot/imported/lacquer-bag.svg-7e6d947a417c5030e489bb5e2f1df164.res"]
+
+[params]

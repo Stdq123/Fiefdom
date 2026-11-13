@@ -30,6 +30,7 @@ offset_left = 124.0
 offset_top = -305.0
 offset_right = -124.0
 offset_bottom = -25.0
+grow_vertical = 0
 mouse_filter = 2
 
 [node name="Panel" type="PanelContainer" parent="MapModal/Anchor"]
@@ -85,6 +86,14 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.96, 0.84, 0.60, 1)
 theme_override_font_sizes/font_size = 18
+
+[node name="Tradeoff" type="Label" parent="MapModal/Anchor/Panel/Stack"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.81, 0.55, 1)
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
 
 [node name="Choices" type="HBoxContainer" parent="MapModal/Anchor/Panel/Stack"]
 layout_mode = 2

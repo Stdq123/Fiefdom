@@ -3,14 +3,18 @@ class_name TravelMeal
 
 const BEAN_MILLET := "bean_millet"
 const RICE_FISH := "rice_fish"
+const WHEAT_CAKE := "wheat_cake"
 const RECIPES := {
 	BEAN_MILLET: {"name": "菽黍饭", "crops": {"beans": 1, "millet": 1}, "frame": 0},
 	RICE_FISH: {"name": "稻鱼羹", "crops": {"rice": 1}, "frame": 1},
+	WHEAT_CAKE: {"name": "麦饼", "crops": {"wheat": 1}, "frame": 2},
 }
 
 static func benefits(meal: String, balance: BalanceData) -> Vector2i:
 	if meal == BEAN_MILLET:
 		return Vector2i(balance.bean_millet_stamina, 0)
+	if meal == WHEAT_CAKE:
+		return Vector2i(balance.wheat_cake_stamina, 0)
 	return Vector2i(balance.rice_fish_stamina, balance.rice_fish_health)
 
 static func describe_recovery(amount: Vector2i) -> String:

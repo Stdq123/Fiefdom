@@ -2,6 +2,7 @@ extends CanvasLayer
 
 const NIGHT_RATIONS_PANEL := preload("res://scenes/NightRationsPanel.tscn")
 const SEED_GARDEN := preload("res://scripts/SeedGarden.gd")
+const WINTER_RATIONS := preload("res://scripts/WinterRoadRations.gd")
 const FISHING_PANEL := preload("res://scripts/FishingPanel.gd")
 
 @onready var world = $"../World"
@@ -120,6 +121,7 @@ func _process(_delta: float) -> void:
 	hud.council_prep_button.disabled = hud.map_button.disabled
 	hud.guide.six_arts.disabled = hud.map_button.disabled
 	hud.handover_button.disabled = hud.map_button.disabled
+	hud.first_private_button.disabled = hud.map_button.disabled
 	hud.tribute_button.disabled = hud.map_button.disabled
 	hud.raid_alert.disabled = blocked
 	var following_canal := (Global.field_route_status == Global.NightGrowth.BLOCKED
@@ -225,6 +227,7 @@ func _connect_signals() -> void:
 	GameEvents.seed_garden_requested.connect(_on_seed_garden_requested)
 	GameEvents.fishing_requested.connect(_on_fishing_requested)
 	GameEvents.travel_hearth_interacted.connect(_on_travel_hearth_interacted)
+	GameEvents.winter_road_rations_interacted.connect(_on_winter_road_rations_interacted)
 	GameEvents.winter_supper_requested.connect(_on_winter_supper_requested)
 	GameEvents.winter_supper_prepared.connect(update_ui)
 	GameEvents.road_rest_interacted.connect(_on_road_rest_interacted)
@@ -298,9 +301,9 @@ func update_ui() -> void:
 	hud.refresh_rations()
 	hud.refresh_tribute()
 	hud.reputation_label.text = "声望 %d" % Global.reputation
-	hud.calendar_label.text = "第 %d 年 · %s · %s · %s" % [
-		Global.get_current_year(), Global.SEASON_NAMES[Global.season_index()], Global.get_current_solar_term(),
-		"雨润旱田" if Global.has_rain() else "晴"]
+	hud.calendar_label.text = "第 %d 年 · %s · %s" % [
+		Global.get_current_year(), Global.get_current_solar_term(),
+		"雨" if Global.has_rain() else "晴"]
 	hud.gathering_label.text = ""
 	if Global.is_gathering_day():
 		hud.gathering_label.text = "今日谷雨亭集 · 迎客曲已入簿" if Global.gathering_score() > 0 else "今日谷雨亭集 · 南路亭东"
@@ -437,7 +440,6 @@ func _refresh_opening_action() -> void:
 	hud.handover_button.visible = Global.outcome == Global.Outcome.RUNNING and not Global.first_tribute_delivered()
 	action.visible = (Global.outcome == Global.Outcome.RUNNING and not hud.cancel_directions.visible
 		and (not speaker.is_empty() or can_review_harvest))
-	hud.visitor_label.visible = speaker.is_empty() or not action.visible or can_discuss_rotation
 	if not action.visible:
 		return
 	if speaker.is_empty():
@@ -658,11 +660,16 @@ func _on_ravine_trip_requested(place: String) -> void:
 		hud.practice_label.text = "已标出东关 · 从南门回封地"
 
 func _on_pinned_order_pressed() -> void:
-	var current := Global.season_order()
-	if Global.is_season_order_pinned(current) and Global.can_deliver_season_order(current):
+	var order := Global.pinned_season_order()
+	if not order.is_empty() and Global.can_deliver_season_order(order):
 		_on_west_market_directions_requested(Global.MARKET_ORDERS)
-	else:
-		_on_season_board_interacted()
+		return
+	if directions.follow_field_route(Global.OrderFieldRoute.HARVEST):
+		panel_manager.hide_management_panel()
+		if Global.is_indoors():
+			hud.practice_label.text = "已标出备货私田 · 从南门回田边"
+		return
+	_on_season_board_interacted()
 
 func _on_season_board_interacted() -> void:
 	world.set_channel_mode(false)
@@ -686,7 +693,16 @@ func _on_freight_arrival_interacted(speech: String, portrait: Texture2D, order_i
 	elif order_id in SeasonOrders.POND_ORDERS:
 		destination = CreekFish.PLACES[CreekFish.Site.POND]
 		guide = directions.follow_place.bind(destination, EstateLayout.POND_LANDING)
+	elif order_id == SeasonOrders.WINTER_WOVEN_GOODS:
+		destination = WINTER_RATIONS.PLACE
+		guide = directions.follow_place.bind(destination, EstateLayout.WINTER_RATIONS_APPROACH)
 	dialog_manager.show_freight_arrival(speech, portrait, _guide_travel_hearth, destination, guide)
+
+func _on_winter_road_rations_interacted() -> void:
+	world.set_channel_mode(false)
+	if directions.tracked_place == WINTER_RATIONS.PLACE:
+		directions.clear_tracking()
+	dialog_manager.show_winter_road_rations(world.get_node("WinterRoadRations").courier_at_table())
 
 func _on_fishing_requested(spot: Node2D) -> void:
 	if _estate_controls_blocked() or not Global.cast_fishing_line(spot.site):

@@ -7,6 +7,7 @@ const DOWN := &"walk_down"
 const RIGHT := &"walk_right"
 const INTERACT := &"interact"
 const MAP := &"open_map"
+const BACKPACK := &"open_backpack"
 const ALMANAC := &"open_almanac"
 const MEAL := &"eat_travel_meal"
 const RHYTHM := &"rhythm"
@@ -16,14 +17,14 @@ const SEEDS: Array[StringName] = [&"seed_1", &"seed_2", &"seed_3", &"seed_4", &"
 
 const DEFAULTS: Dictionary[StringName, Key] = {
 	UP: KEY_W, LEFT: KEY_A, DOWN: KEY_S, RIGHT: KEY_D,
-	INTERACT: KEY_E, MAP: KEY_M, ALMANAC: KEY_C, MEAL: KEY_F, RHYTHM: KEY_SPACE,
+	INTERACT: KEY_E, MAP: KEY_M, BACKPACK: KEY_I, ALMANAC: KEY_C, MEAL: KEY_F, RHYTHM: KEY_SPACE,
 	FILL: KEY_SHIFT, ROTATE: KEY_R,
 	&"seed_1": KEY_1, &"seed_2": KEY_2, &"seed_3": KEY_3, &"seed_4": KEY_4,
 	&"seed_5": KEY_5, &"seed_6": KEY_6, &"seed_7": KEY_7,
 }
 const LABELS := {
 	UP: "向上", LEFT: "向左", DOWN: "向下", RIGHT: "向右",
-	INTERACT: "互动", MAP: "舆图", ALMANAC: "历书", MEAL: "食用路餐", RHYTHM: "敲钟或收线",
+	INTERACT: "互动", MAP: "舆图", BACKPACK: "背包", ALMANAC: "历书", MEAL: "食用路餐", RHYTHM: "敲钟或收线",
 	FILL: "填渠（按住）", ROTATE: "放样换弯",
 }
 const MENU_KEYS := [KEY_ESCAPE, KEY_ENTER, KEY_KP_ENTER, KEY_TAB, KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_BACKTAB]

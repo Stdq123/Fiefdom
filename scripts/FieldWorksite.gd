@@ -1,6 +1,6 @@
 extends Node2D
 
-const STORE := preload("res://assets/world/estate-storage.png")
+const STORE := preload("res://assets/world/estate-storage.svg")
 const NINJA := preload("res://assets/world/ninja-adventure/tileset_village_abandoned.png")
 const PEBBLES := Rect2(160, 64, 16, 16)
 const SACK := Rect2(0, 0, 16, 16)

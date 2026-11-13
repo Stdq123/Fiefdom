@@ -3,6 +3,7 @@ extends "res://scripts/SurveyMap.gd"
 @onready var introduction: Label = %Introduction
 @onready var crops: HBoxContainer = %Crops
 @onready var selection: Label = %Selection
+@onready var tradeoff: Label = %Tradeoff
 @onready var take: Button = %Take
 @onready var share: Button = %Share
 
@@ -36,6 +37,7 @@ func _refresh_on_open() -> void:
 	var preparing := record.is_empty()
 	crops.visible = preparing
 	take.get_parent().visible = preparing
+	tradeoff.hide()
 	if not preparing:
 		introduction.text = "展完后，各家都把自家的样品带回了。"
 		if record.shared:
@@ -75,6 +77,27 @@ func _show_selection() -> void:
 		selection.text += "    " + AutumnExhibit.names(selected)
 	take.disabled = not full
 	share.disabled = not full
+	_show_order_tradeoff()
+
+func _show_order_tradeoff() -> void:
+	var current := Global.season_order()
+	var pinned := Global.pinned_season_order()
+	var schedules: Array[Dictionary] = [current]
+	if not pinned.is_empty() and pinned.start != current.start:
+		schedules.append(pinned)
+	var notes := PackedStringArray()
+	for schedule in schedules:
+		if Global.season_order_delivered_at(schedule) > 0:
+			continue
+		var reserved := {}
+		for id in selected:
+			var available := Global.season_order_stock_for(schedule, id)
+			if available > 0 and available <= int(schedule.order.need.get(id, 0)):
+				reserved[id] = 1
+		if not reserved.is_empty():
+			notes.append("分享会用掉「%s」的留货（%s）" % [schedule.order.title, ItemManager.describe_crops(reserved)])
+	tradeoff.text = "\n".join(notes)
+	tradeoff.visible = not notes.is_empty()
 
 func _commit(sharing: bool) -> void:
 	if Global.place_autumn_exhibit(selected, sharing):

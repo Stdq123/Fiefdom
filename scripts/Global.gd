@@ -156,8 +156,9 @@ enum CropWater { DRY, BLOCKED, HAND, CANAL, RAIN }
 enum NightGrowth { READY, DRY, BLOCKED, GROW, RIPEN }
 enum MulberryRoute { PLANT = 5, WATER, HARVEST }
 enum TributeRoute { TEND = 8 }
+enum OrderFieldRoute { HARVEST = 9 }
 const FIELD_ROUTE_STATES := [NightGrowth.READY, NightGrowth.DRY, NightGrowth.BLOCKED,
-	MulberryRoute.PLANT, MulberryRoute.WATER, MulberryRoute.HARVEST, TributeRoute.TEND]
+	MulberryRoute.PLANT, MulberryRoute.WATER, MulberryRoute.HARVEST, TributeRoute.TEND, OrderFieldRoute.HARVEST]
 enum Season { SPRING, SUMMER, AUTUMN, WINTER }
 const SEASON_NAMES := ["春", "夏", "秋", "冬"]
 
@@ -620,7 +621,7 @@ func dawn_milestones() -> PackedStringArray:
 			numbers.append(str(number))
 		lines.append("井田 %s 已完工 · 可耕种" % "、".join(numbers))
 		if 2 in completed:
-			lines.append("可在「管理」分派井田管事。")
+			lines.append("可在「管理 → 封地概览」交接井田管事。")
 	var research_paid: int = last_dawn.get("research_paid", 0)
 	var research_gap: int = last_dawn.get("research_gap", 0)
 	if research_paid > 0:
@@ -786,19 +787,34 @@ func is_winter_supper_day(day := 0) -> bool:
 func winter_supper_record(day := 0) -> Dictionary:
 	return winter_suppers.get(day if day > 0 else current_day, {})
 
+func winter_supper_bean_gift(day := 0) -> bool:
+	var date := day if day > 0 else current_day
+	if not is_winter_supper_day(date):
+		return false
+	var terms_since_autumn := SOLAR_TERMS.find(WinterSupper.TERM) - SOLAR_TERMS.find(AutumnExhibit.TERM)
+	var harvest_day := date - terms_since_autumn * maxi(1, balance.days_per_solar_term)
+	return autumn_exhibit_record(harvest_day).get("shared", false)
+
+func _winter_supper_crops(recipe: String) -> Dictionary:
+	if recipe == WinterSupper.BEAN and winter_supper_bean_gift():
+		return {"wheat": 1}
+	return WinterSupper.RECIPES[recipe].crops
+
 func can_prepare_winter_supper(recipe: String, fish: String) -> bool:
 	return (outcome == Outcome.RUNNING and is_winter_supper_day() and not winter_suppers.has(current_day)
-		and crop_stock.can_spend(WinterSupper.RECIPES[recipe].crops)
+		and crop_stock.can_spend(_winter_supper_crops(recipe))
 		and (recipe != WinterSupper.FISH or fish_count(fish) > 0))
 
 func prepare_winter_supper(recipe: String, fish: String) -> bool:
 	if not can_prepare_winter_supper(recipe, fish):
 		return false
 	var dish: Dictionary = WinterSupper.RECIPES[recipe]
-	crop_stock.spend(dish.crops)
+	crop_stock.spend(_winter_supper_crops(recipe))
 	if recipe == WinterSupper.FISH:
 		fish_collection[fish].stock -= 1
 	winter_suppers[current_day] = {"recipe": recipe, "portions": WinterSupper.portions(recipe, balance)}
+	if recipe == WinterSupper.BEAN and winter_supper_bean_gift():
+		winter_suppers[current_day]["he_bo_beans"] = true
 	player_stats.add_xp(PlayerStats.Art.RITES, balance.winter_supper_rites)
 	GameEvents.inventory_changed.emit(player_inventory)
 	if recipe == WinterSupper.FISH:
@@ -863,6 +879,8 @@ func set_field_seed_plan(cell: Vector2i, plan: String) -> void:
 		field_seed_plans[cell] = plan
 
 func next_seed_for_plan(cell: Vector2i, plan: String) -> String:
+	if plan == FieldSeedPlan.SEASONAL:
+		return FieldSeedPlan.seasonal_seed(season_index(), irrigation.supplies(cell))
 	if not FieldSeedPlan.is_rotation(plan):
 		return plan
 	var crop: Dictionary = active_crops.get(cell, {})
@@ -1058,7 +1076,7 @@ func tribute_field_plan() -> Dictionary:
 		var crop_data: CropData
 		if crop.is_empty():
 			if sowing_seed.is_empty():
-				sowing_seed = _tribute_seed()
+				sowing_seed = tribute_seed()
 			seed = sowing_seed
 			crop_data = ItemManager.get_crop(seed)
 			nights = sowing_nights(crop_data)
@@ -1071,7 +1089,7 @@ func tribute_field_plan() -> Dictionary:
 				"seed_id": seed, "crop": crop_data.crop_name, "ready_day": current_day + nights}
 	return plan
 
-func _tribute_seed() -> String:
+func tribute_seed() -> String:
 	var best := "millet"
 	var fewest := sowing_nights(ItemManager.get_crop(best))
 	for seed: String in CropData.IDS:
@@ -1365,6 +1383,9 @@ func _ending_memories() -> Array[String]:
 	var pond_day := pond_landing_day()
 	if pond_day > 0:
 		events.append({"day": pond_day, "text": "下游乡亲送来木板，石墨在南池西岸铺了钓台。"})
+	var rations_day := winter_road_rations_day()
+	if rations_day > 0:
+		events.append({"day": rations_day, "text": "阿绥把你送的麦帛搬到亭前，赶路人有了麦饼和行囊。"})
 	var relief := watch_relief_day()
 	if relief > 0:
 		events.append({"day": relief, "text": "你备下的巡粮到了东岗，岗旗换上新麻绳。"})
@@ -1664,6 +1685,9 @@ func fish_market_offer() -> Dictionary:
 		"thanks": request.thanks, "receipt": fish_order_receipt if fish_order_receipt.get("day", 0) >= window.start else {},
 		"food": fish.food + balance.fish_order_food_bonus, "copper": fish.copper + balance.fish_order_copper_bonus}
 
+func fish_order_for_porter() -> bool:
+	return fish_order_receipt.get("day", 0) == current_day and fish_order_receipt.get("watch", 0.0) < CreekFish.ORDER_PICKUP
+
 func fish_delivery_places(caught := "") -> Array[String]:
 	var places: Array[String] = []
 	var offer := fish_market_offer()
@@ -1681,7 +1705,8 @@ func deliver_fish_order(start_day: int, for_food: bool) -> bool:
 	if outcome != Outcome.RUNNING or offer.start != start_day or not offer.receipt.is_empty() or fish_count(offer.fish) < 1:
 		return false
 	var amount: int = offer.food if for_food else offer.copper
-	fish_order_receipt = {"day": current_day, "fish": offer.fish, "for_food": for_food, "amount": amount}
+	fish_order_receipt = {"day": current_day, "watch": day_progress, "fish": offer.fish,
+		"for_food": for_food, "amount": amount}
 	_settle_fish_exchange(offer.fish, for_food, amount)
 	return true
 
@@ -1748,7 +1773,10 @@ func retainer_food_cost() -> int:
 	return cost
 
 func retainer_night_ration(retainer: RetainerData) -> int:
-	return 1 + (0 if retainer.duty == RetainerData.Duty.FIELD else balance.specialist_food_per_night)
+	return night_ration_for_duty(retainer.duty)
+
+func night_ration_for_duty(duty: RetainerData.Duty) -> int:
+	return 1 + (0 if duty == RetainerData.Duty.FIELD else balance.specialist_food_per_night)
 
 func _night_meal(available: int) -> Dictionary:
 	var order := retainers.duplicate()
@@ -2079,6 +2107,20 @@ func season_order_stock_for(schedule: Dictionary, id: String) -> int:
 		stock -= int(SeasonOrders.cargo(current.order).get(id, 0))
 	return maxi(0, stock)
 
+func season_order_crop_gap(schedule: Dictionary, id: String) -> int:
+	var needed: int = schedule.order.need.get(id, 0)
+	return maxi(0, needed - season_order_stock_for(schedule, id)) if needed > 0 else 0
+
+func is_season_order_harvest(cell: Vector2i, schedule: Dictionary) -> bool:
+	return (field_crop_is_ripe(cell) and not is_public_plot(cell)
+		and season_order_crop_gap(schedule, active_crops[cell].id) > 0)
+
+func has_season_order_harvest(schedule: Dictionary) -> bool:
+	for cell: Vector2i in active_crops:
+		if is_season_order_harvest(cell, schedule):
+			return true
+	return false
+
 func private_rice_plots() -> Array[Vector2i]:
 	var plots: Array[Vector2i] = []
 	for field in well_fields:
@@ -2133,6 +2175,8 @@ func deliver_season_order(start_day: int, paid_in_food: bool) -> bool:
 	var previous_post := watch_relief_day() if schedule.order.id == SeasonOrders.WATCH_RELIEF else 0
 	var previous_garden := seed_garden_day() if schedule.order.id in SeasonOrders.SEED_ORDERS else 0
 	var previous_pond := pond_landing_day() if schedule.order.id in SeasonOrders.POND_ORDERS else 0
+	var previous_rations := winter_road_rations_day() if schedule.order.id == SeasonOrders.WINTER_WOVEN_GOODS else 0
+	var cake_claimed_for: int = season_order_receipts.get(schedule.order.id, {}).get("cake_claimed_for", 0)
 	season_order_receipts[schedule.order.id] = {
 		"day": current_day, "paid_in_food": paid_in_food,
 		"dispatch_day": SeasonOrders.dispatch_day(current_day, day_progress),
@@ -2143,6 +2187,9 @@ func deliver_season_order(start_day: int, paid_in_food: bool) -> bool:
 		season_order_receipts[schedule.order.id]["previous_garden_day"] = previous_garden
 	if previous_pond > 0:
 		season_order_receipts[schedule.order.id]["first_pond_day"] = previous_pond
+	if previous_rations > 0:
+		season_order_receipts[schedule.order.id]["previous_rations_day"] = previous_rations
+		season_order_receipts[schedule.order.id]["cake_claimed_for"] = cake_claimed_for
 	reputation += balance.interaction_reputation_gain
 	if paid_in_food:
 		food_storage += rewards.food
@@ -2231,7 +2278,25 @@ func fish_for_travel_meal() -> String:
 			return id
 	return ""
 
+func winter_road_rations_progress() -> float:
+	var receipt: Dictionary = season_order_receipts.get(SeasonOrders.WINTER_WOVEN_GOODS, {})
+	return -1.0 if receipt.is_empty() else SeasonOrders.relay_progress(receipt,
+		current_day, day_progress, SeasonOrders.WINTER_RELAY_FRACTION)
+
+func winter_road_rations_day() -> int:
+	var receipt: Dictionary = season_order_receipts.get(SeasonOrders.WINTER_WOVEN_GOODS, {})
+	if receipt.is_empty():
+		return 0
+	return receipt.dispatch_day if winter_road_rations_progress() >= 1.0 else receipt.get("previous_rations_day", 0)
+
+func winter_road_rations_gift_available() -> bool:
+	var day := winter_road_rations_day()
+	return day > 0 and season_order_receipts[SeasonOrders.WINTER_WOVEN_GOODS].get("cake_claimed_for", 0) != day
+
 func can_pack_travel_meal(meal: String, fish_id: String) -> bool:
+	if meal == TravelMeal.WHEAT_CAKE:
+		return (outcome == Outcome.RUNNING and travel_meal.is_empty() and winter_road_rations_day() > 0
+			and (winter_road_rations_gift_available() or crop_stock.can_spend(TravelMeal.RECIPES[meal].crops)))
 	return (outcome == Outcome.RUNNING and travel_hearth_open() and travel_meal.is_empty()
 		and (meal != TravelMeal.RICE_FISH or fish_count(fish_id) > 0)
 		and crop_stock.can_spend(TravelMeal.RECIPES[meal].crops))
@@ -2239,7 +2304,10 @@ func can_pack_travel_meal(meal: String, fish_id: String) -> bool:
 func pack_travel_meal(meal: String, fish_id: String) -> bool:
 	if not can_pack_travel_meal(meal, fish_id):
 		return false
-	crop_stock.spend(TravelMeal.RECIPES[meal].crops)
+	if meal == TravelMeal.WHEAT_CAKE and winter_road_rations_gift_available():
+		season_order_receipts[SeasonOrders.WINTER_WOVEN_GOODS]["cake_claimed_for"] = winter_road_rations_day()
+	else:
+		crop_stock.spend(TravelMeal.RECIPES[meal].crops)
 	travel_meal = meal
 	if meal == TravelMeal.RICE_FISH:
 		fish_collection[fish_id].stock -= 1
@@ -3528,7 +3596,8 @@ func _restore_fish_order_receipt(record: Variant, saved_day: int) -> Dictionary:
 	var amount := _read_save_int(record.get("amount"), 0)
 	var fish: Variant = record.get("fish")
 	if day > 0 and day <= saved_day and amount > 0 and CreekFish.SPECIES.has(fish):
-		return {"day": day, "fish": fish, "for_food": record.get("for_food") == true, "amount": amount}
+		return {"day": day, "watch": clampf(_read_save_number(record.get("watch"), 0.0), 0.0, 1.0),
+			"fish": fish, "for_food": record.get("for_food") == true, "amount": amount}
 	return {}
 
 func _restore_creek_trap(record: Variant, saved_day: int) -> Dictionary:
@@ -3640,6 +3709,13 @@ func _restore_season_order_receipts(record: Variant, saved_day: int) -> void:
 					var first_pond := clampi(_read_save_int(receipt.get("first_pond_day"), 0), 0, day)
 					if first_pond > 0:
 						season_order_receipts[order.id]["first_pond_day"] = first_pond
+				elif order.id == SeasonOrders.WINTER_WOVEN_GOODS:
+					var previous_rations := clampi(_read_save_int(receipt.get("previous_rations_day"), 0), 0, day)
+					if previous_rations > 0:
+						season_order_receipts[order.id]["previous_rations_day"] = previous_rations
+					var cake_claimed_for := clampi(_read_save_int(receipt.get("cake_claimed_for"), 0), 0, saved_day)
+					if cake_claimed_for > 0:
+						season_order_receipts[order.id]["cake_claimed_for"] = cake_claimed_for
 
 func _restore_sheepfold(record: Variant, saved_day: int) -> void:
 	sheepfold = Sheepfold.new()
@@ -3695,6 +3771,8 @@ func _restore_winter_suppers(record: Variant, saved_day: int) -> void:
 		var portions := _read_save_int(entry.get("portions"), 0)
 		if recipe is String and WinterSupper.RECIPES.has(recipe) and portions > 0:
 			winter_suppers[day] = {"recipe": recipe, "portions": portions}
+			if recipe == WinterSupper.BEAN and entry.get("he_bo_beans") == true:
+				winter_suppers[day]["he_bo_beans"] = true
 
 func _read_save_int(value: Variant, fallback: int) -> int:
 	var number := _read_save_number(value, float(fallback))

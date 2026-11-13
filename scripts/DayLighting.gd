@@ -2,6 +2,7 @@ extends CanvasModulate
 
 const DAWN := Color("#ffe3c2")
 const NIGHT := Color("#8298bd")
+const LAMP_RISE := 0.64
 
 var lamps: Array[Lantern] = []
 var _sky := Gradient.new()
@@ -34,7 +35,8 @@ func place_lamp(layer: Node2D, foot: Vector2, radius_scale := 1.0, ignition := -
 	var lamp := Lantern.new()
 	lamp.name = "Lantern%d" % (lamps.size() + 1)
 	lamp.position = foot
-	lamp.ignition = ignition if ignition >= 0.0 else float(lamps.size()) * 0.055
+	# Leave enough dusk for every automatic lamp to reach full strength at night.
+	lamp.ignition = ignition if ignition >= 0.0 else minf(float(lamps.size()) * 0.055, 1.0 - LAMP_RISE)
 	lamp.glow.texture = _glow
 	lamp.glow.texture_scale = radius_scale
 	layer.add_child(lamp)
@@ -48,7 +50,7 @@ func refresh(delta := 0.0) -> void:
 		var phase := _flicker * 4.0 + float(index) * 2.1
 		var flicker := 0.72 + 0.045 * sin(phase) + 0.025 * sin(phase * 2.75)
 		var ignition := lamps[index].ignition
-		lamps[index].set_glow(smoothstep(ignition, ignition + 0.64, dusk) * flicker)
+		lamps[index].set_glow(smoothstep(ignition, ignition + LAMP_RISE, dusk) * flicker)
 
 class Lantern extends Node2D:
 	var glow := PointLight2D.new()

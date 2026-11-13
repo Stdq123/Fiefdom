@@ -12,5 +12,6 @@
 ## Codex 工作室流程
 
 - `project.yaml` 记录 Game Studios 的项目配置。用 `$studio-start` 盘点已有工作，或用 `$studio-dev-story` 接手明确的功能。完整入口见 [README.md](README.md#codex-工作室)。
+- 用 `$router` 按任务选取上游游戏开发技能。上游的 `skills/<category>/<name>/SKILL.md` 在本项目对应 `.agents/skills/<name>/SKILL.md`，随附参考和脚本从该技能目录读取。 [上游版本](https://github.com/gamedev-skills/awesome-gamedev-agent-skills/tree/c6ca6c41c839b68319ffc08430b99ab768debc32)
 - 运行验证使用 `$studio-smoke-check`。PowerShell 脚本在临时副本中导入、解析脚本并启动主场景，同时隔离编辑器缓存和 `user://`。涉及界面、交互或手感时，另记实机验证结果。
 - 当前会话负责协调。用户明确要求分工时，可使用 `.codex/agents/` 中的系统设计、Godot 和 QA 角色，并汇总各自的证据。

@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" path="res://assets/world/hall-interior.svg" id="2_art"]
 [ext_resource type="Script" path="res://scripts/HallFurnishing.gd" id="3_furniture"]
 [ext_resource type="Material" path="res://resources/world_hint_material.tres" id="4_unshaded"]
+[ext_resource type="SystemFont" path="res://resources/room_hint_font.tres" id="8_hint_font"]
 [ext_resource type="Texture2D" path="res://assets/world/hall-clothes-rack.svg" id="5_clothes"]
 [ext_resource type="Texture2D" path="res://assets/world/hall-decor.svg" id="6_decor_art"]
 [ext_resource type="Script" path="res://scripts/HallDecorView.gd" id="7_decor_view"]
@@ -100,6 +101,7 @@ texture = SubResource("Atlas_shelf")
 centered = false
 
 [node name="Hint" type="Label" parent="DecorShelf"]
+texture_filter = 2
 visible = false
 z_index = 7
 material = ExtResource("4_unshaded")
@@ -111,6 +113,7 @@ mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.88, 0.65, 1)
 theme_override_colors/font_outline_color = Color(0.20, 0.13, 0.095, 1)
 theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("8_hint_font")
 theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
 
@@ -152,6 +155,7 @@ position = Vector2(0, -5)
 shape = SubResource("Shape_desk")
 
 [node name="Hint" type="Label" parent="StudyDesk"]
+texture_filter = 2
 visible = false
 z_index = 7
 material = ExtResource("4_unshaded")
@@ -163,6 +167,7 @@ mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.88, 0.65, 1)
 theme_override_colors/font_outline_color = Color(0.20, 0.13, 0.095, 1)
 theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("8_hint_font")
 theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
 
@@ -182,6 +187,7 @@ position = Vector2(0, -15)
 shape = SubResource("Shape_bed")
 
 [node name="Hint" type="Label" parent="Bed"]
+texture_filter = 2
 visible = false
 z_index = 7
 material = ExtResource("4_unshaded")
@@ -193,6 +199,7 @@ mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.88, 0.65, 1)
 theme_override_colors/font_outline_color = Color(0.20, 0.13, 0.095, 1)
 theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("8_hint_font")
 theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
 
@@ -212,6 +219,7 @@ position = Vector2(0, -5)
 shape = SubResource("Shape_clothes")
 
 [node name="Hint" type="Label" parent="ClothesRack"]
+texture_filter = 2
 visible = false
 z_index = 7
 material = ExtResource("4_unshaded")
@@ -223,6 +231,7 @@ mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.88, 0.65, 1)
 theme_override_colors/font_outline_color = Color(0.20, 0.13, 0.095, 1)
 theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("8_hint_font")
 theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
 
@@ -236,6 +245,7 @@ monitorable = false
 shape = SubResource("Shape_exit")
 
 [node name="ExitHint" type="Label" parent="."]
+texture_filter = 2
 z_index = 7
 material = ExtResource("4_unshaded")
 offset_left = -42.0
@@ -244,6 +254,7 @@ offset_right = 42.0
 offset_bottom = 92.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.84, 0.77, 0.60, 1)
+theme_override_fonts/font = ExtResource("8_hint_font")
 theme_override_font_sizes/font_size = 9
 text = "南门 · 回封地"
 horizontal_alignment = 1

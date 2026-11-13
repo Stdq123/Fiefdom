@@ -32,6 +32,7 @@ const WINDOW_MARGIN := 16.0
 @onready var sheep_note: Label = %SheepNote
 @onready var silk_note: Label = %SilkNote
 @onready var find_plot: Button = %FindPlot
+@onready var find_ready_plot: Button = %FindReadyPlot
 @onready var delegate: CheckButton = %Delegate
 @onready var budget: SpinBox = %Budget
 @onready var partial_meals: CheckButton = %PartialMeals
@@ -72,6 +73,7 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_fit_body)
 	close_button.pressed.connect(queue_free)
 	find_plot.pressed.connect(dry_plot_requested.emit)
+	find_ready_plot.pressed.connect(harvest_requested.emit)
 	find_harvest.pressed.connect(harvest_requested.emit)
 	find_tribute.pressed.connect(tribute_field_requested.emit)
 	find_watch.pressed.connect(func():
@@ -330,6 +332,7 @@ func _refresh_fields() -> void:
 	field_warning.text = " · ".join(warnings)
 	field_warning.visible = not warnings.is_empty()
 	find_plot.visible = report.dry > 0
+	find_ready_plot.visible = report.ready > 0
 	find_harvest.visible = show_previous and report.ready > 0
 
 func _refresh_tribute() -> void:

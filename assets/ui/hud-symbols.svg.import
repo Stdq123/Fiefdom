@@ -1,0 +1,13 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://cfgheuq6pqvd0"
+path="res://.godot/imported/hud-symbols.svg-70f36871085c8a54e9ce65d46d832868.res"
+
+[deps]
+
+source_file="res://assets/ui/hud-symbols.svg"
+dest_files=["res://.godot/imported/hud-symbols.svg-70f36871085c8a54e9ce65d46d832868.res"]
+
+[params]

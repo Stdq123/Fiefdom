@@ -3,6 +3,9 @@ extends RefCounted
 const Campaign := preload("res://tests/CampaignReplay.gd")
 const PLOTS := [Vector2i(4, 4), Vector2i(4, 5)]
 const FIXTURE := "user://second-year-order-fixture.json"
+const RATIONS_PLACE := "亭前路粮案"
+const RATIONS_ORDER := "winter_woven_goods"
+const WHEAT_CAKE := "wheat_cake"
 
 var tree: SceneTree
 var state: Node
@@ -10,6 +13,7 @@ var world: Node2D
 var ui: CanvasLayer
 var capture_dir := ""
 var failed := false
+var winter_only := false
 
 func _expect(ok: bool, message: String) -> bool:
 	if not ok:
@@ -381,6 +385,147 @@ func _winter() -> void:
 		"The commission settles both goods once and leaves the council's dedicated silk milestones intact.")
 	print("YEAR_ORDERS_WINTER day=", state.current_day, " reward=", state.money - before, " silk=", state.silk_workshop.bolts)
 	await _close_management()
+	if not state.has_method("winter_road_rations_day"):
+		return # Earlier exports still run the original year-order comparison.
+	var delivery_day: int = state.current_day
+	if not await _follow_winter_delivery(SeasonOrders.EVENING_DISPATCH):
+		return
+	if not await _take_wheat_cake("09-reserved-wheat-cake"):
+		return
+	if not _expect(state.crop_stock.count("wheat") == 0 and state.king_storage == 4,
+		"The free cake is a packed meal rather than a second payment from private or public wheat."):
+		return
+	if not _expect(state.save_game() == OK, "Save after claiming the reserved wheat cake."):
+		return
+	tree.change_scene_to_file(state.TITLE_SCENE)
+	await tree.scene_changed
+	await _button(tree.current_scene.continue_button)
+	if tree.current_scene == null:
+		await tree.scene_changed
+	_estate()
+	var actor := world.player as Player
+	if not _expect(state.current_day == delivery_day and state.winter_road_rations_day() == delivery_day
+		and not state.winter_road_rations_gift_available() and state.travel_meal == WHEAT_CAKE
+		and "麦饼" in actor.meal_button.text,
+		"Continuing that evening restores the table, collected gift and packed meal."):
+		return
+	var before_stamina: int = state.current_stamina
+	var expected := mini(state.max_stamina, before_stamina + TravelMeal.benefits(WHEAT_CAKE, state.balance).x)
+	await _key(KEY_F)
+	_expect(before_stamina < expected and state.current_stamina == expected and state.travel_meal.is_empty(),
+		"Eat the restored wheat cake with the ordinary travel-meal shortcut.")
+	var dialog := await _open_rations_table()
+	if not _expect(dialog != null, "Reopen the table after eating the wheat cake."):
+		return
+	var paid: Button = dialog.options_container.get_child(0)
+	_expect("用 1 份麦做麦饼" in paid.text and paid.disabled,
+		"The reserved cake is gone after loading and fresh wheat is required.")
+	await _capture("10-no-second-gift")
+	await _key(KEY_ESCAPE)
+	print("WINTER_RATIONS_RESTORED day=", delivery_day, " restored_stamina=", state.current_stamina - before_stamina)
+
+func _winter_clock(watch: float) -> void:
+	state.advance_daylight((watch - state.day_progress) * state.balance.daylight_seconds)
+	await tree.process_frame
+	await tree.physics_frame
+
+func _follow_winter_delivery(dispatch: float) -> bool:
+	var rations := world.get_node("WinterRoadRations")
+	var approach := rations.get_node("Approach") as Marker2D
+	var cart := world.get_node("Freight") as SeasonFreight
+	var arrival := dispatch + SeasonOrders.TRAVEL_FRACTION
+	await Campaign.walk_estate_road_to(tree, world, EstateLayout.FREIGHT_APPROACH)
+	await _winter_clock(arrival + 0.008)
+	if not _expect(cart.arrived and not cart.cargo.visible and cart.shown_order == RATIONS_ORDER
+		and rations.in_transit and rations.get_node("Courier").visible and not rations.table_open
+		and state.winter_road_rations_day() == 0,
+		"Arriving wheat and silk leave the cart, with the table still closed while the courier walks."):
+		return false
+	if dispatch == SeasonOrders.EVENING_DISPATCH:
+		await _capture("07-wheat-and-silk-unloaded")
+	await _key(KEY_E)
+	var dialog := ui.get_node_or_null("Control/DialoguePanel")
+	if not _expect(dialog != null and dialog.name_label.text == "申禾", "Talk to the driver in the actual unloading yard."):
+		return false
+	var route: Button = dialog.options_container.get_child(0)
+	_expect(route.text == "指路去" + RATIONS_PLACE, "The driver offers a route to the winter shipment's destination.")
+	await _button(route)
+	_expect(ui.directions.tracked_place == RATIONS_PLACE
+		and ui.directions.destination().point == world.to_local(approach.global_position),
+		"The winter shipment uses the regular estate directions.")
+	await Campaign.walk_estate_road_to(tree, world, approach.global_position)
+	await _winter_clock(arrival + 0.085)
+	if not _expect(rations.table_open and rations.get_node("Table").visible and not rations.in_transit
+		and state.winter_road_rations_day() == state.current_day and state.winter_road_rations_gift_available(),
+		"The courier's delivery opens the table and reserves a free cake."):
+		return false
+	await _key(KEY_M)
+	_expect(ui.estate_map.places.any(func(entry: Dictionary) -> bool: return entry.title == RATIONS_PLACE),
+		"The estate map lists the opened table.")
+	await _key(KEY_ESCAPE)
+	await _capture("08-winter-rations-at-pavilion" if dispatch == SeasonOrders.EVENING_DISPATCH else "11-next-year-arrival")
+	print("WINTER_RATIONS_DELIVERED day=", state.winter_road_rations_day(), " clock=", snappedf(state.day_progress, 0.001))
+	return not failed
+
+func _open_rations_table() -> Control:
+	var approach := world.get_node("WinterRoadRations/Approach") as Marker2D
+	await Campaign.walk_estate_road_to(tree, world, approach.global_position)
+	await _key(KEY_E)
+	return ui.get_node_or_null("Control/DialoguePanel") as Control
+
+func _take_wheat_cake(frame: String) -> bool:
+	var dialog := await _open_rations_table()
+	if not _expect(dialog != null and dialog.name_label.text in ["阿绥", RATIONS_PLACE],
+		"The pavilion table can be used from its approach."):
+		return false
+	var gift: Button = dialog.options_container.get_child(0)
+	_expect(gift.text == "领一份麦饼", "The table offers the reserved cake without using private wheat.")
+	await _capture(frame)
+	await _button(gift)
+	await tree.process_frame
+	await tree.physics_frame
+	await tree.physics_frame
+	return _expect(state.travel_meal == WHEAT_CAKE and not state.winter_road_rations_gift_available(),
+		"Claiming the cake fills the existing one-meal slot and uses the shipment's gift.")
+
+func _late_winter_delivery() -> void:
+	if not await _fixture(48, {"day_progress": 0.71, "player_inventory": 3,
+		"crop_stock": {"wheat": 3}, "silk_workshop": {"built": true, "bolts": 1}}):
+		return
+	var book := await _orders()
+	await _button(book.food_button)
+	await _close_management()
+	var receipt: Dictionary = state.season_order_receipts.get(RATIONS_ORDER, {})
+	if not _expect(receipt.get("dispatch_day") == 49 and state.winter_road_rations_day() == 0,
+		"An evening shipment waits for the first morning of the following year."):
+		return
+	await _night()
+	if not _expect(state.current_day == 49 and state.season_order().order.id == "spring_seed_share"
+		and state.winter_road_rations_day() == 0 and state.crop_stock.count("wheat") == 1,
+		"Overnight changes the current commission while the winter shipment and spare wheat remain."):
+		return
+	await _plot(PLOTS[0])
+	if not await _follow_winter_delivery(SeasonOrders.MORNING_DISPATCH) or not await _take_wheat_cake("12-next-year-gift"):
+		return
+	var before_stamina: int = state.current_stamina
+	if not _expect(before_stamina < state.max_stamina and world.player.meal_button.is_visible_in_tree(),
+		"Tilling spends stamina and the packed cake is ready to eat after the dialogue closes."):
+		return
+	var expected := mini(state.max_stamina, before_stamina + TravelMeal.benefits(WHEAT_CAKE, state.balance).x)
+	await _key(KEY_F)
+	if not _expect(state.current_stamina == expected and state.travel_meal.is_empty() and state.crop_stock.count("wheat") == 1,
+		"The free cake restores stamina and leaves the remaining wheat for the next order or a new cake."):
+		return
+	var dialog := await _open_rations_table()
+	if not _expect(dialog != null, "Reopen the table with one spare wheat and an empty meal slot."):
+		return
+	var paid: Button = dialog.options_container.get_child(0)
+	_expect("用 1 份麦做麦饼" in paid.text, "The table shows exactly one wheat for a fresh cake.")
+	await _button(paid)
+	_expect(state.travel_meal == WHEAT_CAKE and state.crop_stock.count("wheat") == 0 and state.king_storage == 4,
+		"The next cake costs one private wheat and leaves public grain untouched.")
+	print("WINTER_RATIONS_ROLLOVER day=", state.current_day, " dispatch=", receipt.dispatch_day,
+		" opened=", state.winter_road_rations_day(), " remaining_wheat=", state.crop_stock.count("wheat"))
 
 func _legacy() -> void:
 	var source := OS.get_environment("FIEFDOM_YEAR_LEGACY_EXPORT")
@@ -424,10 +569,16 @@ func run(game_tree: SceneTree) -> void:
 		tree.quit(1)
 		return
 	state = tree.root.get_node("Global")
-	capture_dir = OS.get_environment("FIEFDOM_YEAR_CAPTURES")
+	if capture_dir.is_empty():
+		capture_dir = OS.get_environment("FIEFDOM_YEAR_CAPTURES")
 	tree.root.notify_mouse_entered()
 	seed(2543)
-	if not state.has_method("season_order_stock"):
+	if winter_only:
+		state.balance.raid_first_day = 10000
+		await _winter()
+		if not failed:
+			await _late_winter_delivery()
+	elif not state.has_method("season_order_stock"):
 		await _baseline()
 	else:
 		state.balance.raid_first_day = 10000
@@ -439,6 +590,8 @@ func run(game_tree: SceneTree) -> void:
 			await _autumn()
 		if not failed:
 			await _winter()
+		if not failed and state.has_method("winter_road_rations_day"):
+			await _late_winter_delivery()
 		if not failed and DisplayServer.get_name() == "headless":
 			await _legacy()
 	if not failed:

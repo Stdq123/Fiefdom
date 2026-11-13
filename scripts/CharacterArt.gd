@@ -4,7 +4,7 @@ class_name CharacterArt
 const CAST_PATH := "res://assets/characters/cast.svg"
 const NEIGHBOR_PORTRAITS := "res://assets/characters/neighbor-portraits.svg"
 const NEIGHBOR_MOTION := "res://assets/characters/neighbor-motion.svg"
-const TOWN_PORTRAITS := "res://assets/characters/town-portraits.png"
+const TOWN_PORTRAITS := "res://assets/characters/town-portraits.svg"
 const TOWN_REGIONS := {
 	"谷伯": Rect2(0, 0, 48, 48),
 	"渔生": Rect2(48, 0, 48, 48),

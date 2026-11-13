@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/RegionMap.gd" id="1_region"]
+[ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="2_hud"]
 
 [sub_resource type="StyleBoxFlat" id="PanelStyle"]
 content_margin_left = 22.0
@@ -35,14 +36,15 @@ script = ExtResource("1_region")
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -259.0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -82.0
 offset_top = 16.0
-offset_right = -109.0
+offset_right = 82.0
 offset_bottom = 56.0
 mouse_default_cursor_shape = 2
+theme = ExtResource("2_hud")
+theme_type_variation = &"HudButton"
 text = "区域舆图  M"
 
 [node name="MapModal" type="Control" parent="."]

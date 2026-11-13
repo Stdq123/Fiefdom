@@ -1,0 +1,13 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://dj5jl3muj5y6a"
+path="res://.godot/imported/estate-storage.svg-e98beedad2c1f729bfa46edd744d62a2.res"
+
+[deps]
+
+source_file="res://assets/world/estate-storage.svg"
+dest_files=["res://.godot/imported/estate-storage.svg-e98beedad2c1f729bfa46edd744d62a2.res"]
+
+[params]

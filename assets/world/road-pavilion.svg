@@ -18,4 +18,12 @@
   <path fill="#dfc18b" d="M51 32h2v-2h3v2h2v1h1v3h-9v-3h1z"/>
   <path fill="#b89362" d="M57 33h2v3h-2zM50 36h10v1H50z"/>
   <path fill="#744e35" d="M53 32h4v1h-4zM53 38h5v1h-5z"/>
+  <!-- Slate ridges and staggered joints -->
+  <path fill="#8aa48c" d="M22.5 4.5h3v.5h-3z M19 7.5h3v.5h-3z M25.5 7.5H29v.5h-3.5z M16.5 10.5H20v.5h-3.5z M24.5 10h3v.5h-3z M29.5 10.5h2.5v.5h-2.5z M10.5 13.5H14v.5h-3.5z M18 13h4v.5h-4z M23.5 13.5h3v.5h-3z M29.5 13h3v.5h-3z M34 13.5h3v.5h-3z M8.5 16h4v.5h-4z M16 16h3.5v.5H16z M21 16.5h4v.5h-4z M27 16h4v.5h-4z M36.5 16.5H41v.5h-4.5z"/>
+  <path fill="#496b5d" d="M22.5 8h.5v1h-.5z M26 8.5h.5v1h-.5z M19.5 11h.5v1.5h-.5z M25 11h.5v1.5h-.5z M30.5 11h.5v1.5h-.5z M13 14h.5v2h-.5z M19 14h.5v1.5H19z M24.5 14h.5v2h-.5z M30 14h.5v1.5H30z M37 14h.5v2H37z"/>
+  <path fill="#c4a476" d="M7.5 18.5H15v.5H7.5z M16.5 18.5H20v.5h-3.5z M28 18.5h6v.5h-6z M36.5 18.5h4v.5h-4z M11.5 21h.5v6.5h-.5z M34.5 21.5h.5v7h-.5z M15.5 26.5h8v.5h-8z M25 26.5h7.5v.5H25z"/>
+  <path fill="#66553c" d="M12.5 25h.5v6.5h-.5z M35.5 28.5h.5v4h-.5z M15.5 28.5h5.5v.5h-5.5z M24 28.5h6v.5h-6z M15 34h.5v1.5H15z M24.5 34h.5v1.5h-.5z M33 34h.5v1.5H33z"/>
+  <!-- Woven bowl and tied provisions -->
+  <path fill="#c6a775" d="M50 36.5h2v.5h-2z M53.5 36.5h1.5v.5h-1.5z M57 36.5h2.5v.5H57z M49.5 38h2v.5h-2z M52.5 37.5h2v.5h-2z M56 38h2v.5h-2z M59 37.5h2v.5h-2z"/>
+  <path fill="#f0d6a1" d="M53 30.5h2v.5h-2z M51.5 33.5h1.5v.5h-1.5z M54 34.5h2v.5h-2z"/>
 </svg>

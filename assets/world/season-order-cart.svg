@@ -15,6 +15,8 @@
     <path fill="#ba8b57" d="M12 25h22v1H12zM39 25h21v1H39zM13 28h13v1H13zM44 28h15v1H44z"/>
     <path fill="#4c3e30" d="M11 23h3v10h-3zM60 23h3v10h-3zM34 22h3v11h-3z"/>
     <path fill="#d3b47c" d="M12 25h1v3h-1zM35 24h1v3h-1zM61 25h1v3h-1z"/>
+    <path fill="#caad7d" d="M16 15h16v.5H16zm22 0h19v.5H38zm-9 4h13v.5H29zm16 8h11v.5H45zM16.5 27h12v.5h-12z"/>
+    <path fill="#cf9d66" d="M17 34.5h6v.5h-6zm6 2.5h.5v2H23zm28.5-3.5h4v.5h-4zm4.5 2.5h.5v3H56z"/>
   </g>
   <!-- Tied sacks and a tray for the current season's produce. -->
   <g transform="translate(84)">
@@ -25,6 +27,7 @@
     <path fill="#624c37" d="M26 18h17v5H26z"/>
     <path fill="#a17c52" d="M27 19h15v2H27z"/>
     <path fill="#caa36a" d="M28 19h12v1H28z"/>
+    <path fill="#e3c388" d="M16 11.5h4v.5h-4zM13.5 15h.5v3h-.5zm2 2.5h3v.5h-3zm6-4h3v.5h-3zm22 1h3v.5h-3zM44.5 16h.5v2h-.5z"/>
   </g>
   <!-- View along the shafts, used on the south road. -->
   <g transform="translate(140)">
@@ -38,6 +41,7 @@
     <path fill="#a57c50" d="M7 26h30v4H7zM11 31h22v1H11z"/>
     <path fill="#533d2e" d="M9 13h3v17H9zM32 13h3v17h-3zM13 31h4v13h-4zM27 31h4v13h-4z"/>
     <path fill="#b48d5d" d="M14 32h2v10h-2zM28 32h2v10h-2zM14 41h16v2H14z"/>
+    <path fill="#d1ae79" d="M13 13h7v.5h-7zm8 4h8v.5h-8zm-5 6h8v.5h-8zm-1.5 10h.5v7h-.5zm14 1h.5v7h-.5z"/>
   </g>
   <!-- The order board stays in the market when the cart goes out. -->
   <g transform="translate(184)">
@@ -47,5 +51,7 @@
     <path fill="#d8bb81" d="M6 10h16v10H6z"/>
     <path fill="#91734f" d="M8 12h11v1H8zM8 15h8v1H8z"/>
     <path fill="#a5604b" d="M18 16h2v2h-2z"/>
+    <path fill="#f0d598" d="M7 10.5h13v.5H7zm1.5 3h7v.5h-7zm0 3h4v.5h-4z"/>
+    <path fill="#c17b5a" d="M18.5 16.5h.5v1h-.5z"/>
   </g>
 </svg>

@@ -1,10 +1,17 @@
 extends Control
 
+const SEED_BUTTON := preload("res://scripts/SeedButton.gd")
+
 @onready var day_label: Label = %DayLabel
 @onready var watch_label: Label = %WatchLabel
+@onready var watch_dial: Control = %WatchDial
 @onready var calendar_label: Label = %CalendarLabel
 @onready var forecast_label: Label = %ForecastLabel
 @onready var calendar_button: Button = %CalendarButton
+@onready var weather_icon: TextureRect = %WeatherIcon
+@onready var ledger_toggle: Button = %LedgerToggle
+@onready var ledger_details: VBoxContainer = %LedgerDetails
+@onready var journal_details: Button = %JournalDetails
 @onready var gathering_label: Label = %GatheringLabel
 @onready var rank_label: Label = %RankLabel
 @onready var reputation_label: Label = %ReputationLabel
@@ -15,6 +22,7 @@ extends Control
 @onready var tribute_button: Button = %TributeButton
 @onready var visitor_label: Label = %VisitorLabel
 @onready var opening_action: Button = %OpeningAction
+@onready var first_private_button: Button = %FirstPrivateButton
 @onready var handover_button: Button = %HandoverButton
 @onready var arrival: Label = %Arrival
 @onready var route_progress: Button = %RouteProgress
@@ -50,7 +58,7 @@ extends Control
 @onready var cancel_directions: Button = %CancelDirections
 @onready var save_notice: Label = %SaveNotice
 @onready var morning_button: Button = %MorningButton
-@onready var map_overlays: Array[Control] = [$Journal, $Calendar, $SeedBelt, $Vitals, $Tools, $Actions, $RationsButton]
+@onready var map_overlays: Array[Control] = [$Journal, $Calendar, $SeedBelt, $Vitals, $Tools, $Actions, $RationsButton, $SaveNotice]
 
 var seed_buttons: Dictionary = {}
 var save_notice_tween: Tween
@@ -59,6 +67,7 @@ var reclamation_mode := false
 var indoors := false
 var driving := false
 var channel_message := ""
+var sky_icons := HUDIcons.SKY.map(HUDIcons.icon)
 
 func map_space_clear(area: Rect2) -> bool:
 	if not get_viewport_rect().grow(-8.0).encloses(area):
@@ -104,7 +113,20 @@ func show_driving_progress(progress: String, instruction: String) -> void:
 	driving_hint.text = instruction
 
 func _ready() -> void:
+	for card: PanelContainer in [$Journal, $Calendar]:
+		card.minimum_size_changed.connect(_fit_top_card.bind(card), CONNECT_DEFERRED)
+		_fit_top_card.call_deferred(card)
+	journal_details.toggled.connect(_toggle_journal_details)
+	ledger_toggle.pressed.connect(_toggle_ledger_details)
+	%CoinIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
+	%HealthIcon.texture = HUDIcons.icon(HUDIcons.Symbol.HEALTH)
+	%StaminaIcon.texture = HUDIcons.icon(HUDIcons.Symbol.STAMINA)
+	calendar_button.icon = HUDIcons.icon(HUDIcons.Symbol.CALENDAR)
+	map_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
+	settings_button.icon = HUDIcons.icon(HUDIcons.Symbol.SETTINGS)
+	sleep_button.icon = HUDIcons.icon(HUDIcons.Symbol.MOON)
 	GameEvents.estate_arrived.connect(_show_arrival)
+	GameEvents.day_advanced.connect(arrival.hide.unbind(1))
 	GameEvents.driving_practice_progress.connect(show_driving_progress)
 	GamepadInput.changed.connect(_refresh_shortcuts)
 	Preferences.bindings_changed.connect(_refresh_shortcuts)
@@ -119,6 +141,7 @@ func _ready() -> void:
 	GameEvents.crop_harvested.connect(_refresh_pinned_order.unbind(1))
 	GameEvents.fish_changed.connect(_refresh_pinned_order)
 	GameEvents.silk_changed.connect(_refresh_pinned_order)
+	GameEvents.tax_reform_choice_made.connect(_refresh_pinned_order.unbind(1))
 	GameEvents.campaign_ended.connect(_refresh_pinned_order.unbind(1))
 	GameEvents.day_advanced.connect(_refresh_raid_alert.unbind(1))
 	GameEvents.raid_started.connect(_refresh_raid_alert)
@@ -129,6 +152,17 @@ func _ready() -> void:
 	_refresh_pinned_order()
 	_refresh_raid_alert()
 	refresh_morning_record()
+
+func _toggle_journal_details(expanded: bool) -> void:
+	visitor_label.visible = expanded
+	journal_details.text = "收起来客" if expanded else "封地手记"
+
+func _toggle_ledger_details() -> void:
+	ledger_details.visible = not ledger_details.visible
+	ledger_toggle.text = "收起" if ledger_details.visible else "账目"
+
+func _fit_top_card(card: PanelContainer) -> void:
+	card.size.y = card.get_combined_minimum_size().y
 
 func _show_arrival() -> void:
 	arrival.show()
@@ -158,11 +192,21 @@ func _refresh_pinned_order() -> void:
 	if not pinned_order.visible:
 		return
 	var amounts := ItemManager.describe_season_order_progress(schedule)
+	var harvest := Global.has_season_order_harvest(schedule)
 	if schedule.start > Global.current_day:
-		pinned_order.text = "下季备货   %s   ·   第 %d 天开收" % [amounts, schedule.start]
+		var next_action := "第 %d 天开收" % schedule.start
+		if harvest:
+			next_action = "收备货私田 · " + next_action
+		pinned_order.text = "下季备货   %s   ·   %s" % [amounts, next_action]
+		pinned_order.tooltip_text = pinned_order.text
 		return
-	var action := "去西市交货" if Global.can_deliver_season_order(schedule) else "第 %d 天截止" % schedule.end
+	var action := "第 %d 天截止" % schedule.end
+	if Global.can_deliver_season_order(schedule):
+		action = "去西市交货"
+	elif harvest:
+		action = "收备货私田"
 	pinned_order.text = "时令单   %s   ·   %s" % [amounts, action]
+	pinned_order.tooltip_text = pinned_order.text
 
 func _refresh_silk_stock() -> void:
 	if not $WorkshopStatus.visible:
@@ -196,6 +240,8 @@ func _refresh_shortcuts() -> void:
 
 func _refresh_watch() -> void:
 	watch_label.text = Global.day_watch_label()
+	watch_dial.show_watch(watch_label.text)
+	weather_icon.texture = sky_icons[HUDIcons.sky_index()]
 
 func refresh_morning_record() -> void:
 	morning_button.visible = Global.has_morning_record()
@@ -241,8 +287,6 @@ func refresh_rations() -> void:
 	elif fields_needing_water > 0:
 		rations_button.text = "今夜安排 · %d 格缺水" % fields_needing_water
 		tone = Color("#efbf8a")
-	elif plan.need > 0:
-		rations_button.text = "今夜安排 · 口粮已备"
 	else:
 		rations_button.text = "今夜安排"
 	rations_button.add_theme_color_override("font_color", tone)
@@ -271,45 +315,40 @@ func _refresh_sleep_tooltip() -> void:
 
 func setup_seeds(ids: Array, select_seed: Callable) -> void:
 	var group := ButtonGroup.new()
-	var rest := _slot_style(Color("#2c392b"), Color("#697651"))
-	var hover := _slot_style(Color("#3b492f"), Color("#b6ba80"))
-	var selected := _slot_style(Color("#594931"), Color("#e2bf73"))
 	for i in ids.size():
 		var id: String = ids[i]
 		var crop := ItemManager.get_crop(id)
-		var slot := Button.new()
+		var picture := ItemManager.crop_picture(crop)
+		var slot := SEED_BUTTON.new()
+		slot.setup(id, crop.crop_name, picture)
 		slot.name = "Seed%d" % (i + 1)
-		slot.custom_minimum_size = Vector2(56, 47)
+		slot.custom_minimum_size = Vector2(51, 44)
 		slot.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		slot.focus_mode = Control.FOCUS_NONE # Each seed has its own shortcut.
 		slot.toggle_mode = true
 		slot.button_group = group
-		slot.add_theme_stylebox_override("normal", rest)
-		slot.add_theme_stylebox_override("hover", hover)
-		slot.add_theme_stylebox_override("pressed", selected)
-		slot.add_theme_stylebox_override("hover_pressed", selected)
+		slot.theme_type_variation = &"HudSeedPocket"
 		seed_slots.add_child(slot)
 		slot.pressed.connect(select_seed.bind(id))
 		seed_buttons[id] = slot
 
 		var icon := TextureRect.new()
-		var picture := ItemManager.crop_picture(crop)
 		icon.texture = picture.texture
 		icon.self_modulate = picture.tint
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		icon.position = Vector2(4, 16)
-		icon.size = Vector2(24, 24)
+		icon.position = Vector2(3, 14)
+		icon.size = Vector2(23, 24)
 		slot.add_child(icon)
 
 		var shortcut := _slot_label(slot, "", Vector2(6, 2), 11, Color("#d9c79d"))
 		shortcut.name = "Shortcut"
 		shortcut.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		shortcut.size.x = 31.0
-		_slot_label(slot, crop.crop_name, Vector2(30, 16), 17, Color("#f6e6bc"))
-		var mark := _slot_label(slot, "令", Vector2(41, 2), 10, Color("#edd18a"))
+		_slot_label(slot, SEED_BUTTON.display_name(id, crop.crop_name), Vector2(27, 14), 17, Color("#f6e6bc"))
+		var mark := _slot_label(slot, "令", Vector2(37, 2), 10, Color("#edd18a"))
 		mark.name = "SeasonMark"
 	_refresh_shortcuts()
 
@@ -323,15 +362,6 @@ func _slot_label(slot: Button, text: String, at: Vector2, font_size: int, ink: C
 	slot.add_child(label)
 	return label
 
-func _slot_style(background: Color, edge: Color) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = background
-	style.border_color = edge
-	style.set_border_width_all(1)
-	style.border_width_bottom = 2
-	style.set_corner_radius_all(4)
-	return style
-
 func show_seed(seed_id: String) -> void:
 	var crop := ItemManager.get_crop(seed_id)
 	if not crop:
@@ -344,38 +374,36 @@ func show_seed(seed_id: String) -> void:
 	var nights := Global.sowing_nights(crop)
 	var seasonal := "当令 " if nights < crop.days_to_grow else ""
 	var water := " · 需通水" if crop.is_water_crop else ""
-	var sweep := "按住 A，右摇杆拖过田格" if GamepadInput.active else "按住左键拖过田格"
-	help_label.text = "%s · %s%d 夜成熟%s   |   %s" % [crop.crop_name, seasonal, nights, water, sweep]
+	var name_in_belt := SEED_BUTTON.display_name(seed_id, crop.crop_name)
+	help_label.text = "%s · %s%d 夜%s" % [name_in_belt, seasonal, nights, water]
 
 func refresh_seed_calendar() -> void:
 	var tomorrow := Global.current_day + 1
 	forecast_label.text = "明日 %s · %s" % [
 		Global.get_current_solar_term(tomorrow), "雨润旱田" if Global.has_rain(tomorrow) else "晴"]
+	calendar_button.tooltip_text = forecast_label.text
+	_refresh_watch()
 	for id in seed_buttons:
 		var crop := ItemManager.get_crop(id)
-		var slot: Button = seed_buttons[id]
+		var slot: SEED_BUTTON = seed_buttons[id]
 		var nights := Global.sowing_nights(crop)
 		slot.get_node("SeasonMark").visible = nights < crop.days_to_grow
-		slot.tooltip_text = "%s · %d 次供水过夜成熟" % [crop.crop_name, nights]
-		if not GamepadInput.active:
-			slot.tooltip_text += " · %s 换种" % Preferences.seed_label(id)
-		if crop.favored_season >= 0:
-			var saving := crop.days_to_grow - crop.sowing_nights(crop.favored_season, Global.balance.seasonal_growth_reduction)
-			if saving > 0:
-				slot.tooltip_text += " · %s播少等 %d 夜" % [Global.SEASON_NAMES[crop.favored_season], saving]
-		if crop.is_water_crop:
-			slot.tooltip_text += "\n有渠水的田格才能种稻。断水时停长。"
-		elif crop.is_perennial:
-			slot.tooltip_text += "\n收叶后保留桑树。当令加成用于初栽。"
-		elif crop.restores_fertility:
-			slot.tooltip_text += "\n收菽留肥。下一茬非菽作物多收一份。"
+		slot.refresh_tooltip(crop, nights)
 
 func refresh_farm_status() -> void:
 	var report := Global.field_night_forecast()
-	farm_status.text = "田务  ›  待浇 %d · 可收 %d · 今夜成熟 %d" % [
+	farm_status.tooltip_text = "待浇 %d · 可收 %d · 今夜成熟 %d" % [
 		report.dry, report.ready, report.public_ripe + report.private_ripe]
 	if report.blocked > 0:
-		farm_status.text += " · 断水 %d" % report.blocked
+		farm_status.tooltip_text += " · 断水 %d" % report.blocked
+	var work := PackedStringArray()
+	if report.ready > 0:
+		work.append("可收 %d" % report.ready)
+	if report.dry > 0:
+		work.append("待浇 %d" % report.dry)
+	if report.blocked > 0:
+		work.append("断水 %d" % report.blocked)
+	farm_status.text = "田务" if work.is_empty() else " · ".join(work)
 	var needs_water: int = report.dry + report.blocked
 	if needs_water != fields_needing_water:
 		fields_needing_water = needs_water
@@ -418,6 +446,6 @@ func show_field_gate_mode(active: bool) -> void:
 
 func _update_health(health: int) -> void:
 	health_label.text = "气血 %d / %d" % [health, Global.balance.player_max_health]
-	health_label.modulate = Color("#f19279") if health * 3 < Global.balance.player_max_health else Color.WHITE
+	health_label.add_theme_color_override("font_color", Color("#8d3529") if health * 3 < Global.balance.player_max_health else Color("#37291c"))
 	health_bar.max_value = Global.balance.player_max_health
 	health_bar.value = health

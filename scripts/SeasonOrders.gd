@@ -12,6 +12,8 @@ const SEED_CROPS := ["beans", "millet"]
 const SEED_RELAY_FRACTION := 0.085
 const SEED_GROW_NIGHTS := 3
 const POND_ORDERS := ["summer", "summer_willow_catch"]
+const WINTER_WOVEN_GOODS := "winter_woven_goods"
+const WINTER_RELAY_FRACTION := 0.075
 const SILK_ITEM := "silk_bolt"
 const ORDERS := [
 	{
@@ -67,11 +69,11 @@ const FOLLOW_UP_ORDERS := [
 		"arrival": "稷、菽和麻在这儿卸下，由巡人沿竹径送去东路岗。麻会换到岗上的旗绳上，起风时就看得见。"
 	},
 	{
-		"id": "winter_woven_goods", "title": "岁末麦帛", "speaker": "陶辛",
+		"id": WINTER_WOVEN_GOODS, "title": "岁末麦帛", "speaker": "陶辛",
 		"request": "赶冬路的几户想换些布缝行囊。请捎两份麦作路粮，再从蚕棚带一匹丝绸来。",
 		"need": {"wheat": 2}, "silk": 1,
 		"thanks": "麦袋和丝绸分开扎好了。路上遇雪，申禾会先把布包进车篷。",
-		"arrival": "麦和丝绸都到了。陶辛正在亭前量布，那几户人家赶在年前也能带着新行囊上路。"
+		"arrival": "麦和丝绸都到了。阿绥来帮忙搬到南路亭。陶辛量过布，几户人家做了路上的行囊，也给你留了一份麦饼。"
 	},
 ]
 

@@ -3,11 +3,12 @@ extends Node2D
 const TRACK_AUDIO := preload("res://scripts/TerrainAudio.gd")
 const VISITOR := preload("res://scenes/Visitor.tscn")
 const LAYOUT := preload("res://scripts/WestMarketLayout.gd")
+const GROUND := preload("res://scripts/WestMarketGround.gd")
 const ORDER_CART := preload("res://scripts/SeasonOrderCart.gd")
 const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
 
 @onready var player: Player = $Player
-@onready var ground: Node2D = $Ground
+@onready var ground: GROUND = $Ground
 @onready var lighting: CanvasModulate = $DayLighting
 @onready var audio: TRACK_AUDIO = AudioManager.terrain_audio
 @onready var counter: Control = %Counter
@@ -25,6 +26,7 @@ const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
 var silk_guest: Visitor
 var silk_trip := VisitorData.SilkTrip.NONE
 var fish_reserved := false
+var sky_icons := HUDIcons.SKY.map(HUDIcons.icon)
 
 func _ready() -> void:
 	ground.place_scenery($Scenery)
@@ -41,12 +43,16 @@ func _ready() -> void:
 	player.arrive_at($EstateRoadArrival)
 	player.footstep.connect(_step)
 	market_map.setup(self, destinations, $MarketWaypoint)
+	market_map.open_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
 	$DialogManager.setup($UI/Control, player)
+	%SettingsButton.icon = HUDIcons.icon(HUDIcons.Symbol.SETTINGS)
+	%CoinIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
 	%SettingsButton.pressed.connect(settings.show)
 	counter.visibility_changed.connect(_update_modal)
 	settings.visibility_changed.connect(_update_modal)
 	GameEvents.daylight_changed.connect(_refresh_date)
 	GameEvents.daylight_changed.connect(_refresh_silk_guest)
+	GameEvents.daylight_changed.connect(_refresh_held_fish)
 	GameEvents.visitor_interacted.connect(_talk_to_silk_guest)
 	GameEvents.ravine_trip_requested.connect(_follow_trip)
 	GameEvents.west_market_directions_requested.connect(_follow_trip)
@@ -58,6 +64,7 @@ func _ready() -> void:
 	GameEvents.crop_harvested.connect(_refresh_produce_sack.unbind(1))
 	GameEvents.inventory_changed.connect(_refresh_produce_sack.unbind(1))
 	GameEvents.fish_changed.connect(_refresh_fish_sign)
+	GameEvents.fish_changed.connect(_refresh_held_fish)
 	fish_sign.draw.connect(_draw_fish_sign)
 	_refresh_date()
 	_refresh_stock()
@@ -68,6 +75,7 @@ func _ready() -> void:
 	sample.visible = VisitorData.silk_sample_on_display(Global.current_day)
 	_refresh_silk_guest()
 	_refresh_fish_sign()
+	_refresh_held_fish()
 
 func _open_stall(kind: MarketStall.Kind) -> void:
 	market_map.arrive_at(MarketStall.TITLES[kind])
@@ -109,7 +117,9 @@ func _update_modal() -> void:
 	player.conversation_open = settings.visible or counter.visible
 
 func _refresh_date() -> void:
-	date.text = "第 %d 天  ·  %s  ·  %s" % [Global.current_day, Global.get_current_solar_term(), Global.day_watch_label()]
+	%WeatherIcon.texture = sky_icons[HUDIcons.sky_index()]
+	date.text = "第 %d 天 · %s · %s%s" % [Global.current_day, Global.day_watch_label(), Global.get_current_solar_term(),
+		" · 雨" if Global.has_rain() else ""]
 
 func _refresh_stock() -> void:
 	stock.text = "%d 铜钱   ·   %d 粮食" % [Global.money, Global.food_storage]
@@ -129,6 +139,10 @@ func _refresh_fish_sign() -> void:
 		fish_icon.texture = CreekFish.portrait(offer.receipt.fish if fish_reserved else offer.fish)
 		fish_icon.modulate = Color.WHITE if fish_reserved else Color("#a9af9e")
 		fish_sign.queue_redraw()
+
+func _refresh_held_fish() -> void:
+	var waiting := Global.day_progress < CreekFish.ORDER_PICKUP and Global.fish_order_for_porter()
+	ground.show_held_fish(Global.fish_order_receipt.fish if waiting else "")
 
 func _draw_fish_sign() -> void:
 	fish_sign.draw_rect(Rect2(-11, -7, 22, 15), Color("#49382c"))
@@ -189,4 +203,4 @@ func _step(foot: Vector2) -> void:
 		surface = TRACK_AUDIO.Surface.STONE
 	elif ground.is_on_street(foot):
 		surface = TRACK_AUDIO.Surface.TRACK
-	audio.play_step(surface)
+	ground.weather.play_step(foot, player.get_real_velocity(), surface)

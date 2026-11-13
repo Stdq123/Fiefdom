@@ -138,7 +138,10 @@ func _show_date(index: int) -> void:
 		elif day < Global.current_day:
 			event_note.text = "冬至围炉 · 今年这席已散。"
 		else:
-			event_note.text = "冬至围炉 · %s · 酉时点灯\n备一份麦，再带一份菽或一尾溪鱼。围炉饭供当晚门客。" % EstateLayout.FESTIVAL_SITE_NAME
+			var ingredients := "备一份麦，再带一份菽或一尾溪鱼。"
+			if Global.winter_supper_bean_gift(day):
+				ingredients = "禾伯出菽，带一份麦即可煮粥。带麦和溪鱼也可煮鱼麦羹。"
+			event_note.text = "冬至围炉 · %s · 酉时点灯\n%s围炉饭供当晚门客。" % [EstateLayout.FESTIVAL_SITE_NAME, ingredients]
 
 func _event_place(day: int) -> String:
 	if Global.is_summer_raft_day(day):

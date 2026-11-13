@@ -13,9 +13,11 @@ param(
     [switch]$SixArts,
     [switch]$BowAim,
     [switch]$WinterSupper,
+    [switch]$WinterRoadRations,
     [switch]$KeyBindings,
     [switch]$SummerRaft,
     [switch]$TitlePresentation,
+    [switch]$Backpack,
     [switch]$HallDecor,
     [switch]$RouteGoals,
     [switch]$Opening,
@@ -84,7 +86,7 @@ function Start-VerifiedGame {
     }
     $lines = Get-Content -LiteralPath $log -Encoding utf8
     $marker = if ($Replay) { 'SCENARIO_OK' } else { 'Fiefdom title ready' }
-    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|RESEARCH_RATIONS_|GAMEPAD_|DRIVING_|BOW_AIM_|WINTER_|BINDING_|RAFT_|TITLE_|DECOR_|ROUTE_|COUNCIL_PREP_|COUNCIL_SILK_|DIRECTION_|PLAN_|TRIBUTE_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|CANAL_DOOR_|SPRING_|ESTATE_PROGRESS_|ESTATE_PROVISIONS|FIELD_ACCESS_|FIELD_STROKE_|WORKSITE_|FIELD_ROUTE_|FIELD_NIGHT_|MORNING_|PAVILION_EVENING_|FISH_MARKET_|RAVINE_MAP_|SHORTCUT_|TRAP_|MARKET_WAYFINDING_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
+    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|RESEARCH_RATIONS_|GAMEPAD_|DRIVING_|BOW_AIM_|WINTER_|BINDING_|RAFT_|TITLE_|BACKPACK_|DECOR_|ROUTE_|COUNCIL_PREP_|COUNCIL_SILK_|DIRECTION_|PLAN_|TRIBUTE_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|CANAL_DOOR_|SPRING_|ESTATE_PROGRESS_|ESTATE_PROVISIONS|FIELD_ACCESS_|FIELD_STROKE_|WORKSITE_|FIELD_ROUTE_|FIELD_NIGHT_|MORNING_|PAVILION_EVENING_|FISH_MARKET_|RAVINE_MAP_|SHORTCUT_|TRAP_|MARKET_WAYFINDING_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
     if ($process.ExitCode -ne 0 -or $lines -cnotcontains $marker -or $lines -cmatch '^\s*(?:SCRIPT ERROR|USER ERROR|ERROR|WARNING):') {
         throw "$Name failed (exit $($process.ExitCode)). See $log"
     }
@@ -98,6 +100,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/CanalDoorReplay.gd'), (Join-Path $repo 'tests/CanalFlowReplay.gd'), (Join-Path $repo 'tests/EstateProgressReplay.gd'), (Join-Path $repo 'tests/SilkInteriorReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/IrrigationFlowReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/TributePlanReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/BackpackReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/WestRoadReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/OrderPreparationReplay.gd'), (Join-Path $repo 'tests/SecondYearOrdersReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/WatchReliefReplay.gd') -Destination $testDirectory
@@ -132,7 +135,7 @@ try {
     Start-VerifiedGame -Directory $release -Profile 'startup' -Name 'startup'
     # The fixture lives alongside the unpacked files. The distributed EXE and PCK are used byte for byte.
     Install-Replay $release
-    $fullResolution = if ($Capture) { '1280x720' } else { '' }
+    $fullResolution = if ($Capture) { '1920x1080' } else { '' }
     foreach ($route in 'traditional', 'reformed', 'defeat') {
         Start-VerifiedGame -Directory $release -Profile $route -Name $route -Replay $route -Resolution $fullResolution
     }
@@ -152,11 +155,17 @@ try {
     if ($WinterSupper) {
         Start-VerifiedGame -Directory $release -Profile 'winter-supper' -Name 'winter-supper' -Replay 'winter-supper'
     }
+    if ($WinterRoadRations) {
+        Start-VerifiedGame -Directory $release -Profile 'winter-road-rations' -Name 'winter-road-rations' -Replay 'winter-road-rations'
+    }
     if ($SummerRaft) {
         Start-VerifiedGame -Directory $release -Profile 'summer-raft' -Name 'summer-raft' -Replay 'summer-raft'
     }
     if ($TitlePresentation) {
         Start-VerifiedGame -Directory $release -Profile 'title-presentation' -Name 'title-presentation' -Replay 'title-presentation'
+    }
+    if ($Backpack) {
+        Start-VerifiedGame -Directory $release -Profile 'backpack' -Name 'backpack' -Replay 'backpack'
     }
     if ($HallDecor) {
         Start-VerifiedGame -Directory $release -Profile 'hall-decor' -Name 'hall-decor' -Replay 'hall-decor'
@@ -260,9 +269,7 @@ try {
         Start-VerifiedGame -Directory $release -Profile "legacy-$oldName" -Name "legacy-continue-$oldName" -Replay 'legacy-continue'
     }
     if ($Capture) {
-        foreach ($resolution in '1280x720', '1024x768') {
-            Start-VerifiedGame -Directory $release -Profile "render-$resolution" -Name "render-$resolution" -Replay 'visual' -Resolution $resolution
-        }
+        Start-VerifiedGame -Directory $release -Profile "render-$fullResolution" -Name "render-$fullResolution" -Replay 'visual' -Resolution $fullResolution
     }
     if ($Soak) {
         Start-VerifiedGame -Directory $release -Profile 'soak' -Name 'soak' -Replay 'soak'

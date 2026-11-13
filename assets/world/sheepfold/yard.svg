@@ -17,6 +17,10 @@
   <path fill="#735236" d="M9 27h60v2H9zm37 4h12v2H46z"/>
   <path fill="#66533c" d="M12 46h8v3h-8zm22 0h10v3H34zm25 0h9v3h-9z"/>
   <path fill="#a59570" d="M13 46h6v1h-6zm22 0h8v1h-8zm25 0h7v1h-7z"/>
+  <path fill="#d6b170" d="M35 6.5h3v.5h-3z M40 7h3.5v.5H40z M34 10.5h4v.5h-4z M41 11h4v.5h-4z M46 12.5h3v.5h-3z M30 13.5h3.5v.5H30z M23 15h4v.5h-4z M32 15h3v.5h-3z M39 15h4v.5h-4z M49 15.5h3v.5h-3z M18 18.5h4v.5h-4z M26 18h5v.5h-5z M34 18.5h5v.5h-5z M42 18h4v.5h-4z M51 18.5h5v.5h-5z M14 21.5h5v.5h-5z M21 22h5v.5h-5z M31 21.5h4.5v.5H31z M39 22h4.5v.5H39z M49 22.5h5v.5h-5z M57 21.5h5v.5h-5z M12 24.5h6v.5h-6z M21 24.5h5v.5h-5z M36 24.5h6v.5h-6z M46 24.5h5v.5h-5z M55 24.5h6v.5h-6z M63 24.5h4v.5h-4z"/>
+  <path fill="#9c743e" d="M34 10h.5v3H34z M38 10h.5v4H38z M43 10h.5v3.5H43z M29 14h.5v4H29z M35.5 14h.5v5h-.5z M45 14h.5v5H45z M50 15h.5v4H50z M24 19h.5v4.5H24z M31.5 19.5h.5v4h-.5z M38 19.5h.5v4.5H38z M47 19h.5v4.5H47z M54 19h.5v4.5H54z M59 20.5h.5V24H59z M19 22h.5v3.5H19z M26.5 23h.5v2.5h-.5z M42.5 23h.5v2.5h-.5z M51.5 23h.5v2.5h-.5z M62 23h.5v2.5H62z"/>
+  <path fill="#c0945d" d="M13.5 31h.5v6h-.5z M14.5 39h.5v6h-.5z M39.5 32h.5v7h-.5z M40 40.5h.5V46H40z M62.5 33h.5v6h-.5z M63.5 40.5h.5V46h-.5z M44 36.5h8v.5h-8z M55.5 36H61v.5h-5.5z M44 42h6v.5h-6z M53.5 41.5H59v.5h-5.5z"/>
+  <path fill="#8a7448" d="M21.5 41h5v.5h-5z M24.5 43.5H29v.5h-4.5z M30 45h4v.5h-4z M25 46.5h5v.5h-5z"/>
   <!-- Trough and the separate fodder fill. -->
   <path fill="#2d392b" opacity=".56" d="M82 11h23v2H81z"/>
   <path fill="#54412d" d="M81 3h24v7h-3v2h-3v-2H87v2h-3v-2h-3z"/>
@@ -25,17 +29,32 @@
   <path fill="#a08252" d="M82 3h22v1H82zm1 5h20v1H83z"/>
   <path fill="#8b773c" d="M112 5h2V4h5V3h3v1h6v1h1v3h-17z"/>
   <path fill="#c6a955" d="M113 5h7v1h-7zm4-1h5v1h-5zm4 2h7v1h-7z"/>
+  <path fill="#bea16b" d="M84 3.5h8v.5h-8z M96 3.5h6v.5h-6z M84 8.5h7v.5h-7z M94 8.5h8v.5h-8z"/>
+  <path fill="#694d34" d="M84 6h.5v2H84z M102 6h.5v2h-.5z M88 9.5h5v.5h-5z M95 9.5h4v.5h-4z"/>
+  <path fill="#dac071" d="M114 5h3v.5h-3z M119 4h2v.5h-2z M119 6.5h2v.5h-2z M124 5.5h3v.5h-3z M125.5 7h2v.5h-2z"/>
+  <!-- Bundled hay next to the shelter. -->
+  <path fill="#30372b" opacity=".55" d="M138 9h13v3h-14v-2h1z"/>
+  <path fill="#665336" d="M138 4h2V2h7v1h3v2h2v5h-3v1h-10v-1h-2V6h1z"/>
+  <path fill="#ab8b4d" d="M139 5h2V3h6v1h3v2h1v3h-3v1h-8V9h-2V6h1z"/>
+  <path fill="#d2b369" d="M141 4h6v1h-7v1h-1V5h2zm-2 3h11v1h-11zm2 2h6v1h-6z"/>
+  <path fill="#766346" d="M145 3h1v2h1v4h-1v1h-1V8h1V6h-1z"/>
+  <path fill="#dfbf71" d="M141.5 3.5h3v.5h-3z M139.5 5.5h4v.5h-4z M147 5h2v.5h-2z M139.5 7.5h3v.5h-3z M147.5 7h2v.5h-2z M141 8.5h3v.5h-3z"/>
+  <path fill="#aa8b56" d="M145.5 4.5h.5v1.5h-.5z M146 7h.5v1.5h-.5z"/>
   <!-- Short coat. The body and hooves share the imported sheep's scale and foot anchor. -->
   <path fill="#403e33" d="M82 23h2v-2h8v1h2v-2h2v-1h1v3h1v4h-2v2h-2v3h-2v-3h-6v3h-2v-3h-2v-2h-2v-2h2z"/>
   <path fill="#8e846c" d="M83 23h2v-1h7v1h2v3h-1v2h-8v-1h-2z"/>
   <path fill="#b2a78c" d="M85 22h6v1h2v2h-9v-2h1z"/>
   <path fill="#625d4a" d="M94 22h3v4h-2v1h-1zm-9 7h1v2h-1zm8 0h1v2h-1z"/>
   <path fill="#e1d8bc" d="M95 23h1v1h-1zm-11 0h1v1h-1z"/>
+  <path fill="#cabda0" d="M85.5 22.5H88v.5h-2.5z M89.5 23H92v.5h-2.5z M85 24.5h2v.5h-2z M88 24.5h2v.5h-2z"/>
+  <path fill="#776f5e" d="M86 26h2v.5h-2z M89.5 26.5H92v.5h-2.5z M95 24.5h1v.5h-1z"/>
   <!-- Tuft icon. -->
   <path fill="#504b3a" d="M103 26h2v-4h3v-2h4v1h4v3h2v5h-2v2h-11v-2h-2z"/>
   <path fill="#b5a58a" d="M104 26h2v-3h3v-2h3v1h4v3h1v4h-2v1h-9v-2h-2z"/>
   <path fill="#e5d7b9" d="M106 24h3v-2h3v1h3v2h1v2h-2v1h-7v-2h-2z"/>
   <path fill="#f8ead0" d="M110 23h3v1h-3zm-2 2h2v1h-2zm5 0h2v1h-2z"/>
+  <path fill="#f6e4c8" d="M108 24h2v.5h-2z M111 23.5h1.5v.5H111z M113 24h1.5v.5H113z M111 26.5h2v.5h-2z M107.5 27h2v.5h-2z"/>
+  <path fill="#c8b698" d="M105 27h1.5v.5H105z M109 28.5h2v.5h-2z M113 28h2.5v.5H113z"/>
   <!-- Rear and side rails. Front rails use a separate y-sort anchor. -->
   <path fill="#423c2b" d="M2 63h90v2H2zm0 5h90v2H2zM3 67h3v47H3zm85 0h3v47h-3z"/>
   <path fill="#8c7147" d="M4 62h86v2H4zm0 5h86v2H4zM4 70h1v43H4zm85 0h1v43h-1z"/>
@@ -45,4 +64,6 @@
   <path fill="#9d7d4d" d="M99 61h28v2H99zm0 6h28v1H99zm60-6h28v2h-28zm0 6h28v1h-28z"/>
   <path fill="#5f4a31" d="M98 58h5v14h-5zm26 0h5v14h-5zm33 0h5v14h-5zm26 0h5v14h-5z"/>
   <path fill="#be9a5d" d="M99 58h2v11h-2zm26 0h2v11h-2zm33 0h2v11h-2zm26 0h2v11h-2z"/>
+  <path fill="#b79861" d="M8 62.5h9v.5H8z M28 62.5h14v.5H28z M45 62.5h14v.5H45z M71 62.5h10v.5H71z M9 67.5h11v.5H9z M29 67.5h10v.5H29z M47 67.5h12v.5H47z M72 67.5h10v.5H72z M4.5 72h.5v3h-.5z M3.5 80h.5v7h-.5z M3.5 96h.5v7h-.5z M86.5 80h.5v7h-.5z M86.5 96h.5v7h-.5z M89 108h.5v4H89z M4 108h.5v4H4z M104 61.5h7v.5h-7z M115 61.5h8v.5h-8z M104 67.5h9v.5h-9z M116 67.5h7v.5h-7z M163 61.5h7v.5h-7z M174 61.5h8v.5h-8z M163 67.5h9v.5h-9z M175 67.5h7v.5h-7z"/>
+  <path fill="#51402d" d="M3.5 64h1v.5h-1z M23.5 64h1v.5h-1z M66.5 64h1v.5h-1z M86.5 64h1v.5h-1z M3.5 68h1v.5h-1z M23.5 68h1v.5h-1z M66.5 68h1v.5h-1z M86.5 68h1v.5h-1z M99.5 63h1v.5h-1z M125.5 63h1v.5h-1z M158.5 63h1v.5h-1z M184.5 63h1v.5h-1z M99.5 67h1v.5h-1z M125.5 67h1v.5h-1z M158.5 67h1v.5h-1z M184.5 67h1v.5h-1z"/>
 </svg>

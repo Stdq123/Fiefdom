@@ -4,6 +4,7 @@ const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const LAYOUT := preload("res://scripts/WestMarketLayout.gd")
 const TERRAIN := preload("res://scripts/EstateTerrain.gd")
 const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
+const ROAD_WEATHER := preload("res://scripts/RoadWeather.gd")
 const BACKDROP := Rect2(-1600, -1300, 3200, 2600)
 const GRAIN_YARD := [
 	Vector2(-395, 116), Vector2(-364, 103), Vector2(-309, 108), Vector2(-260, 121),
@@ -61,12 +62,25 @@ const PROP_DETAILS := [
 	Vector3i(206, 108, LANDSCAPE.Prop.ROCK), Vector3i(290, 77, LANDSCAPE.Prop.FLOWERS),
 	Vector3i(324, -14, LANDSCAPE.Prop.SHRUB), Vector3i(369, 80, LANDSCAPE.Prop.ROCK),
 ]
+const RAIN_PUDDLES: Array[Rect2] = [
+	Rect2(278, 29, 38, 14), Rect2(-56, 53, 34, 15), Rect2(-159, -112, 42, 20),
+	Rect2(232, 126, 23, 14), Rect2(-252, 149, 38, 12),
+]
+const SNOW_DRIFTS: Array[Rect2] = [
+	Rect2(277, 45, 64, 24), Rect2(304, -1, 63, 24), Rect2(144, 86, 57, 25),
+	Rect2(-2, 82, 71, 22), Rect2(-176, -104, 54, 20), Rect2(-261, -99, 57, 19),
+	Rect2(-109, -74, 45, 26), Rect2(-370, 158, 73, 22), Rect2(-255, 175, 38, 15),
+	Rect2(218, 177, 43, 19), Rect2(230, 117, 29, 21),
+]
 
 var street: Array[PackedVector2Array] = []
 var street_shoulders: Array[PackedVector2Array] = []
 var paving: PackedVector2Array
 var main_path: PackedVector2Array
 var verge_art := TERRAIN.new(LAYOUT.BOUNDS.position.y)
+var weather := ROAD_WEATHER.new(RAIN_PUDDLES, SNOW_DRIFTS)
+var held_fish := Sprite2D.new()
+var fish_swim := 0.0
 
 func _ready() -> void:
 	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
@@ -93,6 +107,32 @@ func _ready() -> void:
 	surface.name = "BasinWater"
 	add_child(surface)
 	surface.set_weather(Color("#527d79"), Global.has_rain())
+	held_fish.name = "HeldFish"
+	held_fish.texture_filter = TEXTURE_FILTER_NEAREST
+	held_fish.self_modulate = Color("#cee0d8eb")
+	held_fish.hide()
+	add_child(held_fish)
+	set_process(false)
+	weather.name = "RoadWeather"
+	add_child(weather)
+
+func show_held_fish(species: String) -> void:
+	if species.is_empty():
+		held_fish.hide()
+		set_process(false)
+		return
+	held_fish.texture = CreekFish.portrait(species)
+	held_fish.show()
+	_move_fish()
+	set_process(true)
+
+func _process(delta: float) -> void:
+	fish_swim = fposmod(fish_swim + delta * 1.6, TAU)
+	_move_fish()
+
+func _move_fish() -> void:
+	held_fish.position = (LAYOUT.BASIN.get_center() + Vector2(12.0 * sin(fish_swim), 5.0 * cos(fish_swim))).round()
+	held_fish.flip_h = cos(fish_swim) >= 0.0
 
 func _road_outline(points: PackedVector2Array, radius: float) -> PackedVector2Array:
 	return Geometry2D.offset_polyline(points, radius, Geometry2D.JOIN_ROUND, Geometry2D.END_ROUND)[0]
@@ -153,7 +193,7 @@ func _draw_basin() -> void:
 
 func place_scenery(layer: Node2D) -> void:
 	var season := Global.season_index()
-	var pine_sheet := LANDSCAPE.SEASONAL_TREES if season == Global.Season.WINTER else LANDSCAPE.SCENERY
+	var pine_sheet: Texture2D = LANDSCAPE.SEASONAL_TREES if season == Global.Season.WINTER else LANDSCAPE.SCENERY
 	var pine_region := Rect2(96, 48, 48, 48) if season == Global.Season.WINTER else Rect2(144, 0, 48, 48)
 	for index in TREE_FEET.size():
 		var frame: Vector2 = LANDSCAPE.ORCHARD_FRAMES[season] if index % 4 == 1 else Vector2(season, 0)

@@ -136,7 +136,12 @@ func _tend_and_harvest() -> bool:
 	if not _expect(plan != null, "Reopen the plan before both crops ripen."):
 		return false
 	_expect("已有 1 格可收" in plan.field_forecast.text and "公田 1 格、私田 1 格" in plan.field_forecast.text
-		and not plan.find_plot.visible, "An existing ripe crop stays separate from the forecast of newly mature public and private crops.")
+		and not plan.find_plot.visible and plan.find_ready_plot.visible,
+		"An existing ripe crop has a shortcut before bed, separate from the forecast of newly mature crops.")
+	await _button(plan.find_ready_plot)
+	_expect(ui.directions.tracked_plot == EARLY_PRIVATE, "Tonight's forecast points to the ripe private plot.")
+	await _button(ui.hud.cancel_directions)
+	plan = await _open_plan()
 	var original_size := tree.root.size
 	for resolution in [Vector2i(1280, 720), Vector2i(1024, 768)]:
 		tree.root.size = resolution

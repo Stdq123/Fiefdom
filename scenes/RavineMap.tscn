@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/RavineMap.gd" id="1_map"]
+[ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="2_hud"]
 
 [sub_resource type="StyleBoxFlat" id="PanelStyle"]
 content_margin_left = 24.0
@@ -34,30 +35,32 @@ script = ExtResource("1_map")
 [node name="OpenMap" type="Button" parent="."]
 unique_name_in_owner = true
 layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -154.0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -82.0
 offset_top = 16.0
-offset_right = -20.0
-offset_bottom = 53.0
-grow_horizontal = 0
+offset_right = 82.0
+offset_bottom = 56.0
+grow_horizontal = 2
 mouse_default_cursor_shape = 2
+theme = ExtResource("2_hud")
+theme_type_variation = &"HudButton"
 text = "竹涧舆图  M"
 
 [node name="CancelDirections" type="Button" parent="."]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -276.0
-offset_top = 108.0
-offset_right = -20.0
-offset_bottom = 144.0
-grow_horizontal = 0
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -128.0
+offset_top = 65.0
+offset_right = 128.0
+offset_bottom = 101.0
+grow_horizontal = 2
 mouse_default_cursor_shape = 2
+theme = ExtResource("2_hud")
+theme_type_variation = &"HudPrimary"
 
 [node name="MapModal" type="Control" parent="."]
 unique_name_in_owner = true

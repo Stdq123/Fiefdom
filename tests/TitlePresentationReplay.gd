@@ -1,7 +1,6 @@
 extends RefCounted
 
 const PUBLIC := Vector2i(5, 5)
-const PRIVATE := Vector2i(6, 5)
 const ESTATE_NAME := "南路亭东竹涧西岸雨前试作井田记一"
 
 var tree: SceneTree
@@ -85,20 +84,61 @@ func _opening_menu(title: Control) -> void:
 func _first_harvest() -> void:
 	var estate := tree.current_scene
 	var tiles := estate.get_node("World/TileMapLayer") as TileMapLayer
-	var plots := [tiles.get_global_transform_with_canvas() * tiles.map_to_local(PUBLIC),
-		tiles.get_global_transform_with_canvas() * tiles.map_to_local(PRIVATE)]
+	var ui := estate.get_node("UI")
+	var hud: Control = ui.hud
+	var public_point := tiles.get_global_transform_with_canvas() * tiles.map_to_local(PUBLIC)
 	estate.get_node("World").retainer_instances[state.retainers[0]].set_physics_process(false)
+	var journal: Control = hud.get_node("Journal")
+	var calendar: Control = hud.get_node("Calendar")
+	await tree.process_frame
+	_expect(journal.get_global_rect().end.y < 240 and calendar.get_global_rect().end.y < 190,
+		"The fresh estate HUD leaves the terrain visible below both top cards.")
+	await _button(hud.ledger_toggle)
+	_expect(hud.ledger_details.visible and hud.king_label.is_visible_in_tree(), "The ledger expands to show the treasury.")
+	await _button(hud.ledger_toggle)
+	_expect(not hud.ledger_details.visible and calendar.get_global_rect().end.y < 190,
+		"Collapsing the ledger releases the map space it covered.")
 	await _frame("04-first-field")
-	for point in plots:
-		for step in 3:
-			await _click(point)
-	for _night in 2:
-		await _button(estate.get_node("UI").sleep_button)
-		await tree.create_timer(1.12).timeout
-		for point in plots:
-			await _click(point)
+	for step in 3:
+		await _click(public_point)
+	_expect(hud.opening_action.visible and not hud.visitor_label.is_visible_in_tree(),
+		"The first-day keeper shortcut is available with the journal collapsed.")
+	await _button(hud.journal_details)
+	_expect(hud.visitor_label.is_visible_in_tree() and "渠伯" in hud.visitor_label.text and hud.opening_action.visible,
+		"The expanded journal shows the keeper's whereabouts alongside his shortcut.")
+	await _frame("04a-journal-expanded")
+	await _button(hud.journal_details)
+	_expect(not hud.visitor_label.is_visible_in_tree(), "The same button collapses the visitor note.")
+	await _frame("04a-private-option")
+	await _button(hud.first_private_button)
+	var private_cell: Vector2i = hud.guide.opening_cell
+	var private_point := tiles.get_global_transform_with_canvas() * tiles.map_to_local(private_cell)
+	_expect(private_cell != PUBLIC and ui.directions.outline.has_point(private_point),
+		"The optional private path points directly to a private plot on day one.")
+	await _frame("04b-private-plot")
+	await _button(hud.first_private_button)
+	_expect(hud.guide.heading.text == "第一次纳贡" and ui.directions.mark == ui.directions.Mark.BUTTON,
+		"Return to the tribute route and bedtime shortcut without changing either plot.")
+	await _button(hud.first_private_button)
+	for step in 3:
+		await _click(private_point)
+	_expect(state.active_crops[private_cell].watered and not hud.first_private_button.visible,
+		"The side task closes after watering and the main guide resumes.")
+	await _button(ui.sleep_button)
+	await tree.create_timer(1.12).timeout
+	await _click(public_point)
+	_expect(hud.guide.opening_cell == private_cell and ui.directions.outline.has_point(private_point),
+		"The optional path returns to the same planted plot when the public crop has water on day two.")
+	await _click(private_point)
+	await _button(ui.sleep_button)
+	await tree.create_timer(1.12).timeout
+	await _click(public_point)
+	await _click(private_point)
 	_expect(state.current_day == 3 and state.king_storage == 1 and state.player_inventory == 1 and state.money == 5,
 		"The title leads into ordinary tilling, watering, overnight growth and separate public and private harvests.")
+	await _frame("04c-same-morning-harvests")
+	print("TITLE_FIRST_HARVEST day=", state.current_day, " public=", state.king_storage,
+		" private=", state.player_inventory, " copper=", state.money)
 
 func _save_and_title() -> void:
 	var ui := tree.current_scene.get_node("UI")

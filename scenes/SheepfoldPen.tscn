@@ -39,6 +39,11 @@ atlas = ExtResource("2_art")
 region = Rect2(102, 18, 18, 16)
 filter_clip = true
 
+[sub_resource type="AtlasTexture" id="HayBundle"]
+atlas = ExtResource("2_art")
+region = Rect2(136, 0, 18, 13)
+filter_clip = true
+
 [sub_resource type="RectangleShape2D" id="ShedBase"]
 size = Vector2(62, 16)
 
@@ -92,9 +97,32 @@ texture = SubResource("Feed")
 centered = false
 offset = Vector2(-13, -11)
 
+[node name="Haystack" type="Node2D" parent="Paddock"]
+position = Vector2(-30, 18)
+
+[node name="LeftBundle" type="Sprite2D" parent="Paddock/Haystack"]
+visible = false
+position = Vector2(-4, 0)
+texture = SubResource("HayBundle")
+
+[node name="RightBundle" type="Sprite2D" parent="Paddock/Haystack"]
+visible = false
+position = Vector2(5, 2)
+texture = SubResource("HayBundle")
+flip_h = true
+
+[node name="UpperBundle" type="Sprite2D" parent="Paddock/Haystack"]
+visible = false
+position = Vector2(0, -6)
+texture = SubResource("HayBundle")
+
 [node name="Wool" type="Sprite2D" parent="Paddock"]
 visible = false
 position = Vector2(28, 9)
+texture = SubResource("Tuft")
+
+[node name="Clipping" type="Sprite2D" parent="Paddock"]
+visible = false
 texture = SubResource("Tuft")
 
 [node name="FrontFence" type="Sprite2D" parent="Paddock"]

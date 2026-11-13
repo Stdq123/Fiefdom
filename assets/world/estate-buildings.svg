@@ -24,6 +24,20 @@
     <path fill="#c48458" d="M8 36h112v1H8zM25 31h78v1H25zM35 26h58v1H35zM43 21h42v1H43zM51 16h26v1H51zM52 9h24v2H52z"/>
     <path fill="#764431" d="M31 32h2v3h-2zM48 32h2v3h-2zM66 32h2v3h-2zM83 32h2v3h-2zM99 32h2v3h-2zM40 27h2v3h-2zM57 27h2v3h-2zM75 27h2v3h-2zM89 27h2v3h-2zM48 22h2v3h-2zM65 22h2v3h-2zM79 22h2v3h-2zM56 17h2v3h-2zM70 17h2v3h-2z"/>
     <path fill="#bb895e" d="M10 40h108v1H10zM51 43h26v2H51z"/>
+    <!-- Baked tiles: stepped courses, staggered joints and warm upper-left faces. -->
+    <path fill="#754537" d="M58 11h.5v3H58zM65 11h1v3h-1zM72 11h.5v3H72zM52 17h1v3h-1zM62 17h1v3h-1zM77 17h1v3h-1zM43 22h1v3h-1zM55 22h1v3h-1zM72 22h1v3h-1zM86 22h1v3h-1zM34 27h1v3h-1zM47 27h1v3h-1zM64 27h1v3h-1zM81 27h1v3h-1zM94 27h1v3h-1zM24 32h1v3h-1zM39 32h1v3h-1zM56 32h1v3h-1zM74 32h1v3h-1zM91 32h1v3h-1zM106 32h1v3h-1z"/>
+    <path fill="#d29566" d="M54 11h3v.5h-3zM60 12h4v.5h-4zM45 18h5v.5h-5zM53 18h2v.5h-2zM59 18h3v.5h-3zM66 19h3v.5h-3zM39 23h4v.5h-4zM45 23.5h3v.5h-3zM50 23h4v.5h-4zM57 24h4v.5h-4zM67 23.5h4v.5h-4zM31 28.5h3v.5h-3zM36 28h3v.5h-3zM43 28.5h3v.5h-3zM50 28h4v.5h-4zM59 28.5h4v.5h-4zM67 29h4v.5h-4zM23 33h1v.5h-1zM26 33h4v.5h-4zM34 33.5h4v.5h-4zM41 33h5v.5h-5zM51 33h4v.5h-4zM59 33.5h4v.5h-4z"/>
+    <path fill="#523732" opacity=".25" d="M74 14h4v3h5v5h8v5h8v4h9v5h12v2H90v-3h-8v-4h-8v-5h-5v-5h3v-4h2z"/>
+    <path fill="#643d33" d="M10 37h108v1H10zM18 38h6v2h-6zM35 38h6v2h-6zM52 38h6v2h-6zM69 38h6v2h-6zM86 38h6v2h-6zM103 38h6v2h-6z"/>
+    <path fill="#e1a975" d="M52 7h24v1H52zM55 6h5v.5h-5zM66 6h6v.5h-6zM12 40h29v.5H12zM52 40h22v.5H52zM86 40h21v.5H86z"/>
+    <!-- Inset lacquer panels, window lattice and stone landing joints. -->
+    <path fill="#88694a" d="M22 46h24v1H22zM83 46h23v1H83zM22 66h23v1H22zM84 66h15v1H84z"/>
+    <path fill="#71513c" d="M16.5 49h1v5h-1zM15 61h1v5h-1zM48 51h1v5h-1zM49 62h1v4h-1zM79 51h1v6h-1zM110 54h1v6h-1zM111 64h1v4h-1z"/>
+    <path fill="#a88257" d="M27 56.5h13v.5H27zM88 56.5h13v.5H88zM22 48.5h4v.5h-4zM40 64h4v.5h-4zM84 49h3v.5h-3zM95 64.5h4v.5h-4z"/>
+    <path fill="#92644a" d="M56 48h6v1h-6zM66 48h6v1h-6zM56 60.5h3v.5h-3zM69 63h3v.5h-3zM56 68h6v.5h-6zM66 68h6v.5h-6z"/>
+    <path fill="#513b32" d="M55 53h8v1h-8zM65 53h8v1h-8zM55 65h8v.5h-8zM65 65h8v.5h-8z"/>
+    <path fill="#6a5d50" d="M29 73h1v4h-1zM40 76h1v5h-1zM96 74h1v2h-1zM99 78h1v3h-1zM53 76h1v2h-1zM74 76h1v2h-1zM62 80h1v2h-1zM50 84h1v1h-1zM71 84h1v1h-1z"/>
+    <path fill="#c9b291" d="M17 74h7v.5h-7zM35 74h7v.5h-7zM88 74h5v.5h-5zM102 73h9v.5h-9zM56 75h6v.5h-6zM66 79h5v.5h-5zM55 83h10v.5H55z"/>
   </g>
   <!-- Silk shed, 80 × 64. -->
   <g transform="translate(128)">
@@ -46,6 +60,11 @@
     <path fill="#778566" d="M11 22h58v1H11zM20 18h40v1H20zM27 14h26v1H27zM33 8h14v1H33z"/>
     <path fill="#364939" d="M23 19h2v3h-2zM35 19h2v3h-2zM44 19h2v3h-2zM55 19h2v3h-2zM33 15h2v3h-2zM46 15h2v3h-2z"/>
     <path fill="#7d6e50" d="M6 25h68v1H6z"/>
+    <path fill="#88967a" d="M34 9h4v.5h-4zM39 10h4v.5h-4zM28 15h4v.5h-4zM36 15h5v.5h-5zM19 19h3v.5h-3zM27 19.5h4v.5h-4zM38 19h4v.5h-4zM47 20h6v.5h-6zM59 20h3v.5h-3zM12 23h54v.5H12z"/>
+    <path fill="#344738" d="M39 12h1v2h-1zM31 15h1v3h-1zM41 15h1v3h-1zM52 16h1v2h-1zM17 20h1v2h-1zM29 20h1v2h-1zM49 20h1v2h-1zM61 20h1v2h-1zM15 24h49v1H15z"/>
+    <path fill="#a9835b" d="M16 27h17v.5H16zM16 29h17v.5H16zM20 31h9v.5h-9zM16 46h15v.5H16zM16 48h15v.5H16zM35 32h.5v6H35zM35 43h.5v8H35zM61 33h.5v9H61zM62 48h.5v3H62z"/>
+    <path fill="#e0c08b" d="M18 35h11v.5H18zM20 39h9v.5h-9zM18 42h10v.5H18zM37 27h22v.5H37zM36 56h8v.5h-8zM51 58h8v.5h-8z"/>
+    <path fill="#574939" d="M40 54h16v1H40zM23 53h1v5h-1zM47 56.5h1v1.5h-1zM57 59.5h1v1.5h-1zM67 53h1v5h-1z"/>
   </g>
   <!-- Open roadside pavilion, 72 × 60. -->
   <g transform="translate(208)">
@@ -64,6 +83,10 @@
     <path fill="#789480" d="M12 18h48v1H12zM22 14h28v1H22zM30 10h12v1H30zM34 6h4v1h-4z"/>
     <path fill="#3b5b51" d="M20 16h2v2h-2zM28 13h2v1h-2zM35 11h2v3h-2zM43 13h2v1h-2zM50 16h2v2h-2z"/>
     <path fill="#c29a69" d="M5 21h62v1H5z"/>
+    <path fill="#98a991" d="M33 7h3v.5h-3zM28 11.5h3v.5h-3zM38 12h3v.5h-3zM23 15h4v.5h-4zM31 15.5h5v.5h-5zM42 15h4v.5h-4zM15 18.5h4v.5h-4zM22 18.5h5v.5h-5zM33 18.5h5v.5h-5zM41 18.5h4v.5h-4z"/>
+    <path fill="#354f45" d="M31 11.5h1v2h-1zM39 11.5h1v2h-1zM25 16h1v2h-1zM32 16h1v2h-1zM39 16h1v2h-1zM46 16h1v2h-1zM8 20h56v1H8z"/>
+    <path fill="#ce9c63" d="M9 28h1v15H9zM60 28h1v9h-1zM11 43h1v5h-1zM61 42h1v6h-1zM20 40h6v.5h-6zM27 40.5h6v.5h-6z"/>
+    <path fill="#6c6048" d="M14 50h1v4h-1zM26 52h1v3h-1zM47 52h1v3h-1zM58 52h1v3h-1zM35 56h1v2h-1z"/>
   </g>
   <!-- Roadside gate piers. Each 32 × 48 frame is sorted at its own stone footing. -->
   <g transform="translate(280)">
@@ -76,6 +99,8 @@
     <path fill="#435548" d="M2 14h5v-3h4V8h10v3h4v3h5v4H2z"/>
     <path fill="#738471" d="M5 15h5v-3h4v-2h4v2h4v3h5v1H5z"/>
     <path fill="#988d69" d="M4 17h24v1H4z"/>
+    <path fill="#97a291" d="M13 10.5h6v.5h-6zM10.5 13h4v.5h-4zM6.5 15.5h7v.5h-7zM17 15h5v.5h-5z"/>
+    <path fill="#524b41" d="M17 19h4v.5h-4zM20.5 21h.5v12h-.5zM10 38h12v.5H10zM15 40h1v4h-1z"/>
   </g>
   <g transform="translate(312)">
     <path fill="#344235" d="M4 42h24v4H4z"/>
@@ -91,5 +116,7 @@
     <path fill="#61796a" d="M5 15h5v-3h4v-2h4v2h4v3h5v1H5z"/>
     <path fill="#8b9b78" d="M8 14h16v1H8zM12 11h8v1h-8z"/>
     <path fill="#ac9066" d="M4 17h24v1H4z"/>
+    <path fill="#a1a78a" d="M13 10.5h5v.5h-5zM9 14.5h4v.5H9zM16 14h4v.5h-4zM5 16h21v.5H5z"/>
+    <path fill="#72563d" d="M11 33h10v.5H11zM11 35h10v1H11zM9 38h14v.5H9zM17 40h1v4h-1zM22 41h2v.5h-2z"/>
   </g>
 </svg>

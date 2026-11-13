@@ -1,0 +1,72 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/WinterRoadRations.gd" id="1_rations"]
+[ext_resource type="Script" path="res://scripts/NeighborMotion.gd" id="2_motion"]
+[ext_resource type="Material" path="res://resources/world_hint_material.tres" id="3_hint"]
+[ext_resource type="Texture2D" path="res://assets/world/estate-storage.svg" id="4_storage"]
+[ext_resource type="Texture2D" path="res://assets/world/west-court-sample.svg" id="5_cloth"]
+
+[sub_resource type="RectangleShape2D" id="TableFootprint"]
+size = Vector2(35, 8)
+
+[node name="WinterRoadRations" type="Node2D" groups=["interactable"]]
+y_sort_enabled = true
+script = ExtResource("1_rations")
+
+[node name="Approach" type="Marker2D" parent="."]
+position = Vector2(0, 16)
+
+[node name="Table" type="Node2D" parent="."]
+visible = false
+
+[node name="Footprint" type="StaticBody2D" parent="Table"]
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape2D" parent="Table/Footprint"]
+position = Vector2(0, -1)
+shape = SubResource("TableFootprint")
+disabled = true
+
+[node name="Hint" type="Label" parent="Table"]
+visible = false
+z_index = 6
+material = ExtResource("3_hint")
+offset_left = -46.0
+offset_top = -33.0
+offset_right = 62.0
+offset_bottom = -19.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.882, 0.635, 1)
+theme_override_colors/font_outline_color = Color(0.13, 0.21, 0.16, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
+[node name="Courier" type="Node2D" parent="."]
+visible = false
+
+[node name="Motion" type="Sprite2D" parent="Courier"]
+texture_filter = 1
+position = Vector2(0, -11)
+script = ExtResource("2_motion")
+
+[node name="Bundle" type="Node2D" parent="Courier"]
+position = Vector2(8, -9)
+
+[node name="WheatSack" type="Sprite2D" parent="Courier/Bundle"]
+texture_filter = 1
+scale = Vector2(0.75, 0.75)
+self_modulate = Color(0.88, 0.76, 0.54, 1)
+texture = ExtResource("4_storage")
+region_enabled = true
+region_rect = Rect2(0, 0, 16, 16)
+region_filter_clip_enabled = true
+
+[node name="Cloth" type="Sprite2D" parent="Courier/Bundle"]
+texture_filter = 1
+position = Vector2(4, -4)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("5_cloth")
+region_enabled = true
+region_rect = Rect2(7, 5, 14, 13)
+region_filter_clip_enabled = true

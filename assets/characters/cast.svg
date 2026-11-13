@@ -21,6 +21,11 @@
   <path fill="#24252a" d="M21 16h4v2h2v6h-2v1h-5v-2h-1v-4h2z"/>
   <path fill="#b58750" d="M22 17h2v2h2v4h-2v1h-3v-1h-1v-3h2z"/>
   <rect x="22" y="19" width="3" height="1" fill="#e7bc73"/>
+  <path fill="#b9936e" d="M9.5 17h2.5v.5h-1.5v1H9.5zM11 24h1v1h-.5v1.5H11z"/>
+  <path fill="#d0b386" d="M12 16h1.5v1h1v1h1v1h-1v-.5h-1v-1h-1v-1H12z"/>
+  <path fill="#60483d" d="M14.5 4h3v.5h-3zM16.5 4.5h2v.5h-2z"/>
+  <path fill="#f8d2a5" d="M14 10h3.5v.5H14zM15.5 11.5h1v.5h-.5v1h-.5z"/>
+  <path fill="#edc887" d="M22 19h3v.5h-3z"/>
 </g>
 <!-- Confucian retainer -->
 <g transform="translate(0 32)">
@@ -47,6 +52,11 @@
   <rect x="21" y="17" width="4" height="4" fill="#e4c58a"/>
   <rect x="22" y="18" width="1" height="3" fill="#775445"/>
   <rect x="19" y="19" width="2" height="2" fill="#dfac81"/>
+  <path fill="#c3cfc0" d="M9.5 17h2.5v.5h-1.5v1H9.5zM11 24h1v1h-.5v1.5H11z"/>
+  <path fill="#f3e6cd" d="M12 16h1.5v1h1v1h1v1h-1v-.5h-1v-1h-1v-1H12z"/>
+  <path fill="#718397" d="M14.5 5h3v.5h-3zM16.5 5.5h2v.5h-2z"/>
+  <path fill="#f8d2a5" d="M14 10h3.5v.5H14zM15.5 11.5h1v.5h-.5v1h-.5z"/>
+  <path fill="#edcf92" d="M21.5 17h3v.5h-3z"/>
 </g>
 <!-- Mohist retainer -->
 <g transform="translate(0 64)">
@@ -72,6 +82,11 @@
   <path fill="#b1ada0" d="M23 13h4v2h-4z"/>
   <rect x="24" y="15" width="1" height="7" fill="#956947"/>
   <rect x="23" y="19" width="2" height="2" fill="#dfac81"/>
+  <path fill="#838b90" d="M9.5 17h2.5v.5h-1.5v1H9.5zM11 24h1v1h-.5v1.5H11z"/>
+  <path fill="#b1beb5" d="M12 16h1.5v1h1v1h1v1h-1v-.5h-1v-1h-1v-1H12z"/>
+  <path fill="#716365" d="M14.5 5h3v.5h-3zM16.5 5.5h2v.5h-2z"/>
+  <path fill="#f8d2a5" d="M14 10h3.5v.5H14zM15.5 11.5h1v.5h-.5v1h-.5z"/>
+  <path fill="#d1cdb4" d="M23.5 13h3v.5h-3z"/>
 </g>
 <!-- Legalist retainer -->
 <g transform="translate(0 96)">
@@ -97,6 +112,11 @@
   <path fill="#a27b57" d="M22 15h4v9h-6v-7h2z"/>
   <path fill="#d1ad77" d="M22 17h1v5h-1z M24 16h1v6h-1z"/>
   <rect x="19" y="19" width="2" height="2" fill="#dfac81"/>
+  <path fill="#737c96" d="M9.5 17h2.5v.5h-1.5v1H9.5zM11 24h1v1h-.5v1.5H11z"/>
+  <path fill="#a5a6ba" d="M12 16h1.5v1h1v1h1v1h-1v-.5h-1v-1h-1v-1H12z"/>
+  <path fill="#6a6c77" d="M14.5 3h3v.5h-3zM16.5 3.5h2v.5h-2z"/>
+  <path fill="#f8d2a5" d="M14 10h3.5v.5H14zM15.5 11.5h1v.5h-.5v1h-.5z"/>
+  <path fill="#dfbd85" d="M22 17h.5v3H22zM24 16h.5v3H24z"/>
 </g>
 <!-- Agrarian retainer -->
 <g transform="translate(0 128)">
@@ -123,6 +143,11 @@
   <rect x="24" y="14" width="1" height="12" fill="#b28457"/>
   <path fill="#c4c7a8" d="M25 12h2v3h-2z"/>
   <rect x="23" y="18" width="2" height="2" fill="#dfac81"/>
+  <path fill="#91a46f" d="M9.5 17h2.5v.5h-1.5v1H9.5zM11 24h1v1h-.5v1.5H11z"/>
+  <path fill="#c3ca8f" d="M12 16h1.5v1h1v1h1v1h-1v-.5h-1v-1h-1v-1H12z"/>
+  <path fill="#d1a16a" d="M14.5 5h3v.5h-3zM16.5 5.5h2v.5h-2z"/>
+  <path fill="#f8d2a5" d="M14 10h3.5v.5H14zM15.5 11.5h1v.5h-.5v1h-.5z"/>
+  <path fill="#e4ddad" d="M25 12.5h1.5v.5H25z"/>
 </g>
 <!-- Military retainer -->
 <g transform="translate(0 160)">
@@ -149,6 +174,11 @@
   <path fill="#ccd1ae" d="M25 12h2v4h-2v4h-2v-3h1v-3h1z"/>
   <rect x="22" y="19" width="4" height="2" fill="#b78e53"/>
   <rect x="22" y="21" width="1" height="3" fill="#725346"/>
+  <path fill="#ce715a" d="M9.5 17h2.5v.5h-1.5v1H9.5zM11 24h1v1h-.5v1.5H11z"/>
+  <path fill="#df9b72" d="M12 16h1.5v1h1v1h1v1h-1v-.5h-1v-1h-1v-1H12z"/>
+  <path fill="#c59764" d="M14.5 4h3v.5h-3zM16.5 4.5h2v.5h-2z"/>
+  <path fill="#f8d2a5" d="M14 10h3.5v.5H14zM15.5 11.5h1v.5h-.5v1h-.5z"/>
+  <path fill="#e5deaf" d="M25 12.5h1.5v.5H25zM24.5 15h.5v1.5h-.5z"/>
 </g>
 <!-- Visiting scholar -->
 <g transform="translate(0 192)">
@@ -175,6 +205,11 @@
   <rect x="21" y="17" width="4" height="4" fill="#e4c58a"/>
   <rect x="22" y="18" width="1" height="3" fill="#775445"/>
   <rect x="19" y="19" width="2" height="2" fill="#dfac81"/>
+  <path fill="#acc3d1" d="M9.5 17h2.5v.5h-1.5v1H9.5zM11 24h1v1h-.5v1.5H11z"/>
+  <path fill="#f0ede0" d="M12 16h1.5v1h1v1h1v1h-1v-.5h-1v-1h-1v-1H12z"/>
+  <path fill="#718397" d="M14.5 5h3v.5h-3zM16.5 5.5h2v.5h-2z"/>
+  <path fill="#f8d2a5" d="M14 10h3.5v.5H14zM15.5 11.5h1v.5h-.5v1h-.5z"/>
+  <path fill="#edcf92" d="M21.5 17h3v.5h-3z"/>
 </g>
 <!-- Visiting Mohist -->
 <g transform="translate(0 224)">
@@ -200,6 +235,11 @@
   <path fill="#866345" d="M22 16h2v2h2v6h-6v-5h2z"/>
   <rect x="21" y="19" width="4" height="2" fill="#c09a66"/>
   <rect x="23" y="21" width="1" height="1" fill="#e1be84"/>
+  <path fill="#85927d" d="M9.5 17h2.5v.5h-1.5v1H9.5zM11 24h1v1h-.5v1.5H11z"/>
+  <path fill="#b7b49b" d="M12 16h1.5v1h1v1h1v1h-1v-.5h-1v-1h-1v-1H12z"/>
+  <path fill="#716365" d="M14.5 5h3v.5h-3zM16.5 5.5h2v.5h-2z"/>
+  <path fill="#f8d2a5" d="M14 10h3.5v.5H14zM15.5 11.5h1v.5h-.5v1h-.5z"/>
+  <path fill="#e6c591" d="M23 21h2v.5h-2z"/>
 </g>
 <!-- Taoist -->
 <g transform="translate(0 256)">
@@ -225,6 +265,11 @@
   <rect x="24" y="12" width="1" height="14" fill="#b89065"/>
   <rect x="25" y="11" width="1" height="2" fill="#dbba81"/>
   <rect x="23" y="19" width="2" height="2" fill="#dfac81"/>
+  <path fill="#8bb9ad" d="M9.5 17h2.5v.5h-1.5v1H9.5zM11 24h1v1h-.5v1.5H11z"/>
+  <path fill="#dce6ce" d="M12 16h1.5v1h1v1h1v1h-1v-.5h-1v-1h-1v-1H12z"/>
+  <path fill="#dfd8b9" d="M14.5 4h3v.5h-3zM16.5 4.5h2v.5h-2z"/>
+  <path fill="#f8d2a5" d="M14 10h3.5v.5H14zM15.5 11.5h1v.5h-.5v1h-.5z"/>
+  <path fill="#e6c891" d="M25 11h1v.5h-1z"/>
 </g>
 <!-- Merchant -->
 <g transform="translate(0 288)">
@@ -250,6 +295,11 @@
   <path fill="#24252a" d="M21 16h4v2h2v6h-2v1h-5v-2h-1v-4h2z"/>
   <path fill="#b58750" d="M22 17h2v2h2v4h-2v1h-3v-1h-1v-3h2z"/>
   <rect x="22" y="19" width="3" height="1" fill="#e7bc73"/>
+  <path fill="#d0a063" d="M9.5 17h2.5v.5h-1.5v1H9.5zM11 24h1v1h-.5v1.5H11z"/>
+  <path fill="#f1d389" d="M12 16h1.5v1h1v1h1v1h-1v-.5h-1v-1h-1v-1H12z"/>
+  <path fill="#8e5a46" d="M14.5 6h3v.5h-3zM16.5 6.5h2v.5h-2z"/>
+  <path fill="#f8d2a5" d="M14 10h3.5v.5H14zM15.5 11.5h1v.5h-.5v1h-.5z"/>
+  <path fill="#edc887" d="M22 19h3v.5h-3z"/>
 </g>
 <!-- Wild dog -->
 <g transform="translate(0 320)">
@@ -261,6 +311,9 @@
   <rect x="25" y="16" width="2" height="1" fill="#24252a"/>
   <rect x="25" y="16" width="1" height="1" fill="#efc784"/>
   <rect x="10" y="23" width="3" height="1" fill="#59382f"/>
+  <path fill="#c78e63" d="M11.5 16.5H16v.5h-2v.5h-2.5zm5.5-.5h3v-.5h2v.5h-1v.5h-4z"/>
+  <path fill="#b06d4d" d="M3.5 15h.5v1.5h1.5v.5H4v-.5h-.5zM19.5 19h1.5v1h-.5v-.5h-1z"/>
+  <path fill="#e4bc87" d="M26.5 18.5H29v.5h-2.5z"/>
 </g>
 <!-- Scout -->
 <g transform="translate(0 352)">
@@ -286,5 +339,10 @@
   <path fill="#c69a60" d="M25 10h1v4h2v7h-2v4h-1v-3h1v-9h-1z"/>
   <rect x="24" y="13" width="1" height="10" fill="#dfcca0"/>
   <rect x="23" y="18" width="2" height="2" fill="#dfac81"/>
+  <path fill="#ad795d" d="M9.5 17h2.5v.5h-1.5v1H9.5zM11 24h1v1h-.5v1.5H11z"/>
+  <path fill="#d4ae84" d="M12 16h1.5v1h1v1h1v1h-1v-.5h-1v-1h-1v-1H12z"/>
+  <path fill="#715345" d="M14.5 5h3v.5h-3zM16.5 5.5h2v.5h-2z"/>
+  <path fill="#f8d2a5" d="M14 10h3.5v.5H14zM15.5 11.5h1v.5h-.5v1h-.5z"/>
+  <path fill="#f0d9aa" d="M24.5 13.5H26v.5h-1.5z"/>
 </g>
 </svg>

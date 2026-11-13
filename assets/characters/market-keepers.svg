@@ -15,7 +15,14 @@
       <path fill="#3b332e" d="M5 6h2V4h10v2h2v5H5z"/>
       <path fill="#797763" d="M7 6h1V5h8v1h1v2h1v2H6V8h1z"/>
       <path fill="#c1b197" d="M8 5h8v1H8zM6 8h12v1H6z"/>
+      <path fill="#8d876c" d="M11 5.5h3v.5h-3z"/>
+      <path fill="#e0ca9f" d="M8 8h3v.5H8zM13.5 8h3v.5h-3z"/>
+      <path fill="#ffe0b1" d="M10.5 10.5h2.5v.5h-2.5zM11.5 12h1v.5H12v.5h-.5z"/>
+      <path fill="#bdab90" d="M9 14.5h1v.5h1v.5h-1.5V15H9zm4.5 1H15v.5h-1.5z"/>
     </g>
+    <path fill="#718665" d="M5 21.5h2.5v.5h-2v1H5zm10.5 0H18v.5h.5v1H18v-.5h-2.5z"/>
+    <path fill="#afb792" d="M8.5 16.5h1v1h1v1h1.5v.5H11v-.5h-1v-1H9v-.5h-.5z"/>
+    <path fill="#afb792" d="M6 20h1.5v.5H6zm10.5 0H18v.5h-1.5z"/>
   </g>
   <g transform="translate(24 0)">
     <path fill="#3b332e" d="M7 14h10v2h3v3h1v5H3v-5h1v-3h3z"/>
@@ -34,7 +41,14 @@
       <path fill="#3b332e" d="M5 6h2V4h10v2h2v5H5z"/>
       <path fill="#797763" d="M7 6h1V5h8v1h1v2h1v2H6V8h1z"/>
       <path fill="#c1b197" d="M8 5h8v1H8zM6 8h12v1H6z"/>
+      <path fill="#8d876c" d="M11 5.5h3v.5h-3z"/>
+      <path fill="#e0ca9f" d="M8 8h3v.5H8zM13.5 8h3v.5h-3z"/>
+      <path fill="#ffe0b1" d="M10.5 10.5h2.5v.5h-2.5zM11.5 12h1v.5H12v.5h-.5z"/>
+      <path fill="#bdab90" d="M9 14.5h1v.5h1v.5h-1.5V15H9zm4.5 1H15v.5h-1.5z"/>
     </g>
+    <path fill="#718665" d="M5 21.5h2.5v.5h-2v1H5zm10.5 0H18v.5h.5v1H18v-.5h-2.5z"/>
+    <path fill="#afb792" d="M8.5 16.5h1v1h1v1h1.5v.5H11v-.5h-1v-1H9v-.5h-.5z"/>
+    <path fill="#afb792" d="M6 20h1.5v.5H6zm10.5 0H18v.5h-1.5z"/>
   </g>
   <g transform="translate(48 0)">
     <path fill="#3b332e" d="M7 14h10v2h3v3h1v5H3v-5h1v-3h3z"/>
@@ -51,7 +65,14 @@
       <path fill="#3b332e" d="M5 6h2V4h10v2h2v5H5z"/>
       <path fill="#797763" d="M7 6h1V5h8v1h1v2h1v2H6V8h1z"/>
       <path fill="#c1b197" d="M8 5h8v1H8zM6 8h12v1H6z"/>
+      <path fill="#8d876c" d="M11 5.5h3v.5h-3z"/>
+      <path fill="#e0ca9f" d="M8 8h3v.5H8zM13.5 8h3v.5h-3z"/>
+      <path fill="#ffe0b1" d="M10.5 10.5h2.5v.5h-2.5zM11.5 12h1v.5H12v.5h-.5z"/>
+      <path fill="#bdab90" d="M9 14.5h1v.5h1v.5h-1.5V15H9zm4.5 1H15v.5h-1.5z"/>
     </g>
+    <path fill="#718665" d="M5 21.5h2.5v.5h-2v1H5zm10.5 0H18v.5h.5v1H18v-.5h-2.5z"/>
+    <path fill="#afb792" d="M8.5 16.5h1v1h1v1h1.5v.5H11v-.5h-1v-1H9v-.5h-.5z"/>
+    <path fill="#afb792" d="M6 20h1.5v.5H6zm10.5 0H18v.5h-1.5z"/>
   </g>
   <!-- Fish keeper: rest, tending the goods, blink. -->
   <g transform="translate(0 24)">
@@ -69,7 +90,13 @@
       <path fill="#3b332e" d="M5 7h2V4h10v3h2v4H5z"/>
       <path fill="#446177" d="M7 6h1V5h8v1h1v2h1v2H6V8h1z"/>
       <path fill="#7caaa6" d="M6 8h12v2H6zM8 5h8v1H8z"/>
+      <path fill="#607b91" d="M11 5.5h3v.5h-3z"/>
+      <path fill="#aed1bb" d="M8 8h3v.5H8zM13.5 8h3v.5h-3z"/>
+      <path fill="#ffe0b1" d="M10.5 10.5h2.5v.5h-2.5zM11.5 12h1v.5H12v.5h-.5z"/>
     </g>
+    <path fill="#6a8c9c" d="M5 21.5h2.5v.5h-2v1H5zm10.5 0H18v.5h.5v1H18v-.5h-2.5z"/>
+    <path fill="#a9c6be" d="M8.5 16.5h1v1h1v1h1.5v.5H11v-.5h-1v-1H9v-.5h-.5z"/>
+    <path fill="#a9c6be" d="M6 20h1.5v.5H6zm10.5 0H18v.5h-1.5z"/>
   </g>
   <g transform="translate(24 24)">
     <path fill="#3b332e" d="M7 14h10v2h3v3h1v5H3v-5h1v-3h3z"/>
@@ -88,7 +115,13 @@
       <path fill="#3b332e" d="M5 7h2V4h10v3h2v4H5z"/>
       <path fill="#446177" d="M7 6h1V5h8v1h1v2h1v2H6V8h1z"/>
       <path fill="#7caaa6" d="M6 8h12v2H6zM8 5h8v1H8z"/>
+      <path fill="#607b91" d="M11 5.5h3v.5h-3z"/>
+      <path fill="#aed1bb" d="M8 8h3v.5H8zM13.5 8h3v.5h-3z"/>
+      <path fill="#ffe0b1" d="M10.5 10.5h2.5v.5h-2.5zM11.5 12h1v.5H12v.5h-.5z"/>
     </g>
+    <path fill="#6a8c9c" d="M5 21.5h2.5v.5h-2v1H5zm10.5 0H18v.5h.5v1H18v-.5h-2.5z"/>
+    <path fill="#a9c6be" d="M8.5 16.5h1v1h1v1h1.5v.5H11v-.5h-1v-1H9v-.5h-.5z"/>
+    <path fill="#a9c6be" d="M6 20h1.5v.5H6zm10.5 0H18v.5h-1.5z"/>
   </g>
   <g transform="translate(48 24)">
     <path fill="#3b332e" d="M7 14h10v2h3v3h1v5H3v-5h1v-3h3z"/>
@@ -105,7 +138,13 @@
       <path fill="#3b332e" d="M5 7h2V4h10v3h2v4H5z"/>
       <path fill="#446177" d="M7 6h1V5h8v1h1v2h1v2H6V8h1z"/>
       <path fill="#7caaa6" d="M6 8h12v2H6zM8 5h8v1H8z"/>
+      <path fill="#607b91" d="M11 5.5h3v.5h-3z"/>
+      <path fill="#aed1bb" d="M8 8h3v.5H8zM13.5 8h3v.5h-3z"/>
+      <path fill="#ffe0b1" d="M10.5 10.5h2.5v.5h-2.5zM11.5 12h1v.5H12v.5h-.5z"/>
     </g>
+    <path fill="#6a8c9c" d="M5 21.5h2.5v.5h-2v1H5zm10.5 0H18v.5h.5v1H18v-.5h-2.5z"/>
+    <path fill="#a9c6be" d="M8.5 16.5h1v1h1v1h1.5v.5H11v-.5h-1v-1H9v-.5h-.5z"/>
+    <path fill="#a9c6be" d="M6 20h1.5v.5H6zm10.5 0H18v.5h-1.5z"/>
   </g>
   <!-- Silk keeper: rest, tending the goods, blink. -->
   <g transform="translate(0 48)">
@@ -123,7 +162,13 @@
       <path fill="#3b332e" d="M8 4h2V2h6v2h2v2h2v6H4V8h2V6h2z"/>
       <path fill="#5f414a" d="M8 5h3V3h4v2h3v2h1v3H5V8h2z"/>
       <path fill="#d5a366" d="M10 3h5v1h-5zM6 7h12v1H6zM16 6h3v1h-3z"/>
+      <path fill="#86606b" d="M11 3.5h3v.5h-3z"/>
+      <path fill="#eac185" d="M8 7h3v.5H8zM13.5 7h3v.5h-3z"/>
+      <path fill="#ffe0b1" d="M10.5 10.5h2.5v.5h-2.5zM11.5 12h1v.5H12v.5h-.5z"/>
     </g>
+    <path fill="#bd8a97" d="M5 21.5h2.5v.5h-2v1H5zm10.5 0H18v.5h.5v1H18v-.5h-2.5z"/>
+    <path fill="#ebc3b4" d="M8.5 16.5h1v1h1v1h1.5v.5H11v-.5h-1v-1H9v-.5h-.5z"/>
+    <path fill="#ebc3b4" d="M6 20h1.5v.5H6zm10.5 0H18v.5h-1.5z"/>
   </g>
   <g transform="translate(24 48)">
     <path fill="#3b332e" d="M7 14h10v2h3v3h1v5H3v-5h1v-3h3z"/>
@@ -142,7 +187,13 @@
       <path fill="#3b332e" d="M8 4h2V2h6v2h2v2h2v6H4V8h2V6h2z"/>
       <path fill="#5f414a" d="M8 5h3V3h4v2h3v2h1v3H5V8h2z"/>
       <path fill="#d5a366" d="M10 3h5v1h-5zM6 7h12v1H6zM16 6h3v1h-3z"/>
+      <path fill="#86606b" d="M11 3.5h3v.5h-3z"/>
+      <path fill="#eac185" d="M8 7h3v.5H8zM13.5 7h3v.5h-3z"/>
+      <path fill="#ffe0b1" d="M10.5 10.5h2.5v.5h-2.5zM11.5 12h1v.5H12v.5h-.5z"/>
     </g>
+    <path fill="#bd8a97" d="M5 21.5h2.5v.5h-2v1H5zm10.5 0H18v.5h.5v1H18v-.5h-2.5z"/>
+    <path fill="#ebc3b4" d="M8.5 16.5h1v1h1v1h1.5v.5H11v-.5h-1v-1H9v-.5h-.5z"/>
+    <path fill="#ebc3b4" d="M6 20h1.5v.5H6zm10.5 0H18v.5h-1.5z"/>
   </g>
   <g transform="translate(48 48)">
     <path fill="#3b332e" d="M7 14h10v2h3v3h1v5H3v-5h1v-3h3z"/>
@@ -159,6 +210,12 @@
       <path fill="#3b332e" d="M8 4h2V2h6v2h2v2h2v6H4V8h2V6h2z"/>
       <path fill="#5f414a" d="M8 5h3V3h4v2h3v2h1v3H5V8h2z"/>
       <path fill="#d5a366" d="M10 3h5v1h-5zM6 7h12v1H6zM16 6h3v1h-3z"/>
+      <path fill="#86606b" d="M11 3.5h3v.5h-3z"/>
+      <path fill="#eac185" d="M8 7h3v.5H8zM13.5 7h3v.5h-3z"/>
+      <path fill="#ffe0b1" d="M10.5 10.5h2.5v.5h-2.5zM11.5 12h1v.5H12v.5h-.5z"/>
     </g>
+    <path fill="#bd8a97" d="M5 21.5h2.5v.5h-2v1H5zm10.5 0H18v.5h.5v1H18v-.5h-2.5z"/>
+    <path fill="#ebc3b4" d="M8.5 16.5h1v1h1v1h1.5v.5H11v-.5h-1v-1H9v-.5h-.5z"/>
+    <path fill="#ebc3b4" d="M6 20h1.5v.5H6zm10.5 0H18v.5h-1.5z"/>
   </g>
 </svg>

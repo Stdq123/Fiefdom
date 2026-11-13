@@ -8,7 +8,8 @@ const ROAD_REST := preload("res://scripts/RoadRest.gd")
 const ROTATION_BOOK := preload("res://scripts/FieldRotationBook.gd")
 const WATER_SOURCE := preload("res://scripts/WaterSource.gd")
 const SEED_GARDEN := preload("res://scripts/SeedGarden.gd")
-const ESTATE_STORAGE := preload("res://assets/world/estate-storage.png")
+const WINTER_RATIONS := preload("res://scripts/WinterRoadRations.gd")
+const ESTATE_STORAGE := preload("res://assets/world/estate-storage.svg")
 const HUNGER_RETURN_LINES := {
 	VisitorData.FIELD_KEEPER: "那夜没分到饭，我只好去南边借住。今早路过，还是想看看咱们那块田。",
 	VisitorData.ROAD_KEEPER: "那晚我拎着空碗出了门，是过路人分了我一把炒菽。我记得这份情，也惦记亭西的人。",
@@ -94,30 +95,56 @@ func show_seed_garden(host_present: bool) -> void:
 	var remaining := garden_day + SeasonOrders.SEED_GROW_NIGHTS - Global.current_day
 	var context := "南路亭 · 第 %d 天下种" % garden_day
 	var gift := Global.seed_garden_gift
-	var speaker := "林蓼" if host_present else SEED_GARDEN.PLACE
+	var speaker := SEED_GARDEN.HOST if host_present else SEED_GARDEN.PLACE
 	var portrait := SEED_GARDEN.portrait() if host_present else null
 	if remaining > 0:
-		var text := ("你留的菽和黍，我各挑了一把种在这儿。以后谁来领种，先来认一认苗。" if host_present
+		var text := ("你留的菽和黍，我各挑了一把种在这儿。等长成了，来领种的人就能先认认穗子。" if host_present
 			else "林蓼在木签上记着，菽和黍是西市送来的种。两畦再过 %d 夜就能收。" % remaining)
+		text += "\n" + SEED_GARDEN.visit_note(garden_day) + "。"
 		_open(speaker, context, text, ["离开"], [], portrait)
 	elif not gift.is_empty():
-		_open(speaker, context, "林蓼留了木签。给你的%s已经取走，其余留给新领田的人。" % ItemManager.crop_label(gift),
-			["离开"], [], portrait)
+		var text := ("你那份%s已经带走了。阿绥和禾伯也各有一包。" if host_present
+			else "木签上记着你带走了一份%s。其余留给来领种的人。") % ItemManager.crop_label(gift)
+		_open(speaker, context, text, ["离开"], [], portrait)
 	else:
-		var dialog := _open(speaker, context, "林蓼把头茬菽和黍各分了一袋，余下留给来领种的人。她在木签上写着，送种的人可以选一份带走。",
+		var text := ("我把菽和黍分好了。阿绥和禾伯各领一包。你也挑一份，给自家的地留个种。" if host_present
+			else "林蓼在木签上留了话。送种的人可从筐里挑一份菽或黍带走，其他的留给来领种的人。")
+		var dialog := _open(speaker, context, text,
 			["取一份菽", "取一份黍", "留在圃里"], [], portrait)
 		dialog.option_selected.connect(func(index: int):
 			if index < SeasonOrders.SEED_CROPS.size() and Global.take_seed_garden_gift(SeasonOrders.SEED_CROPS[index]):
 				GameEvents.world_notice.emit("亭西种圃 · %s入私仓" % ItemManager.crop_label(Global.seed_garden_gift)))
+
+func show_winter_road_rations(host_present: bool) -> void:
+	var meal := TravelMeal.WHEAT_CAKE
+	var gift := Global.winter_road_rations_gift_available()
+	var name := "阿绥" if host_present else WINTER_RATIONS.PLACE
+	var text := ("陶辛裁的布给赶路人做了行囊。你送来的麦也烙了饼，筐里给你留了一份。" if gift else
+		"亭前备着包路粮的布。带一份私仓麦来，还能做一份麦饼。")
+	var options: Array[String] = ["领一份麦饼" if gift else "用 1 份麦做麦饼", "离开"]
+	var disabled: Array[int] = []
+	if not Global.can_pack_travel_meal(meal, ""):
+		disabled.append(0)
+		if not Global.travel_meal.is_empty():
+			text += "\n你已经带着%s，吃完再来。" % TravelMeal.RECIPES[Global.travel_meal].name
+		elif not gift:
+			text += "\n私仓缺一份麦。"
+	var detail := TravelMeal.describe_recovery(TravelMeal.benefits(meal, Global.balance))
+	var dialog := _open(name, "南路亭 · " + detail, text, options, disabled, TravelMeal.icon(meal))
+	dialog.option_selected.connect(func(index: int):
+		if index == 0:
+			Global.pack_travel_meal(meal, ""))
 
 func show_winter_supper() -> void:
 	var record := Global.winter_supper_record()
 	var need := Global.retainer_food_cost()
 	if not record.is_empty():
 		var dish: String = WinterSupper.RECIPES[record.recipe].name
-		_open(WinterSupper.HOST, WinterSupper.PLACE,
-			"这锅%s已经煮好。先给门客留 %d 份，余下的留给来围炉的人。坐近些，风就小了。" % [
-				dish, mini(need, int(record.portions))], ["坐一会"], [], null)
+		var serving := "这锅%s已经煮好。先给门客留 %d 份，余下的留给来围炉的人。坐近些，风就小了。" % [
+			dish, mini(need, int(record.portions))]
+		if record.get("he_bo_beans", false):
+			serving = "秋社你留了谷样，这锅粥也有我的一份菽。" + serving
+		_open(WinterSupper.HOST, WinterSupper.PLACE, serving, ["坐一会"], [], null)
 		return
 	var fish := Global.fish_for_travel_meal()
 	var fish_name: String = "溪鱼" if fish.is_empty() else CreekFish.SPECIES[fish].name
@@ -126,8 +153,12 @@ func show_winter_supper() -> void:
 	var welcome := ("天色晚了，今夜你家需 %d 份。" if Global.day_progress >= WinterSupper.EVENING else "灯亮就开席，今夜你家需 %d 份。") % need
 	if not previous.is_empty():
 		welcome = "还记得去年的%s。今夜需 %d 份。" % [WinterSupper.RECIPES[previous.recipe].name, need]
-	var speech := "%s\n麦菽粥 · 麦 1、菽 1 · 供 %d 份\n鱼麦羹 · 麦 1、%s 1 · 供 %d 份" % [
-		welcome, WinterSupper.portions(WinterSupper.BEAN, Global.balance), fish_name, WinterSupper.portions(WinterSupper.FISH, Global.balance)]
+	var beans := "菽 1"
+	if Global.winter_supper_bean_gift():
+		welcome = "秋社你留了谷样，我给今晚的粥添一份菽。今夜你家需 %d 份。" % need
+		beans = "禾伯出菽"
+	var speech := "%s\n麦菽粥 · 麦 1、%s · 供 %d 份\n鱼麦羹 · 麦 1、%s 1 · 供 %d 份" % [
+		welcome, beans, WinterSupper.portions(WinterSupper.BEAN, Global.balance), fish_name, WinterSupper.portions(WinterSupper.FISH, Global.balance)]
 	var stock := Global.crop_stock
 	var context := "%s · 私仓麦 %d、菽 %d" % [WinterSupper.PLACE, stock.count("wheat"), stock.count("beans")]
 	var order := Global.season_order()

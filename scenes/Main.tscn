@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dkhnj24a1t7jv" path="res://scripts/World.gd" id="1_world"]
 [ext_resource type="TileSet" uid="uid://bp7kea3f521rt" path="res://resources/game_tileset.tres" id="2_tileset"]
+[ext_resource type="TileSet" path="res://resources/field_crops.tres" id="crop_tileset"]
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="3_player"]
 [ext_resource type="Script" uid="uid://dd0uqup0hk8b5" path="res://scripts/UIManager.gd" id="4_ui"]
 [ext_resource type="Theme" uid="uid://bb1anfi4o7nf5" path="res://resources/game_theme.tres" id="5_theme"]
@@ -51,6 +52,7 @@
 [ext_resource type="Script" path="res://scripts/WaterSource.gd" id="47_water_source"]
 [ext_resource type="Script" path="res://scripts/SeedGarden.gd" id="48_seed_garden"]
 [ext_resource type="Script" path="res://scripts/PondLanding.gd" id="49_pond_landing"]
+[ext_resource type="PackedScene" path="res://scenes/WinterRoadRations.tscn" id="50_winter_rations"]
 
 [sub_resource type="RectangleShape2D" id="Shape_east_gate"]
 size = Vector2(8, 20)
@@ -110,6 +112,10 @@ script = ExtResource("35_neighbor_motion")
 [node name="SeedPouch" type="Sprite2D" parent="World/Scenery/SeedGarden/Courier"]
 texture_filter = 1
 position = Vector2(8, -9)
+
+[node name="Recipients" type="Node2D" parent="World/Scenery/SeedGarden"]
+visible = false
+y_sort_enabled = true
 
 [node name="Hint" type="Label" parent="World/Scenery/SeedGarden"]
 visible = false
@@ -185,7 +191,8 @@ script = ExtResource("12_field_cursor")
 [node name="CropsLayer" type="TileMapLayer" parent="World/TileMapLayer" unique_id=43186087]
 z_as_relative = false
 z_index = -1
-tile_set = ExtResource("2_tileset")
+scale = Vector2(0.5, 0.5)
+tile_set = ExtResource("crop_tileset")
 
 [node name="Player" parent="World" unique_id=1908940042 instance=ExtResource("3_player")]
 position = Vector2(66, 98)
@@ -426,6 +433,9 @@ position = Vector2(-248, 650)
 [node name="WinterSupper" parent="World" instance=ExtResource("40_winter_supper")]
 position = Vector2(338, 873)
 
+[node name="WinterRoadRations" parent="World" instance=ExtResource("50_winter_rations")]
+position = Vector2(101, 421)
+
 [node name="RoadRest" type="Node2D" parent="World"]
 position = Vector2(-25, 446)
 script = ExtResource("18_road_rest")
@@ -621,3 +631,4 @@ vertical_alignment = 1
 layer = 8
 script = ExtResource("10_campaign")
 show_field_status = false
+backpack_trigger = NodePath("../UI/Control/EstateHUD/Tools/BackpackButton")

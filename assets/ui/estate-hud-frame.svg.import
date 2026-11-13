@@ -1,0 +1,13 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://cjufmsa2dcb7u"
+path="res://.godot/imported/estate-hud-frame.svg-0ec2425a63ad5b27a309ee184fb3a237.res"
+
+[deps]
+
+source_file="res://assets/ui/estate-hud-frame.svg"
+dest_files=["res://.godot/imported/estate-hud-frame.svg-0ec2425a63ad5b27a309ee184fb3a237.res"]
+
+[params]

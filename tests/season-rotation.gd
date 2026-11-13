@@ -55,10 +55,11 @@ func _run() -> void:
 	_expect(state.money == 19 and state.player_inventory == 4, "The rotated harvest gains one unit and the ordinary harvest pays its usual amount.")
 	_expect(not state.fertile_cells.has(rotated), "Harvest consumes the rotation benefit once.")
 
-	_expect("谷雨" in ui.hud.forecast_label.text and "雨润旱田" in ui.hud.forecast_label.text,
-		"Tomorrow's rainy term is visible before it begins.")
+	_expect("谷雨" in ui.hud.calendar_button.tooltip_text and "雨润旱田" in ui.hud.calendar_button.tooltip_text,
+		"The almanac shortcut gives tomorrow's rain forecast before it begins.")
 	await _sleep(ui)
-	_expect(state.get_current_solar_term() == "谷雨" and "雨润旱田" in ui.hud.calendar_label.text, "The calendar shows the rainy day before the player sleeps.")
+	_expect(state.get_current_solar_term() == "谷雨" and ui.hud.calendar_label.text.ends_with("· 雨")
+		and ui.hud.weather_icon.texture == ui.hud.sky_icons[1], "The calendar displays both rain text and the rain icon on that day.")
 	world.handle_interaction(ordinary)
 	_expect(state.active_crops.has(ordinary) and not state.active_crops[ordinary]["watered"], "The rain scenario starts with no manual watering.")
 	await _sleep(ui)

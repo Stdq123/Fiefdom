@@ -13,4 +13,7 @@
   <path fill="#d3a681" d="M26 12h1v1h-1zm-1 1h3v1h-3zm1 1h1v1h-1zM24 19h5v1h-5z"/>
   <path fill="#5c4333" d="M12 22h6v3h-6zM24 22h6v3h-6z"/>
   <path fill="#b49a6d" d="M13 22h5v1h-5zM24 23h5v1h-5z"/>
+  <path fill="#c99a68" d="M5.5 10h.5v7h-.5zm28 1h.5v6h-.5zM9 4h6v.5H9zm17 0h7v.5h-7zM9 22.5h13v.5H9zm10 3h7v.5h-7z"/>
+  <path fill="#71a28e" d="M10.5 13h.5v4h-.5zm1 4.5h2v.5h-2zm5-3h.5v4h-.5z"/>
+  <path fill="#c78190" d="M23.5 13h.5v4h-.5zm2 4h2v.5h-2zm3-3h.5v4h-.5z"/>
 </svg>

@@ -2,7 +2,13 @@ extends RefCounted
 class_name FieldSeedPlan
 
 const BEANS := "beans"
+const SEASONAL := "seasonal"
+const SEASONAL_CROPS := [BEANS, "rice", "sorghum", "wheat"]
 const ROTATION_PREFIX := "rotation:"
+
+static func seasonal_seed(season: int, has_canal_water: bool) -> String:
+	var seed: String = SEASONAL_CROPS[season]
+	return "millet" if seed == "rice" and not has_canal_water else seed
 
 static func with_beans(seed_id: String) -> String:
 	return ROTATION_PREFIX + seed_id
@@ -17,5 +23,7 @@ static func supports_rotation(crop: CropData) -> bool:
 	return not crop.restores_fertility and not crop.is_perennial
 
 static func is_valid(plan: String) -> bool:
+	if plan == SEASONAL:
+		return true
 	var crop := ItemManager.get_crop(crop_id(plan))
 	return crop != null and (not is_rotation(plan) or supports_rotation(crop))

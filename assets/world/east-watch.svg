@@ -8,4 +8,8 @@
   <path fill="#6f5340" d="M8 17h16v1H8z M8 25h16v1H8z M11 20h4v1h-4z M16 21h5v1h-5z M10 23h6v1h-6z"/>
   <path fill="#658479" d="M2 29h7v3H2z M23 29h7v3h-7z"/>
   <path fill="#91a193" d="M3 29h5v1H3z M24 29h5v1h-5z"/>
+  <path fill="#c4a16d" d="M5.5 14h.5v6h-.5zm20 3h.5v5h-.5zM8 11h5v.5H8zm8 0h7v.5h-7z"/>
+  <path fill="#fbda95" d="M9.5 15.5h.5v1h-.5zm4 3h.5v4h-.5zm4 0h.5v2h-.5zm4 4h.5v2h-.5z"/>
+  <path fill="#946c49" d="M10 19h2.5v.5H10zm5 1h1.5v.5H15zm3 3h3.5v.5H18zm-8.5 1.5h3v.5h-3z"/>
+  <path fill="#516c5d" d="M3 31h2.5v.5H3zm22 0h3v.5h-3z"/>
 </svg>

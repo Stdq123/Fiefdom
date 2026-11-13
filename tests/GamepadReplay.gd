@@ -148,6 +148,12 @@ func _estate_flow() -> bool:
 	_expect(state.current_day == 3 and state.king_storage == 1 and state.player_inventory == 1 and state.money == 5,
 		"The first controller harvest sends public grain to tribute and private grain and proceeds to the player.")
 	print("GAMEPAD_FARM day=", state.current_day, " public=", state.king_storage, " private=", state.player_inventory, " copper=", state.money)
+	var campaign_hud := tree.current_scene.get_node("CampaignHUD")
+	await _click(campaign_hud.backpack_button)
+	_expect(tree.paused and campaign_hud.backpack != null and campaign_hud.backpack.items.has_node("millet"),
+		"The controller opens the backpack and sees the freshly harvested millet.")
+	await _tap(JOY_BUTTON_B)
+	_expect(not tree.paused and campaign_hud.backpack == null, "B closes the backpack and returns to the estate.")
 
 	await _tap(JOY_BUTTON_Y)
 	_expect(tree.paused and ui.estate_map.modal.visible and ui.estate_map.close_button.text.ends_with("  B"),
@@ -245,7 +251,8 @@ func _fishing() -> void:
 	tree.change_scene_to_file(state.WILDERNESS_SCENE)
 	await tree.scene_changed
 	var trail := tree.current_scene
-	_expect(trail.get_node("CampaignHUD").camera_hint.text.begins_with("RT "), "The trail shows the controller's bow hint.")
+	_expect(trail.get_node("CampaignHUD").trail_vitals.tooltip_text.begins_with("RT "),
+		"The trail status gives the controller's bow and zoom controls on hover.")
 	var pool: Node2D = trail.get_node("WillowPool")
 	var angler: Player = trail.get_node("Player")
 	angler.arrive_at_position(pool.global_position + Vector2(0, 12), Vector2.UP)

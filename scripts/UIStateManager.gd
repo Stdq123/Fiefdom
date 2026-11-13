@@ -43,7 +43,7 @@ func update_day_label() -> void:
 ## 更新背包和国库标签
 func update_inventory_labels() -> void:
 	if inventory_label:
-		inventory_label.text = "作物 %d · 粮食 %d" % [Global.player_inventory, Global.food_storage]
+		inventory_label.text = "粮食 %d" % Global.food_storage
 	if king_label:
 		king_label.text = "国库 %d" % Global.king_storage
 
@@ -63,7 +63,7 @@ func update_rank_display() -> void:
 ## 更新金钱显示
 func update_money_display() -> void:
 	if money_label:
-		money_label.text = "铜钱 %d" % Global.money
+		money_label.text = "%d 铜钱" % Global.money
 
 ## 更新井田显示
 func update_well_field_display() -> void:

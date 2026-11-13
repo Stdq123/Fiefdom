@@ -34,6 +34,8 @@ GamepadInput="*res://scripts/GamepadInput.gd"
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
+window/size/window_width_override=1920
+window/size/window_height_override=1080
 window/stretch/mode="canvas_items"
 window/stretch/aspect="keep"
 
@@ -64,3 +66,7 @@ locale/include_text_server_data=true
 
 environment/defaults/default_clear_color=Color(0.20, 0.25, 0.17, 1)
 textures/canvas_textures/default_texture_filter=0
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/fiefdom_art/plugin.cfg")

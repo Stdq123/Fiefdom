@@ -1,0 +1,255 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="352" height="64" viewBox="0 0 352 64" shape-rendering="crispEdges">
+  <defs>
+    <path id="outer" d="M4 0h24v1h2v2h1v2h1v22h-1v2h-1v2h-2v1H4v-1H2v-2H1v-2H0V5h1V3h1V1h2z"/>
+    <path id="rim" d="M4 1h24v1h2v2h1v23h-1v2h-2v2H4v-1H2v-2H1V5h1V3h2z"/>
+    <path id="inner" d="M5 4h22v1h1v1h1v20h-1v1h-1v1H5v-1H4v-1H3V6h1V5h1z"/>
+    <path id="face" d="M5 5h22v1h1v20h-1v1H5v-1H4V6h1z"/>
+    <path id="slot_face" d="M4 5h24v1h1v21h-1v1H4v-1H3V6h1z"/>
+    <path id="small_rim" d="M3 1h26v1h2v27h-1v1h-2v1H4v-1H2v-1H1V3h2z"/>
+    <path id="corners" d="M4 2h2v1H4zm-2 2h1v2H2zm24-2h2v1h-2zm3 2h1v2h-1zM3 26h1v2H3zm1 3h2v1H4zm24-2h1v2h-1zm-2 2h2v1h-2z"/>
+    <path id="pin_glints" d="M4 3h1v1H4zm23 0h1v1h-1zM4 28h1v1H4zm23 0h1v1h-1z"/>
+    <path id="bevel_light" d="M4 2h24v1H4zM2 5h1v19H2zM3 4h1v1H3zm25-1h1v1h-1z"/>
+    <path id="bevel_shadow" d="M4 29h24v1H4zm25-24h1v23h-1zm-1 23h1v1h-1z"/>
+    <!-- Two interlocked coils fit the 18px tiling segment of the seven-pixel frame. -->
+    <path id="coil" d="M7 2.5h1v-.5h5v.5h1v2h-5v-1h2v.5h2v-1h-4v.5H7zm9 0h1v-.5h5v.5h1v2h-5v-1h2v.5h2v-1h-4v.5h-2z"/>
+    <path id="coil_glint" d="M8 2h5v.5H8zm1.5 1.5h1.5V4H9.5zm7.5-1.5h5v.5h-5zm1.5 1.5h1.5V4h-1.5z"/>
+    <g id="coil_frieze">
+      <use href="#coil"/>
+      <use href="#coil" transform="rotate(180 16 16)"/>
+      <use href="#coil" transform="rotate(-90 16 16)"/>
+      <use href="#coil" transform="rotate(90 16 16)"/>
+    </g>
+    <g id="coil_highlights">
+      <use href="#coil_glint"/>
+      <use href="#coil_glint" transform="rotate(-90 16 16)"/>
+    </g>
+    <path id="patina" d="M4 5h1v1H4zm2-1h1v.5H6zm21 1h1v1h-1zm1 1h.5v1H28zM3 22h1v2H3zm1 3h1v1H4zm0 1h1v1H4zm2 1h1v.5H6zm20-1h1v1h-1zm1 1h1v1h-1zm1-1h1v1h-1z"/>
+    <path id="braid" d="M7 3h2v1H7zm3 1h2v1h-2zm3-1h2v1h-2zm3 1h2v1h-2zm3-1h2v1h-2zm3 1h2v1h-2z"/>
+    <path id="tag" d="M7 2h18v2h3v2h2v4h2v12h-2v4h-2v2h-3v2H7v-2H4v-2H2v-4H0V10h2V6h2V4h3z"/>
+    <path id="tag_face" d="M7 4h18v2h3v4h2v12h-2v4h-3v2H7v-2H4v-4H2V10h2V6h3z"/>
+    <g id="tag_fittings">
+      <path fill="#261c16" d="M1 11h4v-2h2v14H5v-2H1zm30 0h-4V9h-2v14h2v-2h4z"/>
+      <path fill="#b79b62" d="M2 12h3v-2h1v3H5v6h1v3H5v-2H2zm28 0h-3v-2h-1v3h1v6h-1v3h1v-2h3z"/>
+      <path fill="#e1bf7d" d="M2 12h3v1H2zm0 7h3v1H2zm25-7h3v1h-3zm0 7h3v1h-3z"/>
+    </g>
+    <g id="slip_ends">
+      <path fill="#392c21" d="M3 3h4V1h6v1h6V0h6v2h4v2h2v3H1V5h2z"/>
+      <path fill="#b78d54" d="M3 4h4V2h6v1h6V1h6v2h4v4H3z"/>
+      <path fill="#e3bc79" d="M3 4h4V2h6v1h-5v2H3zm10-1h6v1h-6zm6-2h6v1h-5v3h-1zm6 2h4v1h-4z"/>
+      <path fill="#473323" d="M0 6h32v4H0z"/>
+      <path fill="#997149" d="M0 7h32v1H0z"/>
+      <path fill="#c49c62" d="M3 7h2v2H3zm5 0h2v2H8zm6 0h2v2h-2zm6 0h2v2h-2zm6 0h2v2h-2z"/>
+      <path fill="#714b32" d="M0 5h2v6H0zm30 0h2v6h-2z"/>
+    </g>
+  </defs>
+
+  <!-- Bamboo slips bound at both ends, set inside a cast bronze surround. -->
+  <g>
+    <use href="#outer" fill="#231c15"/>
+    <use href="#rim" fill="#51452d"/>
+    <use href="#bevel_light" fill="#aa8552"/>
+    <use href="#bevel_shadow" fill="#2c2920"/>
+    <use href="#inner" fill="#747153"/>
+    <use href="#face" fill="#d5bf90"/>
+    <path fill="#d0b887" d="M8 5.5h4.5v21H8zm12 0h4v21h-4z"/>
+    <path fill="#c5ac7f" d="M6 5.5h.5v21H6zm6.5 0h.5v21h-.5zm6 0h.5v21h-.5zm5.5 0h.5v21H24z"/>
+    <path fill="#e1cca0" d="M7 5.5h1v21H7zm6 0h1v21h-1zm6 0h1v21h-1zm5.5 0h1v21h-1z"/>
+    <path fill="#cbb181" d="M9 6h.5v6H9zm1 9h.5v6H10zm5.5-7h.5v7h-.5zm1 10h.5v5h-.5zm4 1h.5v6h-.5zm2-9h.5v4h-.5z"/>
+    <path fill="#e4cda0" d="M5 5h22v.5H5zM4 7h1v18H4z"/>
+    <path fill="#bfa275" d="M27 7h1v19h-1zM5 26h22v1H5z"/>
+    <path fill="#ae9368" d="M4 6h24v.5H4zm0 19.5h24v.5H4z"/>
+    <path fill="#92794f" d="M5.5 6h1.5v1H5.5zm6.5 0h1.5v1H12zm6 0h1.5v1H18zm5.5 0h1.5v1h-1.5zM5.5 25h1.5v1H5.5zm6.5 0h1.5v1H12zm6 0h1.5v1H18zm5.5 0h1.5v1h-1.5z"/>
+    <path fill="#e0c292" d="M5.5 6h1.5v.5H5.5zm6.5 0h1.5v.5H12zm6 0h1.5v.5H18zm5.5 0h1.5v.5h-1.5z"/>
+    <use href="#coil_frieze" fill="#292c23"/>
+    <use href="#coil_highlights" fill="#788263"/>
+    <use href="#patina" fill="#6c775b"/>
+    <use href="#corners" fill="#857047"/>
+    <use href="#pin_glints" fill="#c49d5e"/>
+  </g>
+
+  <!-- Oxidized bronze tray for status meters and the seed belt. -->
+  <g transform="translate(32 0)">
+    <use href="#outer" fill="#211e17"/>
+    <use href="#rim" fill="#655537"/>
+    <use href="#bevel_light" fill="#aa8552"/>
+    <use href="#bevel_shadow" fill="#2b2c22"/>
+    <use href="#inner" fill="#4c5745"/>
+    <use href="#face" fill="#30362b"/>
+    <path fill="#3a3e30" d="M10 11h1v.5h-1zm5.5 5h.5v1h-.5zm7-5h1v.5h-1zm1.5 9h.5v1h-.5zm-11 2h1v.5h-1z"/>
+    <use href="#coil_frieze" fill="#30352a"/>
+    <use href="#coil_highlights" fill="#879171"/>
+    <use href="#patina" fill="#768260"/>
+    <use href="#corners" fill="#877650"/>
+    <use href="#pin_glints" fill="#d0a269"/>
+  </g>
+
+  <!-- Cast command buttons with a dark recess and a worn brass ridge. -->
+  <g transform="translate(64 0)">
+    <use href="#outer" fill="#242119"/>
+    <use href="#small_rim" fill="#6b5e40"/>
+    <use href="#bevel_light" fill="#a78954"/>
+    <use href="#bevel_shadow" fill="#2f3025"/>
+    <use href="#slot_face" fill="#494c37"/>
+    <path fill="#555843" d="M4 5h24v1H4zm2 2h.5v2H6zm20 16h.5v1H26z"/>
+    <use href="#pin_glints" fill="#b49762"/>
+  </g>
+  <g transform="translate(96 0)">
+    <use href="#outer" fill="#28241a"/>
+    <use href="#small_rim" fill="#85714c"/>
+    <use href="#bevel_light" fill="#c2a569"/>
+    <use href="#bevel_shadow" fill="#393c2f"/>
+    <use href="#slot_face" fill="#565a40"/>
+    <path fill="#676a4c" d="M4 5h24v1H4zm2 2h.5v2H6zm20 16h.5v1H26z"/>
+    <use href="#pin_glints" fill="#d0b277"/>
+  </g>
+  <g transform="translate(128 0)">
+    <use href="#outer" fill="#28231a"/>
+    <use href="#small_rim" fill="#756344"/>
+    <use href="#bevel_light" fill="#535342"/>
+    <use href="#bevel_shadow" fill="#b09964"/>
+    <use href="#slot_face" fill="#3c4637"/>
+    <path fill="#303a2d" d="M4 5h24v2H4z"/>
+    <path fill="#6b7455" d="M5 26h22v1H5z"/>
+  </g>
+  <g transform="translate(160 0)">
+    <use href="#outer" fill="#2c2a22"/>
+    <use href="#small_rim" fill="#646454"/>
+    <use href="#bevel_light" fill="#817e65"/>
+    <use href="#bevel_shadow" fill="#4c4d42"/>
+    <use href="#slot_face" fill="#4f5145"/>
+  </g>
+
+  <!-- Restrained amber inlay marks the primary action. -->
+  <g transform="translate(192 0)">
+    <use href="#outer" fill="#33251a"/>
+    <use href="#small_rim" fill="#9a7042"/>
+    <use href="#bevel_light" fill="#e6c281"/>
+    <use href="#bevel_shadow" fill="#73442e"/>
+    <use href="#slot_face" fill="#ce9c59"/>
+    <path fill="#dab072" d="M4 5h24v1H4zm5 4h10v.5H9zm12 16h5v.5h-5z"/>
+    <use href="#braid" fill="#8f5538"/>
+    <use href="#pin_glints" fill="#eac982"/>
+  </g>
+  <g transform="translate(224 0)">
+    <use href="#outer" fill="#222019"/>
+    <use href="#small_rim" fill="#625739"/>
+    <use href="#bevel_light" fill="#38392c"/>
+    <use href="#bevel_shadow" fill="#92805a"/>
+    <use href="#slot_face" fill="#394031"/>
+    <path fill="#2d352a" d="M4 5h24v2H4zM3 7h1v17H3z"/>
+    <path fill="#515b42" d="M5 26h22v1H5z"/>
+  </g>
+  <!-- A keyed, hollow outline stays visible over either frame material. -->
+  <g transform="translate(288 0)">
+    <path fill="#332419" d="M5 0h22v1h3v2h1v2h1v22h-1v2h-1v2h-3v1H5v-1H2v-2H1v-2H0V5h1V3h1V1h3zm0 3v1H4v1H3v22h1v1h1v1h22v-1h1v-1h1V5h-1V4h-1V3z"/>
+    <path fill="#fff2b4" d="M5 1h22v1h3v3h1v22h-1v3h-3v1H5v-1H2v-3H1V5h1V2h3zm0 2v1H4v1H3v22h1v1h1v1h22v-1h1v-1h1V5h-1V4h-1V3z"/>
+  </g>
+  <!-- Vermilion lacquer plate for place names and short status labels. -->
+  <g transform="translate(320 0)">
+    <use href="#outer" fill="#352018"/>
+    <use href="#small_rim" fill="#6e3326"/>
+    <use href="#bevel_light" fill="#be7750"/>
+    <use href="#bevel_shadow" fill="#51271f"/>
+    <use href="#slot_face" fill="#8e3e30"/>
+    <path fill="#9e4b38" d="M4 5h24v1H4zm3 3h6v.5H7zm12 16h5v.5h-5z"/>
+    <use href="#pin_glints" fill="#cd8c57"/>
+  </g>
+
+  <!-- Journal: uneven split-bamboo ends and two woven cords. -->
+  <g transform="translate(0 32)">
+    <path fill="#5d432c" d="M3 6h26v20H3z"/>
+    <path fill="#d8bb85" d="M4 7h24v18H4z"/>
+    <path fill="#cfb07d" d="M7 9h6v14H7zm12 0h6v14h-6z"/>
+    <path fill="#b69866" d="M6 8h1v16H6zm6 0h1v16h-1zm6 0h1v16h-1zm6 0h1v16h-1z"/>
+    <path fill="#e6ca96" d="M7 9h1v14H7zm6 0h1v14h-1zm6 0h1v14h-1zm6 0h1v14h-1z"/>
+    <use href="#slip_ends"/>
+    <use href="#slip_ends" transform="translate(0 32) scale(1 -1)"/>
+  </g>
+
+  <!-- Cast calendar tablet with an interlaced Spring and Autumn frieze. -->
+  <g transform="translate(32 32)">
+    <use href="#outer" fill="#231d16"/>
+    <use href="#rim" fill="#8d7144"/>
+    <path fill="#727853" d="M5 3h22v1h2v24h-2v1H5v-1H3V5h2z"/>
+    <path fill="#323e35" d="M6 6h20v1h2v18h-2v1H6v-1H4V7h2z"/>
+    <path fill="#415345" d="M5 7h22v1H5zm0 2h1v14H5z"/>
+    <path fill="#28322d" d="M26 9h1v15h-1zM6 24h20v1H6z"/>
+    <use href="#coil_frieze" fill="#303629"/>
+    <use href="#coil_highlights" fill="#c09a5e"/>
+    <path fill="#ddb37a" d="M5 4h1v2H5zm21 0h1v2h-1zM5 26h1v2H5zm21 0h1v2h-1z"/>
+  </g>
+
+  <!-- Pierced command tags. The fittings sit in the fixed sides of each slice. -->
+  <g transform="translate(64 32)">
+    <use href="#tag" fill="#251b16"/>
+    <use href="#tag_face" fill="#624632"/>
+    <path fill="#ae8150" d="M7 4h18v2H7z"/>
+    <path fill="#3b281f" d="M7 26h18v2H7z"/>
+    <use href="#tag_fittings"/>
+  </g>
+  <g transform="translate(96 32)">
+    <use href="#tag" fill="#2a1d15"/>
+    <use href="#tag_face" fill="#745236"/>
+    <path fill="#c59a62" d="M7 4h18v2H7z"/>
+    <path fill="#4b3124" d="M7 26h18v2H7z"/>
+    <use href="#tag_fittings"/>
+  </g>
+  <g transform="translate(128 32)">
+    <use href="#tag" fill="#301a13"/>
+    <use href="#tag_face" fill="#824337"/>
+    <path fill="#c07e58" d="M7 4h18v2H7z"/>
+    <path fill="#51291f" d="M7 26h18v2H7z"/>
+    <use href="#tag_fittings"/>
+  </g>
+  <g transform="translate(160 32)">
+    <use href="#tag" fill="#27231c"/>
+    <use href="#tag_face" fill="#4e4a3d"/>
+    <path fill="#84765d" d="M7 4h18v2H7z"/>
+    <path fill="#393429" d="M7 26h18v2H7z"/>
+    <use href="#tag_fittings" opacity=".54"/>
+  </g>
+
+  <!-- Lacquered wood tray and the two inset seed-slot states. -->
+  <g transform="translate(192 32)">
+    <use href="#outer" fill="#221813"/>
+    <use href="#rim" fill="#6f4030"/>
+    <use href="#inner" fill="#3e271f"/>
+    <use href="#face" fill="#302420"/>
+    <path fill="#9e5840" d="M4 3h24v1H4zm0 25h24v1H4z"/>
+    <path fill="#a06346" d="M4 4h1v3H4zm23 0h1v3h-1zM4 25h1v3H4zm23 0h1v3h-1z"/>
+    <use href="#braid" fill="#d18857"/>
+    <use href="#braid" fill="#af6043" transform="rotate(180 16 16)"/>
+  </g>
+  <g transform="translate(224 32)">
+    <use href="#small_rim" fill="#6b4834"/>
+    <use href="#slot_face" fill="#392a23"/>
+    <path fill="#251b17" d="M4 5h24v2H4zm-1 2h2v18H3z"/>
+    <path fill="#936049" d="M4 27h24v1H4z"/>
+  </g>
+  <g transform="translate(256 32)">
+    <use href="#small_rim" fill="#e1aa6a"/>
+    <use href="#slot_face" fill="#793a2d"/>
+    <path fill="#54281f" d="M4 5h24v1H4zm-1 2h2v18H3z"/>
+    <path fill="#af684a" d="M4 27h24v1H4z"/>
+    <path fill="#f4d38e" d="M2 3h4v1H3v2H2zm24 0h4v3h-1V4h-3zM2 26h1v2h3v1H2zm27 0h1v3h-4v-1h3z"/>
+  </g>
+
+  <!-- Inlaid meters, with a continuous fill and a row of incised ticks. -->
+  <g transform="translate(288 32)">
+    <path fill="#614932" d="M2 0h28v1h2v4h-2v1H2V5H0V1h2z"/>
+    <path fill="#352b23" d="M2 1h28v1h1v2h-1v1H2V4H1V2h1z"/>
+    <path fill="#806244" d="M5 4h1v1H5zm6 0h1v1h-1zm6 0h1v1h-1zm6 0h1v1h-1zm6 0h1v1h-1z"/>
+  </g>
+  <g transform="translate(320 32)">
+    <path fill="#6b773e" d="M1 0h30v1h1v4h-1v1H1V5H0V1h1z"/>
+    <path fill="#a4b666" d="M1 1h30v3H1z"/>
+    <path fill="#ced58c" d="M2 1h28v1H2z"/>
+    <path fill="#879852" d="M5 3h1v2H5zm6 0h1v2h-1zm6 0h1v2h-1zm6 0h1v2h-1zm6 0h1v2h-1z"/>
+  </g>
+  <g transform="translate(320 40)">
+    <path fill="#804134" d="M1 0h30v1h1v4h-1v1H1V5H0V1h1z"/>
+    <path fill="#c0674b" d="M1 1h30v3H1z"/>
+    <path fill="#ea9a6c" d="M2 1h28v1H2z"/>
+    <path fill="#a45542" d="M5 3h1v2H5zm6 0h1v2h-1zm6 0h1v2h-1zm6 0h1v2h-1zm6 0h1v2h-1z"/>
+  </g>
+</svg>

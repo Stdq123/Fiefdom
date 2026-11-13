@@ -286,7 +286,8 @@ func _play_day() -> void:
 	await _capture("01-estate-noon")
 	await _wait_for_progress(0.73)
 	state.balance.daylight_seconds = 150.0
-	_expect(ui.hud.watch_label.text == "酉时" and lighting.color.r > lighting.color.b and _lamps_on(lighting) > 0,
+	_expect(ui.hud.watch_label.text == "酉时" and ui.hud.watch_dial.watch == state.DAY_WATCHES.find("酉")
+		and lighting.color.r > lighting.color.b and _lamps_on(lighting) > 0,
 		"Dusk warms the scene and lights the first lamps.")
 	await _capture("02-estate-dusk")
 	await _key(KEY_M)

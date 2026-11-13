@@ -113,6 +113,13 @@ func _grow_and_harvest() -> bool:
 		for cell: Vector2i in plots:
 			if world.is_crop_dry(cell):
 				await _plot(tiles, cell)
+		if night == harvest_day - 1:
+			await _button(tracked)
+			var preview: Control = ui.panel_manager.management_panel_instance
+			_expect(preview.season_order_panel.is_visible_in_tree() and "3 格明日熟" in preview.season_order_panel.status.text,
+				"The order distinguishes watered crops that can ripen overnight.")
+			await _snapshot("02a-tomorrow-harvest")
+			await _button(preview.close_button)
 		if summer:
 			await _button(ui.manage_button)
 			var study: Control = ui.panel_manager.management_panel_instance
@@ -121,17 +128,41 @@ func _grow_and_harvest() -> bool:
 			await _button(study.close_button)
 		await _button(ui.sleep_button)
 		await tree.create_timer(1.12).timeout
+	_expect("收备货私田" in tracked.text and state.player_inventory == 0,
+		"Ripe private crops become an action without counting as stock.")
+	await _snapshot("02b-harvest-ready")
 	await _button(tracked)
-	var management: Control = ui.panel_manager.management_panel_instance
-	var book: Control = management.season_order_panel
-	_expect(book.is_visible_in_tree() and "私田有 3 格已熟" in book.status.text,
-		"The book distinguishes ripe private beans from stock already in the warehouse.")
-	await _button(management.get_node("CloseButton"))
-	for cell: Vector2i in plots:
+	var first: Variant = ui.directions.tracked_plot
+	_expect(first in plots and not state.is_public_plot(first) and ui.directions.destination().title.contains("备货"),
+		"The tracker marks the first relevant private crop, even with a ripe public plot nearby.")
+	if failed:
+		return false
+	await _snapshot("02c-harvest-directions")
+	if not await _continue(state.ESTATE_SCENE):
+		return false
+	estate = tree.current_scene
+	world = estate.get_node("World")
+	ui = estate.get_node("UI")
+	tiles = world.tile_map
+	tracked = ui.hud.pinned_order
+	await tree.process_frame
+	var harvested := 0
+	while ui.directions.tracked_plot != null and harvested < 3:
+		var cell: Vector2i = ui.directions.tracked_plot
+		_expect(not state.is_public_plot(cell), "Order directions do not switch to tribute.")
 		await _plot(tiles, cell)
+		await tree.process_frame
+		harvested += 1
+	_expect(harvested == 3 and ui.directions.tracked_plot == null and "去西市交货" in tracked.text
+		and state.king_storage == 0 and state.player_inventory == 3,
+		"The saved route advances through three needed private plots, then offers delivery.")
+	for cell: Vector2i in plots:
+		if world.is_crop_ripe(cell):
+			await _plot(tiles, cell)
 	_expect(state.crop_stock.count("beans") == 3 and state.crop_stock.count("millet") == 2 and state.king_storage == 1,
 		"The order and the meal use real private harvests, with one public unit in the treasury.")
 	_expect("去西市交货" in tracked.text, "The tracker turns into a delivery direction after harvest.")
+	print("ORDER_HARVEST day=", state.current_day, " needed_private=", harvested, " tribute_after_other_plots=", state.king_storage)
 	await _button(tracked)
 	return _expect(ui.directions.tracked_place == "西市 · 收货牌" and state.market_trip_target == "收货牌",
 		"The delivery button points through the west gate to the order board.")
