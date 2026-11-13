@@ -918,3 +918,8 @@
 
 - 交货簿按品种列出已熟、明日熟、待浇或断水的私田。跟踪的单缺货且有对应熟田时，点田边进度可逐格指路。够量后收割标记清除，开收的时令单接到西市收货牌。谷伯补齐最后一份后，粮摊可直接指路去交货。
 - 新档第 3 天沿指引收三格备货私田，半途存读档，随后另收公田入国库。另一段新档回放走到谷伯粮摊，买一份菽并沿街交春单。Godot 冒烟、四季交货与田务指路通过。Windows 解压版通过双结局、战败恢复、延期研究、南路与西市回放。两处界面在 1024×768 不可见桌面核对。 [Windows 试玩包](../build/polish-order-harvest/Fiefdom-1.0.0-Windows-x64.zip) · [田边备货指路](../build/polish-order-harvest/farm-1024x768/02c-harvest-directions.png) · [谷伯粮摊](../build/polish-order-harvest/market-1024x768/02b-produce-sold.png) · [发行回放](../build/polish-order-harvest/windows-check.log)
+
+## 亭西种圃开案分种
+
+- 菽和黍长成后，林蓼回来摆案。阿绥和禾伯沿小径来领种，拿着包裹离开，田里留下短茬。舆图和木签可查日期，撞上谷雨亭集就顺延。玩家可当面挑一份，也可散场后到木签旁取。把小径旁的橡树移到种圃西侧，给人物和分种案留出视线。
+- 回放从第 6 天的待交货档开始，经历卸货、送种、三夜生长、第 10 天分种和散场。午时续档还原两人领完的状态，散场后取得一份菽，国库仍有四份。Godot 和 Windows 解压版通过南路、节庆和双结局相关回放，1024×768 画面在不可见桌面核对。 [Windows 试玩包](../build/polish-seed-sharing/Fiefdom-1.0.0-Windows-x64.zip) · [沿小径来领种](../build/polish-seed-sharing/final-1024x768/05a-arriving-for-seed.png) · [分种场景](../build/polish-seed-sharing/final-1024x768/06-neighbors-collect.png) · [发行回放](../build/polish-seed-sharing/windows-final/seed-garden.log)

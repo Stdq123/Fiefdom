@@ -111,6 +111,10 @@ script = ExtResource("35_neighbor_motion")
 texture_filter = 1
 position = Vector2(8, -9)
 
+[node name="Recipients" type="Node2D" parent="World/Scenery/SeedGarden"]
+visible = false
+y_sort_enabled = true
+
 [node name="Hint" type="Label" parent="World/Scenery/SeedGarden"]
 visible = false
 z_index = 6

@@ -119,7 +119,7 @@ func _collect_places() -> void:
 		_add_built_place("亭西歇脚处", "在长凳旁休息", "RoadRest")
 	var garden_day := Global.seed_garden_day()
 	if garden_day > 0:
-		var detail := "第 %d 天下种 · 来看看菽和黍" % garden_day
+		var detail := SEED_GARDEN.visit_note(garden_day)
 		places.append(_entry(Category.PLACES, SEED_GARDEN.PLACE, detail, EstateLayout.SEED_GARDEN_APPROACH, true))
 	if Global.pond_landing_day() > 0:
 		var detail := Global.fishing_block_reason(false, CreekFish.Site.POND)

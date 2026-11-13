@@ -224,7 +224,7 @@ const ESTATE_PROPS := [
 	Vector3i(-24, 346, Prop.MOSS_STONE), Vector3i(-53, 367, Prop.TALL_BAMBOO), Vector3i(-80, 359, Prop.OAK),
 	Vector3i(-113, 335, Prop.GROVE_CLUSTER), Vector3i(-194, 369, Prop.PINE), Vector3i(-267, 333, Prop.GROVE_TREE),
 	Vector3i(0, 402, Prop.BAMBOO), Vector3i(7, 413, Prop.ROCK), Vector3i(-9, 465, Prop.FERN),
-	Vector3i(65, 478, Prop.TALL_BAMBOO), Vector3i(98, 486, Prop.GROVE_TREE), Vector3i(-46, 486, Prop.OAK),
+	Vector3i(65, 478, Prop.TALL_BAMBOO), Vector3i(98, 486, Prop.GROVE_TREE), Vector3i(-133, 489, Prop.OAK),
 	# Southern verges and groves between the unloading yard, pasture and festival clearing.
 	Vector3i(-297, 502, Prop.TALL_BAMBOO), Vector3i(-267, 496, Prop.GROVE_TREE),
 	Vector3i(-217, 513, Prop.PINE), Vector3i(-188, 524, Prop.OAK), Vector3i(-150, 545, Prop.TALL_BAMBOO),

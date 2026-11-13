@@ -16,6 +16,7 @@ func _continue_estate() -> void:
 func _advance_clock(watch: float) -> void:
 	state.advance_daylight((watch - state.day_progress) * state.balance.daylight_seconds)
 	await tree.process_frame
+	await tree.process_frame
 
 func _send_seed() -> bool:
 	if not await _fixture(SPRING_END, {"day_progress": 0.71, "crop_stock": {"beans": 2, "millet": 1},
@@ -60,14 +61,17 @@ func _follow_seeds() -> bool:
 	await _capture("02-seedbeds")
 	await _key(KEY_E)
 	dialog = ui.get_node("Control/DialoguePanel")
-	_expect(dialog.name_label.text == "林蓼" and "菽和黍" in dialog.text_label.text,
-		"Lin Liao explains which crops were planted.")
+	_expect(dialog.name_label.text == GARDEN.HOST and "菽和黍" in dialog.text_label.text
+		and "第 10 天巳时" in dialog.text_label.text, "Lin Liao explains what she planted and when she will return.")
 	await _capture("03-lin-liao")
 	await _button(dialog.options_container.get_child(0))
 	await _key(KEY_M)
 	var places: Array = ui.estate_map.places
 	_expect(places.any(func(entry: Dictionary) -> bool: return entry.title == GARDEN.PLACE),
 		"The estate chart now lists the seed garden.")
+	_expect(places.any(func(entry: Dictionary) -> bool:
+		return entry.title == GARDEN.PLACE and "第 10 天巳时" in entry.detail),
+		"The chart shows the appointment at the actual garden.")
 	await _key(KEY_ESCAPE)
 	return not failed
 
@@ -80,10 +84,46 @@ func _first_harvest() -> void:
 		await _night()
 	_expect(garden.stage == 2 and state.current_day == ARRIVAL_DAY + SeasonOrders.SEED_GROW_NIGHTS, "The plants mature after three nights.")
 	await _capture("05-mature-plants")
+	await _advance_clock(0.30)
+	var first := garden.recipients.get_child(0) as Node2D
+	var arrival := first.position
+	await tree.create_timer(0.24).timeout
+	_expect(garden.host_present() and first.visible and first.position.distance_to(arrival) > 2.0
+		and first.get_node("Motion").walking and garden.packets_left == 2,
+		"Lin Liao opens the table and a recipient walks up from the lane.")
+	await _capture("05a-arriving-for-seed")
+	await _advance_clock(0.42)
+	var second := garden.recipients.get_child(1) as Node2D
+	if not _expect(first.visible and second.visible and first.get_node("Packet").visible
+		and second.get_node("Packet").visible and garden.packets_left == 0,
+		"Both recipients take a packet, leaving the player's share by the sign. Clock %s, packets left %s." % [
+			state.day_progress, garden.packets_left]):
+		return
+	await _capture("06-neighbors-collect")
 	await _key(KEY_E)
 	var dialog: Control = ui.get_node("Control/DialoguePanel")
 	var gift: Button = dialog.options_container.get_child(0)
-	_expect(gift.text == "取一份菽", "The recipient offers a share of the first harvest.")
+	_expect(dialog.name_label.text == GARDEN.HOST and "阿绥和禾伯" in dialog.text_label.text
+		and gift.text == "取一份菽", "Lin Liao offers a share in person during the seed gathering.")
+	await _capture("07-lin-liao-shares")
+	await _button(dialog.choices.back())
+	_expect(state.seed_garden_gift.is_empty() and state.crop_stock.count("beans") == 0,
+		"Leaving the share in the garden spends and awards nothing.")
+	_expect(state.save_game() == OK, "Save while neighbors are still at the garden.")
+	await _continue_estate()
+	garden = world.get_node("Scenery/SeedGarden")
+	_expect(garden.host_present() and garden.packets_left == 0 and garden.recipients.get_child(0).visible,
+		"Reload reconstructs who has collected a packet at the saved time.")
+	await Campaign.walk_estate_road_to(tree, world, EstateLayout.SEED_GARDEN_APPROACH)
+	await _advance_clock(0.78)
+	_expect(not garden.courier.visible and not garden.recipients.visible and garden.stage == 3,
+		"The neighbors leave in the evening, and the crop beds show the harvested stubble.")
+	await _capture("08-after-seed-sharing")
+	await _key(KEY_E)
+	dialog = ui.get_node("Control/DialoguePanel")
+	_expect(dialog.name_label.text == GARDEN.PLACE and "木签" in dialog.text_label.text,
+		"After hours the sign still lets the player collect the reserved share.")
+	gift = dialog.options_container.get_child(0)
 	await _button(gift)
 	_expect(state.crop_stock.count("beans") == 1 and state.king_storage == 4 and state.seed_garden_gift == "beans"
 		and not state.take_seed_garden_gift("millet"), "Only one sample reaches the private pantry.")
@@ -93,6 +133,7 @@ func _first_harvest() -> void:
 		"The garden and its claimed share persist from the title screen.")
 	print("SEED_GARDEN sent=", SPRING_END, " planted=", state.seed_garden_day(), " mature=", state.current_day,
 		" private=", state.player_inventory, " tribute=", state.king_storage)
+	print("SEED_GARDEN_SHARING day=", state.current_day, " two_recipients=true late_claim=", state.seed_garden_gift)
 
 func run(game_tree: SceneTree) -> void:
 	tree = game_tree
