@@ -141,6 +141,39 @@ theme_override_colors/font_color = Color(0.74, 0.83, 0.62, 1)
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 
+[node name="StewardHandover" type="HBoxContainer" parent="HBoxContainer/RightPanel/封地概览"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Label" type="Label" parent="HBoxContainer/RightPanel/封地概览/StewardHandover"]
+layout_mode = 2
+text = "井田管事"
+
+[node name="StewardPicker" type="OptionButton" parent="HBoxContainer/RightPanel/封地概览/StewardHandover"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+fit_to_longest_item = false
+
+[node name="ApplySteward" type="Button" parent="HBoxContainer/RightPanel/封地概览/StewardHandover"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(145, 34)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+disabled = true
+text = "交给管事"
+tooltip_text = "分派当前井田并补齐续播。保留已有安排和正在生长的作物。"
+
+[node name="StewardPreview" type="Label" parent="HBoxContainer/RightPanel/封地概览"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.79, 0.82, 0.70, 1)
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
 [node name="SeedPlan" type="HBoxContainer" parent="HBoxContainer/RightPanel/封地概览"]
 layout_mode = 2
 theme_override_constants/separation = 10

@@ -115,9 +115,22 @@ func _test_pasture() -> void:
 	await _advance_night()
 	_expect(state.current_day == 19 and state.sheepfold.wool_nights == 1 and state.sheepfold.fodder == 3
 		and state.sheepfold.last_feed == Sheepfold.Feed.PASTURE, "The final autumn day used pasture before winter begins.")
+	_watch(0.205)
+	await tree.create_timer(0.15).timeout
+	_expect(pen.animal.position.x > -12.0 and pen.animal.position.x < pen.FEEDING_SPOT.x,
+		"The sheep walks out from the shelter toward the trough on a fed winter day.")
 	_watch(0.34)
 	await tree.create_timer(0.15).timeout
-	_expect(pen.animal.position.distance_to(Vector2(-12, 7)) < 1.0, "In winter the sheep stays by the shelter.")
+	_expect(pen.animal.position.is_equal_approx(pen.FEEDING_SPOT) and pen.animal.rotation > 0.10
+		and _visible_hay_bundles(pen) == 3 and state.sheepfold.fodder == 3,
+		"The sheep lowers its head at the trough beside the winter hay reserve.")
+	await _snapshot("02b-winter-feeding")
+	_watch(0.52)
+	await tree.create_timer(0.15).timeout
+	_expect(pen.animal.position.is_equal_approx(pen.SHELTER), "After the daytime feed the sheep returns to the shelter.")
+
+func _visible_hay_bundles(pen: Node2D) -> int:
+	return pen.haystack.get_children().filter(func(bale: Sprite2D) -> bool: return bale.visible).size()
 
 func _plot(cell: Vector2i) -> void:
 	var tiles: TileMapLayer = world.tile_map
@@ -159,6 +172,11 @@ func _winter_feed() -> bool:
 	_expect(state.sheepfold.wool_nights == 4 and state.sheepfold.last_feed == Sheepfold.Feed.SHORTAGE,
 		"One unfed night pauses growth.")
 	await _walk_to_pen()
+	var pen := world.get_node("SheepfoldPen") as Node2D
+	_watch(0.34)
+	await tree.create_timer(0.15).timeout
+	_expect(pen.animal.position.is_equal_approx(pen.SHELTER) and not pen.hay.visible and _visible_hay_bundles(pen) == 0,
+		"With an empty feed reserve the sheep stays under cover.")
 	var panel := await _open_pen()
 	if panel == null:
 		return false
@@ -182,6 +200,7 @@ func _winter_feed() -> bool:
 	await _continue()
 	_expect(state.sheepfold.save_record() == record and world.get_node("SheepfoldPen/Paddock/Trough/Fodder").is_visible_in_tree(),
 		"Continue restores both the feed record and the full trough.")
+	_expect(_visible_hay_bundles(world.get_node("SheepfoldPen")) == 2, "The restored yard shows two remaining hay bundles.")
 	print("SHEEP_WINTER day=", state.current_day, " wool_nights=", state.sheepfold.wool_nights, " fodder=", state.sheepfold.fodder)
 	return not failed
 
@@ -191,6 +210,12 @@ func _grow_and_shear(capture: bool) -> bool:
 			return false
 		var rainy: bool = state.has_rain()
 		var fodder: int = state.sheepfold.fodder
+		if rainy:
+			var rainy_pen := world.get_node("SheepfoldPen") as Node2D
+			_watch(0.34)
+			await tree.create_timer(0.15).timeout
+			_expect(rainy_pen.animal.position.is_equal_approx(rainy_pen.FEEDING_SPOT) and rainy_pen.animal.rotation > 0.10,
+				"On a fed rainy day the sheep eats by the trough.")
 		await _advance_night()
 		if rainy:
 			_expect(state.sheepfold.last_feed == Sheepfold.Feed.FODDER and state.sheepfold.fodder == fodder - 1,
@@ -208,14 +233,17 @@ func _grow_and_shear(capture: bool) -> bool:
 	var wool: int = state.sheepfold.wool
 	await _button(panel.shear)
 	_expect(state.sheepfold.wool == wool + 1 and state.sheepfold.wool_nights == 0
-		and panel.shear.disabled and pen.animal.texture != grown_texture and not pen.get_node("Paddock/Wool").visible,
-		"Shearing takes exactly one full coat and starts regrowth.")
+		and pen.animal.texture != grown_texture and not pen.get_node("Paddock/Wool").visible
+		and not panel.modal.visible and not tree.paused and pen.clipping.visible,
+		"Shearing takes one full coat and returns to the paddock to show the clipping.")
 	if DisplayServer.get_name() != "headless":
 		var bleat: bool = pen.animal.get_parent().get_children().any(func(node: Node): return node is AudioStreamPlayer2D and node.stream == pen.BLEAT)
 		_expect(bleat, "Shearing starts the recorded sheep sound.")
-	await _key(KEY_ESCAPE)
 	if capture:
 		await _snapshot("06-after-shear")
+	await _open_pen()
+	_expect(panel.shear.disabled, "Opening the pen again shows that the fleece is regrowing.")
+	await _key(KEY_ESCAPE)
 	print("SHEEP_SHEAR day=", state.current_day, " wool=", state.sheepfold.wool)
 	return not failed
 

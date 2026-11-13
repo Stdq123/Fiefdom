@@ -3,6 +3,11 @@ extends Node2D
 const FLEECE := preload("res://assets/world/sheepfold/farm-sheep.webp")
 const BLEAT := preload("res://assets/world/sheepfold/sheep-bleat.ogg")
 const SHELTER := Vector2(-12, 7)
+const FEEDING_SPOT := Vector2(3, 18)
+const WALK_TO_FEED := 0.18
+const AT_TROUGH := 0.23
+const LEAVE_TROUGH := 0.43
+const BACK_IN_SHELTER := 0.48
 const ROUTE := [SHELTER, Vector2(-23, 30), Vector2(8, 40), Vector2(28, 27), Vector2(12, 20), SHELTER]
 const YARD_COLORS := [Color("#57724c"), Color("#5d7248"), Color("#77714b"), Color("#8c8871")]
 const PADDOCK := [Vector2(-43, 1), Vector2(42, 1), Vector2(44, 48),
@@ -14,6 +19,8 @@ const PADDOCK := [Vector2(-43, 1), Vector2(42, 1), Vector2(44, 48),
 @onready var landscape: Node2D = $"../Landscape"
 @onready var ground: Node2D = $Paddock/Yard
 @onready var hay: Sprite2D = $Paddock/Trough/Fodder
+@onready var haystack: Node2D = $Paddock/Haystack
+@onready var clipping: Sprite2D = $Paddock/Clipping
 @onready var hint: Label = $Paddock/Hint
 
 var pose_time := 0.0
@@ -37,6 +44,8 @@ func _refresh() -> void:
 	animal.texture = FLEECE if grown else short_coat
 	animal.scale = Vector2.ONE * (0.25 if grown else 1.0)
 	hay.visible = flock.fodder > 0
+	for bale: Sprite2D in haystack.get_children():
+		bale.visible = bale.get_index() < flock.fodder
 	var ready := Global.can_use_sheepfold(Sheepfold.Action.SHEAR)
 	$Paddock/Wool.visible = ready
 	_refresh_hint()
@@ -49,20 +58,31 @@ func _process(delta: float) -> void:
 func _update_sheep(delta: float) -> void:
 	var foot := SHELTER
 	var clock := Global.day_progress
-	var grazing := Global.sheep_can_graze() and clock > 0.05 and clock < 0.76
+	var pasture := Global.sheep_can_graze()
+	var grazing := pasture and clock > 0.05 and clock < 0.76
+	var at_trough := false
 	if grazing:
 		var progress := inverse_lerp(0.05, 0.76, clock) * (ROUTE.size() - 1)
 		var segment := floori(progress)
 		foot = ROUTE[segment].lerp(ROUTE[segment + 1], smoothstep(0.0, 0.65, fposmod(progress, 1.0)))
+	elif not pasture and hay.visible:
+		var trip := smoothstep(WALK_TO_FEED, AT_TROUGH, clock) * (1.0 - smoothstep(LEAVE_TROUGH, BACK_IN_SHELTER, clock))
+		foot = SHELTER.lerp(FEEDING_SPOT, trip)
+		at_trough = clock >= AT_TROUGH and clock <= LEAVE_TROUGH
 	var motion := foot - animal.position
 	animal.position = foot
-	if absf(motion.x) > 0.01:
+	if at_trough:
+		animal.flip_h = false
+	elif absf(motion.x) > 0.01:
 		animal.flip_h = motion.x < 0.0
 	pose_time = fposmod(pose_time + delta, 4.0)
 	var moving := motion.length_squared() > 0.0002
 	var lift := -1.0 if moving and fposmod(pose_time, 0.50) < 0.23 else 0.0
-	var feeding := (grazing or hay.visible) and not moving and pose_time > 2.8
-	var tilt := 0.09 if feeding else 0.0
+	var tilt := 0.0
+	if at_trough:
+		tilt = 0.15 + sin(pose_time * TAU) * 0.035
+	elif grazing and not moving and pose_time > 2.8:
+		tilt = 0.09
 	animal.rotation = -tilt if animal.flip_h else tilt
 	animal.offset.y = (lift - 6.0) / animal.scale.y
 
@@ -93,3 +113,13 @@ func interact() -> void:
 
 func _on_sheared() -> void:
 	AudioManager.play_world_sfx(BLEAT, animal, -15.0, 125.0)
+	var landing := animal.position + Vector2(-13 if animal.flip_h else 13, 5)
+	clipping.position = animal.position + Vector2(0, -11)
+	clipping.modulate.a = 1.0
+	clipping.show()
+	var fall := create_tween().set_parallel(true)
+	fall.tween_property(clipping, "position:x", landing.x, 0.30).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	fall.tween_property(clipping, "position:y", clipping.position.y - 4.0, 0.08)
+	fall.chain().tween_property(clipping, "position:y", landing.y, 0.22).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	fall.chain().tween_property(clipping, "modulate:a", 0.0, 0.25).set_delay(0.85)
+	fall.chain().tween_callback(clipping.hide)

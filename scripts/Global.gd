@@ -621,7 +621,7 @@ func dawn_milestones() -> PackedStringArray:
 			numbers.append(str(number))
 		lines.append("井田 %s 已完工 · 可耕种" % "、".join(numbers))
 		if 2 in completed:
-			lines.append("可在「管理」分派井田管事。")
+			lines.append("可在「管理 → 封地概览」交接井田管事。")
 	var research_paid: int = last_dawn.get("research_paid", 0)
 	var research_gap: int = last_dawn.get("research_gap", 0)
 	if research_paid > 0:
@@ -1076,7 +1076,7 @@ func tribute_field_plan() -> Dictionary:
 		var crop_data: CropData
 		if crop.is_empty():
 			if sowing_seed.is_empty():
-				sowing_seed = _tribute_seed()
+				sowing_seed = tribute_seed()
 			seed = sowing_seed
 			crop_data = ItemManager.get_crop(seed)
 			nights = sowing_nights(crop_data)
@@ -1089,7 +1089,7 @@ func tribute_field_plan() -> Dictionary:
 				"seed_id": seed, "crop": crop_data.crop_name, "ready_day": current_day + nights}
 	return plan
 
-func _tribute_seed() -> String:
+func tribute_seed() -> String:
 	var best := "millet"
 	var fewest := sowing_nights(ItemManager.get_crop(best))
 	for seed: String in CropData.IDS:
@@ -1773,7 +1773,10 @@ func retainer_food_cost() -> int:
 	return cost
 
 func retainer_night_ration(retainer: RetainerData) -> int:
-	return 1 + (0 if retainer.duty == RetainerData.Duty.FIELD else balance.specialist_food_per_night)
+	return night_ration_for_duty(retainer.duty)
+
+func night_ration_for_duty(duty: RetainerData.Duty) -> int:
+	return 1 + (0 if duty == RetainerData.Duty.FIELD else balance.specialist_food_per_night)
 
 func _night_meal(available: int) -> Dictionary:
 	var order := retainers.duplicate()

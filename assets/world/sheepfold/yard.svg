@@ -25,6 +25,12 @@
   <path fill="#a08252" d="M82 3h22v1H82zm1 5h20v1H83z"/>
   <path fill="#8b773c" d="M112 5h2V4h5V3h3v1h6v1h1v3h-17z"/>
   <path fill="#c6a955" d="M113 5h7v1h-7zm4-1h5v1h-5zm4 2h7v1h-7z"/>
+  <!-- Bundled hay next to the shelter. -->
+  <path fill="#30372b" opacity=".55" d="M138 9h13v3h-14v-2h1z"/>
+  <path fill="#665336" d="M138 4h2V2h7v1h3v2h2v5h-3v1h-10v-1h-2V6h1z"/>
+  <path fill="#ab8b4d" d="M139 5h2V3h6v1h3v2h1v3h-3v1h-8V9h-2V6h1z"/>
+  <path fill="#d2b369" d="M141 4h6v1h-7v1h-1V5h2zm-2 3h11v1h-11zm2 2h6v1h-6z"/>
+  <path fill="#766346" d="M145 3h1v2h1v4h-1v1h-1V8h1V6h-1z"/>
   <!-- Short coat. The body and hooves share the imported sheep's scale and foot anchor. -->
   <path fill="#403e33" d="M82 23h2v-2h8v1h2v-2h2v-1h1v3h1v4h-2v2h-2v3h-2v-3h-6v3h-2v-3h-2v-2h-2v-2h2z"/>
   <path fill="#8e846c" d="M83 23h2v-1h7v1h2v3h-1v2h-8v-1h-2z"/>

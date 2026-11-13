@@ -106,6 +106,7 @@ func _run() -> void:
 		"field-steward":
 			var replay = load("res://tests/FieldSeedPlanReplay.gd").new()
 			replay.steward_story = true
+			replay.steward_capture_path = capture_directory
 			await replay.run(tree)
 		"field-planning", "field-planning-legacy":
 			var replay = load("res://tests/FieldPlanningReplay.gd").new()
@@ -208,6 +209,8 @@ func _run() -> void:
 		"sheepfold", "meadow-fodder":
 			var replay = load("res://tests/SheepfoldReplay.gd").new()
 			replay.meadow_only = arguments[0] == "meadow-fodder"
+			if not capture_directory.is_empty():
+				OS.set_environment("FIEFDOM_SHEEP_CAPTURES", capture_directory)
 			await replay.run(tree)
 		"fish-market-orders", "fish-market-orders-legacy":
 			var replay = load("res://tests/FishMarketReplay.gd").new()

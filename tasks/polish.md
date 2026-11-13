@@ -938,3 +938,13 @@
 
 - 阿绥从卸货场把麦和绸搬到南路亭。到货后可从申禾或封地舆图指路。案上每批留一份麦饼，用过后可用一份私仓麦做。麦饼占现有路餐位，默认恢复 24 体力。
 - 回放在第二年自种麦和织绸，第 45 天交货，走到亭前领麦饼并续档食用。第 48 天晚交的另一批跨年送达，领完后再用一份私仓麦做，国库保持四份。Godot 与 Windows 解压版通过专项回放，发行版双结局、战败恢复、延期研究和冬至围炉通过。两次送达的画面在独立桌面核对。 [Windows 试玩包](../build/polish-winter-rations/Fiefdom-1.0.0-Windows-x64.zip) · [亭前到货](../build/polish-winter-rations/final-1024x768/08-winter-rations-at-pavilion.png) · [跨年到货](../build/polish-winter-rations/final-1024x768/11-next-year-arrival.png) · [发行回放](../build/polish-winter-rations/windows-check/winter-road-rations.log)
+
+## 井田管事当页交接
+
+- 在封地概览选井田和门客，当页看到门客原岗位、每夜口粮和要补齐的续播格数。确认后任命，并只补已翻且未安排的格子。公田用纳贡指引推荐的短茬旱作，私田按时令续播。
+- 回放在同一页任命渠伯，核对固定稻作保留、第二井田未被改动、夜耗增加一份。改革后任命季青时，中央格用私田时令方案，已在地里的黍和桑仍在。原有管事回放另核对续档、跨季补播和三夜公私田分仓。 [交接画面](../build/polish-sheep-and-steward/field-steward-1024x768/00a-steward-handover.png) · [发行回放](../build/polish-sheep-and-steward/windows-check/field-steward.log)
+
+## 羊棚草料与剪毛
+
+- 冬日与雨天有草料时，羊会在日间从棚里走到食槽低头进食，再回棚。棚边最多陈列三捆干草，余量仍在羊棚账上显示。点剪毛后回到棚外，可看到短毛和落下的羊毛。
+- Godot 回放覆盖秋季放牧、冬雨进食、缺草、收剪及草甸过冬。Windows 解压版完成售毛、制衣和试穿，并通过井田、南路相关回放和双结局。1024×768 画面在独立桌面核对。 [Windows 试玩包](../build/polish-sheep-and-steward/Fiefdom-1.0.0-Windows-x64.zip) · [冬日槽边吃草](../build/polish-sheep-and-steward/sheepfold-1024x768/02b-winter-feeding.png) · [发行回放](../build/polish-sheep-and-steward/windows-check/sheepfold.log)
