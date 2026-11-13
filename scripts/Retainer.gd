@@ -183,7 +183,7 @@ func find_work() -> void:
 		_walk_to(home_position)
 
 func _field_target() -> Vector2i:
-	if data.duty in [RetainerData.Duty.FIELD, RetainerData.Duty.HARVEST]:
+	if data.works_fields():
 		return get_parent().find_work_crop(self)
 	return NO_CELL
 
@@ -221,5 +221,5 @@ func _walk() -> void:
 	velocity = last_heading * move_speed
 	move_and_slide()
 	var step_height := sprite.walk(get_position_delta())
-	if target_grid_pos != NO_CELL and data.duty == RetainerData.Duty.FIELD and Global.field_crop_is_dry(target_grid_pos):
+	if target_grid_pos != NO_CELL and Global.field_job(data, target_grid_pos) == Global.FieldJob.WATER:
 		tool_gesture.carry_pail(last_heading, step_height)

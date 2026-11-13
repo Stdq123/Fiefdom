@@ -604,6 +604,8 @@ func dawn_milestones() -> PackedStringArray:
 		for number: int in completed:
 			numbers.append(str(number))
 		lines.append("井田 %s 已完工 · 可耕种" % "、".join(numbers))
+		if 2 in completed:
+			lines.append("可在「管理」分派井田管事。")
 	var research_paid: int = last_dawn.get("research_paid", 0)
 	var research_gap: int = last_dawn.get("research_gap", 0)
 	if research_paid > 0:
@@ -877,16 +879,18 @@ func sow_field_crop(cell: Vector2i, seed_id: String) -> bool:
 
 enum FieldJob { NONE, WATER, SOW, HARVEST }
 
-func field_job(duty: RetainerData.Duty, cell: Vector2i) -> FieldJob:
-	match duty:
-		RetainerData.Duty.FIELD:
-			if field_crop_is_dry(cell):
-				return FieldJob.WATER
-			if not planned_field_seed(cell).is_empty():
-				return FieldJob.SOW
-		RetainerData.Duty.HARVEST:
-			if field_crop_is_ripe(cell):
-				return FieldJob.HARVEST
+func field_job(worker: RetainerData, cell: Vector2i) -> FieldJob:
+	if worker.duty == RetainerData.Duty.STEWARD:
+		var center: Vector2i = stewarded_field(worker).center_pos
+		if not _well_field_cells(center).has_point(cell):
+			return FieldJob.NONE
+	if worker.duty in [RetainerData.Duty.HARVEST, RetainerData.Duty.STEWARD] and field_crop_is_ripe(cell):
+		return FieldJob.HARVEST
+	if worker.duty in [RetainerData.Duty.FIELD, RetainerData.Duty.STEWARD]:
+		if field_crop_is_dry(cell):
+			return FieldJob.WATER
+		if not planned_field_seed(cell).is_empty():
+			return FieldJob.SOW
 	return FieldJob.NONE
 
 func crop_rotation_bonus(cell: Vector2i, crop: CropData) -> int:
@@ -926,7 +930,7 @@ func advance_away_field_work(seconds: float) -> void:
 	if outcome != Outcome.RUNNING or tilled_cells.is_empty():
 		return
 	for worker in retainers:
-		if worker.duty not in [RetainerData.Duty.FIELD, RetainerData.Duty.HARVEST]:
+		if not worker.works_fields():
 			continue
 		var period := balance.away_field_work_seconds / maxf(0.1, worker.get_work_efficiency())
 		var elapsed: float = _away_work_elapsed.get(worker, 0.0) + seconds
@@ -936,7 +940,7 @@ func advance_away_field_work(seconds: float) -> void:
 				elapsed = 0.0
 				break
 			elapsed -= period
-			_finish_away_field_work(field_job(worker.duty, cell), cell)
+			_finish_away_field_work(field_job(worker, cell), cell)
 		_away_work_elapsed[worker] = elapsed
 
 func _away_work_plot(worker: RetainerData) -> Vector2i:
@@ -945,7 +949,7 @@ func _away_work_plot(worker: RetainerData) -> Vector2i:
 	var distance := INF
 	for cell: Vector2i in tilled_cells:
 		var distance_to_anchor := cell.distance_squared_to(anchor)
-		if distance_to_anchor < distance and field_job(worker.duty, cell) != FieldJob.NONE:
+		if distance_to_anchor < distance and field_job(worker, cell) != FieldJob.NONE:
 			nearest = cell
 			distance = distance_to_anchor
 	return nearest
@@ -1713,19 +1717,38 @@ func _advance_lessons(fed: Array[RetainerData]) -> void:
 
 func can_assign_duty(retainer: RetainerData, duty: RetainerData.Duty) -> bool:
 	return (retainers.has(retainer) and retainer.can_take_duty(duty)
-		and (duty != RetainerData.Duty.REEL or silk_workshop.built))
+		and (duty != RetainerData.Duty.REEL or silk_workshop.built)
+		and (duty != RetainerData.Duty.STEWARD or field_steward_unlocked()))
 
 func assign_duty(retainer: RetainerData, duty: RetainerData.Duty) -> bool:
 	if not can_assign_duty(retainer, duty):
 		return false
 	if retainer.duty != duty:
 		retainer.duty = duty
+		_away_work_elapsed.erase(retainer)
 		GameEvents.retainer_duty_changed.emit(retainer)
 	return true
+
+func field_steward_unlocked() -> bool:
+	return well_fields.size() > 1 and well_fields[1].is_unlocked
+
+func stewarded_field(retainer: RetainerData) -> Dictionary:
+	for field in well_fields:
+		if field.is_unlocked and _well_field_cells(field.center_pos).has_point(retainer.assigned_area):
+			return field
+	return well_fields[0]
+
+func assign_retainer_plot(retainer: RetainerData, cell: Vector2i) -> void:
+	retainer.assigned_area = cell
+	if not retainer.works_fields():
+		assign_duty(retainer, RetainerData.Duty.FIELD)
+	_away_work_elapsed.erase(retainer)
+	GameEvents.retainer_assigned.emit(retainer, cell)
 
 func dismiss_retainer(retainer: RetainerData, reason := DepartureReason.UNRECORDED, day := 0) -> void:
 	if retainers.has(retainer):
 		retainers.erase(retainer)
+		_away_work_elapsed.erase(retainer)
 		if night_rations.priority == retainer:
 			night_rations.priority = null
 		if (reason != DepartureReason.UNRECORDED and retainer.name in VisitorData.NEIGHBORS
@@ -2408,10 +2431,12 @@ func irrigated_well_fields() -> int:
 
 func _is_well_field_cell(cell: Vector2i, fields: Array[Dictionary]) -> bool:
 	for field in fields:
-		var center: Vector2i = field["center_pos"]
-		if Rect2i(center - Vector2i.ONE, Vector2i(3, 3)).has_point(cell):
+		if _well_field_cells(field.center_pos).has_point(cell):
 			return true
 	return false
+
+func _well_field_cells(center: Vector2i) -> Rect2i:
+	return Rect2i(center - Vector2i.ONE, Vector2i(3, 3))
 
 func _water_source_for(fields: Array[Dictionary]) -> Vector2i:
 	for cell: Vector2i in Irrigation.SOURCE_CANDIDATES:

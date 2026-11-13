@@ -858,3 +858,8 @@
 
 - 第二年交齐两季时令单后，爵位和纳贡达标的玩家可从入冬起主动请召简，默认最早第 43 天。筹备账保留第 49 天起的常规会期，同时列出提前请议进度和交货簿入口。「岁末麦帛」交货前显示留给议税的丝绸余量。
 - Windows 解压版从第 42 天的筹备档接续，过夜后交齐冬单，回标题续读并请议。第 43 天见召简、选改革，续读后公私田累计账目和结局目标都接得上。常规新档双结局、战败恢复、延期研究和筹备账回放通过。筹备账及使者面板在不可见桌面用 1024×768 核对。 [Windows 试玩包](../build/polish-early-council/Fiefdom-1.0.0-Windows-x64.zip) · [发行回放](../build/polish-early-council/windows-check/council-petition.log) · [筹备账画面](../build/polish-early-council/render-1024x768/02-petition-ready.png)
+
+## 扩田后的井田管事
+
+- 第二块井田完工后，可让一名门客负责一块田的收割、浇水和续播。默认每夜两份口粮。管理页可直接选择负责的井田，封地概览随之切换，田格仍可安排原有轮作和稻种。
+- 回放从第 32 天的双井田档开始。季青接管第二块井田并在续档后收公田。玩家去西市期间，他补播稷、浇水并采私田桑叶，第一块井田的空畦保留。核对了实际口粮、收割岗重叠和旧职责的外出田务。Windows 解压版通过双结局和委派回放，1024×768 画面在不可见桌面取得。 [Windows 试玩包](../build/polish-field-steward/Fiefdom-1.0.0-Windows-x64.zip) · [委派画面](../build/polish-field-steward/render-1024x768/01-steward-assignment.png) · [发行回放](../build/polish-field-steward/windows-check/field-steward.log)

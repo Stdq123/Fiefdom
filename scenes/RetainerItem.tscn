@@ -71,6 +71,15 @@ theme_override_font_sizes/font_size = 13
 text_overrun_behavior = 3
 text = "Farmer"
 
+[node name="Field" type="OptionButton" parent="HBoxContainer/InfoBox"]
+visible = false
+custom_minimum_size = Vector2(100, 25)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 14
+tooltip_text = "为管事选择一块井田。"
+
 [node name="Duty" type="OptionButton" parent="HBoxContainer"]
 custom_minimum_size = Vector2(112, 36)
 layout_mode = 2

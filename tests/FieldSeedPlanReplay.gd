@@ -14,6 +14,7 @@ var world: Node2D
 var ui: CanvasLayer
 var capture_dir := ""
 var failed := false
+var steward_story := false
 
 func _expect(condition: bool, message: String) -> bool:
 	if not condition:
@@ -262,6 +263,73 @@ func _check_repeated_sowing() -> void:
 	if await _wait_for(repeated, "After the next public harvest the same plan sows another crop."):
 		print("SEED_PLAN_REPEAT day=", state.current_day, " tribute=", state.king_storage, " crop=", state.active_crops[PUBLIC].id)
 
+func _choose_from_menu(picker: OptionButton, item_id: int) -> void:
+	await _button(picker)
+	var menu := picker.get_popup()
+	if _expect(menu.visible, "Open the assignment menu from the visible control."):
+		var index := picker.get_item_index(item_id)
+		picker.select(index)
+		picker.item_selected.emit(index)
+		menu.hide()
+		await tree.process_frame
+
+func _steward_work() -> void:
+	var steward: RetainerData = state.retainers[1]
+	var outside: Vector2i = state.FIRST_FIELD_CENTER
+	state.tilled_cells[outside] = true
+	state.set_field_seed_plan(outside, "millet")
+	state.silk_workshop.built = true
+	state.assign_duty(state.retainers[0], RetainerData.Duty.REEL)
+	var panel := await _management()
+	var item: Control = panel.retainer_list_container.get_child(1)
+	var ordinary_need: int = state.retainer_food_cost()
+	await _choose_from_menu(item.duty_picker, RetainerData.Duty.STEWARD)
+	if not _expect(steward.duty == RetainerData.Duty.STEWARD and item.field_picker.visible
+		and item.field_picker.get_selected_id() == 1 and state.retainer_food_cost() == ordinary_need
+		and state.retainer_night_ration(steward) == 1 + state.balance.specialist_food_per_night,
+		"The new job keeps the current field and uses the specialist ration."):
+		return
+	await _choose_from_menu(item.field_picker, 0)
+	_expect(steward.assigned_area == outside and panel.well_field_selector.get_selected_id() == 0,
+		"The field selector assigns the first field and opens its overview.")
+	await _choose_from_menu(item.field_picker, 1)
+	_expect(steward.assigned_area == PUBLIC and panel.well_field_selector.get_selected_id() == 1
+		and "季青" in panel.steward_note.text and item.get_global_rect().encloses(item.field_picker.get_global_rect()),
+		"Reassign from the roster and show who manages the second field.")
+	await _plan(panel, PUBLIC, "sorghum")
+	await _snapshot("01-steward-assignment")
+	await _button(panel.get_node("CloseButton"))
+	if not _expect(state.save_game() == OK and state.load_game() == OK, "Save and reload the assigned steward."):
+		return
+	await tree.scene_changed
+	_estate()
+	steward = state.retainers[1]
+	_expect(steward.duty == RetainerData.Duty.STEWARD and steward.assigned_area == PUBLIC,
+		"The saved role and its field survive reload.")
+	var worker: Retainer = world.retainer_instances[steward]
+	if not await _wait_for(func(): return state.king_storage == 1,
+		"The steward cuts the ripe public crop at home."):
+		return
+	worker.set_physics_process(false)
+	await _button(ui.sleep_button)
+	await tree.create_timer(1.2).timeout
+	_expect(state.current_day == 33 and state.food_storage == 24 - ordinary_need and not state.active_crops.has(outside),
+		"The steward does not plant the other field and consumes the quoted nightly ration.")
+	await Campaign.walk_estate_road_to(tree, world, Vector2(-270, -21))
+	if not await _cross(&"ui_left", state.WEST_MARKET_SCENE):
+		return
+	if not await _wait_for(func(): return state.active_crops.get(PUBLIC, {}).get("watered", false),
+		"The assigned steward sows and waters the next crop without the player."):
+		return
+	if not await _wait_for(func(): return state.player_inventory == 1, "The steward also harvests the private orchard."):
+		return
+	_expect(state.active_crops[PUBLIC].id == "sorghum" and not state.active_crops.has(outside)
+		and state.king_storage == 1 and state.silk_workshop.leaves > 0 and state.away_field_report.sown == 1
+		and state.away_field_report.tribute == 0 and state.away_field_report.stock == 1,
+		"The private mulberry harvest and the public tribute settle once, and the other field stays clear.")
+	print("FIELD_STEWARD day=", state.current_day, " field=2 tribute=", state.king_storage,
+		" private=", state.player_inventory, " meal=", ordinary_need, " next_crop=", state.active_crops[PUBLIC].id)
+
 func run(game_tree: SceneTree) -> void:
 	tree = game_tree
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated save profile."):
@@ -272,7 +340,9 @@ func run(game_tree: SceneTree) -> void:
 	tree.root.notify_mouse_entered()
 	seed(3112)
 	if await _fixture():
-		if not state.has_method("planned_field_seed"):
+		if steward_story:
+			await _steward_work()
+		elif not state.has_method("planned_field_seed"):
 			if await _market():
 				await tree.create_timer(13.0).timeout
 				_expect(state.king_storage == 1 and not state.active_crops.has(PUBLIC) and not state.active_crops.has(SITE),

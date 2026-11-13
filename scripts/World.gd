@@ -16,6 +16,7 @@ const DUTY_STATIONS := {
 	RetainerData.Duty.TEACH: {"anchor": Vector2(-20, 49), "place": "堂前"},
 	RetainerData.Duty.GUARD: {"anchor": Vector2(184, 161), "place": "东路"},
 	RetainerData.Duty.HARVEST: {"anchor": Vector2(147, 113), "place": "田边"},
+	RetainerData.Duty.STEWARD: {"anchor": Vector2(119, 154), "place": "田边"},
 }
 enum FieldAction { NONE, TILL, SOW, WATER, HARVEST, CHANNEL, RAIN, WATERED, DRY_RICE, RICE_SEED }
 const FIELD_COSTS := {
@@ -200,17 +201,23 @@ func spawn_retainer(data: RetainerData, restoring := false) -> void:
 
 func _duty_station(data: RetainerData) -> Vector2:
 	var slot := 0
+	var managed := Global.stewarded_field(data) if data.duty == RetainerData.Duty.STEWARD else {}
 	for other in Global.retainers:
 		if other == data:
 			break
-		if other.duty == data.duty:
+		if other.duty == data.duty and (managed.is_empty() or Global.stewarded_field(other) == managed):
 			slot += 1
-	return DUTY_STATIONS[data.duty]["anchor"] + Vector2(19 * (slot % 3), 17 * floori(float(slot) / 3))
+	var anchor: Vector2 = DUTY_STATIONS[data.duty].anchor
+	if not managed.is_empty():
+		anchor = get_crop_world_pos(managed.center_pos) + Vector2(-8, 30)
+	return anchor + Vector2(19 * (slot % 3), 17 * floori(float(slot) / 3))
 
 func duty_place(data: RetainerData) -> String:
 	var retainer := retainer_instances.get(data) as Retainer
 	if retainer and not retainer.pavilion_note().is_empty():
 		return "南路亭"
+	if data.duty == RetainerData.Duty.STEWARD:
+		return "井田 %d" % (Global.stewarded_field(data).field_id + 1)
 	return DUTY_STATIONS[data.duty]["place"]
 
 func path_to_pavilion_seat(from: Vector2, seat: Vector2) -> Array[Vector2]:
@@ -233,26 +240,19 @@ func path_to_pavilion_seat(from: Vector2, seat: Vector2) -> Array[Vector2]:
 	path.append(seat)
 	return path
 
-func _refresh_duty_stations() -> void:
+func _refresh_duty_stations(reassigned: RetainerData = null) -> void:
 	for data in retainer_instances:
 		var retainer = retainer_instances[data]
 		var station := to_global(_duty_station(data))
-		if retainer.home_position != station:
+		if data == reassigned or retainer.home_position != station:
 			retainer.home_position = station
 			retainer.set_state(Retainer.State.IDLE)
 
-func _on_retainer_assigned(data: RetainerData, grid_pos: Vector2i) -> void:
-	if retainer_instances.has(data):
-		var retainer = retainer_instances[data]
-		data.assigned_area = grid_pos
-		if data.duty in [RetainerData.Duty.FIELD, RetainerData.Duty.HARVEST]:
-			retainer.set_state(retainer.State.IDLE)
-		else:
-			Global.assign_duty(data, RetainerData.Duty.FIELD)
-		print("World: Assigned ", data.name, " to ", grid_pos)
+func _on_retainer_assigned(data: RetainerData, _grid_pos: Vector2i) -> void:
+	_refresh_duty_stations(data)
 
-func _on_retainer_duty_changed(_data: RetainerData) -> void:
-	_refresh_duty_stations()
+func _on_retainer_duty_changed(data: RetainerData) -> void:
+	_refresh_duty_stations(data)
 
 func _on_retainer_recruited(data: RetainerData) -> void:
 	spawn_retainer(data)
@@ -393,11 +393,11 @@ func council_harvest_forecast(choice: Global.TaxReformChoice) -> Dictionary:
 	return totals
 
 func crop_job(worker: Retainer, cell: Vector2i) -> Global.FieldJob:
-	var job := Global.field_job(worker.data.duty, cell)
+	var job := Global.field_job(worker.data, cell)
 	if job == Global.FieldJob.NONE:
 		return job
 	for other: Retainer in retainer_instances.values():
-		if (other != worker and other.data.duty == worker.data.duty
+		if (other != worker
 			and other.target_grid_pos == cell and other.current_state != Retainer.State.IDLE):
 			return Global.FieldJob.NONE
 	return job

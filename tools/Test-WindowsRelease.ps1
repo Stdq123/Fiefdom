@@ -171,6 +171,7 @@ try {
     }
     if ($FieldPlanning) {
         Start-VerifiedGame -Directory $release -Profile 'field-planning' -Name 'field-planning' -Replay 'field-planning'
+        Start-VerifiedGame -Directory $release -Profile 'field-steward' -Name 'field-steward' -Replay 'field-steward'
     }
     if ($FieldRotationPlans) {
         Start-VerifiedGame -Directory $release -Profile 'field-rotation-plans' -Name 'field-rotation-plans' -Replay 'field-rotation-plans'

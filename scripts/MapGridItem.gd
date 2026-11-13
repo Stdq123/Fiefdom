@@ -1,6 +1,6 @@
 extends Button
 
-signal retainer_dropped(grid_pos: Vector2i, data: RetainerData)
+signal retainer_dropped(data: RetainerData, grid_pos: Vector2i)
 
 var grid_pos: Vector2i
 
@@ -37,13 +37,12 @@ func refresh_plot() -> void:
 			text += "\n菽 ↔ %s · %s" % [main_crop.crop_name, next_label]
 		else:
 			text += "\n续播 %s%s" % [next_seed.crop_name, " · 待渠水" if waiting else ""]
-		tooltip_text = "接通水渠后才会补播稻种" if waiting else "田间照料门客会在空畦上补播"
+		tooltip_text = "接通水渠后才会补播稻种" if waiting else "照料门客或管事会在空畦上补播"
 
 func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 	return data is RetainerData
 
 func _drop_data(_at_position: Vector2, data: Variant) -> void:
-	print("Dropped ", data.name, " on grid ", grid_pos)
-	retainer_dropped.emit(grid_pos, data)
+	retainer_dropped.emit(data, grid_pos)
 	self_modulate = Color(1.4, 1.4, 1.4)
 	create_tween().tween_property(self, "self_modulate", Color.WHITE, 0.25)

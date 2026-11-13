@@ -57,7 +57,7 @@ enum School {
 @export var school: School = School.NONE
 var visitor_appearance: int = -1
 
-enum Duty { FIELD, REEL, TEACH, GUARD, HARVEST }
+enum Duty { FIELD, REEL, TEACH, GUARD, HARVEST, STEWARD }
 var duty: Duty = Duty.FIELD
 
 # Attributes
@@ -85,7 +85,11 @@ func duty_name() -> String:
 		Duty.TEACH: return "礼仪教习"
 		Duty.GUARD: return "封地守卫"
 		Duty.HARVEST: return "田间收割"
+		Duty.STEWARD: return "井田管事"
 	return "田间照料"
+
+func works_fields() -> bool:
+	return duty in [Duty.FIELD, Duty.HARVEST, Duty.STEWARD]
 
 func evening_line() -> String:
 	var lines: Array = EVENING_LINES[name]
@@ -126,11 +130,14 @@ func resident_line() -> String:
 		Duty.TEACH: return "堂前空着，我摆了席。晚饭后我在这儿讲礼，先学怎样迎送远道而来的人。"
 		Duty.GUARD: return "我在东路看着。听见弓弦响，就先离开田埂，给我留一条射线。"
 		Duty.HARVEST: return "镰刀已经磨好了。穗子一熟，我就去收。要是有一格得先收，把我拖到封地概览的那格田上。"
+		Duty.STEWARD:
+			return "井田 %d 交给我。庄稼熟了我来收，空畦照你交代的种子续上。出门前，记得看看粮仓。" % (
+				Global.stewarded_field(self).field_id + 1)
 	return "有没浇过的苗，我会提桶过去。你在封地概览里定好下茬的种子，我也能替你播种。"
 
 func can_take_duty(next_duty: Duty) -> bool:
 	match next_duty:
-		Duty.FIELD, Duty.HARVEST: return true
+		Duty.FIELD, Duty.HARVEST, Duty.STEWARD: return true
 		Duty.REEL: return school == School.MOHIST
 		Duty.TEACH: return school == School.CONFUCIAN
 		Duty.GUARD: return school == School.MILITARY

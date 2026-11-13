@@ -15,6 +15,7 @@ const MAP_GRID_ITEM := preload("res://scripts/MapGridItem.gd")
 @onready var retainer_list_container: VBoxContainer = $HBoxContainer/LeftPanel/ScrollContainer/VBoxContainer
 @onready var map_grid_container: GridContainer = $HBoxContainer/RightPanel/封地概览/GridContainer
 @onready var well_field_selector: OptionButton = $HBoxContainer/RightPanel/封地概览/WellFieldSelector
+@onready var steward_note: Label = %StewardNote
 @onready var seed_plan_picker: OptionButton = $HBoxContainer/RightPanel/封地概览/SeedPlan/SeedPicker
 @onready var rotate_seed: CheckBox = $HBoxContainer/RightPanel/封地概览/SeedPlan/RotateSeed
 @onready var apply_private_plan: Button = $HBoxContainer/RightPanel/封地概览/SeedPlan/ApplyPrivate
@@ -71,6 +72,10 @@ func _ready() -> void:
 	GameEvents.day_advanced.connect(_refresh_field_tiles.unbind(1))
 	GameEvents.day_advanced.connect(_refresh_seed_choices.unbind(1))
 	GameEvents.channels_changed.connect(_refresh_field_tiles)
+	GameEvents.retainer_duty_changed.connect(_refresh_stewards.unbind(1))
+	GameEvents.retainer_assigned.connect(_refresh_stewards.unbind(2))
+	GameEvents.retainer_departed.connect(_refresh_stewards.unbind(1))
+	GameEvents.retainer_assigned.connect(_show_steward_assignment)
 	setup_six_arts()
 	setup_tech()
 	_refresh_rank_progress()
@@ -375,10 +380,31 @@ func _show_well_field(index: int) -> void:
 		for x in range(-1, 2):
 			var item := MAP_GRID_ITEM.new()
 			item.grid_pos = center + Vector2i(x, y)
-			item.retainer_dropped.connect(_on_retainer_assigned)
+			item.retainer_dropped.connect(Global.assign_retainer_plot)
 			item.pressed.connect(_apply_seed_plan.bind(item))
 			map_grid_container.add_child(item)
 	_refresh_seed_plan_preview()
+	_refresh_stewards()
+
+func _refresh_stewards() -> void:
+	steward_note.hide()
+	var id := well_field_selector.get_selected_id()
+	var names := PackedStringArray()
+	for retainer in Global.retainers:
+		if retainer.duty == RetainerData.Duty.STEWARD and Global.stewarded_field(retainer).field_id == id:
+			names.append(retainer.name)
+	if not names.is_empty():
+		steward_note.text = "管事 %s · 收割、浇水，按安排续播" % "、".join(names)
+		steward_note.show()
+
+func _show_steward_assignment(data: RetainerData, _cell: Vector2i) -> void:
+	if not is_visible_in_tree() or data.duty != RetainerData.Duty.STEWARD:
+		return
+	var id: int = Global.stewarded_field(data).field_id
+	if id != well_field_selector.get_selected_id():
+		var index := well_field_selector.get_item_index(id)
+		well_field_selector.select(index)
+		_show_well_field(index)
 
 func _refresh_field_tiles() -> void:
 	if is_visible_in_tree():
@@ -486,11 +512,3 @@ func _apply_private_seed_plan() -> void:
 		seed_plan_note.text = "已安排 %d 格私田轮作" % targets.size()
 	else:
 		seed_plan_note.text = ("已取消 %d 格私田的续播" if plan.is_empty() else "已安排 %d 格私田的续播") % targets.size()
-
-func _on_retainer_assigned(grid_pos: Vector2i, data: RetainerData) -> void:
-	print("Assigned ", data.name, " to ", grid_pos)
-	# Notify World or Update Logic
-	# For prototype, we just print. Ideally, we signal World to update the Retainer's target.
-	# But ManagementPanel is UI. 
-	# Let's emit a signal that Main/World can listen to.
-	GameEvents.retainer_assigned.emit(data, grid_pos)

@@ -127,11 +127,19 @@ layout_mode = 2
 
 [node name="Label" type="Label" parent="HBoxContainer/RightPanel/封地概览"]
 layout_mode = 2
-text = "拖动门客到田格可指定优先田。田间照料门客会按安排补播空畦。"
+text = "拖动门客到田格可指定优先田。照料门客和管事可按安排续播。"
 autowrap_mode = 3
 
 [node name="WellFieldSelector" type="OptionButton" parent="HBoxContainer/RightPanel/封地概览"]
 layout_mode = 2
+
+[node name="StewardNote" type="Label" parent="HBoxContainer/RightPanel/封地概览"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.74, 0.83, 0.62, 1)
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
 
 [node name="SeedPlan" type="HBoxContainer" parent="HBoxContainer/RightPanel/封地概览"]
 layout_mode = 2
