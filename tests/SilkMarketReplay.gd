@@ -1,6 +1,7 @@
 extends "res://tests/WestMarketReplay.gd"
 
 const TAO := VisitorData.SILK_MERCHANT
+const ROAD_SCENE := "res://scenes/WestRoad.tscn"
 
 var legacy := false
 var capture_path := ""
@@ -40,10 +41,11 @@ func _sleep_through(day: int) -> void:
 			return
 
 func _save_and_continue() -> bool:
-	var location: String = tree.current_scene.scene_file_path
-	var clock: float = state.day_progress
 	if not _expect(state.save_game() == OK, "Save at the current stop of the trip."):
 		return false
+	return await _continue_saved(tree.current_scene.scene_file_path, state.day_progress)
+
+func _continue_saved(location: String, clock: float) -> bool:
 	tree.change_scene_to_file(state.TITLE_SCENE)
 	await tree.scene_changed
 	await _button(tree.current_scene.continue_button)
@@ -102,7 +104,8 @@ func _follow_merchant() -> bool:
 	await tree.create_timer(0.72).timeout
 	_expect(tao.activity == VisitorData.VisitActivity.TO_SILK_MARKET and tao.walking_to_stop, "The merchant walks out at 巳时.")
 	await _snapshot("00-west-court-departure")
-	await tree.create_timer(6.0).timeout
+	# Allow the merchant to reach the bridge on the shared timetable.
+	await tree.create_timer(7.5).timeout
 	_expect(world.neighbor_actor(TAO) == null and "正沿西路" in world.silk_trip_note(), "The visitor leaves through the west gate.")
 
 	var journal := await _merchant_journal()
@@ -118,7 +121,90 @@ func _follow_merchant() -> bool:
 	_estate()
 	_expect(ui.directions.tracked_neighbor == TAO and state.market_trip_target == TAO,
 		"The selected merchant survives Continue before the crossing.")
-	return await _road_to_market()
+	await Campaign.walk_estate_road_to(tree, world, world.get_node("WestMarketArrival").global_position)
+	await _time_at(VisitorData.SILK_MARKET_DEPART + 0.045)
+	if not await _cross(&"ui_left", ROAD_SCENE) or not await _bridge_encounter(false):
+		return false
+	return await _cross(&"ui_left", state.WEST_MARKET_SCENE)
+
+func _bridge_encounter(returning: bool) -> bool:
+	var road := tree.current_scene as Node2D
+	var tao: Visitor = road.silk_guest
+	var name := "return" if returning else "outbound"
+	if not _expect(tao != null and tao.walking_to_stop and tao.visit_location() == VisitorData.SILK_BRIDGE_PLACE,
+		"The merchant actually walks on the bridge road on the %s trip." % name):
+		return false
+	print("SILK_BRIDGE_ENTER leg=", name, " player=", road.player.position, " tao=", tao.position, " progress=", state.day_progress)
+	var origin := tao.position
+	await tree.create_timer(0.3).timeout
+	var motion := (tao.position - origin).x * (1.0 if returning else -1.0)
+	_expect(motion > 3.0 and tao.sprite.walking and tao.sprite.flip_h == (not returning),
+		"The sprite moves and faces toward the next map.")
+	_expect(state.market_trip_target == TAO and road.route.size() > 1
+		and road.route[-1].distance_to(tao.position) < 2.0, "The cross-map route ends at the merchant on the road.")
+	var bridge_center: Vector2 = road.ground.LAYOUT.BRIDGE.get_center()
+	await Campaign.walk_straight(tree, road.player, bridge_center + Vector2(0, 4))
+	var action := &"ui_right" if returning else &"ui_left"
+	var towards_market := -1.0 if returning else 1.0
+	for frame in 340:
+		if not is_instance_valid(tao) or tao.position.distance_to(road.player.position) < 24.0:
+			break
+		if (tao.position.x - road.player.position.x) * towards_market < -24.0:
+			Input.action_press(action)
+		await tree.physics_frame
+	Input.action_release(action)
+	if not _expect(is_instance_valid(tao) and road.player.position.distance_to(tao.position) < 26.0,
+		"The player can reach the walking merchant from the same road, %s at %s." % [name, road.player.position]):
+		return false
+	await _snapshot("01-bridge-" + name)
+	await _key(KEY_E)
+	var dialogue := road.get_node_or_null("UI/Control/DialoguePanel") as Control
+	if not _expect(dialogue != null and dialogue.name_label.text == TAO
+		and ("南路亭" if returning else "绸摊") in dialogue.text_label.text
+		and state.market_trip_target.is_empty(), "Road dialogue describes the next stop and completes the current route."):
+		return false
+	var clock: float = state.day_progress
+	var feet := tao.position
+	var reputation: int = state.reputation
+	await tree.create_timer(0.3).timeout
+	_expect(state.day_progress == clock and tao.position == feet and not tao.sprite.walking,
+		"Conversation stops the clock and the merchant, even mid-bridge.")
+	var bridge: Rect2 = road.ground.LAYOUT.BRIDGE
+	_expect(bridge.has_point(feet) and absf(feet.y - road.player.position.y) >= 11.0,
+		"The merchant uses the other side of the bridge, leaving room to pass.")
+	await _snapshot("02-bridge-talk-" + name)
+	if returning:
+		_expect("已交谈" in dialogue.options_container.get_child(0).text
+			and dialogue.options_container.get_child(0).disabled, "Talking in the morning already earned the daily reward.")
+		await _key(KEY_ESCAPE)
+	else:
+		await _button(dialogue.options_container.get_child(0))
+		_expect(state.reputation == reputation + state.balance.interaction_reputation_gain,
+			"The ordinary talk action awards the same daily reputation on the road.")
+	await tree.create_timer(0.3).timeout
+	_expect(state.day_progress > clock and tao.position.distance_to(feet) > 3.0 and not road.settings.visible,
+		"Closing dialogue resumes the trip without opening settings.")
+	print("SILK_BRIDGE_WALK day=", state.current_day, " leg=", name, " merchant=", feet, " direction=", signf(motion))
+	# Keep following him through the next gate and continue using the existing town and estate checks.
+	state.market_trip_target = TAO
+	if returning:
+		return not failed
+	await _button(road.get_node("%SettingsButton"))
+	await _button(road.settings.save_button)
+	var save: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(state.manual_save_path()))
+	_expect(save.location == "west_road" and save.market_trip_target == TAO, "Save normally while Tao Xin is on the bridge road.")
+	var saved_foot := tao.position
+	if not await _continue_saved(ROAD_SCENE, save.day_progress):
+		return false
+	road = tree.current_scene
+	tao = road.silk_guest
+	if not _expect(tao != null and tao.position.distance_to(saved_foot) < 5.0 and not road.route.is_empty()
+		and road.route[-1].distance_to(tao.position) <= 2.1,
+		"Continue restores the merchant along the same segment and follows him from the nearer gate."):
+		return false
+	await _snapshot("03-bridge-continued")
+	print("SILK_BRIDGE_CONTINUE day=", state.current_day, " foot=", tao.position, " waypoint=", state.market_trip_target)
+	return not failed
 
 func _approach_tao(market: Node2D) -> void:
 	await Campaign.walk_market_to(tree, market, market.ground.LAYOUT.TAO_STOP + Vector2(0, 22))
@@ -144,7 +230,7 @@ func _market_visit() -> bool:
 		and chart.pin.global_position.distance_to(market.silk_guest.position) < 2.0,
 		"The world marker follows the moving merchant.")
 	await _snapshot("02-market-arrival")
-	await tree.create_timer(6.0).timeout
+	await tree.create_timer(7.6).timeout
 	var tao: Visitor = market.silk_guest
 	_expect(tao != null and not tao.walking_to_stop, "The merchant reaches Cai Niang's stall.")
 	await _key(KEY_M)
@@ -155,7 +241,7 @@ func _market_visit() -> bool:
 	await _snapshot("02a-merchant-on-market-chart")
 	await _key(KEY_ESCAPE)
 	await _approach_tao(market)
-	if not await _talk(market, "交谈", "03-market-conversation"):
+	if not await _talk(market, "离开", "03-market-conversation"):
 		return false
 	_expect(state.market_trip_target.is_empty(), "Opening the merchant's dialogue completes the route.")
 	var reputation: int = state.reputation
@@ -192,11 +278,15 @@ func _back_to_pavilion() -> bool:
 	await tree.create_timer(0.72).timeout
 	_expect(market.silk_guest != null and market.silk_guest.walking_to_stop and market.silk_guest.position.x > 150,
 		"At 申时 Tao Xin walks back to the gate.")
-	await tree.create_timer(6.0).timeout
+	await tree.create_timer(7.6).timeout
 	_expect(market.silk_guest == null and chart.pin.visible and "回封地找陶辛" in chart.cancel_button.text
 		and chart.pin.global_position.is_equal_approx(market.get_node("EstateRoad").position),
 		"After the merchant leaves, the guide switches to the return gate.")
 	await _snapshot("04a-market-return-guide")
+	await Campaign.walk_to_market_exit(tree, market)
+	await _time_at(VisitorData.SILK_MARKET_LEAVE + 0.057)
+	if not await _cross(&"ui_right", ROAD_SCENE) or not await _bridge_encounter(true):
+		return false
 	if not await _cross(&"ui_right", state.ESTATE_SCENE):
 		return false
 	_estate()

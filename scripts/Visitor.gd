@@ -15,9 +15,10 @@ var visit_path := PackedVector2Array()
 var next_stop := 0
 var activity_focus := Vector2.ZERO
 var task_time := 0.0
+var walking_on_clock := false
 
 var walking_to_stop: bool:
-	get: return next_stop < visit_path.size()
+	get: return walking_on_clock or next_stop < visit_path.size()
 
 @onready var sprite: NeighborMotion = $Sprite2D
 @onready var hint: Label = $InteractionHint
@@ -36,6 +37,7 @@ func set_interaction_focused(focused: bool) -> void:
 	_update_hint()
 
 func go_to_activity(next: VisitorData.VisitActivity, path: PackedVector2Array, look_at: Vector2, walk_in: bool, elapsed := 0.0) -> void:
+	walking_on_clock = false
 	activity = next
 	visit_path = path
 	activity_focus = look_at
@@ -59,6 +61,23 @@ func go_to_activity(next: VisitorData.VisitActivity, path: PackedVector2Array, l
 	_update_pose_processing()
 	_update_hint()
 
+func follow_travel_clock(next: VisitorData.VisitActivity, foot: Vector2, heading: Vector2) -> void:
+	if not walking_on_clock:
+		walking_on_clock = true
+		activity = next
+		_update_pose_processing()
+		_update_hint()
+	var movement := foot - position
+	position = foot
+	if is_instance_valid(observer) and observer.conversation_open:
+		sprite.stand()
+		sprite.face(observer.global_position - global_position)
+	elif movement.length_squared() >= 0.0016:
+		sprite.walk(heading.normalized() * movement.length())
+	else:
+		sprite.stand()
+		sprite.face(heading)
+
 func visit_location() -> String:
 	return data.meeting_place if activity == VisitorData.VisitActivity.NONE else VisitorData.ACTIVITY_STOPS[activity].place
 
@@ -78,7 +97,8 @@ func _activity_task() -> String:
 	return VisitorData.ACTIVITY_STOPS[activity].task
 
 func _update_pose_processing() -> void:
-	set_physics_process(activity != VisitorData.VisitActivity.NONE or (is_instance_valid(observer) and sprite.directional))
+	set_physics_process(not walking_on_clock and
+		(activity != VisitorData.VisitActivity.NONE or (is_instance_valid(observer) and sprite.directional)))
 
 func _update_hint() -> void:
 	if data:

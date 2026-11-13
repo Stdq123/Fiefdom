@@ -13,9 +13,11 @@ const HALL_LANDING := Rect2(Vector2(HALL_FOOT) + Vector2(-22, 1), Vector2(44, 15
 const SILK_SHED_FOOT := Vector2(-291, 169)
 const SILK_SHED_YARD := SILK_SHED_FOOT + Vector2(8, 15)
 const SILK_SHED_BASE := Rect2(-31, -14, 62, 14)
+const WEST_GATE := Vector2(-308, -24)
 const WEST_FORK := Vector2(-273, -21)
 const WEST_COURT_TURN := Vector2(-261, 62)
 const WEST_COURT := Vector2(-282, 68)
+const SILK_SAMPLE_STOP := WEST_COURT + Vector2(-13, 28)
 const WEST_COURT_SHELTER := WEST_COURT + Vector2(-22, -14)
 const SOUTH_PAVILION := Vector2(77, 391)
 const PAVILION_SIZE := Vector2(72, 60)
@@ -84,7 +86,7 @@ const WEST_LANE := [
 const WEST_COURT_PATH := [WEST_COURT_TURN, Vector2(-269, 68), WEST_COURT, Vector2(-300, 71)]
 const WEST_ROADS := [WEST_LANE, WEST_COURT_PATH]
 const ROADS := [
-	[Vector2(-504, -33), Vector2(-397, -31), Vector2(-343, -28), Vector2(-308, -24), WEST_FORK, Vector2(-249, -19),
+	[Vector2(-504, -33), Vector2(-397, -31), Vector2(-343, -28), WEST_GATE, WEST_FORK, Vector2(-249, -19),
 		Vector2(-205, 0), Vector2(-140, 16), Vector2(-90, 28), Vector2(-40, 41),
 		Vector2(4, 43), Vector2(39, 38), Vector2(91, 32), Vector2(148, 27), Vector2(213, 20),
 		Vector2(283, 12), DRIVING_FORK, Vector2(400, 8), Vector2(460, 0), Vector2(516, 0),

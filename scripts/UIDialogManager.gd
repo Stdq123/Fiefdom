@@ -134,6 +134,8 @@ func show_visitor_dialog(data: VisitorData, place: String, at_pavilion := false)
 	var speech := data.pavilion_greeting() if at_pavilion else data.greeting()
 	if place == VisitorData.SILK_MARKET_PLACE:
 		speech = VisitorData.silk_market_line()
+	elif place == VisitorData.SILK_BRIDGE_PLACE:
+		speech = data.silk_bridge_line()
 	if returning:
 		speech = _return_speech(data.name, speech if favor.is_valid() else "")
 	var context := _recruitment_context(data.get_school_name() + " · " + place, block)

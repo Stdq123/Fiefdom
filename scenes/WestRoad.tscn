@@ -10,6 +10,7 @@
 [ext_resource type="Theme" path="res://resources/game_theme.tres" id="8_theme"]
 [ext_resource type="PackedScene" path="res://scenes/SeasonFreight.tscn" id="9_freight"]
 [ext_resource type="Script" path="res://scripts/CampaignHUD.gd" id="10_campaign"]
+[ext_resource type="Script" path="res://scripts/UIDialogManager.gd" id="11_dialog"]
 
 [sub_resource type="RectangleShape2D" id="GateMouth"]
 size = Vector2(8, 34)
@@ -39,6 +40,9 @@ y_sort_enabled = true
 
 [node name="Freight" parent="." instance=ExtResource("9_freight")]
 route_section = 1
+
+[node name="DialogManager" type="Node" parent="."]
+script = ExtResource("11_dialog")
 
 [node name="MarketGate" type="Area2D" parent="."]
 collision_layer = 0

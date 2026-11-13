@@ -2,7 +2,7 @@ extends Resource
 class_name VisitorData
 
 enum School { CONFUCIAN, MOHIST, TAOIST, MERCHANT, MILITARY }
-enum VisitActivity { NONE, ROAD_REST, MEASURE, SILK, HERBS, WATCH, PAVILION_REST, TO_SILK_MARKET, SILK_MARKET }
+enum VisitActivity { NONE, ROAD_REST, MEASURE, SILK, HERBS, WATCH, PAVILION_REST, TO_SILK_MARKET, SILK_MARKET, SILK_BRIDGE }
 enum SilkTrip { NONE, WEST_ROAD, STALL, RETURN_ROAD, PAVILION }
 
 const FIELD_KEEPER := "渠伯"
@@ -13,6 +13,7 @@ const EAST_WATCHER := "弋戎"
 const WATER_GUIDE := "石墨"
 const MUSIC_HOST := "商音"
 const SILK_MARKET_PLACE := "西市绸摊"
+const SILK_BRIDGE_PLACE := "溪桥道"
 const SILK_MARKET_PLAN := "晴天午、未时在西市绸摊，酉时到南路亭"
 const SILK_MARKET_DEPART := (9.0 - Global.DAY_START_HOUR) / (Global.DAY_END_HOUR - Global.DAY_START_HOUR)
 const SILK_MARKET_ARRIVE := (11.0 - Global.DAY_START_HOUR) / (Global.DAY_END_HOUR - Global.DAY_START_HOUR)
@@ -38,6 +39,7 @@ const ACTIVITY_STOPS := {
 	VisitActivity.SILK: {"place": "西廊绸架", "task": "整理样绸"},
 	VisitActivity.TO_SILK_MARKET: {"place": SILK_MARKET_PLACE, "task": "沿西路赶集"},
 	VisitActivity.SILK_MARKET: {"place": SILK_MARKET_PLACE, "task": "同蔡娘理绸"},
+	VisitActivity.SILK_BRIDGE: {"place": SILK_BRIDGE_PLACE, "task": "沿溪赶路"},
 	VisitActivity.HERBS: {"place": "竹径药圃", "task": "查看药苗"},
 	VisitActivity.WATCH: {"place": "东岗守备牌", "task": "查看守备"},
 	VisitActivity.PAVILION_REST: {"place": "南路亭", "task": "灯下歇脚"},
@@ -298,6 +300,11 @@ static func silk_market_line() -> String:
 	if Global.attire_id == PlayerAttire.SAMPLE:
 		return "蔡娘刚问谁织的这匹绸。你往这儿一站，衣上的纹和摊前的一照面，她就认出来了。"
 	return "蔡娘特意把你的绸挂在朝街的一面。今早有人捻着布边问是谁家织的，我指了指东边的路。"
+
+func silk_bridge_line() -> String:
+	if silk_trip() == SilkTrip.RETURN_ROAD:
+		return "蔡娘收好样绸了。桥东这段路还赶得上晚风，我要去南路亭歇脚。你忙完了也来坐坐。"
+	return "我沿溪去西市。蔡娘总趁午前把绸样重新挂一遍，你到了就往石板街南边的绸摊找我。"
 
 static func ravine_guide_line() -> String:
 	if Global.ravine_journal.garden_day > 0:

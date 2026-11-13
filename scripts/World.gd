@@ -9,6 +9,7 @@ const SEED_ORDER := CropData.IDS
 const FIELD_IMPACTS := preload("res://assets/farming/field-impacts.svg")
 const HARVEST_TEXT_OFFSET := -4.0
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
+const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
 const DUTY_STATIONS := {
 	RetainerData.Duty.FIELD: {"anchor": Vector2(136, 154), "place": "田边"},
 	RetainerData.Duty.REEL: {"anchor": EstateLayout.SILK_SHED_YARD + Vector2(-12, 5), "place": "蚕桑棚"},
@@ -108,6 +109,10 @@ func _ready() -> void:
 	if Global.raid_day > 0:
 		_spawn_raider()
 	_refresh_defense_notice.call_deferred()
+
+func _process(_delta: float) -> void:
+	if scheduled_visitor and scheduled_visitor.silk_trip() == VisitorData.SilkTrip.WEST_ROAD:
+		_sync_silk_departure()
 
 func _spawn_raider() -> void:
 	var enemy = enemy_scene.instantiate()
@@ -936,35 +941,38 @@ func _place_scheduled_visitor(walk_in: bool) -> void:
 	var trip := scheduled_visitor.silk_trip()
 	if trip in [VisitorData.SilkTrip.STALL, VisitorData.SilkTrip.RETURN_ROAD]:
 		return
-	var foot: Vector2 = ($WestMarketArrival.position if trip == VisitorData.SilkTrip.PAVILION
+	if trip == VisitorData.SilkTrip.WEST_ROAD:
+		_sync_silk_departure()
+		return
+	var foot: Vector2 = (EstateLayout.WEST_GATE if trip == VisitorData.SilkTrip.PAVILION
 		else scheduled_visitor.meeting_point(get_crop_world_pos(Global.irrigation.source_cell)))
 	var visitor := _add_visitor(scheduled_visitor, foot)
 	if trip == VisitorData.SilkTrip.PAVILION:
 		_apply_pavilion_visit(visitor, false)
 	else:
-		_apply_visitor_activity(visitor, walk_in and trip == VisitorData.SilkTrip.NONE)
-		if trip == VisitorData.SilkTrip.WEST_ROAD:
-			_send_visitor_to_market(visitor)
-		else:
-			_apply_pavilion_visit(visitor, walk_in)
+		_apply_visitor_activity(visitor, walk_in)
+		_apply_pavilion_visit(visitor, walk_in)
 
-func _send_visitor_to_market(visitor: Visitor) -> void:
-	var gate: Vector2 = $WestMarketGate.position
-	var path := _follow_lane(EstateLayout.WEST_COURT_PATH, visitor.position, EstateLayout.WEST_COURT_TURN)
-	path.append_array(_follow_lane(EstateLayout.WEST_LANE, EstateLayout.WEST_COURT_TURN, EstateLayout.WEST_FORK).slice(1))
-	path.append_array(_follow_lane(LANDSCAPE.ESTATE_TRACKS[0], EstateLayout.WEST_FORK, gate).slice(1))
-	visitor.go_to_activity(VisitorData.VisitActivity.TO_SILK_MARKET, path, gate + Vector2.LEFT,
-		true, VisitorData.seconds_since(VisitorData.SILK_MARKET_DEPART))
-	if not visitor.walking_to_stop:
-		_remove_visitor(visitor)
+func _sync_silk_departure() -> void:
+	var visitor := _scheduled_visitor_actor()
+	var offset := SILK_JOURNEY.road_offset(SILK_JOURNEY.Section.ESTATE, VisitorData.SilkTrip.WEST_ROAD)
+	if offset < 0.0:
+		if visitor:
+			_remove_visitor(visitor)
+			_report_visitor_activity()
+		return
+	var entering_route := not visitor or visitor.activity != VisitorData.VisitActivity.TO_SILK_MARKET
+	if not visitor:
+		visitor = _add_visitor(scheduled_visitor, SILK_JOURNEY.position_on(SILK_JOURNEY.Section.ESTATE, offset))
+	SILK_JOURNEY.walk(visitor, VisitorData.VisitActivity.TO_SILK_MARKET, SILK_JOURNEY.Section.ESTATE, offset)
+	if entering_route:
+		_report_visitor_activity()
 
 func _remove_visitor(visitor: Visitor) -> void:
 	active_visitors.erase(visitor)
 	visitor.queue_free()
 
-func _visitor_arrived(visitor: Visitor) -> void:
-	if visitor.activity == VisitorData.VisitActivity.TO_SILK_MARKET:
-		_remove_visitor(visitor)
+func _visitor_arrived(_visitor: Visitor) -> void:
 	_report_visitor_activity()
 
 func _report_visitor_activity() -> void:
@@ -985,9 +993,7 @@ func _update_visitor_clock() -> void:
 	var visitor := _scheduled_visitor_actor()
 	match scheduled_visitor.silk_trip():
 		VisitorData.SilkTrip.WEST_ROAD:
-			if visitor and visitor.activity != VisitorData.VisitActivity.TO_SILK_MARKET:
-				_send_visitor_to_market(visitor)
-				_report_visitor_activity()
+			_sync_silk_departure()
 		VisitorData.SilkTrip.STALL, VisitorData.SilkTrip.RETURN_ROAD:
 			if visitor:
 				_remove_visitor(visitor)
@@ -1070,7 +1076,7 @@ func _apply_visitor_activity(visitor: Visitor, walk_in: bool) -> bool:
 			path.append(focus + Vector2(18, -17))
 		VisitorData.VisitActivity.SILK:
 			focus = LANDSCAPE.SILK_SAMPLE_BOUNDS.get_center()
-			path.append(focus + Vector2(10, 20))
+			path.append(EstateLayout.SILK_SAMPLE_STOP)
 		VisitorData.VisitActivity.HERBS:
 			focus = $HerbGarden.position
 			path = _follow_lane(LANDSCAPE.ESTATE_SOUTH_LANE, visitor.position, LANDSCAPE.GARDEN_TRACK[0])

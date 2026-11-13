@@ -4,6 +4,7 @@ const TRACK_AUDIO := preload("res://scripts/TerrainAudio.gd")
 const VISITOR := preload("res://scenes/Visitor.tscn")
 const LAYOUT := preload("res://scripts/WestMarketLayout.gd")
 const ORDER_CART := preload("res://scripts/SeasonOrderCart.gd")
+const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
 
 @onready var player: Player = $Player
 @onready var ground: Node2D = $Ground
@@ -21,7 +22,6 @@ const ORDER_CART := preload("res://scripts/SeasonOrderCart.gd")
 
 var silk_guest: Visitor
 var silk_trip := VisitorData.SilkTrip.NONE
-var guest_returning := false
 var fish_reserved := false
 
 func _ready() -> void:
@@ -75,6 +75,8 @@ func _process(delta: float) -> void:
 	if not player.conversation_open and not MapTravel.active:
 		Global.advance_daylight(delta)
 		Global.advance_away_field_work(delta)
+	if silk_trip == VisitorData.SilkTrip.RETURN_ROAD and silk_guest:
+		_sync_silk_return()
 	lighting.refresh(delta)
 	var distance: float = ground.distance_to_trees(player.global_position)
 	AudioManager.set_world_ambience(INF, distance, distance)
@@ -126,30 +128,33 @@ func _refresh_silk_guest() -> void:
 	if silk_trip not in [VisitorData.SilkTrip.STALL, VisitorData.SilkTrip.RETURN_ROAD]:
 		_remove_silk_guest()
 		return
-	var returning := silk_trip == VisitorData.SilkTrip.RETURN_ROAD
-	if silk_guest and returning == guest_returning:
+	if silk_trip == VisitorData.SilkTrip.RETURN_ROAD:
+		if SILK_JOURNEY.road_offset(SILK_JOURNEY.Section.MARKET, silk_trip) >= 0.0:
+			_add_silk_guest(guest, LAYOUT.TAO_STOP)
+			_sync_silk_return()
+		return
+	if silk_guest:
 		return
 	var path := LAYOUT.silk_guest_path()
-	if returning:
-		path.reverse()
-	if not silk_guest:
-		silk_guest = VISITOR.instantiate()
-		silk_guest.name = VisitorData.SILK_MERCHANT
-		silk_guest.data = guest
-		silk_guest.position = path[0]
-		add_child(silk_guest)
-		silk_guest.activity_reached.connect(_on_silk_guest_arrived)
-	guest_returning = returning
-	var start := VisitorData.SILK_MARKET_LEAVE if returning else VisitorData.SILK_MARKET_ARRIVE
-	var focus := path[-1] + Vector2.RIGHT if returning else sample.global_position
-	silk_guest.go_to_activity(VisitorData.VisitActivity.SILK_MARKET, path, focus,
-		true, VisitorData.seconds_since(start))
-	if returning and not silk_guest.walking_to_stop:
-		_remove_silk_guest()
+	_add_silk_guest(guest, path[0])
+	silk_guest.go_to_activity(VisitorData.VisitActivity.SILK_MARKET, path, sample.global_position,
+		true, VisitorData.seconds_since(VisitorData.SILK_MARKET_ARRIVE))
 
-func _on_silk_guest_arrived() -> void:
-	if guest_returning:
+func _add_silk_guest(data: VisitorData, foot: Vector2) -> void:
+	if silk_guest:
+		return
+	silk_guest = VISITOR.instantiate()
+	silk_guest.name = VisitorData.SILK_MERCHANT
+	silk_guest.data = data
+	silk_guest.position = foot
+	add_child(silk_guest)
+
+func _sync_silk_return() -> void:
+	var offset := SILK_JOURNEY.road_offset(SILK_JOURNEY.Section.MARKET, silk_trip)
+	if offset < 0.0:
 		_remove_silk_guest()
+	else:
+		SILK_JOURNEY.walk(silk_guest, VisitorData.VisitActivity.SILK_MARKET, SILK_JOURNEY.Section.MARKET, offset)
 
 func _remove_silk_guest() -> void:
 	if silk_guest:
