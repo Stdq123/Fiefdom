@@ -7,6 +7,10 @@ const MORNING_DISPATCH := 1.0 / 16.0
 const TRAVEL_FRACTION := 0.12
 const WATCH_RELIEF := "autumn_watch_relief"
 const WATCH_RELAY_FRACTION := 0.11
+const SEED_ORDERS := ["spring", "spring_seed_share"]
+const SEED_CROPS := ["beans", "millet"]
+const SEED_RELAY_FRACTION := 0.085
+const SEED_GROW_NIGHTS := 3
 const SILK_ITEM := "silk_bolt"
 const ORDERS := [
 	{
@@ -14,7 +18,7 @@ const ORDERS := [
 		"request": "南路有人刚分到地。匀两份菽、一份黍，我把能留种的挑出来送去。",
 		"need": {"beans": 2, "millet": 1},
 		"thanks": "季青托人把菽和黍分进两个布袋，路上可以分给新领田的人。",
-		"arrival": "季青托的菽和黍都到了。南路上新分到地的几户人家，来亭里就能领种。"
+		"arrival": "季青托的菽和黍都到了。南路上新分到地的几户人家，来亭里就能领种。林蓼会带一把去亭西试种。"
 	},
 	{
 		"id": "summer", "title": "新稻到亭", "speaker": "石墨",
@@ -45,7 +49,7 @@ const FOLLOW_UP_ORDERS := [
 		"request": "南路又开了几畦地。留两份菽和两份黍作种，再捎一份冬麦给来取种的人。",
 		"need": {"beans": 2, "millet": 2, "wheat": 1},
 		"thanks": "留种的菽和黍已分好。冬麦另装一袋，到了亭前可先做顿饭。",
-		"arrival": "菽和黍已经送到。季青正教新领田的人挑种，亭下那袋麦留着做饭。"
+		"arrival": "菽和黍已经送到。林蓼先挑一把带去亭西种圃，剩下的分给新领田的几户。麦留给来领种的人做饭。"
 	},
 	{
 		"id": "summer_willow_catch", "title": "柳湾夏鲜", "speaker": "石墨",
@@ -94,6 +98,9 @@ static func transit_progress(receipt: Dictionary, day: int, clock: float) -> flo
 	var scheduled_day: int = receipt.dispatch_day
 	var start := MORNING_DISPATCH if scheduled_day > receipt.day else EVENING_DISPATCH
 	return (float(day - scheduled_day) + clock - start) / TRAVEL_FRACTION
+
+static func relay_progress(receipt: Dictionary, day: int, clock: float, duration: float) -> float:
+	return (transit_progress(receipt, day, clock) - 1.0) * TRAVEL_FRACTION / duration
 
 static func dispatch_caption(receipt: Dictionary) -> String:
 	var watch := "辰时" if receipt.dispatch_day > receipt.day else "酉时"

@@ -64,6 +64,7 @@ var player_inventory: int:
 		elif change < 0:
 			crop_stock.spend(crop_stock.plan(-change))
 var season_order_receipts: Dictionary[String, Dictionary] = {}
+var seed_garden_gift := ""
 var legacy_order_start := 0
 var pinned_season_start := 0
 var travel_meal := ""
@@ -243,6 +244,7 @@ func _reset_campaign() -> void:
 	away_field_report.clear()
 	_away_work_elapsed.clear()
 	season_order_receipts.clear()
+	seed_garden_gift = ""
 	legacy_order_start = 0
 	pinned_season_start = 0
 	travel_meal = ""
@@ -1344,6 +1346,9 @@ func _ending_memories() -> Array[String]:
 		events.append({"day": ravine_journal.garden_day, "text": "蒲宁收下溪行手记，在竹径留了药圃。"})
 	if road_rest_built():
 		events.append({"day": road_rest_paid_day + 1, "text": "季青和你在南路亭西修了歇脚处。"})
+	var garden_day := seed_garden_day()
+	if garden_day > 0:
+		events.append({"day": garden_day, "text": "林蓼把你送的菽和黍种进了亭西种圃。"})
 	var relief := watch_relief_day()
 	if relief > 0:
 		events.append({"day": relief, "text": "你备下的巡粮到了东岗，岗旗换上新麻绳。"})
@@ -1367,7 +1372,8 @@ func _ending_memories() -> Array[String]:
 	for order: Dictionary in SeasonOrders.ORDERS + SeasonOrders.FOLLOW_UP_ORDERS:
 		var receipt: Dictionary = season_order_receipts.get(order.id, {})
 		var day: int = receipt.get("day", 0)
-		if day > latest_order.get("day", 0) and (order.id != SeasonOrders.WATCH_RELIEF or relief < day):
+		var received := relief if order.id == SeasonOrders.WATCH_RELIEF else garden_day if order.id in SeasonOrders.SEED_ORDERS else 0
+		if day > latest_order.get("day", 0) and received < day:
 			latest_order = {"day": day, "text": "西市收下了你备齐的「%s」。" % order.title}
 	if not latest_order.is_empty():
 		events.append(latest_order)
@@ -2034,12 +2040,15 @@ func deliver_season_order(start_day: int, paid_in_food: bool) -> bool:
 	silk_workshop.bolts -= silk
 	var rewards := season_order_rewards(schedule)
 	var previous_post := watch_relief_day() if schedule.order.id == SeasonOrders.WATCH_RELIEF else 0
+	var previous_garden := seed_garden_day() if schedule.order.id in SeasonOrders.SEED_ORDERS else 0
 	season_order_receipts[schedule.order.id] = {
 		"day": current_day, "paid_in_food": paid_in_food,
 		"dispatch_day": SeasonOrders.dispatch_day(current_day, day_progress),
 	}
 	if previous_post > 0:
 		season_order_receipts[schedule.order.id]["previous_post_day"] = previous_post
+	if previous_garden > 0:
+		season_order_receipts[schedule.order.id]["previous_garden_day"] = previous_garden
 	reputation += balance.interaction_reputation_gain
 	if paid_in_food:
 		food_storage += rewards.food
@@ -2061,14 +2070,43 @@ func watch_relief_progress() -> float:
 	var receipt: Dictionary = season_order_receipts.get(SeasonOrders.WATCH_RELIEF, {})
 	if receipt.is_empty():
 		return -1.0
-	var transit := SeasonOrders.transit_progress(receipt, current_day, day_progress)
-	return (transit - 1.0) * SeasonOrders.TRAVEL_FRACTION / SeasonOrders.WATCH_RELAY_FRACTION
+	return SeasonOrders.relay_progress(receipt, current_day, day_progress, SeasonOrders.WATCH_RELAY_FRACTION)
 
 func watch_relief_day() -> int:
 	var receipt: Dictionary = season_order_receipts.get(SeasonOrders.WATCH_RELIEF, {})
 	if receipt.is_empty():
 		return 0
 	return int(receipt.dispatch_day) if watch_relief_progress() >= 1.0 else int(receipt.get("previous_post_day", 0))
+
+func seed_garden_delivery_progress() -> float:
+	var latest: Dictionary = {}
+	for id: String in SeasonOrders.SEED_ORDERS:
+		var receipt: Dictionary = season_order_receipts.get(id, {})
+		if receipt.get("day", 0) > latest.get("day", 0):
+			latest = receipt
+	return -1.0 if latest.is_empty() else (
+		SeasonOrders.relay_progress(latest, current_day, day_progress, SeasonOrders.SEED_RELAY_FRACTION))
+
+func seed_garden_day() -> int:
+	var planted := 0
+	for id: String in SeasonOrders.SEED_ORDERS:
+		var receipt: Dictionary = season_order_receipts.get(id, {})
+		if receipt.is_empty():
+			continue
+		var reached := SeasonOrders.relay_progress(receipt, current_day, day_progress, SeasonOrders.SEED_RELAY_FRACTION) >= 1.0
+		var day: int = receipt.dispatch_day if reached else receipt.get("previous_garden_day", 0)
+		planted = maxi(planted, day)
+	return planted
+
+func take_seed_garden_gift(crop_id: String) -> bool:
+	var planted := seed_garden_day()
+	if (outcome != Outcome.RUNNING or crop_id not in SeasonOrders.SEED_CROPS or not seed_garden_gift.is_empty()
+		or planted == 0 or current_day < planted + SeasonOrders.SEED_GROW_NIGHTS):
+		return false
+	seed_garden_gift = crop_id
+	crop_stock.add(crop_id, 1)
+	GameEvents.inventory_changed.emit(player_inventory)
+	return true
 
 func market_crop_plan(amount: int, crop_id := "") -> Dictionary[String, int]:
 	return crop_stock.plan(amount, crop_id, season_order_crops_to_keep())
@@ -2588,6 +2626,7 @@ func _save_snapshot(origin: String) -> Error:
 		"player_inventory": player_inventory,
 		"crop_stock": crop_stock.lots,
 		"season_order_receipts": season_order_receipts,
+		"seed_garden_gift": seed_garden_gift,
 		"legacy_order_start": legacy_order_start,
 		"pinned_season_start": pinned_season_start,
 		"travel_meal": travel_meal,
@@ -3070,6 +3109,7 @@ func load_game(path := "") -> Error:
 	money = maxi(0, _read_save_int(data.get("money"), 0))
 	_restore_crop_stock(data.get("crop_stock"), maxi(0, _read_save_int(data.get("player_inventory"), 0)))
 	_restore_season_order_receipts(data.get("season_order_receipts"), saved_day)
+	seed_garden_gift = data.seed_garden_gift if data.get("seed_garden_gift") in SeasonOrders.SEED_CROPS else ""
 	var order_window := SeasonOrders.window(saved_day, balance.days_per_solar_term)
 	# Finish the active order from an older save before changing to the new schedule.
 	var old_start: int = order_window.start if order_window.order.id != order_window.original_order.id else 0
@@ -3405,6 +3445,10 @@ func _restore_season_order_receipts(record: Variant, saved_day: int) -> void:
 					var previous_post := clampi(_read_save_int(receipt.get("previous_post_day"), 0), 0, day - 1)
 					if previous_post > 0:
 						season_order_receipts[order.id]["previous_post_day"] = previous_post
+				elif order.id in SeasonOrders.SEED_ORDERS:
+					var previous_garden := clampi(_read_save_int(receipt.get("previous_garden_day"), 0), 0, day)
+					if previous_garden > 0:
+						season_order_receipts[order.id]["previous_garden_day"] = previous_garden
 
 func _restore_sheepfold(record: Variant, saved_day: int) -> void:
 	sheepfold = Sheepfold.new()

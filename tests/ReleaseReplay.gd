@@ -190,6 +190,9 @@ func _run() -> void:
 			replay.from_older_save = arguments[0] == "watch-relief-old-save"
 			replay.capture_path = capture_directory
 			await replay.run(tree)
+		"seed-garden":
+			var replay = load("res://tests/SeedGardenReplay.gd").new()
+			await replay.run(tree)
 		"autumn-exhibit":
 			var replay = load("res://tests/AutumnExhibitReplay.gd").new()
 			await replay.run(tree)

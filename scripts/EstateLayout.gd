@@ -46,6 +46,10 @@ const FIELD_LANE_TURN := Vector2(44, 241)
 const BAMBOO_BEND := Vector2(19, 321)
 const PAVILION_TURN := Vector2(44, 385)
 const PAVILION_JUNCTION := Vector2(23, 432)
+const SEED_GARDEN := Vector2(-91, 443)
+const SEED_GARDEN_APPROACH := SEED_GARDEN + Vector2(0, 17)
+const SEED_GARDEN_TRACK := [PAVILION_JUNCTION, Vector2(9, 432), Vector2(-7, 442),
+	Vector2(-9, 464), Vector2(-36, 467), Vector2(-63, 468), SEED_GARDEN_APPROACH]
 const SOUTH_FORK := Vector2(29, 536)
 const FREIGHT_STOP := Vector2(-94, 574)
 const FREIGHT_JUNCTION := Vector2(-41, 574)
@@ -138,14 +142,22 @@ const SOUTH_ROADS := [
 
 static var road_lines: Array[PackedVector2Array] = _bake_roads()
 
-static func watch_relief_route() -> Array:
+static func unloading_exit() -> Array:
 	var aisle := FREIGHT_AISLE.duplicate()
 	aisle.reverse()
 	var unloading := UNLOADING_LANE.slice(0, UNLOADING_LANE.find(FREIGHT_JUNCTION))
 	unloading.reverse()
+	return aisle + unloading
+
+static func watch_relief_route() -> Array:
 	var south := SOUTH_LANE.slice(SOUTH_LANE.find(EAST_LANE_JUNCTION), -1)
 	south.reverse()
-	return aisle + unloading + south + EAST_LANE.slice(1) + [WATCH_RELIEF_POST]
+	return unloading_exit() + south + EAST_LANE.slice(1) + [WATCH_RELIEF_POST]
+
+static func seed_garden_route() -> Array:
+	var south := SOUTH_LANE.slice(SOUTH_LANE.find(PAVILION_JUNCTION), -1)
+	south.reverse()
+	return unloading_exit() + south + SEED_GARDEN_TRACK.slice(1) + [SEED_GARDEN + Vector2(37, 7)]
 
 static func festival_entrance() -> Array[Vector2]:
 	var path: Array[Vector2] = []

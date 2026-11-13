@@ -8,6 +8,7 @@ const ROAD_REST := preload("res://scripts/RoadRest.gd")
 const ROTATION_BOOK := preload("res://scripts/FieldRotationBook.gd")
 const TRAVEL_HEARTH := preload("res://scripts/TravelHearth.gd")
 const WATER_SOURCE := preload("res://scripts/WaterSource.gd")
+const SEED_GARDEN := preload("res://scripts/SeedGarden.gd")
 const HUNGER_RETURN_LINES := {
 	VisitorData.FIELD_KEEPER: "那夜没分到饭，我只好去南边借住。今早路过，还是想看看咱们那块田。",
 	VisitorData.ROAD_KEEPER: "那晚我拎着空碗出了门，是过路人分了我一把炒菽。我记得这份情，也惦记亭西的人。",
@@ -35,18 +36,40 @@ func setup(host: Control, estate_player: Player) -> void:
 	parent_node = host
 	player = estate_player
 
-func show_freight_arrival(speech: String, portrait: Texture2D, guide_hearth: Callable, guide_watch: Callable) -> void:
+func show_freight_arrival(speech: String, portrait: Texture2D, guide_hearth: Callable,
+		destination: String, guide_destination: Callable) -> void:
 	var choices: Array[String] = ["指路去灶台", "知道了"]
 	var actions: Array[Callable] = [guide_hearth]
-	if guide_watch.is_valid():
-		choices.push_front("指路去东路岗")
-		actions.push_front(guide_watch)
+	if not destination.is_empty():
+		choices.push_front("指路去" + destination)
+		actions.push_front(guide_destination)
 	var dialog := _open("申禾", "车夫 · 南路卸货场", speech + "\n沿南路往东有灶台。带点食材去，走远路前可以装一份吃的。",
 		choices, [], portrait)
 	dialog.option_selected.connect(func(index: int):
 		if index < actions.size():
 			actions[index].call()
 	)
+
+func show_seed_garden(host_present: bool) -> void:
+	var garden_day := Global.seed_garden_day()
+	var remaining := garden_day + SeasonOrders.SEED_GROW_NIGHTS - Global.current_day
+	var context := "南路亭 · 第 %d 天下种" % garden_day
+	var gift := Global.seed_garden_gift
+	var speaker := "林蓼" if host_present else SEED_GARDEN.PLACE
+	var portrait := SEED_GARDEN.portrait() if host_present else null
+	if remaining > 0:
+		var text := ("你留的菽和黍，我各挑了一把种在这儿。以后谁来领种，先来认一认苗。" if host_present
+			else "林蓼在木签上记着，菽和黍是西市送来的种。两畦再过 %d 夜就能收。" % remaining)
+		_open(speaker, context, text, ["离开"], [], portrait)
+	elif not gift.is_empty():
+		_open(speaker, context, "林蓼留了木签。给你的%s已经取走，其余留给新领田的人。" % ItemManager.crop_label(gift),
+			["离开"], [], portrait)
+	else:
+		var dialog := _open(speaker, context, "林蓼把头茬菽和黍各分了一袋，余下留给来领种的人。她在木签上写着，送种的人可以选一份带走。",
+			["取一份菽", "取一份黍", "留在圃里"], [], portrait)
+		dialog.option_selected.connect(func(index: int):
+			if index < SeasonOrders.SEED_CROPS.size() and Global.take_seed_garden_gift(SeasonOrders.SEED_CROPS[index]):
+				GameEvents.world_notice.emit("亭西种圃 · %s入私仓" % ItemManager.crop_label(Global.seed_garden_gift)))
 
 func show_winter_supper() -> void:
 	var record := Global.winter_supper_record()

@@ -3,6 +3,7 @@ extends "res://scripts/SurveyMap.gd"
 enum Category { PLACES, FIELDS, PEOPLE, RAVINE }
 
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
+const SEED_GARDEN := preload("res://scripts/SeedGarden.gd")
 const PAPER := Color("#ded2ac")
 const INK := Color("#3e3c2a")
 const GOLD := Color("#f2ce78")
@@ -115,6 +116,10 @@ func _collect_places() -> void:
 	_add_built_place("轮作簿", "查看轮作约定", "FieldRotationBook")
 	if Global.road_rest_built():
 		_add_built_place("亭西歇脚处", "在长凳旁休息", "RoadRest")
+	var garden_day := Global.seed_garden_day()
+	if garden_day > 0:
+		var detail := "第 %d 天下种 · 来看看菽和黍" % garden_day
+		places.append(_entry(Category.PLACES, SEED_GARDEN.PLACE, detail, EstateLayout.SEED_GARDEN_APPROACH, true))
 	var record_stand := world.get_node("Scenery/EndingRecord")
 	if record_stand.visible:
 		var task := "翻看通关当天的账目" if record_stand.archived else "呈交账簿，开启结尾"

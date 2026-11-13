@@ -115,7 +115,7 @@ func _sync_position() -> void:
 	var has_cargo := not lot.is_empty() and delivery_day >= Global.current_day
 	if has_cargo and shown_order != lot.order.id:
 		_load_cargo(lot.order)
-	cargo.visible = has_cargo and (not arrived or shown_order != SeasonOrders.WATCH_RELIEF)
+	cargo.visible = has_cargo and (not arrived or (shown_order != SeasonOrders.WATCH_RELIEF and shown_order not in SeasonOrders.SEED_ORDERS))
 	var start: float = [0.0, west_road_start, estate_start][route_section]
 	_pose(roads[route_section], 0.0 if at_origin else distance - start, not parked)
 

@@ -40,9 +40,8 @@ func setup(estate_world: Node2D, estate_hud: Control) -> void:
 	world = estate_world
 	hud = estate_hud
 	hud.cancel_directions.pressed.connect(clear_tracking)
-	var connected_roads := [EstateLayout.ROADS[0], EstateLayout.SOUTH_LANE, EstateLayout.EAST_LANE] \
-		+ EstateLayout.WEST_ROADS + EstateLayout.SOUTH_ROADS + EstateLayout.DRIVING_ROADS
-	road_network = ROAD_NETWORK.new(connected_roads, world, world.player)
+	_refresh_road_network()
+	GameEvents.seed_garden_arrived.connect(_refresh_road_network)
 	road_guide.z_index = -2
 	road_guide.hide()
 	world.add_child(road_guide)
@@ -58,6 +57,14 @@ func setup(estate_world: Node2D, estate_hud: Control) -> void:
 	caption.add_theme_color_override("font_color", GOLD)
 	add_child(caption)
 	hide()
+
+func _refresh_road_network() -> void:
+	var tracks := [EstateLayout.ROADS[0], EstateLayout.SOUTH_LANE, EstateLayout.EAST_LANE] \
+		+ EstateLayout.WEST_ROADS + EstateLayout.SOUTH_ROADS + EstateLayout.DRIVING_ROADS
+	if Global.seed_garden_day() > 0:
+		tracks.append(EstateLayout.SEED_GARDEN_TRACK)
+	road_network = ROAD_NETWORK.new(tracks, world, world.player)
+	road_target = Vector2.INF
 
 func follow_neighbor(speaker: String) -> bool:
 	if not is_instance_valid(world.neighbor_actor(speaker)) and _neighbor_trip_stop(speaker).is_empty():

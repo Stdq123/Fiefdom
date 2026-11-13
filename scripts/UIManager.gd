@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 const NIGHT_RATIONS_PANEL := preload("res://scenes/NightRationsPanel.tscn")
+const SEED_GARDEN := preload("res://scripts/SeedGarden.gd")
 
 @onready var world = $"../World"
 @onready var hud = $Control/EstateHUD
@@ -218,6 +219,7 @@ func _connect_signals() -> void:
 	GameEvents.retainer_interacted.connect(_on_retainer_interacted)
 	GameEvents.season_board_interacted.connect(_on_season_board_interacted)
 	GameEvents.freight_arrival_interacted.connect(_on_freight_arrival_interacted)
+	GameEvents.seed_garden_requested.connect(_on_seed_garden_requested)
 	GameEvents.travel_hearth_interacted.connect(_on_travel_hearth_interacted)
 	GameEvents.winter_supper_requested.connect(_on_winter_supper_requested)
 	GameEvents.winter_supper_prepared.connect(update_ui)
@@ -649,8 +651,21 @@ func _on_road_rest_interacted() -> void:
 
 func _on_freight_arrival_interacted(speech: String, portrait: Texture2D, order_id: String) -> void:
 	world.set_channel_mode(false)
-	var guide_watch := _guide_east_watch if order_id == SeasonOrders.WATCH_RELIEF else Callable()
-	dialog_manager.show_freight_arrival(speech, portrait, _guide_travel_hearth, guide_watch)
+	var destination := ""
+	var guide := Callable()
+	if order_id == SeasonOrders.WATCH_RELIEF:
+		destination = "东路岗"
+		guide = _guide_east_watch
+	elif order_id in SeasonOrders.SEED_ORDERS:
+		destination = SEED_GARDEN.PLACE
+		guide = directions.follow_place.bind(destination, EstateLayout.SEED_GARDEN_APPROACH)
+	dialog_manager.show_freight_arrival(speech, portrait, _guide_travel_hearth, destination, guide)
+
+func _on_seed_garden_requested() -> void:
+	world.set_channel_mode(false)
+	if directions.tracked_place == SEED_GARDEN.PLACE:
+		directions.clear_tracking()
+	dialog_manager.show_seed_garden(world.get_node("Scenery/SeedGarden").host_present())
 
 func _guide_east_watch() -> void:
 	directions.follow_place("东路岗", EstateLayout.EAST_WATCH)

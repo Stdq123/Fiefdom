@@ -198,7 +198,7 @@ func _freight_to_pavilion() -> void:
 		await _snapshot("07-south-pavilion")
 		print("ORDER_DELIVERED day=", state.current_day, " grain_reward=", state.season_order_rewards(state.season_order()).food,
 			" tribute=", state.king_storage)
-		await _button(dialog.options_container.get_child(0))
+		await _button(dialog.options_container.get_child(1))
 		_expect(estate.get_node("UI").directions.tracked_place == "南路灶台", "The driver can point to the new hearth.")
 		await _meal_from_harvest()
 

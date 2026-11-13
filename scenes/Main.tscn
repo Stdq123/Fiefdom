@@ -49,6 +49,7 @@
 [ext_resource type="PackedScene" path="res://scenes/CouncilPreparation.tscn" id="45_council_prep"]
 [ext_resource type="PackedScene" path="res://scenes/RavineShortcutGate.tscn" id="46_ravine_trail"]
 [ext_resource type="Script" path="res://scripts/WaterSource.gd" id="47_water_source"]
+[ext_resource type="Script" path="res://scripts/SeedGarden.gd" id="48_seed_garden"]
 
 [sub_resource type="RectangleShape2D" id="Shape_east_gate"]
 size = Vector2(8, 20)
@@ -91,6 +92,38 @@ script = ExtResource("20_butterfly")
 [node name="EastWatch" type="Node2D" parent="World/Scenery"]
 position = Vector2(336, 151)
 script = ExtResource("14_east_watch")
+
+[node name="SeedGarden" type="Node2D" parent="World/Scenery"]
+position = Vector2(-91, 443)
+y_sort_enabled = true
+script = ExtResource("48_seed_garden")
+
+[node name="Courier" type="Node2D" parent="World/Scenery/SeedGarden"]
+visible = false
+
+[node name="Motion" type="Sprite2D" parent="World/Scenery/SeedGarden/Courier"]
+texture_filter = 1
+position = Vector2(0, -11)
+script = ExtResource("35_neighbor_motion")
+
+[node name="SeedPouch" type="Sprite2D" parent="World/Scenery/SeedGarden/Courier"]
+texture_filter = 1
+position = Vector2(8, -9)
+
+[node name="Hint" type="Label" parent="World/Scenery/SeedGarden"]
+visible = false
+z_index = 6
+material = ExtResource("24_world_hint")
+offset_left = -45.0
+offset_top = -45.0
+offset_right = 45.0
+offset_bottom = -30.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.882, 0.635, 1)
+theme_override_colors/font_outline_color = Color(0.13, 0.21, 0.16, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
 
 [node name="EndingRecord" type="Sprite2D" parent="World/Scenery"]
 visible = false

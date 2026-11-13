@@ -868,3 +868,8 @@
 
 - 路线目标齐备后，封地手记和舆图可指路。传统线到堂前呈交贡簿，改革线到南路亭呈交新税册。互动后，召简在同一处接册，镜头回望井田，随后打开结算。结算选取本局近期的邻里、节令和时令交货记录。续营后回到原处可翻阅通关时的账簿。
 - Windows 解压版从新档分别在第 56 天和第 59 天步行交接，覆盖交接前续档、结局存读、跳过重看和继续经营。门客回归核对了最后一茬收割后照常过夜。两段结尾与记事在不可见桌面以 1024×768 核对。 [Windows 试玩包](../build/polish-ending-handoff/Fiefdom-1.0.0-Windows-x64.zip) · [回放清单](../build/polish-ending-handoff/windows-release.log) · [堂前交接](../build/polish-ending-handoff/render-1024x768/traditional-ceremony.png) · [改革结算](../build/polish-ending-handoff/render-1024x768/reformed-ledger.png)
+
+## 从春单到亭西种圃
+
+- 春单到卸货场后，林蓼沿南路带种子去亭西。首次送达后开放小径，舆图可指路。菽和黍三夜长成，可从林蓼留的一袋里任选一份入私仓。季青的邻里手记和结局记事会记录种圃。参考了《星露谷物语》用委托改变地图的做法。 [ConcernedApe 开发日志](https://www.stardewvalley.net/dev-update-20/)
+- Windows 解压版从第 6 天晚交春单，次日走到卸货场问申禾，送种途中存档后接续。第 10 天领一份菽入私仓，国库仍为四份，读档后领取记录保留。双结局、交货、东岗巡粮和其他南路回放通过。1024×768 画面在不可见桌面取得。 [Windows 试玩包](../build/polish-seed-garden/Fiefdom-1.0.0-Windows-x64.zip) · [林蓼与种圃](../build/polish-seed-garden/final-1024x768/03-lin-liao.png) · [菽和黍成熟](../build/polish-seed-garden/final-1024x768/05-mature-plants.png) · [发行回放](../build/polish-seed-garden/windows-final-check/seed-garden.log)
