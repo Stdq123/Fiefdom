@@ -17,6 +17,7 @@ const SEED_BUTTON := preload("res://scripts/SeedButton.gd")
 @onready var tribute_button: Button = %TributeButton
 @onready var visitor_label: Label = %VisitorLabel
 @onready var opening_action: Button = %OpeningAction
+@onready var first_private_button: Button = %FirstPrivateButton
 @onready var handover_button: Button = %HandoverButton
 @onready var arrival: Label = %Arrival
 @onready var route_progress: Button = %RouteProgress
@@ -107,6 +108,7 @@ func show_driving_progress(progress: String, instruction: String) -> void:
 
 func _ready() -> void:
 	GameEvents.estate_arrived.connect(_show_arrival)
+	GameEvents.day_advanced.connect(arrival.hide.unbind(1))
 	GameEvents.driving_practice_progress.connect(show_driving_progress)
 	GamepadInput.changed.connect(_refresh_shortcuts)
 	Preferences.bindings_changed.connect(_refresh_shortcuts)

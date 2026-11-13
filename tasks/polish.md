@@ -954,3 +954,8 @@
 - 游戏内的 SVG 和 11 张原低分辨率 PNG 以双倍分辨率导入。人物、对话头像、堂屋、蚕棚、西市、羊棚、树木及农事道具补绘衣褶、瓦缝和经纬等细节。七种作物各有三张原生 32×32 的生长图，公私田仍使用同一套 16×16 格线。
 - 原有高像素密度的筏、绵羊和作物字形使用原素材。标题的清晨、薄暮画面以 2560×1440 实机重新拍摄。
 - Godot 通过建筑比例、封地地形、读档、换装、田间计划、种圃、西市、丝坊和羊棚回放。Windows 解压版通过双结局、战败恢复、研究和相关场景回放。封地和丝坊实机截图在独立桌面核对。旧版和本版的昼夜回放均可复现夜间大厅断言。 [Windows 试玩包](../build/polish-art-resolution/Fiefdom-1.0.0-Windows-x64.zip) · [封地](../build/polish-art-resolution/estate-art/estate-morning.png) · [标题](../build/polish-art-resolution/title-final/01-morning-title.png) · [丝坊](../build/polish-art-resolution/silk-art/04-first-bolt.png)
+
+## 首轮公私田与场景可读性
+
+- 第一天浇好公田后，可在手记里兼种一格私田，也可继续按原指引走。回放第三天完成首贡和首茬私收，国库和私仓各得一份，另赚 5 铜钱。「今夜安排」可从田务预测直接标出成熟田格。 [兼种指引](../build/polish-art-resolution/opening-1024/04b-private-plot.png) · [第三天收成](../build/polish-art-resolution/opening-final-1280/04c-same-morning-harvests.png)
+- 修正了西廊等处因登记顺序靠后而未点亮的夜灯。堂屋、蚕棚提示在 3× 镜头下使用清晰字体。Godot 的开局、昼夜、田务、手柄输入与室内回放通过。实机画面在独立桌面核对。 [西廊灯笼对照](../build/hall-daylight/west-court-before-after.png) · [蚕棚织机提示](../build/polish-world-text/silk-1280/04-first-bolt.png) · [Windows 试玩包](../build/polish-opening-followup/Fiefdom-1.0.0-Windows-x64.zip)

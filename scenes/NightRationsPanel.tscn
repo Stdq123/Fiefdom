@@ -248,14 +248,25 @@ theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(0.83, 0.87, 0.67, 1)
 autowrap_mode = 3
 
-[node name="FindPlot" type="Button" parent="Center/Window/Content/Scroll/Body/Plan/FieldPlan/Row"]
+[node name="FieldActions" type="VBoxContainer" parent="Center/Window/Content/Scroll/Body/Plan/FieldPlan/Row"]
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="FindPlot" type="Button" parent="Center/Window/Content/Scroll/Body/Plan/FieldPlan/Row/FieldActions"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(108, 34)
 layout_mode = 2
-size_flags_vertical = 4
 mouse_default_cursor_shape = 2
 text = "找待浇田"
+
+[node name="FindReadyPlot" type="Button" parent="Center/Window/Content/Scroll/Body/Plan/FieldPlan/Row/FieldActions"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(108, 34)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "找可收田"
 
 [node name="Stock" type="PanelContainer" parent="Center/Window/Content/Scroll/Body/Plan"]
 layout_mode = 2

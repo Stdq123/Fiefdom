@@ -791,6 +791,7 @@ func harvest_crop(grid_pos: Vector2i, worker: Retainer = null) -> bool:
 		spawn_floating_text(grid_pos, message, tone, HARVEST_TEXT_OFFSET)
 	_show_field_impact(grid_pos, Player.Action.HARVEST)
 	if not worker:
+		tile_map.get_node("FieldCursor").clear_plot_hover(grid_pos)
 		player.show_action(Player.Action.HARVEST, to_global(get_crop_world_pos(grid_pos)))
 	if harvest.first_tribute:
 		AudioManager.play_event_sound("first_tribute")

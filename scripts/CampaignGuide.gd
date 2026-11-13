@@ -8,6 +8,8 @@ const ESTATE_WORLD := preload("res://scripts/World.gd")
 @onready var route_progress: Button = %RouteProgress
 @onready var council_prep: Button = %CouncilPrepButton
 @onready var six_arts: Button = %PromotionArts
+@onready var first_private_button: Button = %FirstPrivateButton
+@onready var cancel_directions: Button = %CancelDirections
 
 var world: ESTATE_WORLD
 var opening_cue := OpeningCue.NONE
@@ -15,8 +17,13 @@ var opening_cell := Vector2i.ZERO
 var opening_plot_name := "公田"
 var opening_seed_id := "millet"
 var waiting_for_tribute_crop := false
+var tending_first_private := false
+var offer_first_private := false
+var private_crop_planted := false
 
 func _ready() -> void:
+	first_private_button.pressed.connect(_toggle_first_private)
+	cancel_directions.visibility_changed.connect(_refresh_first_private_button)
 	GamepadInput.changed.connect(refresh)
 	Preferences.bindings_changed.connect(refresh)
 	GameEvents.farm_state_changed.connect(refresh)
@@ -50,6 +57,7 @@ func setup(estate_world: ESTATE_WORLD) -> void:
 func refresh() -> void:
 	opening_cue = OpeningCue.NONE
 	waiting_for_tribute_crop = false
+	offer_first_private = false
 	six_arts.hide()
 	if not world or Global.well_fields.is_empty():
 		return
@@ -66,6 +74,7 @@ func refresh() -> void:
 	if record_stand.archived:
 		var route := "守礼安邦" if Global.ending_record["outcome"] == Global.Outcome.TRADITIONAL else "税亩富民"
 		_describe(route + " · 已通关", "到%s翻看%s。" % [record_stand.place_name, record_stand.record_name])
+		_refresh_first_private_button()
 		return
 	if Global.tax_council_waiting():
 		_describe("初税亩 · 召简来访", "使者在堂前候议。请在过夜前定案。")
@@ -104,7 +113,7 @@ func refresh() -> void:
 		else:
 			_show_next_promotion()
 	elif not Global.first_tribute_delivered() and Global.current_rank == Global.Rank.XIA_SHI:
-		_describe("第一次纳贡", _opening_field_step(Global.well_fields[0]["center_pos"], true))
+		_show_first_tribute()
 	elif (Global.current_rank == Global.Rank.XIA_SHI and Global.private_harvest_total == 0
 		and not Global.eligible_for_promotion()):
 		_describe("第一茬私田", _opening_field_step(_first_private_cell(), false))
@@ -112,6 +121,34 @@ func refresh() -> void:
 		_show_first_promotion()
 	else:
 		_show_first_expansion()
+	if Global.first_tribute_delivered() or Global.private_harvest_total > 0:
+		tending_first_private = false
+	_refresh_first_private_button()
+
+func _show_first_tribute() -> void:
+	var public_step := _opening_field_step(Global.well_fields[0]["center_pos"], true)
+	_describe("第一次纳贡", public_step)
+	if not waiting_for_tribute_crop or Global.private_harvest_total > 0:
+		return
+	var cell := _first_private_cell()
+	var action := world.field_action(cell)
+	private_crop_planted = Global.active_crops.has(cell)
+	offer_first_private = (action in [ESTATE_WORLD.FieldAction.TILL, ESTATE_WORLD.FieldAction.SOW,
+		ESTATE_WORLD.FieldAction.RICE_SEED, ESTATE_WORLD.FieldAction.WATER, ESTATE_WORLD.FieldAction.HARVEST]
+		and world.field_cost(action) <= Global.current_stamina)
+	if offer_first_private and tending_first_private:
+		_describe("兼顾一格私田", _opening_field_step(cell, false))
+
+func _toggle_first_private() -> void:
+	tending_first_private = not tending_first_private
+	refresh()
+
+func _refresh_first_private_button() -> void:
+	first_private_button.visible = offer_first_private and not cancel_directions.visible
+	if tending_first_private:
+		first_private_button.text = "返回纳贡指引"
+	else:
+		first_private_button.text = "照料首茬私田" if private_crop_planted else "兼种一格私田"
 
 func _show_first_promotion() -> void:
 	var title := "晋升中士 · %d/%d 声望" % [Global.reputation, Global.promotion_reputation()]

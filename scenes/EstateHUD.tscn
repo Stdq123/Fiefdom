@@ -240,6 +240,16 @@ size_flags_horizontal = 0
 mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 14
 
+[node name="FirstPrivateButton" type="Button" parent="Journal/Stack"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 27)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 14
+text = "兼种一格私田"
+
 [node name="VisitorLabel" type="Label" parent="Journal/Stack"]
 unique_name_in_owner = true
 layout_mode = 2

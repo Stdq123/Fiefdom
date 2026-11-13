@@ -121,6 +121,7 @@ func _process(_delta: float) -> void:
 	hud.council_prep_button.disabled = hud.map_button.disabled
 	hud.guide.six_arts.disabled = hud.map_button.disabled
 	hud.handover_button.disabled = hud.map_button.disabled
+	hud.first_private_button.disabled = hud.map_button.disabled
 	hud.tribute_button.disabled = hud.map_button.disabled
 	hud.raid_alert.disabled = blocked
 	var following_canal := (Global.field_route_status == Global.NightGrowth.BLOCKED
