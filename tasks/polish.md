@@ -923,3 +923,8 @@
 
 - 菽和黍长成后，林蓼回来摆案。阿绥和禾伯沿小径来领种，拿着包裹离开，田里留下短茬。舆图和木签可查日期，撞上谷雨亭集就顺延。玩家可当面挑一份，也可散场后到木签旁取。把小径旁的橡树移到种圃西侧，给人物和分种案留出视线。
 - 回放从第 6 天的待交货档开始，经历卸货、送种、三夜生长、第 10 天分种和散场。午时续档还原两人领完的状态，散场后取得一份菽，国库仍有四份。Godot 和 Windows 解压版通过南路、节庆和双结局相关回放，1024×768 画面在不可见桌面核对。 [Windows 试玩包](../build/polish-seed-sharing/Fiefdom-1.0.0-Windows-x64.zip) · [沿小径来领种](../build/polish-seed-sharing/final-1024x768/05a-arriving-for-seed.png) · [分种场景](../build/polish-seed-sharing/final-1024x768/06-neighbors-collect.png) · [发行回放](../build/polish-seed-sharing/windows-final/seed-garden.log)
+
+## 溪桥道与西市的雨雪路面
+
+- 谷雨时，桥头土路和西市的石板、摊边泥地出现浅水洼，走过可听见水声并踩出水纹。冬天桥头、主街路肩和支巷有积雪，脚印在几秒内淡去。石板中线和木桥仍可辨认。
+- 回放从封地走过溪桥道到西市，核对积水的脚步和水纹、桥面的木板声。用冬日存档从西市续玩，走过石板和两处积雪。Godot 和 Windows 解压版通过相关回放，发行版双结局、战败恢复和研究也通过。雨雪画面在 1024×768 的独立桌面核对。 [Windows 试玩包](../build/polish-west-weather/Fiefdom-1.0.0-Windows-x64.zip) · [谷雨的桥头](../build/polish-west-weather/render-1024x768/02a-bridge-puddle.png) · [冬至的西市](../build/polish-west-weather/render-1024x768/05-market-snow.png) · [发行回放](../build/polish-west-weather/windows-check/ambience-travel.log)

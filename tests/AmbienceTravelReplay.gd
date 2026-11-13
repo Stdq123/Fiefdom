@@ -12,6 +12,8 @@ func _play() -> void:
 	if await _start_in_rain() and await _rainy_trip() and await _rain_at_the_hall():
 		if legacy or await _dry_morning():
 			await _market_at_night()
+			if not legacy and not failed:
+				await _winter_walk()
 	tree.unload_current_scene()
 	for stream in tree.root.get_node("AudioManager").get_children():
 		if stream is AudioStreamPlayer:
@@ -20,7 +22,7 @@ func _play() -> void:
 
 func _terrain() -> Node:
 	var scene := tree.current_scene
-	if scene.scene_file_path == state.WEST_MARKET_SCENE:
+	if scene.scene_file_path in [state.WEST_MARKET_SCENE, "res://scenes/WestRoad.tscn"]:
 		return scene.audio
 	var path := "World/Landscape" if scene.scene_file_path == state.ESTATE_SCENE else "Landscape"
 	return scene.get_node(path).terrain_audio
@@ -51,13 +53,36 @@ func _rainy_trip() -> bool:
 	await _walk(player, [Vector2(66, 36), Vector2(-181, 54), Vector2(-181, 0), Vector2(-270, -21)])
 	var music := tree.root.get_node("AudioManager")
 	var score: AudioStreamPlayer = music.bgm_player
-	if not await _rain_cross(&"ui_left", state.WEST_MARKET_SCENE, "02-west-gate"):
+	if legacy:
+		if not await _rain_cross(&"ui_left", state.WEST_MARKET_SCENE, "02-west-gate"):
+			return false
+	elif not await _rainy_west_road():
 		return false
 	_expect(music.bgm_player == score, "The estate and market keep their shared seasonal score.")
 	var market := tree.current_scene
 	if not legacy:
+		await _walk(market.player, [Vector2(290, 36)])
+		_expect(_step_sample().begins_with("water-") and not market.ground.weather.ripples.is_empty(),
+			"The puddle on the market's stone street splashes underfoot.")
+		await _snapshot("02b-market-puddle")
 		await Campaign.walk_to_market_exit(tree, market)
 	return await _rain_cross(&"ui_right", state.ESTATE_SCENE, "")
+
+func _rainy_west_road() -> bool:
+	if not await _rain_cross(&"ui_left", state.WEST_ROAD_SCENE, "02-west-gate"):
+		return false
+	var road := tree.current_scene
+	await _walk(road.player, [Vector2(82, 36)])
+	_expect(_step_sample().begins_with("water-") and not road.ground.weather.ripples.is_empty(),
+		"Walking through the puddle by the bridge plays a splash and leaves a ripple.")
+	await _snapshot("02a-bridge-puddle")
+	await _walk(road.player, [Vector2(8, 36)])
+	_expect(_step_sample().begins_with("plank-"), "The wooden bridge keeps its sound in the rain.")
+	await _walk(road.player, [Vector2(-225, 36)])
+	return await _rain_cross(&"ui_left", state.WEST_MARKET_SCENE, "")
+
+func _step_sample() -> String:
+	return _terrain().footsteps.stream.resource_path.get_file()
 
 func _rain_cross(direction: StringName, destination: String, clip: String) -> bool:
 	var source: AudioStreamPlayer = _terrain().rain
@@ -154,6 +179,28 @@ func _market_at_night() -> void:
 	_expect(summer > 0.12 and (winter > 0.12 if legacy else is_zero_approx(winter)),
 		"The test position has summer insects. Only the old market carries them into winter.")
 	print("AMBIENCE_SEASONS foot=", market.player.position, " summer=", snappedf(summer, 0.001), " winter=", snappedf(winter, 0.001))
+
+func _winter_walk() -> void:
+	await _time_at(0.28)
+	if not _expect(state.save_game() == OK and state.load_game() == OK, "Resume at the market on a winter morning."):
+		return
+	await tree.scene_changed
+	var market := tree.current_scene
+	await _walk(market.player, [Vector2(290, 36)])
+	_expect(_step_sample().begins_with("stone-"), "The middle of the winter street stays clear.")
+	await _walk(market.player, [Vector2(290, 55), Vector2(328, 55)])
+	var market_marks: int = market.ground.weather.snow_footprints.prints.size()
+	_expect(_step_sample().begins_with("snow-") and market_marks > 0, "Snow by the street takes footprints.")
+	await _snapshot("05-market-snow")
+	await Campaign.walk_to_market_exit(tree, market)
+	if not await _cross(&"ui_right", state.WEST_ROAD_SCENE):
+		return
+	var road := tree.current_scene
+	await _walk(road.player, [Vector2(-110, 36), Vector2(-110, 55), Vector2(-79, 55)])
+	var road_marks: int = road.ground.weather.snow_footprints.prints.size()
+	_expect(_step_sample().begins_with("snow-") and road_marks > 0, "Snow by the bridge takes footprints.")
+	print("ROAD_WEATHER winter_market_footprints=", market_marks, " winter_bridge_footprints=", road_marks)
+	await _snapshot("06-bridge-snow")
 
 func _start_recording() -> AudioEffectRecord:
 	if capture_dir.is_empty() or DisplayServer.get_name() == "headless":

@@ -4,6 +4,7 @@ const LAYOUT := preload("res://scripts/WestRoadLayout.gd")
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const TERRAIN := preload("res://scripts/EstateTerrain.gd")
 const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
+const ROAD_WEATHER := preload("res://scripts/RoadWeather.gd")
 const BACKDROP := Rect2(-800, -460, 1600, 960)
 const ROAD_HALF_WIDTH := 20.0
 const WATER_HALF_WIDTH := 23.0
@@ -42,6 +43,15 @@ const PAVING_LIMIT := [
 	Vector2(-161, 47), Vector2(-153, 47), Vector2(-153, 54), Vector2(-169, 54),
 	Vector2(-169, 92), Vector2(-520, 92),
 ]
+const RAIN_PUDDLES: Array[Rect2] = [
+	Rect2(68, 27, 36, 15), Rect2(-112, 36, 40, 14), Rect2(-218, 32, 31, 13),
+	Rect2(118, 63, 24, 9),
+]
+const SNOW_DRIFTS: Array[Rect2] = [
+	Rect2(66, 0, 76, 30), Rect2(85, 44, 74, 28), Rect2(185, 3, 66, 22),
+	Rect2(-130, 44, 70, 26), Rect2(-193, 10, 63, 17), Rect2(-256, 44, 62, 15),
+	Rect2(145, 107, 53, 17), Rect2(184, 138, 22, 10),
+]
 
 var road := EstateLayout.sample_road(PackedVector2Array(LAYOUT.ROAD))
 var creek := EstateLayout.sample_road(PackedVector2Array(LAYOUT.CREEK))
@@ -56,6 +66,7 @@ var water := _riverbed(WATER_HALF_WIDTH)
 var deep_water := _riverbed(14.0)
 var pavement := Geometry2D.intersect_polygons(track, PackedVector2Array(PAVING_LIMIT))[0]
 var meadow := TERRAIN.new(LAYOUT.BOUNDS.position.y)
+var weather := ROAD_WEATHER.new(RAIN_PUDDLES, SNOW_DRIFTS)
 
 func _ready() -> void:
 	var channel := StaticBody2D.new()
@@ -73,6 +84,8 @@ func _ready() -> void:
 	surface.name = "WaterSurface"
 	add_child(surface)
 	surface.set_weather(LANDSCAPE.WATER_TINTS[Global.season_index()], Global.has_rain())
+	weather.name = "RoadWeather"
+	add_child(weather)
 
 func _ribbon(path: PackedVector2Array, width: float) -> PackedVector2Array:
 	return Geometry2D.offset_polyline(path, width, Geometry2D.JOIN_ROUND, Geometry2D.END_ROUND)[0]
@@ -131,9 +144,6 @@ func _draw_meadow(grass: Color, loam: Color, season: int) -> void:
 	var winter := season == Global.Season.WINTER
 	TERRAIN.draw_loam(self, edge, grass.lerp(shade, 0.35))
 	meadow.draw_verge(self, edge, 1.5, grass.lerp(shade, 0.28), winter)
-	if winter:
-		for drift: Rect2 in [Rect2(130, 112, 35, 8), Rect2(173, 118, 24, 10), Rect2(183, 144, 20, 5)]:
-			draw_rect(drift, Color("#b7c3b5"))
 	meadow.draw_verge(self, meadow_lane, MEADOW_HALF_WIDTH * 2.0, grass, winter)
 	draw_colored_polygon(meadow_shoulder, loam.lerp(grass, 0.52))
 	TERRAIN.draw_loam(self, meadow_track, loam)

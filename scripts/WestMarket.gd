@@ -3,11 +3,12 @@ extends Node2D
 const TRACK_AUDIO := preload("res://scripts/TerrainAudio.gd")
 const VISITOR := preload("res://scenes/Visitor.tscn")
 const LAYOUT := preload("res://scripts/WestMarketLayout.gd")
+const GROUND := preload("res://scripts/WestMarketGround.gd")
 const ORDER_CART := preload("res://scripts/SeasonOrderCart.gd")
 const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
 
 @onready var player: Player = $Player
-@onready var ground: Node2D = $Ground
+@onready var ground: GROUND = $Ground
 @onready var lighting: CanvasModulate = $DayLighting
 @onready var audio: TRACK_AUDIO = AudioManager.terrain_audio
 @onready var counter: Control = %Counter
@@ -189,4 +190,4 @@ func _step(foot: Vector2) -> void:
 		surface = TRACK_AUDIO.Surface.STONE
 	elif ground.is_on_street(foot):
 		surface = TRACK_AUDIO.Surface.TRACK
-	audio.play_step(surface)
+	ground.weather.play_step(foot, player.get_real_velocity(), surface)

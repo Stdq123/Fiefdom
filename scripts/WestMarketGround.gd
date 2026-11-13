@@ -4,6 +4,7 @@ const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const LAYOUT := preload("res://scripts/WestMarketLayout.gd")
 const TERRAIN := preload("res://scripts/EstateTerrain.gd")
 const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
+const ROAD_WEATHER := preload("res://scripts/RoadWeather.gd")
 const BACKDROP := Rect2(-1600, -1300, 3200, 2600)
 const GRAIN_YARD := [
 	Vector2(-395, 116), Vector2(-364, 103), Vector2(-309, 108), Vector2(-260, 121),
@@ -61,12 +62,23 @@ const PROP_DETAILS := [
 	Vector3i(206, 108, LANDSCAPE.Prop.ROCK), Vector3i(290, 77, LANDSCAPE.Prop.FLOWERS),
 	Vector3i(324, -14, LANDSCAPE.Prop.SHRUB), Vector3i(369, 80, LANDSCAPE.Prop.ROCK),
 ]
+const RAIN_PUDDLES: Array[Rect2] = [
+	Rect2(278, 29, 38, 14), Rect2(-56, 53, 34, 15), Rect2(-159, -112, 42, 20),
+	Rect2(232, 126, 23, 14), Rect2(-252, 149, 38, 12),
+]
+const SNOW_DRIFTS: Array[Rect2] = [
+	Rect2(277, 45, 64, 24), Rect2(304, -1, 63, 24), Rect2(144, 86, 57, 25),
+	Rect2(-2, 82, 71, 22), Rect2(-176, -104, 54, 20), Rect2(-261, -99, 57, 19),
+	Rect2(-109, -74, 45, 26), Rect2(-370, 158, 73, 22), Rect2(-255, 175, 38, 15),
+	Rect2(218, 177, 43, 19), Rect2(230, 117, 29, 21),
+]
 
 var street: Array[PackedVector2Array] = []
 var street_shoulders: Array[PackedVector2Array] = []
 var paving: PackedVector2Array
 var main_path: PackedVector2Array
 var verge_art := TERRAIN.new(LAYOUT.BOUNDS.position.y)
+var weather := ROAD_WEATHER.new(RAIN_PUDDLES, SNOW_DRIFTS)
 
 func _ready() -> void:
 	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
@@ -93,6 +105,8 @@ func _ready() -> void:
 	surface.name = "BasinWater"
 	add_child(surface)
 	surface.set_weather(Color("#527d79"), Global.has_rain())
+	weather.name = "RoadWeather"
+	add_child(weather)
 
 func _road_outline(points: PackedVector2Array, radius: float) -> PackedVector2Array:
 	return Geometry2D.offset_polyline(points, radius, Geometry2D.JOIN_ROUND, Geometry2D.END_ROUND)[0]

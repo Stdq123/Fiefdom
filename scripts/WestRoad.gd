@@ -216,4 +216,4 @@ func _step(foot: Vector2) -> void:
 		surface = TRACK_AUDIO.Surface.STONE
 	elif Geometry2D.is_point_in_polygon(foot, ground.track) or Geometry2D.is_point_in_polygon(foot, ground.meadow_track):
 		surface = TRACK_AUDIO.Surface.TRACK
-	audio.play_step(surface)
+	ground.weather.play_step(foot, player.get_real_velocity(), surface)
