@@ -2,6 +2,8 @@ extends Node2D
 
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const LAYOUT := preload("res://scripts/WestMarketLayout.gd")
+const TERRAIN := preload("res://scripts/EstateTerrain.gd")
+const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
 const BACKDROP := Rect2(-1600, -1300, 3200, 2600)
 const GRAIN_YARD := [
 	Vector2(-395, 116), Vector2(-364, 103), Vector2(-309, 108), Vector2(-260, 121),
@@ -61,16 +63,22 @@ const PROP_DETAILS := [
 ]
 
 var street: Array[PackedVector2Array] = []
+var street_shoulders: Array[PackedVector2Array] = []
 var paving: PackedVector2Array
+var main_path: PackedVector2Array
+var verge_art := TERRAIN.new(LAYOUT.BOUNDS.position.y)
 
 func _ready() -> void:
-	var avenue := EstateLayout.sample_road(PackedVector2Array(LAYOUT.MAIN_ROAD + [LAYOUT.EAST_OUTSIDE]))
-	paving = _road_outline(avenue, 12.0)
-	street.append(_road_outline(avenue, 22.0))
+	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	main_path = EstateLayout.sample_road(PackedVector2Array(LAYOUT.MAIN_ROAD + [LAYOUT.EAST_OUTSIDE]))
+	paving = _road_outline(main_path, 12.0)
+	street.append(_road_outline(main_path, 22.0))
 	for lane: Array in [LAYOUT.FISH_LANE, LAYOUT.SILK_LANE, LAYOUT.CART_DRIVE]:
 		street.append(_road_outline(EstateLayout.sample_road(PackedVector2Array(lane)), 14.0))
 	for yard: Array in [GRAIN_YARD, FISH_YARD, SILK_YARD]:
 		street.append(PackedVector2Array(yard))
+	for surface in street:
+		street_shoulders.append(Geometry2D.offset_polygon(surface, 2.0)[0])
 
 	var basin := StaticBody2D.new()
 	basin.position = LAYOUT.BASIN.get_center()
@@ -81,6 +89,10 @@ func _ready() -> void:
 	collider.shape = rim
 	basin.add_child(collider)
 	add_child(basin)
+	var surface := WATER_SURFACE.new(EstateLayout.corners(LAYOUT.BASIN.grow(-5.0)), 0.0)
+	surface.name = "BasinWater"
+	add_child(surface)
+	surface.set_weather(Color("#527d79"), Global.has_rain())
 
 func _road_outline(points: PackedVector2Array, radius: float) -> PackedVector2Array:
 	return Geometry2D.offset_polyline(points, radius, Geometry2D.JOIN_ROUND, Geometry2D.END_ROUND)[0]
@@ -119,41 +131,13 @@ func _draw() -> void:
 	draw_texture_rect(LANDSCAPE.GRAIN, BACKDROP, true, Color(1.0, 1.0, 1.0, 0.75))
 	for foot: Vector2 in TREE_FEET:
 		draw_rect(Rect2(foot - Vector2(14, 1), Vector2(30, 4)), meadow.lerp(shade, 0.72))
-	draw_set_transform(Vector2(0, 3))
+	verge_art.draw_verge(self, main_path, 44.0, meadow, Global.season_index() == Global.Season.WINTER)
+	for shoulder in street_shoulders:
+		draw_colored_polygon(shoulder, dirt.lerp(meadow, 0.52))
 	for surface in street:
-		draw_colored_polygon(surface, dirt.lerp(meadow, 0.52))
-	draw_set_transform(Vector2.ZERO)
-	for surface in street:
-		draw_colored_polygon(surface, dirt)
-	var extent := Vector2i(LAYOUT.BOUNDS.size)
-	for mark in 620:
-		var foot := LAYOUT.BOUNDS.position + Vector2(posmod(mark * 127, extent.x), posmod(mark * 61, extent.y))
-		if is_on_street(to_global(foot)):
-			var ink := dirt.lightened(0.16) if mark % 2 == 0 else dirt.darkened(0.13)
-			draw_rect(Rect2(foot, Vector2(1 + mark % 4, 1)), ink)
-	_draw_paving(dirt)
+		TERRAIN.draw_loam(self, surface, dirt)
+	TERRAIN.draw_paving(self, paving, dirt, LAYOUT.EAST_GATE.x)
 	_draw_basin()
-
-func _draw_paving(dirt: Color) -> void:
-	var grout := dirt.lerp(Color("#606357"), 0.58)
-	draw_colored_polygon(paving, grout)
-	var bounds := Rect2(paving[0], Vector2.ZERO)
-	for point in paving:
-		bounds = bounds.expand(point)
-	for row in range(floori(bounds.position.y / 8.0), ceili(bounds.end.y / 8.0)):
-		for column in range(floori(bounds.position.x / 15.0), ceili(bounds.end.x / 15.0)):
-			var x := column * 15 + posmod(row, 2) * 7
-			var y := row * 8
-			var grain := posmod(column * 7 + row * 17, 13)
-			var slab := Rect2(x, y, 13 + grain % 2, 6)
-			var corners := [slab.position, Vector2(slab.end.x, slab.position.y),
-				slab.end, Vector2(slab.position.x, slab.end.y)]
-			if not corners.all(func(corner: Vector2) -> bool: return Geometry2D.is_point_in_polygon(corner, paving)):
-				continue
-			var stone := grout.lerp(Color("#a6a48a"), 0.37 + 0.025 * grain)
-			draw_rect(slab, stone.darkened(0.14))
-			draw_rect(Rect2(slab.position, slab.size - Vector2(1, 2)), stone)
-			draw_rect(Rect2(slab.position + Vector2(1, 1), Vector2(4 + grain % 5, 1)), stone.lightened(0.13))
 
 func _draw_basin() -> void:
 	var rim := LAYOUT.BASIN
@@ -163,8 +147,6 @@ func _draw_basin() -> void:
 	var water := rim.grow(-5.0)
 	draw_rect(water, Color("#527d79"))
 	draw_rect(Rect2(water.position, Vector2(water.size.x, 5)), Color("#476663"))
-	for offset: Vector2 in [Vector2(4, 10), Vector2(22, 8), Vector2(30, 16), Vector2(13, 20), Vector2(38, 23)]:
-		draw_rect(Rect2(water.position + offset, Vector2(7, 1)), Color("#8aaba0"))
 	for step in 5:
 		var x := rim.position.x + 5 + step * 10
 		draw_rect(Rect2(x, rim.end.y - 2, 8, 1), Color("#c3bfa4"))

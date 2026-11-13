@@ -842,3 +842,8 @@
 
 - 议税预览和改革后的收割提示都显示实际扣掉的铜钱。沿用原有税率和每份作物的取整规则，公私田产出和结局条件沿用原账。渠伯随田制更换对白，季青和陶辛会在定案后谈起所选办法。无窗口的新档回放到达两条结局。 [Godot 回放记录](../build/polish-council-feedback/godot-council-feedback.log)
 - 首份纳贡、新井田完工和召简到场有不同的短铃声，定案时有竹简声。Windows 整合包已导出并在解压后启动到标题。首次玩家通关、实景布局和音量仍需集中试玩。 [Windows 整合包](../build/windows-integrated/Fiefdom-1.0.0-Windows-x64.zip)
+
+## 水岸与西市街面
+
+- 南池、溪桥道、竹涧和鱼槽共用水面效果。深水和浅岸用不同水色，溪水沿溪流动，谷雨有涟漪，入冬岸边挂霜。西市主街与桥道西端共用石板，土路补了路肩。桥东草甸的高草换成成簇的草穗，割草后可见短茬。
+- 源码回放通过西市往返、木桥和浅滩、南池秋社以及割草过冬。1280×720 Vulkan 取帧在不可见桌面完成。 [源码冒烟](../build/polish-water-and-streets/godot-map-verified.log) · [谷雨竹涧](../build/polish-water-and-streets/verified-frames/08-rain.png) · [西市街面](../build/polish-water-and-streets/verified-frames/05-market-fish-lane.png)

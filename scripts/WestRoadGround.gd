@@ -3,6 +3,7 @@ extends Node2D
 const LAYOUT := preload("res://scripts/WestRoadLayout.gd")
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const TERRAIN := preload("res://scripts/EstateTerrain.gd")
+const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
 const BACKDROP := Rect2(-800, -460, 1600, 960)
 const ROAD_HALF_WIDTH := 20.0
 const WATER_HALF_WIDTH := 23.0
@@ -55,7 +56,6 @@ var water := _riverbed(WATER_HALF_WIDTH)
 var deep_water := _riverbed(14.0)
 var pavement := Geometry2D.intersect_polygons(track, PackedVector2Array(PAVING_LIMIT))[0]
 var meadow := TERRAIN.new(LAYOUT.BOUNDS.position.y)
-var flow_time := 0.0
 
 func _ready() -> void:
 	var channel := StaticBody2D.new()
@@ -69,11 +69,10 @@ func _ready() -> void:
 		rail.polygon = EstateLayout.corners(Rect2(LAYOUT.BRIDGE.position.x, y, LAYOUT.BRIDGE.size.x, 2.0))
 		channel.add_child(rail)
 	add_child(channel)
-	$Current.draw.connect(_draw_current)
-
-func _process(delta: float) -> void:
-	flow_time = fposmod(flow_time + delta * 9.0, 432.0)
-	$Current.queue_redraw()
+	var surface := WATER_SURFACE.new(water, 12.0, [LAYOUT.BRIDGE.grow(4.0)])
+	surface.name = "WaterSurface"
+	add_child(surface)
+	surface.set_weather(LANDSCAPE.WATER_TINTS[Global.season_index()], Global.has_rain())
 
 func _ribbon(path: PackedVector2Array, width: float) -> PackedVector2Array:
 	return Geometry2D.offset_polyline(path, width, Geometry2D.JOIN_ROUND, Geometry2D.END_ROUND)[0]
@@ -116,54 +115,38 @@ func _draw() -> void:
 	meadow.draw_verge(self, road, ROAD_HALF_WIDTH * 2.0, grass, winter)
 	draw_colored_polygon(shoulder, loam.lerp(grass, 0.54))
 	TERRAIN.draw_loam(self, track, loam)
-	_draw_paving()
+	TERRAIN.draw_paving(self, pavement, loam, LAYOUT.MARKET_GATE.x)
 	var stream_color: Color = LANDSCAPE.WATER_TINTS[season]
-	draw_colored_polygon(banks, Color("#8e9f91") if winter else Color("#718376"))
-	draw_colored_polygon(shallows, stream_color.lightened(0.12))
-	draw_colored_polygon(water, stream_color.darkened(0.09))
-	draw_colored_polygon(deep_water, stream_color.darkened(0.19))
-	_draw_water_edge(stream_color, winter)
+	var silt := grass.lerp(Color("#a5a085"), 0.58)
+	draw_colored_polygon(banks, silt.darkened(0.13))
+	draw_colored_polygon(shallows, silt)
+	draw_colored_polygon(water, stream_color.lerp(Color("#89a58b"), 0.41))
+	draw_colored_polygon(deep_water, stream_color.darkened(0.16))
+	WATER_SURFACE.draw_shore(self, water, silt, stream_color, winter, [LAYOUT.BRIDGE.grow(8.0)])
 	_draw_bridge(winter)
 
 func _draw_meadow(grass: Color, loam: Color, season: int) -> void:
 	var shade: Color = [Color("#6c784e"), Color("#7c8b50"), Color("#958353"), Color("#89998b")][season]
-	draw_colored_polygon(PackedVector2Array(LAYOUT.MEADOW_EDGE), grass.lerp(shade, 0.65))
-	if season == Global.Season.WINTER:
+	var edge := PackedVector2Array(LAYOUT.MEADOW_EDGE)
+	var winter := season == Global.Season.WINTER
+	TERRAIN.draw_loam(self, edge, grass.lerp(shade, 0.35))
+	meadow.draw_verge(self, edge, 1.5, grass.lerp(shade, 0.28), winter)
+	if winter:
 		for drift: Rect2 in [Rect2(130, 112, 35, 8), Rect2(173, 118, 24, 10), Rect2(183, 144, 20, 5)]:
 			draw_rect(drift, Color("#b7c3b5"))
-	meadow.draw_verge(self, meadow_lane, MEADOW_HALF_WIDTH * 2.0, grass, season == Global.Season.WINTER)
+	meadow.draw_verge(self, meadow_lane, MEADOW_HALF_WIDTH * 2.0, grass, winter)
 	draw_colored_polygon(meadow_shoulder, loam.lerp(grass, 0.52))
 	TERRAIN.draw_loam(self, meadow_track, loam)
-
-func _draw_water_edge(tint: Color, winter: bool) -> void:
-	var rim := Color("#a8b8ac") if winter else tint.lightened(0.24)
-	for index in range(20, creek.size() - 21, 3):
-		var point := creek[index].round()
-		if absf(point.y - LAYOUT.BRIDGE.get_center().y) < 27.0:
-			continue
-		var side := -1.0 if index % 2 == 0 else 1.0
-		var at := point + Vector2(side * (WATER_HALF_WIDTH + index % 6), 0)
-		draw_rect(Rect2(at, Vector2(4 + index % 4, 1)), Color(rim, 0.65))
-		draw_rect(Rect2(at + Vector2(side * 5.0, 2), Vector2(3, 2)), Color("#9aa28a"))
-
-func _draw_paving() -> void:
-	var grout := Color("#777868")
-	draw_colored_polygon(pavement, grout)
-	for row in 6:
-		for column in 19:
-			var stagger := 8 if row % 2 == 0 else 0
-			var slab := Rect2(-420 + column * 15 + stagger, 16 + row * 7, 14, 6)
-			if not Geometry2D.is_point_in_polygon(slab.position, pavement) or not Geometry2D.is_point_in_polygon(slab.end, pavement):
-				continue
-			var stone := grout.lerp(Color("#bbb49a"), 0.35 + 0.08 * ((column * 3 + row) % 5))
-			draw_rect(slab, stone)
-			draw_rect(Rect2(slab.position + Vector2(1, 0), Vector2(11, 1)), stone.lightened(0.14))
 
 func _draw_bridge(winter: bool) -> void:
 	var deck := LAYOUT.BRIDGE
 	draw_rect(Rect2(deck.position + Vector2(-3, 4), deck.size + Vector2(6, 4)), Color("#354842"))
 	draw_rect(deck.grow(2.0), Color("#645346"))
 	draw_rect(deck, Color("#a8967a") if winter else Color("#aa8b5e"))
+	for x: float in [deck.position.x, deck.end.x - 4.0]:
+		draw_rect(Rect2(x, deck.position.y + 2, 4, deck.size.y - 4), Color("#746e58"))
+		for y in range(int(deck.position.y) + 5, int(deck.end.y) - 3, 8):
+			draw_rect(Rect2(x, y, 4, 2), Color("#a39a7b"))
 	for plank in range(1, floori(deck.size.x), 5):
 		var x := deck.position.x + plank
 		draw_rect(Rect2(x, deck.position.y + 3, 1, deck.size.y - 6), Color("#8a6b4a"))
@@ -174,17 +157,6 @@ func _draw_bridge(winter: bool) -> void:
 		for x in [deck.position.x + 2, -23.0, 18.0, deck.end.x - 5]:
 			draw_rect(Rect2(x, y - 5, 4, 9), Color("#6c5138"))
 			draw_rect(Rect2(x, y - 5, 4, 2), Color("#d1b78b"))
-
-func _draw_current() -> void:
-	var tint: Color = LANDSCAPE.WATER_TINTS[Global.season_index()]
-	for index in 39:
-		var y := floorf(-176.0 + fposmod(index * 47.0 + flow_time, 432.0))
-		if y >= LAYOUT.BRIDGE.position.y - 3.0 and y <= LAYOUT.BRIDGE.end.y + 8.0:
-			continue
-		var x := -80 + posmod(index * 29, 104)
-		var ripple := Rect2(x, y, 4 + index % 8, 1)
-		if Geometry2D.is_point_in_polygon(ripple.position, water) and Geometry2D.is_point_in_polygon(ripple.end, water):
-			$Current.draw_rect(ripple, Color(tint.lightened(0.29), 0.35))
 
 func place_scenery(layer: Node2D) -> void:
 	var season := Global.season_index()

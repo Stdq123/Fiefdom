@@ -114,7 +114,7 @@ func _return_and_continue(market: Node2D) -> void:
 		return
 	var road := tree.current_scene as Node2D
 	var player: Player = road.player
-	var west_position: float = road._map_road_progress()
+	var west_position: Vector2 = road._map_road_progress()
 	_expect(state.market_trip_target == state.MARKET_RETURN and road.route_direction == Vector2.RIGHT,
 		"The market return marker continues east on the bridge road.")
 	await _snapshot("02-market-end-of-road")
@@ -124,7 +124,7 @@ func _return_and_continue(market: Node2D) -> void:
 		"Deep water stops the player at the visible bank away from the bridge.")
 	await _walk(player, [Vector2(-82, 36), Vector2(-17, 36)])
 	_expect(road.ground.LAYOUT.BRIDGE.has_point(player.position), "The bridge connects the two banks.")
-	_expect(west_position < 0.1 and absf(road._map_road_progress() - 0.5) < 0.06,
+	_expect(west_position.x < 0.1 and absf(road._map_road_progress().x - 0.5) < 0.06,
 		"The map marker moves from the market side to the bridge according to the player's position.")
 	await _snapshot("03-creek-bridge")
 	await _button(road.get_node("%SettingsButton"))

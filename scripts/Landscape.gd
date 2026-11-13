@@ -14,6 +14,7 @@ const SEASONAL_TREES := preload("res://assets/world/seasonal-trees.svg")
 const WINTER_WILLOW := preload("res://assets/world/winter-willow.svg")
 const SEASONAL_GROUND := preload("res://scripts/SeasonalGround.gd")
 const ESTATE_TERRAIN := preload("res://scripts/EstateTerrain.gd")
+const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
 const SNOW_FOOTPRINTS := preload("res://scripts/SnowFootprints.gd")
 const ROAD_PAVILION := preload("res://assets/world/road-pavilion.svg")
 const SILK_SAMPLE := preload("res://assets/world/west-court-sample.svg")
@@ -110,6 +111,7 @@ const BERRY_GROVE := RavineLayout.FRUIT + Vector2(-17, 8)
 const BRIDGE := RavineLayout.BRIDGE
 const BRIDGE_DECK := Rect2(BRIDGE - Vector2(27, 13), Vector2(54, 26))
 const FORD := RavineLayout.FORD
+const FORD_AREA := Rect2(FORD - Vector2(35, 17), Vector2(70, 34))
 const CROSSING_HALF_DEPTH := 16.0
 const WATER_HALF_WIDTH := 17.0
 const EAST_LANE_JUNCTION := EstateLayout.EAST_LANE_JUNCTION
@@ -329,13 +331,11 @@ var seasonal_textures: Dictionary[int, AtlasTexture] = {}
 var ground_cover: SEASONAL_GROUND
 var estate_terrain: ESTATE_TERRAIN
 var snow_footprints: SNOW_FOOTPRINTS
-var creek_surface: Node2D
+var water_surface: WATER_SURFACE
 var terrain_audio: TERRAIN_AUDIO
 var day_lighting: DAY_LIGHTING
 var season := 0
 var raining := false
-var water_time := 0.0
-var water_frame := 0
 var estate_tracks := ESTATE_TRACKS.duplicate()
 var estate_track_widths: Array[float] = []
 var track_shapes: Array[Dictionary] = []
@@ -343,8 +343,8 @@ var field_approaches: Dictionary[int, PackedVector2Array] = {}
 
 func _ready() -> void:
 	ground_cover = SEASONAL_GROUND.new(wilderness)
+	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	if not wilderness:
-		texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 		estate_terrain = ESTATE_TERRAIN.new(ESTATE_BOUNDS.position.y)
 	snow_footprints = SNOW_FOOTPRINTS.new()
 	snow_footprints.name = "SnowFootprints"
@@ -370,6 +370,7 @@ func _ready() -> void:
 		_layout_field_approaches()
 	else:
 		_build_track_shapes(WILD_TRACKS, WILD_TRACK_WIDTHS)
+	_add_water_surface()
 	_update_weather()
 	_prepare_map.call_deferred()
 
@@ -447,9 +448,6 @@ func _prepare_map() -> void:
 		scenery[sprite] = placement.z
 	if wilderness:
 		scenery[_place_sprite(props_layer, RavineLayout.LOOKOUT, Vector2(-24, -38), LOOKOUT)] = SCENE_LANDMARK
-		creek_surface = Node2D.new()
-		creek_surface.draw.connect(_draw_surface)
-		add_child(creek_surface)
 	else:
 		var pavilion_texture := _atlas_texture(ESTATE_BUILDINGS, PAVILION_REGION)
 		scenery[_place_sprite(props_layer, SOUTH_PAVILION, _building_offset(PAVILION_REGION.size), pavilion_texture)] = SCENE_LANDMARK
@@ -467,6 +465,15 @@ func _prepare_map() -> void:
 	_add_landmark_labels()
 	_install_boundaries()
 	_refresh_scenery()
+
+func _add_water_surface() -> void:
+	if wilderness:
+		water_surface = WATER_SURFACE.new(_ribbon(PackedVector2Array(CREEK), WATER_HALF_WIDTH), 10.0,
+			[BRIDGE_DECK.grow(2.0), FORD_AREA])
+	else:
+		water_surface = WATER_SURFACE.new(estate_terrain.pond, 0.0)
+	water_surface.name = "WaterSurface"
+	add_child(water_surface)
 
 func _place_lanterns(layer: Node2D) -> void:
 	if wilderness:
@@ -509,8 +516,7 @@ func _update_weather() -> void:
 	raining = Global.has_rain()
 	if not wilderness:
 		_refresh_estate_tracks()
-	if creek_surface:
-		creek_surface.queue_redraw()
+	water_surface.set_weather(WATER_TINTS[season], raining)
 	_refresh_scenery()
 
 func _refresh_scenery() -> void:
@@ -559,12 +565,6 @@ func _process(delta: float) -> void:
 		var tint := sprite.self_modulate
 		tint.a = move_toward(tint.a, 0.28 if behind else 1.0, delta * 5.6)
 		sprite.self_modulate = tint
-	if creek_surface:
-		water_time = fposmod(water_time + delta * 8.0, 640.0)
-		var next_frame := floori(water_time)
-		if next_frame != water_frame:
-			water_frame = next_frame
-			creek_surface.queue_redraw()
 
 func _draw() -> void:
 	_draw_ground()
@@ -807,9 +807,9 @@ func _append_track_cap(outline: PackedVector2Array, tip: Vector2, first: Vector2
 func _draw_tracks() -> void:
 	var dust := _track_dust()
 	var verge: Color = SEASON_PALETTES[season][0]
+	if raining:
+		verge = verge.darkened(0.15)
 	if estate_terrain:
-		if raining:
-			verge = verge.darkened(0.15)
 		for track in track_shapes:
 			estate_terrain.draw_verge(self, track.gravel_path, track.width, verge, season == Global.Season.WINTER)
 	for track in track_shapes:
@@ -817,10 +817,7 @@ func _draw_tracks() -> void:
 	for track in track_shapes:
 		draw_colored_polygon(track.edge, dust.lerp(verge, 0.41))
 	for track in track_shapes:
-		if estate_terrain:
-			ESTATE_TERRAIN.draw_loam(self, track.surface, dust)
-		else:
-			draw_colored_polygon(track.surface, dust)
+		ESTATE_TERRAIN.draw_loam(self, track.surface, dust)
 	for track in track_shapes:
 		_track_gravel(track.gravel_path, track.width, dust)
 
@@ -910,30 +907,13 @@ func _draw_creek() -> void:
 	var line := PackedVector2Array(CREEK)
 	var water: Color = WATER_TINTS[season]
 	var winter := season == Global.Season.WINTER
+	var silt := Color("#778b7d") if winter else Color("#727b5e")
+	var bank := _ribbon(line, WATER_HALF_WIDTH)
 	draw_colored_polygon(_ribbon(line, 26), Color("#505f59") if winter else Color("#475b49"))
-	draw_colored_polygon(_ribbon(line, 23), Color("#72837d") if winter else Color("#718375"))
-	draw_colored_polygon(_ribbon(line, WATER_HALF_WIDTH + 2), water.darkened(0.25))
-	draw_colored_polygon(_ribbon(line, 12), water)
-	for step in range(floori(WILD_BOUNDS.position.y) - 16, ceili(WILD_BOUNDS.end.y) + 18, 9):
-		var mid := roundf(creek_x(step))
-		var offset := posmod(step * 3, 5)
-		draw_rect(Rect2(mid - 23 + offset, step, 4, 2), Color("#9cae9f") if winter else Color("#879576"))
-		draw_rect(Rect2(mid + 16 - offset, step + 3, 6, 1), water.lightened(0.09 if winter else 0.21))
-	if winter:
-		_draw_creek_rime()
-
-func _draw_creek_rime() -> void:
-	for index in ceili(WILD_BOUNDS.size.y / 16.0) + 2:
-		var y := WILD_BOUNDS.position.y - 14 + index * 16 + posmod(index * 11, 13)
-		if absf(y - BRIDGE.y) <= CROSSING_HALF_DEPTH + 4.0 or absf(y - FORD.y) <= CROSSING_HALF_DEPTH + 4.0:
-			continue
-		var bank := -1 if index % 5 < 2 else 1
-		var x := roundf(creek_x(y)) + bank * (17 + index % 6)
-		var width := 5 + index % 5
-		draw_rect(Rect2(x - width * 0.5, y, width, 2), Color("#a0b8b1"))
-		draw_rect(Rect2(x - 2, y + 2, width - 4, 2), Color("#829f9c"))
-		if index % 3 == 0:
-			draw_rect(Rect2(x - 2 * bank, y - 2, 3, 1), Color("#c1d1c7"))
+	draw_colored_polygon(_ribbon(line, 22), silt)
+	draw_colored_polygon(bank, water.lerp(Color("#86a587"), 0.43))
+	draw_colored_polygon(_ribbon(line, 11.0, true), water.darkened(0.13))
+	WATER_SURFACE.draw_shore(self, bank, silt, water, winter, [BRIDGE_DECK.grow(4.0), FORD_AREA])
 
 func _draw_crossings() -> void:
 	var deck := BRIDGE_DECK
@@ -969,18 +949,6 @@ func _draw_crossings() -> void:
 		draw_rect(Rect2(stone + Vector2(-3, -4), Vector2(width, 5)), Color("#a2a898"))
 		draw_rect(Rect2(stone + Vector2(-1, -5), Vector2(width - 3.0, 2)), Color("#c6c3aa"))
 
-func _draw_surface() -> void:
-	var water: Color = WATER_TINTS[season]
-	for i in 30:
-		var y := WILD_BOUNDS.position.y - 14 + posmod(i * 29 + water_frame, ceili(WILD_BOUNDS.size.y) + 28)
-		if absf(y - BRIDGE.y) <= CROSSING_HALF_DEPTH or absf(y - FORD.y) <= CROSSING_HALF_DEPTH:
-			continue
-		var x := roundf(creek_x(y)) + (i * 7) % 14 - 7
-		var highlight := Color(water.lightened(0.32), 0.48 + 0.15 * (i % 3))
-		creek_surface.draw_rect(Rect2(x - 4, y, 5 + i % 5, 1), highlight)
-		if raining:
-			creek_surface.draw_rect(Rect2(x - 1, y + 2, 3, 1), Color("#adc7bb90"))
-
 static func creek_x(y: float) -> float:
 	for i in range(1, CREEK.size()):
 		var a: Vector2 = CREEK[i - 1]
@@ -989,13 +957,15 @@ static func creek_x(y: float) -> float:
 			return lerpf(a.x, b.x, clampf(inverse_lerp(a.y, b.y, y), 0.0, 1.0))
 	return CREEK.back().x
 
-func _ribbon(line: PackedVector2Array, half_width: float) -> PackedVector2Array:
+func _ribbon(line: PackedVector2Array, half_width: float, uneven := false) -> PackedVector2Array:
 	var band := PackedVector2Array()
-	var edge := Vector2(half_width, 0)
 	for point in line:
-		band.append(point - edge)
+		var edge := half_width + (sin(point.y * 0.046) * 2.6 if uneven else 0.0)
+		band.append(point - Vector2(edge, 0))
 	for i in range(line.size() - 1, -1, -1):
-		band.append(line[i] + edge)
+		var point := line[i]
+		var edge := half_width + (cos(point.y * 0.052) * 2.2 if uneven else 0.0)
+		band.append(point + Vector2(edge, 0))
 	return band
 
 func _install_boundaries() -> void:

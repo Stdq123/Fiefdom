@@ -33,8 +33,6 @@ z_index = -4
 texture_repeat = 2
 script = ExtResource("2_ground")
 
-[node name="Current" type="Node2D" parent="Ground"]
-
 [node name="Waypoint" type="Node2D" parent="."]
 z_index = -2
 

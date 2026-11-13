@@ -2,6 +2,7 @@ extends RefCounted
 
 const LOAM := preload("res://assets/world/ninja-adventure/estate-loam.png")
 const VERGE := preload("res://assets/world/ninja-adventure/estate-verge.png")
+const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
 const TUFT_SIZE := Vector2(16, 16)
 const RIDGE_PROFILE := [
 	Vector2(-540, -13), Vector2(-430, -16), Vector2(-368, -21), Vector2(-334, -25),
@@ -23,11 +24,6 @@ const MEADOW_PATCHES := [
 	Rect2(82, 581, 106, 99), Rect2(204, 624, 77, 58), Rect2(386, 657, 116, 60),
 	Rect2(127, 739, 80, 64), Rect2(260, 795, 149, 71), Rect2(385, 899, 111, 65),
 ]
-const POND_GLINTS := [
-	Vector2(227, 675), Vector2(284, 665), Vector2(202, 699), Vector2(262, 694),
-	Vector2(310, 706), Vector2(231, 726), Vector2(283, 733), Vector2(247, 749),
-]
-
 var crest := PackedVector2Array()
 var north_edge: float
 var meadow_sprigs := PackedVector2Array()
@@ -85,6 +81,36 @@ static func draw_loam(canvas: CanvasItem, polygon: PackedVector2Array, soil: Col
 		uvs.append(point / size)
 	canvas.draw_polygon(polygon, PackedColorArray([soil]), uvs, LOAM)
 
+static func draw_paving(canvas: CanvasItem, outline: PackedVector2Array, loam: Color, joint_origin: float) -> void:
+	var grout := loam.lerp(Color("#62675e"), 0.66)
+	canvas.draw_colored_polygon(outline, grout)
+	var area := Rect2(outline[0], Vector2.ZERO)
+	for point in outline:
+		area = area.expand(point)
+	for row in range(floori(area.position.y / 8.0), ceili(area.end.y / 8.0)):
+		for column in range(floori((area.position.x - joint_origin) / 15.0) - 1,
+				ceili((area.end.x - joint_origin) / 15.0)):
+			var x := joint_origin + column * 15 + posmod(row, 2) * 7
+			var y := row * 8
+			var grain := posmod(column * 7 + row * 17, 13)
+			var slab := Rect2(x, y, 13 + grain % 2, 6)
+			var corners := EstateLayout.corners(slab)
+			if not Geometry2D.is_point_in_polygon(slab.get_center(), outline):
+				continue
+			var stone := grout.lerp(Color("#bab49a"), 0.26 + 0.034 * grain)
+			var inside := true
+			for corner in corners:
+				if not Geometry2D.is_point_in_polygon(corner, outline):
+					inside = false
+					break
+			if inside:
+				canvas.draw_rect(slab, stone.darkened(0.16))
+				canvas.draw_rect(Rect2(slab.position, slab.size - Vector2(1, 1)), stone)
+				canvas.draw_rect(Rect2(slab.position + Vector2(1, 0), Vector2(4 + grain % 6, 1)), stone.lightened(0.15))
+			else:
+				for fragment in Geometry2D.intersect_polygons(corners, outline):
+					canvas.draw_colored_polygon(fragment, stone.darkened(0.09))
+
 func draw_meadow(canvas: CanvasItem, grass: Color, winter: bool) -> void:
 	for index in meadow_sprigs.size():
 		if winter and index % 3 != 0:
@@ -95,18 +121,9 @@ func draw_meadow(canvas: CanvasItem, grass: Color, winter: bool) -> void:
 func draw_pond(canvas: CanvasItem, grass: Color, water: Color, winter: bool) -> void:
 	var mud := grass.lerp(Color("#a49673"), 0.56)
 	canvas.draw_colored_polygon(pond_bank, mud.darkened(0.10))
-	canvas.draw_colored_polygon(pond, water.lightened(0.13))
-	canvas.draw_colored_polygon(pond_depth, water.darkened(0.08))
-	for index in POND_GLINTS.size():
-		var at: Vector2 = POND_GLINTS[index]
-		var length := 8.0 + float(index % 4) * 3.0
-		canvas.draw_rect(Rect2(at, Vector2(length, 1)), Color(water.lightened(0.28), 0.72))
-		if index % 3 == 0:
-			canvas.draw_rect(Rect2(at + Vector2(5, 3), Vector2(length * 0.5, 1)), water.lightened(0.12))
-	for index in pond.size():
-		var at := pond[index].lerp(pond[(index + 1) % pond.size()], 0.55).round()
-		var rim := Color("#b1c3b6") if winter else mud.lightened(0.19)
-		canvas.draw_rect(Rect2(at - Vector2(2, 0), Vector2(4 + index % 3, 2)), Color(rim, 0.77))
+	canvas.draw_colored_polygon(pond, water.lerp(Color("#8c9c74"), 0.46))
+	canvas.draw_colored_polygon(pond_depth, water.darkened(0.11))
+	WATER_SURFACE.draw_shore(canvas, pond, mud, water, winter)
 
 func draw_verge(canvas: CanvasItem, points: PackedVector2Array, width: float, grass: Color, winter: bool) -> void:
 	for index in range(3, points.size() - 2, 5):
