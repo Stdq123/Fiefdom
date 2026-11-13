@@ -7,6 +7,7 @@ const ESTATE_WORLD := preload("res://scripts/World.gd")
 @onready var heading: Label = %GuideHeading
 @onready var route_progress: Button = %RouteProgress
 @onready var council_prep: Button = %CouncilPrepButton
+@onready var six_arts: Button = %PromotionArts
 
 var world: ESTATE_WORLD
 var opening_cue := OpeningCue.NONE
@@ -41,12 +42,14 @@ func _ready() -> void:
 func setup(estate_world: ESTATE_WORLD) -> void:
 	world = estate_world
 	world.seed_selected.connect(refresh.unbind(1))
+	Global.player_stats.level_up.connect(refresh.unbind(2))
 	GameEvents.stamina_changed.connect(refresh.unbind(1))
 	refresh()
 
 func refresh() -> void:
 	opening_cue = OpeningCue.NONE
 	waiting_for_tribute_crop = false
+	six_arts.hide()
 	if not world or Global.well_fields.is_empty():
 		return
 	var goals := Global.route_objectives()
@@ -91,8 +94,7 @@ func refresh() -> void:
 			_describe("开垦第二块井田", "已完成 %d/%d 夜 · %s\n睡觉可推进。" % [
 				progress, Global.RECLAMATION_NIGHTS, Global.reclamation_stage(progress)])
 		else:
-			var next := "条件已齐，过夜核定。" if Global.eligible_for_promotion() else "达标后过夜核定。"
-			_describe("新井田已完工", Global.promotion_summary() + "\n" + next)
+			_show_next_promotion()
 	elif not Global.first_tribute_delivered() and Global.current_rank == Global.Rank.XIA_SHI:
 		_describe("第一次纳贡", _opening_field_step(Global.well_fields[0]["center_pos"], true))
 	elif (Global.current_rank == Global.Rank.XIA_SHI and Global.private_harvest_total == 0
@@ -111,6 +113,23 @@ func _show_first_promotion() -> void:
 		_describe(title, "晋升要求周礼中等或以上。当前周礼为「%s」。" % Global.zhou_li_score)
 	else:
 		_describe(title, "纳贡或交谈积声望，达标后过夜晋升。\n招募一人会花 %d 声望。" % Global.balance.recruit_reputation_requirement)
+
+func _show_next_promotion() -> void:
+	if Global.current_rank == Global.Rank.XIA_SHI:
+		_show_first_promotion()
+		return
+	var title := "晋升" + String(Global.rank_names[Global.current_rank + 1])
+	var reputation := "声望 %d/%d" % [Global.reputation, Global.promotion_reputation()]
+	if Global.eligible_for_promotion():
+		_describe(title, reputation + " · 过夜核定爵位。")
+		return
+	var required_art := Global.balance.upper_rank_art_level
+	var best_art := Global.highest_six_art_level()
+	if Global.current_rank == Global.Rank.ZHONG_SHI and best_art < required_art:
+		six_arts.show()
+		_describe(title, "%s\n任一六艺需 %d 级，当前最高 %d 级。" % [reputation, required_art, best_art])
+	else:
+		_describe(title, reputation + "\n纳贡或同来客交谈积声望。")
 
 func _show_first_expansion() -> void:
 	var plan := Global.reclamation_plan()

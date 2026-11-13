@@ -135,7 +135,8 @@ func _run() -> void:
 	_check("开垦第二块井田" in guide.heading.text and "0/4" in guide.text, "The guide shows the construction countdown.")
 	for day in range(4):
 		await _sleep(ui)
-	_check("新井田已完工" in guide.heading.text, "The guide acknowledges the completed field.")
+	_check(guide.heading.text == "晋升" + state.rank_names[state.current_rank + 1],
+		"After the second field is ready the guide names the next promotion.")
 	_check(state.well_fields[1]["is_unlocked"], "Second well field unlocks after four regular nights")
 	ui.manage_button.pressed.emit()
 	var panel = ui.panel_manager.management_panel_instance

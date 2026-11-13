@@ -65,13 +65,18 @@ func _promote_through_study() -> void:
 		and "任一六艺需 3 级 · 当前最高 2 级" in book.rank_status.text and book.arts_button.visible,
 		"Before the third year the ledger shows the date and the missing rank qualification.")
 	await _snapshot("01-study-needed")
-	await _button(book.arts_button)
+	await _button(book.close_button)
+	_expect(ui.hud.guide.heading.text == "晋升上士" and "当前最高 2 级" in ui.hud.guide.text,
+		"The journal points from the finished field to the missing art level.")
+	await _button(ui.hud.guide.six_arts)
 	var management: Control = ui.panel_manager.management_panel_instance
 	_expect(not tree.paused and management.stats_container.is_visible_in_tree(), "The arts shortcut reaches the actual arts tab.")
 	await _button(management.read_button)
 	_expect(state.player_stats.get_level(PlayerStats.Art.LITERACY) == 3 and state.eligible_for_promotion(),
 		"Ordinary study reaches the art level needed for promotion.")
 	await _button(management.get_node("CloseButton"))
+	_expect(not ui.hud.guide.six_arts.visible and "过夜核定" in ui.hud.guide.text,
+		"The journal switches to nightly confirmation as soon as the requirement is met.")
 	await _sleep()
 	_expect(state.current_day == 48 and state.current_rank == state.Rank.SHANG_SHI and not state.tax_council_waiting(),
 		"Nightly promotion takes the player to the next rank.")

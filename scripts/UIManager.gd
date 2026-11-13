@@ -69,6 +69,7 @@ func _ready() -> void:
 	route_goals.action_requested.connect(_on_route_goal_action)
 	council_preparation.world = world
 	hud.council_prep_button.pressed.connect(_open_council_preparation)
+	hud.guide.six_arts.pressed.connect(_show_six_arts)
 	council_preparation.fields_requested.connect(_guide_public_harvest)
 	council_preparation.six_arts_requested.connect(_show_six_arts)
 	council_preparation.silk_requested.connect(_show_silk)
@@ -110,6 +111,7 @@ func _process(_delta: float) -> void:
 	hud.calendar_button.disabled = hud.map_button.disabled
 	hud.route_progress.disabled = hud.map_button.disabled
 	hud.council_prep_button.disabled = hud.map_button.disabled
+	hud.guide.six_arts.disabled = hud.map_button.disabled
 	hud.handover_button.disabled = hud.map_button.disabled
 	hud.tribute_button.disabled = hud.map_button.disabled
 	hud.raid_alert.disabled = blocked

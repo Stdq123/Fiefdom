@@ -189,6 +189,16 @@ mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 15
 text = "查议税条件"
 
+[node name="PromotionArts" type="Button" parent="Journal/Stack"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 31)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 15
+text = "查看六艺"
+
 [node name="WorksiteButton" type="Button" parent="Journal/Stack"]
 unique_name_in_owner = true
 visible = false
