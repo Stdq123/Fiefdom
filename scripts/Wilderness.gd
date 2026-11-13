@@ -111,13 +111,13 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 func _on_fishing_requested(spot: Node2D) -> void:
-	if MapTravel.active or $FishingUI.has_node("FishingPanel") or not Global.cast_fishing_line():
+	if MapTravel.active or $FishingUI.has_node("FishingPanel") or not Global.cast_fishing_line(spot.site):
 		return
 	var panel := FISHING_PANEL.new()
 	panel.name = "FishingPanel"
 	panel.spot = spot
 	panel.angler = $Player
-	panel.market_route = ravine_map.follow_market
+	panel.route_to = ravine_map.follow_market
 	$FishingUI.add_child(panel)
 
 func _open_raft_trial() -> void:

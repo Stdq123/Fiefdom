@@ -11,6 +11,7 @@ const SEED_ORDERS := ["spring", "spring_seed_share"]
 const SEED_CROPS := ["beans", "millet"]
 const SEED_RELAY_FRACTION := 0.085
 const SEED_GROW_NIGHTS := 3
+const POND_ORDERS := ["summer", "summer_willow_catch"]
 const SILK_ITEM := "silk_bolt"
 const ORDERS := [
 	{
@@ -25,7 +26,7 @@ const ORDERS := [
 		"request": "下游有几家也在量水口。若井田引得来水，留两份新稻给他们看看。",
 		"need": {"rice": 2},
 		"thanks": "石墨在稻袋上绑了截量渠的绳，留给下游照着比量。",
-		"arrival": "石墨的两袋新稻在卸货场码好了。下游的人来取稻时，袋口那截量水的绳也一并带走。"
+		"arrival": "下游的人收了稻和量水绳，送来几块木板作谢礼。石墨把板铺在南池西岸，想钓鱼时有个稳当的落脚处。"
 	},
 	{
 		"id": "autumn", "title": "东岗秋粮", "speaker": "弋戎",
@@ -56,7 +57,7 @@ const FOLLOW_UP_ORDERS := [
 		"request": "下游这几日都在修渠。备两份新稻，再到柳湾钓一尾白鲦，我给渠边的人送饭。",
 		"need": {"rice": 2}, "fish": "minnow",
 		"thanks": "稻已入袋，白鲦装进带水的鱼篓。申禾会把两样都送到南路卸货场。",
-		"arrival": "石墨刚派人取走了稻和白鲦。听说下游的水口已经通了，今晚能在渠边吃顿热饭。"
+		"arrival": "石墨刚派人取走了稻和白鲦。下游的渠修通了，乡亲托他带回几块木板。南池西岸有了钓台，路过可以坐下钓一会儿。"
 	},
 	{
 		"id": WATCH_RELIEF, "title": "东岗换防", "speaker": "弋戎",

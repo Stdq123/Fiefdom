@@ -898,3 +898,8 @@
 
 - 交货簿在夏单缺稻、现有私田供水不足时提供水源指路。本季和下季均可跟踪，路径经西市东口、溪桥道和封地西关接到泉边。泉边提供原有的研读、科技和引水操作。跟踪夏单时，渠线可沿首块井田外缘多接一格私田，报价按实际需要挖的格数计算。金框标渠，青框标出备稻私田。通水后退出施工选中稻种。
 - 从新档交春单并在西市续档，第 7 天用 12 铜钱挖三格渠，接通两格私田。第 10 天在西市交两份自种稻，国库保有首份纳贡。此专项延后敌袭，攻防继续由默认规则的双结局和东岗回放验证。水利、四季交货、备货和 Windows 南路相关回放通过。1024×768 Vulkan 画面在不可见桌面核对。 [Windows 试玩包](../build/polish-summer-rice/Fiefdom-1.0.0-Windows-x64.zip) · [溪桥道指路](../build/polish-summer-rice/delivered-1024x768/05-spring-route-on-bridge.png) · [两格私田接水](../build/polish-summer-rice/delivered-1024x768/09-two-plots-supplied.png) · [交货回放](../build/polish-summer-rice/release/summer-rice.log)
+
+## 夏稻送达后的南池钓台
+
+- 首次夏单到货后，南池西岸出现钓台及接到池岸路的短径。可从卸货场问申禾指路，也可在封地舆图选择。四季可钓鲫鱼，与竹涧共用每日一次的起鱼机会。鱼获结果可指路去灶台，鲫鱼可与稻做成稻鱼羹。
+- 新档交了两份自种稻后，回放将时辰推进到到货时间。第 10 天从申禾处沿路到南池，消耗 5 点体力钓到鲫鱼。续档保留钓台和首获地点，用鱼和在西市购得的一份稻做成路餐。Godot 与 Windows 解压版通过相关回放，包含默认规则的双结局、竹笼、秋社和留鱼单。1024×768 画面在不可见桌面取得。 [Windows 试玩包](../build/polish-pond-landing/Fiefdom-1.0.0-Windows-x64.zip) · [南池垂钓](../build/polish-pond-landing/final-1024x768/13-pond-fishing.png) · [鱼获与灶台指路](../build/polish-pond-landing/final-1024x768/14-pond-catch.png) · [发行回放](../build/polish-pond-landing/release-final/summer-rice.log)

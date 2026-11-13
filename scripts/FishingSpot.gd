@@ -27,16 +27,20 @@ func _ready() -> void:
 	_refresh()
 
 func _refresh() -> void:
-	hint.text = CreekFish.PLACES[site] + "钓点"
+	var place: String = CreekFish.PLACES[site]
+	hint.text = place if site == CreekFish.Site.POND else place + "钓点"
 	if line_visible:
-		hint.text = CreekFish.PLACES[site] + " · 垂钓中"
+		hint.text = place + " · 垂钓中"
 	elif focused:
-		var reason := Global.fishing_block_reason()
+		var reason := Global.fishing_block_reason(false, site)
 		var fish := Global.fish_at_today(site)
 		var offer := ("%s · 体力 −%d" % [CreekFish.SPECIES[fish].name, Global.balance.fishing_stamina_cost]
 			if reason.is_empty() else reason)
 		hint.text += " · %s\n%s" % [GamepadInput.interact_key(), offer]
 	hint.modulate = Color("#ffe2a4") if focused else Color("#d5d9ac")
+
+func can_interact_from(foot: Vector2) -> bool:
+	return visible and (site != CreekFish.Site.POND or global_position.distance_squared_to(foot) <= 25.0 * 25.0)
 
 func set_interaction_focused(active: bool) -> void:
 	focused = active

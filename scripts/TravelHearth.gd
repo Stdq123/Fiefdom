@@ -1,5 +1,7 @@
 extends Node2D
+class_name TravelHearth
 
+const PLACE := "南路灶台"
 const PORTRAIT := preload("res://assets/world/travel-hearth.svg")
 const PACK_SOUND := preload("res://assets/audio/water-2.wav")
 

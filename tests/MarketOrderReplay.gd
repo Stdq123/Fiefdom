@@ -34,13 +34,16 @@ func _button(button: Button) -> void:
 			and tree.root.get_visible_rect().encloses(button.get_global_rect()), "Use the visible control " + button.text):
 		await _click(button.get_global_rect().get_center())
 
+func _key_state(code: Key, pressed: bool) -> void:
+	var event := InputEventKey.new()
+	event.keycode = code
+	event.physical_keycode = code
+	event.pressed = pressed
+	tree.root.push_input(event, true)
+
 func _key(code: Key) -> void:
-	for pressed in [true, false]:
-		var event := InputEventKey.new()
-		event.keycode = code
-		event.physical_keycode = code
-		event.pressed = pressed
-		tree.root.push_input(event, true)
+	_key_state(code, true)
+	_key_state(code, false)
 	await tree.process_frame
 
 func _snapshot(name: String) -> void:
@@ -264,10 +267,87 @@ func _summer_handoff(book: Control) -> void:
 		return
 	book = tree.current_scene.counter.orders
 	await _button(book.food_button)
-	_expect(state.season_order_delivered_at(state.season_order()) == harvest_day and state.crop_stock.count("rice") == 0,
-		"The summer delivery consumes the home-grown rice through the market counter.")
+	_expect(state.season_order_delivered_at(state.season_order()) == harvest_day and state.crop_stock.count("rice") == 0
+		and state.pond_landing_day() == 0, "The summer delivery takes the two home-grown portions. The landing waits for the shipment.")
 	print("SUMMER_RICE_DELIVERED day=", harvest_day, " canal_cost=", price, " public=", state.king_storage)
 	await _snapshot("10-summer-delivery")
+	await _key(KEY_ESCAPE)
+	market = tree.current_scene
+	await Campaign.walk_market_to(tree, market, market.market_map.places[MarketStall.TITLES[MarketStall.Kind.GRAIN]])
+	await _key(KEY_E)
+	await _button(market.counter.market_produce)
+	_expect(state.crop_stock.count("rice") == 1, "The summer grain stall supplies a separate serving for the meal.")
+	await _pond_after_delivery()
+
+func _pond_after_delivery() -> void:
+	await _key(KEY_ESCAPE)
+	if not await _to_estate():
+		return
+	var estate := tree.current_scene
+	var world: Node2D = estate.get_node("World")
+	var ui: CanvasLayer = estate.get_node("UI")
+	var landing: Node2D = world.get_node("Scenery/PondLanding")
+	var cart := world.get_node("Freight") as SeasonFreight
+	_expect(not landing.visible, "The landing stays closed on the way back before the freight arrives.")
+	await _set_watch(SeasonOrders.EVENING_DISPATCH + SeasonOrders.TRAVEL_FRACTION + 0.01)
+	await Campaign.walk_estate_road_to(tree, world, EstateLayout.FREIGHT_APPROACH)
+	if not _expect(cart.arrived and landing.visible and world.player.interaction_target == cart,
+		"The summer shipment opens the landing at the actual arrival."):
+		return
+	await _key(KEY_E)
+	var dialog := ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(dialog != null and dialog.choices[0].text == "指路去南池钓台", "Shen He offers the landing route."):
+		return
+	await _snapshot("11-rice-arrival")
+	await _button(dialog.choices[0])
+	_expect(ui.directions.tracked_place == CreekFish.PLACES[CreekFish.Site.POND], "The route points to the pond's west bank.")
+	await Campaign.walk_estate_road_to(tree, world, landing.global_position)
+	if not _expect(world.player.interaction_target == landing and not state.knows_ravine_journal(),
+		"The new dock can be reached from the bank, before learning about the ravine."):
+		return
+	await _snapshot("12-pond-landing")
+	var energy: int = state.current_stamina
+	var day: int = state.current_day
+	await _key(KEY_E)
+	var panel := ui.get_node_or_null("Control/FishingPanel") as Control
+	if not _expect(panel != null and tree.paused and panel.spot == landing, "The same fishing controls open at the pond."):
+		return
+	while panel.phase == panel.Phase.WAITING:
+		await tree.process_frame
+	await _snapshot("13-pond-fishing")
+	_key_state(KEY_SPACE, true)
+	for frame in 300:
+		await tree.process_frame
+		if panel.phase != panel.Phase.REELING:
+			break
+		if panel.holding and panel.tension >= 0.64:
+			_key_state(KEY_SPACE, false)
+		elif not panel.holding and panel.tension <= 0.43:
+			_key_state(KEY_SPACE, true)
+	_key_state(KEY_SPACE, false)
+	_expect(panel.catch_icon.visible and state.fish_count("crucian") == 1
+		and state.fish_collection.crucian.first_site == CreekFish.Site.POND
+		and state.last_fishing_day == day and state.current_stamina == energy - state.balance.fishing_stamina_cost,
+		"A real catch consumes today's fishing opportunity and records its location.")
+	await _snapshot("14-pond-catch")
+	await _button(panel.actions.get_node("HearthRoute"))
+	_expect(not tree.paused and ui.directions.tracked_place == "南路灶台" and not state.cast_fishing_line(CreekFish.Site.POND),
+		"The catch points back to the hearth and today's fishing opportunity is used.")
+	if not await _continue(state.ESTATE_SCENE):
+		return
+	estate = tree.current_scene
+	world = estate.get_node("World")
+	ui = estate.get_node("UI")
+	_expect(world.get_node("Scenery/PondLanding").visible and state.pond_landing_day() == day
+		and state.fish_collection.crucian.first_site == CreekFish.Site.POND, "The dock and its first catch survive a title continue.")
+	var hearth := await _open_hearth()
+	if not _expect(hearth != null and not hearth.choices[1].disabled, "The local rice and fish make a travel meal."):
+		return
+	await _button(hearth.choices[1])
+	_expect(state.travel_meal == TravelMeal.RICE_FISH and state.fish_count("crucian") == 0
+		and state.crop_stock.count("rice") == 0 and state.king_storage == 1,
+		"Packing the meal consumes the market rice and the pond fish.")
+	print("POND_LANDING day=", day, " fish=crucian site=", CreekFish.Site.POND, " meal=", state.travel_meal)
 
 func _set_watch(progress: float) -> void:
 	state.advance_daylight((progress - state.day_progress) * state.balance.daylight_seconds)

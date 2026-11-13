@@ -50,6 +50,7 @@
 [ext_resource type="PackedScene" path="res://scenes/RavineShortcutGate.tscn" id="46_ravine_trail"]
 [ext_resource type="Script" path="res://scripts/WaterSource.gd" id="47_water_source"]
 [ext_resource type="Script" path="res://scripts/SeedGarden.gd" id="48_seed_garden"]
+[ext_resource type="Script" path="res://scripts/PondLanding.gd" id="49_pond_landing"]
 
 [sub_resource type="RectangleShape2D" id="Shape_east_gate"]
 size = Vector2(8, 20)
@@ -124,6 +125,11 @@ theme_override_colors/font_outline_color = Color(0.13, 0.21, 0.16, 1)
 theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
+
+[node name="PondLanding" type="Node2D" parent="World/Scenery" groups=["interactable"]]
+visible = false
+position = Vector2(162, 713)
+script = ExtResource("49_pond_landing")
 
 [node name="EndingRecord" type="Sprite2D" parent="World/Scenery"]
 visible = false

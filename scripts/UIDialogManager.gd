@@ -6,7 +6,6 @@ const SPRING_GATHERING := preload("res://scripts/SpringGathering.gd")
 const MUSIC_PRACTICE := preload("res://scripts/MusicPractice.gd")
 const ROAD_REST := preload("res://scripts/RoadRest.gd")
 const ROTATION_BOOK := preload("res://scripts/FieldRotationBook.gd")
-const TRAVEL_HEARTH := preload("res://scripts/TravelHearth.gd")
 const WATER_SOURCE := preload("res://scripts/WaterSource.gd")
 const SEED_GARDEN := preload("res://scripts/SeedGarden.gd")
 const ESTATE_STORAGE := preload("res://assets/world/estate-storage.png")
@@ -144,9 +143,9 @@ func show_winter_supper() -> void:
 			Global.prepare_winter_supper(WinterSupper.MENU[index], fish)
 	)
 
-func show_travel_hearth(guide_market: Callable) -> void:
-	var place := "南路灶台"
-	var portrait := TRAVEL_HEARTH.PORTRAIT
+func show_travel_hearth(guide_market: Callable, guide_pond: Callable) -> void:
+	var place := TravelHearth.PLACE
+	var portrait := TravelHearth.PORTRAIT
 	if not Global.travel_hearth_open():
 		var dialog := _open(place, "南路东段", "西市交过第一单后，这里就会有人照看灶火。",
 			["指路去西市", "离开"], [], portrait)
@@ -173,10 +172,17 @@ func show_travel_hearth(guide_market: Callable) -> void:
 	var speech := "菽黍饭　%s　·　%s\n稻鱼羹　%s　·　%s" % [
 		grain, TravelMeal.describe_recovery(TravelMeal.benefits(meals[0], Global.balance)),
 		rice, TravelMeal.describe_recovery(TravelMeal.benefits(meals[1], Global.balance))]
-	var dialog := _open(place, "可带一份 · %s食用" % GamepadInput.meal_hint(), speech, ["装菽黍饭", "装稻鱼羹", "离开"], disabled, portrait)
+	var choices: Array[String] = ["装菽黍饭", "装稻鱼羹"]
+	var offer_pond := fish.is_empty() and Global.pond_landing_day() > 0
+	if offer_pond:
+		choices.append("指路去" + CreekFish.PLACES[CreekFish.Site.POND])
+	choices.append("离开")
+	var dialog := _open(place, "可带一份 · %s食用" % GamepadInput.meal_hint(), speech, choices, disabled, portrait)
 	dialog.option_selected.connect(func(index: int):
 		if index < meals.size():
 			Global.pack_travel_meal(meals[index], fish)
+		elif offer_pond and index == meals.size():
+			guide_pond.call()
 	)
 
 func show_visitor_dialog(data: VisitorData, place: String, at_pavilion := false) -> void:

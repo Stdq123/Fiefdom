@@ -101,6 +101,8 @@ func _refresh() -> void:
 			"正在运往南路卸货场" if travel < 1.0 else "已送到南路卸货场")
 		if order.id == SeasonOrders.WATCH_RELIEF and travel >= 1.0:
 			delivery = "巡人 · 正送往东路岗" if Global.watch_relief_progress() < 1.0 else "东路岗 · 巡粮与新旗绳已到"
+		elif order.id in SeasonOrders.POND_ORDERS and travel >= 1.0:
+			delivery = "已送到南路卸货场 · 南池西岸钓台已开放"
 		else:
 			delivery = "申禾 · " + delivery
 		status.text = "第 %d 天已交 · 已领%s\n%s" % [

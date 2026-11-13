@@ -42,6 +42,7 @@ func setup(estate_world: Node2D, estate_hud: Control) -> void:
 	hud.cancel_directions.pressed.connect(clear_tracking)
 	_refresh_road_network()
 	GameEvents.seed_garden_arrived.connect(_refresh_road_network)
+	GameEvents.pond_landing_opened.connect(_refresh_road_network)
 	road_guide.z_index = -2
 	road_guide.hide()
 	world.add_child(road_guide)
@@ -63,6 +64,8 @@ func _refresh_road_network() -> void:
 		+ EstateLayout.WEST_ROADS + EstateLayout.SOUTH_ROADS + EstateLayout.DRIVING_ROADS
 	if Global.seed_garden_day() > 0:
 		tracks.append(EstateLayout.SEED_GARDEN_TRACK)
+	if Global.pond_landing_day() > 0:
+		tracks.append(EstateLayout.POND_TRACK)
 	road_network = ROAD_NETWORK.new(tracks, world, world.player)
 	road_target = Vector2.INF
 

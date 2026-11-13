@@ -368,6 +368,7 @@ func _ready() -> void:
 		GameEvents.ravine_journal_changed.connect(_refresh_estate_tracks)
 		GameEvents.field_rotation_changed.connect(_refresh_estate_tracks)
 		GameEvents.seed_garden_arrived.connect(_refresh_estate_tracks)
+		GameEvents.pond_landing_opened.connect(_refresh_estate_tracks)
 		_layout_field_approaches()
 	else:
 		_build_track_shapes(WILD_TRACKS, WILD_TRACK_WIDTHS)
@@ -434,6 +435,9 @@ func _refresh_estate_tracks() -> void:
 	elif Global.road_rest_built():
 		estate_tracks.append(ROAD_REST_TRACK)
 		estate_track_widths.append(12.0)
+	if Global.pond_landing_day() > 0:
+		estate_tracks.append(EstateLayout.POND_TRACK)
+		estate_track_widths.append(10.0)
 	if Global.field_rotation.signed_day > 0:
 		estate_tracks.append(ROTATION_BOOK_TRACK)
 		estate_track_widths.append(11.0)

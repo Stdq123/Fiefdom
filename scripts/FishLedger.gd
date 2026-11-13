@@ -12,7 +12,7 @@ var rows: Dictionary[String, Dictionary] = {}
 func _ready() -> void:
 	add_theme_constant_override("separation", 10)
 	var title := Label.new()
-	title.text = "竹涧溪鱼簿"
+	title.text = "溪鱼簿"
 	title.add_theme_color_override("font_color", Color("#efd291"))
 	title.add_theme_font_size_override("font_size", 25)
 	title.visible = not at_stall
@@ -31,6 +31,7 @@ func _ready() -> void:
 	add_child(receipt)
 	GameEvents.fish_changed.connect(_refresh)
 	GameEvents.creek_trap_changed.connect(_refresh)
+	GameEvents.pond_landing_opened.connect(_refresh)
 	GameEvents.day_advanced.connect(_refresh.unbind(1))
 	visibility_changed.connect(_refresh)
 	_refresh()
@@ -80,8 +81,9 @@ func _add_fish_row(id: String) -> void:
 
 func _refresh() -> void:
 	market_offer.refresh()
+	var pond := Global.pond_landing_day() > 0
 	if not Global.knows_ravine_journal():
-		summary.text = "先到南边竹径找蒲宁。他知道竹涧哪里可以抛竿。"
+		summary.text = "去竹涧垂钓前，可在南边竹径找蒲宁。"
 	else:
 		var pool := CreekFish.at(CreekFish.Site.POOL, Global.season_index(), Global.has_rain())
 		var shoal := CreekFish.at(CreekFish.Site.SHOAL, Global.season_index(), Global.has_rain())
@@ -94,6 +96,8 @@ func _refresh() -> void:
 			summary.text += "\n柳湾、砾滩可用竹笼，带一份黍或菽出门。"
 		elif Global.get_current_year() >= 2:
 			summary.text += "\n钓到第一尾鱼后，两岸的笼桩就能使用。"
+	if pond:
+		summary.text += "\n南池钓台 · 鲫鱼"
 	for id: String in CreekFish.IDS:
 		var row: Dictionary = rows[id]
 		var fish: Dictionary = CreekFish.SPECIES[id]

@@ -1362,6 +1362,9 @@ func _ending_memories() -> Array[String]:
 	var garden_day := seed_garden_day()
 	if garden_day > 0:
 		events.append({"day": garden_day, "text": "林蓼把你送的菽和黍种进了亭西种圃。"})
+	var pond_day := pond_landing_day()
+	if pond_day > 0:
+		events.append({"day": pond_day, "text": "下游乡亲送来木板，石墨在南池西岸铺了钓台。"})
 	var relief := watch_relief_day()
 	if relief > 0:
 		events.append({"day": relief, "text": "你备下的巡粮到了东岗，岗旗换上新麻绳。"})
@@ -1546,7 +1549,7 @@ func fish_at_day(site: int, day: int) -> String:
 	return CreekFish.at(site, season_index(day), has_rain(day))
 
 func creek_traps_unlocked() -> bool:
-	return get_current_year() >= 2 and not fish_collection.is_empty()
+	return get_current_year() >= 2 and knows_ravine_journal() and not fish_collection.is_empty()
 
 func ravine_trip_places() -> Array:
 	return RAVINE_TRIP_PLACES + CreekTrap.PLACES if creek_traps_unlocked() else RAVINE_TRIP_PLACES
@@ -1602,13 +1605,16 @@ func take_creek_trap(site: int) -> Dictionary:
 	return caught
 
 func fishing_spot_today(id: String) -> String:
-	for site in CreekFish.PLACES.size():
+	for site in [CreekFish.Site.POOL, CreekFish.Site.SHOAL]:
 		if fish_at_today(site) == id:
 			return CreekFish.PLACES[site]
 	return ""
 
-func fishing_block_reason(compact := false) -> String:
-	if not knows_ravine_journal():
+func fishing_block_reason(compact := false, site := CreekFish.Site.POOL) -> String:
+	if site == CreekFish.Site.POND:
+		if pond_landing_day() == 0:
+			return "夏稻送达后开放" if compact else "夏单送达南路卸货场后开放"
+	elif not knows_ravine_journal():
 		return "垂钓待学" if compact else "先到南边竹径与蒲宁交谈"
 	if last_fishing_day == current_day:
 		return "垂钓已用" if compact else "今日垂钓机会已用"
@@ -1616,10 +1622,10 @@ func fishing_block_reason(compact := false) -> String:
 		return "抛竿缺体力" if compact else "体力不足 · 抛竿需要 %d" % balance.fishing_stamina_cost
 	return ""
 
-func cast_fishing_line() -> bool:
+func cast_fishing_line(site := CreekFish.Site.POOL) -> bool:
 	if outcome != Outcome.RUNNING:
 		return false
-	var reason := fishing_block_reason()
+	var reason := fishing_block_reason(false, site)
 	if not reason.is_empty():
 		GameEvents.world_notice.emit(reason)
 		return false
@@ -1628,7 +1634,8 @@ func cast_fishing_line() -> bool:
 	return true
 
 func land_creek_fish(site: int, cast_day: int) -> String:
-	if outcome != Outcome.RUNNING or cast_day != current_day or last_fishing_day == current_day or not knows_ravine_journal():
+	var can_fish := pond_landing_day() > 0 if site == CreekFish.Site.POND else knows_ravine_journal()
+	if outcome != Outcome.RUNNING or cast_day != current_day or last_fishing_day == current_day or not can_fish:
 		return ""
 	var id := fish_at_today(site)
 	if id.is_empty():
@@ -2125,6 +2132,7 @@ func deliver_season_order(start_day: int, paid_in_food: bool) -> bool:
 	var rewards := season_order_rewards(schedule)
 	var previous_post := watch_relief_day() if schedule.order.id == SeasonOrders.WATCH_RELIEF else 0
 	var previous_garden := seed_garden_day() if schedule.order.id in SeasonOrders.SEED_ORDERS else 0
+	var previous_pond := pond_landing_day() if schedule.order.id in SeasonOrders.POND_ORDERS else 0
 	season_order_receipts[schedule.order.id] = {
 		"day": current_day, "paid_in_food": paid_in_food,
 		"dispatch_day": SeasonOrders.dispatch_day(current_day, day_progress),
@@ -2133,6 +2141,8 @@ func deliver_season_order(start_day: int, paid_in_food: bool) -> bool:
 		season_order_receipts[schedule.order.id]["previous_post_day"] = previous_post
 	if previous_garden > 0:
 		season_order_receipts[schedule.order.id]["previous_garden_day"] = previous_garden
+	if previous_pond > 0:
+		season_order_receipts[schedule.order.id]["first_pond_day"] = previous_pond
 	reputation += balance.interaction_reputation_gain
 	if paid_in_food:
 		food_storage += rewards.food
@@ -2201,6 +2211,19 @@ func season_order_crops_to_keep() -> Dictionary:
 
 func travel_hearth_open() -> bool:
 	return not season_order_receipts.is_empty()
+
+func pond_landing_day() -> int:
+	var opened := 0
+	for id: String in SeasonOrders.POND_ORDERS:
+		var receipt: Dictionary = season_order_receipts.get(id, {})
+		if receipt.is_empty():
+			continue
+		var day: int = receipt.get("first_pond_day", 0)
+		if day == 0 and SeasonOrders.transit_progress(receipt, current_day, day_progress) >= 1.0:
+			day = receipt.dispatch_day
+		if day > 0:
+			opened = day if opened == 0 else mini(opened, day)
+	return opened
 
 func fish_for_travel_meal() -> String:
 	for id: String in CreekFish.IDS:
@@ -3241,6 +3264,7 @@ func load_game(path := "") -> Error:
 	# Old saves used one daily record for both activities.
 	last_fishing_day = clampi(_read_save_int(data.get("last_fishing_day"), last_forage_day), 0, saved_day)
 	_restore_fish_collection(data.get("fish_collection"), saved_day)
+	visitor_encounters = restored_encounters
 	fish_order_receipt = _restore_fish_order_receipt(data.get("fish_order_receipt"), saved_day)
 	creek_trap = _restore_creek_trap(data.get("creek_trap"), saved_day)
 	var saved_trip: Variant = data.get("ravine_trip_target")
@@ -3293,7 +3317,6 @@ func load_game(path := "") -> Error:
 	channel_survey_day = mini(saved_survey, saved_day) if first_channel_growth_day > 0 and saved_survey >= first_channel_growth_day else 0
 	silk_workshop = restored_workshop
 	retainers = restored_retainers
-	visitor_encounters = restored_encounters
 	neighbor_met_days.clear()
 	var known_days: Variant = data.get("neighbor_met_days")
 	if known_days is Dictionary:
@@ -3613,6 +3636,10 @@ func _restore_season_order_receipts(record: Variant, saved_day: int) -> void:
 					var previous_garden := clampi(_read_save_int(receipt.get("previous_garden_day"), 0), 0, day)
 					if previous_garden > 0:
 						season_order_receipts[order.id]["previous_garden_day"] = previous_garden
+				elif order.id in SeasonOrders.POND_ORDERS:
+					var first_pond := clampi(_read_save_int(receipt.get("first_pond_day"), 0), 0, day)
+					if first_pond > 0:
+						season_order_receipts[order.id]["first_pond_day"] = first_pond
 
 func _restore_sheepfold(record: Variant, saved_day: int) -> void:
 	sheepfold = Sheepfold.new()

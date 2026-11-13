@@ -121,6 +121,11 @@ func _collect_places() -> void:
 	if garden_day > 0:
 		var detail := "第 %d 天下种 · 来看看菽和黍" % garden_day
 		places.append(_entry(Category.PLACES, SEED_GARDEN.PLACE, detail, EstateLayout.SEED_GARDEN_APPROACH, true))
+	if Global.pond_landing_day() > 0:
+		var detail := Global.fishing_block_reason(false, CreekFish.Site.POND)
+		if detail.is_empty():
+			detail = "南池西岸 · 可钓鲫鱼"
+		places.append(_entry(Category.PLACES, CreekFish.PLACES[CreekFish.Site.POND], detail, EstateLayout.POND_LANDING, true))
 	var record_stand := world.get_node("Scenery/EndingRecord")
 	if record_stand.visible:
 		var task := "翻看通关当天的账目" if record_stand.archived else "呈交账簿，开启结尾"

@@ -2,6 +2,7 @@ extends CanvasLayer
 
 const NIGHT_RATIONS_PANEL := preload("res://scenes/NightRationsPanel.tscn")
 const SEED_GARDEN := preload("res://scripts/SeedGarden.gd")
+const FISHING_PANEL := preload("res://scripts/FishingPanel.gd")
 
 @onready var world = $"../World"
 @onready var hud = $Control/EstateHUD
@@ -222,6 +223,7 @@ func _connect_signals() -> void:
 	GameEvents.season_board_interacted.connect(_on_season_board_interacted)
 	GameEvents.freight_arrival_interacted.connect(_on_freight_arrival_interacted)
 	GameEvents.seed_garden_requested.connect(_on_seed_garden_requested)
+	GameEvents.fishing_requested.connect(_on_fishing_requested)
 	GameEvents.travel_hearth_interacted.connect(_on_travel_hearth_interacted)
 	GameEvents.winter_supper_requested.connect(_on_winter_supper_requested)
 	GameEvents.winter_supper_prepared.connect(update_ui)
@@ -681,7 +683,29 @@ func _on_freight_arrival_interacted(speech: String, portrait: Texture2D, order_i
 	elif order_id in SeasonOrders.SEED_ORDERS:
 		destination = SEED_GARDEN.PLACE
 		guide = directions.follow_place.bind(destination, EstateLayout.SEED_GARDEN_APPROACH)
+	elif order_id in SeasonOrders.POND_ORDERS:
+		destination = CreekFish.PLACES[CreekFish.Site.POND]
+		guide = directions.follow_place.bind(destination, EstateLayout.POND_LANDING)
 	dialog_manager.show_freight_arrival(speech, portrait, _guide_travel_hearth, destination, guide)
+
+func _on_fishing_requested(spot: Node2D) -> void:
+	if _estate_controls_blocked() or not Global.cast_fishing_line(spot.site):
+		return
+	if directions.tracked_place == CreekFish.PLACES[CreekFish.Site.POND]:
+		directions.clear_tracking()
+	var panel := FISHING_PANEL.new()
+	panel.name = "FishingPanel"
+	panel.spot = spot
+	panel.angler = world.player
+	panel.route_to = _follow_pond_route
+	$Control.add_child(panel)
+
+func _follow_pond_route(place: String) -> bool:
+	if place == TravelHearth.PLACE:
+		_guide_travel_hearth()
+	else:
+		_on_west_market_directions_requested(place)
+	return true
 
 func _on_seed_garden_requested() -> void:
 	world.set_channel_mode(false)
@@ -701,7 +725,7 @@ func _on_east_watch_read() -> void:
 
 func _guide_travel_hearth() -> void:
 	var approach := world.get_node("TravelHearth/Approach") as Marker2D
-	directions.follow_place("南路灶台", world.to_local(approach.global_position))
+	directions.follow_place(TravelHearth.PLACE, world.to_local(approach.global_position))
 
 func _guide_calendar_event(place: String) -> void:
 	if place == SummerRaft.PLACE:
@@ -739,9 +763,10 @@ func _on_sheepfold_requested() -> void:
 
 func _on_travel_hearth_interacted() -> void:
 	world.set_channel_mode(false)
-	if directions.tracked_place == "南路灶台":
+	if directions.tracked_place == TravelHearth.PLACE:
 		directions.clear_tracking()
-	dialog_manager.show_travel_hearth(_on_west_market_directions_requested.bind(Global.MARKET_ORDERS))
+	dialog_manager.show_travel_hearth(_on_west_market_directions_requested.bind(Global.MARKET_ORDERS),
+		directions.follow_place.bind(CreekFish.PLACES[CreekFish.Site.POND], EstateLayout.POND_LANDING))
 
 func _on_neighbors_pressed() -> void:
 	world.set_channel_mode(false)

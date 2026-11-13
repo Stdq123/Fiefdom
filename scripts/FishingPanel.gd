@@ -9,7 +9,7 @@ const SAFE_HIGH := 0.79
 
 var spot: Node2D
 var angler: Node2D
-var market_route: Callable
+var route_to: Callable
 var phase := Phase.WAITING
 var phase_time := 0.0
 var float_time := 0.0
@@ -206,7 +206,7 @@ func _finish(message: String, caught := "") -> void:
 	line_meter.hide()
 	status.text = message
 	if caught.is_empty():
-		detail.text = "外出机会还在，可以收竿后再试。"
+		detail.text = "今日垂钓机会还在，可以收竿后再试。"
 	else:
 		catch_icon.texture = CreekFish.portrait(caught)
 		catch_icon.show()
@@ -222,21 +222,29 @@ func _show_delivery_routes(caught: String) -> void:
 			detail.text += "这尾鱼也可交时令单。" if Global.fish_count(caught) == 1 else "时令单也已备齐。"
 	elif seasonal:
 		detail.text = "时令单已备齐，可以回西市交货。"
+	elif spot.site == CreekFish.Site.POND:
+		detail.text = "带一份稻到南路灶台，可做稻鱼羹。"
 	else:
 		detail.text = "打开溪鱼簿，可添口粮或换铜钱。"
+	if spot.site == CreekFish.Site.POND:
+		_add_route_button("HearthRoute", "去" + TravelHearth.PLACE, TravelHearth.PLACE)
 	for place in places:
-		var button := Button.new()
-		button.name = "SeasonDelivery" if place == Global.MARKET_ORDERS else "FishDelivery"
-		button.text = "去西市交时令单" if place == Global.MARKET_ORDERS else "去西市交留鱼"
-		button.custom_minimum_size.y = 36
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		button.pressed.connect(_follow_market.bind(place))
-		actions.add_child(button)
-		actions.move_child(button, actions.get_child_count() - 2)
+		var order := place == Global.MARKET_ORDERS
+		_add_route_button("SeasonDelivery" if order else "FishDelivery", "去西市交时令单" if order else "去西市交留鱼", place)
 
-func _follow_market(place: String) -> void:
-	if market_route.call(place):
+func _add_route_button(button_name: String, caption: String, place: String) -> void:
+	var button := Button.new()
+	button.name = button_name
+	button.text = caption
+	button.custom_minimum_size.y = 36
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	button.pressed.connect(_follow_route.bind(place))
+	actions.add_child(button)
+	actions.move_child(button, actions.get_child_count() - 2)
+
+func _follow_route(place: String) -> void:
+	if route_to.call(place):
 		queue_free()
 	else:
 		detail.text = "先靠近山路，再从竹涧舆图指路去西市。"
