@@ -93,10 +93,19 @@ func _refresh() -> void:
 			delivery = "申禾 · " + delivery
 		status.text = "第 %d 天已交 · 已领%s\n%s" % [
 			delivered_on, "口粮" if receipt.paid_in_food else "铜钱", delivery]
+		if (Global.get_current_year() == Global.TAX_COUNCIL_YEAR - 1
+			and Global.tax_reform_choice == Global.TaxReformChoice.NONE and not Global.tax_council_waiting()):
+			var required := Global.TAX_COUNCIL_PETITION_ORDERS
+			status.text += "\n提前请议 · 本年已交 %d/%d 季 · 详见议税筹备账" % [
+				mini(Global.tax_council_petition_order_count(), required), required]
 	elif Global.outcome != Global.Outcome.RUNNING:
 		status.text = "本局已经结算"
 	elif ready:
 		status.text = "已备齐 · 任选一种报酬，并记 %d 声望" % Global.balance.interaction_reputation_gain
+		var silk: int = order.get("silk", 0)
+		var target := Global.balance.ending_silk_target
+		if silk > 0 and Global.silk_workshop.bolts - silk < target and Global.tax_reform_choice == Global.TaxReformChoice.NONE:
+			status.text += "\n交货后余 %d 匹丝绸。议税两案都要备 %d 匹。" % [Global.silk_workshop.bolts - silk, target]
 	else:
 		status.text = _preparation_notes(schedule)
 	if delivered_on == 0 and not fish.is_empty() and Global.fish_count(fish) == 1:

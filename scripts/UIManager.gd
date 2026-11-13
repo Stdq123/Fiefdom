@@ -73,6 +73,7 @@ func _ready() -> void:
 	council_preparation.fields_requested.connect(_guide_public_harvest)
 	council_preparation.six_arts_requested.connect(_show_six_arts)
 	council_preparation.silk_requested.connect(_show_silk)
+	council_preparation.orders_requested.connect(_on_season_board_interacted)
 	calendar.controls_blocked = _map_controls_blocked
 	hud.calendar_button.pressed.connect(calendar.open_map)
 	calendar.directions_requested.connect(_guide_calendar_event)

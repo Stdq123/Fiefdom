@@ -18,6 +18,7 @@ const MARKET_ORDERS := "收货牌"
 const MARKET_RETURN := "回封地"
 const TAX_ENVOY := "召简"
 const TAX_COUNCIL_YEAR := 3
+const TAX_COUNCIL_PETITION_ORDERS := 2
 const RECLAMATION_BOUNDS := Rect2i(-16, -10, 36, 23)
 const FIRST_FIELD_CENTER := Vector2i(5, 5)
 const RECLAMATION_NIGHTS := 4
@@ -1148,6 +1149,28 @@ func public_contribution_ratio(added_public := 0, added_private := 0) -> float:
 
 func tax_council_start_day() -> int:
 	return (TAX_COUNCIL_YEAR - 1) * maxi(1, balance.days_per_year) + 1
+
+func tax_council_petition_day() -> int:
+	var winter_days := SeasonOrders.TERMS_PER_SEASON * maxi(1, balance.days_per_solar_term)
+	return tax_council_start_day() - mini(winter_days, maxi(1, balance.days_per_year))
+
+func tax_council_petition_order_count() -> int:
+	var opening := tax_council_start_day()
+	var year_start := opening - maxi(1, balance.days_per_year)
+	var count := 0
+	for receipt: Dictionary in season_order_receipts.values():
+		if receipt.day >= year_start and receipt.day < opening:
+			count += 1
+	return count
+
+func tax_council_qualified() -> bool:
+	return (outcome == Outcome.RUNNING and tax_reform_choice == TaxReformChoice.NONE
+		and not tax_council_invited and current_rank >= Rank.DA_FU
+		and king_storage > 0 and public_contribution_ratio() >= balance.public_field_ratio_threshold)
+
+func can_petition_tax_council() -> bool:
+	return (current_day >= tax_council_petition_day() and current_day < tax_council_start_day()
+		and tax_council_qualified() and tax_council_petition_order_count() >= TAX_COUNCIL_PETITION_ORDERS)
 
 func tax_council_public_gap(added_public := 0, added_private := 0) -> int:
 	var tribute := king_storage + added_public

@@ -59,6 +59,8 @@ func refresh() -> void:
 		and Global.tax_reform_choice == Global.TaxReformChoice.NONE and not Global.tax_council_waiting()
 		and (Global.current_rank >= Global.Rank.SHANG_SHI
 			or (Global.well_fields.size() > 1 and Global.well_fields[1].is_unlocked)))
+	var can_petition := council_prep.visible and Global.can_petition_tax_council()
+	council_prep.text = "请议已就绪" if can_petition else "查议税条件"
 	var record_stand := world.get_node("Scenery/EndingRecord")
 	if record_stand.visible:
 		var route := "守礼安邦" if Global.ending_record["outcome"] == Global.Outcome.TRADITIONAL else "税亩富民"
@@ -82,6 +84,8 @@ func refresh() -> void:
 	elif Global.current_rank >= Global.Rank.DA_FU:
 		var start := Global.tax_council_start_day()
 		var date := "第 %d 天起议税" % start if Global.current_day < start else "已到议税时日"
+		if can_petition:
+			date = "可请召简提前议税"
 		var gap := Global.tax_council_public_gap()
 		var tribute := "纳贡已达标" if gap == 0 else "还差 %d 份纳贡" % gap
 		if gap < 0:

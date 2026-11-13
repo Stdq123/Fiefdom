@@ -853,3 +853,8 @@
 - 当粮仓不足且手头物资可改善分餐时，账页列出能补的份数、可转用的作物和购粮费用。玩家可按报价启用夜间备粮或调高每夜上限。仍在过夜时结算，并沿用时令单留货、分餐与研究费的规则。
 - 回放从旧档的手动备粮进入报价。补三份需转两份麻和花五铜钱。确认后库存保持原数，过夜后完成四份分餐，留下春单所需作物。 [Godot 冒烟](../build/polish-ration-quote/godot-ration-quote.log)
 - 田边按钮与账页使用同一个缺粮数，分餐明细另列实际能供给的整份口粮。 [Windows 试玩包](../build/windows-landscape/Fiefdom-1.0.0-Windows-x64.zip) · [报价截图](../build/windows-landscape/rations-final-1024x768/01-before-delegation.png)
+
+## 从时令交货到提前议税
+
+- 第二年交齐两季时令单后，爵位和纳贡达标的玩家可从入冬起主动请召简，默认最早第 43 天。筹备账保留第 49 天起的常规会期，同时列出提前请议进度和交货簿入口。「岁末麦帛」交货前显示留给议税的丝绸余量。
+- Windows 解压版从第 42 天的筹备档接续，过夜后交齐冬单，回标题续读并请议。第 43 天见召简、选改革，续读后公私田累计账目和结局目标都接得上。常规新档双结局、战败恢复、延期研究和筹备账回放通过。筹备账及使者面板在不可见桌面用 1024×768 核对。 [Windows 试玩包](../build/polish-early-council/Fiefdom-1.0.0-Windows-x64.zip) · [发行回放](../build/polish-early-council/windows-check/council-petition.log) · [筹备账画面](../build/polish-early-council/render-1024x768/02-petition-ready.png)

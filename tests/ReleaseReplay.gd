@@ -77,9 +77,10 @@ func _run() -> void:
 			var replay = load("res://tests/RouteGoalsReplay.gd").new()
 			replay.legacy = arguments[0] == "route-goals-legacy"
 			await replay.run(tree)
-		"council-prep", "council-prep-legacy":
+		"council-prep", "council-prep-legacy", "council-petition":
 			var replay = load("res://tests/CouncilPrepReplay.gd").new()
 			replay.legacy = arguments[0] == "council-prep-legacy"
+			replay.petition = arguments[0] == "council-petition"
 			await replay.run(tree)
 		"council-silk":
 			var replay = load("res://tests/CouncilSilkReplay.gd").new()

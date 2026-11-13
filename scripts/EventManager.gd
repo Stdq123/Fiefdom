@@ -38,13 +38,18 @@ func _check_progress() -> void:
 			Global.finish_campaign(ending)
 
 func invite_if_eligible() -> void:
-	if Global.tax_reform_choice != Global.TaxReformChoice.NONE or Global.tax_council_invited:
-		return
-	if Global.current_day < Global.tax_council_start_day() or Global.current_rank < Global.Rank.DA_FU:
-		return
-	if Global.king_storage > 0 and Global.public_contribution_ratio() >= Global.balance.public_field_ratio_threshold:
-		Global.tax_council_invited = true
-		GameEvents.tax_reform_triggered.emit()
+	if Global.current_day >= Global.tax_council_start_day() and Global.tax_council_qualified():
+		_invite()
+
+func petition_tax_council() -> bool:
+	if not Global.can_petition_tax_council():
+		return false
+	_invite()
+	return true
+
+func _invite() -> void:
+	Global.tax_council_invited = true
+	GameEvents.tax_reform_triggered.emit()
 
 func _process_research() -> void:
 	if Global.current_day <= Global.tax_reform_day or Global.research_choice_pending:
@@ -116,6 +121,8 @@ func _event_data(world: Node, final_choice: bool) -> Dictionary:
 				"研究经费未能如期缴清。请卿今日定下田赋。")
 		else:
 			greeting = "一年研究期满。请卿定下采邑今后的田赋。"
+	elif Global.current_day < Global.tax_council_start_day():
+		greeting = "西市呈上了卿的交货回执。君上准卿提前议定田赋，请先看这份账。"
 	return {
 		"title": "国君密诏 · 初税亩",
 		"speaker": "国君使者 · 召简",

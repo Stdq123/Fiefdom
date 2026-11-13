@@ -3,6 +3,7 @@ extends "res://scripts/SurveyMap.gd"
 signal fields_requested()
 signal six_arts_requested()
 signal silk_requested()
+signal orders_requested()
 
 const READY := Color("#c5d592")
 const PENDING := Color("#f2bc85")
@@ -14,6 +15,11 @@ const PENDING := Color("#f2bc85")
 @onready var contribution: Label = %Contribution
 @onready var account: Label = %Account
 @onready var contribution_status: Label = %ContributionStatus
+@onready var petition_card: PanelContainer = %PetitionCard
+@onready var petition_heading: Label = %PetitionHeading
+@onready var petition_detail: Label = %PetitionDetail
+@onready var orders_button: Button = %OrdersButton
+@onready var petition_button: Button = %PetitionButton
 @onready var preview_heading: Label = %PreviewHeading
 @onready var public_card: PanelContainer = %PublicCard
 @onready var public_preview: Label = %PublicPreview
@@ -40,6 +46,12 @@ func _ready() -> void:
 	silk_button.pressed.connect(func():
 		close_map()
 		silk_requested.emit())
+	orders_button.pressed.connect(func():
+		close_map()
+		orders_requested.emit())
+	petition_button.pressed.connect(func():
+		if EventManager.petition_tax_council():
+			close_map())
 
 func _map_available() -> bool:
 	return Global.tax_reform_choice == Global.TaxReformChoice.NONE and not Global.tax_council_waiting()
@@ -47,7 +59,7 @@ func _map_available() -> bool:
 func _refresh_on_open() -> void:
 	var opening := Global.tax_council_start_day()
 	var nights := maxi(0, opening - Global.current_day)
-	date_line.text = "第 %d 年起 · 第 %d 天" % [Global.TAX_COUNCIL_YEAR, opening]
+	date_line.text = "常规会期 · 第 %d 天起" % opening
 	date_status.text = "已到议税时日" if nights == 0 else "还需 %d 夜" % nights
 	date_status.modulate = READY if nights == 0 else PENDING
 
@@ -70,6 +82,9 @@ func _refresh_on_open() -> void:
 		_percentage(), threshold]
 	account.text = "累计纳贡 %d 份 · 累计私田收成 %d 份" % [Global.king_storage, Global.private_harvest_total]
 	_describe_gap(contribution_status, Global.tax_council_public_gap())
+	petition_card.visible = nights > 0
+	if petition_card.visible:
+		_refresh_petition()
 
 	var totals: Dictionary = world.council_harvest_forecast(Global.TaxReformChoice.NONE)
 	var tribute: int = totals.tribute
@@ -91,6 +106,23 @@ func _refresh_on_open() -> void:
 	silk_stock.text = "备绸 · %d / %d 匹" % [bolts, silk_target]
 	silk_stock.modulate = READY if bolts >= silk_target else PENDING
 	silk_button.text = "查看蚕桑" if bolts >= silk_target else "准备丝绸"
+
+func _refresh_petition() -> void:
+	var delivered := Global.tax_council_petition_order_count()
+	var required := Global.TAX_COUNCIL_PETITION_ORDERS
+	var opening := Global.tax_council_petition_day()
+	var ready := Global.can_petition_tax_council()
+	petition_heading.text = "提前请议 · 第 %d 年交货 %d/%d 季" % [
+		Global.TAX_COUNCIL_YEAR - 1, mini(delivered, required), required]
+	petition_heading.modulate = READY if ready else Color.WHITE
+	orders_button.visible = delivered < required
+	petition_button.visible = ready
+	if ready:
+		petition_detail.text = "递上交货回执后，召简今日到堂前。"
+	elif Global.current_day < opening:
+		petition_detail.text = "第 %d 天起可请议，须达到大夫和纳贡门槛。" % opening
+	else:
+		petition_detail.text = "交齐两季时令单、爵位和纳贡达标后，即可请议。"
 
 func _percentage(public_yield := 0, private_yield := 0) -> String:
 	return "%.2f%%" % (Global.public_contribution_ratio(public_yield, private_yield) * 100.0)

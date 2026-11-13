@@ -161,6 +161,47 @@ layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 18
 
+[node name="PetitionCard" type="PanelContainer" parent="MapModal/Center/Ledger/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/panel = SubResource("Card")
+
+[node name="Row" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack/PetitionCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/PetitionCard/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="PetitionHeading" type="Label" parent="MapModal/Center/Ledger/Stack/PetitionCard/Row/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 19
+
+[node name="PetitionDetail" type="Label" parent="MapModal/Center/Ledger/Stack/PetitionCard/Row/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="OrdersButton" type="Button" parent="MapModal/Center/Ledger/Stack/PetitionCard/Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(136, 36)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+text = "查看时令单"
+
+[node name="PetitionButton" type="Button" parent="MapModal/Center/Ledger/Stack/PetitionCard/Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(136, 36)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+text = "请召简议税"
+
 [node name="Preview" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack"]
 layout_mode = 2
 theme_override_constants/separation = 8

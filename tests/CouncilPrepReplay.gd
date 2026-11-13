@@ -27,6 +27,7 @@ var world: Node2D
 var ui: CanvasLayer
 var book: Control
 var legacy := false
+var petition := false
 
 func _continue() -> void:
 	tree.change_scene_to_file(state.TITLE_SCENE)
@@ -191,6 +192,69 @@ func _old_save() -> void:
 		"Following the public crop from an old save meets the existing invitation rule.")
 	print("COUNCIL_PREP_OLD_SAVE day=", state.current_day, " tribute=", state.king_storage, " invited=", state.tax_council_waiting())
 
+func _early_petition() -> void:
+	var save := SNAPSHOT.duplicate(true)
+	save.merge({"current_day": 42, "current_rank": 3, "king_storage": 35, "private_harvest_total": 68,
+		"season_order_receipts": {"spring": {"day": 4}, "spring_seed_share": {"day": 27}},
+		"crop_stock": {"wheat": 2}, "player_inventory": 2,
+		"silk_workshop": {"built": true, "bolts": 1}}, true)
+	var fixture := FileAccess.open("user://savegame.json", FileAccess.WRITE)
+	fixture.store_string(JSON.stringify(save))
+	fixture.close()
+	await _continue()
+	await _open_book()
+	_expect("1/2" in book.petition_heading.text and "第 43 天" in book.petition_detail.text
+		and not book.petition_button.visible and not EventManager.petition_tax_council(),
+		"The first-year receipt cannot count, and the petition cannot start before winter.")
+	await _button(book.orders_button)
+	var management: Control = ui.panel_manager.management_panel_instance
+	_expect(management.season_order_panel.is_visible_in_tree() and not tree.paused,
+		"The preparation ledger leads to the same seasonal order book.")
+	await _button(management.get_node("CloseButton"))
+	await _sleep()
+	await _open_book()
+	_expect(state.current_day == 43 and not book.petition_button.visible and not EventManager.petition_tax_council(),
+		"Winter alone cannot open the petition with one eligible receipt.")
+	await _snapshot("01-one-receipt")
+	await _button(book.orders_button)
+	var orders: Control = management.season_order_panel
+	_expect("交货后余 0 匹丝绸" in orders.status.text, "The winter order quotes the shared silk stock before the sale.")
+	var food: int = state.food_storage
+	await _button(orders.food_button)
+	_expect(state.food_storage > food and state.crop_stock.count("wheat") == 0 and state.silk_workshop.bolts == 0
+		and state.king_storage == 35 and state.private_harvest_total == 68 and state.silk_bolts_sold == 0
+		and "本年已交 2/2" in orders.status.text and not state.tax_council_waiting(),
+		"The real winter order settles privately, records the second receipt and leaves the petition optional.")
+	await _button(management.get_node("CloseButton"))
+	_expect(ui.hud.council_prep_button.text == "请议已就绪" and state.save_game() == OK,
+		"The estate journal reports the opportunity and saves the receipts.")
+	await _continue()
+	await _open_book()
+	_expect("2/2" in book.petition_heading.text and book.petition_button.visible,
+		"The saved receipts restore the opportunity after continuing from the title.")
+	await _snapshot("02-petition-ready")
+	await _button(book.petition_button)
+	if not _expect(state.tax_council_waiting() and not book.modal.visible and not tree.paused
+		and not EventManager.petition_tax_council() and state.save_game() == OK,
+		"The petition schedules exactly one audience and saves the pending appointment."):
+		return
+	await _continue()
+	await _button(ui.hud.opening_action)
+	_expect(ui.directions.tracked_neighbor == state.TAX_ENVOY, "The estate journal can guide the player to the early audience.")
+	var decision := await Campaign.meet_tax_envoy(tree)
+	if not _expect(decision != null and "交货回执" in decision.text_label.text
+		and decision.option_buttons.size() == 3, "The envoy acknowledges the receipts and offers all three choices."):
+		return
+	await _snapshot("03-early-audience")
+	await _button(decision.option_buttons[state.TaxReformChoice.REFORMED])
+	await _button(decision.confirm_button)
+	await _continue()
+	_expect(state.current_day == 43 and state.tax_reform_day == 43 and state.tax_reform_choice == state.TaxReformChoice.REFORMED
+		and state.king_storage == 35 and state.private_harvest_total == 68 and ui.hud.route_progress.visible,
+		"Continuing after the choice restores the early decision and starts the normal ending goals.")
+	print("COUNCIL_PREP_PETITION day=", state.tax_reform_day, " regular=", state.tax_council_start_day(),
+		" receipts=", state.tax_council_petition_order_count(), " tribute=", state.king_storage)
+
 func run(game_tree: SceneTree) -> void:
 	tree = game_tree
 	state = tree.root.get_node("Global")
@@ -198,7 +262,9 @@ func run(game_tree: SceneTree) -> void:
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated council preparation profile."):
 		tree.quit(1)
 		return
-	if legacy:
+	if petition:
+		await _early_petition()
+	elif legacy:
 		await _old_save()
 	else:
 		var fixture := FileAccess.open("user://savegame.json", FileAccess.WRITE)
