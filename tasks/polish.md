@@ -21,7 +21,7 @@
 - **经营到结局**。按自己的节奏选一条路线，记下哪几天改变了经营方式、哪些操作重复得最累、哪次遇见人物或走过某处让你想再去。结算后退出，再从标题「继续游戏」读回，核对路线和结算日期。
 - **回报**。记下系统和显卡、键鼠或手柄、实际窗口尺寸、总游玩时间及停在的游戏日期。能复现的问题附上当时的截图或一段操作顺序。画面、节奏和手感直接写感受即可。
 
-本包包含封地、溪桥道、西市和竹涧的斜俯视更新。竹涧木桥上游可以看到落水的岩坎和潭面水花，东岸有石阶通往望溪台。若过夜会有门客因缺餐离任，也可先从提醒打开备粮安排。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本包校验](../build/polish-ravine-stone/final/headless/manifest.txt)
+本包包含封地、溪桥道、西市和竹涧的斜俯视更新。采完野果或办完市集事务后可点「回井田」，沿金线过关回到第一块井田的田口。若过夜会有门客因缺餐离任，也可先从提醒打开备粮安排。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本轮试玩包](../build/polish-estate-return/final/Fiefdom-1.0.0-Windows-x64.zip) · [本包校验](../build/polish-estate-return/final/headless/manifest.txt)
 
 ## 从新档到第一次收获
 
@@ -1132,3 +1132,9 @@
 - 抬高木桥上游的落水岩坎，水线沿岩面落下，水花在潭面散开。溪岸用草苔、亮岩面和近水阴影显出高度。望溪台的每级石阶露出踏面与近侧立面，山路指引沿阶面接到野药旁。谷雨压暗湿岩，入冬霜覆岩沿。 [同机位前后对比](../build/polish-ravine-stone/final/ravine-before-after.png) · [谷雨与立冬](../build/polish-ravine-stone/final/rain-and-frost.png)
 - 1920×1080 和 1024×768 隔离桌面均从新档沿舆图过木桥、登石阶、到野药旁，再经浅滩返程。实际脚步在木桥为木板，在石阶为石面。角色靠近瀑布时仍停在深水边，水迹可保存后读回。两帧实拍分别看见水线与水花变化。干净配置直接启动的窗口为 1920×1080。 [默认窗口回放](../build/polish-ravine-stone/final/native-window/native-default.log) · [1920×1080 竹涧回放](../build/polish-ravine-stone/final/capture/ravine-map.log) · [窄窗口的冬夜](../build/polish-ravine-stone/final/capture/1024x768/09-lookout-lamp.png)
 - 103 项源码场景、31 项无窗口发行检查和 20 次隔离桌面运行通过。从新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局均可退出重启后读回。另复核战败恢复、管事与交货的长线路线、上版第 4 天存档接续和 90.742 秒连续运行。两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-ravine-stone/final/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-ravine-stone/source-release.log) · [无窗口发行](../build/polish-ravine-stone/final/headless.log) · [隔离桌面](../build/polish-ravine-stone/final/capture.log) · [重复构建](../build/polish-ravine-stone/final/hashes.log)
+
+## 从竹涧和西市指路回井田
+
+- 竹涧、西市和溪桥道可点「回井田」。金线随关口切换地图，回封地后接到第一块井田南侧的田口，走到就收起。竹涧南路小径已开放且谷内走这边更近时，地图会标出南路。指路可取消，也可沿途保存后继续。 [采果后的入口](../build/polish-estate-return/final/capture/1920x1080/return-ravine-after-gathering.png) · [南路小径的预览](../build/polish-estate-return/final/capture/1920x1080/return-shoal-region.png) · [回到东关的金线](../build/polish-estate-return/final/capture/1920x1080/return-ravine-on-estate.png)
+- 1920×1080 和 1024×768 都从新档照手记收下首贡和私田作物，第 6 天进竹涧采得 5 份野果，经西门回到田口，留存的菽、时令单和公田作物继续有效。两种尺寸都用手柄从西市启动返程，在溪桥道取消再开始，保存后从标题读回，走完桥和封地道路。另从砾滩钓鱼后经南路续档返程。 [1024×768 西市回放](../build/polish-estate-return/final/capture/market-wayfinding-1024x768.log) · [溪桥道续档](../build/polish-estate-return/final/capture/1920x1080/return-market-bridge-resume.png) · [南路回放](../build/polish-estate-return/final/capture/ravine-shortcut.log)
+- 103 项源码场景、34 项无窗口发行检查和 18 次隔离桌面运行通过。解压版从新档第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，均可退出重启后读回。上版第 4 天进度可接续。连续运行 90.64 秒，两次构建的 ZIP 校验值一致。 [源码回归](../build/polish-estate-return/source-release.log) · [无窗口发行](../build/polish-estate-return/final/headless.log) · [隔离桌面](../build/polish-estate-return/final/capture-retry.log) · [重复构建](../build/polish-estate-return/final/hashes.log)
