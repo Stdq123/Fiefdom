@@ -21,7 +21,7 @@
 - **经营到结局**。按自己的节奏选一条路线，记下哪几天改变了经营方式、哪些操作重复得最累、哪次遇见人物或走过某处让你想再去。结算后退出，再从标题「继续游戏」读回，核对路线和结算日期。
 - **回报**。记下系统和显卡、键鼠或手柄、实际窗口尺寸、总游玩时间及停在的游戏日期。能复现的问题附上当时的截图或一段操作顺序。画面、节奏和手感直接写感受即可。
 
-本包包含封地、溪桥道、西市和竹涧的斜俯视更新。若过夜会有门客因缺餐离任，也可先从提醒打开备粮安排。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本包校验](../build/polish-ration-bedtime/final/headless/manifest.txt)
+本包包含封地、溪桥道、西市和竹涧的斜俯视更新。竹涧木桥上游可以看到落水的岩坎和潭面水花，东岸有石阶通往望溪台。若过夜会有门客因缺餐离任，也可先从提醒打开备粮安排。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本包校验](../build/polish-ravine-stone/final/headless/manifest.txt)
 
 ## 从新档到第一次收获
 
@@ -1126,3 +1126,9 @@
 - 缺餐会让门客的忠诚降到零时，点「睡觉」或从「今夜安排」过夜，先看到可分出的口粮份数和预计离任的人名。打开今晚安排可直达补粮选项，仍可按原安排过夜。同夜有首贡提醒时，两个去处放在同一张提醒里。 [1920×1080 离任提醒](../build/polish-ration-bedtime/final/capture/1920x1080/rations-priority-bedtime-warning.png) · [1024×768 堂屋提醒](../build/polish-ration-bedtime/final/capture/1024x768/rations-priority-tribute-and-meal.png)
 - 从第 49 天的缺粮档验证按 Esc 取消、用手柄打开粮情、经东关实走到野果坳、采回 5 份口粮并在当天内回封地。补粮后过夜供足 5/5 份，三位门客均留任。同一晚选择继续过夜时，实际离任者与预报一致。另从堂屋床榻启用夜间备粮，提醒只保留首贡待办。 [1024×768 备粮入口](../build/polish-ration-bedtime/final/capture/1024x768/rations-priority-berry-option.png) · [采摘画面](../build/polish-ration-bedtime/final/capture/1920x1080/rations-priority-berry-grove.png) · [隔离桌面回放](../build/polish-ration-bedtime/final/capture/ration-priority.log)
 - 103 项源码场景、35 项无窗口发行检查及 16 次隔离桌面运行通过。解压版从新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，均可退出重启后读回。管事和交货路线也走到结局，全程供足口粮。上一版的第 4 天进度可接续，连续运行 90.752 秒，两次构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-ration-bedtime/final/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-ration-bedtime/source-matrix.txt) · [无窗口发行](../build/polish-ration-bedtime/final/headless.log) · [隔离桌面](../build/polish-ration-bedtime/final/capture.log) · [重复构建](../build/polish-ration-bedtime/final/hashes.log)
+
+## 竹涧岩坎、落水潭与望溪台石阶
+
+- 抬高木桥上游的落水岩坎，水线沿岩面落下，水花在潭面散开。溪岸用草苔、亮岩面和近水阴影显出高度。望溪台的每级石阶露出踏面与近侧立面，山路指引沿阶面接到野药旁。谷雨压暗湿岩，入冬霜覆岩沿。 [同机位前后对比](../build/polish-ravine-stone/final/ravine-before-after.png) · [谷雨与立冬](../build/polish-ravine-stone/final/rain-and-frost.png)
+- 1920×1080 和 1024×768 隔离桌面均从新档沿舆图过木桥、登石阶、到野药旁，再经浅滩返程。实际脚步在木桥为木板，在石阶为石面。角色靠近瀑布时仍停在深水边，水迹可保存后读回。两帧实拍分别看见水线与水花变化。干净配置直接启动的窗口为 1920×1080。 [默认窗口回放](../build/polish-ravine-stone/final/native-window/native-default.log) · [1920×1080 竹涧回放](../build/polish-ravine-stone/final/capture/ravine-map.log) · [窄窗口的冬夜](../build/polish-ravine-stone/final/capture/1024x768/09-lookout-lamp.png)
+- 103 项源码场景、31 项无窗口发行检查和 20 次隔离桌面运行通过。从新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局均可退出重启后读回。另复核战败恢复、管事与交货的长线路线、上版第 4 天存档接续和 90.742 秒连续运行。两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-ravine-stone/final/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-ravine-stone/source-release.log) · [无窗口发行](../build/polish-ravine-stone/final/headless.log) · [隔离桌面](../build/polish-ravine-stone/final/capture.log) · [重复构建](../build/polish-ravine-stone/final/hashes.log)
