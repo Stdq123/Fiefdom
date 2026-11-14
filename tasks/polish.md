@@ -21,7 +21,7 @@
 - **经营到结局**。按自己的节奏选一条路线，记下哪几天改变了经营方式、哪些操作重复得最累、哪次遇见人物或走过某处让你想再去。结算后退出，再从标题「继续游戏」读回，核对路线和结算日期。
 - **回报**。记下系统和显卡、键鼠或手柄、实际窗口尺寸、总游玩时间及停在的游戏日期。能复现的问题附上当时的截图或一段操作顺序。画面、节奏和手感直接写感受即可。
 
-本包包含溪桥道的斜俯视木桥、西市的厚檐柜台和石槽、东关到望溪台的岩壁与石阶，以及重绘的陶罐、粮袋和采集物。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本包校验](../build/polish-market-depth/delivery/headless/manifest.txt)
+本包包含堂前石阶、井田田埂和石砌泉眼的斜俯视更新，也包含溪桥道木桥、西市摊位和东关到望溪台的岩壁与石阶。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本包校验](../build/polish-estate-water-depth/final/headless/manifest.txt)
 
 ## 从新档到第一次收获
 
@@ -1114,3 +1114,9 @@
 - 溪桥道和竹涧共用斜俯视木桥。桥板露出侧梁与墩脚，近侧栏杆能挡住行人的脚，指路箭头铺在板上。西市粮、鱼、绸三处柜台露出台面和棚檐的厚度，鱼槽有石沿、侧壁和低一层的水面。 [桥与鱼摊前后对比](../build/polish-market-depth/delivery/market-before-after.png) · [过桥时的栏杆遮挡](../build/polish-market-depth/delivery/bridge-crop.png)
 - 1920×1080 隔离桌面回放用默认步速约 4.75 秒走完整段溪桥道。回封地途中在西岸存档，从标题继续后经桥返程。1920×1080 和 1024×768 均从封地交货簿指路到鱼摊，交当季的鱼得 13 铜，走到槽前会被石沿挡住。继续游戏后鱼仍在水里游，酉时伙计到槽边收鱼。 [溪桥道回放](../build/polish-market-depth/delivery/capture/west-road.log) · [1920×1080 留鱼单](../build/polish-market-depth/delivery/capture/fish-market-orders.log) · [1024×768 找鱼摊](../build/polish-market-depth/delivery/capture/market-wayfinding-1024x768.log) · [1024×768 留鱼单](../build/polish-market-depth/delivery/capture/fish-market-orders-1024x768.log)
 - 103 项源码场景、39 项无窗口发行检查及 15 次隔离桌面运行通过。解压版从新档在第 56 天达成传统结局、第 59 天达成改革结局，重启可读回两个结局。上一版第 4 天的存档可继续，连续运行 90.655 秒，两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-market-depth/delivery/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-market-depth/source-delivery.log) · [无窗口发行](../build/polish-market-depth/delivery/headless.log) · [隔离桌面](../build/polish-market-depth/delivery/capture.log) · [重复构建](../build/polish-market-depth/delivery/hashes.log)
+
+## 堂前石阶、泉眼和井田田口
+
+- 堂前两级石阶有踏面和近侧立面。各块完工井田按实际下田小路露出田口，田埂上沿见光，近侧是浅土坡。石砌泉眼按原水源坐标摆放，人物能绕过石基，从泉北看时石沿盖住脚边。走到互动范围后，舆图提示退去，泉边的互动键抬到人物头顶。泉眼图形沿用项目自绘素材，在 32×26 的逻辑尺寸内重绘，用原 Godot 导入器的两倍比例检验透明边缘。 [画面前后对比](../build/polish-estate-water-depth/final/estate-before-after.png) · [泉边遮挡和提示](../build/polish-estate-water-depth/final/spring-occlusion.png) · [泉眼图形报告](../build/polish-estate-water-depth/asset-report.json)
+- 1920×1080 和 1024×768 都从标题新建游戏，走泉眼前后各一遍。按 E 到研读入口，书艺达 3 级后以手柄 X 到科技。第 5 天正常开两格渠花 8 铜，只有东侧石口出水。第 6 天从标题读回一格稻、国库的一份纳贡和 7 铜。再填渠、过夜查稻停长，补接后于第 10 天从私田收稻。还在谷雨回放第二块井田和过渠木板，在冬季看霜及田口。 [1920×1080 引渠回放](../build/polish-estate-water-depth/final/capture/irrigation-flow.log) · [1024×768 引渠回放](../build/polish-estate-water-depth/final/capture/irrigation-flow-1024x768.log) · [开渠与填渠画面](../build/polish-estate-water-depth/final/spring-outlet.png)
+- 103 项源码场景、40 项无窗口发行检查及 18 次隔离桌面运行通过。解压版从新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」。两次退出重启各读回对应结局。上一版第 4 天的存档可继续。连续运行 90.69 秒，两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-estate-water-depth/final/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-estate-water-depth/source-release.log) · [无窗口发行](../build/polish-estate-water-depth/final/headless.log) · [隔离桌面](../build/polish-estate-water-depth/final/capture.log) · [重复构建](../build/polish-estate-water-depth/final/hashes.log)
