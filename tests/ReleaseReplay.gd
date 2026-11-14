@@ -261,6 +261,10 @@ func _run() -> void:
 			await replay.run(tree)
 		"creek-traps":
 			var replay = load("res://tests/CreekTrapReplay.gd").new()
+			if not capture_directory.is_empty():
+				var trap_captures := capture_directory.path_join("creek-traps")
+				DirAccess.make_dir_recursive_absolute(trap_captures)
+				OS.set_environment("FIEFDOM_TRAP_CAPTURES", trap_captures)
 			await replay.run(tree)
 		"west-market":
 			var replay = load("res://tests/WestMarketReplay.gd").new()
