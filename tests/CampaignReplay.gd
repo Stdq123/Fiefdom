@@ -30,6 +30,9 @@ var nights_short := 0
 var use_night_rations := false
 var use_field_steward := false
 var use_season_orders := false
+var use_early_order_guide := false
+var early_order_seeds := 0
+var first_early_order_day := 0
 var use_rotation_steward := false
 var use_field_wait := false
 var use_bedtime_work := false
@@ -391,6 +394,8 @@ func _expand() -> void:
 	_expect(state.well_fields.size() == 2, "Ordinary reclamation creates the second field.")
 
 func _order_plots() -> Dictionary:
+	if use_early_order_guide:
+		return {}
 	if not use_season_orders or state.get_current_year() != state.TAX_COUNCIL_YEAR - 1:
 		return {}
 	var schedule: Dictionary = state.season_order()
@@ -400,6 +405,55 @@ func _order_plots() -> Dictionary:
 		"spring_seed_share": return SPRING_ORDER_PLOTS
 		"autumn_watch_relief": return AUTUMN_ORDER_PLOTS
 	return {}
+
+func _grow_guided_orders() -> void:
+	var wanted := ["spring_seed_share", "autumn_watch_relief"]
+	var current: Dictionary = state.season_order()
+	var upcoming: Dictionary = state.season_order(current.end + 1)
+	var order: Dictionary = current if current.order.id in wanted else upcoming
+	var second_year_start: int = state.tax_council_start_day() - state.balance.days_per_year
+	if order.start < second_year_start or order.order.id not in wanted or state.season_order_delivered_at(order) != 0:
+		return
+	var plan: Dictionary = state.season_order_work(order)
+	if order.start > state.current_day and state.current_day + 3 < order.start:
+		return
+	while not plan.is_empty() and plan.action != state.OrderWork.WAIT and state.current_stamina > 0:
+		if not state.is_season_order_pinned(order) or ui.directions.order_work.get("crop_id") != plan.crop_id:
+			if not await _open_guided_order_plot(order):
+				return
+		else:
+			await _click(ui.hud.pinned_order.get_global_rect().get_center())
+		if not _expect(ui.directions.tracked_plot == plan.cell and not state.is_public_plot(plan.cell),
+			"Follow the pinned order to a real private plot."):
+			return
+		var cell: Vector2i = plan.cell
+		var action: int = world.field_action(cell)
+		if world.field_cost(action) > state.current_stamina:
+			return
+		if not _expect(action in [world.FieldAction.TILL, world.FieldAction.SOW, world.FieldAction.WATER, world.FieldAction.HARVEST],
+			"The order marker points to work the player can do today."):
+			return
+		_farm_action(cell)
+		if action == world.FieldAction.SOW and order.start > state.current_day:
+			early_order_seeds += 1
+			if first_early_order_day == 0:
+				first_early_order_day = state.current_day
+		await tree.process_frame
+		var next: Dictionary = state.season_order_work(order)
+		if next == plan and action != world.FieldAction.TILL:
+			break
+		plan = next
+
+func _open_guided_order_plot(order: Dictionary) -> bool:
+	var panel := _management(0)
+	panel.show_season_orders()
+	await tree.process_frame
+	var book: Control = panel.season_order_panel
+	var button: Button = book.next_field_work_button if order.start > state.current_day else book.field_work_button
+	if not _expect(button.is_visible_in_tree(), "Reach the relevant order's field work from the delivery book."):
+		return false
+	await _click(button.get_global_rect().get_center())
+	return _expect(not panel.visible and state.is_season_order_pinned(order), "Start field work and pin the selected delivery.")
 
 func _seek_petition() -> bool:
 	return (use_season_orders and state.tax_council_petition_order_count() >= state.TAX_COUNCIL_PETITION_ORDERS
@@ -1009,6 +1063,7 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 		var prioritize_tribute := _seek_petition()
 		var order_plots := _order_plots()
 		var in_second_year: bool = use_season_orders and state.get_current_year() == state.TAX_COUNCIL_YEAR - 1
+		var preparing_spring: bool = use_early_order_guide and state.current_day >= state.tax_council_start_day() - state.balance.days_per_year - 3
 		if not first_managed:
 			_harvest_and_tend(FIRST, KEY_1 if state.fertile_cells.has(FIRST) else KEY_5, true)
 		if field_ready and not use_field_steward:
@@ -1034,7 +1089,7 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 						grow = true
 					if use_rotation_steward and cell == ROTATION_PLOT and state.field_rotation.beans_day == 0:
 						seed_key = KEY_5
-					if in_second_year and not silk_plot and seed_key != KEY_3:
+					if (in_second_year or preparing_spring) and not silk_plot and seed_key != KEY_3:
 						grow = order_plots.has(cell)
 						seed_key = order_plots.get(cell, seed_key)
 					_harvest_and_tend(cell, seed_key, grow)
@@ -1042,6 +1097,8 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 			await _prepare_workshop_and_canal()
 			prepared = true
 			print("CAMPAIGN_BUILD day=", state.current_day, " literacy=", state.player_stats.get_level(literacy_art))
+		if use_early_order_guide:
+			await _grow_guided_orders()
 		_make_silk()
 		await _deliver_order()
 		if failures > 0:
@@ -1224,6 +1281,11 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 			"Deliver season orders and petition before the regular council in an ordinary new game.")
 		_expect(ration_forage_trips > 0 and nights_short == 0,
 			"The order campaign follows the berry route and feeds everyone through to its ending.")
+		if use_early_order_guide:
+			_expect(early_order_seeds >= 3 and first_early_order_day < state.tax_council_start_day() - state.balance.days_per_year,
+				"Prepare actual fields before the second-year order opens.")
+			print("CAMPAIGN_ORDER_AHEAD first_day=", first_early_order_day, " early_sowings=", early_order_seeds,
+				" first_delivery=", state.season_order_receipts["spring_seed_share"].day, " petition=", petition_day)
 	var outcome_view := tree.current_scene.get_node("CampaignHUD")
 	var ending: Control = outcome_view.summary
 	var ending_capture := ("first-steward-" if use_rotation_steward else "") + "ending-" + branch

@@ -200,28 +200,22 @@ func _refresh_pinned_order() -> void:
 	if not pinned_order.visible:
 		return
 	var amounts := ItemManager.describe_season_order_progress(schedule)
-	var harvest := Global.has_season_order_harvest(schedule)
-	if schedule.start > Global.current_day:
-		var next_action := "第 %d 天开收" % schedule.start
-		if harvest:
-			next_action = "收备货私田 · " + next_action
-		pinned_order.text = "下季备货   %s   ·   %s" % [amounts, next_action]
-		pinned_order.tooltip_text = pinned_order.text
-		return
-	var action := "第 %d 天截止" % schedule.end
+	var upcoming: bool = schedule.start > Global.current_day
+	var action := "第 %d 天开收" % schedule.start if upcoming else "第 %d 天截止" % schedule.end
 	if Global.can_deliver_season_order(schedule):
 		action = "去西市交货"
-	elif harvest:
-		action = "收备货私田"
 	else:
 		var plan := Global.season_order_work(schedule)
 		if not plan.is_empty():
 			var label := ItemManager.crop_label(plan.crop_id)
 			match int(plan.action):
+				Global.OrderWork.HARVEST: action = "收备货私田"
 				Global.OrderWork.WATER: action = "给%s浇水" % label
-				Global.OrderWork.SOW: action = "种%s · 第 %d 天截止" % [label, schedule.end]
+				Global.OrderWork.SOW:
+					action = "种%s · 第 %d 天开收" % [label, schedule.start] if upcoming else "种%s · 第 %d 天截止" % [label, schedule.end]
 				Global.OrderWork.WAIT: action = "%s最早第 %d 天收" % [label, plan.day]
-	pinned_order.text = "时令单   %s   ·   %s" % [amounts, action]
+	var heading := "下季备货" if upcoming else "时令单"
+	pinned_order.text = "%s   %s   ·   %s" % [heading, amounts, action]
 	pinned_order.tooltip_text = pinned_order.text
 
 func _refresh_silk_stock() -> void:

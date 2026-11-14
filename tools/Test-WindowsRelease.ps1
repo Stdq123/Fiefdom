@@ -79,7 +79,7 @@ function Start-VerifiedGame {
         (New-Item -ItemType Directory -Path $profilePath).FullName
     }
     $log = Join-Path $evidence "$Name.log"
-    $frameLimit = if ($Replay -like '*-steward' -or $Replay -in 'reformed-orders', 'reformed-field-work-wait') { '42000' } elseif ($Replay) { '12000' } else { '180' }
+    $frameLimit = if ($Replay -like '*-steward' -or $Replay -in 'reformed-orders', 'reformed-order-ahead', 'reformed-field-work-wait') { '42000' } elseif ($Replay) { '12000' } else { '180' }
     $arguments = @('--quit-after', $frameLimit, '--log-file', ('"' + $log + '"'))
     $arguments += if ($Replay -eq 'soak') {
         '--max-fps', '60', '--audio-driver', 'Dummy'
@@ -120,7 +120,7 @@ function Start-VerifiedGame {
     }
     $lines = Get-Content -LiteralPath $log -Encoding utf8
     $marker = if ($Replay) { 'SCENARIO_OK' } else { 'Fiefdom title ready' }
-    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|RESEARCH_RATIONS_|GAMEPAD_|DRIVING_|BOW_AIM_|WINTER_|AUTUMN_|BINDING_|RAFT_|TITLE_|BACKPACK_|DECOR_|ROUTE_|COUNCIL_PREP_|COUNCIL_SILK_|DIRECTION_|PLAN_|TRIBUTE_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|CANAL_DOOR_|SPRING_|ESTATE_PROGRESS_|ESTATE_PROVISIONS|RECRUITMENT_|FIELD_ACCESS_|FIELD_STROKE_|WORKSITE_|FIELD_ROUTE_|FIELD_NIGHT_|FIELD_BEDTIME|MORNING_|PAVILION_EVENING_|FISH_MARKET_|RAVINE_MAP_|SHORTCUT_|TRAP_|MARKET_WAYFINDING_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
+    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|RESEARCH_RATIONS_|GAMEPAD_|DRIVING_|BOW_AIM_|WINTER_|AUTUMN_|BINDING_|RAFT_|TITLE_|BACKPACK_|DECOR_|ROUTE_|COUNCIL_PREP_|COUNCIL_SILK_|DIRECTION_|PLAN_|TRIBUTE_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|CANAL_DOOR_|SPRING_|ESTATE_PROGRESS_|ESTATE_PROVISIONS|RECRUITMENT_|FIELD_ACCESS_|FIELD_STROKE_|WORKSITE_|FIELD_ROUTE_|FIELD_NIGHT_|FIELD_BEDTIME|MORNING_|PAVILION_EVENING_|FISH_MARKET_|RAVINE_MAP_|SHORTCUT_|TRAP_|MARKET_WAYFINDING_|ORDER_AHEAD_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
     if ($exitCode -ne 0 -or $lines -cnotcontains $marker -or $lines -cmatch '^\s*(?:SCRIPT ERROR|USER ERROR|ERROR|WARNING):') {
         throw "$Name failed (exit $exitCode). See $log"
     }
@@ -251,6 +251,7 @@ try {
     if ($OrderCampaign) {
         Start-VerifiedGame -Directory $release -Profile 'freight-wait' -Name 'freight-wait' -Replay 'freight-wait' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'reformed-orders' -Name 'reformed-orders' -Replay 'reformed-orders' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'reformed-order-ahead' -Name 'reformed-order-ahead' -Replay 'reformed-order-ahead'
     }
     if ($FieldRotationPlans) {
         Start-VerifiedGame -Directory $release -Profile 'field-rotation-plans' -Name 'field-rotation-plans' -Replay 'field-rotation-plans'
@@ -313,6 +314,7 @@ try {
         foreach ($name in 'order-preparation', 'watch-relief', 'seed-garden', 'sheepfold', 'meadow-fodder') {
             Start-VerifiedGame -Directory $release -Profile $name -Name $name -Replay $name
         }
+        Start-VerifiedGame -Directory $release -Profile 'order-ahead' -Name 'order-ahead' -Replay 'order-ahead' -Resolution $fullResolution
     }
     if ($RavineLayout) {
         Start-VerifiedGame -Directory $release -Profile 'ravine-map' -Name 'ravine-map' -Replay 'ravine-map' -Resolution $fullResolution
@@ -406,6 +408,7 @@ try {
         if ($SouthRoad) {
             Start-VerifiedGame -Directory $release -Profile 'market-orders-compact' -Name 'market-orders-1024x768' -Replay 'market-orders' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'autumn-exhibit-compact' -Name 'autumn-exhibit-1024x768' -Replay 'autumn-exhibit' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'order-ahead-compact' -Name 'order-ahead-1024x768' -Replay 'order-ahead' -Resolution '1024x768'
         }
         if ($Opening) {
             Start-VerifiedGame -Directory $release -Profile 'opening-compact' -Name 'opening-1024x768' -Replay 'estate-directions' -Resolution '1024x768'

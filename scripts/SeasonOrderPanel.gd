@@ -33,6 +33,7 @@ const CROP_PROGRESS := {
 @onready var next_silk_button: Button = $Next/Content/HeadingRow/Silk
 @onready var next_water_button: Button = $Next/Content/HeadingRow/WaterRoute
 @onready var next_details: Label = $Next/Content/Details
+@onready var next_field_work_button: Button = $Next/Content/FieldWork
 @onready var last_receipt: Label = $LastReceipt
 
 var start_day := 0
@@ -43,7 +44,8 @@ func _ready() -> void:
 	copper_button.pressed.connect(_deliver.bind(false))
 	food_button.pressed.connect(_deliver.bind(true))
 	pin_button.toggled.connect(Global.pin_season_order)
-	field_work_button.pressed.connect(GameEvents.season_order_work_requested.emit)
+	field_work_button.pressed.connect(GameEvents.season_order_work_requested.emit.bind(false))
+	next_field_work_button.pressed.connect(GameEvents.season_order_work_requested.emit.bind(true))
 	next_plan_button.toggled.connect(Global.pin_season_order.bind(true))
 	fish_route_button.pressed.connect(func(): GameEvents.ravine_trip_requested.emit(fish_route_target))
 	produce_route_button.pressed.connect(GameEvents.west_market_directions_requested.emit.bind(MarketStall.TITLES[MarketStall.Kind.GRAIN]))
@@ -90,7 +92,7 @@ func _refresh() -> void:
 	var pinned := Global.is_season_order_pinned(schedule)
 	pin_button.set_pressed_no_signal(pinned)
 	pin_button.text = "取消田边跟踪" if pinned else "在田边跟踪此单"
-	_refresh_field_work(schedule)
+	_refresh_field_work(field_work_button, schedule)
 	_refresh_produce_route(order)
 	var rice_water_gap := Global.rice_order_water_gap(schedule) if pin_button.visible else 0
 	water_route_button.visible = rice_water_gap > 0
@@ -169,22 +171,27 @@ func _refresh() -> void:
 	next_water_button.visible = next_plan_button.visible and needs_next_water
 	next_silk_button.visible = next_plan_button.visible and not at_market \
 		and int(upcoming.order.get("silk", 0)) > Global.season_order_stock_for(upcoming, SeasonOrders.SILK_ITEM)
+	_refresh_field_work(next_field_work_button, upcoming)
 	last_receipt.visible = delivered_on == 0 and not receipt.is_empty()
 	if last_receipt.visible:
 		last_receipt.text = "上次这张单在第 %d 天交齐。" % receipt.day
 
-func _refresh_field_work(schedule: Dictionary) -> void:
+func _refresh_field_work(button: Button, schedule: Dictionary) -> void:
 	var plan := Global.season_order_work(schedule) if not at_market else {}
-	field_work_button.visible = not plan.is_empty()
-	if not field_work_button.visible:
+	button.visible = not plan.is_empty()
+	if not button.visible:
 		return
 	var label := ItemManager.crop_label(plan.crop_id)
 	match int(plan.action):
-		Global.OrderWork.HARVEST: field_work_button.text = "标出已熟的%s" % label
-		Global.OrderWork.WATER: field_work_button.text = "标出待浇的%s" % label
-		Global.OrderWork.SOW: field_work_button.text = "标出空私田 · 换%s种" % label
-		Global.OrderWork.WAIT: field_work_button.text = "查看田里的%s" % label
-	field_work_button.tooltip_text = "在田边跟踪此单，并标出一格私田。"
+		Global.OrderWork.HARVEST: button.text = "标出已熟的%s" % label
+		Global.OrderWork.WATER: button.text = "标出待浇的%s" % label
+		Global.OrderWork.SOW: button.text = "标出空私田 · 换%s种" % label
+		Global.OrderWork.WAIT: button.text = "查看田里的%s" % label
+	button.tooltip_text = "在田边跟踪此单，并标出一格私田。"
+	if schedule.start > Global.current_day:
+		if plan.action != Global.OrderWork.HARVEST:
+			next_details.text += "\n%s最早第 %d 天可收。第 %d 天起可交货。" % [label, plan.day, schedule.start]
+		button.tooltip_text += "\n第 %d 天起可交货。" % schedule.start
 
 func _refresh_produce_route(order: Dictionary) -> void:
 	var crop := Global.market_produce_crop()

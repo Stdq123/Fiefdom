@@ -41,8 +41,9 @@ func _run() -> void:
 		"traditional-steward", "reformed-steward":
 			var replay = load("res://tests/CampaignReplay.gd").new()
 			await replay.run(tree, arguments[0].trim_suffix("-steward"), true, capture_directory, true, true)
-		"reformed-orders":
+		"reformed-orders", "reformed-order-ahead":
 			var replay = load("res://tests/CampaignReplay.gd").new()
+			replay.use_early_order_guide = arguments[0] == "reformed-order-ahead"
 			await replay.run(tree, "reformed", true, capture_directory, true, false, true)
 		"reformed-first-steward", "reformed-field-work-wait":
 			var replay = load("res://tests/CampaignReplay.gd").new()
@@ -250,10 +251,11 @@ func _run() -> void:
 			replay.waiting_shipment = arguments[0] == "freight-wait"
 			replay.capture_dir = capture_directory
 			await replay.run(tree)
-		"order-preparation", "order-preparation-baseline", "order-preparation-old-save":
+		"order-preparation", "order-preparation-baseline", "order-preparation-old-save", "order-ahead":
 			var replay = load("res://tests/OrderPreparationReplay.gd").new()
 			replay.baseline = arguments[0] == "order-preparation-baseline"
 			replay.from_older_save = arguments[0] == "order-preparation-old-save"
+			replay.start_planting_early = arguments[0] == "order-ahead"
 			replay.capture_path = capture_directory
 			await replay.run(tree)
 		"opening-order", "opening-order-pad", "opening-order-write-old", "opening-order-resume-old":

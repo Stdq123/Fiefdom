@@ -900,7 +900,7 @@ func _on_pinned_order_pressed() -> void:
 		return
 	var plan := Global.season_order_work(order)
 	if not plan.is_empty() and (plan.action != Global.OrderWork.WAIT
-		or Global.field_route_status == Global.OrderFieldRoute.PREPARE):
+		or Global.field_route_status == Global.OrderFieldRoute.PREPARE or order.start > Global.current_day):
 		_follow_order_work(plan)
 		return
 	if directions.follow_field_route(Global.OrderFieldRoute.HARVEST):
@@ -910,13 +910,15 @@ func _on_pinned_order_pressed() -> void:
 		return
 	_on_season_board_interacted()
 
-func _on_season_order_work_requested() -> void:
+func _on_season_order_work_requested(upcoming: bool) -> void:
 	var order := Global.season_order()
+	if upcoming:
+		order = Global.season_order(order.end + 1)
 	var plan := Global.season_order_work(order)
 	if plan.is_empty():
 		return
 	if not Global.is_season_order_pinned(order):
-		Global.pin_season_order(true)
+		Global.pin_season_order(true, upcoming)
 	_follow_order_work(plan)
 
 func _follow_order_work(plan: Dictionary) -> void:

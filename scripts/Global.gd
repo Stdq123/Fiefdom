@@ -2344,34 +2344,36 @@ func season_order_stock_for(schedule: Dictionary, id: String) -> int:
 	var stock := season_order_stock(id)
 	if schedule.start <= current_day:
 		return stock
-	var current := season_order()
-	if season_order_delivered_at(current) == 0:
-		stock -= int(SeasonOrders.cargo(current.order).get(id, 0))
-	return maxi(0, stock)
+	return maxi(0, stock - _current_order_claim(id))
 
 func season_order_crop_gap(schedule: Dictionary, id: String) -> int:
 	var needed: int = schedule.order.need.get(id, 0)
 	return maxi(0, needed - season_order_stock_for(schedule, id)) if needed > 0 else 0
 
+func _current_order_claim(id: String) -> int:
+	var current := season_order()
+	return int(SeasonOrders.cargo(current.order).get(id, 0)) if season_order_delivered_at(current) == 0 else 0
+
 func is_season_order_harvest(cell: Vector2i, schedule: Dictionary) -> bool:
 	return (field_crop_is_ripe(cell) and not is_public_plot(cell)
 		and season_order_crop_gap(schedule, active_crops[cell].id) > 0)
 
-func has_season_order_harvest(schedule: Dictionary) -> bool:
-	for cell: Vector2i in active_crops:
-		if is_season_order_harvest(cell, schedule):
-			return true
-	return false
-
 func season_order_work(schedule: Dictionary) -> Dictionary:
-	if (schedule.is_empty() or outcome != Outcome.RUNNING or current_day < schedule.start
-		or current_day > schedule.end or season_order_delivered_at(schedule) > 0):
+	if schedule.is_empty() or outcome != Outcome.RUNNING or season_order_delivered_at(schedule) > 0:
+		return {}
+	var current := season_order()
+	if schedule.start != current.start and schedule.start != current.end + 1:
 		return {}
 	var best := {}
+	var upcoming: bool = schedule.start > current_day
+	var current_delivery := {}
+	if upcoming and season_order_delivered_at(current) == 0:
+		current_delivery = current.order.need
 	for crop_id: String in schedule.order.need:
 		var missing := season_order_crop_gap(schedule, crop_id)
 		if missing == 0:
 			continue
+		missing += maxi(0, int(current_delivery.get(crop_id, 0)) - crop_stock.count(crop_id))
 		var plan := _order_crop_work(crop_id, missing, schedule.end)
 		if not plan.is_empty() and (best.is_empty() or plan.action < best.action
 			or (plan.action == best.action and plan.day < best.day)):
