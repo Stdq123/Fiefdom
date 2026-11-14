@@ -86,6 +86,7 @@ func _ready() -> void:
 	GameEvents.retainer_assigned.connect(_refresh_steward_choices.unbind(2))
 	GameEvents.retainer_recruited.connect(_refresh_steward_choices.unbind(1))
 	GameEvents.retainer_departed.connect(_refresh_steward_choices.unbind(1))
+	GameEvents.food_changed.connect(_refresh_steward_preview.unbind(1))
 	GameEvents.retainer_assigned.connect(_show_steward_assignment)
 	GameEvents.tax_reform_choice_made.connect(_refresh_field_tiles.unbind(1))
 	setup_six_arts()
@@ -194,8 +195,19 @@ func show_technology() -> void:
 func show_silk() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(silk_panel)
 
-func show_estate() -> void:
+func show_estate(field_id := -1) -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(map_grid_container.get_parent())
+	if field_id < 0:
+		return
+	var index := well_field_selector.get_item_index(field_id)
+	if index < 0:
+		return
+	if well_field_selector.selected != index:
+		well_field_selector.select(index)
+		_show_well_field(index)
+	var focus: Control = steward_picker if steward_picker.is_visible_in_tree() and not steward_picker.disabled else well_field_selector
+	focus.grab_focus()
+	GamepadInput.snap_pointer_to_focus.call_deferred()
 
 func show_neighbors() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(neighbor_journal)
@@ -444,11 +456,16 @@ func _steward_fill_targets() -> Array[Vector2i]:
 func _refresh_steward_preview() -> void:
 	steward_preview.visible = Global.field_steward_unlocked()
 	var data := steward_picker.get_selected_metadata() as RetainerData
+	var has_tilled_plot := map_grid_container.get_children().any(
+		func(tile: MAP_GRID_ITEM) -> bool: return Global.tilled_cells.has(tile.grid_pos))
+	var till_hint := "先翻田，再安排续播。"
 	apply_steward.disabled = data == null
 	apply_steward.text = "交给管事"
 	if data == null:
 		steward_preview.text = ("留任门客后可安排井田管事。" if steward_picker.disabled else
-			"选择门客，交接时可补齐已翻田格的续播安排。")
+			"管事负责收割、浇水和按计划续播。")
+		if not has_tilled_plot:
+			steward_preview.text += " " + till_hint
 		return
 	var already_assigned := _manages_selected_field(data)
 	var targets := _steward_fill_targets()
@@ -458,7 +475,10 @@ func _refresh_steward_preview() -> void:
 	var private_count := targets.size() - public_count
 	var ration := Global.night_ration_for_duty(RetainerData.Duty.STEWARD)
 	var change := ration - Global.retainer_night_ration(data)
-	var ration_note := "每夜 %d 份粮（%s）" % [ration, "+%d" % change if change > 0 else "不变"]
+	var household := Global.retainer_food_cost()
+	var ration_note := "全员每夜用粮 %d 份" % household
+	if change != 0:
+		ration_note = "全员每夜用粮 %d → %d 份" % [household, household + change]
 	var field_number := well_field_selector.get_selected_id() + 1
 	var assignment := "井田 %d" % field_number
 	if already_assigned:
@@ -473,8 +493,10 @@ func _refresh_steward_preview() -> void:
 		plans.append("公田 %d 格续播%s" % [public_count, ItemManager.crop_label(Global.tribute_seed())])
 	if private_count > 0:
 		plans.append("私田 %d 格按时令续播" % private_count)
-	var plan_note := "无可补齐的续播" if plans.is_empty() else "，".join(plans)
-	steward_preview.text = "%s · %s · %s" % [assignment, ration_note, plan_note]
+	var plan_note := "，".join(plans)
+	if plan_note.is_empty():
+		plan_note = "无可补齐的续播" if has_tilled_plot else till_hint
+	steward_preview.text = "%s · %s · 粮仓 %d 份\n%s" % [assignment, ration_note, Global.food_storage, plan_note]
 
 func _apply_steward_handover() -> void:
 	var data := steward_picker.get_selected_metadata() as RetainerData

@@ -622,8 +622,6 @@ func dawn_milestones() -> PackedStringArray:
 		for number: int in completed:
 			numbers.append(str(number))
 		lines.append("井田 %s 已完工 · 可耕种" % "、".join(numbers))
-		if 2 in completed:
-			lines.append("可在「管理 → 封地概览」交接井田管事。")
 	var research_paid: int = last_dawn.get("research_paid", 0)
 	var research_gap: int = last_dawn.get("research_gap", 0)
 	if research_paid > 0:

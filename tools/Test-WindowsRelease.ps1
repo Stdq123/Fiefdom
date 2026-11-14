@@ -304,6 +304,7 @@ try {
         }
         if ($Opening) {
             Start-VerifiedGame -Directory $release -Profile 'opening-compact' -Name 'opening-1024x768' -Replay 'estate-directions' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'estate-progress-compact' -Name 'estate-progress-1024x768' -Replay 'estate-progress' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'recruitment-compact' -Name 'recruitment-ledger-1024x768' -Replay 'recruitment-ledger' -Resolution '1024x768'
         }
         if ($FieldStroke) {

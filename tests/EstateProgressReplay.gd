@@ -2,6 +2,7 @@ extends RefCounted
 
 const PUBLIC := Vector2i(5, 5)
 const EXPANSION := Vector2i(9, 5)
+const EXPANSION_PRIVATE := EXPANSION + Vector2i.DOWN
 const HOME := Vector2(42, 98)
 const MOVEMENT := [&"ui_left", &"ui_right", &"ui_up", &"ui_down"]
 
@@ -385,12 +386,111 @@ func _complete_expansion() -> void:
 	var record: Control = ui.get_node_or_null("Control/NightRationsPanel")
 	if not _expect(record != null and "井田 2 已完工" in record.milestones.text, "The finished field stays in the morning record after Continue."):
 		return
-	await _button(record.close_button)
+	await _capture("08-morning-field-handover")
+	await _button(record.plan_field)
+	var management: Control = ui.panel_manager.management_panel_instance
+	if not _expect(not is_instance_valid(record) and is_instance_valid(management) and management.visible and not world.player.conversation_open
+		and management.well_field_selector.get_selected_id() == 1 and management.steward_picker.has_focus()
+		and "先翻田" in management.steward_preview.text, "The morning record opens the new field with clear instructions and selector focus."):
+		return
+	await _button(management.close_button)
 	_key(KEY_1)
 	await _tend(EXPANSION)
+	await _click(_cell_point(EXPANSION_PRIVATE))
 	_expect(state.active_crops.has(EXPANSION), "The completed field can be cultivated after reloading.")
 	await _capture("05-first-crop-on-the-new-field")
 	print("ESTATE_PROGRESS_FINISHED day=", day, " raids_defeated=", state.raids_defeated, " tribute=", state.king_storage)
+	await _try_stewardship()
+
+func _try_stewardship() -> void:
+	await _button(ui.hud.farm_status)
+	var map: Control = ui.estate_map
+	var field_row: Button
+	for row: Button in map.row_buttons:
+		if map.row_buttons[row].get("field_id") == 1:
+			field_row = row
+			break
+	if not _expect(map.modal.visible and field_row != null, "Find the finished field in the normal map."):
+		return
+	await _button(field_row)
+	if not _expect(map.manage_field.is_visible_in_tree(), "The selected field offers a management action."):
+		return
+	await _capture("08b-map-field-handover")
+	await _button(map.manage_field)
+	var panel: Control = ui.panel_manager.management_panel_instance
+	if not _expect(panel.visible and not tree.paused and not map.modal.visible
+		and panel.well_field_selector.get_selected_id() == 1, "The map opens the same field after the morning record."):
+		return
+	var keeper = state.retainers.front()
+	var before_need: int = state.retainer_food_cost()
+	var after_need: int = before_need + state.balance.specialist_food_per_night
+	await _button(panel.steward_picker)
+	var popup: PopupMenu = panel.steward_picker.get_popup()
+	if not _expect(popup.visible, "Open the ordinary steward selection menu."):
+		return
+	_key(KEY_DOWN)
+	await tree.process_frame
+	if popup.get_focused_item() == 0:
+		_key(KEY_DOWN)
+		await tree.process_frame
+	_key(KEY_ENTER)
+	await tree.process_frame
+	if not _expect(panel.steward_picker.get_selected_metadata() == keeper and not popup.visible
+		and "全员每夜用粮 %d → %d 份" % [before_need, after_need] in panel.steward_preview.text
+		and "粮仓 0 份" in panel.steward_preview.text and "公田 1 格" in panel.steward_preview.text
+		and "私田 1 格" in panel.steward_preview.text and not state.field_seed_plans.has(EXPANSION_PRIVATE),
+		"Caretaker quote after keyboard selection (index %d, open %s): %s" % [
+			panel.steward_picker.selected, popup.visible, panel.steward_preview.text]):
+		return
+	await _capture("09-steward-quote")
+	var public_plan: String = state.tribute_seed()
+	await _button(panel.apply_steward)
+	_expect(state.field_seed_plans.get(EXPANSION) == public_plan and state.field_seed_plans.get(EXPANSION_PRIVATE) == "seasonal"
+		and state.retainer_food_cost() == after_need and state.stewarded_field(keeper).field_id == 1,
+		"Applying keeps the standing public crop and sets only the two prepared plots to be resown.")
+	await _button(panel.close_button)
+	await _defend()
+	await _walk_to(HOME)
+	for y in range(4, 7):
+		for x in range(4, 7):
+			var cell := Vector2i(x, y)
+			if cell != PUBLIC and world.field_action(cell) == world.FieldAction.HARVEST:
+				await _click(_cell_point(cell))
+	await _button(ui.hud.rations_button)
+	var night: Control = ui.get_node_or_null("Control/NightRationsPanel")
+	if not _expect(night != null and "缺 %d 份" % after_need in night.forecast.text,
+		"Today's night forecast shows the full household shortage after appointment."):
+		return
+	await _button(night.get_node("%Market"))
+	var market: Control = panel.market_panel
+	var reserve: Dictionary = state.food_reserve_plan(3)
+	if not _expect(market.is_visible_in_tree() and reserve.copper <= state.money and not market.reserve_button.disabled,
+		"Three-night reserve (visible %s, food %d, copper %d/%d, mode %d): %s" % [
+			market.is_visible_in_tree(), reserve.food, reserve.copper, state.money, market.reserve_kind.selected, market.reserve_label.text]):
+		return
+	await _button(market.reserve_button)
+	await _button(panel.close_button)
+	var tribute: int = state.king_storage
+	var private_yield: int = state.private_harvest_total
+	var day: int = state.current_day
+	for _night_index in 3:
+		await tree.create_timer(8.0).timeout
+		await _defend()
+		await _night()
+	await _button(ui.hud.farm_status)
+	map = ui.estate_map
+	_expect(map.modal.visible and "管事 " + keeper.name in map.fields[1].needs,
+		"The field page names the appointed caretaker after the growing trial.")
+	await _button(map.close_button)
+	if not await _load_title(true):
+		return
+	keeper = state.retainers.front()
+	_expect(state.current_day == day + 3 and state.king_storage > tribute and state.private_harvest_total > private_yield
+		and state.stewarded_field(keeper).field_id == 1 and state.field_seed_plans.has(EXPANSION_PRIVATE)
+		and state.night_rations.last.served == after_need and state.food_storage == 0,
+		"Three ordinary nights produce both kinds of harvest with no player field clicks and preserve the appointment on Continue.")
+	print("ESTATE_PROGRESS_STEWARD day=", state.current_day, " tribute=", state.king_storage - tribute,
+		" private=", state.private_harvest_total - private_yield, " ration=", after_need, " manual_field_clicks=0")
 
 func run(game_tree: SceneTree) -> void:
 	tree = game_tree

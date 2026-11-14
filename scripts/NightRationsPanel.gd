@@ -5,6 +5,7 @@ signal duties_requested
 signal dry_plot_requested
 signal harvest_requested
 signal tribute_field_requested
+signal field_management_requested(field_id: int)
 signal sleep_requested
 signal east_watch_requested
 
@@ -50,6 +51,7 @@ const WINDOW_MARGIN := 16.0
 @onready var field_receipt: Label = %FieldReceipt
 @onready var silk_receipt: Label = %SilkReceipt
 @onready var milestones: Label = %Milestones
+@onready var plan_field: Button = %PlanField
 @onready var find_harvest: Button = %FindHarvest
 @onready var title: Label = %Title
 @onready var page_button: Button = %PageButton
@@ -60,6 +62,7 @@ const WINDOW_MARGIN := 16.0
 @onready var body: VBoxContainer = %Body
 
 var show_previous := false
+var completed_field_id := -1
 
 func _ready() -> void:
 	budget.max_value = NightRations.MAX_COPPER_LIMIT
@@ -76,6 +79,7 @@ func _ready() -> void:
 	find_ready_plot.pressed.connect(harvest_requested.emit)
 	find_harvest.pressed.connect(harvest_requested.emit)
 	find_tribute.pressed.connect(tribute_field_requested.emit)
+	plan_field.pressed.connect(_open_field_management)
 	find_watch.pressed.connect(func():
 		queue_free()
 		east_watch_requested.emit()
@@ -121,6 +125,7 @@ func _show_page(previous: bool) -> void:
 	plan_body.visible = not previous
 	footer.visible = not previous
 	_refresh_fields()
+	_refresh_field_management()
 	scroll.set_deferred("scroll_vertical", 0)
 	_fit_body.call_deferred()
 
@@ -223,6 +228,7 @@ func _refresh() -> void:
 		if not departed.is_empty():
 			receipt.text += "\n已离任 · " + "、".join(departed)
 	_refresh_field_receipt()
+	_refresh_field_management()
 	var last_silk := Global.silk_workshop.last_work_summary()
 	silk_receipt.visible = not last_silk.is_empty()
 	silk_receipt.text = "昨夜蚕棚 · " + last_silk
@@ -334,6 +340,20 @@ func _refresh_fields() -> void:
 	find_plot.visible = report.dry > 0
 	find_ready_plot.visible = report.ready > 0
 	find_harvest.visible = show_previous and report.ready > 0
+
+func _refresh_field_management() -> void:
+	var completed: Array = Global.last_dawn.get("completed_fields", [])
+	completed_field_id = int(completed.back()) - 1 if not completed.is_empty() else -1
+	var field := Global.get_well_field(completed_field_id)
+	plan_field.visible = show_previous and field.get("is_unlocked", false)
+	if plan_field.visible:
+		plan_field.text = "安排井田 %d" % (completed_field_id + 1)
+
+func _open_field_management() -> void:
+	if is_queued_for_deletion() or not plan_field.is_visible_in_tree():
+		return
+	queue_free()
+	field_management_requested.emit(completed_field_id)
 
 func _refresh_tribute() -> void:
 	var due := Global.tribute_deadline()

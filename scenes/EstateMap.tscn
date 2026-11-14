@@ -186,6 +186,14 @@ tooltip_text = "依次标出需接通水渠的稻田"
 theme_override_colors/font_color = Color(0.98, 0.70, 0.56, 1)
 theme_override_font_sizes/font_size = 14
 
+[node name="ManageField" type="Button" parent="MapModal/Center/Panel/Layout/Content/Index"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+tooltip_text = "打开所选井田的分工与续播安排。"
+
 [node name="RavineNote" type="Label" parent="MapModal/Center/Panel/Layout/Content/Index"]
 unique_name_in_owner = true
 visible = false

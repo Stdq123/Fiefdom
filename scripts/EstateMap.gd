@@ -1,5 +1,7 @@
 extends "res://scripts/SurveyMap.gd"
 
+signal field_management_requested(field_id: int)
+
 enum Category { PLACES, FIELDS, PEOPLE, RAVINE }
 
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
@@ -20,6 +22,7 @@ const MAP_MARGIN := 19.0
 @onready var harvest_route: Button = %HarvestRoute
 @onready var water_route: Button = %WaterRoute
 @onready var canal_route: Button = %CanalRoute
+@onready var manage_field: Button = %ManageField
 @onready var ravine_note: Label = %RavineNote
 @onready var listing: VBoxContainer = %Listing
 @onready var scroll: ScrollContainer = %IndexScroll
@@ -42,6 +45,7 @@ var captions: Dictionary[String, Rect2] = {}
 var target: Dictionary = {}
 var road_path := PackedVector2Array()
 var region_map: Control
+var selected_field_id := -1
 
 func setup(estate_world: Node2D, guide: Control, blocked: Callable) -> void:
 	world = estate_world
@@ -56,6 +60,7 @@ func setup(estate_world: Node2D, guide: Control, blocked: Callable) -> void:
 	harvest_route.pressed.connect(_start_field_route.bind(Global.NightGrowth.READY))
 	water_route.pressed.connect(_start_field_route.bind(Global.NightGrowth.DRY))
 	canal_route.pressed.connect(_start_field_route.bind(Global.NightGrowth.BLOCKED))
+	manage_field.pressed.connect(_open_field_management)
 	chart.draw.connect(_draw_chart)
 	chart.gui_input.connect(_chart_input)
 	chart.resized.connect(_layout_chart)
@@ -73,6 +78,12 @@ func open_fields() -> void:
 func _start_field_route(task: int) -> void:
 	if directions.follow_field_route(task):
 		close_map()
+
+func _open_field_management() -> void:
+	if selected_field_id < 0:
+		return
+	close_map()
+	field_management_requested.emit(selected_field_id)
 
 func _map_available() -> bool:
 	return controls_blocked.is_valid() and not controls_blocked.call()
@@ -192,6 +203,12 @@ func _collect_fields() -> void:
 				needs.append("待浇 %d" % dry)
 			if blocked > 0:
 				needs.append("断水 %d" % blocked)
+			var stewards := PackedStringArray()
+			for worker: RetainerData in Global.retainers:
+				if worker.duty == RetainerData.Duty.STEWARD and Global.stewarded_field(worker).field_id == id:
+					stewards.append(worker.name)
+			if not stewards.is_empty():
+				needs.append("管事 " + "、".join(stewards))
 		var entry := _entry(Category.FIELDS, title, detail, _cell_point(center))
 		entry.merge({"field_id": id, "worksite": working, "watered": watered, "needs": " · ".join(needs)})
 		fields.append(entry)
@@ -394,13 +411,20 @@ func _refresh_destination() -> void:
 			Category.FIELDS: status.text = "选一类田务，做完一格会标出下一格。"
 			Category.RAVINE: status.text = "选个去处，沿金色标记进竹涧。"
 			_: status.text = "点选目的地，回到封地后沿金色标记走。"
+	selected_field_id = -1
 	for row in row_buttons:
 		var entry: Dictionary = row_buttons[row]
 		var selected: String = target.get("title", "")
 		match entry.kind:
 			Category.PEOPLE: selected = directions.tracked_neighbor
 			Category.RAVINE: selected = Global.ravine_trip_target
-		row.set_pressed_no_signal(entry.title == selected)
+		var row_selected: bool = entry.title == selected
+		row.set_pressed_no_signal(row_selected)
+		if row_selected and entry.kind == Category.FIELDS and not entry.worksite:
+			selected_field_id = entry.field_id
+	manage_field.visible = selected_field_id >= 0
+	if manage_field.visible:
+		manage_field.text = "安排井田 %d" % (selected_field_id + 1)
 	_layout_chart()
 
 func _chart_input(event: InputEvent) -> void:

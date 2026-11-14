@@ -459,6 +459,15 @@ size_flags_horizontal = 0
 mouse_default_cursor_shape = 2
 text = "找可收田"
 
+[node name="PlanField" type="Button" parent="Center/Window/Content/Scroll/Body/LastCard/Results"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(138, 38)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+tooltip_text = "查看完工井田的管事、续播和全员用粮。"
+
 [node name="Footer" type="HBoxContainer" parent="Center/Window/Content"]
 unique_name_in_owner = true
 layout_mode = 2

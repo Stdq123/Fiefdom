@@ -1016,3 +1016,9 @@
 
 - 逐格点收、拖收和门客代收共用种子栏上方的回执。连续收割合计入库、作物、铜钱、桑叶和税金，并标出轮作增收及留肥。田格仍逐格呈现镰刀动作、断穗和音效。回执淡出后下一次收割重新计数，过夜清除当日回执。
 - 专项拖收四格私田并单点一格公田，回执合计入库 1、作物 4、铜钱 20。另核对两次独立点收、门客代收、改革后的净收入与税金，以及上一版存档接续。101 项源码场景、35 项无窗口发行检查和 13 次隔离桌面运行通过。两种备粮方式均在第 56 天达成传统结局、第 59 天达成改革结局。90 秒连续运行正常结束，两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-harvest-receipt/Fiefdom-1.0.0-Windows-x64.zip) · [1920×1080 混合收割](../build/polish-harvest-receipt/final-capture/1920x1080/01b-combined-harvest-receipt.png) · [1024×768 连续点收](../build/polish-harvest-receipt/final-capture/1024x768/01c-two-separate-harvest-clicks.png) · [源码回归](../build/polish-harvest-receipt/final-source/source-matrix.txt) · [发行校验](../build/polish-harvest-receipt/final-headless/manifest.txt)
+
+## 从完工记录交接井田管事
+
+- 「昨夜结算」直接打开刚完工的井田安排。舆图也可打开所选完工井田，并显示该田管事。交接页列出全员每夜粮耗、粮仓现量和可补齐的公私田续播，玩家选择门客后再确认。
+- 默认新档回放在第 17 天读回晨间档，从完工记录打开井田 2，翻地后再从舆图进入并任命渠伯。全员用粮从 3 份增至 4 份，以首块井田收成备齐三夜口粮。第 20 天继续游戏时，管事和续播保留，第二块井田已由管事收下一份贡粮和一份私田作物，其间玩家无需再操作该田。
+- 101 项源码场景、36 项无窗口发行检查及 14 次隔离桌面运行通过。默认 1920×1080 和 1024×768 均核对了完工记录、舆图和交接报价。同一解压包完成两种备粮方式的双结局、上一版续档、退出重启与 90 秒连续运行。 [Windows 1.0 x64](../build/polish-steward-handoff/Fiefdom-1.0.0-Windows-x64.zip) · [完工记录](../build/polish-steward-handoff/capture/1920x1080/08-morning-field-handover.png) · [交接报价](../build/polish-steward-handoff/capture/1024x768/09-steward-quote.png) · [新档回放](../build/polish-steward-handoff/headless/estate-progress.log) · [源码回归](../build/polish-steward-handoff/source/source-matrix.txt) · [发行校验](../build/polish-steward-handoff/headless/manifest.txt)

@@ -66,6 +66,7 @@ func _ready() -> void:
 	elif not Global.market_trip_target.is_empty():
 		directions.follow_market(Global.market_trip_target)
 	estate_map.setup(world, directions, _map_controls_blocked)
+	estate_map.field_management_requested.connect(_show_estate_management)
 	hud.map_button.pressed.connect(estate_map.open_map)
 	hud.farm_status.pressed.connect(estate_map.open_fields)
 	hud.leave_cart.pressed.connect(world.get_node("DrivingPractice").dismount)
@@ -198,9 +199,9 @@ func _on_route_goal_action(kind: Global.RouteGoal) -> void:
 			else:
 				_show_estate_management()
 
-func _show_estate_management() -> void:
+func _show_estate_management(field_id := -1) -> void:
 	panel_manager.show_management_panel()
-	panel_manager.management_panel_instance.show_estate()
+	panel_manager.management_panel_instance.show_estate(field_id)
 
 func _connect_signals() -> void:
 	GameEvents.day_advanced.connect(update_ui.unbind(1))
@@ -652,7 +653,10 @@ func _show_night_rations(show_previous := false) -> void:
 	$Control.add_child(panel)
 	GameEvents.modal_visibility_changed.emit(true)
 	panel.market_requested.connect(_show_market)
-	panel.duties_requested.connect(panel_manager.show_management_panel)
+	panel.duties_requested.connect(_show_estate_management)
+	panel.field_management_requested.connect(func(field_id: int):
+		panel.tree_exited.connect(_show_estate_management.bind(field_id), CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+	)
 	panel.dry_plot_requested.connect(_on_night_plot_requested.bind(panel, Global.NightGrowth.DRY))
 	panel.harvest_requested.connect(_on_night_plot_requested.bind(panel, Global.NightGrowth.READY))
 	panel.tribute_field_requested.connect(_on_tribute_field_requested.bind(panel))
