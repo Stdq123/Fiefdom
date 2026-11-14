@@ -16,7 +16,7 @@ func _opening() -> void:
 	_expect(west_visible != baseline and east_visible != baseline,
 		"Both gate roads reach the last visible part of the camera's range in the new terrain.")
 	_field_entry(terrain)
-	_gate_passage(terrain, world.get_node("WestMarketGate"))
+	_gate_passage(terrain, world.get_node("WestMarketGate"), TerrainAudio.Surface.TRACK)
 	_gate_passage(terrain, world.get_node("EastGate"))
 	var tiles: TileMapLayer = world.tile_map
 	var public_point := tiles.get_global_transform_with_canvas() * tiles.map_to_local(PUBLIC)

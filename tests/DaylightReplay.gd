@@ -202,7 +202,8 @@ func _cross_at_dusk() -> bool:
 	_expect(is_zero_approx(terrain.birds.volume_linear) and terrain.crickets.volume_linear > 0.24
 		and terrain.crickets.bus == &"Ambience" and is_zero_approx(terrain.creek.volume_linear),
 		"Summer nights replace birds with nearby insects by the dry grove.")
-	_expect(_lamps_on(landscape.day_lighting) == 4, "The west gate, both bridge ends and the south trail carry lit lamps.")
+	_expect(landscape.day_lighting.lamps.size() == 6 and _lamps_on(landscape.day_lighting) == 6,
+		"The west approach, grove, bridge, lookout and south trail carry lit lamps.")
 	await _capture("03-ravine-night")
 	await _capture_insects(terrain)
 	print("DAYLIGHT_RAVINE day=", state.current_day, " watch=", state.day_watch_label(), " insects=", snappedf(terrain.crickets.volume_linear, 0.01))

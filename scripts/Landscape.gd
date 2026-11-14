@@ -29,6 +29,7 @@ const MOUNTAIN_POST_BAMBOO := preload("res://assets/world/mountain-post/bamboo.p
 const ESTATE_STORAGE := preload("res://assets/world/estate-storage.svg")
 const RAVINE_ACCENTS := preload("res://assets/world/momonga/ravine-accents.png")
 const RAVINE_BANKS := preload("res://scripts/RavineBanks.gd")
+const RAVINE_RELIEF := preload("res://scripts/RavineRelief.gd")
 const RAVINE_ACCENT_PROPS := [Prop.RAVINE_ROCK, Prop.RAVINE_SHOOT, Prop.RAVINE_RUSH]
 const MEADOW_FLOWERS := {
 	Prop.WHITE_BLOOM: preload("res://assets/world/mini-meadow/flower_white.png"),
@@ -261,8 +262,8 @@ const ESTATE_PROPS := [
 ]
 const WILD_PROPS := [
 	Vector3i(-363, -1, Prop.GATE_FAR), Vector3i(-389, 41, Prop.GATE),
-	Vector3i(-429, -4, Prop.FENCE), Vector3i(-417, 73, Prop.BOULDER), Vector3i(-406, -56, Prop.GROVE_CLUSTER),
-	Vector3i(-358, -32, Prop.PINE), Vector3i(-321, -15, Prop.TALL_BAMBOO), Vector3i(-285, 1, Prop.GROVE_TREE),
+	Vector3i(-423, -48, Prop.FENCE), Vector3i(-417, 73, Prop.BOULDER), Vector3i(-406, -56, Prop.GROVE_CLUSTER),
+	Vector3i(-358, -46, Prop.PINE), Vector3i(-321, -32, Prop.TALL_BAMBOO), Vector3i(-285, 1, Prop.GROVE_TREE),
 	Vector3i(-263, -38, Prop.OAK), Vector3i(-243, -5, Prop.MOSS_STONE), Vector3i(-223, 66, Prop.TALL_BAMBOO),
 	Vector3i(-328, 84, Prop.GROVE_CLUSTER), Vector3i(-296, 66, Prop.PINE), Vector3i(-262, 100, Prop.GROVE_TREE),
 	Vector3i(-427, -136, Prop.PINE), Vector3i(-397, -202, Prop.GROVE_CLUSTER), Vector3i(-359, -148, Prop.TALL_BAMBOO),
@@ -300,10 +301,10 @@ const WILD_PROPS := [
 	Vector3i(107, 60, Prop.PEBBLES), Vector3i(183, 58, Prop.PEBBLES), Vector3i(204, 6, Prop.TALL_BAMBOO),
 	Vector3i(225, -169, Prop.WILLOW), Vector3i(208, -108, Prop.MOSS_STONE), Vector3i(241, -88, Prop.GROVE_TREE),
 	Vector3i(269, -52, Prop.PINE), Vector3i(273, -103, Prop.TALL_BAMBOO), Vector3i(304, -132, Prop.GROVE_CLUSTER),
-	Vector3i(319, -46, Prop.BOULDER), Vector3i(348, -61, Prop.BAMBOO), Vector3i(370, -105, Prop.PINE),
+	Vector3i(319, -46, Prop.BOULDER), Vector3i(342, -70, Prop.BAMBOO), Vector3i(376, -112, Prop.PINE),
 	Vector3i(383, -151, Prop.TALL_BAMBOO), Vector3i(420, -149, Prop.GROVE_TREE), Vector3i(467, -145, Prop.PINE),
 	Vector3i(483, -96, Prop.TALL_BAMBOO), Vector3i(499, -69, Prop.GROVE_TREE), Vector3i(452, -63, Prop.FERN),
-	Vector3i(482, -28, Prop.BOULDER), Vector3i(404, -28, Prop.MOSS_STONE), Vector3i(355, 33, Prop.SIGNPOST),
+	Vector3i(482, -28, Prop.BOULDER), Vector3i(414, -25, Prop.MOSS_STONE), Vector3i(355, 33, Prop.SIGNPOST),
 	Vector3i(369, 73, Prop.TALL_BAMBOO), Vector3i(376, 121, Prop.PINE), Vector3i(433, 100, Prop.GROVE_CLUSTER),
 	Vector3i(486, 44, Prop.PINE), Vector3i(523, -16, Prop.TALL_BAMBOO), Vector3i(526, 99, Prop.GROVE_TREE),
 	Vector3i(253, 99, Prop.PINE), Vector3i(241, 143, Prop.RAVINE_RUSH), Vector3i(280, 132, Prop.SHRUB),
@@ -329,6 +330,7 @@ var gate_bases: Dictionary[Sprite2D, CollisionShape2D] = {}
 var seasonal_textures: Dictionary[int, AtlasTexture] = {}
 var ground_cover: SEASONAL_GROUND
 var estate_terrain: ESTATE_TERRAIN
+var ravine_relief: RAVINE_RELIEF
 var snow_footprints: SNOW_FOOTPRINTS
 var water_surface: WATER_SURFACE
 var terrain_audio: TERRAIN_AUDIO
@@ -345,6 +347,8 @@ func _ready() -> void:
 	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	if not wilderness:
 		estate_terrain = ESTATE_TERRAIN.new(ESTATE_BOUNDS.position.y)
+	else:
+		ravine_relief = RAVINE_RELIEF.new()
 	snow_footprints = SNOW_FOOTPRINTS.new()
 	snow_footprints.name = "SnowFootprints"
 	add_child(snow_footprints)
@@ -494,6 +498,8 @@ func _place_lanterns(layer: Node2D) -> void:
 		day_lighting.place_lamp(layer, BRIDGE + Vector2(-29, 15), 0.83)
 		day_lighting.place_lamp(layer, BRIDGE + Vector2(30, -12), 0.83)
 		day_lighting.place_lamp(layer, RavineLayout.SOUTH_TRAIL_GATE + Vector2(-22, -10), 0.72)
+		day_lighting.place_lamp(layer, RAVINE_RELIEF.WEST_GATE_LAMP, 0.94, 0.05)
+		day_lighting.place_lamp(layer, RAVINE_RELIEF.LOOKOUT_LAMP, 0.68, 0.12)
 	else:
 		day_lighting.place_lamp(layer, Vector2(HALL_FOOT) + Vector2(-18, 8), 0.90)
 		day_lighting.place_lamp(layer, Vector2(HALL_FOOT) + Vector2(18, 8), 0.90)
@@ -587,12 +593,15 @@ func _draw() -> void:
 		draw_colored_polygon(PackedVector2Array(GRAVEL_BAR), gravel)
 		draw_colored_polygon(PackedVector2Array(RavineLayout.WILLOW_BANK), gravel)
 		_draw_tracks()
+		RAVINE_RELIEF.draw_gate(self, RavineLayout.WEST_GATE, true, season, raining)
+		ravine_relief.draw_lookout(self, season, raining)
 		_draw_creek()
 		RAVINE_BANKS.draw_banks(self, season, raining)
 		_draw_crossings()
 	else:
 		_draw_field_verges()
 		_draw_tracks()
+		RAVINE_RELIEF.draw_gate(self, EstateLayout.EAST_GATE, false, season, raining)
 		_draw_hall_landing()
 		_draw_field_banks()
 		if Global.road_provisions_delivered:
@@ -629,6 +638,8 @@ func _surface_at(foot: Vector2) -> TERRAIN_AUDIO.Surface:
 			return TERRAIN_AUDIO.Surface.PLANK
 		if absf(foot.y - FORD.y) < CROSSING_HALF_DEPTH and absf(foot.x - creek_x(foot.y)) < WATER_HALF_WIDTH:
 			return TERRAIN_AUDIO.Surface.SHALLOWS
+		if RAVINE_RELIEF.gate_stone_at(foot, RavineLayout.WEST_GATE) or ravine_relief.lookout_stone_at(foot):
+			return TERRAIN_AUDIO.Surface.STONE
 	else:
 		if EstateLayout.PAVILION_SHELTER_FLOOR.has_point(foot) \
 				or get_parent().irrigation_overlay.footbridge_at(to_global(foot)):
@@ -636,6 +647,8 @@ func _surface_at(foot: Vector2) -> TERRAIN_AUDIO.Surface:
 		for field in Global.well_fields:
 			if _field_bounds(field["center_pos"]).has_point(foot):
 				return TERRAIN_AUDIO.Surface.GRASS
+		if RAVINE_RELIEF.gate_stone_at(foot, EstateLayout.EAST_GATE):
+			return TERRAIN_AUDIO.Surface.STONE
 		if HALL_LANDING.has_point(foot) and _hall_landing_visible():
 			return TERRAIN_AUDIO.Surface.TRACK
 	for track in track_shapes:
@@ -649,7 +662,7 @@ func _surface_at(foot: Vector2) -> TERRAIN_AUDIO.Surface:
 
 func _add_landmark_labels() -> void:
 	if wilderness:
-		_label_at(RavineLayout.WEST_GATE + Vector2(0, -79), "← 西门 · 回封地")
+		_label_at(RavineLayout.WEST_GATE + Vector2(1, -71), "← 西门 · 回封地")
 		_label_at(RavineLayout.GROVE_FORK + Vector2(0, -42), "↑ 野果坳")
 		_label_at(RavineLayout.FORD_FORK + Vector2(-10, 23), "浅滩 ↘")
 		_label_at(Vector2(140, 186), "南路小径 ↓")
@@ -657,7 +670,7 @@ func _add_landmark_labels() -> void:
 		_label_at(RavineLayout.DOCK_FORK + Vector2(-24, -19), "↑ 柳湾")
 		_label_at(BRIDGE + Vector2(-66, -31), "木桥 →")
 		_label_at(RavineLayout.RIDGE_FORK + Vector2(0, -34), "望溪台 ↗")
-		_label_at(RavineLayout.LOOKOUT + Vector2(0, -55), "望溪台")
+		_label_at(RavineLayout.LOOKOUT + Vector2(-4, -51), "望溪台")
 	else:
 		_label_at(Vector2(-305, -104), "← 西市")
 		_label_at(Vector2(-136, 37), "← 西市")
@@ -971,10 +984,12 @@ func _install_boundaries() -> void:
 			var base := _ground_bounds(sprite.position, prop)
 			gate_bases[sprite] = _add_edge(terrain, base.get_center(), base.size)
 	if wilderness:
+		RAVINE_RELIEF.install_ravine_edges(terrain)
 		_block_water(terrain, bounds.position.y - 12, BRIDGE.y - CROSSING_HALF_DEPTH)
 		_block_water(terrain, BRIDGE.y + CROSSING_HALF_DEPTH, FORD.y - CROSSING_HALF_DEPTH)
 		_block_water(terrain, FORD.y + CROSSING_HALF_DEPTH, bounds.end.y + 12)
 	else:
+		RAVINE_RELIEF.install_estate_edge(terrain)
 		var pond := CollisionPolygon2D.new()
 		pond.name = "SouthPond"
 		pond.polygon = estate_terrain.pond

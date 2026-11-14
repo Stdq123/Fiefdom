@@ -105,7 +105,7 @@ func _field_entry(terrain: Node2D) -> void:
 			"The player's feet fit across the painted approach.")
 	print("SCALE_FIELD bounds=", field.size, " approach=", approach.width)
 
-func _gate_passage(terrain: Node2D, gate: Area2D) -> void:
+func _gate_passage(terrain: Node2D, gate: Area2D, surface := TerrainAudio.Surface.STONE) -> void:
 	var near_base := Rect2()
 	var far_base := Rect2()
 	for sprite: Sprite2D in terrain.gate_bases:
@@ -125,7 +125,7 @@ func _gate_passage(terrain: Node2D, gate: Area2D) -> void:
 		and trigger.x == 8.0 and trigger.y + 14.0 <= gap,
 		"The gateway spans the road with room for feet on either side of its trigger.")
 	for y in [-7.0, 0.0, 7.0]:
-		_expect(terrain._surface_at(gate.position + Vector2(0.0, y)) == TerrainAudio.Surface.TRACK,
+		_expect(terrain._surface_at(gate.position + Vector2(0.0, y)) == surface,
 			"The road continues beneath the gateway across the player's foot span.")
 	print("SCALE_GATE map=", tree.current_scene.name, " gap=", gap, " trigger=", trigger)
 
