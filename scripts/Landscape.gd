@@ -28,22 +28,29 @@ const ACTG_SCENERY := preload("res://assets/world/actg/swamp.png")
 const MOUNTAIN_POST_BAMBOO := preload("res://assets/world/mountain-post/bamboo.png")
 const ESTATE_STORAGE := preload("res://assets/world/estate-storage.svg")
 const RAVINE_ACCENTS := preload("res://assets/world/momonga/ravine-accents.png")
-const RAVINE_WOODLAND := preload("res://assets/world/ravine-woodland.svg")
+const WOODLAND := preload("res://assets/world/ravine-woodland.svg")
 const RAVINE_BANKS := preload("res://scripts/RavineBanks.gd")
 const RAVINE_RELIEF := preload("res://scripts/RavineRelief.gd")
 const RAVINE_ACCENT_PROPS := [Prop.RAVINE_SHOOT, Prop.RAVINE_RUSH]
-const RAVINE_WOODLAND_REGIONS := {
+const WOODLAND_REGIONS := {
 	Prop.GROVE_TREE: Rect2(0, 0, 32, 32),
 	Prop.GROVE_CLUSTER: Rect2(36, 0, 64, 48),
 	Prop.PINE: Rect2(104, 0, 48, 48),
 }
-const RAVINE_SHADOW_SIZES := {
+const SCENERY_SHADOW_SIZES := {
+	Prop.OAK: Vector2(19, 7),
+	Prop.BLOSSOM_TREE: Vector2(19, 7),
 	Prop.GROVE_TREE: Vector2(15, 5),
 	Prop.GROVE_CLUSTER: Vector2(30, 9),
 	Prop.PINE: Vector2(20, 7),
 	Prop.TALL_BAMBOO: Vector2(13, 5),
+	Prop.SHRUB: Vector2(16, 5),
+	Prop.GRAIN_SACK: Vector2(6, 2.5),
+	Prop.OPEN_SACK: Vector2(6, 2.5),
+	Prop.JAR: Vector2(6, 2.5),
+	Prop.LIDDED_JAR: Vector2(6, 2.5),
 }
-const RAVINE_SHADOW_PROFILE := [Vector2(-0.78, -0.14), Vector2(-0.52, -0.78), Vector2(0.06, -0.97),
+const SCENERY_SHADOW_PROFILE := [Vector2(-0.78, -0.14), Vector2(-0.52, -0.78), Vector2(0.06, -0.97),
 	Vector2(0.65, -0.68), Vector2(1.16, -0.2), Vector2(1.45, 0.26), Vector2(1.14, 0.72),
 	Vector2(0.57, 0.95), Vector2(0.05, 0.76), Vector2(-0.4, 0.52), Vector2(-0.81, 0.21)]
 const ROCK_PROPS := [Prop.ROCK, Prop.BOULDER, Prop.MOSS_STONE, Prop.RAVINE_ROCK]
@@ -494,9 +501,9 @@ func _prepare_map() -> void:
 	if wilderness:
 		scenery[_place_sprite(props_layer, RavineLayout.LOOKOUT, Vector2(-24, -38), LOOKOUT)] = SCENE_LANDMARK
 	else:
-		var pavilion_texture := _atlas_texture(ESTATE_BUILDINGS, PAVILION_REGION)
+		var pavilion_texture := atlas_texture(ESTATE_BUILDINGS, PAVILION_REGION)
 		scenery[_place_sprite(props_layer, SOUTH_PAVILION, _building_offset(PAVILION_REGION.size), pavilion_texture)] = SCENE_LANDMARK
-		var shelter := _atlas_texture(ROAD_PAVILION, Rect2(0, 0, 48, 40))
+		var shelter := atlas_texture(ROAD_PAVILION, Rect2(0, 0, 48, 40))
 		scenery[_place_sprite(props_layer, EstateLayout.WEST_COURT_SHELTER, Vector2(-24, -38), shelter)] = SCENE_WEST_COURT
 		var workshop := _place_sprite(props_layer, SILK_SHED_FOOT,
 			_prop_bounds(Vector2.ZERO, Prop.SILK_SHED).position, _prop_texture(Prop.SILK_SHED))
@@ -634,7 +641,6 @@ func _draw() -> void:
 		_draw_creek()
 		RAVINE_BANKS.draw_banks(self, season, raining)
 		_draw_crossings()
-		_draw_woodland_shadows()
 	else:
 		_draw_field_verges()
 		_draw_tracks()
@@ -648,25 +654,21 @@ func _draw() -> void:
 			draw_texture_rect_region(ROAD_PAVILION, provisions, Rect2(48, 30, 14, 10))
 		if Global.silk_sample_day > 0 and _ground_clear(SILK_SAMPLE_BOUNDS):
 			draw_texture_rect(SILK_SAMPLE, SILK_SAMPLE_BOUNDS, false, _prop_tint(-1))
+	var shade := scenery_shade(raining)
+	for sprite: Sprite2D in scenery:
+		if sprite.visible:
+			draw_scenery_shadow(self, sprite.position, scenery[sprite], shade)
 	for prop in props:
-		if prop.z in SORTED_PROPS and prop.z != Prop.TALL_BAMBOO and not STORAGE_TINTS.has(prop.z):
+		if prop.z in SORTED_PROPS:
 			continue
 		if season == Global.Season.WINTER and prop.z in DORMANT_PROPS:
-			continue
-		if wilderness and prop.z == Prop.TALL_BAMBOO:
 			continue
 		var foot := Vector2(prop.x, prop.y)
 		var bounds := _prop_bounds(foot, prop.z)
 		if not wilderness and not _ground_clear(bounds):
 			continue
-		if prop.z == Prop.TALL_BAMBOO:
-			draw_rect(Rect2(foot - Vector2(11, 2), Vector2(22, 5)), Color("#23382b80"))
-		elif STORAGE_TINTS.has(prop.z):
-			var shadow := Color("#252f2586")
-			draw_rect(Rect2(foot - Vector2(6, 2), Vector2(14, 3)), shadow)
-			draw_rect(Rect2(foot - Vector2(4, 1), Vector2(14, 4)), shadow)
-		else:
-			_stamp(bounds, prop.z)
+		draw_scenery_shadow(self, foot, prop.z, shade)
+		_stamp(bounds, prop.z)
 
 func _on_footstep(at: Vector2) -> void:
 	var foot := to_local(at)
@@ -775,7 +777,7 @@ func _draw_ground() -> void:
 		estate_terrain.draw_pond(self, meadow, pond_water, winter, raining, pond_landing.visible)
 	var grass := shade.lightened(0.09)
 	for prop in props:
-		if wilderness and RAVINE_SHADOW_SIZES.has(prop.z):
+		if SCENERY_SHADOW_SIZES.has(prop.z):
 			continue
 		if prop.z in LEAFY_PROPS and (not winter or prop.z not in DORMANT_PROPS):
 			var patch := Vector2(prop.x, prop.y)
@@ -885,19 +887,19 @@ func _draw_tracks() -> void:
 	for track in track_shapes:
 		_track_gravel(track.gravel_path, track.width, dust)
 
-func _draw_woodland_shadows() -> void:
+static func scenery_shade(rain: bool) -> Color:
 	var shade := Color("#27392f")
-	shade.a = 0.20 if raining else 0.38
-	for sprite: Sprite2D in scenery:
-		var prop: int = scenery[sprite]
-		if not RAVINE_SHADOW_SIZES.has(prop):
-			continue
-		var foot := sprite.position
-		var half_size: Vector2 = RAVINE_SHADOW_SIZES[prop]
-		var outline := PackedVector2Array()
-		for point: Vector2 in RAVINE_SHADOW_PROFILE:
-			outline.append((foot + point * half_size).snapped(Vector2(0.5, 0.5)))
-		draw_colored_polygon(outline, shade)
+	shade.a = 0.20 if rain else 0.38
+	return shade
+
+static func draw_scenery_shadow(canvas: CanvasItem, foot: Vector2, prop: int, shade: Color) -> void:
+	if not SCENERY_SHADOW_SIZES.has(prop):
+		return
+	var half_size: Vector2 = SCENERY_SHADOW_SIZES[prop]
+	var outline := PackedVector2Array()
+	for point: Vector2 in SCENERY_SHADOW_PROFILE:
+		outline.append((foot + point * half_size).snapped(Vector2(0.5, 0.5)))
+	canvas.draw_colored_polygon(outline, shade)
 
 func _draw_building_shadows() -> void:
 	var ground_shadow := Color("#26352c")
@@ -1173,27 +1175,26 @@ func _prop_sheet(index: int) -> Texture2D:
 func _prop_texture(index: int) -> AtlasTexture:
 	if seasonal_textures.has(index):
 		return seasonal_textures[index]
-	return _atlas_texture(_prop_sheet(index), _scenery_region(index))
+	return atlas_texture(_prop_sheet(index), _scenery_region(index))
 
 func _update_tree_textures() -> void:
-	seasonal_textures[Prop.OAK] = _atlas_texture(SEASONAL_TREES, Rect2(Vector2(season, 0) * PROP_SIZE, PROP_SIZE))
-	seasonal_textures[Prop.BLOSSOM_TREE] = _atlas_texture(SEASONAL_TREES,
-		Rect2(ORCHARD_FRAMES[season] * PROP_SIZE, PROP_SIZE))
-	if wilderness:
-		var row := Vector2(0, 48) if season == Global.Season.WINTER else Vector2.ZERO
-		for prop in RAVINE_WOODLAND_REGIONS:
-			var region: Rect2 = RAVINE_WOODLAND_REGIONS[prop]
-			region.position += row
-			seasonal_textures[prop] = _atlas_texture(RAVINE_WOODLAND, region)
-	else:
-		var winter_pine := _atlas_texture(SEASONAL_TREES, Rect2(Vector2(2, 1) * PROP_SIZE, PROP_SIZE))
-		seasonal_textures[Prop.PINE] = winter_pine if season == Global.Season.WINTER else _atlas_texture(SCENERY, _scenery_region(Prop.PINE))
+	for prop in [Prop.OAK, Prop.BLOSSOM_TREE, Prop.PINE, Prop.GROVE_TREE, Prop.GROVE_CLUSTER]:
+		seasonal_textures[prop] = tree_texture(prop, season)
 	if season == Global.Season.WINTER:
-		seasonal_textures[Prop.WILLOW] = _atlas_texture(WINTER_WILLOW, Rect2(Vector2.ZERO, WINTER_WILLOW.get_size()))
+		seasonal_textures[Prop.WILLOW] = atlas_texture(WINTER_WILLOW, Rect2(Vector2.ZERO, WINTER_WILLOW.get_size()))
 	else:
-		seasonal_textures[Prop.WILLOW] = _atlas_texture(ACTG_SCENERY, _scenery_region(Prop.WILLOW))
+		seasonal_textures[Prop.WILLOW] = atlas_texture(ACTG_SCENERY, _scenery_region(Prop.WILLOW))
 
-func _atlas_texture(source: Texture2D, region: Rect2) -> AtlasTexture:
+static func tree_texture(prop: int, season_index: int) -> AtlasTexture:
+	if WOODLAND_REGIONS.has(prop):
+		var region: Rect2 = WOODLAND_REGIONS[prop]
+		if season_index == Global.Season.WINTER:
+			region.position.y += 48.0
+		return atlas_texture(WOODLAND, region)
+	var frame: Vector2 = ORCHARD_FRAMES[season_index] if prop == Prop.BLOSSOM_TREE else Vector2(season_index, 0)
+	return atlas_texture(SEASONAL_TREES, Rect2(frame * PROP_SIZE, PROP_SIZE))
+
+static func atlas_texture(source: Texture2D, region: Rect2) -> AtlasTexture:
 	var result := AtlasTexture.new()
 	result.atlas = source
 	result.region = region
@@ -1201,11 +1202,11 @@ func _atlas_texture(source: Texture2D, region: Rect2) -> AtlasTexture:
 	return result
 
 func _prop_tint(index: int) -> Color:
-	if wilderness and RAVINE_WOODLAND_REGIONS.has(index):
+	if WOODLAND_REGIONS.has(index):
 		var woodland: Color = LEAF_TINTS[season] if index != Prop.PINE and season != Global.Season.WINTER else Color.WHITE
 		return woodland * Color(0.88, 0.94, 0.99) if raining else woodland
 	var painted_tree := index == Prop.OAK or index == Prop.BLOSSOM_TREE \
-		or (season == Global.Season.WINTER and index in [Prop.PINE, Prop.WILLOW])
+		or (season == Global.Season.WINTER and index == Prop.WILLOW)
 	if painted_tree:
 		return Color(0.88, 0.94, 0.99) if raining else Color.WHITE
 	var tint := Color.WHITE

@@ -57,6 +57,7 @@ const FENCE_FEET := [
 	Vector2(-384, 164), Vector2(-353, 184), Vector2(-319, 195), Vector2(-243, -153),
 	Vector2(137, 145), Vector2(217, 149), Vector2(333, -5), Vector2(429, 67),
 ]
+const TREE_PATTERN := [LANDSCAPE.Prop.OAK, LANDSCAPE.Prop.BLOSSOM_TREE, LANDSCAPE.Prop.PINE, LANDSCAPE.Prop.OAK]
 const PROP_DETAILS := [
 	Vector3i(-377, 190, LANDSCAPE.Prop.LOGS), Vector3i(-211, 98, LANDSCAPE.Prop.LOGS),
 	Vector3i(-147, 114, LANDSCAPE.Prop.FLOWERS), Vector3i(-143, -39, LANDSCAPE.Prop.FLOWERS),
@@ -163,7 +164,8 @@ func _draw() -> void:
 	var meadow: Color = palette[0]
 	var shade: Color = palette[1]
 	var dirt: Color = palette[3]
-	if Global.has_rain():
+	var raining := Global.has_rain()
+	if raining:
 		meadow = meadow.lerp(Color("#344c4c"), 0.30)
 		dirt = dirt.darkened(0.16)
 	draw_rect(BACKDROP, meadow)
@@ -173,8 +175,6 @@ func _draw() -> void:
 			edge.append((grove.position + grove.size * point).round())
 		draw_colored_polygon(edge, meadow.lerp(shade, 0.48))
 	draw_texture_rect(LANDSCAPE.GRAIN, BACKDROP, true, Color(1.0, 1.0, 1.0, 0.75))
-	for foot: Vector2 in TREE_FEET:
-		draw_rect(Rect2(foot - Vector2(14, 1), Vector2(30, 4)), meadow.lerp(shade, 0.72))
 	verge_art.draw_verge(self, main_path, 44.0, meadow, Global.season_index() == Global.Season.WINTER)
 	for shoulder in street_shoulders:
 		draw_colored_polygon(shoulder, dirt.lerp(meadow, 0.52))
@@ -182,9 +182,13 @@ func _draw() -> void:
 		TERRAIN.draw_loam(self, surface, dirt)
 	TERRAIN.draw_paving(self, paving, dirt, LAYOUT.EAST_GATE.x)
 	_draw_basin()
+	var contact_shade := LANDSCAPE.scenery_shade(raining)
+	for index in TREE_FEET.size():
+		LANDSCAPE.draw_scenery_shadow(self, TREE_FEET[index], TREE_PATTERN[index % TREE_PATTERN.size()], contact_shade)
+	for detail: Vector3i in PROP_DETAILS:
+		LANDSCAPE.draw_scenery_shadow(self, Vector2(detail.x, detail.y), detail.z, contact_shade)
 	for jar: Vector3i in STORAGE:
-		var foot := Vector2(jar.x, jar.y)
-		draw_rect(Rect2(foot - Vector2(6, 1), Vector2(15, 4)), Color("#26382b90"))
+		LANDSCAPE.draw_scenery_shadow(self, Vector2(jar.x, jar.y), STORAGE_PROPS[jar.z], contact_shade)
 
 func _draw_basin() -> void:
 	var rim := LAYOUT.BASIN
@@ -241,34 +245,33 @@ func place_scenery(layer: Node2D) -> void:
 	rim.draw.connect(_draw_basin_front.bind(rim))
 	layer.add_child(rim)
 	var season := Global.season_index()
-	var pine_sheet: Texture2D = LANDSCAPE.SEASONAL_TREES if season == Global.Season.WINTER else LANDSCAPE.SCENERY
-	var pine_region := Rect2(96, 48, 48, 48) if season == Global.Season.WINTER else Rect2(144, 0, 48, 48)
+	var tree_art := {}
+	for variety in [LANDSCAPE.Prop.OAK, LANDSCAPE.Prop.BLOSSOM_TREE, LANDSCAPE.Prop.PINE]:
+		tree_art[variety] = LANDSCAPE.tree_texture(variety, season)
+	var wet_tint := Color(0.88, 0.94, 0.99) if Global.has_rain() else Color.WHITE
 	for index in TREE_FEET.size():
-		var frame: Vector2 = LANDSCAPE.ORCHARD_FRAMES[season] if index % 4 == 1 else Vector2(season, 0)
-		if index % 4 == 2:
-			_prop(layer, TREE_FEET[index], pine_sheet, pine_region, 45.0)
-		else:
-			_prop(layer, TREE_FEET[index], LANDSCAPE.SEASONAL_TREES, Rect2(frame * 48.0, Vector2(48, 48)), 45.0)
+		_prop(layer, TREE_FEET[index], tree_art[TREE_PATTERN[index % TREE_PATTERN.size()]], 45.0, wet_tint)
+	var fence := LANDSCAPE.atlas_texture(LANDSCAPE.SCENERY, Rect2(336, 48, 48, 48))
 	for foot: Vector2 in FENCE_FEET:
-		_prop(layer, foot, LANDSCAPE.SCENERY, Rect2(336, 48, 48, 48), 45.0)
+		_prop(layer, foot, fence, 45.0, wet_tint)
 	for detail: Vector3i in PROP_DETAILS:
 		var frame := Vector2i(detail.z % 8, floori(float(detail.z) / 8.0))
-		_prop(layer, Vector2(detail.x, detail.y), LANDSCAPE.SCENERY, Rect2(Vector2(frame * 48), Vector2(48, 48)), 45.0)
+		var texture := LANDSCAPE.atlas_texture(LANDSCAPE.SCENERY, Rect2(Vector2(frame * 48), Vector2(48, 48)))
+		_prop(layer, Vector2(detail.x, detail.y), texture, 45.0, wet_tint)
 	for jar: Vector3i in STORAGE:
 		var tint: Color = LANDSCAPE.STORAGE_TINTS[STORAGE_PROPS[jar.z]]
-		_prop(layer, Vector2(jar.x, jar.y), LANDSCAPE.ESTATE_STORAGE, Rect2(jar.z * 16, 0, 16, 16), 14.0, tint)
-	_prop(layer, LAYOUT.EAST_GATE + Vector2(9, -23), LANDSCAPE.ESTATE_BUILDINGS, LANDSCAPE.BUILDING_REGIONS[LANDSCAPE.Prop.GATE_FAR], 44.0)
-	_prop(layer, LAYOUT.EAST_GATE + Vector2(-14, 23), LANDSCAPE.ESTATE_BUILDINGS, LANDSCAPE.BUILDING_REGIONS[LANDSCAPE.Prop.GATE], 44.0)
+		var texture := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_STORAGE, Rect2(jar.z * 16, 0, 16, 16))
+		_prop(layer, Vector2(jar.x, jar.y), texture, 14.0, tint * wet_tint)
+	var north_gate := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_BUILDINGS, LANDSCAPE.BUILDING_REGIONS[LANDSCAPE.Prop.GATE_FAR])
+	var south_gate := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_BUILDINGS, LANDSCAPE.BUILDING_REGIONS[LANDSCAPE.Prop.GATE])
+	_prop(layer, LAYOUT.EAST_GATE + Vector2(9, -23), north_gate, 44.0, wet_tint)
+	_prop(layer, LAYOUT.EAST_GATE + Vector2(-14, 23), south_gate, 44.0, wet_tint)
 
-func _prop(layer: Node2D, foot: Vector2, sheet: Texture2D, region: Rect2, baseline: float, tint := Color.WHITE) -> void:
-	var texture := AtlasTexture.new()
-	texture.atlas = sheet
-	texture.region = region
-	texture.filter_clip = true
+func _prop(layer: Node2D, foot: Vector2, texture: AtlasTexture, baseline: float, tint: Color) -> void:
 	var sprite := Sprite2D.new()
 	sprite.centered = false
 	sprite.texture = texture
 	sprite.position = foot
-	sprite.offset = Vector2(-region.size.x * 0.5, -baseline)
+	sprite.offset = Vector2(-texture.get_width() * 0.5, -baseline)
 	sprite.self_modulate = tint
 	layer.add_child(sprite)

@@ -136,6 +136,16 @@ func _draw() -> void:
 	draw_colored_polygon(water, stream_color.lerp(Color("#89a58b"), 0.41))
 	draw_colored_polygon(deep_water, stream_color.darkened(0.16))
 	WATER_SURFACE.draw_shore(self, water, silt, stream_color, winter, [LAYOUT.BRIDGE.grow(8.0)])
+	var contact_shade := LANDSCAPE.scenery_shade(Global.has_rain())
+	for index in TREES.size():
+		LANDSCAPE.draw_scenery_shadow(self, TREES[index], _tree_variety(index), contact_shade)
+	for prop: Vector3i in BANK_PROPS:
+		LANDSCAPE.draw_scenery_shadow(self, Vector2(prop.x, prop.y), prop.z, contact_shade)
+
+func _tree_variety(index: int) -> int:
+	if index % 4 == 2:
+		return LANDSCAPE.Prop.PINE
+	return LANDSCAPE.Prop.BLOSSOM_TREE if index % 3 == 1 else LANDSCAPE.Prop.OAK
 
 func _draw_meadow(grass: Color, loam: Color, season: int) -> void:
 	var shade: Color = [Color("#6c784e"), Color("#7c8b50"), Color("#958353"), Color("#89998b")][season]
@@ -150,34 +160,31 @@ func _draw_meadow(grass: Color, loam: Color, season: int) -> void:
 func place_scenery(layer: Node2D) -> void:
 	var season := Global.season_index()
 	var winter := season == Global.Season.WINTER
+	var tree_art := {}
+	for variety in [LANDSCAPE.Prop.OAK, LANDSCAPE.Prop.BLOSSOM_TREE, LANDSCAPE.Prop.PINE]:
+		tree_art[variety] = LANDSCAPE.tree_texture(variety, season)
+	var wet_tint := Color(0.88, 0.94, 0.99) if Global.has_rain() else Color.WHITE
 	for index in TREES.size():
-		var frame: Vector2 = LANDSCAPE.ORCHARD_FRAMES[season] if index % 3 == 1 else Vector2(season, 0)
-		if index % 4 == 2:
-			var pine_sheet: Texture2D = LANDSCAPE.SEASONAL_TREES if winter else LANDSCAPE.SCENERY
-			var pine_frame := Vector2(96, 48) if winter else Vector2(144, 0)
-			_prop(layer, TREES[index], pine_sheet, Rect2(pine_frame, Vector2(48, 48)))
-		else:
-			_prop(layer, TREES[index], LANDSCAPE.SEASONAL_TREES, Rect2(frame * 48.0, Vector2(48, 48)))
+		_prop(layer, TREES[index], tree_art[_tree_variety(index)]).self_modulate = wet_tint
 	var willow_sheet: Texture2D = LANDSCAPE.WINTER_WILLOW if winter else LANDSCAPE.ACTG_SCENERY
 	var willow_region: Rect2 = Rect2(Vector2.ZERO, willow_sheet.get_size()) if winter else LANDSCAPE.EXTERNAL_REGIONS[LANDSCAPE.Prop.WILLOW]
-	_prop(layer, Vector2(36, -55), willow_sheet, willow_region).scale = Vector2.ONE * 0.72
-	_prop(layer, Vector2(-73, 111), willow_sheet, willow_region).scale = Vector2.ONE * 0.81
+	var willow := LANDSCAPE.atlas_texture(willow_sheet, willow_region)
+	_prop(layer, Vector2(36, -55), willow).scale = Vector2.ONE * 0.72
+	_prop(layer, Vector2(-73, 111), willow).scale = Vector2.ONE * 0.81
 	for mark: Vector3i in BANK_PROPS:
 		if winter and mark.z == LANDSCAPE.Prop.FLOWERS:
 			continue
 		var frame := Vector2(mark.z % 8, floori(mark.z / 8.0))
-		var sprite := _prop(layer, Vector2(mark.x, mark.y), LANDSCAPE.SCENERY, Rect2(frame * 48.0, Vector2(48, 48)))
+		var texture := LANDSCAPE.atlas_texture(LANDSCAPE.SCENERY, Rect2(frame * 48.0, Vector2(48, 48)))
+		var sprite := _prop(layer, Vector2(mark.x, mark.y), texture)
 		sprite.flip_h = mark.z == LANDSCAPE.Prop.SIGNPOST and mark.x < 0
+		sprite.self_modulate = wet_tint
 
-func _prop(layer: Node2D, foot: Vector2, sheet: Texture2D, region: Rect2) -> Sprite2D:
-	var texture := AtlasTexture.new()
-	texture.atlas = sheet
-	texture.region = region
-	texture.filter_clip = true
+func _prop(layer: Node2D, foot: Vector2, texture: AtlasTexture) -> Sprite2D:
 	var sprite := Sprite2D.new()
 	sprite.texture = texture
 	sprite.centered = false
-	sprite.offset = Vector2(-region.size.x * 0.5, 3.0 - region.size.y)
+	sprite.offset = Vector2(-texture.get_width() * 0.5, 3.0 - texture.get_height())
 	sprite.position = foot
 	layer.add_child(sprite)
 	return sprite

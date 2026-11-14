@@ -226,7 +226,7 @@
   标题使用「井田印」标志，印章中央为公田，外围八格为私田。Windows 程序图标沿用同一印章。
   标志题字取自 Ma Shan Zheng Project Authors 的 Ma Shan Zheng 字体（SIL OFL 1.1），已转为矢量路径。许可随包附带。
   发布页 https://github.com/google/fonts/tree/main/ofl/mashanzheng
-  部分林木、蕨草、树桩和新井田清草阶段的碎石来自 Pixel-Boy 与 AAA 的 Ninja Adventure Asset Pack（CC0 1.0）。
+  蕨草、树桩和新井田清草阶段的碎石来自 Pixel-Boy 与 AAA 的 Ninja Adventure Asset Pack（CC0 1.0）。
   发布页 https://pixel-boy.itch.io/ninja-adventure-asset-pack
   原图 https://github.com/pixel-boy/NinjaAdventure/blob/6ac78232d5aedcc85ce5f27d060ea92366f7c24a/content/map/tileset_village_abandoned.png
   封地土路和草丛也使用该素材包。土纹取自 tileset_floor.png 的 (16,128)、(128,128)、(80,176)、(96,176) 四块 16×16 图块，去色后拼接。草丛取自 (16,192) 起的四块 16×16 图块，去底色后随季节调色。
@@ -236,7 +236,7 @@
   试筏的无帆筏身和水纹取自 Sevarihk 的 Animated Pixel Art Raft Sprite（CC BY 4.0）。取用原图顺流朝向的停泊和移动帧，在游戏中裁切显示并缩小。
   发布页 https://opengameart.org/content/animated-pixel-art-raft-sprite
   许可 https://creativecommons.org/licenses/by/4.0/
-  四季的阔叶树和花树、覆雪的松树及冬柳为本项目绘制。
+  封地、溪桥道、西市和竹涧的阔叶树、花树、松树和灌木为本项目绘制。冬季的柳枝也是本项目绘制。
   结局使者召简的行走造型、堂前谷帛和南路亭税册摊为本项目绘制。
   封地堂前、竹径和竹涧两岸的高竹来自 MightyKartz 的 Mountain Post / 山林驿站（CC0 1.0，免费版 v0.1）。
   采用 assets/props/bamboo.png，按地图中的位置、季节和天气绘制。原包标注为 AI 辅助制作。

@@ -51,12 +51,16 @@ func _run() -> void:
 	var estate := current_scene.get_node("World/Landscape")
 	var oak := _tree_at(estate, Vector2(-112, -17))
 	var orchard := _tree_at(estate, ORCHARD_FOOT)
-	if oak == null or orchard == null:
+	var pine := _tree_at(estate, Vector2(85, -20))
+	var sapling := _tree_at(estate, Vector2(115, -42))
+	if oak == null or orchard == null or pine == null or sapling == null:
 		push_error("The estate's spring trees must be present.")
 		quit(1)
 		return
 	var oak_anchor := oak.offset
 	var orchard_anchor := orchard.offset
+	var pine_anchor := pine.offset
+	var sapling_anchor := sapling.offset
 	_expect(not estate.ground_cover.ground_marks.is_empty() and not estate.ground_cover.frost_marks.is_empty(),
 		"The estate has both warm-season marks and winter frost details.")
 	for season in 4:
@@ -66,6 +70,11 @@ func _run() -> void:
 			and orchard.texture.region.position == ORCHARD_FRAMES[season], "Sleeping updates the living trees for season %d." % season)
 		_expect(oak.offset == oak_anchor and orchard.offset == orchard_anchor,
 			"Every seasonal tree uses the same ground anchor.")
+		var winter_row := 48 if season == state.Season.WINTER else 0
+		_expect(pine.texture.atlas == estate.WOODLAND and pine.texture.region.position == Vector2(104, winter_row)
+			and sapling.texture.atlas == estate.WOODLAND and sapling.texture.region.position == Vector2(0, winter_row)
+			and pine.offset == pine_anchor and sapling.offset == sapling_anchor,
+			"The estate's pine and sapling share the ravine's art and keep their feet through winter.")
 	var snowy_point := Vector2(190, 201)
 	_expect(estate._surface_at(snowy_point) == TerrainAudio.Surface.SNOW, "The lower winter field margin has snow.")
 	var tile_map := current_scene.get_node("World/TileMapLayer") as TileMapLayer
