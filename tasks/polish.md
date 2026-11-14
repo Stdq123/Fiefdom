@@ -21,7 +21,7 @@
 - **经营到结局**。按自己的节奏选一条路线，记下哪几天改变了经营方式、哪些操作重复得最累、哪次遇见人物或走过某处让你想再去。结算后退出，再从标题「继续游戏」读回，核对路线和结算日期。
 - **回报**。记下系统和显卡、键鼠或手柄、实际窗口尺寸、总游玩时间及停在的游戏日期。能复现的问题附上当时的截图或一段操作顺序。画面、节奏和手感直接写感受即可。
 
-本包包含南路亭的灯下小谈、野狗和斥候的战斗反馈、西市配乐《西市行》、轮作簿交接井田、时令交货后的返程指路和缺粮时的野果坳指路。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局的退出重启。 [本包校验](../build/polish-pavilion-stories/delivery/headless/manifest.txt)
+本包包含南路卸货场候货、南路亭的灯下小谈、野狗和斥候的战斗反馈、西市配乐《西市行》、轮作簿交接井田和缺粮时的野果坳指路。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本包校验](../build/polish-freight-wait/delivery/headless/manifest.txt)
 
 ## 从新档到第一次收获
 
@@ -1082,3 +1082,10 @@
 - 晴天酉时，轮访来客和收工门客到亭东同一张席案。雨天申时沿东侧小路去雨棚。守卫留在东岗，等勘渠、交手记或守备复盘的人依约等候。陶辛从西市返程也走到席案。
 - 席案和舆图会提示可听的小谈。第 7 天的新档回放正常耕作、过夜并送出一份私田路粮，随后加快白天时钟，沿路走到季青和渠伯中间。可从桌边打开今夜安排，也可中途离席再听。听完后从标题重读，日期仍记在两人的手记里，也可出现在结局记事中。另用已完成前情的存档回放了勘渠、样绸和守备三段小谈，守备小谈在谷雨棚下验证。渠伯的手记按日期保留两段谈话。 [1920×1080 席案](../build/polish-pavilion-stories/delivery/capture/1920x1080/07-table-ready.png) · [1024×768 渠伯对白](../build/polish-pavilion-stories/delivery/capture/1024x768/08-qu-bo-replies.png) · [邻里手记](../build/polish-pavilion-stories/delivery/capture/1024x768/09-neighbor-journal.png) · [四段小谈回放](../build/polish-pavilion-stories/delivery/headless/pavilion-stories.log)
 - 102 项源码场景、36 项无窗口发行检查及 7 次隔离桌面运行通过。解压版从新档分别在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局均可退出后重读。上一版存档可继续，连续运行 90.677 秒，两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-pavilion-stories/delivery/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-pavilion-stories/source-delivery.log) · [无窗口发行](../build/polish-pavilion-stories/delivery/headless.log) · [隔离桌面](../build/polish-pavilion-stories/delivery/capture.log) · [重复构建](../build/polish-pavilion-stories/delivery/hashes.log)
+
+## 在南路卸货场坐等货车
+
+- 收据指向停车处的候货座。到早了按 E 可查时辰并坐等同日货车。白天时钟加快，申禾赶车进入视野后恢复原速。货到即起身，可以接着问去处。途中可用按钮、Esc 或手柄 B 起身，保留已走的时辰。出现敌袭会起身。 [1920×1080 候货](../build/polish-freight-wait/delivery/capture/1920x1080/07-waiting-for-wagon.png) · [1024×768 次日到货](../build/polish-freight-wait/delivery/capture/1024x768/09-tomorrow-delivery.png)
+- 第 3 天春单从新档真实收割、交货并沿金线返回。到场时离到货约 89 秒，短坐、取消并读档返回时还剩约 70 秒，第二次坐下约 4.5 秒到货。跨季旧档第 6 天只能查看时辰，正常过夜耗一份粮，公私两格各长一阶。第 7 天分别收到巳时春货与戌时夏货，先问春单仍保留夏单指路。 [候货回放](../build/polish-freight-wait/delivery/headless/freight-wait.log)
+- 同一交货战役在第 28 天实走收据路线。进场时按原速需等约 83 秒，坐等约 4 秒见到申禾，再沿原路去亭西见林蓼。第 57 天达成改革结局，第 58 天读档续营，全程供足口粮。 [交货战役](../build/polish-freight-wait/delivery/headless/reformed-orders.log)
+- 103 项源码场景、40 项无窗口发行检查和 8 次隔离桌面运行通过。候货在 1920×1080 和 1024×768 各走一遍，手柄输入验证了选项和起身。传统第 56 天、改革第 59 天通关，两个结局可退出重读，上一版档可继续。连续运行 90.337 秒，两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-freight-wait/delivery/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-freight-wait/source-delivery.log) · [无窗口发行](../build/polish-freight-wait/delivery/headless.log) · [隔离桌面](../build/polish-freight-wait/delivery/capture.log) · [重复构建](../build/polish-freight-wait/delivery/hashes.log)
