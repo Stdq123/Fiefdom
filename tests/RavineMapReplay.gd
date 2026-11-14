@@ -143,7 +143,7 @@ func _select_place(place: String) -> bool:
 	await _click(map.markers[place])
 	return _expect(guide.destination_name == place and guide.route.size() >= 2, "Choose %s with the map button." % place)
 
-func _walk_route(allow_exit := false) -> bool:
+func _walk_route(allow_exit := false, climb_frame := "01b-lookout-steps") -> bool:
 	var path: PackedVector2Array = guide.route.duplicate()
 	var refreshed := false
 	var travel := tree.root.get_node_or_null("MapTravel")
@@ -188,7 +188,7 @@ func _walk_route(allow_exit := false) -> bool:
 				and landscape.terrain_audio.footsteps.stream.resource_path.get_file().begins_with("stone-"),
 				"Walking up the marked steps plays stone footfalls.")
 			print("RAVINE_MAP_CLIMB foot=", player.position)
-			await _capture_map_frame("01b-lookout-steps")
+			await _capture_map_frame(climb_frame)
 		if not guide.route.is_empty() and guide.route[0].distance_to(path[0]) >= 16.0:
 			refreshed = true
 	if path.size() > 2 and path[0].distance_to(path[-1]) >= 32.0:
@@ -247,6 +247,7 @@ func _cross_the_ravine() -> bool:
 			"The herbs remain reachable from the open side of the terrace.")
 		await _capture_map_frame("02a-herbs-on-ledge")
 		await Campaign.walk_straight(tree, player, RavineLayout.HERBS)
+	await _check_lookout_face(landscape)
 
 	if not await _select_place("砾滩"):
 		return false
@@ -274,6 +275,33 @@ func _cross_the_ravine() -> bool:
 		return _expect(await Campaign.walk_through_gates(tree, &"ui_left", state.ESTATE_SCENE),
 			"Return through the open pass after checking the edge.")
 	return false
+
+func _check_lookout_face(landscape: Node2D) -> void:
+	var side := Vector2(379, -58)
+	await Campaign.walk_ravine_to(tree, ravine, RavineLayout.RIDGE_FORK)
+	await Campaign.walk_straight(tree, player, Vector2(313, -23))
+	await Campaign.walk_straight(tree, player, Vector2(330, -52))
+	await Campaign.walk_straight(tree, player, Vector2(370, side.y))
+	await Campaign.walk_straight(tree, player, side)
+	if not _expect(player.position.distance_to(side) < 4.0, "Reach the foot of the lookout below the stair landing at %s." % player.position):
+		return
+	var face := landscape.get_node("TerrainEdges/LookoutWestFace") as CollisionPolygon2D
+	var beyond := Vector2(386, -84)
+	_expect(Geometry2D.is_point_in_polygon(face.to_local(beyond), face.polygon), "The visible rock foot covers the attempted approach.")
+	await Campaign.walk_straight(tree, player, beyond)
+	var stopped := Vector2(player.position)
+	_expect(stopped.distance_to(beyond) > 9.0 and Rect2(365, -80, 23, 18).has_point(stopped)
+		and not Geometry2D.is_point_in_polygon(face.to_local(stopped), face.polygon)
+		and landscape._surface_at(stopped) != TERRAIN_AUDIO.Surface.STONE,
+		"The rocky approach stops the player off the stone path below the lip.")
+	print("RAVINE_LOOKOUT_FOOT start=", side, " stopped=", stopped)
+	await _capture_map_frame("01c-lookout-foot")
+	await Campaign.walk_straight(tree, player, side)
+	await Campaign.walk_straight(tree, player, Vector2(330, -52))
+	await Campaign.walk_straight(tree, player, Vector2(313, -23))
+	await Campaign.walk_straight(tree, player, RavineLayout.RIDGE_FORK)
+	_expect(player.position.distance_to(RavineLayout.RIDGE_FORK) < 4.0,
+		"The path continues around the toe of the bluff back to the stair junction.")
 
 func _check_gate_rock() -> void:
 	var gate_start := player.position
@@ -375,7 +403,11 @@ func _check_ravine_weather() -> void:
 		await _capture_map_frame("07a-shoal-rain" if day == 6 else "07b-shoal-frost")
 		await Campaign.walk_ravine_to(tree, ravine, RavineLayout.BRIDGE)
 	var landscape: Node2D = ravine.get_node("Landscape")
-	await Campaign.walk_ravine_to(tree, ravine, RavineLayout.HERBS)
+	if not await _select_place("望溪台"):
+		return
+	await _click(map.close_button)
+	if not await _walk_route(false, "08a-lookout-steps-frost"):
+		return
 	_expect(RavineLayout.HERBS.distance_to(player.position) < 4.0 and landscape._surface_at(player.position) == TERRAIN_AUDIO.Surface.STONE,
 		"The steps and the landing remain usable in winter.")
 	await _capture_map_frame("08-lookout-frost")

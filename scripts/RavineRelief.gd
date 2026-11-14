@@ -33,12 +33,32 @@ const TERRACE := [Vector2(397, -101), Vector2(405, -114), Vector2(426, -124), Ve
 	Vector2(441, -83), Vector2(419, -82), Vector2(407, -88), Vector2(397, -93)]
 const TERRACE_FRONT := [Vector2(395, -96), Vector2(397, -93), Vector2(407, -88), Vector2(419, -82),
 	Vector2(441, -83), Vector2(448, -86), Vector2(462, -94), Vector2(471, -106)]
+const TERRACE_FOOT := [Vector2(378, -84), Vector2(385, -76), Vector2(396, -68), Vector2(413, -64),
+	Vector2(444, -54), Vector2(455, -52), Vector2(474, -61), Vector2(481, -77)]
+# The opening between these two faces is where the upper stair joins the terrace.
+const STAIR_OPENING := 3
 const TERRACE_LIGHT := [Vector2(397, -101), Vector2(405, -114), Vector2(426, -124), Vector2(449, -124),
 	Vector2(455, -116), Vector2(433, -108), Vector2(415, -105), Vector2(406, -95), Vector2(397, -93)]
 const TERRACE_PLANES := [
 	[Vector2(399, -100), Vector2(412, -101), Vector2(421, -98), Vector2(418, -88), Vector2(407, -88), Vector2(399, -93)],
 	[Vector2(441, -107), Vector2(463, -114), Vector2(468, -106), Vector2(460, -96), Vector2(448, -89), Vector2(440, -94)],
 ]
+const ROCK_SLOPES := [
+	[Vector2(291, -130), Vector2(316, -151), Vector2(358, -165), Vector2(389, -159), Vector2(418, -137),
+		Vector2(421, -114), Vector2(391, -94), Vector2(369, -77), Vector2(339, -66), Vector2(315, -75),
+		Vector2(301, -98)],
+	[Vector2(376, -29), Vector2(399, -56), Vector2(430, -74), Vector2(472, -105), Vector2(513, -102),
+		Vector2(541, -94), Vector2(561, -67), Vector2(569, -49), Vector2(537, -30), Vector2(499, -24),
+		Vector2(464, -16), Vector2(417, -18), Vector2(392, -11)],
+]
+const SLOPE_MARKS := [
+	[Vector2(309, -125), Vector2(321, -137), Vector2(346, -142), Vector2(371, -152), Vector2(391, -141)],
+	[Vector2(455, -76), Vector2(475, -99), Vector2(503, -93), Vector2(530, -78), Vector2(546, -66)],
+	[Vector2(427, -25), Vector2(454, -30), Vector2(478, -38), Vector2(513, -43), Vector2(548, -49)],
+]
+const LOOKOUT_SCREE := [Vector3(310, -91, 4), Vector3(333, -76, 6), Vector3(348, -80, 3),
+	Vector3(380, -74, 5), Vector3(366, -59, 3), Vector3(395, -27, 4), Vector3(437, -29, 7),
+	Vector3(454, -39, 3), Vector3(476, -33, 5), Vector3(497, -44, 4), Vector3(531, -58, 6)]
 const STAIR_WIDTH := 27.0
 const STAIR_SPACING := 8.0
 const STAIR_RISER := 3.0
@@ -103,29 +123,71 @@ static func draw_gate(canvas: CanvasItem, gate: Vector2, wilderness: bool, seaso
 		_draw_bluff(canvas, gate, ESTATE_BANK, rock, moss)
 
 func draw_lookout(canvas: CanvasItem, season: int, wet: bool) -> void:
-	var rock := Color("#98917b").lerp(Color("#5b726b"), 0.46 if wet else 0.0)
+	var rock := Color("#a1987d").lerp(Color("#617368"), 0.48 if wet else 0.0)
+	if season == Global.Season.WINTER:
+		rock = rock.lerp(Color("#929e9a"), 0.43)
 	var moss: Color = MOSS[season]
+	_draw_lookout_slopes(canvas, rock, moss, season == Global.Season.WINTER, wet)
 	_draw_bluff(canvas, RavineLayout.LOOKOUT, LOOKOUT_WEST, rock, moss)
 	_draw_bluff(canvas, RavineLayout.LOOKOUT, LOOKOUT_EAST, rock.darkened(0.10), moss.darkened(0.09))
+	_draw_terrace_faces(canvas, rock, moss)
 	_draw_steps(canvas, rock, moss)
 	_draw_terrace(canvas, rock, moss)
 
+func _draw_lookout_slopes(canvas: CanvasItem, rock: Color, moss: Color, frost: bool, wet: bool) -> void:
+	var light := Color(moss.lerp(Color("#4e6551"), 0.32), 0.42 if wet else 0.51)
+	var dark := Color("#263e31", 0.15 if frost else 0.40)
+	for slope in ROCK_SLOPES:
+		var outline := PackedVector2Array(slope)
+		var colors := PackedColorArray()
+		var top := outline[0].y
+		var bottom := top
+		for point in outline:
+			top = minf(top, point.y)
+			bottom = maxf(bottom, point.y)
+		for point in outline:
+			colors.append(light.lerp(dark, inverse_lerp(top, bottom, point.y)))
+		canvas.draw_polygon(outline, colors)
+	for marks: Array in SLOPE_MARKS:
+		for index in marks.size() - 1:
+			var a: Vector2 = marks[index]
+			var b: Vector2 = marks[index + 1]
+			var lip := a.lerp(b, 0.73).round()
+			var width := 3.0 + index % 3
+			canvas.draw_colored_polygon(PackedVector2Array([a, lip, lip + Vector2(4, width), a + Vector2(6, width + 1)]),
+				Color(moss.darkened(0.16), 0.50))
+			canvas.draw_line(a.lerp(lip, 0.2).round(), lip, Color(moss.lightened(0.12), 0.57), 1.0)
+	for stone: Vector3 in LOOKOUT_SCREE:
+		var at := Vector2(stone.x, stone.y)
+		var width := stone.z
+		canvas.draw_line(at + Vector2(0, 2), at + Vector2(width + 3, 2), dark, 2.0)
+		canvas.draw_colored_polygon(PackedVector2Array([at, at + Vector2(1, -2), at + Vector2(width - 2, -3),
+			at + Vector2(width, -1), at + Vector2(width - 1, 1), at + Vector2(2, 1)]), rock.darkened(0.15))
+		var highlight := moss.lightened(0.13) if frost else rock.lightened(0.15)
+		canvas.draw_line(at + Vector2(1, -2), at + Vector2(width - 2, -3), highlight, 1.0)
+
 func _draw_steps(canvas: CanvasItem, rock: Color, moss: Color) -> void:
-	var shadow := Transform2D(0.0, Vector2(7, 7)) * stair_outline
-	canvas.draw_colored_polygon(shadow, Color("#283a32a6"))
-	var side_tone := rock.lerp(Color("#45483a"), 0.52)
+	var side_tone := rock.lerp(Color("#47473a"), 0.62)
+	var footing := rock.lerp(Color("#2d4336"), 0.78)
 	for index in steps.size():
 		var slab := steps[index]
-		var shade := rock.lightened(0.04 + (index % 4) * 0.039)
+		var shade := rock.lightened(0.055 + (index % 4) * 0.032)
 		var tread_west := (slab[3] + Vector2(-1, -STAIR_RISER + index % 2)).round()
 		var tread_east := (slab[2] + Vector2(0, -STAIR_RISER - index % 2)).round()
 		var joint_ratio := 0.24 + posmod(index * 3, 5) * 0.13
 		var joint := tread_west.lerp(tread_east, joint_ratio).round()
 		var joint_back := joint.lerp(slab[0].lerp(slab[1], joint_ratio), 0.86).round()
 		var riser_joint := slab[3].lerp(slab[2], joint_ratio).round()
+		var toe_front: Vector2 = slab[2] + Vector2(5, 3 + index)
+		var toe_back: Vector2 = slab[1] + Vector2(5, 4 + index)
+		var ledge_front := slab[2].lerp(toe_front, 0.43).round()
+		var ledge_back := slab[1].lerp(toe_back, 0.43).round()
+		var side := side_tone.lightened(0.025 * (index % 3))
+		canvas.draw_colored_polygon(PackedVector2Array([slab[1], slab[2], ledge_front, ledge_back]), side)
+		if index > 1:
+			canvas.draw_colored_polygon(PackedVector2Array([ledge_back, ledge_front, toe_front, toe_back]), footing)
+			canvas.draw_line(ledge_back, ledge_front, side.darkened(0.17), 1.0)
 		canvas.draw_colored_polygon(PackedVector2Array([slab[0], slab[1], tread_east, joint, tread_west]), shade)
-		canvas.draw_colored_polygon(PackedVector2Array([slab[1], slab[2], slab[2] + Vector2(5, 4),
-			slab[1] + Vector2(5, 4)]), side_tone)
 		canvas.draw_colored_polygon(PackedVector2Array([tread_west, joint, riser_joint, slab[3]]), shade.darkened(0.31))
 		canvas.draw_colored_polygon(PackedVector2Array([joint, tread_east, slab[2], riser_joint]), side_tone)
 		canvas.draw_line(tread_west + Vector2(1, 0), joint - Vector2(2, 0), shade.lightened(0.26), 1.0)
@@ -134,9 +196,42 @@ func _draw_steps(canvas: CanvasItem, rock: Color, moss: Color) -> void:
 		var verge := slab[0] if index % 3 == 1 else slab[2] + Vector2(2, 0)
 		canvas.draw_rect(Rect2(verge - Vector2(1, 2), Vector2(3 + index % 2, 2)), moss.darkened(0.1))
 
+func _draw_terrace_faces(canvas: CanvasItem, rock: Color, moss: Color) -> void:
+	var contact := Color("#26382eae")
+	var shadow := Color(contact, 0.0)
+	for index in TERRACE_FRONT.size() - 1:
+		if index == STAIR_OPENING:
+			continue
+		var a: Vector2 = TERRACE_FRONT[index]
+		var b: Vector2 = TERRACE_FRONT[index + 1]
+		var foot_a: Vector2 = TERRACE_FOOT[index]
+		var foot_b: Vector2 = TERRACE_FOOT[index + 1]
+		var seam_a := a.lerp(foot_a, 0.36 + (index % 4) * 0.075).round()
+		var seam_b := b.lerp(foot_b, 0.36 + ((index + 1) % 4) * 0.075).round()
+		var shade := rock.darkened(0.17 + (index % 3) * 0.039)
+		if index > STAIR_OPENING:
+			shade = shade.lerp(Color("#4f5a49"), 0.30)
+		var base := shade.lerp(Color("#333d34"), 0.61)
+		var drift := Vector2(9, 6)
+		canvas.draw_polygon(PackedVector2Array([foot_a, foot_b, foot_b + drift, foot_a + drift]),
+			PackedColorArray([contact, contact, shadow, shadow]))
+		canvas.draw_polygon(PackedVector2Array([seam_a, seam_b, foot_b, foot_a]),
+			PackedColorArray([shade.darkened(0.14), shade.darkened(0.14), base, base]))
+		canvas.draw_colored_polygon(PackedVector2Array([a, b, seam_b, seam_a]), shade)
+		var split := 0.35 + (index % 3) * 0.09
+		var crest := a.lerp(b, split).round()
+		var cut := seam_a.lerp(seam_b, split + 0.14).round()
+		var cleft := foot_a.lerp(foot_b, split - 0.09).round()
+		canvas.draw_colored_polygon(PackedVector2Array([crest, b, seam_b, cut]), Color(base, 0.53))
+		canvas.draw_colored_polygon(PackedVector2Array([cut, seam_b, foot_b, cleft]), Color(base.darkened(0.19), 0.45))
+		canvas.draw_polyline(PackedVector2Array([crest, cut, cleft]), base.darkened(0.15), 1.0)
+		canvas.draw_line(seam_a.lerp(cut, 0.27), cut.lerp(seam_b, 0.32), Color(shade.lightened(0.19), 0.7), 1.0)
+		if index in [1, 4, 6]:
+			var patch := seam_a.lerp(seam_b, 0.22).round()
+			canvas.draw_colored_polygon(PackedVector2Array([patch + Vector2(-4, 0), patch + Vector2(-1, -4),
+				patch + Vector2(4, -3), patch + Vector2(5, 0), patch + Vector2(2, 3)]), moss.darkened(0.16))
+
 func _draw_terrace(canvas: CanvasItem, rock: Color, moss: Color) -> void:
-	var shadow := Transform2D(0.0, Vector2(8, 12)) * terrace_surface
-	canvas.draw_colored_polygon(shadow, Color("#263b328e"))
 	var walking_stone := rock.lightened(0.12)
 	canvas.draw_colored_polygon(terrace_surface, walking_stone)
 	canvas.draw_colored_polygon(PackedVector2Array(TERRACE_LIGHT), rock.lightened(0.24))
@@ -146,14 +241,9 @@ func _draw_terrace(canvas: CanvasItem, rock: Color, moss: Color) -> void:
 		var a: Vector2 = TERRACE_FRONT[index]
 		var b: Vector2 = TERRACE_FRONT[index + 1]
 		var seam := a.lerp(b, 0.42 + (index % 3) * 0.11).round()
-		if index != 3: # The stair meets this side of the landing.
-			var toe := Vector2(4, 8 + (index % 3) * 2)
-			var shade := rock.darkened(0.27 + (index % 4) * 0.033)
-			canvas.draw_colored_polygon(PackedVector2Array([a, b, b + toe, a + toe]), shade)
-			canvas.draw_colored_polygon(PackedVector2Array([seam, b, b + toe, seam + toe + Vector2(-2, 0)]), shade.darkened(0.17))
-			canvas.draw_line(seam + Vector2(2, 0), seam + toe * 0.76, shade.lightened(0.14), 1.0)
-		canvas.draw_line(a, seam, walking_stone.lightened(0.17), 1.0)
-		canvas.draw_rect(Rect2(seam - Vector2(2, 2), Vector2(3 + index % 4, 2)), moss)
+		if index != STAIR_OPENING:
+			canvas.draw_line(a, seam, walking_stone.lightened(0.12), 1.0)
+			canvas.draw_rect(Rect2(seam - Vector2(2, 2), Vector2(3 + index % 4, 2)), moss)
 	for at: Vector2 in [Vector2(406, -99), Vector2(419, -92), Vector2(430, -115), Vector2(442, -96), Vector2(452, -105)]:
 		canvas.draw_polyline(PackedVector2Array([at, at + Vector2(5, -2), at + Vector2(9, -1)]), rock.darkened(0.13), 1.0)
 
@@ -162,6 +252,14 @@ static func install_ravine_edges(terrain: StaticBody2D) -> void:
 	_add_bluff_edge(terrain, &"WestGateSouthRock", RavineLayout.WEST_GATE, GATE_SOUTH)
 	_add_bluff_edge(terrain, &"LookoutWestRock", RavineLayout.LOOKOUT, LOOKOUT_WEST)
 	_add_bluff_edge(terrain, &"LookoutEastRock", RavineLayout.LOOKOUT, LOOKOUT_EAST)
+	_add_terrace_edge(terrain, &"LookoutWestFace", 0, STAIR_OPENING - 1)
+	_add_terrace_edge(terrain, &"LookoutEastFace", STAIR_OPENING + 1, TERRACE_FRONT.size() - 1)
+
+static func _add_terrace_edge(terrain: StaticBody2D, edge_name: StringName, first: int, last: int) -> void:
+	var face := PackedVector2Array(TERRACE_FRONT.slice(first, last + 1))
+	for index in range(last, first - 1, -1):
+		face.append(TERRACE_FOOT[index])
+	_install_edge(terrain, edge_name, face)
 
 static func install_estate_edge(terrain: StaticBody2D) -> void:
 	_add_bluff_edge(terrain, &"EastGateRock", EstateLayout.EAST_GATE, ESTATE_BANK)
@@ -173,9 +271,12 @@ static func _add_bluff_edge(terrain: StaticBody2D, edge_name: StringName, origin
 	for index in range(profile.size() - 1, -1, -1):
 		var point := profile[index]
 		boundary.append(origin + Vector2(point.x, point.y - point.z * BLUFF_TOP_DEPTH))
+	_install_edge(terrain, edge_name, boundary)
+
+static func _install_edge(terrain: StaticBody2D, edge_name: StringName, outline: PackedVector2Array) -> void:
 	var edge := CollisionPolygon2D.new()
 	edge.name = edge_name
-	edge.polygon = boundary
+	edge.polygon = outline
 	terrain.add_child(edge)
 
 static func _draw_bluff(canvas: CanvasItem, origin: Vector2, profile: Array[Vector3], rock: Color, moss: Color) -> void:

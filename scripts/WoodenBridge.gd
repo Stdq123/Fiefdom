@@ -52,12 +52,7 @@ func _draw_deck() -> void:
 	var east := deck.end.x
 	var back := deck.position.y
 	var front := deck.end.y
-	deck_art.draw_colored_polygon(PackedVector2Array([Vector2(west + 3, front), Vector2(east - 3, front),
-		Vector2(east - 4, front + 17), Vector2(west + 7, front + 14)]), Color("#152f3390"))
-	for x in [west + 3, east - 10]:
-		deck_art.draw_rect(Rect2(x, front - 6, 8, 17), Color("#49382e"))
-		deck_art.draw_rect(Rect2(x + 1, front, 3, 8), Color("#77644c"))
-		deck_art.draw_rect(Rect2(x - 2, front + 8, 12, 4), Color("#53655b"))
+	_draw_supports(west, east, front)
 	deck_art.draw_colored_polygon(PackedVector2Array([Vector2(west, front - 3), Vector2(east, front - 3),
 		Vector2(east - 1, front + 5), Vector2(east - 9, front + 6),
 		Vector2(west + 8, front + 6), Vector2(west + 1, front + 4)]), _wood(Color("#684831")))
@@ -75,10 +70,35 @@ func _draw_deck() -> void:
 	deck_art.draw_rect(Rect2(west, front - 1, deck.size.x, 1), _wood(Color("#d0a66a")))
 	for x: float in [west, east]:
 		var cap := Rect2(x - 3.0, back - 1, 6.0, deck.size.y + 2)
-		deck_art.draw_rect(cap, Color("#656656"))
-		deck_art.draw_rect(Rect2(cap.position + Vector2(1, 1), Vector2(3, deck.size.y - 1)), Color("#aaa38b"))
-		deck_art.draw_rect(Rect2(cap.position + Vector2(1, deck.size.y - 5), Vector2(4, 1)), Color("#585c4c"))
+		deck_art.draw_rect(cap, _stone(Color("#656656")))
+		deck_art.draw_rect(Rect2(cap.position + Vector2(1, 1), Vector2(3, deck.size.y - 1)), _stone(Color("#aaa38b")))
+		deck_art.draw_rect(Rect2(cap.position + Vector2(1, deck.size.y - 5), Vector2(4, 1)), _stone(Color("#585c4c")))
+		if season == Global.Season.WINTER:
+			deck_art.draw_line(cap.position + Vector2(1, 1), cap.position + Vector2(4, 1), Color("#c4cdc3"), 1.0)
 	_draw_rail(deck_art, back)
+
+func _stone(color: Color) -> Color:
+	return color.lerp(Color("#4d6661"), 0.36) if wet else color
+
+func _draw_supports(west: float, east: float, front: float) -> void:
+	var under := Color("#182c2a")
+	deck_art.draw_polygon(PackedVector2Array([Vector2(west + 1, front + 3), Vector2(east - 1, front + 3),
+		Vector2(east + 6, front + 21), Vector2(west + 8, front + 18)]), PackedColorArray([
+			Color(under, 0.76), Color(under, 0.76), Color(under, 0.08), Color(under, 0.08)]))
+	for x: float in [west + 3, east - 10]:
+		var footing := Vector2(x, front + 12)
+		deck_art.draw_colored_polygon(PackedVector2Array([footing + Vector2(-3, 5), footing + Vector2(4, 1),
+			footing + Vector2(13, 4), footing + Vector2(14, 10), footing + Vector2(-2, 10)]), Color(under, 0.55))
+		deck_art.draw_colored_polygon(PackedVector2Array([footing + Vector2(-3, -3), footing + Vector2(9, -3),
+			footing + Vector2(10, 5), footing + Vector2(8, 8), footing + Vector2(-2, 8),
+			footing + Vector2(-4, 3)]), _stone(Color("#586354")))
+		deck_art.draw_colored_polygon(PackedVector2Array([footing + Vector2(-3, -3), footing + Vector2(2, -5),
+			footing + Vector2(10, -3), footing + Vector2(6, 1), footing + Vector2(-2, 2)]), _stone(Color("#888b73")))
+		deck_art.draw_line(footing + Vector2(-2, 5), footing + Vector2(6, 5), _stone(Color("#727965")), 1.0)
+		deck_art.draw_rect(Rect2(x, front - 4, 8, 17), _wood(Color("#48372d")))
+		deck_art.draw_rect(Rect2(x + 1, front + 1, 3, 11), _wood(Color("#96754f")))
+		deck_art.draw_rect(Rect2(x + 5, front + 5, 2, 7), _wood(Color("#604734")))
+		deck_art.draw_rect(Rect2(x, front + 7, 7, 2), _wood(Color("#75624d")))
 
 func _draw_near_rail() -> void:
 	_draw_rail(near_rail, 0.0)
