@@ -21,7 +21,7 @@
 - **经营到结局**。按自己的节奏选一条路线，记下哪几天改变了经营方式、哪些操作重复得最累、哪次遇见人物或走过某处让你想再去。结算后退出，再从标题「继续游戏」读回，核对路线和结算日期。
 - **回报**。记下系统和显卡、键鼠或手柄、实际窗口尺寸、总游玩时间及停在的游戏日期。能复现的问题附上当时的截图或一段操作顺序。画面、节奏和手感直接写感受即可。
 
-本包包含封地、溪桥道、西市和竹涧的斜俯视更新。按住 Shift 或手柄 LT 可一次处理一块井田内同类的农事。第一次纳贡后可从手记接上轮作并安排井田管事。右上日期栏可查看秋社谷样与冬至围炉食材。南池畔新增有路灯的石坪，夏单到货后可走上钓台。解压版已回放两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本轮试玩包](../build/polish-south-pond-depth/final/Fiefdom-1.0.0-Windows-x64.zip) · [本包校验](../build/polish-south-pond-depth/final/headless/manifest.txt)
+本包包含封地、溪桥道、西市和竹涧的斜俯视更新。按住 Shift 或手柄 LT 可一次处理一块井田内同类的农事。第一次纳贡后可从手记接上轮作并安排井田管事。右上日期栏可为秋社留谷样、为冬至按菜留料，「今夜安排」可查询或撤销。南池畔有路灯和节庆石坪，夏单到货后可走上钓台。解压版已回放两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本轮试玩包](../build/polish-festival-pantry/release/Fiefdom-1.0.0-Windows-x64.zip) · [本包校验](../build/polish-festival-pantry/release/headless/manifest.txt)
 
 ## 从新档到第一次收获
 
@@ -1181,3 +1181,9 @@
 - 远岸岩面降到水线，近岸可见浅水、碎石和芦苇。沿临水小路能看到灯和石坪。秋社展台露出棚面、木梁和侧面，冬至炉桌可见锅沿、开炉后的热气和炭火。平日也可以从封地舆图指路到南池畔。 [南池与秋社前后对比](../build/polish-south-pond-depth/final/south-pond-before-after.png) · [钓台与冬至炉桌](../build/polish-south-pond-depth/final/south-pond-fishing-and-supper.png) · [平日石坪](../build/polish-south-pond-depth/final/capture/1920x1080/01f-ordinary-clearing.png)
 - 1920×1080 和 1024×768 的秋社回放从新档沿真实路线进场。第 13 天可用舆图到空石坪，秋分到台前可摆谷样，冬至可用禾伯添的菽备饭。夏单专项于第 10 天上台进入原水面范围，脚下为木板，栏杆挡住往深水方向的行走。钓得鲫鱼后从标题读回，再走上台，最后到灶台备稻鱼羹。 [1920×1080 秋冬回放](../build/polish-south-pond-depth/final/capture/autumn-exhibit.log) · [1024×768 秋冬回放](../build/polish-south-pond-depth/final/capture/autumn-exhibit-1024x768.log) · [默认窗口钓台回放](../build/polish-south-pond-depth/final/dock-reopen/1920x1080/pond-landing.log) · [1024×768 钓台回放](../build/polish-south-pond-depth/final/dock-reopen/1024x768/pond-landing.log)
 - 用上一版 Windows 包从新档走到第 10 天，保存开台与钓得鲫鱼的进度。新版加载后保留鱼获和地点，可沿路走上新木台。原存档校验值未变。105 项源码回归通过。解压包通过 32 项无窗口发行检查、90.697 秒连续运行以及 15 次隔离桌面运行。干净配置默认 1920×1080。传统线第 56 天、改革线第 59 天到结局，均可重启后读回。两次干净构建的 ZIP 校验值一致。 [旧钓台存档](../build/polish-south-pond-depth/final/legacy-dock/load-previous-dock.log) · [源码回归](../build/polish-south-pond-depth/source-final.log) · [无窗口发行](../build/polish-south-pond-depth/final/headless.log) · [隔离桌面](../build/polish-south-pond-depth/final/capture.log) · [重复构建](../build/polish-south-pond-depth/final/hashes.log)
+
+## 给秋社和冬至留出夜间备粮用料
+
+- 第 15 天用同一个缺粮存档比较两次过夜。取消留用后，门客转用最后一份黍，第 16 天仅剩两种谷样。选择留样并接受今夜报价后，实际花 5 铜钱买一份口粮，晨间三种谷样仍齐。两种过夜均保留国库和秋单需用的两份稷、一份菽。历书与「今夜安排」都会列出额外留样和与订单共用的作物。 [历书留样](../build/polish-festival-pantry/release/default/01-autumn-pantry.png) · [1024×768 睡前账目](../build/polish-festival-pantry/release/capture/1024x768/02-pantry-shortage.png) · [缺粮对照回放](../build/polish-festival-pantry/release/default/default-window.log)
+- 冬单已交时，留麦菽粥料会保留麦和菽。改留鱼麦羹用麦，门客仍可转用菽。新档中可提前预留尚未收获的作物，并从历书去柳湾钓鱼。秋社分享后禾伯出的菽计入配方。留用到节庆最后一天清早为止，取消时立即重算粮价。用第 21 天的结局测试档读回再续营时，冬单两份麦和围炉一份麦均保留。 [1024×768 鱼麦羹指路](../build/polish-festival-pantry/release/winter-compact/01a-fish-plan.png) · [秋社到围炉新档回放](../build/polish-festival-pantry/release/capture/autumn-exhibit-1024x768.log)
+- 106 项源码回归通过。补上结局续营的留用恢复后，最终构建再通过节庆、备粮、双结局与晨间存档在内的六项源码专项。解压包通过 38 项无窗口发行检查（含 90.743 秒连续运行）和 19 次隔离桌面运行。默认窗口为 1920×1080，另查 1024×768 的留样、备粮、指路与开席。新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局均可退出重启后读回。上一版实际生成的第三天存档可接续并过夜到第四天。两次干净构建的 ZIP 校验值一致。首次独立试玩和长线体验仍待验收。 [源码回归](../build/polish-festival-pantry/source-verified.log) · [最终构建专项](../build/polish-festival-pantry/source-release.log) · [无窗口发行](../build/polish-festival-pantry/release/windows-headless.log) · [隔离桌面](../build/polish-festival-pantry/release/windows-capture.log) · [重复构建](../build/polish-festival-pantry/release/hashes.log)
