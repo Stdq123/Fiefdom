@@ -60,6 +60,8 @@ func _ready() -> void:
 		directions.follow_ravine(Global.ravine_trip_target)
 	elif Global.market_trip_target == Global.MARKET_RETURN:
 		Global.market_trip_target = ""
+	elif Global.market_trip_target == Global.FIELD_RETURN:
+		directions.follow_first_field()
 	elif Global.market_trip_target == Global.WATER_SOURCE:
 		directions.follow_water_source()
 	elif Global.market_trip_target == Global.FREIGHT_YARD:

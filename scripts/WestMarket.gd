@@ -44,6 +44,7 @@ func _ready() -> void:
 	player.footstep.connect(_step)
 	market_map.setup(self, destinations, $MarketWaypoint)
 	market_map.open_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
+	$CampaignHUD.add_field_return(player, market_map.follow_region_destination)
 	$DialogManager.setup($UI/Control, player)
 	%SettingsButton.icon = HUDIcons.icon(HUDIcons.Symbol.SETTINGS)
 	%CoinIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)

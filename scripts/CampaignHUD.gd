@@ -26,11 +26,14 @@ var summary: Control
 var status: Label
 var backpack: Control
 var backpack_button: Button
+var field_return_button: Button
+var _return_player: Player
 var trail_weather: TextureRect
 var sky_icons := HUDIcons.SKY.map(HUDIcons.icon)
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	set_process(false)
 	view = Control.new()
 	view.theme = GAME_THEME
 	view.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -69,6 +72,37 @@ func _ready() -> void:
 	GameEvents.ending_record_requested.connect(_open_record)
 	if Global.outcome != Global.Outcome.RUNNING:
 		_show_outcome.call_deferred(Global.outcome, true)
+
+func add_field_return(walker: Player, choose_trip: Callable) -> void:
+	_return_player = walker
+	field_return_button = Button.new()
+	field_return_button.name = "FieldReturn"
+	field_return_button.text = "回井田"
+	field_return_button.tooltip_text = "沿路指引回第一块井田的田口"
+	field_return_button.theme = HUD_THEME
+	field_return_button.theme_type_variation = &"HudButton"
+	field_return_button.focus_mode = Control.FOCUS_NONE
+	field_return_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	view.add_child(field_return_button)
+	field_return_button.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	field_return_button.offset_left = -188.0
+	field_return_button.offset_right = -92.0
+	field_return_button.offset_top = 16.0
+	field_return_button.offset_bottom = 56.0
+	field_return_button.pressed.connect(func():
+		if _can_start_field_return() and not choose_trip.call(Global.FIELD_RETURN):
+			_show_world_notice("这里接不上山路，靠近一条路后再选。")
+	)
+	field_return_button.hide()
+	set_process(true)
+
+func _process(_delta: float) -> void:
+	field_return_button.visible = _can_start_field_return()
+
+func _can_start_field_return() -> bool:
+	return Global.outcome == Global.Outcome.RUNNING and not get_tree().paused and not settings_open and not modal_open \
+		and not management_open and is_instance_valid(_return_player) and not _return_player.world_controls_blocked() \
+		and Global.regional_destination() != Global.FIELD_RETURN
 
 func _setup_backpack_button() -> void:
 	if backpack_trigger.is_empty():

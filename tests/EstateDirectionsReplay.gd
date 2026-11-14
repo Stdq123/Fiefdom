@@ -302,6 +302,68 @@ func _next_reputation_step(spawn: Vector2) -> void:
 	print("DIRECTION_REPUTATION_HANDOFF day=", state.current_day, " visitor=", guest.name,
 		" reputation=", before, "->", state.reputation, " next_field=", directions.tracked_plot)
 
+func _forage_and_return() -> void:
+	await _key(KEY_M)
+	var chart: Control = ui.estate_map
+	await _click(chart.tabs.get_node("Ravine").get_global_rect().get_center())
+	for row: Button in chart.row_buttons:
+		if chart.row_buttons[row].title == "野果坳":
+			await _click(row.get_global_rect().get_center())
+			break
+	if not _expect(state.ravine_trip_target == "野果坳", "Use the local chart to plan the first forage trip."):
+		return
+	await _key(KEY_ESCAPE)
+	var day: int = state.current_day
+	var grain: int = state.food_storage
+	var tribute: int = state.king_storage
+	var order: int = state.pinned_season_start
+	var crop: Dictionary = state.active_crops[PUBLIC].duplicate()
+	await Campaign.walk_estate_road_to(tree, world, world.get_node("EastArrival").global_position)
+	if not _expect(await Campaign.walk_through_gates(tree, &"ui_right", state.WILDERNESS_SCENE), "Walk into the ravine."):
+		return
+	await tree.process_frame
+	var ravine := tree.current_scene as Node2D
+	var walker := ravine.get_node("Player") as Node2D
+	var return_button := ravine.get_node("CampaignHUD").field_return_button as Button
+	var fruit := ravine.get_node("WildFruit") as Node2D
+	await Campaign.walk_ravine_to(tree, ravine, fruit.global_position + Vector2(0, 16))
+	await _key(KEY_E)
+	if not _expect(state.food_storage == grain + state.balance.wild_food_yield and ravine.active_waypoint().is_empty()
+		and return_button.visible, "Harvest wild fruit and see the return action when the outward trail ends."):
+		return
+	await _capture("return-ravine-after-gathering")
+	var foot := walker.position
+	await _click(return_button.get_global_rect().get_center())
+	var guide: Node2D = ravine.ravine_map.guide
+	if not _expect(state.market_trip_target == state.FIELD_RETURN and ravine.active_waypoint() == "西门回封地"
+		and not return_button.visible and walker.position == foot and not guide.route.is_empty()
+		and guide.route[-1] == ravine.get_node("ExitArea").position,
+		"The action replaces the old trail and guides to the west gate without moving the player."):
+		return
+	await _capture("return-ravine-west-gate")
+	await Campaign.walk_to_ravine_exit(tree, ravine)
+	if not _expect(await Campaign.walk_through_gates(tree, &"ui_left", state.ESTATE_SCENE), "Follow the trail out of the ravine."):
+		return
+	await _use_estate()
+	await tree.create_timer(0.05).timeout
+	var approach: PackedVector2Array = world.get_node("Landscape").field_approaches[0]
+	var path: PackedVector2Array = directions.road_path
+	if not _expect(state.market_trip_target == state.FIELD_RETURN and directions.tracked_place == state.FIELD_RETURN
+		and directions.road_guide.visible and path.has(EstateLayout.FIELD_TURN) and path[-1] == approach[-1],
+		"The route continues past the estate gate to the actual field entrance."):
+		return
+	await _capture("return-ravine-on-estate")
+	for point in path.slice(1):
+		await Campaign.walk_straight(tree, world.player, world.to_global(point))
+	_expect(world.player.position.distance_to(approach[-1]) < 4.0 and state.market_trip_target.is_empty()
+		and not ui.hud.cancel_directions.visible and state.current_day == day and state.king_storage == tribute
+		and state.food_storage == grain + state.balance.wild_food_yield and state.crop_stock.count("beans") == 1
+		and state.active_crops.get(PUBLIC) == crop and state.pinned_season_start == order,
+		"Reach the entrance on foot and clear the trip with the same day, crop, tribute and order.")
+	await _capture("return-ravine-at-field")
+	print("FIELD_RETURN_RAVINE day=", state.current_day, " grain=", grain, "->", state.food_storage,
+		" entrance=", approach[-1], " remaining_waypoint=", state.market_trip_target)
+
 func _finish() -> void:
 	tree.unload_current_scene()
 	tree.root.get_node("AudioManager").bgm_player.stop()
@@ -455,4 +517,6 @@ func run(game_tree: SceneTree) -> void:
 	print("DIRECTION_OPENING day=", state.current_day, " tribute=", state.king_storage, " rotation=", state.field_rotation.promise_day)
 	if not failed:
 		await _private_crop_and_grain(spawn)
+	if not failed and not legacy:
+		await _forage_and_return()
 	await _finish()

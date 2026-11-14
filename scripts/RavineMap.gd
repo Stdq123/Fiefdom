@@ -6,6 +6,7 @@ const PATH_INK := Color("#934b2e")
 const MAP_MARGIN := Vector2(20, 20)
 const JOURNAL_SUFFIX := "水迹"
 const ESTATE_EXIT := "西门回封地"
+const ROAD_NETWORK := preload("res://scripts/RoadNetwork.gd")
 
 @onready var chart: Control = %Chart
 @onready var paper: Control = %MapInk
@@ -68,7 +69,7 @@ func setup(trail_guide: Node2D, walker: Player, terrain: LANDSCAPE, destinations
 	_refresh_traps()
 	_refresh_route()
 	region_map = add_region_map(Region.RAVINE, func(): return not _map_available(),
-		_regional_trip, follow_region_destination, guide.clear)
+		_regional_trip, follow_region_destination, guide.clear, _field_return_uses_south)
 
 func _map_available() -> bool:
 	return is_instance_valid(player) and not player.conversation_open and not MapTravel.active
@@ -110,11 +111,27 @@ func follow_market(place: String) -> bool:
 	return guide.follow(ESTATE_EXIT, places[ESTATE_EXIT], place)
 
 func follow_region_destination(place: String) -> bool:
+	if place == Global.FIELD_RETURN:
+		return follow_first_field(RavineLayout.SOUTH_TRAIL_NAME if _field_return_uses_south(place) else ESTATE_EXIT)
 	if place == Global.MARKET_RETURN:
 		return guide.follow(ESTATE_EXIT, places[ESTATE_EXIT])
 	if places.has(place):
 		return guide.follow(place, places[place])
 	return follow_market(place)
+
+func follow_first_field(saved_exit: String) -> bool:
+	var exit := RavineLayout.SOUTH_TRAIL_NAME if saved_exit == RavineLayout.SOUTH_TRAIL_NAME \
+		and Global.ravine_shortcut_open() else ESTATE_EXIT
+	return guide.follow(exit, places[exit], Global.FIELD_RETURN)
+
+func _field_return_uses_south(place: String) -> bool:
+	if place != Global.FIELD_RETURN or not Global.ravine_shortcut_open():
+		return false
+	if Global.market_trip_target == Global.FIELD_RETURN and not guide.destination_name.is_empty():
+		return guide.destination_name == RavineLayout.SOUTH_TRAIL_NAME
+	var west_path: PackedVector2Array = guide.network.route_between(player.position, places[ESTATE_EXIT])
+	var south_path: PackedVector2Array = guide.network.route_between(player.position, places[RavineLayout.SOUTH_TRAIL_NAME])
+	return ROAD_NETWORK.route_length(south_path) < ROAD_NETWORK.route_length(west_path)
 
 func _regional_trip() -> String:
 	if not Global.market_trip_target.is_empty():
@@ -160,12 +177,15 @@ func _refresh_journal() -> void:
 
 func _refresh_route() -> void:
 	var name: String = guide.destination_name
-	var going_to_market := name == ESTATE_EXIT and not Global.market_trip_target.is_empty()
-	var destination := "西市 · " + Global.market_trip_target if going_to_market else name
-	if going_to_market and Global.market_trip_target == Sheepfold.MEADOW:
-		destination = Sheepfold.MEADOW
-	elif going_to_market and Global.market_trip_target in [Global.WATER_SOURCE, Global.FREIGHT_YARD]:
-		destination = "封地 · " + Global.market_trip_target
+	var regional_target := Global.market_trip_target
+	var using_exit := name in [ESTATE_EXIT, RavineLayout.SOUTH_TRAIL_NAME] and not regional_target.is_empty()
+	var destination := name
+	if using_exit:
+		if regional_target == Sheepfold.MEADOW:
+			destination = Sheepfold.MEADOW
+		else:
+			var region := "封地" if regional_target in Global.ESTATE_REGIONAL_STOPS else "西市"
+			destination = "%s · %s" % [region, regional_target]
 	cancel_button.visible = not name.is_empty()
 	cancel_button.text = destination + " · 清除指路"
 	clear_button.disabled = name.is_empty()
@@ -175,10 +195,10 @@ func _refresh_route() -> void:
 		route_status.text = "选一处地点，回到山路后沿标记走。"
 	else:
 		route_status.text = "前往" + destination
-		if going_to_market:
-			route_status.text += " · 经西门回封地"
-		elif name == RavineLayout.SOUTH_TRAIL_NAME:
+		if name == RavineLayout.SOUTH_TRAIL_NAME:
 			route_status.text += " · 回封地南路"
+		elif using_exit:
+			route_status.text += " · 经西门回封地"
 		if guide.route.has(LANDSCAPE.BRIDGE):
 			route_status.text += " · 经木桥"
 		elif guide.route.has(LANDSCAPE.FORD):

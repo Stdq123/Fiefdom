@@ -42,6 +42,7 @@ func _ready() -> void:
 	}
 	ravine_map.setup(directions, $Player, $Landscape, destinations)
 	ravine_map.open_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
+	$CampaignHUD.add_field_return($Player, ravine_map.follow_region_destination)
 	_setup_settings($CampaignHUD.view)
 	$FishingUI/CreekTrapPanel.route_requested.connect(ravine_map.follow_place)
 	var goal := Global.ravine_trip_target
@@ -50,6 +51,8 @@ func _ready() -> void:
 	var continue_route := Callable()
 	if destinations.has(goal):
 		continue_route = directions.follow.bind(goal, destinations[goal])
+	elif Global.market_trip_target == Global.FIELD_RETURN:
+		continue_route = ravine_map.follow_first_field.bind(saved_waypoint)
 	elif not Global.market_trip_target.is_empty():
 		continue_route = ravine_map.follow_market.bind(Global.market_trip_target)
 	elif not saved_waypoint.is_empty():

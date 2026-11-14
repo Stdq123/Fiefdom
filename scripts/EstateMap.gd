@@ -393,7 +393,9 @@ func _clear_directions() -> void:
 	_refresh_destination()
 
 func follow_region_destination(place: String) -> bool:
-	if place == Global.WATER_SOURCE:
+	if place == Global.FIELD_RETURN:
+		directions.follow_first_field()
+	elif place == Global.WATER_SOURCE:
 		directions.follow_water_source()
 	elif place == Global.FREIGHT_YARD:
 		directions.follow_freight_yard()

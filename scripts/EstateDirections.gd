@@ -61,6 +61,9 @@ func setup(estate_world: Node2D, estate_hud: Control) -> void:
 func _refresh_road_network() -> void:
 	var tracks := [EstateLayout.ROADS[0], EstateLayout.SOUTH_LANE, EstateLayout.EAST_LANE] \
 		+ EstateLayout.WEST_ROADS + EstateLayout.SOUTH_ROADS + EstateLayout.DRIVING_ROADS
+	var approach := _first_field_approach()
+	if not approach.is_empty():
+		tracks.append(Array(approach))
 	if Global.seed_garden_day() > 0:
 		tracks.append(EstateLayout.SEED_GARDEN_TRACK)
 	if Global.pond_landing_day() > 0:
@@ -135,6 +138,15 @@ func follow_ravine(place: String) -> void:
 func follow_water_source() -> void:
 	follow_place(Global.WATER_SOURCE, _cell_position(Global.irrigation.source_cell))
 	Global.market_trip_target = Global.WATER_SOURCE
+
+func follow_first_field() -> void:
+	var approach := _first_field_approach()
+	var foot := _cell_position(Global.FIRST_FIELD_CENTER) if approach.is_empty() else approach[-1]
+	follow_place(Global.FIELD_RETURN, foot)
+	Global.market_trip_target = Global.FIELD_RETURN
+
+func _first_field_approach() -> PackedVector2Array:
+	return world.get_node("Landscape").field_approaches.get(0, PackedVector2Array())
 
 func ravine_gate_point(place: String) -> Vector2:
 	var south: bool = (Global.ravine_shortcut_open() and world.estate_player_point().y >= EstateLayout.BAMBOO_BEND.y
@@ -279,7 +291,7 @@ func update_marker(blocked: bool) -> void:
 			var title := "申禾 · " + GamepadInput.interact_key() if arrived else SeasonOrders.arrival_caption(freight_receipt)
 			_mark_map(Rect2(at - Vector2(8, 8), Vector2(16, 16)), title, Mark.PLACE, false)
 			return
-		if not Global.ravine_trip_target.is_empty() or not Global.market_trip_target.is_empty():
+		if tracked_place != Global.FIELD_RETURN and (not Global.ravine_trip_target.is_empty() or not Global.market_trip_target.is_empty()):
 			hide()
 			return
 		clear_tracking()
@@ -310,7 +322,7 @@ func _show_road_route(point: Vector2) -> void:
 
 func road_route_between(foot: Vector2, point: Vector2) -> PackedVector2Array:
 	if (point.y >= EstateLayout.FIELD_LANE_TURN.y or point.x <= EstateLayout.WEST_FORK.x
-		or point.x >= EstateLayout.EAST_WATCH.x):
+		or point.x >= EstateLayout.EAST_WATCH.x or (tracked_place == Global.FIELD_RETURN and point == tracked_place_point)):
 		return road_network.route_between(foot, point)
 	return PackedVector2Array()
 

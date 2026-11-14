@@ -51,6 +51,7 @@ func _ready() -> void:
 	settings.visibility_changed.connect(_update_modal)
 	region_map.setup(SURVEY.Region.ROAD, func(): return player.conversation_open, Global.regional_destination,
 		_follow_region_destination, _clear_regional_trip, null, Callable(), _map_road_progress)
+	$CampaignHUD.add_field_return(player, _follow_region_destination)
 	region_map.road_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
 	%RouteIcon.texture = HUDIcons.icon(HUDIcons.Symbol.MAP)
 	GameEvents.daylight_changed.connect(_refresh_clock)
@@ -141,9 +142,10 @@ func _talk_to_silk_guest(data: VisitorData) -> void:
 func _refresh_route() -> void:
 	var target := Global.market_trip_target
 	var tracking_meadow := target == Sheepfold.MEADOW
+	var tracking_field := target == Global.FIELD_RETURN
 	var tracking_guest := target == VisitorData.SILK_MERCHANT
 	var silk_trip := scheduled_guest.silk_trip() if tracking_guest and scheduled_guest else VisitorData.SilkTrip.NONE
-	if not tracking_meadow and (not tracking_guest or not silk_guest):
+	if not tracking_meadow and not tracking_field and (not tracking_guest or not silk_guest):
 		route.clear()
 		route_origin = Vector2.INF
 	if not Global.ravine_trip_target.is_empty():
@@ -156,7 +158,11 @@ func _refresh_route() -> void:
 	elif target == Global.MARKET_RETURN:
 		%Route.text = "回封地 →"
 		route_direction = Vector2.RIGHT
-	elif target in [Global.WATER_SOURCE, Global.FREIGHT_YARD]:
+	elif tracking_field:
+		%Route.text = "封地 · %s →" % target
+		route_direction = Vector2.RIGHT
+		_route_to(LAYOUT.ESTATE_GATE, 8.0)
+	elif target in Global.ESTATE_REGIONAL_STOPS:
 		%Route.text = "封地 · %s →" % target
 		route_direction = Vector2.RIGHT
 	elif tracking_guest and silk_guest:

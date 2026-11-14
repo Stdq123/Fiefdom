@@ -16,8 +16,10 @@ const SAVE_LOCATION_NAMES := {"ravine": "竹涧", "west_market": "西市", "west
 const RAVINE_TRIP_PLACES := ["野果坳", "望溪台", "柳湾", "砾滩", SummerRaft.PLACE]
 const MARKET_ORDERS := "收货牌"
 const MARKET_RETURN := "回封地"
+const FIELD_RETURN := "井田 1"
 const FREIGHT_YARD := "南路卸货场"
 const WATER_SOURCE := "水源"
+const ESTATE_REGIONAL_STOPS := [FIELD_RETURN, WATER_SOURCE, FREIGHT_YARD]
 const MARKET_PRODUCE := ["beans", "rice", "sorghum", "wheat"]
 const TAX_ENVOY := "召简"
 const TAX_COUNCIL_YEAR := 3
@@ -3436,7 +3438,7 @@ func load_game(path := "") -> Error:
 	var saved_waypoint: Variant = data.get("ravine_waypoint")
 	restored_ravine_waypoint = saved_waypoint if resume_scene == WILDERNESS_SCENE and saved_waypoint is String else ""
 	var saved_market_trip: Variant = data.get("market_trip_target")
-	var market_places := MarketStall.TITLES + [MARKET_ORDERS, MARKET_RETURN, FREIGHT_YARD, WATER_SOURCE,
+	var market_places := MarketStall.TITLES + ESTATE_REGIONAL_STOPS + [MARKET_ORDERS, MARKET_RETURN,
 		VisitorData.SILK_MERCHANT, Sheepfold.MEADOW]
 	market_trip_target = saved_market_trip if saved_market_trip is String and saved_market_trip in market_places else ""
 	market_produce_bought_on = clampi(_read_save_int(data.get("market_produce_bought_on"), 0), 0, saved_day)

@@ -1,5 +1,7 @@
 extends "res://tests/FishMarketReplay.gd"
 
+const ROAD_LAYOUT := preload("res://scripts/WestRoadLayout.gd")
+
 var chart: Control
 var from_older_save := false
 
@@ -153,6 +155,8 @@ func _trade_at_fish_stall() -> bool:
 	if not _expect(market.counter.fish.is_visible_in_tree() and state.market_trip_target.is_empty(),
 		"Opening the selected counter clears directions."):
 		return false
+	await tree.create_timer(0.05).timeout
+	_expect(not market.get_node("CampaignHUD").field_return_button.visible, "The counter hides the return button.")
 	_expect("只要一尾" in market.counter.keeper_note.text, "The fish keeper explains the seasonal order before the trade.")
 	await _key(KEY_M)
 	_expect(not chart.modal.visible and not tree.paused, "The chart stays closed during a transaction.")
@@ -184,12 +188,69 @@ func _follow_to_cart_and_home() -> void:
 	await _snapshot("05-delivery-board")
 	await gamepad._tap(JOY_BUTTON_B)
 	_expect(not market.counter.visible, "B leaves the delivery board and returns to the street.")
-	await _button(chart.open_button)
-	await _button(chart.markers["回封地"])
-	await _key(KEY_M)
+	var hud := market.get_node("CampaignHUD")
+	var return_button: Button = hud.field_return_button
+	var area := return_button.get_global_rect()
+	_expect(not area.intersects(chart.open_button.get_global_rect()) and not area.intersects(hud.backpack_button.get_global_rect()),
+		"The new button fits beside the other street controls.")
+	await gamepad._click(return_button)
+	if not _expect(state.market_trip_target == state.FIELD_RETURN and chart.pin.visible
+		and "井田 1" in chart.cancel_button.text and chart.route[-1] == chart.places[state.MARKET_RETURN],
+		"The gamepad starts the return and the first leg leads to the market's eastern gate."):
+		return
+	await _snapshot("return-market-east-gate")
 	await Campaign.walk_to_market_exit(tree, market)
-	if await _cross(&"ui_right", state.ESTATE_SCENE):
-		await _estate()
-		_expect(state.market_trip_target.is_empty() and ui.directions.tracked_place.is_empty()
-			and state.fish_count("minnow") == 1, "Crossing the marked return gate completes the route and keeps the trade.")
-		print("MARKET_WAYFINDING_RETURN day=", state.current_day, " fish_left=", state.fish_count("minnow"))
+	if not await _cross(&"ui_right", state.WEST_ROAD_SCENE):
+		return
+	await _bridge_and_continue()
+
+func _bridge_and_continue() -> void:
+	var road := tree.current_scene as Node2D
+	await tree.process_frame
+	if not _expect(state.market_trip_target == state.FIELD_RETURN and road.route_direction == Vector2.RIGHT
+		and not road.route.is_empty() and road.route[-1] == ROAD_LAYOUT.ESTATE_GATE,
+		"Follow the marked road across the creek toward the estate."):
+		return
+	await _key(KEY_M)
+	var overview: Control = road.region_map
+	_expect(overview.route_label.text == "溪桥道 → 封地 → 井田 1 · 正在指路", "The regional map shows the field as the saved destination.")
+	await _button(overview.clear_button)
+	_expect(road.route.is_empty() and tree.paused, "Clearing the route on the bridge drops its gold trail.")
+	await _key(KEY_M)
+	await _button(road.get_node("CampaignHUD").field_return_button)
+	await _button(road.get_node("%SettingsButton"))
+	await _button(road.settings.save_button)
+	var saved: Dictionary = state.latest_saved_game()
+	if not _expect(road.settings.save_status.text.begins_with("游戏已保存 · 续档时从溪桥道")
+		and saved.get("location") == "溪桥道", "Save the return trip in the bridge settings."):
+		return
+	var day: int = state.current_day
+	tree.change_scene_to_file(state.TITLE_SCENE)
+	await tree.scene_changed
+	await _button(tree.current_scene.continue_button)
+	if tree.current_scene == null:
+		await tree.scene_changed
+	road = tree.current_scene
+	await tree.process_frame
+	if not _expect(road.scene_file_path == state.WEST_ROAD_SCENE and state.market_trip_target == state.FIELD_RETURN
+		and not road.route.is_empty() and road.route[-1] == ROAD_LAYOUT.ESTATE_GATE,
+		"Continuing from the title restores the bridge leg of the return trip."):
+		return
+	await _snapshot("return-market-bridge-resume")
+	var path: PackedVector2Array = road.network.route_between(road.player.position, road.get_node("EstateArrival").position)
+	for point in path.slice(1):
+		await Campaign.walk_straight(tree, road.player, road.to_global(point))
+	if not await _cross(&"ui_right", state.ESTATE_SCENE):
+		return
+	await _estate()
+	await tree.create_timer(0.05).timeout
+	path = ui.directions.road_path
+	var entrance: Vector2 = world.get_node("Landscape").field_approaches[0][-1]
+	if not _expect(state.market_trip_target == state.FIELD_RETURN and not path.is_empty() and path[-1] == entrance,
+		"The field waypoint survives both crossings and appears on the estate's roads."):
+		return
+	for point in path.slice(1):
+		await Campaign.walk_straight(tree, world.player, world.to_global(point))
+	_expect(world.player.position.distance_to(entrance) < 4.0 and state.market_trip_target.is_empty()
+		and state.current_day == day and state.fish_count("minnow") == 1, "Arrive at the field and keep the day's fish trade.")
+	print("MARKET_WAYFINDING_RETURN day=", state.current_day, " fish_left=", state.fish_count("minnow"), " entrance=", entrance)
