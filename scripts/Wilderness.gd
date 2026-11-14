@@ -5,6 +5,7 @@ const RAVINE_DIRECTIONS := preload("res://scripts/RavineDirections.gd")
 const RAVINE_MAP := preload("res://scenes/RavineMap.tscn")
 const ROAD_NETWORK := preload("res://scripts/RoadNetwork.gd")
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
+const WOODEN_BRIDGE := preload("res://scripts/WoodenBridge.gd")
 const RAFT_TRIAL := preload("res://scenes/RaftTrial.tscn")
 const SETTINGS_PANEL := preload("res://scripts/SettingsPanel.gd")
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
@@ -14,6 +15,7 @@ var ravine_map: Control
 var settings: Panel
 
 func _ready() -> void:
+	add_child(WOODEN_BRIDGE.new(RavineLayout.BRIDGE_DECK))
 	if not MapTravel.active:
 		$Player.arrive_at($SouthTrailArrival if Global.restored_ravine_south else $WestArrival)
 	Global.restored_ravine_south = false

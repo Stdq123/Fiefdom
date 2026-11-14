@@ -21,7 +21,7 @@
 - **经营到结局**。按自己的节奏选一条路线，记下哪几天改变了经营方式、哪些操作重复得最累、哪次遇见人物或走过某处让你想再去。结算后退出，再从标题「继续游戏」读回，核对路线和结算日期。
 - **回报**。记下系统和显卡、键鼠或手柄、实际窗口尺寸、总游玩时间及停在的游戏日期。能复现的问题附上当时的截图或一段操作顺序。画面、节奏和手感直接写感受即可。
 
-本包包含东关到望溪台的斜俯视岩壁与石阶、重绘的陶罐粮袋和采集物、南路卸货场候货、南路亭的灯下小谈、野狗和斥候的战斗反馈、西市配乐《西市行》、轮作簿交接井田和缺粮时的野果坳指路。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本包校验](../build/polish-world-prop-depth/final/capture-final/manifest.txt)
+本包包含溪桥道的斜俯视木桥、西市的厚檐柜台和石槽、东关到望溪台的岩壁与石阶，以及重绘的陶罐、粮袋和采集物。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本包校验](../build/polish-market-depth/delivery/headless/manifest.txt)
 
 ## 从新档到第一次收获
 
@@ -1108,3 +1108,9 @@
 - 封地的缚口谷袋、开口谷袋、陶罐和带盖罐都露出上沿和近侧面。人物在罐后时罐身遮住人物，在罐前时露出全身。保留图集的四个裁切位置，谷袋在背包、工地和差役携带画面依然可用。用原导入器的两倍比例栅格化后，四帧均为 32×32、有透明背景。 [图集预览](../build/polish-world-prop-depth/art-check/storage-atlas.png) · [实景遮挡](../build/polish-world-prop-depth/final/world-props.png)
 - 野药移到望溪台东侧的石台面，抬高采集提示给叶片留出空间。竹涧舆图随实际野药位置更新。从新档进入竹涧，在石台侧面可交互，在野果坳按 E 后果实当日消失，粮仓由 10 增至 15。用 1920×1080 和 1024×768 隔离桌面走过这两处。 [采摘前后](../build/polish-world-prop-depth/final/picking-berries.png) · [1920×1080 回放](../build/polish-world-prop-depth/final/capture-final/ravine-map.log) · [1024×768 回放](../build/polish-world-prop-depth/final/capture-final/ravine-map-1024x768.log)
 - 103 项源码场景、33 项无窗口发行检查及 7 次隔离桌面运行通过。解压版从新档在第 56 天达成传统结局、第 59 天达成改革结局，两个结局均可重启后续档。把第一块井田交给渠伯的路线第 64 天完成改革结局。上一版的第 4 天存档可继续。连续运行 90.698 秒，两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-world-prop-depth/final/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-world-prop-depth/source-delivery.log) · [无窗口发行](../build/polish-world-prop-depth/final/headless.log) · [隔离桌面](../build/polish-world-prop-depth/final/capture-final.log) · [重复构建](../build/polish-world-prop-depth/final/hashes.log)
+
+## 溪桥道木桥与西市摊位
+
+- 溪桥道和竹涧共用斜俯视木桥。桥板露出侧梁与墩脚，近侧栏杆能挡住行人的脚，指路箭头铺在板上。西市粮、鱼、绸三处柜台露出台面和棚檐的厚度，鱼槽有石沿、侧壁和低一层的水面。 [桥与鱼摊前后对比](../build/polish-market-depth/delivery/market-before-after.png) · [过桥时的栏杆遮挡](../build/polish-market-depth/delivery/bridge-crop.png)
+- 1920×1080 隔离桌面回放用默认步速约 4.75 秒走完整段溪桥道。回封地途中在西岸存档，从标题继续后经桥返程。1920×1080 和 1024×768 均从封地交货簿指路到鱼摊，交当季的鱼得 13 铜，走到槽前会被石沿挡住。继续游戏后鱼仍在水里游，酉时伙计到槽边收鱼。 [溪桥道回放](../build/polish-market-depth/delivery/capture/west-road.log) · [1920×1080 留鱼单](../build/polish-market-depth/delivery/capture/fish-market-orders.log) · [1024×768 找鱼摊](../build/polish-market-depth/delivery/capture/market-wayfinding-1024x768.log) · [1024×768 留鱼单](../build/polish-market-depth/delivery/capture/fish-market-orders-1024x768.log)
+- 103 项源码场景、39 项无窗口发行检查及 15 次隔离桌面运行通过。解压版从新档在第 56 天达成传统结局、第 59 天达成改革结局，重启可读回两个结局。上一版第 4 天的存档可继续，连续运行 90.655 秒，两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-market-depth/delivery/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-market-depth/source-delivery.log) · [无窗口发行](../build/polish-market-depth/delivery/headless.log) · [隔离桌面](../build/polish-market-depth/delivery/capture.log) · [重复构建](../build/polish-market-depth/delivery/hashes.log)

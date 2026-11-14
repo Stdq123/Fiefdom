@@ -263,6 +263,7 @@ func _run() -> void:
 			await replay.run(tree)
 		"west-market":
 			var replay = load("res://tests/WestMarketReplay.gd").new()
+			replay.capture_dir = capture_directory
 			await replay.run(tree)
 		"west-road", "west-road-baseline", "west-road-older-save":
 			var replay = load("res://tests/WestRoadReplay.gd").new()

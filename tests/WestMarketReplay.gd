@@ -361,7 +361,8 @@ func run(game_tree: SceneTree) -> void:
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated market profile."):
 		tree.quit(1)
 		return
-	capture_dir = OS.get_environment("FIEFDOM_MARKET_CAPTURES")
+	if capture_dir.is_empty():
+		capture_dir = OS.get_environment("FIEFDOM_MARKET_CAPTURES")
 	state = tree.root.get_node("Global")
 	tree.root.notify_mouse_entered()
 	tree.change_scene_to_file(state.TITLE_SCENE)

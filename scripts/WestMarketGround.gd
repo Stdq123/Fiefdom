@@ -6,6 +6,9 @@ const TERRAIN := preload("res://scripts/EstateTerrain.gd")
 const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
 const ROAD_WEATHER := preload("res://scripts/RoadWeather.gd")
 const BACKDROP := Rect2(-1600, -1300, 3200, 2600)
+const BASIN_INNER := Rect2(LAYOUT.BASIN.position + Vector2(6, 6), LAYOUT.BASIN.size - Vector2(12, 12))
+const BASIN_STONE := Color("#a4a08a")
+const WET_BASIN_STONE := Color("#8b8c7b")
 const GRAIN_YARD := [
 	Vector2(-395, 116), Vector2(-364, 103), Vector2(-309, 108), Vector2(-260, 121),
 	Vector2(-205, 117), Vector2(-196, 153), Vector2(-207, 188), Vector2(-248, 200),
@@ -95,6 +98,7 @@ func _ready() -> void:
 		street_shoulders.append(Geometry2D.offset_polygon(surface, 2.0)[0])
 
 	var basin := StaticBody2D.new()
+	basin.name = "BasinBody"
 	basin.position = LAYOUT.BASIN.get_center()
 	basin.collision_mask = 0
 	var collider := CollisionShape2D.new()
@@ -103,10 +107,10 @@ func _ready() -> void:
 	collider.shape = rim
 	basin.add_child(collider)
 	add_child(basin)
-	var surface := WATER_SURFACE.new(EstateLayout.corners(LAYOUT.BASIN.grow(-5.0)), 0.0)
+	var surface := WATER_SURFACE.new(EstateLayout.corners(BASIN_INNER), 0.0)
 	surface.name = "BasinWater"
 	add_child(surface)
-	surface.set_weather(Color("#527d79"), Global.has_rain())
+	surface.set_weather(Color("#456f70"), Global.has_rain())
 	held_fish.name = "HeldFish"
 	held_fish.texture_filter = TEXTURE_FILTER_NEAREST
 	held_fish.self_modulate = Color("#cee0d8eb")
@@ -178,20 +182,64 @@ func _draw() -> void:
 		TERRAIN.draw_loam(self, surface, dirt)
 	TERRAIN.draw_paving(self, paving, dirt, LAYOUT.EAST_GATE.x)
 	_draw_basin()
+	for jar: Vector3i in STORAGE:
+		var foot := Vector2(jar.x, jar.y)
+		draw_rect(Rect2(foot - Vector2(6, 1), Vector2(15, 4)), Color("#26382b90"))
 
 func _draw_basin() -> void:
 	var rim := LAYOUT.BASIN
-	draw_rect(Rect2(rim.position + Vector2(1, 3), rim.size + Vector2(1, 1)), Color("#5a5949"))
-	draw_rect(rim, Color("#9d9b80"))
-	draw_rect(rim.grow(-3.0), Color("#414f49"))
-	var water := rim.grow(-5.0)
-	draw_rect(water, Color("#527d79"))
-	draw_rect(Rect2(water.position, Vector2(water.size.x, 5)), Color("#476663"))
-	for step in 5:
-		var x := rim.position.x + 5 + step * 10
-		draw_rect(Rect2(x, rim.end.y - 2, 8, 1), Color("#c3bfa4"))
+	var stone := WET_BASIN_STONE if Global.has_rain() else BASIN_STONE
+	var front := Vector2(rim.position.x, rim.end.y)
+	var back := rim.position
+	draw_colored_polygon(PackedVector2Array([front + Vector2(-4, -3), front + Vector2(rim.size.x + 6, -3),
+		front + Vector2(rim.size.x + 11, 6), front + Vector2(5, 8), front + Vector2(-5, 5)]), Color("#323f32a0"))
+	draw_colored_polygon(PackedVector2Array([back + Vector2(rim.size.x - 2, 2), back + Vector2(rim.size.x + 4, 6),
+		front + Vector2(rim.size.x + 4, 3), front + Vector2(rim.size.x - 2, 5)]), stone.darkened(0.51))
+	draw_colored_polygon(PackedVector2Array([back + Vector2(3, 0), back + Vector2(rim.size.x - 3, 0),
+		back + Vector2(rim.size.x, 3), front + Vector2(rim.size.x, -3), front + Vector2(rim.size.x - 3, 0),
+		front + Vector2(3, 0), front + Vector2(0, -3), back + Vector2(0, 3)]), stone.darkened(0.18))
+	draw_rect(rim.grow(-4.0), Color("#48584e"))
+	draw_rect(BASIN_INNER, Color("#487371"))
+	draw_rect(Rect2(BASIN_INNER.position, Vector2(BASIN_INNER.size.x, 4)), Color("#345e59"))
+	for index in 6:
+		var x := 2.0 + float(index) * 9.5
+		var top := back + Vector2(x, 1)
+		draw_rect(Rect2(top, Vector2(8.5, 3)), stone.lightened(0.16 + (index % 3) * 0.055))
+		draw_rect(Rect2(top + Vector2(0, 3), Vector2(8.5, 1)), stone.darkened(0.38))
+		draw_rect(Rect2(top + Vector2(index % 3, 0), Vector2(4, 1)), stone.lightened(0.38))
+	for y in [8.0, 18.0, 27.0]:
+		draw_rect(Rect2(back + Vector2(1, y), Vector2(3, 8)), stone.lightened(0.16))
+		draw_rect(Rect2(back + Vector2(rim.size.x - 5, y), Vector2(3, 8)), stone.lightened(0.04))
+		draw_rect(Rect2(back + Vector2(4, y + 1), Vector2(1, 6)), stone.darkened(0.30))
+		if y != 18.0:
+			draw_rect(Rect2(back + Vector2(3, y + 4), Vector2(3, 2)), Color("#778263"))
+	if Global.season_index() == Global.Season.WINTER:
+		var frost := Color("#c1c9b8")
+		draw_rect(Rect2(back + Vector2(3, 1), Vector2(17, 1)), frost)
+		draw_rect(Rect2(back + Vector2(rim.size.x - 18, 1), Vector2(10, 1)), frost)
+		draw_rect(Rect2(back + Vector2(1, 8), Vector2(2, 7)), frost.darkened(0.10))
+
+func _draw_basin_front(rim: Node2D) -> void:
+	var stone := WET_BASIN_STONE if Global.has_rain() else BASIN_STONE
+	var width := LAYOUT.BASIN.size.x
+	rim.draw_colored_polygon(PackedVector2Array([Vector2(0, -6), Vector2(width, -6),
+		Vector2(width - 2, 0), Vector2(width - 4, 4), Vector2(4, 4), Vector2(1, 2)]), stone.darkened(0.36))
+	for index in 6:
+		var x := 2.0 + float(index) * 9.5
+		rim.draw_rect(Rect2(x, -6, 8.5, 3), stone.lightened(0.23 + float(index % 3) * 0.04))
+		rim.draw_rect(Rect2(x, -5, 8.5, 1), stone.lightened(0.38))
+		rim.draw_rect(Rect2(x + 1, -2, 8, 3), stone.darkened(0.23 + float(index % 2) * 0.07))
+		rim.draw_rect(Rect2(x + float(index % 3), 2, 7, 1), stone.darkened(0.46))
+	if Global.season_index() == Global.Season.WINTER:
+		rim.draw_rect(Rect2(4, -6, 12, 1), Color("#c1c9b8"))
+		rim.draw_rect(Rect2(width - 12, -6, 8, 1), Color("#c1c9b8"))
 
 func place_scenery(layer: Node2D) -> void:
+	var rim := Node2D.new()
+	rim.name = "BasinFront"
+	rim.position = Vector2(LAYOUT.BASIN.position.x, LAYOUT.BASIN.end.y)
+	rim.draw.connect(_draw_basin_front.bind(rim))
+	layer.add_child(rim)
 	var season := Global.season_index()
 	var pine_sheet: Texture2D = LANDSCAPE.SEASONAL_TREES if season == Global.Season.WINTER else LANDSCAPE.SCENERY
 	var pine_region := Rect2(96, 48, 48, 48) if season == Global.Season.WINTER else Rect2(144, 0, 48, 48)

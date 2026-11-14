@@ -315,13 +315,14 @@ func _check_ravine_weather() -> void:
 	if bridge == null:
 		return
 	var railing := bridge.get_node("NearRail") as Node2D
+	var deck := bridge.get_node("Deck") as Node2D
 	var sprite := player.get_node("Sprite2D") as Sprite2D
 	var cascade: Node2D = ravine.get_node("Landscape/BridgeCascade")
 	var frame: int = cascade.frame
 	await tree.create_timer(0.18).timeout
 	_expect(cascade.frame != frame, "Foam moves down the cascade while the water above and below it remains visible.")
-	_expect(bridge.position == RavineLayout.BRIDGE and bridge.z_index < sprite.z_index
-		and bridge.z_index + railing.z_index == sprite.z_index and bridge.position.y + railing.position.y > player.position.y,
+	_expect(bridge.position == RavineLayout.BRIDGE and bridge.y_sort_enabled and deck.z_index < sprite.z_index
+		and railing.z_index == sprite.z_index and railing.global_position.y > player.position.y,
 		"The walkway sorts below the player and its near rail sorts in front while crossing.")
 	await Campaign.walk_straight(tree, player, Vector2(104, RavineLayout.BRIDGE.y))
 	await Campaign.walk_straight(tree, player, Vector2(104, -43))

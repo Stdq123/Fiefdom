@@ -136,7 +136,6 @@ func _draw() -> void:
 	draw_colored_polygon(water, stream_color.lerp(Color("#89a58b"), 0.41))
 	draw_colored_polygon(deep_water, stream_color.darkened(0.16))
 	WATER_SURFACE.draw_shore(self, water, silt, stream_color, winter, [LAYOUT.BRIDGE.grow(8.0)])
-	_draw_bridge(winter)
 
 func _draw_meadow(grass: Color, loam: Color, season: int) -> void:
 	var shade: Color = [Color("#6c784e"), Color("#7c8b50"), Color("#958353"), Color("#89998b")][season]
@@ -147,26 +146,6 @@ func _draw_meadow(grass: Color, loam: Color, season: int) -> void:
 	meadow.draw_verge(self, meadow_lane, MEADOW_HALF_WIDTH * 2.0, grass, winter)
 	draw_colored_polygon(meadow_shoulder, loam.lerp(grass, 0.52))
 	TERRAIN.draw_loam(self, meadow_track, loam)
-
-func _draw_bridge(winter: bool) -> void:
-	var deck := LAYOUT.BRIDGE
-	draw_rect(Rect2(deck.position + Vector2(-3, 4), deck.size + Vector2(6, 4)), Color("#354842"))
-	draw_rect(deck.grow(2.0), Color("#645346"))
-	draw_rect(deck, Color("#a8967a") if winter else Color("#aa8b5e"))
-	for x: float in [deck.position.x, deck.end.x - 4.0]:
-		draw_rect(Rect2(x, deck.position.y + 2, 4, deck.size.y - 4), Color("#746e58"))
-		for y in range(int(deck.position.y) + 5, int(deck.end.y) - 3, 8):
-			draw_rect(Rect2(x, y, 4, 2), Color("#a39a7b"))
-	for plank in range(1, floori(deck.size.x), 5):
-		var x := deck.position.x + plank
-		draw_rect(Rect2(x, deck.position.y + 3, 1, deck.size.y - 6), Color("#8a6b4a"))
-		draw_rect(Rect2(x + 1, deck.position.y + 5 + posmod(plank * 7, 12), 2, 12), Color("#bc9c6c"))
-	for y in [deck.position.y, deck.end.y - 2]:
-		draw_rect(Rect2(deck.position.x, y, deck.size.x, 3), Color("#695340"))
-		draw_rect(Rect2(deck.position.x, y - 1, deck.size.x, 1), Color("#c8bb9c") if winter else Color("#b3976b"))
-		for x in [deck.position.x + 2, -23.0, 18.0, deck.end.x - 5]:
-			draw_rect(Rect2(x, y - 5, 4, 9), Color("#6c5138"))
-			draw_rect(Rect2(x, y - 5, 4, 2), Color("#d1b78b"))
 
 func place_scenery(layer: Node2D) -> void:
 	var season := Global.season_index()

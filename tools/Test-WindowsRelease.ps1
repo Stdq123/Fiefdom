@@ -81,7 +81,7 @@ function Start-VerifiedGame {
     $arguments = @('--quit-after', $frameLimit, '--log-file', ('"' + $log + '"'))
     $arguments += if ($Replay -eq 'soak') {
         '--max-fps', '60', '--audio-driver', 'Dummy'
-    } elseif ($Resolution -and $Replay -in 'ambience-travel', 'raid-feedback') {
+    } elseif ($Resolution -and $Replay -in 'ambience-travel', 'raid-feedback', 'west-market') {
         # Audio playback and recordings follow wall time.
         '--max-fps', '60'
     } else {
@@ -296,12 +296,12 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'ravine-shortcut' -Name 'ravine-shortcut' -Replay 'ravine-shortcut'
     }
     if ($FishMarketOrders) {
-        Start-VerifiedGame -Directory $release -Profile 'fish-market-orders' -Name 'fish-market-orders' -Replay 'fish-market-orders'
+        Start-VerifiedGame -Directory $release -Profile 'fish-market-orders' -Name 'fish-market-orders' -Replay 'fish-market-orders' -Resolution $fullResolution
     }
     if ($MarketWayfinding) {
-        Start-VerifiedGame -Directory $release -Profile 'west-market' -Name 'west-market' -Replay 'west-market'
-        Start-VerifiedGame -Directory $release -Profile 'west-road' -Name 'west-road' -Replay 'west-road'
-        Start-VerifiedGame -Directory $release -Profile 'market-wayfinding' -Name 'market-wayfinding' -Replay 'market-wayfinding'
+        Start-VerifiedGame -Directory $release -Profile 'west-market' -Name 'west-market' -Replay 'west-market' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'west-road' -Name 'west-road' -Replay 'west-road' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'market-wayfinding' -Name 'market-wayfinding' -Replay 'market-wayfinding' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'fishing-journey' -Name 'fishing-journey' -Replay 'fishing-journey'
     }
     if ($KeyBindings) {
@@ -335,6 +335,12 @@ try {
         }
         if ($RavineLayout) {
             Start-VerifiedGame -Directory $release -Profile 'ravine-map-compact' -Name 'ravine-map-1024x768' -Replay 'ravine-map' -Resolution '1024x768'
+        }
+        if ($MarketWayfinding) {
+            Start-VerifiedGame -Directory $release -Profile 'market-wayfinding-compact' -Name 'market-wayfinding-1024x768' -Replay 'market-wayfinding' -Resolution '1024x768'
+        }
+        if ($FishMarketOrders) {
+            Start-VerifiedGame -Directory $release -Profile 'fish-market-orders-compact' -Name 'fish-market-orders-1024x768' -Replay 'fish-market-orders' -Resolution '1024x768'
         }
         if ($AmbienceTravel) {
             Start-VerifiedGame -Directory $release -Profile 'ambience-travel-compact' -Name 'ambience-travel-1024x768' -Replay 'ambience-travel' -Resolution '1024x768'

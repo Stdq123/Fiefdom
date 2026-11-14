@@ -2,6 +2,7 @@ extends Node2D
 
 const LAYOUT := preload("res://scripts/WestRoadLayout.gd")
 const GROUND := preload("res://scripts/WestRoadGround.gd")
+const WOODEN_BRIDGE := preload("res://scripts/WoodenBridge.gd")
 const TRACK_AUDIO := preload("res://scripts/TerrainAudio.gd")
 const VISITOR := preload("res://scenes/Visitor.tscn")
 const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
@@ -33,6 +34,7 @@ func _ready() -> void:
 	player.arrive_at($MarketArrival if Global.restored_west_road_from_market else $EstateArrival)
 	Global.restored_west_road_from_market = false
 	ground.place_scenery($Scenery)
+	add_child(WOODEN_BRIDGE.new(LAYOUT.BRIDGE))
 	network = TRACK_DIRECTION.new([LAYOUT.ROAD, LAYOUT.MEADOW_TRACK], self, player)
 	scheduled_guest = Global.visitor_for_day(Global.current_day)
 	$DialogManager.setup($UI/Control, player)
@@ -190,7 +192,7 @@ func _draw_waypoint() -> void:
 		return
 	if route_direction == Vector2.ZERO:
 		return
-	for point: Vector2 in LAYOUT.ROAD.slice(1, -1):
+	for point: Vector2 in LAYOUT.ROAD.slice(1, -1) + [LAYOUT.BRIDGE.get_center()]:
 		var head := point + route_direction * 3.0
 		var tail := point - route_direction * 3.0
 		$Waypoint.draw_polyline(PackedVector2Array([tail - Vector2(0, 4), head, tail + Vector2(0, 4)]), GOLD, 1.5)

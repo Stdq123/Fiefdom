@@ -124,9 +124,22 @@ func _return_and_continue(market: Node2D) -> void:
 		"Deep water stops the player at the visible bank away from the bridge.")
 	await _walk(player, [Vector2(-82, 36), Vector2(-17, 36)])
 	_expect(road.ground.LAYOUT.BRIDGE.has_point(player.position), "The bridge connects the two banks.")
+	var bridge: Node2D = road.get_node("CreekBridge")
+	var deck: Node2D = bridge.get_node("Deck")
+	var rail: Node2D = bridge.get_node("NearRail")
+	_expect(bridge.y_sort_enabled and deck.z_index < player.sprite.z_index and rail.z_index == player.sprite.z_index
+		and rail.global_position.y == road.ground.LAYOUT.BRIDGE.end.y,
+		"The deck lies under the traveler and the near rail sorts against the traveler's feet.")
 	_expect(west_position.x < 0.1 and absf(road._map_road_progress().x - 0.5) < 0.06,
 		"The map marker moves from the market side to the bridge according to the player's position.")
 	await _snapshot("03-creek-bridge")
+	var low_side := Vector2(-17, road.ground.LAYOUT.BRIDGE.end.y - 9.0)
+	await Campaign.walk_straight(tree, player, low_side)
+	_expect(player.position.distance_to(low_side) < 3.0 and player.position.y < rail.global_position.y,
+		"The lower strip of planks stays walkable behind the near railing.")
+	await _snapshot("03a-behind-bridge-rail")
+	print("WEST_ROAD_RAIL foot=", player.position, " rail_y=", rail.global_position.y)
+	await Campaign.walk_straight(tree, player, Vector2(-17, 36))
 	await _button(road.get_node("%SettingsButton"))
 	var progress: float = state.day_progress
 	await tree.create_timer(0.30).timeout
