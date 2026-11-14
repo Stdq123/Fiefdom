@@ -292,7 +292,7 @@ try {
     }
     if ($RavineLayout) {
         Start-VerifiedGame -Directory $release -Profile 'ravine-map' -Name 'ravine-map' -Replay 'ravine-map' -Resolution $fullResolution
-        Start-VerifiedGame -Directory $release -Profile 'creek-traps' -Name 'creek-traps' -Replay 'creek-traps'
+        Start-VerifiedGame -Directory $release -Profile 'creek-traps' -Name 'creek-traps' -Replay 'creek-traps' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'ravine-shortcut' -Name 'ravine-shortcut' -Replay 'ravine-shortcut' -Resolution $fullResolution
     }
     if ($FishMarketOrders) {

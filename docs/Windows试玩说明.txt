@@ -215,7 +215,7 @@
   标题背景在游戏内同一机位以 2560×1440 拍摄堂屋、井田和西廊入口，采用清晨与薄暮两帧。
   标题四字采用 Ma Shan Zheng Project Authors 的 Ma Shan Zheng 字体子集（SIL OFL 1.1）。许可随包附带。
   发布页 https://github.com/google/fonts/tree/main/ofl/mashanzheng
-  部分林木、苔石、蕨草、碎石和树桩来自 Pixel-Boy 与 AAA 的 Ninja Adventure Asset Pack（CC0 1.0）。新井田清草阶段沿用其中的碎石。
+  部分林木、蕨草、树桩和新井田清草阶段的碎石来自 Pixel-Boy 与 AAA 的 Ninja Adventure Asset Pack（CC0 1.0）。
   发布页 https://pixel-boy.itch.io/ninja-adventure-asset-pack
   原图 https://github.com/pixel-boy/NinjaAdventure/blob/6ac78232d5aedcc85ce5f27d060ea92366f7c24a/content/map/tileset_village_abandoned.png
   封地土路和草丛也使用该素材包。土纹取自 tileset_floor.png 的 (16,128)、(128,128)、(80,176)、(96,176) 四块 16×16 图块，去色后拼接。草丛取自 (16,192) 起的四块 16×16 图块，去底色后随季节调色。
@@ -237,7 +237,8 @@
   同两处的陶罐与带盖罐来自 zwonky 的 Various Containers（CC0 1.0）。
   依据 pottery.png 中左上角分别为 (32, 0) 和 (32, 32) 的 16×16 图块，重绘釉面后与谷袋合图。
   发布页 https://opengameart.org/content/various-containers
-  竹涧的溪石、嫩芽与岸草来自 MOMONGA 的 Bamboo Forest Basic Tiles（CC0 1.0）。
+  地图散石、苔石、层岩和浅滩踏石为本项目绘制。
+  竹涧的嫩芽与岸草来自 MOMONGA 的 Bamboo Forest Basic Tiles（CC0 1.0）。
   从 bamboo_forest_objects.png 取用 (214, 47) 起的 84×17 区域，按季节和天气调色。
   发布页 https://momongaa.itch.io/bamboo-forest-basic-tiles
   南路亭边的白花和粉花来自 myobln 的 Mini Meadow（CC0 1.0）。

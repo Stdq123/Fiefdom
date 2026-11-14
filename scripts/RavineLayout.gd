@@ -74,8 +74,20 @@ const CREEK := [
 	Vector2(139, -19), Vector2(145, 17), BRIDGE, Vector2(149, 79), Vector2(161, 102), Vector2(177, 119),
 	Vector2(192, 143), FORD, Vector2(256, 246), Vector2(283, 338), Vector2(308, 412), Vector2(334, 528),
 ]
-const WILLOW_BANK := [
-	Vector2(140, -463), Vector2(162, -472), Vector2(184, -465), Vector2(202, -441),
-	Vector2(224, -409), Vector2(221, -385), Vector2(193, -370), Vector2(168, -374),
-	Vector2(145, -391), Vector2(137, -417),
+# The fishing shelves share their water-facing edge with the visible rock faces.
+const WILLOW_WATERLINE := [
+	Vector2(180, -469), Vector2(183, -459), Vector2(187, -447), Vector2(196, -434),
+	Vector2(205, -418), Vector2(210, -405), Vector2(210, -389), Vector2(210, -376),
+]
+const WILLOW_BANK := WILLOW_WATERLINE + [
+	Vector2(193, -373), Vector2(175, -377), Vector2(155, -389), Vector2(145, -404),
+	Vector2(138, -421), Vector2(134, -439), Vector2(141, -455), Vector2(156, -469), Vector2(173, -471),
+]
+const GRAVEL_WATERLINE := [
+	Vector2(244, 202), Vector2(252, 214), Vector2(260, 227), Vector2(268, 238),
+	Vector2(275, 251), Vector2(279, 264), Vector2(282, 277),
+]
+const GRAVEL_BAR := GRAVEL_WATERLINE + [
+	Vector2(293, 274), Vector2(302, 268), Vector2(312, 255), Vector2(313, 242),
+	Vector2(306, 222), Vector2(291, 207), Vector2(277, 198), Vector2(259, 197),
 ]
