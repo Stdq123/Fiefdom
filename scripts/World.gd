@@ -7,7 +7,6 @@ signal visitor_changed(data: VisitorData)
 
 const SEED_ORDER := CropData.IDS
 const FIELD_IMPACTS := preload("res://assets/farming/field-impacts.svg")
-const HARVEST_TEXT_OFFSET := -4.0
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
 const DUTY_STATIONS := {
@@ -55,10 +54,6 @@ var sweep_action := FieldAction.NONE
 var sweep_field := Rect2i()
 var sweep_pointer := Vector2.ZERO
 var swept_cells: Dictionary[Vector2i, bool] = {}
-var sweep_harvests := 0
-var sweep_gains := Vector4i.ZERO
-var sweep_levy := 0
-var sweep_popup: Label
 
 func _ready() -> void:
 	# millet_data.crop_name = "黍" ... # Moved to ItemManager
@@ -571,10 +566,6 @@ func _stroke_cell(point: Vector2, inward: Vector2i) -> Vector2i:
 func _end_sweep() -> void:
 	sweep_action = FieldAction.NONE
 	swept_cells.clear()
-	sweep_harvests = 0
-	sweep_gains = Vector4i.ZERO
-	sweep_levy = 0
-	sweep_popup = null
 
 func field_at(viewport_point: Vector2) -> Vector2i:
 	return tile_map.local_to_map(tile_map.make_canvas_position_local(viewport_point))
@@ -761,42 +752,11 @@ func harvest_crop(grid_pos: Vector2i, worker: Retainer = null) -> bool:
 		GameEvents.stamina_changed.emit(Global.current_stamina)
 
 	var harvest := Global.harvest_field_crop(grid_pos)
-	var message := "国库 +%d" % harvest.tribute if harvest.public else (
-		"%s +%d · 铜钱 +%d" % [harvest.crop, harvest.stock, harvest.copper])
-	if harvest.levy > 0:
-		message += "（税 %d）" % harvest.levy
-	var tone := Color("#efce80") if harvest.public else Color("#d2de9e")
-	if harvest.leaves > 0:
-		message += " · 桑叶 +%d" % harvest.leaves
-	if harvest.rotated:
-		message += " · 轮作增收"
-	if harvest.fertile:
-		message += " · 肥地"
-
 	if active_crops.has(grid_pos):
 		_draw_crop(grid_pos)
 	else:
 		crops_layer.erase_cell(grid_pos)
-	if worker:
-		spawn_floating_text(grid_pos, worker.data.name + "收割 · " + message, tone, HARVEST_TEXT_OFFSET)
-	elif sweep_action == FieldAction.HARVEST:
-		sweep_harvests += 1
-		sweep_gains += Vector4i(harvest.tribute, harvest.stock, harvest.copper, harvest.leaves)
-		sweep_levy += harvest.levy
-		if is_instance_valid(sweep_popup):
-			sweep_popup.queue_free()
-		if sweep_harvests > 1:
-			var totals := PackedStringArray(["收获 %d 格" % sweep_harvests])
-			var names := ["国库", "作物", "铜钱", "桑叶"]
-			for i in names.size():
-				if sweep_gains[i] > 0:
-					totals.append("%s +%d" % [names[i], sweep_gains[i]])
-			if sweep_levy > 0:
-				totals.append("已扣税 %d 铜钱" % sweep_levy)
-			message = " · ".join(totals)
-		sweep_popup = spawn_floating_text(grid_pos, message, tone, HARVEST_TEXT_OFFSET)
-	else:
-		spawn_floating_text(grid_pos, message, tone, HARVEST_TEXT_OFFSET)
+	GameEvents.harvest_receipt.emit(harvest, worker.data.name if worker else "")
 	_show_field_impact(grid_pos, Player.Action.HARVEST)
 	if not worker:
 		tile_map.get_node("FieldCursor").clear_plot_hover(grid_pos)
@@ -809,16 +769,15 @@ func harvest_crop(grid_pos: Vector2i, worker: Retainer = null) -> bool:
 		GameEvents.world_notice.emit(receipt)
 	return true
 
-func spawn_floating_text(grid_pos: Vector2i, text: String, color: Color, offset_y := 13.0) -> Label:
+func spawn_floating_text(grid_pos: Vector2i, text: String, color: Color) -> void:
 	var instance := floating_text_scene.instantiate() as Label
 	instance.text = text
 	instance.modulate = color
 	instance.scale = Vector2.ONE / player.camera.zoom
 	var center := get_crop_world_pos(grid_pos)
 	var half_width := instance.get_combined_minimum_size().x * instance.scale.x / 2
-	instance.position = center + Vector2(-half_width, offset_y)
+	instance.position = center + Vector2(-half_width, 13.0)
 	add_child(instance)
-	return instance
 
 func _on_day_advanced(new_day: int) -> void:
 	_end_sweep()

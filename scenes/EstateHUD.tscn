@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://scripts/CampaignGuide.gd" id="2_guide"]
 [ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="3_hud_theme"]
 [ext_resource type="Script" path="res://scripts/WatchDial.gd" id="4_watch_dial"]
+[ext_resource type="Script" uid="uid://d2c8b051731pv" path="res://scripts/HarvestReceipt.gd" id="5_harvest_receipt"]
 
 [node name="EstateHUD" type="Control"]
 layout_mode = 3
@@ -533,6 +534,19 @@ unique_name_in_owner = true
 mouse_filter = 2
 custom_minimum_size = Vector2(0, 6)
 show_percentage = false
+
+[node name="HarvestReceipt" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 0
+mouse_filter = 2
+theme_type_variation = &"HudRail"
+script = ExtResource("5_harvest_receipt")
+
+[node name="Caption" type="Label" parent="HarvestReceipt"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 15
+horizontal_alignment = 1
 
 [node name="SeedBelt" type="PanelContainer" parent="."]
 layout_mode = 1

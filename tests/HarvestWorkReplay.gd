@@ -152,6 +152,11 @@ func _compare_harvests() -> bool:
 	for cell: Vector2i in READY:
 		await _click_field(cell)
 	var manual := _settlement()
+	var receipt := ui.hud.get_node("HarvestReceipt") as Control
+	var caption := receipt.get_node("Caption") as Label
+	_expect(receipt.visible and "国库 +2" in caption.text and "作物 +7" in caption.text
+		and "桑叶 +4" in caption.text and "轮作增收" in caption.text and "留肥" in caption.text,
+		"The receipt shows mixed crops, silk leaves and the effects of rotation.")
 	var spent: int = stamina - state.current_stamina
 	if not _expect(spent == READY.size() * 3 and manual.tribute == initial.tribute + 2
 		and manual.private == initial.private + 7 and manual.rotation == "hemp",
@@ -175,6 +180,10 @@ func _compare_harvests() -> bool:
 		"Saving during the swing retains the work order without booking unfinished produce.")
 	if not await _wait_for_harvest():
 		return false
+	receipt = ui.hud.get_node("HarvestReceipt") as Control
+	caption = receipt.get_node("Caption") as Label
+	_expect(receipt.visible and ("渠伯代收" in caption.text or "门客代收" in caption.text),
+		"The receipt credits the worker, including when several assisted plots are grouped.")
 	_expect(_settlement() == manual and state.current_stamina == stamina,
 		"Delegation produces the same tribute, cash, bins, leaves and rotation without player stamina.")
 	_expect(state.active_crops[ORCHARD]["age"] == 1 and state.active_crops[YOUNG]["age"] == 0
@@ -272,7 +281,14 @@ func _check_reform() -> void:
 	while worker.work_left > 0.20:
 		await tree.physics_frame
 	ui.sleep_button.pressed.emit()
-	await tree.create_timer(0.75).timeout
+	await tree.create_timer(0.34).timeout
+	var receipt := ui.hud.get_node("HarvestReceipt") as Control
+	var caption := receipt.get_node("Caption") as Label
+	_expect(receipt.visible and "渠伯代收" in caption.text and "桑叶 +4" in caption.text and "国库" not in caption.text
+		and "铜钱 +%d" % tax_payment in caption.text and "已扣税 %d" % (mulberry.sell_price - tax_payment) in caption.text,
+		"A reformed harvest previews the actual net copper, tax, leaves and worker before dawn.")
+	await tree.create_timer(0.41).timeout
+	_expect(not receipt.visible, "The dawn clears the previous night's harvest receipt.")
 	_expect(state.king_storage == initial.tribute and state.private_harvest_total == initial.private + 1
 		and state.money == initial.money + tax_payment and state.silk_workshop.leaves == state.balance.mulberry_leaves_per_harvest
 		and state.route_objectives()[0]["value"] == state.balance.ending_reformed_private,

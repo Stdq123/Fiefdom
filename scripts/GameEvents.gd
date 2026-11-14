@@ -2,6 +2,7 @@ extends Node
 
 # Signal Bus for decoupled communication
 signal crop_harvested(is_public: bool)
+signal harvest_receipt(harvest: Dictionary, worker: String)
 signal farm_state_changed()
 signal seed_cycle_requested(step: int)
 signal day_advanced(new_day: int)

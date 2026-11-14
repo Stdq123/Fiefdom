@@ -1011,3 +1011,8 @@
 - 首茬去处选定后，封地手记可带玩家去见当日尚未交谈的来客，或标出下一次纳贡的公田。公田成熟和当夜欠贡时优先提示可处理的公田田务。已有指路时保留玩家选择。达到晋升条件可直接看今夜安排，过夜晋升后可从手记打开开垦筹备。
 - 招募对话列出留任前后的总粮耗和粮仓余量。早期招募导致当夜口粮供不齐时，手记可直达今夜安排。布置收割岗的专项从每夜 2 份增加到 3 份，补买 1 份后过夜，全员吃到口粮。
 - 默认新档回放在第 6 天读档后循手记找到弋戎，交谈获得 5 声望，再沿标记播种公田。扩建回放从手记打开今夜安排，第 12 天升中士，第 13 天立桩，第 17 天读晨间档并耕作新井田。101 项源码场景和 35 项无窗口发行检查通过，含手动与委派备粮的双结局、退出重启、上一版续档与 90 秒连续运行。10 次隔离桌面运行核对两种尺寸的实际画面。 [Windows 1.0 x64](../build/polish-opening-bridge/Fiefdom-1.0.0-Windows-x64.zip) · [手记指路](../build/polish-opening-bridge/capture/1920x1080/13-next-reputation-step.png) · [招募预估](../build/polish-opening-bridge/capture/1024x768/07-hiring-ration-preview.png) · [源码回归](../build/polish-opening-bridge/source/source-matrix.txt) · [发行校验](../build/polish-opening-bridge/headless/manifest.txt)
+
+## 连续收割的收获回执
+
+- 逐格点收、拖收和门客代收共用种子栏上方的回执。连续收割合计入库、作物、铜钱、桑叶和税金，并标出轮作增收及留肥。田格仍逐格呈现镰刀动作、断穗和音效。回执淡出后下一次收割重新计数，过夜清除当日回执。
+- 专项拖收四格私田并单点一格公田，回执合计入库 1、作物 4、铜钱 20。另核对两次独立点收、门客代收、改革后的净收入与税金，以及上一版存档接续。101 项源码场景、35 项无窗口发行检查和 13 次隔离桌面运行通过。两种备粮方式均在第 56 天达成传统结局、第 59 天达成改革结局。90 秒连续运行正常结束，两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-harvest-receipt/Fiefdom-1.0.0-Windows-x64.zip) · [1920×1080 混合收割](../build/polish-harvest-receipt/final-capture/1920x1080/01b-combined-harvest-receipt.png) · [1024×768 连续点收](../build/polish-harvest-receipt/final-capture/1024x768/01c-two-separate-harvest-clicks.png) · [源码回归](../build/polish-harvest-receipt/final-source/source-matrix.txt) · [发行校验](../build/polish-harvest-receipt/final-headless/manifest.txt)

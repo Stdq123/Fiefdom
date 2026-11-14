@@ -12,7 +12,7 @@ const HOVER_CROP := Vector2i(13, 4)
 
 func _fixture() -> void:
 	var crops := {}
-	for cell: Vector2i in PRIVATE_PATH + [PUBLIC, Vector2i(11, 6), WALK_MIDDLE, WALK_END, HOVER_CROP]:
+	for cell: Vector2i in PRIVATE_PATH + [PUBLIC, Vector2i(4, 5), Vector2i(5, 6), Vector2i(11, 6), WALK_MIDDLE, WALK_END, HOVER_CROP]:
 		crops["%d,%d" % [cell.x, cell.y]] = {"id": "millet", "age": 2, "growth_nights": 2}
 	var save := FileAccess.open(state.SAVE_PATH, FileAccess.WRITE)
 	save.store_string(JSON.stringify({
@@ -71,9 +71,9 @@ func _diagonal(baseline: bool) -> void:
 	var from := _grid_point(DIAGONAL_START)
 	var to := _grid_point(DIAGONAL_END)
 	await _stroke(from, to)
-	var harvests: int = world.sweep_harvests
 	var public_gain: int = state.king_storage - tribute
 	var private_gain: int = state.player_inventory - stock
+	var harvests := public_gain + private_gain
 	if baseline:
 		_expect(harvests == 3 and public_gain == 1 and private_gain == 2
 			and state.active_crops.has(PRIVATE_PATH[1]) and state.active_crops.has(PRIVATE_PATH[2]),
@@ -91,6 +91,29 @@ func _diagonal(baseline: bool) -> void:
 		await _click(_point(PUBLIC))
 		_expect(state.king_storage == tribute + 1 and state.player_inventory == stock + 4,
 			"A separate click still sends the public harvest to the treasury.")
+		var receipt := ui.hud.get_node("HarvestReceipt") as Control
+		var caption := receipt.get_node("Caption") as Label
+		_expect(receipt.visible and "收获 5 格" in caption.text and "国库 +1" in caption.text
+			and "作物 +4" in caption.text and "铜钱 +%d" % (price * 4) in caption.text,
+			"The separate click and the preceding drag share one public and private receipt.")
+		_expect(ui.hud.map_space_clear(receipt.get_global_rect()), "The receipt stays above the seed belt and within the viewport.")
+		await _capture("01b-combined-harvest-receipt")
+		print("FIELD_STROKE_RECEIPT plots=5 public=1 private=4 copper=", price * 4)
+
+func _rapid_separate_harvest() -> void:
+	await tree.create_timer(1.65).timeout
+	var receipt := ui.hud.get_node("HarvestReceipt") as Control
+	var caption := receipt.get_node("Caption") as Label
+	_expect(not receipt.visible, "The previous harvest receipt has expired.")
+	var stock: int = state.player_inventory
+	await _click(_point(Vector2i(4, 5)))
+	await _click(_point(Vector2i(5, 6)))
+	_expect(state.player_inventory == stock + 2 and receipt.visible and "收获 2 格" in caption.text
+		and "作物 +2" in caption.text and "国库" not in caption.text,
+		"Two ordinary presses make a fresh receipt without retaining earlier tribute.")
+	await _capture("01c-two-separate-harvest-clicks")
+	await tree.create_timer(1.65).timeout
+	_expect(not receipt.visible, "The new receipt also fades and disappears.")
 
 func _camera_drag(baseline: bool) -> void:
 	var start := _grid_point(WALK_START)
@@ -160,6 +183,8 @@ func run_field_stroke(game_tree: SceneTree, baseline := false, captures := "") -
 	if baseline:
 		await _save_manually()
 	await _diagonal(baseline)
+	if not baseline and not legacy:
+		await _rapid_separate_harvest()
 	await _camera_drag(baseline)
 	if not baseline:
 		await _exact_corner()
