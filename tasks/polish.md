@@ -21,7 +21,7 @@
 - **经营到结局**。按自己的节奏选一条路线，记下哪几天改变了经营方式、哪些操作重复得最累、哪次遇见人物或走过某处让你想再去。结算后退出，再从标题「继续游戏」读回，核对路线和结算日期。
 - **回报**。记下系统和显卡、键鼠或手柄、实际窗口尺寸、总游玩时间及停在的游戏日期。能复现的问题附上当时的截图或一段操作顺序。画面、节奏和手感直接写感受即可。
 
-本包包含时令交货后的返程指路。解压后验证标题启动、两条新档路线、战败恢复、延期研究和两个结局的退出重启。 [本包校验](../build/polish-order-journey/headless/manifest.txt)
+本包包含时令交货后的返程指路和缺粮时的野果坳指路。解压后验证标题启动、两条新档路线、战败恢复、延期研究和两个结局的退出重启。 [本包校验](../build/polish-berry-rations/final-headless/manifest.txt)
 
 ## 从新档到第一次收获
 
@@ -1052,3 +1052,9 @@
 - 基线新档在第 28 天和第 39 天交齐两季订单，继续扩种私田时第 49 天公田贡献仅 24.47%，第 97 天仍只有 29.28%。到请议的日子，筹备账现在会在回执旁列出所缺的纳贡或爵位。 [基线回放](../build/polish-order-journey/baseline/reformed-orders.log)
 - 解压版从标题开新档，第 28 天交春单领 7 份口粮，沿返程指路等到戌时车抵，问申禾后步行至亭西种圃见林蓼。第 39 天交秋单领 26 铜钱，收窄私田播种并优先补公田。第 43 天回执齐，筹备账显示还差 4 份纳贡。第 47 天公田占比 30.77% 时提前请议，第 57 天达成改革结局，读回结局档后在第 58 天续营。这条经营路线在第 43、45、46、48 天的晚上遇到口粮不足。 [长线回放](../build/polish-order-journey/campaign-verified/reformed-orders.log) · [林蓼接货](../build/polish-order-journey/campaign-verified/1920x1080/orders-seed-garden.png) · [尚缺纳贡](../build/polish-order-journey/campaign-verified/1920x1080/orders-petition-missing-tribute.png)
 - 101 项源码场景与 50 项无窗口发行检查通过。隔离桌面核对两种窗口的收据与返程，并以默认 1920×1080 完成上述长线回放。上一版存档可续读，双结局均可退出重读，连续运行 90.637 秒。两次干净构建的 ZIP 校验值相同。 [Windows 1.0 x64](../build/polish-order-journey/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-order-journey/source.log) · [发行回归](../build/polish-order-journey/headless/verification.txt) · [隔离桌面](../build/polish-order-journey/capture/verification.txt) · [重复构建](../build/polish-order-journey/rebuild.log)
+
+## 缺粮时指路去野果坳
+
+- 转粮、购粮和一匹余绸仍无法供齐时，今夜安排标出可采的野果和入仓量。点按钮从东关进竹涧，路标继续指向野果坳。当天已采药或采果时收起入口，采摘仍使用原有的一日一次规则。 [1920×1080 缺粮入口](../build/polish-berry-rations/final-capture/1920x1080/orders-rations-fruit-option.png) · [竹涧路标](../build/polish-berry-rations/final-capture/1920x1080/orders-rations-ravine-route.png) · [1024×768 缺粮入口](../build/polish-berry-rations/final-capture/1024x768/05-uncovered-shortage.png)
+- 同一交货路线在第 43、45、46 天各走一趟，每次采回 5 份，原先缺粮的四晚均供齐。该局第 47 天请议，第 57 天呈交新税册并达成改革结局，第 58 天读回结局后续营。田务、交货、采集与敌袭按默认规则运行。 [新档长线回放](../build/polish-berry-rations/final-capture/reformed-orders.log) · [原回放](../build/polish-order-journey/campaign-verified/reformed-orders.log)
+- 101 项源码场景、46 项无窗口发行检查和 8 次隔离桌面运行通过。两种窗口核对了缺粮入口，专项覆盖可直接补足时不显示、采药后收起和隔日重新可用。上版存档接续、两个结局退出重启和连续运行 90.557 秒通过，两次构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-berry-rations/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-berry-rations/source.log) · [发行回归](../build/polish-berry-rations/final-headless.log) · [隔离桌面](../build/polish-berry-rations/final-capture.log) · [重复构建](../build/polish-berry-rations/rebuild.log)

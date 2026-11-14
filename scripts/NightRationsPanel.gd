@@ -47,6 +47,7 @@ const WINDOW_MARGIN := 16.0
 @onready var sell_silk: Button = %SellSilk
 @onready var view_silk: Button = %ViewSilk
 @onready var silk_sale_receipt: Label = %SilkSaleReceipt
+@onready var find_fruit: Button = %FindFruit
 @onready var priority_row: HBoxContainer = %PriorityRow
 @onready var priority_picker: OptionButton = %Priority
 @onready var meal_forecast: Label = %MealForecast
@@ -81,6 +82,7 @@ func _ready() -> void:
 		queue_free()
 		silk_requested.emit()
 	)
+	find_fruit.pressed.connect(_guide_fruit)
 	priority_picker.item_selected.connect(_select_priority)
 	body.minimum_size_changed.connect(_fit_body)
 	get_viewport().size_changed.connect(_fit_body)
@@ -112,6 +114,7 @@ func _ready() -> void:
 	GameEvents.sheepfold_changed.connect(_refresh)
 	GameEvents.silk_changed.connect(_refresh)
 	GameEvents.food_changed.connect(_refresh.unbind(1))
+	GameEvents.forage_taken.connect(_refresh)
 	GameEvents.money_changed.connect(_refresh.unbind(1))
 	GameEvents.inventory_changed.connect(_refresh.unbind(1))
 	GameEvents.retainer_recruited.connect(_refresh.unbind(1))
@@ -253,6 +256,7 @@ func _refresh_night_offer(plan: Dictionary) -> void:
 	silk_offer.hide()
 	sell_silk.hide()
 	view_silk.hide()
+	find_fruit.hide()
 	if plan.uncovered == 0:
 		return
 	var policy := Global.night_rations
@@ -281,6 +285,15 @@ func _refresh_night_offer(plan: Dictionary) -> void:
 			silk_offer.text = "现有 %d 匹丝绸，可先留给议税或交货，再织余绸买粮。" % stock
 		silk_offer.show()
 		view_silk.show()
+	if offer.uncovered > 0 and (funded.is_empty() or funded.uncovered > 0) and Global.last_forage_day != Global.current_day:
+		find_fruit.text = "去野果坳采果 · 粮食 +%d" % Global.balance.wild_food_yield
+		find_fruit.show()
+
+func _guide_fruit() -> void:
+	if is_queued_for_deletion() or not find_fruit.is_visible_in_tree() or Global.last_forage_day == Global.current_day:
+		return
+	queue_free()
+	GameEvents.ravine_trip_requested.emit("野果坳")
 
 func _silk_ration_quote(offer: Dictionary, reserve: int) -> Dictionary:
 	var price := Global.balance.silk_sell_price

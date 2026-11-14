@@ -417,6 +417,15 @@ theme_override_colors/font_color = Color(0.79, 0.87, 0.68, 1)
 theme_override_font_sizes/font_size = 16
 autowrap_mode = 3
 
+[node name="FindFruit" type="Button" parent="Center/Window/Content/Scroll/Body/Plan/Preview"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(196, 37)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+tooltip_text = "经东关到竹涧，与望溪台的野药共用今日采集机会。"
+
 [node name="Keep" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/Preview"]
 unique_name_in_owner = true
 layout_mode = 2

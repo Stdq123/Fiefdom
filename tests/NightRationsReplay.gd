@@ -78,6 +78,7 @@ func _end() -> void:
 func _sell_surplus_silk(panel: Control) -> void:
 	_expect(not panel.sell_silk.visible and panel.view_silk.visible and state.silk_workshop.bolts == 1,
 		"Keep the only bolt for the council even when tonight's pantry is short.")
+	_expect(panel.find_fruit.visible, "The berry route is available again on a new day without enough cash or surplus silk.")
 	panel.scroll.ensure_control_visible(panel.view_silk)
 	await tree.process_frame
 	await _click(panel.view_silk)
@@ -88,7 +89,7 @@ func _sell_surplus_silk(panel: Control) -> void:
 	await _click(management.close_button)
 	panel = await _open()
 	if not _expect(panel.sell_silk.visible and "余 1 匹" in panel.silk_offer.text and "10 铜钱" in panel.silk_offer.text
-		and state.money == 2 and state.food_storage == 1 and state.silk_workshop.bolts == 2,
+		and not panel.find_fruit.visible and state.money == 2 and state.food_storage == 1 and state.silk_workshop.bolts == 2,
 		"The surplus offer quotes actual food purchases and preserves the council bolt before any trade."):
 		return
 	panel.scroll.ensure_control_visible(panel.sell_silk)
@@ -157,6 +158,7 @@ func run(game_tree: SceneTree) -> void:
 		"An old save starts in manual mode and shows the specialist meal shortage.")
 	_expect(panel.accept_offer.visible and "麻 2" in panel.night_offer.text and "5 铜钱" in panel.night_offer.text,
 		"The shortage offers the exact surplus and minimum copper cap.")
+	_expect(not panel.find_fruit.visible, "An affordable full meal has no forage detour.")
 	await _capture("01-before-delegation")
 	panel.scroll.ensure_control_visible(panel.accept_offer)
 	await tree.process_frame
@@ -235,7 +237,11 @@ func run(game_tree: SceneTree) -> void:
 	panel = await _open()
 	_expect(panel != null and "还差 2 份" in panel.forecast.text and "稻 2" in panel.keep.text,
 		"The forecast uses available copper as well as the cap and shows the uncovered amount.")
+	_expect(panel.find_fruit.visible and str(state.balance.wild_food_yield) in panel.find_fruit.text,
+		"The forage button quotes the existing berry yield when the offer cannot feed the table.")
 	await _capture("05-uncovered-shortage")
+	_expect(state.pack_wild_herbs() and not panel.find_fruit.visible and state.food_storage == 1,
+		"Packing today's herbs uses the shared outing without adding food or suggesting a spent berry trip.")
 	panel.scroll.ensure_control_visible(panel.delegate)
 	await tree.process_frame
 	await _click(panel.delegate)

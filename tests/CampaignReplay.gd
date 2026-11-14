@@ -36,6 +36,7 @@ var manual_field_actions := 0
 var second_field_actions := 0
 var paused_private_sowing := false
 var ration_silk_sales := 0
+var ration_forage_trips := 0
 
 static func confirm_optional_tribute_warning(ui: Node) -> void:
 	var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
@@ -569,6 +570,56 @@ func _fund_rations_with_silk() -> void:
 		await _click(panel.accept_offer.get_global_rect().get_center())
 	await _click(panel.close_button.get_global_rect().get_center())
 
+func _forage_for_rations() -> void:
+	if not use_season_orders or state.night_rations_plan().uncovered == 0:
+		return
+	await _click(ui.hud.rations_button.get_global_rect().get_center())
+	var panel := ui.get_node_or_null("Control/NightRationsPanel") as Control
+	if not _expect(panel != null and panel.find_fruit.is_visible_in_tree(), "An unfunded meal points to the berry grove."):
+		return
+	panel.scroll.ensure_control_visible(panel.find_fruit)
+	await tree.process_frame
+	var capture_trip := ration_forage_trips == 0 and not order_capture_directory.is_empty()
+	if capture_trip:
+		await _capture_ending(order_capture_directory, "orders-rations-fruit-option")
+	var grain: int = state.food_storage
+	var copper: int = state.money
+	var evening: int = state.current_day
+	await _click(panel.find_fruit.get_global_rect().get_center())
+	await tree.process_frame
+	if not _expect(not is_instance_valid(panel) and state.ravine_trip_target == "野果坳"
+		and state.food_storage == grain and state.money == copper, "The ledger starts the trip without charging or granting food."):
+		return
+	await walk_estate_road_to(tree, world, world.get_node("EastArrival").global_position)
+	if not _expect(await walk_through_gates(tree, &"ui_right", state.WILDERNESS_SCENE), "Take the east gate into the ravine."):
+		return
+	await tree.process_frame
+	var ravine := tree.current_scene as Node2D
+	var fruit := ravine.get_node("WildFruit") as Node2D
+	if not _expect(ravine.active_waypoint() == "野果坳" and state.ravine_trip_target == "野果坳",
+		"The ravine resumes the directions from the ledger."):
+		return
+	if capture_trip:
+		await _capture_ending(order_capture_directory, "orders-rations-ravine-route")
+	await walk_ravine_to(tree, ravine, fruit.global_position + Vector2(0, 16))
+	if not _expect(ravine.get_node("Player").interaction_target == fruit, "The road reaches the actual fruit bush."):
+		return
+	if capture_trip:
+		await _capture_ending(order_capture_directory, "orders-rations-berry-grove")
+	_key(KEY_E)
+	await tree.process_frame
+	_expect(state.food_storage == grain + state.balance.wild_food_yield and state.last_forage_day == evening,
+		"Picking the fruit adds the quoted food and spends today's gathering.")
+	await walk_to_ravine_exit(tree, ravine)
+	if not _expect(await walk_through_gates(tree, &"ui_left", state.ESTATE_SCENE), "Take the west gate back to the estate."):
+		return
+	_refresh_estate()
+	await walk_estate_road_to(tree, world, Vector2(82, 115))
+	_expect(state.current_day == evening and state.night_rations_plan().uncovered == 0,
+		"Returning with the fruit covers this evening's meal.")
+	ration_forage_trips += 1
+	print("CAMPAIGN_RATION_FRUIT evening=", evening, " grain=", grain, "->", state.food_storage, " copper=", state.money)
+
 func _resume_private_sowing() -> void:
 	if not paused_private_sowing:
 		return
@@ -720,6 +771,10 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 			_provision(mini(expansion_food + 10, state.food_storage + state.player_inventory + affordable_food), true)
 		else:
 			_provision(state.retainer_food_cost() + 1)
+		await _forage_for_rations()
+		if failures > 0:
+			_end(true)
+			return
 		if need_expansion and state.money >= expansion_cost and state.food_storage >= expansion_food + 10:
 			await _expand()
 		if state.current_day % 8 == 1:
@@ -799,6 +854,10 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 						_harvest_and_tend(cell, KEY_7, branch == "reformed" or x == 8)
 		await _fund_rations_with_silk()
 		_provision(state.retainer_food_cost())
+		await _forage_for_rations()
+		if failures > 0:
+			_end(true)
+			return
 		await tree.process_frame
 		if state.outcome == state.Outcome.RUNNING and not state.route_ready_to_present():
 			await _sleep()
@@ -806,7 +865,7 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 		print("CAMPAIGN_MISSING ", state.route_objectives())
 		_end(true)
 		return
-	if branch == "reformed":
+	if branch == "reformed" and not use_season_orders:
 		var earned: int = state.money
 		ui.hud.route_progress.pressed.emit()
 		state.money = state.balance.ending_reformed_wealth - 1
@@ -849,6 +908,8 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 	if use_season_orders:
 		_expect(petition_day > 0 and petition_day < state.tax_council_start_day() and deliveries >= 2,
 			"Deliver season orders and petition before the regular council in an ordinary new game.")
+		_expect(ration_forage_trips > 0 and nights_short == 0,
+			"The order campaign follows the berry route and feeds everyone through to its ending.")
 	var outcome_view := tree.current_scene.get_node("CampaignHUD")
 	var ending: Control = outcome_view.summary
 	if not _expect(ending != null and ending.shot == ending.Shot.CEREMONY and ending.film.visible and not ui.visible
