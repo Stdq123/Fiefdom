@@ -186,6 +186,18 @@ func _estate_flow() -> bool:
 		"The left stick navigates the menu and a click behind the panel cannot start field work.")
 	await _tap(JOY_BUTTON_B)
 	_expect(not world.player.menu_open, "B leaves management.")
+	await _aim(_point(PUBLIC))
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	await tree.process_frame
+	await tree.process_frame
+	_expect(hint.preview_plots.size() == 2 and "A 确认" in hint.label.text,
+		"Holding LT over an empty tilled plot previews both matching plots.")
+	await _snapshot("02a-field-batch-pad")
+	await _tap(JOY_BUTTON_A)
+	_expect(state.active_crops.has(PUBLIC) and state.active_crops.has(PRIVATE) and state.current_stamina == 90,
+		"LT and A apply the quoted batch through gamepad input.")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
+	await tree.process_frame
 
 	await _aim(_point(PUBLIC) + Vector2(60.0, 0.0))
 	_axis(JOY_AXIS_TRIGGER_RIGHT, 0.85)

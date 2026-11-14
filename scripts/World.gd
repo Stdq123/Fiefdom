@@ -21,6 +21,9 @@ enum FieldAction { NONE, TILL, SOW, WATER, HARVEST, CHANNEL, RAIN, WATERED, DRY_
 const FIELD_COSTS := {
 	FieldAction.TILL: 2, FieldAction.SOW: 2, FieldAction.WATER: 1, FieldAction.HARVEST: 3,
 }
+const FIELD_WORK_LABELS := {
+	FieldAction.TILL: "翻地", FieldAction.SOW: "播种", FieldAction.WATER: "浇水", FieldAction.HARVEST: "收割",
+}
 
 @onready var tile_map: TileMapLayer = $TileMapLayer
 @onready var crops_layer: TileMapLayer = $TileMapLayer/CropsLayer
@@ -493,6 +496,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			_edit_channel(grid_pos, _fill_held(event))
 			get_viewport().set_input_as_handled()
 		else:
+			if _fill_held(event):
+				_apply_field_batch(grid_pos)
+				get_viewport().set_input_as_handled()
+				return
 			_begin_sweep(grid_pos, event.position)
 			if handle_interaction(grid_pos):
 				get_viewport().set_input_as_handled()
@@ -507,19 +514,54 @@ func _fill_held(event: InputEventMouse) -> bool:
 	return (GamepadInput.filling or Input.is_action_pressed(KeyBindings.FILL)
 		or (Preferences.binding(KeyBindings.FILL) == KEY_SHIFT and event.shift_pressed))
 
+func _working_field_at(cell: Vector2i) -> Rect2i:
+	for field in Global.well_fields:
+		var bounds := Rect2i(field["center_pos"] - Vector2i.ONE, Vector2i(3, 3))
+		if field["is_unlocked"] and bounds.has_point(cell):
+			return bounds
+	return Rect2i()
+
+func field_batch_targets(cell: Vector2i, action: FieldAction) -> Array[Vector2i]:
+	var targets: Array[Vector2i] = []
+	if not FIELD_COSTS.has(action) or Global.outcome != Global.Outcome.RUNNING:
+		return targets
+	var bounds := _working_field_at(cell)
+	for y in range(bounds.position.y, bounds.end.y):
+		for x in range(bounds.position.x, bounds.end.x):
+			var plot := Vector2i(x, y)
+			if field_action(plot) == action:
+				targets.append(plot)
+	return targets
+
+func _apply_field_batch(cell: Vector2i) -> void:
+	var action := field_action(cell)
+	var targets := field_batch_targets(cell, action)
+	if targets.is_empty():
+		return
+	var cost := field_cost(action) * targets.size()
+	if cost > Global.current_stamina:
+		spawn_floating_text(cell, "体力不足 · 整田需 %d" % cost, Color.SALMON)
+		return
+	# Use the ordinary per-plot settlement so public yield, rotation and harvest receipts stay in sync.
+	# Apply the aimed plot last so the character finishes the action facing the cursor.
+	targets.erase(cell)
+	for plot in targets:
+		handle_interaction(plot)
+	handle_interaction(cell)
+	if action != FieldAction.HARVEST:
+		spawn_floating_text(cell, "%s %d 格 · −%d 体力" % [FIELD_WORK_LABELS[action], targets.size() + 1, cost], Color.WHEAT)
+
 func _begin_sweep(cell: Vector2i, pointer: Vector2) -> void:
 	var action := field_action(cell)
 	var cost := field_cost(action)
 	if cost == 0 or cost > Global.current_stamina:
 		return
-	for field in Global.well_fields:
-		var bounds := Rect2i(field["center_pos"] - Vector2i.ONE, Vector2i(3, 3))
-		if field["is_unlocked"] and bounds.has_point(cell):
-			sweep_field = bounds
-			sweep_pointer = pointer
-			sweep_action = action
-			swept_cells[cell] = true
-			return
+	var bounds := _working_field_at(cell)
+	if bounds.has_area():
+		sweep_field = bounds
+		sweep_pointer = pointer
+		sweep_action = action
+		swept_cells[cell] = true
 
 func _sweep_to(pointer: Vector2) -> void:
 	if pointer == sweep_pointer:

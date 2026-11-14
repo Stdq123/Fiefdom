@@ -173,7 +173,7 @@ try {
     }
     Start-VerifiedGame -Directory $release -Profile 'research' -Name 'research' -Replay 'research'
     if ($Gamepad) {
-        Start-VerifiedGame -Directory $release -Profile 'gamepad' -Name 'gamepad' -Replay 'gamepad'
+        Start-VerifiedGame -Directory $release -Profile 'gamepad' -Name 'gamepad' -Replay 'gamepad' -Resolution $fullResolution
     }
     if ($ManagementNavigation) {
         Start-VerifiedGame -Directory $release -Profile 'management-navigation' -Name 'management-navigation' -Replay 'management-navigation'
@@ -270,6 +270,8 @@ try {
     }
     if ($FieldStroke) {
         Start-VerifiedGame -Directory $release -Profile 'field-stroke' -Name 'field-stroke' -Replay 'field-stroke' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'field-batch' -Name 'field-batch' -Replay 'field-batch' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'field-batch-mixed' -Name 'field-batch-mixed' -Replay 'field-batch-mixed'
     }
     if ($FieldRoutes) {
         Start-VerifiedGame -Directory $release -Profile 'field-routes' -Name 'field-routes' -Replay 'field-routes'
@@ -306,7 +308,7 @@ try {
     }
     if ($KeyBindings) {
         Start-VerifiedGame -Directory $release -Profile 'key-bindings' -Name 'key-bindings' -Replay 'key-bindings'
-        Start-VerifiedGame -Directory $release -Profile 'key-bindings' -Name 'key-bindings-reload' -Replay 'key-bindings-reload'
+        Start-VerifiedGame -Directory $release -Profile 'key-bindings' -Name 'key-bindings-reload' -Replay 'key-bindings-reload' -ResumeProfile
     }
     if ($Rations) {
         Start-VerifiedGame -Directory $release -Profile 'night-rations' -Name 'night-rations' -Replay 'night-rations' -Resolution $fullResolution
@@ -378,6 +380,7 @@ try {
         }
         if ($FieldStroke) {
             Start-VerifiedGame -Directory $release -Profile 'field-stroke-compact' -Name 'field-stroke-1024x768' -Replay 'field-stroke' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'field-batch-compact' -Name 'field-batch-1024x768' -Replay 'field-batch' -Resolution '1024x768'
         }
     }
     if ($Soak) {

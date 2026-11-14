@@ -194,6 +194,9 @@ func _run() -> void:
 			var replay = load("res://tests/FieldStrokeReplay.gd").new()
 			replay.legacy = arguments[0] == "field-stroke-legacy"
 			await replay.run_field_stroke(tree, false, capture_directory)
+		"field-batch", "field-batch-mixed":
+			var replay = load("res://tests/FieldStrokeReplay.gd").new()
+			await replay.run_field_batch(tree, capture_directory, arguments[0] == "field-batch-mixed")
 		"field-routes", "field-routes-legacy":
 			var replay = load("res://tests/FieldRoutesReplay.gd").new()
 			replay.legacy = arguments[0] == "field-routes-legacy"

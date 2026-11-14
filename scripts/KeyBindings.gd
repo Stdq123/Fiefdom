@@ -25,7 +25,7 @@ const DEFAULTS: Dictionary[StringName, Key] = {
 const LABELS := {
 	UP: "向上", LEFT: "向左", DOWN: "向下", RIGHT: "向右",
 	INTERACT: "互动", MAP: "舆图", BACKPACK: "背包", ALMANAC: "历书", MEAL: "食用路餐", RHYTHM: "敲钟或收线",
-	FILL: "填渠（按住）", ROTATE: "放样换弯",
+	FILL: "整田操作／填渠（按住）", ROTATE: "放样换弯",
 }
 const MENU_KEYS := [KEY_ESCAPE, KEY_ENTER, KEY_KP_ENTER, KEY_TAB, KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_BACKTAB]
 
