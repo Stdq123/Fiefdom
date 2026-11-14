@@ -20,14 +20,23 @@ func _open_from_title(continue_game := false) -> void:
 
 func _walk_to_source() -> void:
 	var water: Vector2 = world.get_crop_world_pos(state.irrigation.source_cell)
-	await Campaign.walk_to(tree, world.player, world.to_global(water + Vector2(-9, 12)))
+	var has_basin: bool = world.irrigation_overlay.water_source.has_node("Basin")
+	if has_basin and absf(world.player.position.x - water.x) < 16.0 and world.player.position.y < water.y + 15.0:
+		var beside := Vector2(water.x + 20.0, world.player.position.y)
+		await Campaign.walk_straight(tree, world.player, world.to_global(beside))
+	if has_basin:
+		await Campaign.walk_straight(tree, world.player, world.to_global(Vector2(world.player.position.x, water.y + 16.0)))
+		await Campaign.walk_straight(tree, world.player, world.to_global(water + Vector2(0, 16)))
+	else:
+		await Campaign.walk_to(tree, world.player, world.to_global(water + Vector2(-9, 12)))
 	await tree.physics_frame
 
 func _source_dialog() -> Control:
 	await _walk_to_source()
 	await _key(KEY_E)
 	var dialog := ui.get_node_or_null("Control/DialoguePanel") as Control
-	_expect(dialog != null and dialog.name_label.text == "水源", "Use the interact key at the spring.")
+	_expect(dialog != null and dialog.name_label.text == "水源", "Use the interact key at the spring from %s focused on %s." % [
+		world.player.position, world.player.interaction_target])
 	return dialog
 
 func _close_management(panel: Control) -> void:
@@ -60,6 +69,8 @@ func _first_study() -> void:
 	var spring: Node2D = world.irrigation_overlay.water_source
 	_expect(world.player.interaction_target == spring and "E" in spring.hint.text,
 		"The spring label names the interaction key at the correct tile.")
+	if spring.has_node("Basin"):
+		await _check_basin(spring)
 	var dialog := await _source_dialog()
 	if dialog == null:
 		return
@@ -68,6 +79,43 @@ func _first_study() -> void:
 	await _capture("02-reading-cue")
 	await _button(dialog.choices[0])
 	await _read(ui.panel_manager.management_panel_instance)
+
+func _check_basin(spring: Node2D) -> void:
+	ui.directions.follow_water_source()
+	var at := spring.global_position
+	await Campaign.walk_straight(tree, world.player, at + Vector2(0, 16))
+	await Campaign.walk_straight(tree, world.player, at)
+	await tree.physics_frame
+	var foot: Vector2 = world.player.global_position - at
+	var basin: StaticBody2D = spring.get_node("Basin")
+	_expect(foot.distance_to(Vector2(0, 14)) < 2.0 and world.player.interaction_target == spring,
+		"The stone face stops the player at the rim within interaction range.")
+	_expect(spring.y_sort_enabled and basin.z_index == world.player.z_index
+		and basin.global_position.y < world.player.global_position.y and not ui.directions.visible
+		and ui.directions.tracked_place == state.WATER_SOURCE and "E" in spring.hint.text,
+		"The traveler stands in front of the stone and the route yields to the spring's own prompt.")
+	_expect(spring.outlets.is_empty() and spring.global_position == world.tile_map.to_global(
+		world.tile_map.map_to_local(state.irrigation.source_cell)), "The untouched source sits on its real tile without outlets.")
+	await _capture("01a-at-the-stone-rim")
+	await Campaign.walk_to(tree, world.player, at + Vector2(20, 16))
+	await Campaign.walk_to(tree, world.player, at + Vector2(20, -16))
+	await Campaign.walk_straight(tree, world.player, at + Vector2(0, -16))
+	await Campaign.walk_straight(tree, world.player, at)
+	await tree.physics_frame
+	var rear: Vector2 = world.player.global_position - at
+	_expect(rear.distance_to(Vector2(0, -13)) < 2.0 and basin.global_position.y > world.player.global_position.y,
+		"The path around the basin stays open and the player sorts behind the rear lip.")
+	await _capture("01b-behind-the-stone-rim")
+	var actor: Player = world.player
+	var label: Label = spring.hint
+	var sprite_bounds := actor.sprite.get_global_transform_with_canvas() * actor.sprite.get_rect()
+	var hint_bounds := label.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, label.size)
+	_expect(hint_bounds.end.y <= sprite_bounds.position.y + 5.0,
+		"The spring's prompt stays above the traveler approaching from the rear.")
+	print("SPRING_RIM front=", foot, " rear=", rear)
+	await Campaign.walk_straight(tree, world.player, at + Vector2(0, -19))
+	await Campaign.walk_straight(tree, world.player, at + Vector2(20, -19))
+	await Campaign.walk_straight(tree, world.player, at + Vector2(20, 19))
 
 func _unlock_irrigation() -> void:
 	var panel: Control
@@ -114,6 +162,9 @@ func _dig_first_channel() -> void:
 	await _click(_point(STARTER[0]))
 	_expect(state.irrigation.is_channel_wet(STARTER[0]) and not state.irrigation.supplies(RICE),
 		"The first outlet flows and stops one tile short of the field.")
+	var spring: Node2D = world.irrigation_overlay.water_source
+	if spring.has_node("Basin"):
+		_expect(spring.outlets == [Vector2i.RIGHT], "Only the connected east side opens in the stone rim.")
 	if not baseline:
 		_expect(world.irrigation_overlay.starter_canal == [STARTER[1]], "Only the remaining stretch is marked.")
 	await _click(_point(STARTER[1]))
@@ -152,11 +203,18 @@ func _check_cut_and_harvest() -> void:
 	await _button(ui.channel_button)
 	await _click(_point(STARTER[0]), true)
 	await _key(KEY_ESCAPE)
+	var spring: Node2D = world.irrigation_overlay.water_source
+	if spring.has_node("Basin"):
+		_expect(spring.outlets.is_empty(), "Filling the connector closes its mouth at the spring.")
+		await _pointer(Vector2(650, 14))
+		await _capture("08-outlet-closed")
 	await _sleep()
 	_expect(state.active_crops[RICE].age == 1, "Dry rice stops growing through a night.")
 	await _button(ui.channel_button)
 	await _click(_point(STARTER[0]))
 	await _key(KEY_ESCAPE)
+	if spring.has_node("Basin"):
+		_expect(spring.outlets == [Vector2i.RIGHT], "Reconnecting the ditch reopens the same outlet.")
 	for night in 3:
 		await _sleep()
 	await _click(_point(RICE))

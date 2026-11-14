@@ -256,14 +256,14 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'ambience-travel' -Name 'ambience-travel' -Replay 'ambience-travel' -Resolution $fullResolution
     }
     if ($EstateTerrain) {
-        Start-VerifiedGame -Directory $release -Profile 'estate-terrain' -Name 'estate-terrain' -Replay 'estate-terrain'
+        Start-VerifiedGame -Directory $release -Profile 'estate-terrain' -Name 'estate-terrain' -Replay 'estate-terrain' -Resolution $fullResolution
     }
     if ($CanalFlow) {
-        Start-VerifiedGame -Directory $release -Profile 'canal-flow' -Name 'canal-flow' -Replay 'canal-flow'
+        Start-VerifiedGame -Directory $release -Profile 'canal-flow' -Name 'canal-flow' -Replay 'canal-flow' -Resolution $fullResolution
     }
     if ($CanalDoors) {
         Start-VerifiedGame -Directory $release -Profile 'canal-doors' -Name 'canal-doors' -Replay 'canal-doors'
-        Start-VerifiedGame -Directory $release -Profile 'irrigation-flow' -Name 'irrigation-flow' -Replay 'irrigation-flow'
+        Start-VerifiedGame -Directory $release -Profile 'irrigation-flow' -Name 'irrigation-flow' -Replay 'irrigation-flow' -Resolution $fullResolution
     }
     if ($FieldWorksites) {
         Start-VerifiedGame -Directory $release -Profile 'field-worksites' -Name 'field-worksites' -Replay 'field-worksites'
@@ -344,6 +344,12 @@ try {
         }
         if ($AmbienceTravel) {
             Start-VerifiedGame -Directory $release -Profile 'ambience-travel-compact' -Name 'ambience-travel-1024x768' -Replay 'ambience-travel' -Resolution '1024x768'
+        }
+        if ($EstateTerrain) {
+            Start-VerifiedGame -Directory $release -Profile 'estate-terrain-compact' -Name 'estate-terrain-1024x768' -Replay 'estate-terrain' -Resolution '1024x768'
+        }
+        if ($CanalDoors) {
+            Start-VerifiedGame -Directory $release -Profile 'irrigation-flow-compact' -Name 'irrigation-flow-1024x768' -Replay 'irrigation-flow' -Resolution '1024x768'
         }
         if ($RaidFeedback) {
             Start-VerifiedGame -Directory $release -Profile 'raid-feedback-compact' -Name 'raid-feedback-1024x768' -Replay 'raid-feedback' -Resolution '1024x768'

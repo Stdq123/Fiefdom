@@ -75,7 +75,7 @@ func _title(continuing: bool) -> bool:
 	return true
 
 func _walk(point: Vector2) -> void:
-	await Campaign.walk_to(tree, world.player, world.to_global(point))
+	await Campaign.walk_estate_road_to(tree, world, world.to_global(point))
 
 func _meet(actor: Node2D, offset := Vector2(0, -12)) -> Control:
 	await _walk(actor.position + offset)

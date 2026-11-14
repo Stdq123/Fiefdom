@@ -114,8 +114,10 @@ func _meet(speaker: String) -> Control:
 	var actor: Node2D = world.neighbor_actor(speaker)
 	if not _expect(is_instance_valid(actor), "Expected a person named " + speaker):
 		return null
-	await Campaign.walk_to(tree, world.player, actor.global_position + Vector2(0, 19))
+	await Campaign.walk_estate_road_to(tree, world, actor.global_position + Vector2(0, 19))
 	await tree.physics_frame
+	if not _expect(world.player.interaction_target == actor, "Reach the indicated neighbor along the road before pressing E."):
+		return null
 	await _key(KEY_E)
 	return ui.get_node_or_null("Control/DialoguePanel") as Control
 

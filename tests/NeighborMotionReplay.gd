@@ -50,7 +50,7 @@ func _click_cell(cell: Vector2i) -> void:
 	await _click(tiles.get_global_transform_with_canvas() * tiles.map_to_local(cell))
 
 func _walk(at: Vector2) -> void:
-	await Campaign.walk_to(tree, world.player, at)
+	await Campaign.walk_estate_road_to(tree, world, at)
 	await tree.physics_frame
 	await tree.process_frame
 

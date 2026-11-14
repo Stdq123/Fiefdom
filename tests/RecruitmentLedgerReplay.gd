@@ -140,7 +140,7 @@ func _check_promotion_tradeoff() -> void:
 	}):
 		return
 	var visitor: Node2D = world.neighbor_actor(VisitorData.ROAD_KEEPER)
-	await _walk(world.player, [visitor.global_position + Vector2(0, 16)])
+	await Campaign.walk_estate_road_to(tree, world, visitor.global_position + Vector2(0, 16))
 	var dialog := await _talk_on_estate(VisitorData.ROAD_KEEPER)
 	if dialog == null:
 		return
@@ -163,7 +163,7 @@ func _provision_after_hiring() -> void:
 	}):
 		return
 	var visitor: Node2D = world.neighbor_actor(VisitorData.ROAD_KEEPER)
-	await _walk(world.player, [visitor.global_position + Vector2(0, 16)])
+	await Campaign.walk_estate_road_to(tree, world, visitor.global_position + Vector2(0, 16))
 	var dialog := await _talk_on_estate(VisitorData.ROAD_KEEPER)
 	if dialog == null:
 		return

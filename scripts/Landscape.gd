@@ -844,15 +844,27 @@ func _draw_hall_landing() -> void:
 	if not _hall_landing_visible():
 		return
 	var at := HALL_LANDING.position
-	var stone := Color("#a39879").darkened(0.15 if raining else 0.0)
-	draw_rect(HALL_LANDING, stone.darkened(0.31))
-	draw_rect(Rect2(at + Vector2(1, 1), HALL_LANDING.size - Vector2(2, 3)), stone)
-	draw_rect(Rect2(at + Vector2(2, 7), Vector2(40, 1)), stone.darkened(0.19))
-	draw_rect(Rect2(at + Vector2(13, 1), Vector2(1, 6)), stone.darkened(0.19))
-	draw_rect(Rect2(at + Vector2(32, 1), Vector2(1, 6)), stone.darkened(0.19))
-	draw_rect(Rect2(at + Vector2(23, 8), Vector2(1, 5)), stone.darkened(0.19))
-	draw_rect(Rect2(at + Vector2(4, 9), Vector2(9, 1)), stone.lightened(0.12))
-	draw_rect(Rect2(at + Vector2(31, 3), Vector2(8, 1)), stone.lightened(0.12))
+	var stone := Color("#a79e85").darkened(0.15 if raining else 0.0)
+	draw_colored_polygon(PackedVector2Array([at + Vector2(1, 11), at + Vector2(43, 11),
+		at + Vector2(48, 16), at + Vector2(43, 18), at + Vector2(2, 18), at + Vector2(-2, 15)]),
+		Color("#373c31a6"))
+	draw_colored_polygon(PackedVector2Array([at + Vector2(4, 0), at + Vector2(39, 0),
+		at + Vector2(44, 9), at + Vector2(44, 14), at + Vector2(42, 16), at + Vector2(2, 16),
+		at + Vector2(0, 14), at + Vector2(0, 8)]), stone.darkened(0.32))
+	for step in 2:
+		var x := 4 - step * 3
+		var y := 2 + step * 6
+		var width := 36 + step * 6
+		var tread := at + Vector2(x, y)
+		draw_rect(Rect2(tread, Vector2(width, 6)), stone.darkened(0.06 * step))
+		draw_rect(Rect2(tread + Vector2(0, 4), Vector2(width, 2)), stone.darkened(0.23 + step * 0.05))
+		draw_rect(Rect2(tread + Vector2(1, 3), Vector2(width - 3, 1)), stone.lightened(0.20))
+		for joint: float in [11.0 + step * 4, 25.0 + step * 3]:
+			draw_rect(Rect2(tread + Vector2(joint, 0), Vector2(1, 5)), stone.darkened(0.28))
+		draw_rect(Rect2(tread + Vector2(width - 2, 1), Vector2(2, 3)), stone.darkened(0.20))
+	if season == Global.Season.WINTER:
+		draw_rect(Rect2(at + Vector2(1, 11), Vector2(7, 1)), Color("#c4cdba"))
+		draw_rect(Rect2(at + Vector2(37, 10), Vector2(5, 1)), Color("#c4cdba"))
 
 func _track_gravel(points: PackedVector2Array, width: float, dust: Color) -> void:
 	for index in range(points.size() - 1):
@@ -887,16 +899,22 @@ func _draw_field_banks() -> void:
 		var area := _field_bounds(field["center_pos"])
 		var entrance := field_entrance(field["field_id"])
 		var bank := area.grow(2.0)
-		if entrance.x == 0.0:
-			bank.size.y += 2.0
-		_draw_field_edge(bank, dust.darkened(0.25), entrance, 4.0)
-		var highlight := Rect2(area.position + Vector2(2, -2), Vector2(area.size.x - 4.0, 1))
-		if entrance == Vector2.UP:
-			var length := (highlight.size.x - EstateLayout.FIELD_ENTRANCE_WIDTH) * 0.5
-			draw_rect(Rect2(highlight.position, Vector2(length, 1)), dust.lightened(0.13))
-			highlight.position.x = highlight.end.x - length
-			highlight.size.x = length
-		draw_rect(highlight, dust.lightened(0.13))
+		var face := bank
+		face.size.y += 3.0
+		_draw_field_edge(face, dust.darkened(0.42), entrance, 5.0)
+		_draw_field_edge(bank, dust.darkened(0.18), entrance, 4.0)
+		var edge := EstateLayout.field_boundary(bank, entrance, EstateLayout.FIELD_ENTRANCE_WIDTH)
+		for index in range(1, edge.size()):
+			var start := edge[index - 1]
+			var finish := edge[index]
+			var along := start.direction_to(finish)
+			var inset := along.orthogonal() * -1.0
+			var top := dust.lightened(0.11) if along.x > 0.0 or along.y < 0.0 else dust.lightened(0.03)
+			draw_line(start + along * 3.0 + inset, finish - along * 3.0 + inset, top, 1.0)
+			for offset in range(6, floori(start.distance_to(finish)) - 4, 7):
+				var at := start + along * offset + inset * 2.0
+				var ink := Color("#bac1ac") if season == Global.Season.WINTER else dust.darkened(0.30)
+				draw_rect(Rect2(at.round(), Vector2(2, 1)), ink)
 
 func _draw_field_edge(area: Rect2, color: Color, entrance: Vector2, depth: float, loam := false) -> void:
 	var corners := EstateLayout.corners(area)

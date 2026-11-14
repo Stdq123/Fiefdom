@@ -36,7 +36,7 @@ func _open() -> Control:
 	return ui.get_node_or_null("Control/DialoguePanel")
 
 func _approach(actor: Node2D) -> Control:
-	await Campaign.walk_to(self, world.player, actor.global_position + Vector2(0, 23))
+	await Campaign.walk_estate_road_to(self, world, actor.global_position + Vector2(0, 23))
 	return await _open()
 
 func _option(dialog: Control, prefix: String) -> Button:

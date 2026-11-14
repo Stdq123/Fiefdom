@@ -1,5 +1,6 @@
 extends RefCounted
 
+const Campaign := preload("res://tests/CampaignReplay.gd")
 const PUBLIC := Vector2i(5, 5)
 const EXPANSION := Vector2i(9, 5)
 const EXPANSION_PRIVATE := EXPANSION + Vector2i.DOWN
@@ -147,7 +148,7 @@ func _visit() -> void:
 			return
 		await _button(sheet.visitor_button)
 		_expect(not is_instance_valid(sheet) and ui.directions.tracked_neighbor == speaker, "Follow the visitor from the ledger.")
-	await _walk_to(actor.position + Vector2(0, -14))
+	await Campaign.walk_estate_road_to(tree, world, actor.global_position + Vector2(0, -14))
 	_key(KEY_E)
 	await tree.process_frame
 	var dialog := ui.get_node_or_null("Control/DialoguePanel")

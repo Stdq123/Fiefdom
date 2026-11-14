@@ -160,6 +160,36 @@ theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
 
+[node name="WaterSource" type="Node2D" parent="World" groups=["interactable"]]
+y_sort_enabled = true
+texture_filter = 1
+script = ExtResource("47_water_source")
+
+[node name="Basin" type="StaticBody2D" parent="World/WaterSource"]
+position = Vector2(0, 7)
+collision_mask = 0
+
+[node name="StoneFootprint" type="CollisionPolygon2D" parent="World/WaterSource/Basin"]
+polygon = PackedVector2Array(-6, -13, 6, -13, 8, -10, 8, -3, 6, 0, -6, 0, -8, -3, -8, -10)
+
+[node name="Glints" type="Node2D" parent="World/WaterSource/Basin"]
+
+[node name="Runoff" type="Node2D" parent="World/WaterSource"]
+z_index = -1
+
+[node name="Hint" type="Label" parent="World/WaterSource"]
+z_index = 1
+material = ExtResource("24_world_hint")
+offset_left = -64.0
+offset_top = -36.0
+offset_right = 64.0
+offset_bottom = -21.0
+mouse_filter = 2
+theme_override_colors/font_outline_color = Color(0.13, 0.22, 0.18, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
 [node name="TileMapLayer" type="TileMapLayer" parent="World" unique_id=1265781007]
 z_index = -3
 position = Vector2(16, 24)
@@ -171,22 +201,6 @@ script = ExtResource("6_marker")
 [node name="IrrigationOverlay" type="Node2D" parent="World/TileMapLayer"]
 z_index = 1
 script = ExtResource("7_irrigation")
-
-[node name="WaterSource" type="Node2D" parent="World/TileMapLayer/IrrigationOverlay" groups=["interactable"]]
-texture_filter = 1
-script = ExtResource("47_water_source")
-
-[node name="Hint" type="Label" parent="World/TileMapLayer/IrrigationOverlay/WaterSource"]
-material = ExtResource("24_world_hint")
-offset_left = -64.0
-offset_top = -29.0
-offset_right = 64.0
-offset_bottom = -14.0
-mouse_filter = 2
-theme_override_colors/font_outline_color = Color(0.13, 0.22, 0.18, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 10
-horizontal_alignment = 1
 
 [node name="FieldCursor" type="Node2D" parent="World/TileMapLayer"]
 script = ExtResource("12_field_cursor")

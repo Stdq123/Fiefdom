@@ -58,7 +58,7 @@ func _run() -> void:
 	await scene_changed
 	_expect(state.irrigation.channels.is_empty() and state.irrigation.source_cell == Vector2i(5, 1), "The source respects existing fields in legacy saves.")
 	overlay = current_scene.get_node("World").irrigation_overlay
-	_expect(overlay.water_source.position == overlay.tile_map.map_to_local(state.irrigation.source_cell),
+	_expect(overlay.water_source.global_position == overlay.tile_map.to_global(overlay.tile_map.map_to_local(state.irrigation.source_cell)),
 		"The spring art and interaction follow the alternate legacy source cell.")
 	_expect(state.active_crops[Vector2i(1, 5)]["watered"] and not state.active_crops[Vector2i(1, 5)]["requires_channel"], "Existing rice keeps manual watering.")
 	_expect(state.active_crops[Vector2i(1, 5)]["growth_nights"] == 4, "Legacy crops receive their original unmodified growth target.")

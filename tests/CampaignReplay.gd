@@ -139,7 +139,7 @@ static func meet_tax_envoy(tree: SceneTree) -> Control:
 	var player: Node2D = world.player
 	if not envoy.visible:
 		return null
-	await walk_to(tree, player, world.to_global(envoy.waiting_place + Vector2(24, 22)))
+	await walk_estate_road_to(tree, world, world.to_global(envoy.waiting_place + Vector2(24, 22)))
 	for frame in 100:
 		if player.interaction_target == envoy:
 			var event := InputEventKey.new()

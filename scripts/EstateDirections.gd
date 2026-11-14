@@ -264,6 +264,10 @@ func update_marker(blocked: bool) -> void:
 			clear_tracking()
 			hide()
 			return
+		if tracked_place == Global.WATER_SOURCE and world.player.interaction_target == world.irrigation_overlay.water_source:
+			road_guide.hide()
+			hide()
+			return
 		var foot := world.to_local(world.player.global_position)
 		if foot.distance_to(tracked_place_point) > 12.0:
 			_mark_place(tracked_place, tracked_place_point)

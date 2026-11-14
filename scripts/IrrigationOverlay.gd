@@ -18,7 +18,7 @@ const RICE_MARK := Color("#abdcc8")
 
 @onready var tile_map: TileMapLayer = get_parent()
 @onready var tile_size := Vector2(tile_map.tile_set.tile_size)
-@onready var water_source = $WaterSource
+@onready var water_source = tile_map.get_parent().get_node("WaterSource")
 
 var editing := false
 var cursor := Vector2i.ZERO
@@ -163,6 +163,7 @@ func _process(delta: float) -> void:
 	var next_frame := floori(water_time)
 	if next_frame != water_frame:
 		water_frame = next_frame
+		water_source.animate_water(water_frame)
 		flow_ink.queue_redraw()
 
 func _pointer_cell() -> Vector2i:
@@ -388,7 +389,7 @@ func _compare_flow(next: Dictionary[Vector2i, int], gates: Dictionary[Vector2i, 
 			affected_fields[cell] = supplied
 
 func _refresh_network() -> void:
-	water_source.refresh(tile_map.map_to_local(Global.irrigation.source_cell))
+	water_source.refresh(tile_map.to_global(tile_map.map_to_local(Global.irrigation.source_cell)))
 	if not starter_canal.is_empty():
 		starter_canal = starter_canal_cells()
 	culverts.clear()
@@ -609,8 +610,6 @@ func _draw_inlets(cell: Vector2i) -> void:
 
 func _draw_flow() -> void:
 	var network := Global.irrigation
-	var source := tile_map.map_to_local(network.source_cell)
-	flow_ink.draw_rect(Rect2(source + Vector2(posmod(water_frame, 5) - 3, -2), Vector2(3, 1)), WATER_LIGHT)
 	for cell in network.channels:
 		var distance := network.flow_distance(cell)
 		if distance <= 0 or culverts.has(cell):

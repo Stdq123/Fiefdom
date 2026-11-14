@@ -63,7 +63,7 @@ func _run() -> void:
 			await _sleep(ui)
 		world.handle_interaction(tribute)
 	await _sleep(ui)
-	await Campaign.walk_to(self, world.player, world.active_visitors.front().global_position)
+	await Campaign.walk_estate_road_to(self, world, world.active_visitors.front().global_position)
 	await _interact()
 	var dialog := ui.get_node_or_null("Control/DialoguePanel")
 	_expect(dialog != null and dialog.name_label.text == "弋戎", "The military visitor is available in ordinary play before the first raid.")

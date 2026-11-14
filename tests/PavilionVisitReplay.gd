@@ -74,7 +74,7 @@ func _walk(point: Vector2) -> void:
 	await Campaign.walk_to(tree, world.player, world.to_global(point))
 
 func _meet(guest: Visitor, offset: Vector2) -> Control:
-	await _walk(guest.position + offset)
+	await Campaign.walk_estate_road_to(tree, world, guest.global_position + offset)
 	await _key(KEY_E)
 	return ui.get_node_or_null("Control/DialoguePanel") as Control
 
