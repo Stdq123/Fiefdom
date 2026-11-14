@@ -332,7 +332,7 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.73, 0.81, 0.68, 1)
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
-text = "只补今夜所需，优先用时令单之外的作物。购粮上限填 0 时只用余粮。"
+text = "只补今夜所需。先留时令单和已选的节庆用料。购粮上限填 0 时只用余粮。"
 
 [node name="PartialMeals" type="CheckButton" parent="Center/Window/Content/Scroll/Body/Plan/Policy"]
 unique_name_in_owner = true
@@ -360,6 +360,35 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 autowrap_mode = 3
+
+[node name="Keep" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/Preview"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.80, 0.77, 0.58, 1)
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="FestivalPantry" type="HBoxContainer" parent="Center/Window/Content/Scroll/Body/Plan/Preview"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="FestivalReserve" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/Preview/FestivalPantry"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.75, 0.84, 0.68, 1)
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+
+[node name="ReleaseFestivalReserve" type="Button" parent="Center/Window/Content/Scroll/Body/Plan/Preview/FestivalPantry"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 37)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+text = "取消节庆留用"
 
 [node name="NightOffer" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/Preview"]
 unique_name_in_owner = true
@@ -425,13 +454,6 @@ layout_mode = 2
 size_flags_horizontal = 0
 mouse_default_cursor_shape = 2
 tooltip_text = "经东关到竹涧，与望溪台的野药共用今日采集机会。"
-
-[node name="Keep" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/Preview"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.80, 0.77, 0.58, 1)
-theme_override_font_sizes/font_size = 15
-autowrap_mode = 3
 
 [node name="PriorityRow" type="HBoxContainer" parent="Center/Window/Content/Scroll/Body/Plan/Preview"]
 unique_name_in_owner = true

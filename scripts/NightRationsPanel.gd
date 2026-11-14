@@ -41,6 +41,9 @@ const WINDOW_MARGIN := 16.0
 @onready var research_fee: Label = %ResearchFee
 @onready var forecast: Label = %Forecast
 @onready var keep: Label = %Keep
+@onready var festival_pantry: HBoxContainer = %FestivalPantry
+@onready var festival_reserve: Label = %FestivalReserve
+@onready var release_festival_reserve: Button = %ReleaseFestivalReserve
 @onready var night_offer: Label = %NightOffer
 @onready var accept_offer: Button = %AcceptOffer
 @onready var silk_offer: Label = %SilkOffer
@@ -77,6 +80,7 @@ func _ready() -> void:
 	delegate.toggled.connect(_change_policy.unbind(1))
 	budget.value_changed.connect(_change_policy.unbind(1))
 	partial_meals.toggled.connect(_change_policy.unbind(1))
+	release_festival_reserve.pressed.connect(_release_festival_reserve)
 	accept_offer.pressed.connect(_accept_night_offer)
 	sell_silk.pressed.connect(_sell_silk_for_rations)
 	view_silk.pressed.connect(func():
@@ -182,6 +186,13 @@ func _accept_night_offer() -> void:
 func _select_priority(index: int) -> void:
 	Global.set_ration_priority(priority_picker.get_item_metadata(index) as RetainerData)
 
+func _release_festival_reserve() -> void:
+	var had_focus := release_festival_reserve.has_focus()
+	Global.set_festival_pantry(0)
+	AudioManager.play_ui_sfx()
+	if had_focus:
+		delegate.grab_focus()
+
 func _refresh() -> void:
 	_refresh_raid_plan()
 	_refresh_fields()
@@ -239,6 +250,9 @@ func _refresh() -> void:
 			ItemManager.describe_crops(plan.upcoming_reserved)])
 	keep.text = "\n".join(reservations)
 	keep.visible = policy.enabled and not reservations.is_empty()
+	festival_pantry.visible = not plan.festival_pantry.is_empty()
+	if festival_pantry.visible:
+		festival_reserve.text = NightRations.describe_festival_pantry(plan.festival_pantry)
 	_refresh_meal(plan)
 	var meal := policy.last
 	receipt.visible = not meal.is_empty()

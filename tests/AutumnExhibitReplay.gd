@@ -182,6 +182,10 @@ func _prepare_autumn() -> void:
 	_expect(tree.root.gui_get_focus_owner() == book.close_button and ui.directions.tracked_place.is_empty(),
 		"Opening the notice puts focus in the almanac without setting a route.")
 	await _snapshot("01e-autumn-plan")
+	await _button(book.keep_samples)
+	_expect(book.pantry_note.visible and state.night_rations.festival_day == 16
+		and state.night_rations_plan().festival_pantry.held == {"millet": 1},
+		"Opt in from the autumn notice before the third variety ripens.")
 	await _key(KEY_ESCAPE)
 	await _key(KEY_C)
 	_expect(book.modal.visible and "秋分" in book.title.text, "The keyboard shortcut opens the advertised event too.")
@@ -517,10 +521,15 @@ func _winter_return() -> void:
 		and "仓中 麦 0 · 菽 0" in ui.calendar.event_note.text and tree.paused,
 		"The winter detail opens directly with the actual gift, missing wheat and preparation time.")
 	await _snapshot("08-winter-plan")
+	await _button(ui.calendar.keep_porridge)
+	_expect(state.night_rations.festival_recipe == WinterSupper.BEAN and "等作物入仓" in ui.calendar.pantry_note.text,
+		"The porridge plan can start before the wheat is even planted.")
 	await _key(KEY_ESCAPE)
 	await _grow({KEY_4: [FALL_PLOTS[1]]}, 2)
 	_expect("明日冬至围炉 · 可备麦菽粥" in notice.text and state.crop_stock.count("wheat") == 1,
 		"The wheat harvest makes the meal ready before the solstice.")
+	var pantry: Dictionary = state.night_rations_plan().festival_pantry
+	_expect(pantry.held == {} and pantry.shared == {"wheat": 1}, "A winter order and the porridge share one wheat. He Bo covers the beans.")
 	await _snapshot("09-winter-ready")
 	await _night()
 	await _button(notice)

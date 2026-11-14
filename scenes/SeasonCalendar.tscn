@@ -144,6 +144,14 @@ theme_override_colors/font_color = Color(0.95, 0.82, 0.57, 1)
 theme_override_constants/line_spacing = 5
 autowrap_mode = 3
 
+[node name="PantryNote" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.84, 0.68, 1)
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+
 [node name="Routes" type="HBoxContainer" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
 layout_mode = 2
 theme_override_constants/separation = 10
@@ -161,3 +169,32 @@ custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 text = "指路去柳湾钓鱼"
+
+[node name="KeepSamples" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Routes"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+toggle_mode = true
+tooltip_text = "夜间备粮为秋社各留一份谷样，最多三种。"
+
+[node name="KeepPorridge" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Routes"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+toggle_mode = true
+text = "留麦菽粥料"
+tooltip_text = "夜间备粮会给麦菽粥留料。再按一次取消。"
+
+[node name="KeepSoup" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Routes"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+toggle_mode = true
+text = "留鱼麦羹用麦"
+tooltip_text = "夜间备粮会给鱼麦羹留一份麦。再按一次取消。"

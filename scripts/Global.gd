@@ -815,8 +815,19 @@ func winter_supper_bean_gift(day := 0) -> bool:
 	var harvest_day := date - terms_since_autumn * maxi(1, balance.days_per_solar_term)
 	return autumn_exhibit_record(harvest_day).get("shared", false)
 
-func _winter_supper_crops(recipe: String) -> Dictionary:
-	if recipe == WinterSupper.BEAN and winter_supper_bean_gift():
+func festival_notice_lead(term: String) -> int:
+	if term == WinterSupper.TERM:
+		return maxi(ItemManager.get_crop("wheat").days_to_grow, ItemManager.get_crop("beans").days_to_grow)
+	var lead := 1
+	if term == AutumnExhibit.TERM:
+		for id: String in AutumnExhibit.CROPS:
+			var crop := ItemManager.get_crop(id)
+			if not crop.is_water_crop:
+				lead = maxi(lead, crop.days_to_grow)
+	return lead
+
+func _winter_supper_crops(recipe: String, day := 0) -> Dictionary:
+	if recipe == WinterSupper.BEAN and winter_supper_bean_gift(day):
 		return {"wheat": 1}
 	return WinterSupper.RECIPES[recipe].crops
 
@@ -858,6 +869,8 @@ func place_autumn_exhibit(crops: Array[String], share: bool) -> bool:
 		GameEvents.reputation_changed.emit(reputation)
 	player_stats.add_xp(PlayerStats.Art.RITES, balance.autumn_exhibit_rites)
 	GameEvents.autumn_exhibit_completed.emit()
+	if night_rations.festival_day == _solar_term_start(current_day):
+		set_festival_pantry(0)
 	return true
 
 func crop_water(cell: Vector2i, crop: Dictionary, day := 0) -> CropWater:
@@ -1882,6 +1895,9 @@ func _serve_night_rations(finished_day: int) -> Array[RetainerData]:
 		night_rations.last["departed"] = departed
 	if supper > 0:
 		night_rations.last["supper"] = supper
+	if night_rations.festival_day > 0 and not _festival_pantry_open(night_rations.festival_day, current_day):
+		night_rations.festival_day = 0
+		night_rations.festival_recipe = ""
 	GameEvents.night_rations_changed.emit()
 	return meal.fed
 
@@ -2448,6 +2464,66 @@ func set_ration_priority(retainer: RetainerData) -> void:
 	night_rations.priority = retainer
 	GameEvents.night_rations_changed.emit()
 
+func _festival_pantry_open(day: int, evening: int) -> bool:
+	if day <= 0 or day != _solar_term_start(day):
+		return false
+	var term := get_current_solar_term(day)
+	if evening < day - festival_notice_lead(term):
+		return false
+	if term == AutumnExhibit.TERM:
+		var last_day := day + maxi(1, balance.days_per_solar_term) - 1
+		return evening < last_day and autumn_exhibit_record(day).is_empty()
+	return term == WinterSupper.TERM and evening < day
+
+func can_set_festival_pantry(day: int) -> bool:
+	return outcome == Outcome.RUNNING and _festival_pantry_open(day, current_day)
+
+func set_festival_pantry(day: int, recipe := "") -> void:
+	if outcome != Outcome.RUNNING or (day != 0 and not can_set_festival_pantry(day)):
+		return
+	if day != 0 and is_winter_supper_day(day):
+		if recipe not in WinterSupper.MENU:
+			return
+	else:
+		recipe = ""
+	if night_rations.festival_day == day and night_rations.festival_recipe == recipe:
+		return
+	night_rations.festival_day = day
+	night_rations.festival_recipe = recipe
+	GameEvents.night_rations_changed.emit()
+
+func _festival_pantry(evening: int, order_keep: Dictionary) -> Dictionary:
+	var day := night_rations.festival_day
+	if not _festival_pantry_open(day, evening):
+		return {}
+	var name := AutumnExhibit.NAME
+	var wanted := {}
+	if is_winter_supper_day(day):
+		var recipe := night_rations.festival_recipe
+		name = WinterSupper.RECIPES[recipe].name
+		wanted = _winter_supper_crops(recipe, day)
+	else:
+		var candidates: Array[String] = []
+		var order_crops: Array[String] = []
+		for id in AutumnExhibit.stocked_crops(crop_stock):
+			if crop_stock.count(id) > int(order_keep.get(id, 0)):
+				candidates.append(id)
+			else:
+				order_crops.append(id)
+		candidates.append_array(order_crops)
+		for id in candidates.slice(0, AutumnExhibit.SAMPLE_COUNT):
+			wanted[id] = 1
+	var held := {}
+	var shared := {}
+	for id: String in wanted:
+		var available := mini(crop_stock.count(id), int(wanted[id]))
+		var extra := mini(available, maxi(0, crop_stock.count(id) - int(order_keep.get(id, 0))))
+		if extra > 0:
+			held[id] = extra
+		if available > extra:
+			shared[id] = available - extra
+	return {"name": name, "held": held, "shared": shared}
+
 func night_rations_plan(finished_day := 0) -> Dictionary:
 	var plan := _night_rations_supply_plan(finished_day if finished_day > 0 else current_day, night_rations)
 	plan.merge(_night_meal(food_storage + int(plan.supper) + int(plan.converted) + int(plan.bought)))
@@ -2473,8 +2549,13 @@ func _night_rations_supply_plan(evening: int, policy: NightRations, extra_copper
 	var fee := research_fee_due(evening + 1)
 	var purse := money + extra_copper
 	var reserved := fee if purse >= fee else 0
-	var plan := policy.plan(need, food_storage + supper, purse - reserved, crop_stock,
-		_order_stock_to_keep(schedule, upcoming), balance.market_food_price, _night_meal)
+	var order_keep := _order_stock_to_keep(schedule, upcoming)
+	var pantry := _festival_pantry(evening, order_keep)
+	var keep := order_keep.duplicate()
+	for id: String in pantry.get("held", {}):
+		keep[id] = int(keep.get(id, 0)) + int(pantry.held[id])
+	var plan := policy.plan(need, food_storage + supper, purse - reserved, crop_stock, keep, balance.market_food_price, _night_meal)
+	plan.festival_pantry = pantry
 	plan.supper = supper
 	plan.research_fee = fee
 	plan.research_reserve = reserved
@@ -2484,8 +2565,8 @@ func _night_rations_supply_plan(evening: int, policy: NightRations, extra_copper
 	plan.new_order = schedule.start == evening + 1
 	plan.current_reserved = {}
 	plan.upcoming_reserved = {}
-	for id: String in plan.reserved:
-		var total: int = plan.reserved[id]
+	for id: String in order_keep:
+		var total := mini(crop_stock.count(id), int(order_keep[id]))
 		var current := mini(total, int(schedule.order.need.get(id, 0))) if current_open else 0
 		if current > 0:
 			plan.current_reserved[id] = current
@@ -2981,6 +3062,8 @@ func _save_snapshot(origin: String) -> Error:
 			"partial_meals": night_rations.partial_meals,
 			"copper_limit": night_rations.copper_limit,
 			"priority": retainers.find(night_rations.priority),
+			"festival_day": night_rations.festival_day,
+			"festival_recipe": night_rations.festival_recipe,
 			"last": night_rations.last,
 		},
 		"last_field_night": last_field_night,
@@ -3479,7 +3562,6 @@ func load_game(path := "") -> Error:
 	silk_bolts_offered = maxi(0, _read_save_int(data.get("silk_bolts_offered"), 0))
 	silk_sample_day = clampi(_read_save_int(data.get("silk_sample_day"), 0), 0, saved_day)
 	food_storage = maxi(0, _read_save_int(data.get("food_storage"), 10))
-	night_rations = _restore_night_rations(data.get("night_rations"), saved_day, restored_retainers)
 	last_field_night = _restore_field_night(data.get("last_field_night"), saved_day)
 	away_field_report = _restore_away_field_report(data.get("away_field_report"), saved_day)
 	_away_work_elapsed.clear()
@@ -3526,6 +3608,7 @@ func load_game(path := "") -> Error:
 	_restore_summer_raft_results(data.get("summer_raft_results"), saved_day)
 	_restore_autumn_exhibits(data.get("autumn_exhibits"), saved_day)
 	_restore_winter_suppers(data.get("winter_suppers"), saved_day)
+	night_rations = _restore_night_rations(data.get("night_rations"), saved_day, restored_retainers)
 	_restore_sheepfold(data.get("sheepfold"), saved_day)
 	tech_unlocked = {
 		"irrigation": technology.get("irrigation", false) == true,
@@ -3665,6 +3748,14 @@ func _restore_night_rations(record: Variant, saved_day: int, roster: Array[Retai
 	var priority := _read_save_int(record.get("priority"), -1)
 	if priority >= 0 and priority < roster.size():
 		restored.priority = roster[priority]
+	var festival_day := _read_save_int(record.get("festival_day"), 0)
+	var recipe: Variant = record.get("festival_recipe", "")
+	if can_set_festival_pantry(festival_day):
+		if is_autumn_exhibit_day(festival_day):
+			restored.festival_day = festival_day
+		elif recipe is String and recipe in WinterSupper.MENU and is_winter_supper_day(festival_day):
+			restored.festival_day = festival_day
+			restored.festival_recipe = recipe
 	var meal: Variant = record.get("last")
 	if not meal is Dictionary:
 		return restored

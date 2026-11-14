@@ -130,6 +130,10 @@ func _fish_for_supper() -> bool:
 	await _button(notice)
 	_expect("麦菽粥 3 份" in ui.calendar.event_note.text and "鱼麦羹 5 份" in ui.calendar.event_note.text,
 		"Compare the two meals and their servings before committing stock.")
+	await _button(ui.calendar.keep_soup)
+	_expect(ui.calendar.keep_soup.button_pressed and ui.calendar.fish_guide.is_visible_in_tree()
+		and "鱼麦羹留用" in ui.calendar.pantry_note.text,
+		"A player can hold tomorrow's wheat and still follow the ordinary route to the fishing pool.")
 	await _frame("01a-fish-plan")
 	await _button(ui.calendar.fish_guide)
 	if not _expect(state.ravine_trip_target == "柳湾" and not tree.paused,

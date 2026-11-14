@@ -15,6 +15,10 @@ const EVENT_TERMS := [Global.GATHERING_TERM, SummerRaft.TERM, AutumnExhibit.TERM
 @onready var event_note: Label = %Event
 @onready var guide: Button = %Guide
 @onready var fish_guide: Button = %FishGuide
+@onready var pantry_note: Label = %PantryNote
+@onready var keep_samples: Button = %KeepSamples
+@onready var keep_porridge: Button = %KeepPorridge
+@onready var keep_soup: Button = %KeepSoup
 
 var controls_blocked: Callable
 var year_start := 1
@@ -32,6 +36,8 @@ func _ready() -> void:
 	var selected := dates.get_theme_stylebox("pressed", "Button").duplicate() as StyleBox
 	for side: Side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
 		selected.set_content_margin(side, normal.get_margin(side))
+	for button: Button in [keep_samples, keep_porridge, keep_soup]:
+		button.add_theme_stylebox_override("pressed", selected)
 	for index in TERMS:
 		var row := Button.new()
 		row.custom_minimum_size.y = 49.0
@@ -43,6 +49,9 @@ func _ready() -> void:
 		dates.add_child(row)
 	guide.pressed.connect(_request_directions)
 	fish_guide.pressed.connect(_follow_place.bind(CreekFish.PLACES[CreekFish.Site.POOL]))
+	keep_samples.toggled.connect(_set_pantry)
+	keep_porridge.toggled.connect(_set_pantry.bind(WinterSupper.BEAN))
+	keep_soup.toggled.connect(_set_pantry.bind(WinterSupper.FISH))
 
 func _map_available() -> bool:
 	return not controls_blocked.call()
@@ -71,7 +80,8 @@ func event_notice() -> String:
 	elif Global.is_summer_raft_day(day):
 		status = "竹涧西岸" if not Global.summer_raft_results.has(day) else "已入簿"
 	elif Global.is_autumn_exhibit_day(day):
-		status = ("谷样 %d/%d" % [mini(_autumn_stock().size(), AutumnExhibit.SAMPLE_COUNT), AutumnExhibit.SAMPLE_COUNT]
+		var have := AutumnExhibit.stocked_crops(Global.crop_stock).size()
+		status = ("谷样 %d/%d" % [mini(have, AutumnExhibit.SAMPLE_COUNT), AutumnExhibit.SAMPLE_COUNT]
 			if Global.autumn_exhibit_record(day).is_empty() else "已入簿")
 	elif Global.is_winter_supper_day(day):
 		status = _winter_notice(day) if Global.winter_supper_record(day).is_empty() else "已备饭"
@@ -85,20 +95,9 @@ func _noticed_day() -> int:
 		var day := first + Global.SOLAR_TERMS.find(term) * term_length
 		if today >= day + _event_length(day, term_length):
 			continue
-		if today >= day - _notice_lead(term):
+		if today >= day - Global.festival_notice_lead(term):
 			return day
 	return 0
-
-func _notice_lead(term: String) -> int:
-	if term == WinterSupper.TERM:
-		return maxi(ItemManager.get_crop("wheat").days_to_grow, ItemManager.get_crop("beans").days_to_grow)
-	var lead := 1
-	if term == AutumnExhibit.TERM:
-		for id: String in AutumnExhibit.CROPS:
-			var crop := ItemManager.get_crop(id)
-			if not crop.is_water_crop:
-				lead = maxi(lead, crop.days_to_grow)
-	return lead
 
 func _year_start(day: int, term_length: int) -> int:
 	return day - posmod(day - 1, term_length * Global.SOLAR_TERMS.size())
@@ -210,14 +209,29 @@ func _show_event(day: int) -> void:
 			event_note.text = "冬至已入簿 · %s\n围炉备了 %d 份，先供当晚门客。" % [WinterSupper.RECIPES[record.recipe].name, record.portions]
 		else:
 			event_note.text = "冬至围炉 · 今年这席已散。" if past else _winter_plan(day)
+	_refresh_festival_pantry(day)
 	guide.get_parent().visible = guide.visible or fish_guide.visible
 
-func _autumn_stock() -> Array[String]:
-	var stock: Array[String] = []
-	for id: String in AutumnExhibit.CROPS:
-		if Global.crop_stock.count(id) > 0:
-			stock.append(id)
-	return stock
+func _refresh_festival_pantry(day: int) -> void:
+	var can_set := Global.can_set_festival_pantry(day)
+	var active := can_set and Global.night_rations.festival_day == day
+	keep_samples.visible = can_set and Global.is_autumn_exhibit_day(day)
+	keep_samples.set_pressed_no_signal(active and keep_samples.visible)
+	keep_samples.text = "取消留谷样" if keep_samples.button_pressed else "夜里留谷样"
+	var winter := can_set and Global.is_winter_supper_day(day)
+	keep_porridge.visible = winter
+	keep_soup.visible = winter
+	var recipe := Global.night_rations.festival_recipe if active else ""
+	keep_porridge.set_pressed_no_signal(recipe == WinterSupper.BEAN)
+	keep_soup.set_pressed_no_signal(recipe == WinterSupper.FISH)
+	pantry_note.visible = active
+	if active:
+		pantry_note.text = NightRations.describe_festival_pantry(Global.night_rations_plan().festival_pantry)
+
+func _set_pantry(enabled: bool, recipe := "") -> void:
+	var day := _day(focus)
+	Global.set_festival_pantry(day if enabled else 0, recipe)
+	_refresh_festival_pantry(day)
 
 func _ripe_private_crops() -> Dictionary:
 	var ripe := {}
@@ -227,13 +241,13 @@ func _ripe_private_crops() -> Dictionary:
 	return ripe
 
 func _autumn_plan(day: int, last_day: int) -> String:
-	var stock := _autumn_stock()
+	var stock := AutumnExhibit.stocked_crops(Global.crop_stock)
 	var needed := maxi(0, AutumnExhibit.SAMPLE_COUNT - stock.size())
 	var preparation := "谷样已齐" if needed == 0 else "还差 %d 种" % needed
 	var on_hand := "仓中暂无谷样" if stock.is_empty() else "仓中有 " + AutumnExhibit.names(stock)
 	var line := "秋社 · %s\n备三种不同的私田作物，各一份。\n留样给乡邻，冬至禾伯会出菽。\n%s · %s" % [
 		EstateLayout.FESTIVAL_SITE_NAME, on_hand, preparation]
-	if needed == 0 or day - Global.current_day > _notice_lead(AutumnExhibit.TERM):
+	if needed == 0 or day - Global.current_day > Global.festival_notice_lead(AutumnExhibit.TERM):
 		return line
 	var ripe := _ripe_private_crops()
 	var harvest: Array[String] = []
@@ -276,7 +290,7 @@ func _winter_plan(day: int) -> String:
 		"禾伯出菽，带一份麦即可。" if gift else "麦、菽各一份。"]
 	line += "\n鱼麦羹 %d 份 · 一份麦、一尾溪鱼。" % WinterSupper.portions(WinterSupper.FISH, Global.balance)
 	var remaining := day - Global.current_day
-	if remaining <= _notice_lead(WinterSupper.TERM):
+	if remaining <= Global.festival_notice_lead(WinterSupper.TERM):
 		var prep := PackedStringArray()
 		var ripe := _ripe_private_crops()
 		if wheat == 0:

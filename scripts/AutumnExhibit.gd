@@ -13,6 +13,13 @@ const HANDOFF_SECONDS := 3.65
 static func handoff(index: int, elapsed: float) -> float:
 	return 1.0 if elapsed < 0.0 else clampf((elapsed - 0.55 - float(index) * 0.48) / 2.05, 0.0, 1.0)
 
+static func stocked_crops(stock: CropStock) -> Array[String]:
+	var crops: Array[String] = []
+	for id: String in CROPS:
+		if stock.count(id) > 0:
+			crops.append(id)
+	return crops
+
 static func portions(crops: Array) -> Dictionary:
 	if crops.size() != SAMPLE_COUNT:
 		return {}
