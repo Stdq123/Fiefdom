@@ -1,0 +1,13 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://cdyx4gikhaj2h"
+path="res://.godot/imported/ravine-woodland.svg-864f570ddc7948466b8e36ed1cbf4600.res"
+
+[deps]
+
+source_file="res://assets/world/ravine-woodland.svg"
+dest_files=["res://.godot/imported/ravine-woodland.svg-864f570ddc7948466b8e36ed1cbf4600.res"]
+
+[params]

@@ -28,9 +28,24 @@ const ACTG_SCENERY := preload("res://assets/world/actg/swamp.png")
 const MOUNTAIN_POST_BAMBOO := preload("res://assets/world/mountain-post/bamboo.png")
 const ESTATE_STORAGE := preload("res://assets/world/estate-storage.svg")
 const RAVINE_ACCENTS := preload("res://assets/world/momonga/ravine-accents.png")
+const RAVINE_WOODLAND := preload("res://assets/world/ravine-woodland.svg")
 const RAVINE_BANKS := preload("res://scripts/RavineBanks.gd")
 const RAVINE_RELIEF := preload("res://scripts/RavineRelief.gd")
 const RAVINE_ACCENT_PROPS := [Prop.RAVINE_SHOOT, Prop.RAVINE_RUSH]
+const RAVINE_WOODLAND_REGIONS := {
+	Prop.GROVE_TREE: Rect2(0, 0, 32, 32),
+	Prop.GROVE_CLUSTER: Rect2(36, 0, 64, 48),
+	Prop.PINE: Rect2(104, 0, 48, 48),
+}
+const RAVINE_SHADOW_SIZES := {
+	Prop.GROVE_TREE: Vector2(15, 5),
+	Prop.GROVE_CLUSTER: Vector2(30, 9),
+	Prop.PINE: Vector2(20, 7),
+	Prop.TALL_BAMBOO: Vector2(13, 5),
+}
+const RAVINE_SHADOW_PROFILE := [Vector2(-0.78, -0.14), Vector2(-0.52, -0.78), Vector2(0.06, -0.97),
+	Vector2(0.65, -0.68), Vector2(1.16, -0.2), Vector2(1.45, 0.26), Vector2(1.14, 0.72),
+	Vector2(0.57, 0.95), Vector2(0.05, 0.76), Vector2(-0.4, 0.52), Vector2(-0.81, 0.21)]
 const ROCK_PROPS := [Prop.ROCK, Prop.BOULDER, Prop.MOSS_STONE, Prop.RAVINE_ROCK]
 const STONE_REGIONS := {
 	Prop.MOSS_STONE: Rect2(0, 96, 32, 32),
@@ -619,6 +634,7 @@ func _draw() -> void:
 		_draw_creek()
 		RAVINE_BANKS.draw_banks(self, season, raining)
 		_draw_crossings()
+		_draw_woodland_shadows()
 	else:
 		_draw_field_verges()
 		_draw_tracks()
@@ -636,6 +652,8 @@ func _draw() -> void:
 		if prop.z in SORTED_PROPS and prop.z != Prop.TALL_BAMBOO and not STORAGE_TINTS.has(prop.z):
 			continue
 		if season == Global.Season.WINTER and prop.z in DORMANT_PROPS:
+			continue
+		if wilderness and prop.z == Prop.TALL_BAMBOO:
 			continue
 		var foot := Vector2(prop.x, prop.y)
 		var bounds := _prop_bounds(foot, prop.z)
@@ -699,7 +717,7 @@ func _add_landmark_labels() -> void:
 		_label_at(RavineLayout.DOCK_FORK + Vector2(-24, -19), "↑ 柳湾")
 		_label_at(BRIDGE + Vector2(-66, -31), "木桥 →")
 		_label_at(RavineLayout.RIDGE_FORK + Vector2(0, -34), "望溪台 ↗")
-		_label_at(RavineLayout.LOOKOUT + Vector2(-4, -51), "望溪台")
+		_label_at(RavineLayout.LOOKOUT + Vector2(-19, -55), "望溪台")
 	else:
 		_label_at(Vector2(-305, -104), "← 西市")
 		_label_at(Vector2(-136, 37), "← 西市")
@@ -757,6 +775,8 @@ func _draw_ground() -> void:
 		estate_terrain.draw_pond(self, meadow, pond_water, winter, raining, pond_landing.visible)
 	var grass := shade.lightened(0.09)
 	for prop in props:
+		if wilderness and RAVINE_SHADOW_SIZES.has(prop.z):
+			continue
 		if prop.z in LEAFY_PROPS and (not winter or prop.z not in DORMANT_PROPS):
 			var patch := Vector2(prop.x, prop.y)
 			if winter and ground_cover.has_snow(patch):
@@ -864,6 +884,20 @@ func _draw_tracks() -> void:
 		ESTATE_TERRAIN.draw_loam(self, track.surface, dust)
 	for track in track_shapes:
 		_track_gravel(track.gravel_path, track.width, dust)
+
+func _draw_woodland_shadows() -> void:
+	var shade := Color("#27392f")
+	shade.a = 0.20 if raining else 0.38
+	for sprite: Sprite2D in scenery:
+		var prop: int = scenery[sprite]
+		if not RAVINE_SHADOW_SIZES.has(prop):
+			continue
+		var foot := sprite.position
+		var half_size: Vector2 = RAVINE_SHADOW_SIZES[prop]
+		var outline := PackedVector2Array()
+		for point: Vector2 in RAVINE_SHADOW_PROFILE:
+			outline.append((foot + point * half_size).snapped(Vector2(0.5, 0.5)))
+		draw_colored_polygon(outline, shade)
 
 func _draw_building_shadows() -> void:
 	var ground_shadow := Color("#26352c")
@@ -1145,11 +1179,18 @@ func _update_tree_textures() -> void:
 	seasonal_textures[Prop.OAK] = _atlas_texture(SEASONAL_TREES, Rect2(Vector2(season, 0) * PROP_SIZE, PROP_SIZE))
 	seasonal_textures[Prop.BLOSSOM_TREE] = _atlas_texture(SEASONAL_TREES,
 		Rect2(ORCHARD_FRAMES[season] * PROP_SIZE, PROP_SIZE))
+	if wilderness:
+		var row := Vector2(0, 48) if season == Global.Season.WINTER else Vector2.ZERO
+		for prop in RAVINE_WOODLAND_REGIONS:
+			var region: Rect2 = RAVINE_WOODLAND_REGIONS[prop]
+			region.position += row
+			seasonal_textures[prop] = _atlas_texture(RAVINE_WOODLAND, region)
+	else:
+		var winter_pine := _atlas_texture(SEASONAL_TREES, Rect2(Vector2(2, 1) * PROP_SIZE, PROP_SIZE))
+		seasonal_textures[Prop.PINE] = winter_pine if season == Global.Season.WINTER else _atlas_texture(SCENERY, _scenery_region(Prop.PINE))
 	if season == Global.Season.WINTER:
-		seasonal_textures[Prop.PINE] = _atlas_texture(SEASONAL_TREES, Rect2(Vector2(2, 1) * PROP_SIZE, PROP_SIZE))
 		seasonal_textures[Prop.WILLOW] = _atlas_texture(WINTER_WILLOW, Rect2(Vector2.ZERO, WINTER_WILLOW.get_size()))
 	else:
-		seasonal_textures[Prop.PINE] = _atlas_texture(SCENERY, _scenery_region(Prop.PINE))
 		seasonal_textures[Prop.WILLOW] = _atlas_texture(ACTG_SCENERY, _scenery_region(Prop.WILLOW))
 
 func _atlas_texture(source: Texture2D, region: Rect2) -> AtlasTexture:
@@ -1160,6 +1201,9 @@ func _atlas_texture(source: Texture2D, region: Rect2) -> AtlasTexture:
 	return result
 
 func _prop_tint(index: int) -> Color:
+	if wilderness and RAVINE_WOODLAND_REGIONS.has(index):
+		var woodland: Color = LEAF_TINTS[season] if index != Prop.PINE and season != Global.Season.WINTER else Color.WHITE
+		return woodland * Color(0.88, 0.94, 0.99) if raining else woodland
 	var painted_tree := index == Prop.OAK or index == Prop.BLOSSOM_TREE \
 		or (season == Global.Season.WINTER and index in [Prop.PINE, Prop.WILLOW])
 	if painted_tree:
