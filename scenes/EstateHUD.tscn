@@ -362,14 +362,16 @@ theme_override_font_sizes/font_size = 13
 text = "账目"
 tooltip_text = "查看爵位、声望、国库和井田"
 
-[node name="GatheringLabel" type="Label" parent="Calendar/Stack"]
+[node name="SeasonEventButton" type="Button" parent="Calendar/Stack"]
 unique_name_in_owner = true
 visible = false
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
-mouse_filter = 2
+mouse_default_cursor_shape = 2
+theme_type_variation = &"HudNight"
 theme_override_font_sizes/font_size = 13
-theme_override_colors/font_color = Color(1, 0.77, 0.54, 1)
-horizontal_alignment = 2
+text_overrun_behavior = 3
+alignment = 0
 
 [node name="LedgerDetails" type="VBoxContainer" parent="Calendar/Stack"]
 unique_name_in_owner = true

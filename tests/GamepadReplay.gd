@@ -177,6 +177,7 @@ func _estate_flow() -> bool:
 	await _tap(JOY_BUTTON_BACK)
 	_expect(tree.paused and ui.calendar.modal.visible, "View opens the almanac.")
 	await _tap(JOY_BUTTON_B)
+	await _season_shortcut()
 	await _click(ui.manage_button)
 	_expect(world.player.menu_open, "A opens management.")
 	var standing: Vector2 = world.player.position
@@ -233,6 +234,22 @@ func _estate_flow() -> bool:
 	await _click(title_button, true)
 	await _confirm(confirmation, "04-return")
 	return await _scene_is(TITLE)
+
+func _season_shortcut() -> void:
+	var current: int = state.current_day
+	var events := tree.root.get_node("GameEvents")
+	# Use the eve of the first event to exercise View and B without advancing the opening economy.
+	state.current_day = 5
+	events.day_advanced.emit(5)
+	await _tap(JOY_BUTTON_BACK)
+	_expect(tree.paused and ui.calendar.modal.visible and "谷雨" in ui.calendar.title.text
+		and tree.root.gui_get_focus_owner() == ui.calendar.close_button,
+		"View opens the upcoming event with focus inside the almanac.")
+	await _snapshot("02b-gamepad-season-notice")
+	await _tap(JOY_BUTTON_B)
+	_expect(not tree.paused, "B closes the event and restores the estate.")
+	state.current_day = current
+	events.day_advanced.emit(current)
 
 func _irrigation() -> void:
 	# Unlock construction here to test the input gesture after the normal opening harvest.

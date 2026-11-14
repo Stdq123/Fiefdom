@@ -91,6 +91,7 @@ func _ready() -> void:
 	council_preparation.orders_requested.connect(_on_season_board_interacted)
 	calendar.controls_blocked = _map_controls_blocked
 	hud.calendar_button.pressed.connect(calendar.open_map)
+	hud.season_event_button.pressed.connect(calendar.open_noticed_event)
 	calendar.directions_requested.connect(_guide_calendar_event)
 	hud.pinned_order.pressed.connect(_on_pinned_order_pressed)
 	_connect_signals()
@@ -98,6 +99,7 @@ func _ready() -> void:
 	_refresh_channel_button()
 	hud.refresh_survey_button()
 	update_ui()
+	_refresh_season_event()
 	if not Global.restore_notice.is_empty():
 		hud.show_save_notice(Global.restore_notice, true)
 		Global.restore_notice = ""
@@ -126,6 +128,7 @@ func _process(_delta: float) -> void:
 	hud.map_button.disabled = blocked or world.player.training_cart.visible or Global.outcome != Global.Outcome.RUNNING
 	hud.farm_status.disabled = hud.map_button.disabled
 	hud.calendar_button.disabled = hud.map_button.disabled
+	hud.season_event_button.disabled = hud.map_button.disabled
 	hud.route_progress.disabled = hud.map_button.disabled
 	hud.council_prep_button.disabled = hud.map_button.disabled
 	hud.guide.six_arts.disabled = hud.map_button.disabled
@@ -218,6 +221,7 @@ func _show_sowing_plans(field_id: int) -> void:
 
 func _connect_signals() -> void:
 	GameEvents.day_advanced.connect(update_ui.unbind(1))
+	GameEvents.day_advanced.connect(_refresh_season_event.unbind(1))
 	GameEvents.day_advanced.connect(_refresh_farm_calendar.unbind(1))
 	GameEvents.save_finished.connect(_on_save_finished)
 	GameEvents.farm_state_changed.connect(hud.refresh_farm_status)
@@ -227,14 +231,17 @@ func _connect_signals() -> void:
 	GameEvents.channels_changed.connect(hud.refresh_farm_status)
 	GameEvents.channels_changed.connect(_refresh_opening_action)
 	GameEvents.crop_harvested.connect(update_ui.unbind(1))
+	GameEvents.crop_harvested.connect(_refresh_season_event.unbind(1))
 	GameEvents.stamina_changed.connect(update_ui.unbind(1))
 	GameEvents.visitor_interacted.connect(_on_visitor_interacted)
 	GameEvents.gathering_guest_interacted.connect(_on_gathering_guest_interacted)
 	GameEvents.gathering_book_requested.connect(_on_gathering_book_requested)
 	GameEvents.neighbor_directions_requested.connect(_on_neighbor_directions_requested)
 	GameEvents.gathering_recital_recorded.connect(update_ui)
+	GameEvents.gathering_recital_recorded.connect(_refresh_season_event)
 	GameEvents.autumn_exhibit_requested.connect(_on_autumn_exhibit_requested)
 	GameEvents.autumn_exhibit_completed.connect(update_ui)
+	GameEvents.autumn_exhibit_completed.connect(_refresh_season_event)
 	GameEvents.autumn_guest_interacted.connect(_on_autumn_guest_interacted)
 	GameEvents.sheepfold_requested.connect(_on_sheepfold_requested)
 	GameEvents.retainer_interacted.connect(_on_retainer_interacted)
@@ -247,6 +254,7 @@ func _connect_signals() -> void:
 	GameEvents.winter_road_rations_interacted.connect(_on_winter_road_rations_interacted)
 	GameEvents.winter_supper_requested.connect(_on_winter_supper_requested)
 	GameEvents.winter_supper_prepared.connect(update_ui)
+	GameEvents.winter_supper_prepared.connect(_refresh_season_event)
 	GameEvents.road_rest_interacted.connect(_on_road_rest_interacted)
 	GameEvents.rotation_book_interacted.connect(_on_rotation_book_interacted)
 	GameEvents.water_source_interacted.connect(_on_water_source_interacted)
@@ -269,6 +277,8 @@ func _connect_signals() -> void:
 	GameEvents.reputation_changed.connect(update_ui.unbind(1))
 	GameEvents.money_changed.connect(update_ui.unbind(1))
 	GameEvents.inventory_changed.connect(update_ui.unbind(1))
+	GameEvents.inventory_changed.connect(_refresh_season_event.unbind(1))
+	GameEvents.fish_changed.connect(_refresh_season_event)
 	GameEvents.food_changed.connect(update_ui.unbind(1))
 	GameEvents.night_rations_changed.connect(update_ui)
 	GameEvents.night_rations_requested.connect(_show_night_rations)
@@ -325,28 +335,12 @@ func update_ui() -> void:
 	hud.calendar_label.text = "第 %d 年 · %s · %s" % [
 		Global.get_current_year(), Global.get_current_solar_term(),
 		"雨" if Global.has_rain() else "晴"]
-	hud.gathering_label.text = ""
-	if Global.is_gathering_day():
-		hud.gathering_label.text = "今日谷雨亭集 · 迎客曲已入簿" if Global.gathering_score() > 0 else "今日谷雨亭集 · 南路亭东"
-	elif Global.is_gathering_day(Global.current_day + 1):
-		hud.gathering_label.text = "明日谷雨亭集 · 南路亭东"
-	elif Global.is_summer_raft_day():
-		hud.gathering_label.text = ("今日夏至试筏 · 竹涧西岸" if not Global.summer_raft_results.has(Global.current_day)
-			else "夏至试筏 · 成绩已入簿")
-	elif Global.is_summer_raft_day(Global.current_day + 1):
-		hud.gathering_label.text = "明日夏至试筏 · 竹涧西岸"
-	elif Global.is_autumn_exhibit_day():
-		hud.gathering_label.text = ("今日秋社 · " + EstateLayout.FESTIVAL_SITE_NAME
-			if Global.autumn_exhibit_record(Global.current_day).is_empty() else "今日秋社 · 已入簿")
-	elif Global.is_autumn_exhibit_day(Global.current_day + 1):
-		hud.gathering_label.text = "明日秋社 · 备三种私田收成"
-	elif Global.is_winter_supper_day():
-		hud.gathering_label.text = ("今日冬至围炉 · " + EstateLayout.FESTIVAL_SITE_NAME if Global.winter_supper_record().is_empty()
-			else "冬至围炉 · 今夜已备饭")
-	elif Global.is_winter_supper_day(Global.current_day + 1):
-		hud.gathering_label.text = "明日冬至围炉 · 备麦和菽或鱼"
-	hud.gathering_label.visible = not hud.gathering_label.text.is_empty()
 	_update_visitor_note(world.current_visitor())
+
+func _refresh_season_event() -> void:
+	var caption: String = calendar.event_notice()
+	hud.season_event_button.text = caption
+	hud.season_event_button.visible = not caption.is_empty()
 
 func _refresh_farm_calendar() -> void:
 	hud.refresh_seed_calendar()
@@ -987,8 +981,8 @@ func _guide_travel_hearth() -> void:
 	directions.follow_place(TravelHearth.PLACE, world.to_local(approach.global_position))
 
 func _guide_calendar_event(place: String) -> void:
-	if place == SummerRaft.PLACE:
-		directions.follow_ravine(place)
+	if place == SummerRaft.PLACE or place == CreekFish.PLACES[CreekFish.Site.POOL]:
+		_on_ravine_trip_requested(place)
 		return
 	var path := "SpringGathering"
 	match place:

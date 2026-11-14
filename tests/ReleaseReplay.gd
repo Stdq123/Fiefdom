@@ -244,7 +244,7 @@ func _run() -> void:
 			await replay.run(tree)
 		"autumn-exhibit":
 			var replay = load("res://tests/AutumnExhibitReplay.gd").new()
-			await replay.run(tree)
+			await replay.run(tree, capture_directory)
 		"sheepfold", "meadow-fodder":
 			var replay = load("res://tests/SheepfoldReplay.gd").new()
 			replay.meadow_only = arguments[0] == "meadow-fodder"

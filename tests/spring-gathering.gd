@@ -97,7 +97,7 @@ func _run() -> void:
 	_expect(not gathering.visible and not gathering.is_in_group("interactable"), "The event and empty book stay out of the way on the opening day.")
 	while state.current_day < 5 and not failed:
 		await _night()
-	_expect(ui.hud.gathering_label.visible and "明日谷雨亭集" in ui.hud.gathering_label.text, "Clear Brightness forecasts the next day's gathering.")
+	_expect(ui.hud.season_event_button.visible and "明日谷雨亭集" in ui.hud.season_event_button.text, "Clear Brightness forecasts the next day's gathering.")
 	await _night()
 	_expect(state.current_day == 6 and state.is_gathering_day() and gathering.guests.get_child_count() == 3,
 		"Grain Rain opens the pavilion gathering with three guests.")
@@ -151,9 +151,9 @@ func _run() -> void:
 		return
 	await scene_changed
 	_estate()
-	_expect(state.gathering_score() == 4 and "已入簿" in ui.hud.gathering_label.text, "The score and calendar status survive reload.")
+	_expect(state.gathering_score() == 4 and "已入簿" in ui.hud.season_event_button.text, "The score and calendar status survive reload.")
 	await _night()
-	_expect(gathering.guests.get_child_count() == 0 and gathering.visible and not gathering.stall.visible and not ui.hud.gathering_label.visible,
+	_expect(gathering.guests.get_child_count() == 0 and gathering.visible and not gathering.stall.visible and not ui.hud.season_event_button.visible,
 		"The guests and rack depart on the following day while the record remains.")
 	dialog = await _book()
 	_expect(dialog != null and "第 1 年 · 谷雨 · 迎客曲 4/4" in dialog.text_label.text, "The book shows the completed performance after the festival.")

@@ -144,9 +144,20 @@ theme_override_colors/font_color = Color(0.95, 0.82, 0.57, 1)
 theme_override_constants/line_spacing = 5
 autowrap_mode = 3
 
-[node name="Guide" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+[node name="Routes" type="HBoxContainer" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Guide" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Routes"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
-size_flags_horizontal = 0
 mouse_default_cursor_shape = 2
+
+[node name="FishGuide" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Routes"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "指路去柳湾钓鱼"

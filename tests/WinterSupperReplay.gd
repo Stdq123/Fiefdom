@@ -106,7 +106,7 @@ func _walk_to_table() -> void:
 	var approach := world.get_node("WinterSupper/Approach") as Marker2D
 	await Campaign.walk_estate_road_to(tree, world, approach.global_position)
 
-func _recruit_and_fish() -> bool:
+func _recruit_guide() -> bool:
 	var guest: Node2D = world.neighbor_actor(VisitorData.RAVINE_GUIDE)
 	if not _expect(guest != null, "The herbalist visits normally before the first raid."):
 		return false
@@ -119,13 +119,30 @@ func _recruit_and_fish() -> bool:
 	await _key(KEY_E)
 	dialog = ui.get_node_or_null("Control/DialoguePanel")
 	await _button(_find_dialog_button(dialog, "招募"))
-	if not _expect(state.retainers.size() == 2, "Earn and spend reputation to recruit the second retainer."):
+	if not _expect(state.retainers.size() == 2 and state.knows_ravine_journal(), "Recruit the second retainer and learn to fish."):
 		return false
-	await _walk(world.player, [Vector2(117, 4), Vector2(359, 4)])
+	await _walk(world.player, [Vector2(116, 42), Vector2(116, 96), Vector2(66, 98)])
+	return not failed
+
+func _fish_for_supper() -> bool:
+	var notice: Button = ui.hud.season_event_button
+	_expect("明日冬至围炉 · 可备麦菽粥" in notice.text, "The solstice eve shows porridge is ready, with fishing still an option.")
+	await _button(notice)
+	_expect("麦菽粥 3 份" in ui.calendar.event_note.text and "鱼麦羹 5 份" in ui.calendar.event_note.text,
+		"Compare the two meals and their servings before committing stock.")
+	await _frame("01a-fish-plan")
+	await _button(ui.calendar.fish_guide)
+	if not _expect(state.ravine_trip_target == "柳湾" and not tree.paused,
+		"The cooking plan sets an actual route to the willow pool."):
+		return false
+	await _walk(world.player, [Vector2(116, 4), Vector2(359, 4)])
 	if not await _cross(&"ui_right", state.WILDERNESS_SCENE):
 		return false
+	await tree.process_frame
 	var trail := tree.current_scene
 	var pool: Node2D = trail.get_node("WillowPool")
+	var guide := trail.get_node("RavineDirections")
+	_expect(guide.destination_name == "柳湾" and not guide.route.is_empty(), "The route continues inside the ravine.")
 	await Campaign.walk_ravine_to(tree, trail, pool.global_position + Vector2(0, 12))
 	await _key(KEY_E)
 	var panel := trail.get_node_or_null("FishingUI/FishingPanel")
@@ -153,6 +170,11 @@ func _recruit_and_fish() -> bool:
 		return false
 	_estate()
 	await _walk(world.player, [Vector2(116, 4), Vector2(116, 96), Vector2(66, 98)])
+	await _button(ui.hud.season_event_button)
+	_expect("两道齐料" in ui.hud.season_event_button.text and "鲫鱼" in ui.calendar.event_note.text and not ui.calendar.fish_guide.visible,
+		"After fishing, the calendar shows the stored catch and retires the fishing prompt.")
+	await _key(KEY_ESCAPE)
+	print("WINTER_FISHED_FOR_SUPPER day=", state.current_day, " catch=", state.fish_for_travel_meal())
 	return not failed
 
 func _defend() -> void:
@@ -203,11 +225,12 @@ func _first_year() -> bool:
 		if state.current_day >= 19:
 			await _key(KEY_4)
 			await _tend(WHEAT, state.current_day == 19)
-		if state.current_day == 5 and not await _recruit_and_fish():
+		if state.current_day == 5 and not await _recruit_guide():
 			return false
 		if state.current_day == 21:
 			await _assign_harvesters()
-			_expect("明日冬至" in ui.hud.gathering_label.text, "The solstice eve reminds the player what to prepare.")
+			if not await _fish_for_supper():
+				return false
 		await _sleep()
 	print("WINTER_FIRST_YEAR day=", state.current_day, " retainers=", state.retainers.size(), " raids=", state.raids_defeated,
 		" tribute=", state.king_storage, " wheat=", state.crop_stock.count("wheat"), " beans=", state.crop_stock.count("beans"),
