@@ -5,6 +5,7 @@ const PRIVATE_WHEAT := Vector2i(6, 5)
 var world: Node2D
 var ui: CanvasLayer
 var meadow_only := false
+var previous_cut := false
 
 func _estate() -> void:
 	world = tree.current_scene.get_node("World")
@@ -297,13 +298,20 @@ func _wear_coat() -> void:
 		and state.sheepfold.coat and state.king_storage == 2, "Continue preserves the coat, flock, and two public harvests.")
 	print("SHEEP_COAT day=", state.current_day, " attire=", state.attire_id, " tribute=", state.king_storage)
 
-func _walk_to_meadow(road: Node2D) -> void:
+func _walk_to_meadow(road: Node2D, capture_fork := false) -> void:
 	var route: PackedVector2Array = road.network.route_between(road.player.position, road.ground.LAYOUT.MEADOW)
 	_expect(route.has(road.ground.LAYOUT.MEADOW_JUNCTION), "The grass clearing connects to the road at its own junction.")
 	for point: Vector2 in route.slice(1):
 		await Campaign.walk_straight(tree, road.player, point)
+		if capture_fork and point == road.ground.LAYOUT.MEADOW_JUNCTION:
+			var post := road.get_node_or_null("Scenery/桥东草甸路牌") as Sprite2D
+			_expect(road.route.is_empty() and post != null and post.is_visible_in_tree()
+				and (post.texture as AtlasTexture).region.position == Vector2(96, 0),
+				"The physical meadow sign points south from the road even after the player clears directions.")
+			await _snapshot("11a-meadow-fork")
 	var spot := road.get_node("FodderMeadow") as Node2D
-	_expect(road.player.position.distance_to(spot.position) < 3.0 and road.player.interaction_target == spot,
+	_expect(road.player.position.distance_to(spot.position) < 3.0 and road.player.interaction_target == spot
+		and spot.get_node("Hint").visible and spot.get_node("ToolStone") is StaticBody2D,
 		"Walk down the spur and reach the actual cutting site.")
 
 func _back_from_meadow(road: Node2D) -> bool:
@@ -335,7 +343,11 @@ func _cut_summer_meadow(portions: int) -> bool:
 		return false
 	var road := tree.current_scene as Node2D
 	_expect(road.route.has(road.ground.LAYOUT.MEADOW_JUNCTION), "The market route continues across the bridge to the spur.")
-	await _walk_to_meadow(road)
+	await _key(KEY_M)
+	await _button(road.region_map.clear_button)
+	await _key(KEY_M)
+	await _walk_to_meadow(road, true)
+	await _snapshot("11b-summer-grass")
 	var rain_term: String = state.balance.rain_solar_term
 	state.balance.rain_solar_term = state.get_current_solar_term()
 	await _key(KEY_E)
@@ -429,6 +441,22 @@ func _verify_meadow_seasons() -> void:
 		" stock=", state.sheepfold.fodder, " tribute=", state.king_storage)
 
 func _play() -> void:
+	if previous_cut:
+		await _button(tree.current_scene.continue_button)
+		if tree.current_scene == null:
+			await tree.scene_changed
+		var road := tree.current_scene as Node2D
+		if not _expect(road.scene_file_path == state.WEST_ROAD_SCENE and state.current_day == 13
+			and state.sheepfold.last_meadow_cut == 13 and state.sheepfold.fodder == 4,
+			"The previous Windows save continues on the bridge road after the autumn cut."):
+			return
+		await _walk_to_meadow(road)
+		await _key(KEY_E)
+		_expect(state.sheepfold.fodder == 4 and "本季已收" in road.get_node("FodderMeadow/Hint").text,
+			"The old cut plot renders short grass and cannot be cut again.")
+		await _snapshot("15-previous-cut-resumed")
+		print("MEADOW_LEGACY day=", state.current_day, " stock=", state.sheepfold.fodder, " cut=", state.sheepfold.last_meadow_cut)
+		return
 	await _button(tree.current_scene.new_button)
 	_estate()
 	_expect(not world.get_node("SheepfoldPen").visible and not state.sheepfold.owned(), "The pasture is empty in a fresh campaign.")

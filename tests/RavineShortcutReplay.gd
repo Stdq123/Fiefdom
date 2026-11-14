@@ -26,6 +26,7 @@ func _continue_from_title() -> void:
 
 func _check_closed_gate() -> bool:
 	var gate := world.get_node("RavineTrailGate") as Node2D
+	await _look_at_fork(false)
 	await Campaign.walk_estate_road_to(tree, world, gate.global_position + Vector2(-18, 3))
 	Input.action_press(&"ui_right")
 	for frame in 22:
@@ -34,9 +35,16 @@ func _check_closed_gate() -> bool:
 	await tree.process_frame
 	var blocked := _expect(tree.current_scene.scene_file_path == state.ESTATE_SCENE
 		and world.player.position.x < gate.position.x and not gate.get_node("Barrier/Shape").disabled
-		and "未开" in gate.get_node("Caption").text, "The bamboo bar blocks the route before handing in the three notes.")
+		and "向蒲宁交还三处水迹" in gate.get_node("Caption").text,
+		"The bamboo bar blocks the route and names the requirement at the gate.")
 	await _snapshot("01-closed-gate")
 	return blocked
+
+func _look_at_fork(open: bool) -> void:
+	await Campaign.walk_estate_road_to(tree, world, EstateLayout.FESTIVAL_FORK)
+	var post := world.get_node_or_null("Scenery/竹涧小径路牌") as Sprite2D
+	_expect(post != null and post.is_visible_in_tree() == open, "The path sign appears at the fork only when the gate is open.")
+	await _snapshot("02a-open-fork" if open else "00-closed-fork")
 
 func _hand_in_survey() -> bool:
 	var guide: Node2D = world.neighbor_actor(VisitorData.RAVINE_GUIDE)
@@ -187,10 +195,14 @@ func _play() -> void:
 		return
 	world.player.arrive_at_position(EstateLayout.SOUTH_PAVILION + Vector2(0, 21), Vector2.DOWN)
 	if not baseline:
+		await _look_at_fork(true)
 		await _choose_shoal_from_estate()
 	var ravine := await _reach_shoal(not baseline)
 	if ravine == null:
 		return
+	if not baseline:
+		var return_post := ravine.get_node_or_null("Scenery/南路小径路牌") as Sprite2D
+		_expect(return_post != null and return_post.is_visible_in_tree(), "The unlocked trail is signed on the ravine side too.")
 	var fish_id: String = state.fish_at_today(CreekFish.Site.SHOAL)
 	if not await _catch_at(ravine.get_node("GravelShoal"), fish_id, ""):
 		return

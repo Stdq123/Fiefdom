@@ -111,8 +111,11 @@ func _check_junction_posts() -> void:
 	var names := ["野果坳", "浅滩", "望溪台", "南路小径"]
 	for index in names.size():
 		var post := scenery.get_node_or_null(names[index] + "路牌") as Sprite2D
-		if not _expect(post != null and post.is_visible_in_tree(), "The %s fork has a physical sign." % names[index]):
+		if not _expect(post != null, "The %s fork has a physical sign." % names[index]):
 			continue
+		var visible: bool = index != 3 or state.ravine_shortcut_open()
+		_expect(post.is_visible_in_tree() == visible and post.get_node("Caption").text == names[index],
+			"The %s caption belongs to the sign and the gated route is only signed when open." % names[index])
 		var art := post.texture as AtlasTexture
 		_expect(art != null and art.atlas == LANDSCAPE.RAVINE_WAYPOSTS and art.region.position == Vector2(index * 32, 0),
 			"The %s sign points into its lane." % names[index])

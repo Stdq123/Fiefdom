@@ -407,6 +407,18 @@ func _continue_old_handover() -> void:
 			"The interaction key finishes the old save's conversation.")
 	print("DIRECTION_LEGACY day=", state.current_day, " watered=", state.active_crops[PUBLIC].watered)
 
+func _check_road_posts() -> void:
+	var scenery := world.get_node("Scenery")
+	for entry: Array in [["南路亭", 3], ["西廊", 3], ["驾御场", 1], ["南池", 1]]:
+		var post := scenery.get_node_or_null(entry[0] + "路牌") as Sprite2D
+		if not _expect(post != null and post.is_visible_in_tree(), "The %s sign is on the road in a new game." % entry[0]):
+			continue
+		var art := post.texture as AtlasTexture
+		_expect(art != null and art.region.position == Vector2(entry[1] * 32, 0)
+			and post.flip_h == (entry[0] == "南池") and post.get_node("Caption").text == entry[0],
+			"The board and destination for %s point into its branch." % entry[0])
+	print("DIRECTION_ROAD_POSTS pavilion=south court=south chariot=southeast pond=southwest")
+
 func run(game_tree: SceneTree) -> void:
 	tree = game_tree
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Isolate the directions replay's save directory."):
@@ -425,6 +437,7 @@ func run(game_tree: SceneTree) -> void:
 		return
 	await _click(tree.current_scene.new_button.get_global_rect().get_center())
 	await _use_estate()
+	_check_road_posts()
 	var spawn: Vector2 = world.player.global_position
 	_expect(directions.visible and directions.mark == directions.Mark.PLOT and directions.caption.text == "公田"
 		and "WASD" in ui.hud.guide.text and not ui.hud.tribute_button.visible,

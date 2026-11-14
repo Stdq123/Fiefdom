@@ -32,10 +32,9 @@ const BANK_PROPS := [
 	Vector3i(16, 83, LANDSCAPE.Prop.REEDS), Vector3i(-44, 95, LANDSCAPE.Prop.REEDS),
 	Vector3i(-66, 137, LANDSCAPE.Prop.ROCK), Vector3i(-14, 142, LANDSCAPE.Prop.REEDS),
 	Vector3i(-155, 84, LANDSCAPE.Prop.SHRUB), Vector3i(-108, -47, LANDSCAPE.Prop.FLOWERS),
-	Vector3i(137, 73, LANDSCAPE.Prop.FLOWERS), Vector3i(176, -24, LANDSCAPE.Prop.SHRUB),
+	Vector3i(173, 90, LANDSCAPE.Prop.FLOWERS), Vector3i(176, -24, LANDSCAPE.Prop.SHRUB),
 	Vector3i(-290, -17, LANDSCAPE.Prop.FENCE), Vector3i(-316, -17, LANDSCAPE.Prop.FENCE),
 	Vector3i(-298, 87, LANDSCAPE.Prop.FENCE), Vector3i(-324, 87, LANDSCAPE.Prop.FENCE),
-	Vector3i(-242, 12, LANDSCAPE.Prop.SIGNPOST), Vector3i(241, 11, LANDSCAPE.Prop.SIGNPOST),
 ]
 const PAVING_LIMIT := [
 	Vector2(-520, -20), Vector2(-146, -20), Vector2(-146, 23), Vector2(-153, 23),
@@ -182,8 +181,11 @@ func place_scenery(layer: Node2D) -> void:
 		var texture := reedbed if mark.z == LANDSCAPE.Prop.REEDS \
 			else LANDSCAPE.atlas_texture(LANDSCAPE.SCENERY, Rect2(frame * 48.0, Vector2(48, 48)))
 		var sprite := _prop(layer, Vector2(mark.x, mark.y), texture)
-		sprite.flip_h = mark.z == LANDSCAPE.Prop.SIGNPOST and mark.x < 0
 		sprite.self_modulate = plant_tint if mark.z == LANDSCAPE.Prop.REEDS else wet_tint
+	LANDSCAPE.place_waypost(layer, LAYOUT.MARKET_GATE + Vector2(16, -24), Vector2.LEFT, "西市").self_modulate = wet_tint
+	LANDSCAPE.place_waypost(layer, LAYOUT.ESTATE_GATE + Vector2(-17, -25), Vector2.RIGHT, "封地").self_modulate = wet_tint
+	var meadow_heading: Vector2 = LAYOUT.MEADOW_TRACK[1] - LAYOUT.MEADOW_JUNCTION
+	LANDSCAPE.place_waypost(layer, LAYOUT.MEADOW_JUNCTION + Vector2(33, 32), meadow_heading, Sheepfold.MEADOW).self_modulate = wet_tint
 
 func _prop(layer: Node2D, foot: Vector2, texture: AtlasTexture) -> Sprite2D:
 	var sprite := Sprite2D.new()

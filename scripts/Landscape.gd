@@ -151,11 +151,25 @@ const FORD_AREA := Rect2(FORD - Vector2(35, 17), Vector2(70, 34))
 const CROSSING_HALF_DEPTH := 16.0
 const WATER_HALF_WIDTH := 17.0
 const RAVINE_JUNCTIONS := [
-	[Vector2(-174, 35), RavineLayout.BERRY_LANE[1], "野果坳"],
-	[Vector2(-62, 14), RavineLayout.FORD_TRAIL[1], "浅滩"],
-	[Vector2(355, 33), RavineLayout.RIDGE_LANE[1], "望溪台"],
-	[Vector2(150, 214), RavineLayout.SOUTH_TRAIL[1], "南路小径"],
+	[Vector2(-174, 35), RavineLayout.BERRY_LANE, "野果坳"],
+	[Vector2(-62, 14), RavineLayout.FORD_TRAIL, "浅滩"],
+	[Vector2(355, 33), RavineLayout.RIDGE_LANE, "望溪台"],
+	[Vector2(150, 214), RavineLayout.SOUTH_TRAIL, RavineLayout.SOUTH_TRAIL_NAME],
 ]
+const ESTATE_WAYPOSTS := [
+	[Vector2(-75, 65), Vector2.LEFT, "西市"],
+	[Vector2(-239, 10), EstateLayout.WEST_LANE[1] - EstateLayout.WEST_FORK, "西廊"],
+	[Vector2(120, 54), Vector2.RIGHT, "东关"],
+	[Vector2(286, 46), Vector2.RIGHT, "竹涧"],
+	[Vector2(351, 57), EstateLayout.DRIVING_APPROACH[1] - EstateLayout.DRIVING_FORK, "驾御场"],
+	[Vector2(23, 209), EstateLayout.FIELD_LANE_TURN - EstateLayout.SOUTH_LANE[6], "南路亭"],
+	[Vector2(0, 527), EstateLayout.SHEEP_LANE[1] - EstateLayout.SOUTH_FORK, "西坡"],
+	[Vector2(50, 511), EstateLayout.HEARTH_LANE[1] - EstateLayout.SOUTH_FORK, "灶台"],
+	[Vector2(226, 605), EstateLayout.FESTIVAL_LANE[1] - EstateLayout.FESTIVAL_FORK, "南池"],
+	[Vector2(278, 553), EstateLayout.RAVINE_TRAIL[1] - EstateLayout.FESTIVAL_FORK, EstateLayout.RAVINE_TRAIL_NAME],
+]
+# Frames for clockwise headings from east. The east and west cuts use the long board.
+const WAYPOST_FRAMES := [-1, 1, 3, 1, -1, 2, 0, 2]
 const WINTER_ROCK_TINT := Color(0.92, 0.99, 1.08)
 const EAST_LANE_JUNCTION := EstateLayout.EAST_LANE_JUNCTION
 const ESTATE_SOUTH_LANE := EstateLayout.SOUTH_LANE
@@ -223,7 +237,6 @@ const ESTATE_PROPS := [
 	Vector3i(52, -17, Prop.BLOSSOM_TREE), Vector3i(85, -20, Prop.PINE), Vector3i(115, -42, Prop.GROVE_TREE),
 	Vector3i(126, -25, Prop.SHRUB), Vector3i(173, -23, Prop.ROCK), Vector3i(204, -35, Prop.PINE),
 	Vector3i(233, -21, Prop.OAK), Vector3i(267, -41, Prop.BAMBOO), Vector3i(306, -27, Prop.MOSS_STONE),
-	Vector3i(-239, 10, Prop.SIGNPOST),
 	Vector3i(-320, 94, Prop.FENCE), Vector3i(-290, 99, Prop.OPEN_SACK),
 	Vector3i(-311, 116, Prop.TALL_BAMBOO), Vector3i(-284, 124, Prop.PINE), Vector3i(-231, 101, Prop.TALL_BAMBOO),
 	Vector3i(-211, 115, Prop.SHRUB), Vector3i(-317, 188, Prop.LIDDED_JAR), Vector3i(-311, 195, Prop.JAR),
@@ -242,13 +255,12 @@ const ESTATE_PROPS := [
 	Vector3i(152, 452, Prop.WHITE_BLOOM), Vector3i(161, 455, Prop.PINK_BLOOM), Vector3i(223, 445, Prop.WHITE_BLOOM),
 	Vector3i(289, 285, Prop.FLOWERS), Vector3i(262, 305, Prop.BAMBOO),
 	Vector3i(349, 318, Prop.MOSS_STONE), Vector3i(334, 322, Prop.FERN),
-	Vector3i(120, 54, Prop.SIGNPOST),
-	Vector3i(286, 32, Prop.SIGNPOST), Vector3i(348, -24, Prop.GROVE_TREE), Vector3i(356, -17, Prop.FENCE),
+	Vector3i(348, -24, Prop.GROVE_TREE), Vector3i(356, -17, Prop.FENCE),
 	Vector3i(413, -16, Prop.GATE_FAR), Vector3i(387, 32, Prop.GATE),
 	Vector3i(445, 25, Prop.FENCE), Vector3i(457, 53, Prop.PINE),
 	Vector3i(481, -21, Prop.GROVE_CLUSTER), Vector3i(478, 99, Prop.GROVE_TREE),
 	# The pine verge separates the watch post and the training road.
-	Vector3i(351, 57, Prop.SIGNPOST), Vector3i(357, 87, Prop.OAK), Vector3i(420, 94, Prop.TALL_BAMBOO),
+	Vector3i(357, 87, Prop.OAK), Vector3i(420, 94, Prop.TALL_BAMBOO),
 	Vector3i(354, 109, Prop.GROVE_TREE), Vector3i(357, 194, Prop.PINE), Vector3i(427, 155, Prop.PINE),
 	Vector3i(336, 207, Prop.TALL_BAMBOO), Vector3i(348, 226, Prop.FENCE), Vector3i(446, 222, Prop.FENCE),
 	Vector3i(351, 270, Prop.LOGS), Vector3i(448, 276, Prop.OAK), Vector3i(365, 319, Prop.TALL_BAMBOO),
@@ -256,7 +268,7 @@ const ESTATE_PROPS := [
 	Vector3i(377, 436, Prop.PINE), Vector3i(447, 428, Prop.FENCE), Vector3i(474, 435, Prop.FENCE),
 	Vector3i(468, 491, Prop.TALL_BAMBOO), Vector3i(423, 501, Prop.GROVE_TREE),
 	# Bamboo and low grasses flank the lane between the fields and the pavilion.
-	Vector3i(12, 224, Prop.SIGNPOST), Vector3i(75, 255, Prop.BAMBOO),
+	Vector3i(75, 255, Prop.BAMBOO),
 	Vector3i(-7, 276, Prop.TALL_BAMBOO), Vector3i(-38, 289, Prop.TALL_BAMBOO), Vector3i(-24, 303, Prop.FERN),
 	Vector3i(67, 286, Prop.ROCK), Vector3i(88, 300, Prop.TALL_BAMBOO), Vector3i(122, 307, Prop.GROVE_CLUSTER),
 	Vector3i(54, 315, Prop.TALL_BAMBOO), Vector3i(81, 326, Prop.BAMBOO), Vector3i(46, 338, Prop.FERN),
@@ -271,12 +283,12 @@ const ESTATE_PROPS := [
 	Vector3i(-68, 536, Prop.LIDDED_JAR), Vector3i(-46, 521, Prop.GROVE_TREE), Vector3i(-5, 512, Prop.FERN),
 	Vector3i(-88, 608, Prop.MOSS_STONE), Vector3i(-107, 616, Prop.FLOWERS), Vector3i(-150, 617, Prop.SHRUB),
 	Vector3i(-294, 627, Prop.FENCE), Vector3i(-289, 652, Prop.FLOWERS), Vector3i(-200, 632, Prop.FLOWERS),
-	Vector3i(50, 511, Prop.SIGNPOST), Vector3i(101, 522, Prop.GROVE_TREE), Vector3i(122, 531, Prop.PINE),
+	Vector3i(101, 522, Prop.GROVE_TREE), Vector3i(122, 531, Prop.PINE),
 	Vector3i(172, 530, Prop.TALL_BAMBOO), Vector3i(191, 548, Prop.LOGS), Vector3i(253, 555, Prop.JAR),
 	Vector3i(112, 594, Prop.OAK), Vector3i(136, 621, Prop.PINE), Vector3i(172, 609, Prop.GROVE_TREE),
 	Vector3i(37, 600, Prop.BAMBOO), Vector3i(23, 636, Prop.FLOWERS), Vector3i(4, 678, Prop.TALL_BAMBOO),
 	Vector3i(281, 633, Prop.GROVE_TREE), Vector3i(315, 635, Prop.TALL_BAMBOO), Vector3i(337, 648, Prop.RAVINE_ROCK),
-	Vector3i(278, 553, Prop.SIGNPOST), Vector3i(306, 545, Prop.BAMBOO), Vector3i(341, 539, Prop.GROVE_TREE),
+	Vector3i(306, 545, Prop.BAMBOO), Vector3i(341, 539, Prop.GROVE_TREE),
 	Vector3i(400, 603, Prop.BLOSSOM_TREE), Vector3i(463, 539, Prop.PINE), Vector3i(457, 608, Prop.TALL_BAMBOO),
 	Vector3i(489, 612, Prop.PINE), Vector3i(483, 664, Prop.OAK),
 	# Reeds mark the waterline. The open west bank is the approach to the clearing.
@@ -371,6 +383,7 @@ const WILD_PROPS := [
 
 var props: Array[Vector3i] = []
 var scenery: Dictionary[Sprite2D, int] = {}
+var shortcut_waypost: Sprite2D
 var gate_bases: Dictionary[Sprite2D, CollisionShape2D] = {}
 var seasonal_textures: Dictionary[int, AtlasTexture] = {}
 var ground_cover: SEASONAL_GROUND
@@ -410,6 +423,7 @@ func _ready() -> void:
 	props.assign(WILD_PROPS if wilderness else ESTATE_PROPS)
 	props.sort_custom(func(a: Vector3i, b: Vector3i) -> bool: return a.y < b.y)
 	GameEvents.day_advanced.connect(_update_weather.unbind(1))
+	GameEvents.ravine_journal_changed.connect(_refresh_shortcut_waypost)
 	if not wilderness:
 		get_parent().visitor_changed.connect(queue_redraw.unbind(1))
 		GameEvents.well_field_added.connect(_refresh_field_layout.unbind(1))
@@ -511,6 +525,7 @@ func _prepare_map() -> void:
 		scenery[_place_sprite(props_layer, RavineLayout.LOOKOUT, Vector2(-24, -38), LOOKOUT)] = SCENE_LANDMARK
 		_place_ravine_wayposts(props_layer)
 	else:
+		_place_estate_wayposts(props_layer)
 		var pavilion_texture := atlas_texture(ESTATE_BUILDINGS, PAVILION_REGION)
 		scenery[_place_sprite(props_layer, SOUTH_PAVILION, _building_offset(PAVILION_REGION.size), pavilion_texture)] = SCENE_LANDMARK
 		var shelter := atlas_texture(ROAD_PAVILION, Rect2(0, 0, 48, 40))
@@ -531,14 +546,39 @@ func _prepare_map() -> void:
 	_refresh_scenery()
 
 func _place_ravine_wayposts(layer: Node2D) -> void:
-	# A different cut of the same board makes each fork readable without a pinned route.
-	for index in RAVINE_JUNCTIONS.size():
-		var junction: Array = RAVINE_JUNCTIONS[index]
-		var board := atlas_texture(RAVINE_WAYPOSTS, Rect2(index * 32.0, 0, 32, 32))
-		var post := _place_sprite(layer, junction[0], Vector2(-16, -29), board)
-		post.name = junction[2] + "路牌"
+	for junction: Array in RAVINE_JUNCTIONS:
+		var lane: Array = junction[1]
+		var post := place_waypost(layer, junction[0], lane[1] - lane[0], junction[2])
 		scenery[post] = Prop.SIGNPOST
-		_label_at(junction[1] + Vector2(0, -15), junction[2])
+		if junction[2] == RavineLayout.SOUTH_TRAIL_NAME:
+			shortcut_waypost = post
+
+func _place_estate_wayposts(layer: Node2D) -> void:
+	for entry: Array in ESTATE_WAYPOSTS:
+		var post := place_waypost(layer, entry[0], entry[1], entry[2])
+		scenery[post] = Prop.SIGNPOST
+		if entry[2] == EstateLayout.RAVINE_TRAIL_NAME:
+			shortcut_waypost = post
+
+static func place_waypost(layer: Node2D, foot: Vector2, direction: Vector2, caption: String) -> Sprite2D:
+	var heading := posmod(roundi(direction.angle() / (PI / 4.0)), 8)
+	var frame: int = WAYPOST_FRAMES[heading]
+	var texture: AtlasTexture
+	var offset := Vector2(-16, -29)
+	if frame == -1:
+		var cut := Vector2(Prop.SIGNPOST % PROP_COLUMNS, floori(float(Prop.SIGNPOST) / PROP_COLUMNS))
+		texture = atlas_texture(SCENERY, Rect2(cut * PROP_SIZE, PROP_SIZE))
+		offset = -PROP_ANCHOR
+	else:
+		texture = atlas_texture(RAVINE_WAYPOSTS, Rect2(frame * 32.0, 0, 32, 32))
+	var post := _place_sprite(layer, foot, offset, texture)
+	post.name = caption + "路牌"
+	post.flip_h = heading in [3, 4, 5]
+	var label := _landmark_label(caption)
+	label.name = "Caption"
+	label.position = Vector2(-55, -43 if frame == -1 else -39)
+	post.add_child(label)
+	return post
 
 func _add_water_surface() -> void:
 	if wilderness:
@@ -579,7 +619,7 @@ func _place_lanterns(layer: Node2D) -> void:
 		day_lighting.place_lamp(layer, EstateLayout.WEST_COURT + Vector2(-31, -9), 0.78)
 	day_lighting.refresh()
 
-func _place_sprite(layer: Node, foot: Vector2, offset: Vector2, texture: Texture2D) -> Sprite2D:
+static func _place_sprite(layer: Node, foot: Vector2, offset: Vector2, texture: Texture2D) -> Sprite2D:
 	var sprite := Sprite2D.new()
 	sprite.position = foot
 	sprite.centered = false
@@ -625,7 +665,13 @@ func _refresh_scenery() -> void:
 	if not wilderness:
 		for lamp in day_lighting.lamps:
 			lamp.visible = _ground_clear(Rect2(to_local(lamp.global_position) - Vector2(4, 2), Vector2(8, 4)))
+	_refresh_shortcut_waypost()
 	queue_redraw()
+
+func _refresh_shortcut_waypost() -> void:
+	if shortcut_waypost != null:
+		shortcut_waypost.visible = Global.ravine_shortcut_open() and (
+			wilderness or _ground_clear(_ground_bounds(shortcut_waypost.position, Prop.SIGNPOST)))
 
 func _process(delta: float) -> void:
 	if not get_tree().paused and not player.conversation_open and not MapTravel.active:
@@ -737,26 +783,20 @@ func _add_landmark_labels() -> void:
 		_label_at(BRIDGE + Vector2(-66, -31), "木桥 →")
 		_label_at(RavineLayout.LOOKOUT + Vector2(-19, -55), "望溪台")
 	else:
-		_label_at(Vector2(-305, -104), "← 西市")
-		_label_at(Vector2(-136, 37), "← 西市")
-		_label_at(Vector2(-239, -21), "西廊 ↓")
 		_label_at(EstateLayout.WEST_COURT_SHELTER + Vector2(0, -48), "西廊")
-		_label_at(Vector2(120, 6), "东关 →")
-		_label_at(Vector2(287, -22), "东关 · 竹涧 →")
 		_label_at(Vector2(400, -78), "东关")
-		_label_at(Vector2(348, 14), "驾御场 ↘")
 		_label_at(SOUTH_PAVILION + Vector2(0, -69), "南路亭")
-		_label_at(Vector2(12, 181), "南路亭 ↓")
-		_label_at(EstateLayout.SOUTH_FORK + Vector2(22, -38), "西坡 ↙  ·  灶台 →")
-		_label_at(Vector2(278, 510), "竹涧小径 →")
-		_label_at(EstateLayout.FESTIVAL_FORK + Vector2(4, 46), "↙ 南池")
 		_label_at(EstateLayout.FESTIVAL_LANE[-5] + Vector2(-16, -18), "南池畔 ↘")
 
 func _label_at(center: Vector2, text: String) -> void:
+	var label := _landmark_label(text)
+	label.position = center - Vector2(55, 0)
+	add_child(label)
+
+static func _landmark_label(text: String) -> Label:
 	var label := Label.new()
 	label.material = preload("res://resources/world_hint_material.tres")
 	label.text = text
-	label.position = center - Vector2(55, 0)
 	label.size.x = 110
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -765,7 +805,7 @@ func _label_at(center: Vector2, text: String) -> void:
 	label.add_theme_color_override("font_color", Color("#e8dbac"))
 	label.add_theme_color_override("font_outline_color", Color("#243a2d"))
 	label.add_theme_constant_override("outline_size", 3)
-	add_child(label)
+	return label
 
 func _draw_ground() -> void:
 	var colors: Array = SEASON_PALETTES[season]

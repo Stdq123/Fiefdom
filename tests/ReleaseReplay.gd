@@ -288,9 +288,10 @@ func _run() -> void:
 		"autumn-exhibit":
 			var replay = load("res://tests/AutumnExhibitReplay.gd").new()
 			await replay.run(tree, capture_directory)
-		"sheepfold", "meadow-fodder":
+		"sheepfold", "meadow-fodder", "meadow-previous-cut":
 			var replay = load("res://tests/SheepfoldReplay.gd").new()
 			replay.meadow_only = arguments[0] == "meadow-fodder"
+			replay.previous_cut = arguments[0] == "meadow-previous-cut"
 			if not capture_directory.is_empty():
 				OS.set_environment("FIEFDOM_SHEEP_CAPTURES", capture_directory)
 			await replay.run(tree)
