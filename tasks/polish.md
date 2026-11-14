@@ -21,7 +21,7 @@
 - **经营到结局**。按自己的节奏选一条路线，记下哪几天改变了经营方式、哪些操作重复得最累、哪次遇见人物或走过某处让你想再去。结算后退出，再从标题「继续游戏」读回，核对路线和结算日期。
 - **回报**。记下系统和显卡、键鼠或手柄、实际窗口尺寸、总游玩时间及停在的游戏日期。能复现的问题附上当时的截图或一段操作顺序。画面、节奏和手感直接写感受即可。
 
-本包包含东关到望溪台的斜俯视岩壁与石阶、南路卸货场候货、南路亭的灯下小谈、野狗和斥候的战斗反馈、西市配乐《西市行》、轮作簿交接井田和缺粮时的野果坳指路。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本包校验](../build/polish-east-gate-depth/delivery/capture-final/manifest.txt)
+本包包含东关到望溪台的斜俯视岩壁与石阶、重绘的陶罐粮袋和采集物、南路卸货场候货、南路亭的灯下小谈、野狗和斥候的战斗反馈、西市配乐《西市行》、轮作簿交接井田和缺粮时的野果坳指路。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本包校验](../build/polish-world-prop-depth/final/capture-final/manifest.txt)
 
 ## 从新档到第一次收获
 
@@ -1101,4 +1101,10 @@
 - 东关的石铺路与竹涧西门接成同一路口。进林径时可见两侧岩壁，过木桥后从东岸岔口循石阶去望溪台。野药仍在台上。石阶、台面和门槛用石面脚步，岩壁依轮廓阻挡行走。冬季岩沿覆霜，入夜可沿西门和石台的灯辨认去路。 [西门与望溪台前后对比](../build/polish-east-gate-depth/delivery/route-before-after.png) · [夜间灯火](../build/polish-east-gate-depth/delivery/route-at-night.png)
 - 1920×1080 和 1024×768 的独立桌面回放从新档经东关进竹涧，沿舆图过木桥上石台，走浅滩回东关。重新入谷后往北走，角色停在岩脚，再经石门返回。专题推进至冬季，仍能登台，西门和石台的灯在亥时点亮。 [1920×1080 实景记录](../build/polish-east-gate-depth/delivery/capture-final/ravine-map.log) · [1024×768 实景记录](../build/polish-east-gate-depth/delivery/capture-final/ravine-map-1024x768.log)
 - 另从新档实走三条交给渠伯管田的经营路线。第 24 天起由渠伯管理第二块田的传统与改革路线分别于第 65 天、第 62 天结算。从第一块田交接的改革路线于第 64 天结算，渠伯在外出期间收获 117 份，玩家执行 152 次田间操作，57 夜按安排备粮。三条路线没有缺餐夜，结算后各继续一天。 [管第二田的传统路线](../build/polish-east-gate-depth/delivery/steward-final/traditional-steward.log) · [管第二田的改革路线](../build/polish-east-gate-depth/delivery/steward-final/reformed-steward.log) · [交接第一块田](../build/polish-east-gate-depth/delivery/steward-final/reformed-first-steward.log)
-- 30 项无窗口发行检查和 7 次隔离桌面运行通过。传统第 56 天、改革第 59 天结算，两个结局可退出重读，上一版存档可继续，连续运行 90.606 秒。两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-east-gate-depth/delivery/Fiefdom-1.0.0-Windows-x64.zip) · [无窗口发行](../build/polish-east-gate-depth/delivery/headless-final.log) · [隔离桌面](../build/polish-east-gate-depth/delivery/capture-final.log) · [重复构建](../build/polish-east-gate-depth/delivery/hashes.log)
+- 103 项源码场景、30 项无窗口发行检查和 7 次隔离桌面运行通过。传统第 56 天、改革第 59 天结算，两个结局可退出重读，上一版存档可继续，连续运行 90.606 秒。两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-east-gate-depth/delivery/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-east-gate-depth/source-final.log) · [无窗口发行](../build/polish-east-gate-depth/delivery/headless-final.log) · [隔离桌面](../build/polish-east-gate-depth/delivery/capture-final.log) · [重复构建](../build/polish-east-gate-depth/delivery/hashes.log)
+
+## 堂前器物与竹涧采集物的斜俯视
+
+- 封地的缚口谷袋、开口谷袋、陶罐和带盖罐都露出上沿和近侧面。人物在罐后时罐身遮住人物，在罐前时露出全身。保留图集的四个裁切位置，谷袋在背包、工地和差役携带画面依然可用。用原导入器的两倍比例栅格化后，四帧均为 32×32、有透明背景。 [图集预览](../build/polish-world-prop-depth/art-check/storage-atlas.png) · [实景遮挡](../build/polish-world-prop-depth/final/world-props.png)
+- 野药移到望溪台东侧的石台面，抬高采集提示给叶片留出空间。竹涧舆图随实际野药位置更新。从新档进入竹涧，在石台侧面可交互，在野果坳按 E 后果实当日消失，粮仓由 10 增至 15。用 1920×1080 和 1024×768 隔离桌面走过这两处。 [采摘前后](../build/polish-world-prop-depth/final/picking-berries.png) · [1920×1080 回放](../build/polish-world-prop-depth/final/capture-final/ravine-map.log) · [1024×768 回放](../build/polish-world-prop-depth/final/capture-final/ravine-map-1024x768.log)
+- 33 项无窗口发行检查及 7 次隔离桌面运行通过。解压版从新档在第 56 天达成传统结局、第 59 天达成改革结局，两个结局均可重启后续档。把第一块井田交给渠伯的路线第 64 天完成改革结局。上一版的第 4 天存档可继续。连续运行 90.698 秒，两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-world-prop-depth/final/Fiefdom-1.0.0-Windows-x64.zip) · [无窗口发行](../build/polish-world-prop-depth/final/headless.log) · [隔离桌面](../build/polish-world-prop-depth/final/capture-final.log) · [重复构建](../build/polish-world-prop-depth/final/hashes.log)

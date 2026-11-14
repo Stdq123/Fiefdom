@@ -21,7 +21,7 @@ const SOUTH_TRAIL_ARRIVAL := Vector2(203, 310)
 const SOUTH_TRAIL_NAME := "南路小径"
 
 const FRUIT := Vector2(-139, -123)
-const HERBS := Vector2(446, -106)
+const HERBS := Vector2(452, -102)
 const WILLOW_POOL := Vector2(190, -410)
 const POOL_TRAP := Vector2(155, -448)
 const GRAVEL_SHOAL := Vector2(277, 229)

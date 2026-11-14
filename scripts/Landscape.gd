@@ -577,7 +577,7 @@ func _process(delta: float) -> void:
 	var under_roof := not wilderness and EstateLayout.PAVILION_SHELTER_FLOOR.has_point(foot)
 	AudioManager.set_world_ambience(creek_distance, birds_distance, cricket_distance, under_roof)
 	for sprite in scenery:
-		if not sprite.visible:
+		if not sprite.visible or STORAGE_TINTS.has(scenery[sprite]):
 			continue
 		var from_foot := sprite.to_local(player.global_position)
 		var crown := sprite.get_rect().grow(-3.0)
@@ -621,7 +621,9 @@ func _draw() -> void:
 		if prop.z == Prop.TALL_BAMBOO:
 			draw_rect(Rect2(foot - Vector2(11, 2), Vector2(22, 5)), Color("#23382b80"))
 		elif STORAGE_TINTS.has(prop.z):
-			draw_rect(Rect2(foot - Vector2(6, 1), Vector2(12, 3)), Color("#23382b80"))
+			var shadow := Color("#252f2586")
+			draw_rect(Rect2(foot - Vector2(6, 2), Vector2(14, 3)), shadow)
+			draw_rect(Rect2(foot - Vector2(4, 1), Vector2(14, 4)), shadow)
 		else:
 			_stamp(bounds, prop.z)
 

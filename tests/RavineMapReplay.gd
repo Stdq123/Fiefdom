@@ -223,6 +223,13 @@ func _cross_the_ravine() -> bool:
 	print("RAVINE_TRIP_HERBS arrival=", player.position, " used=", state.last_forage_day == state.current_day)
 	print("RAVINE_MAP_BRIDGE arrival=", player.position)
 	await _capture_map_frame("02-east-lookout")
+	if not map_capture_dir.is_empty():
+		var roadside := RavineLayout.HERBS + Vector2(-19, 9)
+		await Campaign.walk_straight(tree, player, roadside)
+		_expect(player.position.x < RavineLayout.HERBS.x - 12.0 and player.interaction_target == ravine.get_node("WildHerbs"),
+			"The herbs remain reachable from the open side of the terrace.")
+		await _capture_map_frame("02a-herbs-on-ledge")
+		await Campaign.walk_straight(tree, player, RavineLayout.HERBS)
 
 	if not await _select_place("砾滩"):
 		return false
@@ -255,6 +262,47 @@ func _check_gate_rock() -> void:
 		"Walking toward the rocks stops at their feet alongside the gate.")
 	print("RAVINE_MAP_GATE_EDGE arrived=", gate_start, " stopped=", player.position)
 	await Campaign.walk_straight(tree, player, gate_start)
+
+func _check_fruit() -> void:
+	if not await _select_place("野果坳"):
+		return
+	await _key(KEY_ESCAPE)
+	if not await _walk_route():
+		return
+	var available_grain: int = state.food_storage
+	if not map_capture_dir.is_empty():
+		await Campaign.walk_straight(tree, player, RavineLayout.FRUIT + Vector2(-17, 11))
+	await _capture_map_frame("10-berries-on-bush")
+	await _key(KEY_E)
+	_expect(state.food_storage == available_grain + state.balance.wild_food_yield
+		and state.last_forage_day == state.current_day, "Picking the visible berries still deposits the day's forage in the granary.")
+	await _capture_map_frame("11-berries-picked")
+	print("RAVINE_MAP_FRUIT day=", state.current_day, " grain=", available_grain, "->", state.food_storage)
+
+func _check_courtyard_storage(estate_player: CharacterBody2D, landscape: Node2D) -> void:
+	var jar: Sprite2D
+	for sprite: Sprite2D in landscape.scenery:
+		if landscape.scenery[sprite] == LANDSCAPE.Prop.JAR and sprite.position == Vector2(15, 35):
+			jar = sprite
+			break
+	if not _expect(jar != null and jar.is_visible_in_tree() and jar.get_parent().y_sort_enabled,
+		"The courtyard jar is on the same foot-sorted scenery layer as the hall."):
+		return
+	await Campaign.walk_to(tree, estate_player, Vector2(61, 35))
+	await _capture_map_frame("00c-hall-storage")
+	await Campaign.walk_straight(tree, estate_player, Vector2(53, 49))
+	await Campaign.walk_straight(tree, estate_player, Vector2(15, 49))
+	await Campaign.walk_straight(tree, estate_player, jar.position + Vector2(0, -2))
+	await _capture_map_frame("00d-behind-jar")
+	_expect(estate_player.position.distance_to(jar.position + Vector2(0, -2)) < 2.0
+		and estate_player.position.y < jar.position.y and is_equal_approx(jar.self_modulate.a, 1.0),
+		"Passing behind the solid jar keeps its mouth and front opaque.")
+	await Campaign.walk_straight(tree, estate_player, jar.position + Vector2(0, 8))
+	await _capture_map_frame("00e-in-front-of-jar")
+	_expect(absf(estate_player.position.x - jar.position.x) < 2.0 and estate_player.position.y >= jar.position.y + 4.0,
+		"The player can keep walking past the front of the jar.")
+	print("RAVINE_MAP_STORAGE jar=", jar.position, " alpha=", jar.self_modulate.a, " front=", estate_player.position)
+	await Campaign.walk_straight(tree, estate_player, Vector2(61, 48))
 
 func _lamp_at_lights(landscape: Node2D, foot: Vector2) -> bool:
 	for lamp in landscape.day_lighting.lamps:
@@ -414,6 +462,8 @@ func run(game_tree: SceneTree) -> void:
 		var estate_player: CharacterBody2D = tree.current_scene.get_node("World/Player")
 		var landscape: Node2D = tree.current_scene.get_node("World/Landscape")
 		await _move(&"ui_up", 48)
+		if not map_capture_dir.is_empty():
+			await _check_courtyard_storage(estate_player, landscape)
 		await Campaign.walk_to(tree, estate_player, Vector2(359, 8))
 		_expect(landscape._surface_at(EstateLayout.EAST_GATE) == TERRAIN_AUDIO.Surface.STONE,
 			"The estate approach has a matching stone sill.")
@@ -421,6 +471,8 @@ func run(game_tree: SceneTree) -> void:
 		await _move(&"ui_right", 38)
 		if _bind_ravine() and await _cross_the_ravine():
 			await _check_journal()
+			if not tree.paused:
+				await _check_fruit()
 			if not map_capture_dir.is_empty() and not tree.paused:
 				await Campaign.walk_ravine_to(tree, ravine, RavineLayout.BRIDGE)
 				await _check_ravine_weather()

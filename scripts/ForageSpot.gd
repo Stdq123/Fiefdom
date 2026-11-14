@@ -1,5 +1,8 @@
 extends Node2D
 
+const BERRY_PILES := [Vector2(-9, 0), Vector2(-6, -8), Vector2(4, -6), Vector2(7, 1)]
+const HERB_LEAVES := [Vector2(-4, -5), Vector2(0, 1), Vector2(6, -4)]
+
 @export var medicinal := false
 @export var player: Player
 
@@ -11,7 +14,7 @@ var focused := false
 func _ready() -> void:
 	hint = Label.new()
 	hint.material = preload("res://resources/world_hint_material.tres")
-	hint.position = Vector2(-41, -28)
+	hint.position = Vector2(-41, -35)
 	hint.size.x = 82
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -75,20 +78,55 @@ func interact() -> void:
 func _draw() -> void:
 	var gathered := Global.last_forage_day == Global.current_day
 	if medicinal:
-		draw_rect(Rect2(-9, 2, 18, 4), Color("#2e4735"))
-		for offset: Vector2 in [Vector2(-6, 0), Vector2(0, -5), Vector2(5, -2)]:
-			draw_rect(Rect2(offset + Vector2(0, -8), Vector2(2, 10)), Color("#577f64"))
-			draw_rect(Rect2(offset + Vector2(-3, -5), Vector2(7, 3)), Color("#7fa281"))
-			if not gathered:
-				draw_rect(Rect2(offset + Vector2(-1, -10), Vector2(4, 3)), Color("#bad5b5"))
-		return
-	draw_rect(Rect2(-12, 3, 24, 5), Color("#273e31"))
-	draw_rect(Rect2(-11, -5, 22, 10), Color("#39583e"))
-	draw_rect(Rect2(-8, -10, 15, 13), Color("#56764a"))
-	draw_rect(Rect2(-3, -13, 7, 12), Color("#718952"))
-	draw_rect(Rect2(-9, -6, 6, 5), Color("#7d965a"))
-	draw_rect(Rect2(5, -6, 7, 6), Color("#617e50"))
+		_draw_herbs(gathered)
+	else:
+		_draw_berry_bush(gathered)
+
+func _draw_herbs(gathered: bool) -> void:
+	var dark := Color("#345341")
+	var leaf := Color("#668c5b")
+	var upper := Color("#9bb37a")
+	if gathered:
+		upper = leaf
+	draw_rect(Rect2(-10, 2, 21, 4), Color("#38463899"))
+	draw_rect(Rect2(-7, 0, 14, 5), Color("#574f3e"))
+	draw_rect(Rect2(-5, 0, 11, 2), Color("#8b7f5f"))
+	for index in HERB_LEAVES.size():
+		var node: Vector2 = HERB_LEAVES[index]
+		var side := -1.0 if index == 0 else 1.0
+		var head := node + Vector2(side * 4, -8)
+		draw_line(Vector2(node.x * 0.48, 3), head + Vector2(0, 2), dark, 2.0)
+		_draw_leaf(node, Vector2(5, -5), leaf, dark, upper)
+		_draw_leaf(node - Vector2(0, 3), Vector2(-5, -3), leaf, dark, upper)
+		if not gathered:
+			draw_rect(Rect2(head - Vector2(2, 1), Vector2(5, 3)), Color("#779668"))
+			draw_rect(Rect2(head - Vector2(1, 2), Vector2(2, 2)), Color("#c0cd98"))
+			draw_rect(Rect2(head + Vector2(1, -1), Vector2(2, 1)), Color("#a9bc85"))
+
+func _draw_leaf(base: Vector2, direction: Vector2, leaf: Color, underside: Color, rim: Color) -> void:
+	var tip := base + direction
+	var right := base + direction * 0.56 + Vector2(1, 2)
+	var left := base + direction * 0.30 - Vector2(0, 2)
+	draw_colored_polygon(PackedVector2Array([base, left, tip, right]), underside)
+	draw_colored_polygon(PackedVector2Array([base, left, tip]), leaf)
+	draw_line(base.lerp(tip, 0.32), tip, rim, 1.0)
+
+func _draw_berry_bush(gathered: bool) -> void:
+	draw_rect(Rect2(-13, 3, 27, 5), Color("#263c2d99"))
+	draw_rect(Rect2(-9, 1, 20, 6), Color("#31482e"))
+	draw_rect(Rect2(-2, -1, 3, 8), Color("#554d35"))
+	draw_colored_polygon(PackedVector2Array([
+		Vector2(-12, -5), Vector2(-8, -12), Vector2(-1, -15), Vector2(7, -13), Vector2(12, -8),
+		Vector2(14, -2), Vector2(10, 3), Vector2(4, 5), Vector2(-7, 4), Vector2(-13, 0),
+	]), Color("#36533a"))
+	for tip: Vector2 in [Vector2(-10, -8), Vector2(-5, -13), Vector2(2, -14), Vector2(10, -10), Vector2(12, -5), Vector2(7, -2)]:
+		var stem := tip.lerp(Vector2(1, 3), 0.62).round()
+		_draw_leaf(stem, tip - stem, Color("#708c51"), Color("#4f6d43"), Color("#8ca25e"))
+	for tip: Vector2 in [Vector2(-12, 0), Vector2(-8, 3), Vector2(8, 4), Vector2(13, 0)]:
+		_draw_leaf(Vector2(0, -4), tip - Vector2(0, -4), Color("#587741"), Color("#3d5e39"), Color("#6b864e"))
 	if not gathered:
-		for berry: Vector2 in [Vector2(-8, -3), Vector2(-3, -8), Vector2(3, -5), Vector2(7, -1)]:
-			draw_rect(Rect2(berry, Vector2(3, 3)), Color("#cb8359"))
-			draw_rect(Rect2(berry, Vector2.ONE), Color("#f5c281"))
+		for berry: Vector2 in BERRY_PILES:
+			draw_rect(Rect2(berry + Vector2(-1, 1), Vector2(5, 3)), Color("#512f28"))
+			draw_rect(Rect2(berry, Vector2(3, 3)), Color("#c26f50"))
+			draw_rect(Rect2(berry + Vector2(2, 2), Vector2(2, 2)), Color("#af5542"))
+			draw_rect(Rect2(berry, Vector2.ONE), Color("#ffcb8a"))

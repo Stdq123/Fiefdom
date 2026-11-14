@@ -95,7 +95,7 @@ position = Vector2(-139, -123)
 script = ExtResource("5_forage")
 
 [node name="WildHerbs" type="Node2D" parent="." node_paths=PackedStringArray("player") groups=["interactable"]]
-position = Vector2(446, -106)
+position = Vector2(452, -102)
 script = ExtResource("5_forage")
 medicinal = true
 player = NodePath("../Player")
