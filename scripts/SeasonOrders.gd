@@ -4,7 +4,7 @@ class_name SeasonOrders
 const TERMS_PER_SEASON := 6
 const EVENING_DISPATCH := 11.0 / 16.0
 const MORNING_DISPATCH := 1.0 / 16.0
-const TRAVEL_FRACTION := 0.12
+const TRAVEL_FRACTION := 2.0 / 16.0
 const WATCH_RELIEF := "autumn_watch_relief"
 const WATCH_RELAY_FRACTION := 0.11
 const SEED_ORDERS := ["spring", "spring_seed_share"]
@@ -97,10 +97,15 @@ static func cargo(order: Dictionary) -> Dictionary:
 static func dispatch_day(day: int, clock: float) -> int:
 	return day + int(clock >= EVENING_DISPATCH)
 
+static func _dispatch_progress(receipt: Dictionary) -> float:
+	return MORNING_DISPATCH if receipt.dispatch_day > receipt.day else EVENING_DISPATCH
+
+static func arrival_progress(receipt: Dictionary) -> float:
+	return _dispatch_progress(receipt) + TRAVEL_FRACTION
+
 static func transit_progress(receipt: Dictionary, day: int, clock: float) -> float:
-	var scheduled_day: int = receipt.dispatch_day
-	var start := MORNING_DISPATCH if scheduled_day > receipt.day else EVENING_DISPATCH
-	return (float(day - scheduled_day) + clock - start) / TRAVEL_FRACTION
+	var relative_clock := float(day - int(receipt.dispatch_day)) + clock
+	return (relative_clock - _dispatch_progress(receipt)) / TRAVEL_FRACTION
 
 static func relay_progress(receipt: Dictionary, day: int, clock: float, duration: float) -> float:
 	return (transit_progress(receipt, day, clock) - 1.0) * TRAVEL_FRACTION / duration
@@ -110,5 +115,7 @@ static func dispatch_caption(receipt: Dictionary) -> String:
 	return "第 %d 天%s发车" % [receipt.dispatch_day, watch]
 
 static func arrival_caption(receipt: Dictionary) -> String:
-	var watch := "巳时" if receipt.dispatch_day > receipt.day else "戌时"
-	return "预计第 %d 天%s到南路卸货场" % [receipt.dispatch_day, watch]
+	return "预计第 %d 天%s到南路卸货场" % [receipt.dispatch_day, arrival_watch(receipt)]
+
+static func arrival_watch(receipt: Dictionary) -> String:
+	return "巳时" if receipt.dispatch_day > receipt.day else "戌时"

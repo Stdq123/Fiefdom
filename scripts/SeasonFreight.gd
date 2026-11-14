@@ -94,8 +94,11 @@ func _process(_delta: float) -> void:
 
 func _sync_position() -> void:
 	var lot := current_lot
-	if not previous_lot.is_empty() and (lot.is_empty() or _progress(previous_lot) < 1.0):
-		lot = previous_lot
+	if not previous_lot.is_empty():
+		var previous_in_transit := _progress(previous_lot) < 1.0
+		var current_reached_estate := _progress(lot) * route_length >= estate_start
+		if lot.is_empty() or previous_in_transit or (route_section == RouteSection.ESTATE and not current_reached_estate):
+			lot = previous_lot
 	var progress := _progress(lot)
 	var delivery_day: int = lot.receipt.dispatch_day if not lot.is_empty() else -1
 	var distance := clampf(progress, 0.0, 1.0) * route_length
@@ -155,7 +158,7 @@ func _pose(road: Curve2D, offset: float, moving: bool) -> void:
 	var bob := 0.0
 	if moved > 0.04 and moving:
 		bob = driver.walk(heading.normalized() * moved)
-		if floori(offset / 33.0) != floori(previous_offset / 33.0):
+		if moved < 12.0 and floori(offset / 33.0) != floori(previous_offset / 33.0):
 			AudioManager.play_world_sfx(ROAD_STEP, self, -18.0, 110.0)
 	else:
 		driver.stand()

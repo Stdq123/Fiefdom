@@ -35,6 +35,7 @@ var hurt_tween: Tween
 var interaction_target: Node2D
 var conversation_open := false
 var resting := false
+var seated := false
 var menu_open := false
 var meal_controls_blocked := false
 var bow_pointer := Vector2.INF
@@ -157,7 +158,7 @@ func show_action(action: ToolGesture.Action, target: Vector2) -> void:
 func _update_walk_sprite(direction: Vector2, delta: float) -> void:
 	if direction.is_zero_approx():
 		walk_phase = 0.0
-		sprite.offset = tool_gesture.body_lean
+		sprite.offset = Vector2(0, 3) if seated else tool_gesture.body_lean
 		sprite.frame_coords = Vector2i(0, facing_row)
 		return
 	sprite.offset = Vector2.ZERO

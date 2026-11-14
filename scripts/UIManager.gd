@@ -14,6 +14,8 @@ const FISHING_PANEL := preload("res://scripts/FishingPanel.gd")
 @onready var channel_button: Button = hud.channel_button
 @onready var help_label: Label = hud.help_label
 @onready var fader: ColorRect = $Control/Fader
+@onready var freight_wait := $Control/FreightWait
+@onready var freight_bench: FreightBench = $"../World/FreightBench"
 @onready var dawn_caption: Label = $Control/Fader/DawnCaption
 @onready var directions = $Control/EstateDirections
 @onready var estate_map = $Control/EstateMap
@@ -140,7 +142,7 @@ func _estate_controls_blocked() -> bool:
 	return world.channel_mode or _estate_controls_busy()
 
 func _estate_controls_busy() -> bool:
-	return (MapTravel.active or world.player.conversation_open
+	return (MapTravel.active or world.player.conversation_open or freight_wait.visible
 		or (sleep_tween and sleep_tween.is_running())
 		or _estate_panel_open())
 
@@ -233,6 +235,7 @@ func _connect_signals() -> void:
 	GameEvents.sheepfold_requested.connect(_on_sheepfold_requested)
 	GameEvents.retainer_interacted.connect(_on_retainer_interacted)
 	GameEvents.season_board_interacted.connect(_on_season_board_interacted)
+	GameEvents.freight_bench_interacted.connect(_on_freight_bench_interacted)
 	GameEvents.freight_arrival_interacted.connect(_on_freight_arrival_interacted)
 	GameEvents.seed_garden_requested.connect(_on_seed_garden_requested)
 	GameEvents.fishing_requested.connect(_on_fishing_requested)
@@ -810,9 +813,25 @@ func _on_road_rest_interacted() -> void:
 	world.set_channel_mode(false)
 	dialog_manager.show_road_rest()
 
+func _on_freight_bench_interacted() -> void:
+	if _estate_controls_busy():
+		return
+	var receipt := freight_bench.pending_arrival()
+	if not receipt.is_empty():
+		world.set_channel_mode(false)
+		var can_wait: bool = receipt.dispatch_day == Global.current_day and Global.raid_day == 0
+		dialog_manager.show_freight_wait(receipt, can_wait, _wait_for_freight)
+
+func _wait_for_freight() -> void:
+	var receipt := freight_bench.pending_arrival()
+	if not _estate_controls_busy() and not receipt.is_empty() and receipt.dispatch_day == Global.current_day \
+			and Global.raid_day == 0 and freight_bench.can_interact_from(world.player.global_position):
+		freight_wait.wait_for(world.player, SeasonOrders.arrival_progress(receipt), SeasonOrders.arrival_watch(receipt),
+			freight_bench.to_global(FreightBench.SEAT_OFFSET))
+
 func _on_freight_arrival_interacted(speech: String, portrait: Texture2D, order_id: String) -> void:
 	world.set_channel_mode(false)
-	if Global.market_trip_target == Global.FREIGHT_YARD:
+	if Global.market_trip_target == Global.FREIGHT_YARD and Global.season_order_receipts.get(order_id) == directions.freight_receipt:
 		directions.clear_tracking()
 	var destination := ""
 	var guide := Callable()

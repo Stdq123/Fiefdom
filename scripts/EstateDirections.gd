@@ -269,8 +269,11 @@ func update_marker(blocked: bool) -> void:
 			_mark_place(tracked_place, tracked_place_point)
 			return
 		if tracked_place == Global.FREIGHT_YARD:
+			road_guide.hide()
 			var arrived := SeasonOrders.transit_progress(freight_receipt, Global.current_day, Global.day_progress) >= 1.0
-			_mark_place("申禾 · " + GamepadInput.interact_key() if arrived else SeasonOrders.arrival_caption(freight_receipt), tracked_place_point)
+			var at := world.get_global_transform_with_canvas() * tracked_place_point
+			var title := "申禾 · " + GamepadInput.interact_key() if arrived else SeasonOrders.arrival_caption(freight_receipt)
+			_mark_map(Rect2(at - Vector2(8, 8), Vector2(16, 16)), title, Mark.PLACE, false)
 			return
 		if not Global.ravine_trip_target.is_empty() or not Global.market_trip_target.is_empty():
 			hide()

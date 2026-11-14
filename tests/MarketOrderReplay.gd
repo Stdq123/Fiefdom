@@ -11,6 +11,7 @@ var state: Node
 var capture_dir := ""
 var failed := false
 var summer := false
+var waiting_shipment := false
 
 func _expect(ok: bool, message: String) -> bool:
 	if not ok:
@@ -198,7 +199,119 @@ func _deliver() -> void:
 		and state.food_storage == before_grain + reward and state.market_trip_target == state.FREIGHT_YARD
 		and state.FREIGHT_YARD in market.market_map.cancel_button.text,
 		"Continue restores the loaded cart, settled reward and return route.")
-	await _freight_to_pavilion()
+	if waiting_shipment:
+		await _try_freight_bench()
+	else:
+		await _freight_to_pavilion()
+
+func _walk_to_bench() -> Player:
+	var world: Node2D = tree.current_scene.get_node("World")
+	var player: Player = world.player
+	await Campaign.walk_estate_road_to(tree, world, EstateLayout.FREIGHT_APPROACH)
+	if player.position.distance_to(EstateLayout.FREIGHT_APPROACH) > 4.0:
+		await Campaign.walk_straight(tree, player, EstateLayout.FREIGHT_APPROACH)
+	return player
+
+func _open_bench() -> Control:
+	await _key(KEY_E)
+	var dialog := tree.current_scene.get_node_or_null("UI/Control/DialoguePanel") as Control
+	return dialog if _expect(dialog != null and dialog.name_label.text == "候货座", "Interact with the bench at the unloading yard.") else null
+
+func _tap_pad(button: JoyButton) -> void:
+	for pressed in [true, false]:
+		var event := InputEventJoypadButton.new()
+		event.button_index = button
+		event.pressed = pressed
+		Input.parse_input_event(event)
+		Input.flush_buffered_events()
+		await tree.process_frame
+	await tree.process_frame
+
+func _try_freight_bench() -> void:
+	if not await _to_estate():
+		return
+	var player := await _walk_to_bench()
+	var world: Node2D = tree.current_scene.get_node("World")
+	var ui: CanvasLayer = tree.current_scene.get_node("UI")
+	var wagon := world.get_node("Freight") as SeasonFreight
+	var wait_panel: Control = ui.freight_wait
+	var receipt: Dictionary = state.pending_freight_receipt().duplicate(true)
+	var arrival := SeasonOrders.arrival_progress(receipt)
+	var natural: float = (arrival - state.day_progress) * state.balance.daylight_seconds
+	if not _expect(natural > 12.0 and ui.directions.destination().title == state.FREIGHT_YARD,
+			"Walk from the market receipt to the bench before the first cart arrives."):
+		return
+	var dialog := await _open_bench()
+	if dialog == null:
+		return
+	_expect("第 3 天戌时" in dialog.text_label.text and dialog.choices.size() == 2,
+		"The bench advertises the same watch and offers a choice.")
+	print("FREIGHT_WAIT_BASE day=", state.current_day, " clock=", snappedf(state.day_progress, 0.0001),
+		" remaining_seconds=", snappedf(natural, 0.01))
+	await _snapshot("06-bench-options")
+	await _key(KEY_ESCAPE)
+	var resources := Vector4i(state.current_day, state.king_storage, state.player_inventory, state.food_storage)
+	var money: int = state.money
+	var stamina: int = state.current_stamina
+	var before: float = state.day_progress
+	await _tap_pad(JOY_BUTTON_X)
+	dialog = ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(dialog != null and dialog.name_label.text == "候货座", "Use the gamepad to reopen the bench."):
+		return
+	await _tap_pad(JOY_BUTTON_DPAD_LEFT)
+	await _tap_pad(JOY_BUTTON_A)
+	await tree.create_timer(0.38).timeout
+	_expect(wait_panel.visible and wait_panel.stand.text.ends_with("B") and player.resting and player.seated
+		and not wagon.arrived and state.day_progress > before,
+		"A short sit advances the same day's visible clock.")
+	await _tap_pad(JOY_BUTTON_B)
+	_expect(not wait_panel.visible and not player.resting and not player.seated and state.day_progress < arrival
+		and state.market_trip_target == state.FREIGHT_YARD, "Standing up leaves the shipment on its way and keeps directions.")
+	var stopped: float = state.day_progress
+	if not await _continue(state.ESTATE_SCENE):
+		return
+	world = tree.current_scene.get_node("World")
+	ui = tree.current_scene.get_node("UI")
+	wagon = world.get_node("Freight") as SeasonFreight
+	wait_panel = ui.freight_wait
+	player = world.player
+	_expect(not wait_panel.visible and not player.resting and state.day_progress - stopped < 0.01
+		and state.pending_freight_receipt() == receipt and state.market_trip_target == state.FREIGHT_YARD,
+		"Continue restores the clock and receipt after standing up.")
+	await _walk_to_bench()
+	var resumed_remaining: float = (arrival - state.day_progress) * state.balance.daylight_seconds
+	dialog = await _open_bench()
+	if dialog == null:
+		return
+	await _button(dialog.choices[0])
+	var wait_started := Engine.get_process_frames()
+	await _snapshot("07-waiting-for-wagon")
+	var wait_seconds := 0.0
+	var saw_approach := false
+	var saw_walking := false
+	while wait_panel.visible and wait_seconds < 6.0:
+		saw_approach = saw_approach or ("赶车过来" in wait_panel.status.text and wagon.travelling)
+		saw_walking = saw_walking or (wagon.travelling and wagon.driver.walking)
+		await tree.create_timer(0.05).timeout
+		wait_seconds += 0.05
+	await tree.physics_frame
+	var sat_seconds := float(Engine.get_process_frames() - wait_started) / 60.0
+	_expect(not wait_panel.visible and not player.resting and wagon.arrived and saw_approach and saw_walking
+		and sat_seconds <= 5.0 and sat_seconds < resumed_remaining and state.day_progress - arrival < 0.004
+		and state.seed_garden_day() == 0 and state.day_watch_label() == "戌时",
+		"Waiting ends at this wagon's normal arrival with the final approach and the seed relay still to come.")
+	_expect(resources == Vector4i(state.current_day, state.king_storage, state.player_inventory, state.food_storage)
+		and state.money == money and state.current_stamina == stamina and state.pending_freight_receipt() == receipt,
+		"Waiting spends no stock, stamina, or money and does not settle an overnight.")
+	await _key(KEY_E)
+	dialog = ui.get_node_or_null("Control/DialoguePanel") as Control
+	if _expect(dialog != null and dialog.name_label.text == "申禾" and state.market_trip_target.is_empty(),
+			"Talk to the arriving driver from the usual approach and clear the route."):
+		await _snapshot("08-talk-to-the-driver")
+		await _key(KEY_ESCAPE)
+	print("FREIGHT_WAIT_DONE day=", state.current_day, " remaining_before_sit=", snappedf(resumed_remaining, 0.01),
+		" sat_seconds=", snappedf(sat_seconds, 0.01),
+		" resumed_clock=", snappedf(stopped, 0.0001))
 
 func _summer_handoff(book: Control) -> void:
 	var market := tree.current_scene as Node2D
@@ -561,6 +674,106 @@ func _late_delivery() -> void:
 	_expect(state.market_trip_target == state.FREIGHT_YARD, "The late load starts the same return route after rollover.")
 	print("ORDER_LATE day=", state.current_day, " cargo=", cart.shown_order, " offset=", snappedf(cart.route_offset, 0.1))
 
+func _check_wait_boundaries() -> void:
+	var day := 6
+	var late := {"day": day, "dispatch_day": day + 1, "paid_in_food": true}
+	var crop := Vector2i(5, 5)
+	var private_crop := Vector2i(6, 5)
+	var path := "user://late-freight-seat.json"
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if not _expect(file != null, "Create an evening receipt at the last day of spring."):
+		return
+	file.store_string(JSON.stringify({"current_day": day, "day_progress": 0.84, "market_trip_target": state.FREIGHT_YARD,
+		"king_storage": 1, "food_storage": 10, "season_order_receipts": {"spring": late}}))
+	file.close()
+	if not _expect(state.load_game(path) == OK, "Load an earlier save with tomorrow's shipment."):
+		return
+	await tree.scene_changed
+	await tree.process_frame
+	var world: Node2D = tree.current_scene.get_node("World")
+	var ui: CanvasLayer = tree.current_scene.get_node("UI")
+	var tiles: TileMapLayer = world.tile_map
+	for cell in [crop, private_crop]:
+		for click in 3:
+			await _plot(tiles, cell)
+	await _walk_to_bench()
+	var dialog := await _open_bench()
+	if dialog == null:
+		return
+	_expect(dialog.choices.size() == 1 and "第 7 天巳时" in dialog.text_label.text,
+		"An overnight shipment offers its ETA and requires sleeping as usual.")
+	await _snapshot("09-tomorrow-delivery")
+	await _key(KEY_ESCAPE)
+	await _button(ui.sleep_button)
+	await tree.create_timer(1.15).timeout
+	var morning: Variant = state.pending_freight_receipt()
+	_expect(state.current_day == 7 and state.food_storage == 9 and state.market_trip_target == state.FREIGHT_YARD
+		and morning == late and state.active_crops.get(crop, {}).get("age") == 1
+		and state.active_crops.get(private_crop, {}).get("age") == 1,
+		"Ordinary overnight rolls spring into summer, feeds the household, and grows both plots once.")
+	# Advance to the morning departure with the player still beside the bench.
+	var next_receipt := {"day": 7, "dispatch_day": 7, "paid_in_food": false}
+	state.season_order_receipts["summer"] = next_receipt
+	var events := tree.root.get_node("GameEvents")
+	events.inventory_changed.emit(state.player_inventory)
+	ui.directions.follow_freight_yard()
+	await _set_watch(SeasonOrders.MORNING_DISPATCH + 0.01)
+	var before_raid: float = state.day_progress
+	state.raid_day = state.current_day
+	events.raid_started.emit()
+	dialog = await _open_bench()
+	if dialog == null:
+		return
+	_expect(dialog.choices.size() == 1 and "东路有来敌" in dialog.text_label.text
+		and state.day_progress - before_raid < 0.01, "An active raid bars sitting while keeping the arrival information.")
+	await _key(KEY_ESCAPE)
+	state.raid_day = 0
+	events.raid_defeated.emit()
+	dialog = await _open_bench()
+	if dialog == null:
+		return
+	await _button(dialog.choices[0])
+	await tree.process_frame
+	_expect(ui.freight_wait.visible, "The player can wait for the previous season's cart this morning.")
+	state.raid_day = state.current_day
+	events.raid_started.emit()
+	_expect(not ui.freight_wait.visible and not world.player.resting,
+		"A raid interrupts a wait and gives movement controls back immediately.")
+	state.raid_day = 0
+	events.raid_defeated.emit()
+	dialog = await _open_bench()
+	if dialog == null:
+		return
+	await _button(dialog.choices[0])
+	await tree.create_timer(4.95).timeout
+	var wagon := world.get_node("Freight") as SeasonFreight
+	_expect(wagon.arrived and wagon.shown_order == "spring" and not ui.freight_wait.visible and state.current_day == 7
+		and state.day_watch_label() == "巳时"
+		and state.food_storage == 9 and state.king_storage == 1 and state.player_inventory == 0
+		and state.active_crops.get(crop, {}).get("age") == 1 and state.active_crops.get(private_crop, {}).get("age") == 1,
+		"Sitting for the morning wagon preserves the overnight results and the cargo from spring.")
+	await _key(KEY_E)
+	dialog = ui.get_node_or_null("Control/DialoguePanel") as Control
+	_expect(dialog != null and dialog.name_label.text == "申禾" and "托的菽和黍" in dialog.text_label.text,
+		"The spring driver remains available after his cart arrives. Current target: %s." % world.player.interaction_target)
+	_expect(state.market_trip_target == state.FREIGHT_YARD, "The morning handoff keeps the return route for the summer cart.")
+	await _key(KEY_ESCAPE)
+	var bench := world.get_node("FreightBench") as Node2D
+	await Campaign.walk_to(tree, world.player, bench.global_position + Vector2(7, 9))
+	dialog = await _open_bench()
+	if dialog == null:
+		return
+	_expect("第 7 天戌时" in dialog.text_label.text, "The bench now offers the second delivery.")
+	await _button(dialog.choices[0])
+	await tree.create_timer(4.95).timeout
+	_expect(wagon.arrived and wagon.shown_order == "summer", "The evening cart replaces the morning cart when it reaches the yard.")
+	await _key(KEY_E)
+	_expect(state.market_trip_target.is_empty(), "Talking to the tracked cart clears the remaining directions.")
+	await _key(KEY_ESCAPE)
+	print("FREIGHT_WAIT_ROLLOVER day=", state.current_day, " food=", state.food_storage,
+		" morning=spring evening=", wagon.shown_order, " public_and_private_age=", state.active_crops.get(crop, {}).get("age"),
+		",", state.active_crops.get(private_crop, {}).get("age"))
+
 func _legacy_receipt(path: String) -> void:
 	if not _expect(state.load_game(path) == OK, "Load the spring receipt saved by the previous Windows build."):
 		return
@@ -603,6 +816,13 @@ func run(game_tree: SceneTree) -> void:
 	tree.change_scene_to_file(state.TITLE_SCENE)
 	await tree.scene_changed
 	await _play()
+	if waiting_shipment:
+		if not failed:
+			await _check_wait_boundaries()
+		if not failed:
+			print("SCENARIO_OK")
+		tree.quit(1 if failed else 0)
+		return
 	if summer:
 		if not failed:
 			print("SCENARIO_OK")

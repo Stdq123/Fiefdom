@@ -412,12 +412,32 @@ func _meet_freight_driver() -> void:
 	var target: Vector2 = ui.directions.destination().point
 	await walk_estate_road_to(tree, world, world.to_global(target))
 	var wagon: Node2D = world.get_node("Freight")
-	# Wait on the estate clock, with normal resident and cart updates running.
 	var started_at := Time.get_ticks_msec()
-	var remaining: float = state.balance.daylight_seconds * (1.0 - state.day_progress)
-	while not wagon.arrived and remaining > 0.0:
-		await tree.create_timer(1.0).timeout
-		remaining -= 1.0
+	var receipt: Dictionary = state.pending_freight_receipt()
+	if not _expect(not receipt.is_empty(), "Read the arrival time from the paid receipt."):
+		return
+	var remaining: float = (SeasonOrders.arrival_progress(receipt) - state.day_progress) * state.balance.daylight_seconds
+	var sat := false
+	if not wagon.arrived and world.has_node("FreightBench"):
+		_key(KEY_E)
+		await tree.process_frame
+		var bench := ui.get_node_or_null("Control/DialoguePanel") as Control
+		if not _expect(bench != null and bench.name_label.text == "候货座", "The return route reaches the waiting bench."):
+			return
+		var sit := _find_button(bench, "坐等到货")
+		if not _expect(sit != null and not sit.disabled, "The same-day shipment can be awaited."):
+			return
+		await _click(sit.get_global_rect().get_center())
+		await tree.process_frame
+		sat = world.player.resting
+		if not _expect(sat, "Sitting begins the wait before the cart arrives."):
+			return
+		if not order_capture_directory.is_empty():
+			await _capture_ending(order_capture_directory, "orders-wait-on-the-bench")
+	var waited := 0.0
+	while (not wagon.arrived or world.player.resting) and waited < maxf(remaining, 0.0) + 2.0:
+		await tree.create_timer(0.10).timeout
+		waited += 0.10
 	await tree.process_frame
 	if not _expect(wagon.arrived and world.player.interaction_target == wagon,
 		"The afternoon wagon arrives where the receipt directed the player."):
@@ -431,7 +451,8 @@ func _meet_freight_driver() -> void:
 	if not order_capture_directory.is_empty():
 		await _capture_ending(order_capture_directory, "orders-meet-the-driver")
 	print("CAMPAIGN_FREIGHT day=", state.current_day, " watch=", state.day_watch_label(),
-		" elapsed_ms=", Time.get_ticks_msec() - started_at)
+		" sat=", sat, " normal_seconds=", snappedf(maxf(remaining, 0.0), 0.01),
+		" waited_seconds=", snappedf(waited, 0.01), " elapsed_ms=", Time.get_ticks_msec() - started_at)
 	var garden_choice := _find_button(dialog, "指路去亭西种圃")
 	if not _expect(garden_choice != null, "The delivery names the seed garden and offers directions."):
 		return

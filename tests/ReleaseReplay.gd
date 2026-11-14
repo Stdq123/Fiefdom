@@ -209,9 +209,10 @@ func _run() -> void:
 		"pavilion-stories":
 			var replay = load("res://tests/PavilionVisitReplay.gd").new()
 			await replay.run(tree, capture_directory, true)
-		"market-orders", "summer-rice":
+		"market-orders", "summer-rice", "freight-wait":
 			var replay = load("res://tests/MarketOrderReplay.gd").new()
 			replay.summer = arguments[0] == "summer-rice"
+			replay.waiting_shipment = arguments[0] == "freight-wait"
 			replay.capture_dir = capture_directory
 			await replay.run(tree)
 		"order-preparation", "order-preparation-baseline", "order-preparation-old-save":

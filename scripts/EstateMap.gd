@@ -112,8 +112,12 @@ func _collect_places() -> void:
 			_node_point(world.get_node("TravelHearth/Approach")), true),
 		_entry(Category.PLACES, "交货簿", "到卸货场查看本季托付", _node_point(world.get_node("SeasonBoard/Approach")), true)
 	]
-	if not Global.pending_freight_receipt().is_empty() or Global.market_trip_target == Global.FREIGHT_YARD:
-		places.append(_entry(Category.PLACES, Global.FREIGHT_YARD, "货到后可和申禾交谈", EstateLayout.FREIGHT_APPROACH, true))
+	var delivery := Global.pending_freight_receipt()
+	if not delivery.is_empty():
+		var next_receipt := Global.next_freight_arrival()
+		var detail := "货到了，可以找申禾" if next_receipt.is_empty() \
+			else "候货座 · " + SeasonOrders.arrival_caption(next_receipt)
+		places.append(_entry(Category.PLACES, Global.FREIGHT_YARD, detail, EstateLayout.FREIGHT_APPROACH, true))
 	if Global.ravine_shortcut_open():
 		places.append(_entry(Category.PLACES, EstateLayout.RAVINE_TRAIL_NAME, "过南路灶台向东，通竹涧浅滩西岸",
 			_node_point(world.get_node("RavineTrailGate")), true))

@@ -236,6 +236,7 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'reformed-first-steward' -Name 'reformed-first-steward' -Replay 'reformed-first-steward' -Resolution $fullResolution
     }
     if ($OrderCampaign) {
+        Start-VerifiedGame -Directory $release -Profile 'freight-wait' -Name 'freight-wait' -Replay 'freight-wait' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'reformed-orders' -Name 'reformed-orders' -Replay 'reformed-orders' -Resolution $fullResolution
     }
     if ($FieldRotationPlans) {
@@ -328,6 +329,9 @@ try {
         }
         if ($StewardCampaign) {
             Start-VerifiedGame -Directory $release -Profile 'first-steward-compact' -Name 'reformed-first-steward-1024x768' -Replay 'reformed-first-steward' -Resolution '1024x768'
+        }
+        if ($OrderCampaign) {
+            Start-VerifiedGame -Directory $release -Profile 'freight-wait-compact' -Name 'freight-wait-1024x768' -Replay 'freight-wait' -Resolution '1024x768'
         }
         if ($AmbienceTravel) {
             Start-VerifiedGame -Directory $release -Profile 'ambience-travel-compact' -Name 'ambience-travel-1024x768' -Replay 'ambience-travel' -Resolution '1024x768'

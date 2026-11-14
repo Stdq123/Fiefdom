@@ -114,6 +114,26 @@ func show_first_harvest(open_orders: Callable) -> Control:
 	)
 	return dialog
 
+func show_freight_wait(receipt: Dictionary, can_wait: bool, take_seat: Callable) -> void:
+	if parent_node.has_node("DialoguePanel"):
+		return
+	var text := "申禾预计第 %d 天%s到。" % [receipt.dispatch_day, SeasonOrders.arrival_watch(receipt)]
+	var choices: Array[String] = ["离开"]
+	if can_wait:
+		var dispatched := SeasonOrders.transit_progress(receipt, Global.current_day, Global.day_progress) >= 0.0
+		text += "货车已经从西市发出。" if dispatched else "货车还在西市等发车。"
+		choices.push_front("坐等到货")
+	elif receipt.dispatch_day > Global.current_day:
+		text += "今晚可先回去休息，明早再来。"
+	else:
+		text += "东路有来敌。守住封地后可以坐等。"
+	var dialog := _open("候货座", Global.FREIGHT_YARD, text, choices, [], null)
+	if can_wait:
+		dialog.option_selected.connect(func(index: int):
+			if index == 0:
+				dialog.tree_exited.connect(take_seat, CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+		)
+
 func show_freight_arrival(speech: String, portrait: Texture2D, guide_hearth: Callable,
 		destination: String, guide_destination: Callable) -> void:
 	var choices: Array[String] = ["指路去灶台", "知道了"]

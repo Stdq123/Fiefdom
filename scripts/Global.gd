@@ -2132,6 +2132,17 @@ func pending_freight_receipt() -> Dictionary:
 			return previous
 	return {}
 
+func next_freight_arrival() -> Dictionary:
+	var receipt := pending_freight_receipt()
+	var schedule := season_order()
+	if schedule.start == current_day and current_day > 1:
+		var former := season_order(current_day - 1)
+		var previous: Dictionary = season_order_receipts.get(former.order.id, {})
+		if season_order_delivered_at(former) > 0 and previous.dispatch_day == current_day \
+				and SeasonOrders.transit_progress(previous, current_day, day_progress) < 1.0:
+			return previous
+	return receipt if not receipt.is_empty() and SeasonOrders.transit_progress(receipt, current_day, day_progress) < 1.0 else {}
+
 func is_season_order_pinned(schedule: Dictionary) -> bool:
 	return outcome == Outcome.RUNNING and pinned_season_start == schedule.start and season_order_delivered_at(schedule) == 0
 
