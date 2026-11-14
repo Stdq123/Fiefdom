@@ -13,11 +13,22 @@ const FEET := [Vector2(-30, -20), Vector2(48, 9), Vector2(22, -17)]
 var actors: Array[Node2D] = []
 var motions: Array[NeighborMotion] = []
 var routes: Array[Curve2D] = []
+var table := Node2D.new()
+var steam_layer := Node2D.new()
 var focused := false
 var recipe := ""
 var steam := 0.0
+var heated := false
+var ember_frame := -1
 
 func _ready() -> void:
+	table.name = "HearthTable"
+	steam_layer.name = "Steam"
+	steam_layer.z_index = 1
+	add_child(table)
+	add_child(steam_layer)
+	table.draw.connect(_draw_table)
+	steam_layer.draw.connect(_draw_steam)
 	for index in FEET.size():
 		var actor := Node2D.new()
 		actor.name = ["阿绥", "林蓼", WinterSupper.HOST][index]
@@ -55,7 +66,11 @@ func _refresh() -> void:
 		recipe = Global.winter_supper_record().get("recipe", "")
 		_sync_guests(true)
 		_refresh_hint()
-		queue_redraw()
+		heated = _hearth_lit()
+		ember_frame = 0 if heated else -1
+		steam_layer.visible = heated
+		table.queue_redraw()
+		steam_layer.queue_redraw()
 
 func can_interact_from(foot: Vector2) -> bool:
 	var at := to_local(foot)
@@ -79,7 +94,15 @@ func _on_prepared() -> void:
 func _process(delta: float) -> void:
 	steam = fposmod(steam + delta, 2.8)
 	_sync_guests()
-	queue_redraw()
+	var lit := _hearth_lit()
+	var embers := int(steam * 4.0) % 4 if lit else -1
+	if lit != heated or embers != ember_frame:
+		heated = lit
+		ember_frame = embers
+		table.queue_redraw()
+	steam_layer.visible = lit
+	if lit:
+		steam_layer.queue_redraw()
 
 func _sync_guests(snap := false) -> void:
 	for index in ARRIVALS.size():
@@ -98,38 +121,53 @@ func _sync_guests(snap := false) -> void:
 		elif not step.is_zero_approx():
 			motion.walk(step)
 
-func _draw() -> void:
-	draw_rect(Rect2(-35, 1, 70, 11), Color("#2d3d3888"))
-	draw_rect(Rect2(42, 5, 10, 7), Color("#4a3428"))
-	draw_rect(Rect2(42, 3, 10, 4), Color("#a58057"))
-	draw_rect(Rect2(-29, -1, 5, 10), Color("#4a3125"))
-	draw_rect(Rect2(24, -1, 5, 10), Color("#4a3125"))
-	draw_rect(Rect2(-34, -12, 68, 16), Color("#43312a"))
-	draw_rect(Rect2(-33, -16, 66, 15), Color("#896044"))
-	draw_rect(Rect2(-31, -16, 62, 2), Color("#b48a5a"))
-	draw_rect(Rect2(-33, -2, 66, 3), Color("#6d4933"))
-	draw_rect(Rect2(-11, -16, 22, 18), Color("#4e6569"))
-	draw_rect(Rect2(-11, -15, 22, 2), Color("#879a89"))
-	draw_rect(Rect2(-10, 0, 20, 2), Color("#d1b579"))
-	draw_rect(Rect2(-6, -12, 12, 7), Color("#343027"))
-	draw_rect(Rect2(-4, -9, 8, 2), Color("#be734e"))
-	draw_rect(Rect2(-7, -19, 14, 9), Color("#51574b"))
-	draw_rect(Rect2(-5, -11, 10, 2), Color("#44473d"))
-	draw_rect(Rect2(-8, -21, 16, 3), Color("#b18d60"))
-	draw_rect(Rect2(-5, -22, 10, 2), Color("#d0aa76"))
-	draw_rect(Rect2(-2, -24, 4, 2), Color("#8b654a"))
-	draw_rect(Rect2(-6, -17, 2, 5), Color("#8e8961"))
-	draw_rect(Rect2(-10, -17, 3, 2), Color("#ad8454"))
-	draw_rect(Rect2(7, -17, 3, 2), Color("#ad8454"))
-	var filled := not recipe.is_empty() or Global.day_progress >= WinterSupper.EVENING
-	for x in [-23, 22]:
-		draw_rect(Rect2(x - 5, -11, 10, 6), Color("#504f44"))
-		draw_rect(Rect2(x - 5, -12, 10, 3), Color("#b6b8a4"))
-		draw_rect(Rect2(x - 4, -6, 9, 1), Color("#c79e72"))
-		if filled:
-			draw_rect(Rect2(x - 3, -11, 6, 2), Color("#efc17d") if recipe == WinterSupper.FISH else Color("#eadba3"))
-	if filled:
-		for index in 3:
-			var rise := fposmod(steam + index * 0.9, 2.8) / 2.8
-			var at := Vector2(-3.0 + floorf(rise * 9.0), -25.0 - floorf(rise * 16.0))
-			draw_rect(Rect2(at, Vector2(3.0, 2.0)), Color(1.0, 0.92, 0.77, (1.0 - rise) * 0.66))
+func _hearth_lit() -> bool:
+	return not recipe.is_empty() or Global.day_progress >= WinterSupper.EVENING
+
+func _draw_table() -> void:
+	table.draw_colored_polygon(PackedVector2Array([Vector2(-37, 1), Vector2(34, 1),
+		Vector2(45, 10), Vector2(36, 13), Vector2(-33, 10)]), Color("#2832328c"))
+	for x in [-29, 24]:
+		table.draw_rect(Rect2(x, -1, 5, 10), Color("#4a3125"))
+		table.draw_rect(Rect2(x + 1, 2, 2, 6), Color("#816045"))
+	table.draw_colored_polygon(PackedVector2Array([Vector2(-34, 0), Vector2(29, 0), Vector2(37, -8),
+		Vector2(37, -3), Vector2(30, 5), Vector2(-34, 5)]), Color("#503a2c"))
+	table.draw_colored_polygon(PackedVector2Array([Vector2(-35, -3), Vector2(28, -3),
+		Vector2(37, -13), Vector2(-28, -13)]), Color("#a07850"))
+	table.draw_line(Vector2(-33, -4), Vector2(28, -4), Color("#bd9565"), 1.0)
+	for x in [-29, -16, 16, 26]:
+		table.draw_rect(Rect2(x, -7 - posmod(x, 3), 7, 1), Color("#d7aa6b8a"))
+	table.draw_colored_polygon(PackedVector2Array([Vector2(-13, 2), Vector2(9, 2), Vector2(14, -3),
+		Vector2(14, -12), Vector2(9, -13), Vector2(-11, -13), Vector2(-13, -9)]), Color("#53534a"))
+	table.draw_rect(Rect2(-11, -10, 21, 3), Color("#918270"))
+	table.draw_rect(Rect2(-7, -7, 13, 7), Color("#343027"))
+	if heated:
+		table.draw_rect(Rect2(-5, -4, 9, 2), Color("#ba6645"))
+		table.draw_rect(Rect2(-3 + ember_frame, -4, 3, 1), Color("#efad63"))
+	table.draw_colored_polygon(PackedVector2Array([Vector2(-12, -21), Vector2(13, -21), Vector2(10, -13),
+		Vector2(6, -11), Vector2(-6, -11), Vector2(-10, -14)]), Color("#555e4b"))
+	table.draw_rect(Rect2(-8, -19, 2, 5), Color("#869074"))
+	table.draw_rect(Rect2(-14, -20, 4, 3), Color("#ab925f"))
+	table.draw_rect(Rect2(11, -20, 4, 3), Color("#948057"))
+	table.draw_colored_polygon(PackedVector2Array([Vector2(-13, -21), Vector2(-8, -25), Vector2(7, -25),
+		Vector2(13, -22), Vector2(9, -19), Vector2(-9, -19)]), Color("#b59563"))
+	table.draw_rect(Rect2(-6, -24, 12, 1), Color("#d5b780"))
+	table.draw_rect(Rect2(-2, -27, 4, 3), Color("#785d43"))
+	for x in [-23, 23]:
+		table.draw_rect(Rect2(x - 6, -10, 12, 5), Color("#654f3b"))
+		table.draw_colored_polygon(PackedVector2Array([Vector2(x - 6, -9), Vector2(x - 3, -12),
+			Vector2(x + 4, -12), Vector2(x + 6, -10), Vector2(x + 3, -7), Vector2(x - 3, -7)]), Color("#c2b298"))
+		var topping := Color("#8c7760")
+		if heated:
+			topping = Color("#e9ae72") if recipe == WinterSupper.FISH else Color("#e4c998")
+		table.draw_rect(Rect2(x - 3, -10, 6, 2), topping)
+
+func _draw_steam() -> void:
+	if not heated:
+		return
+	for index in 3:
+		var rise := fposmod(steam + index * 0.90, 2.8) / 2.8
+		var at := Vector2(float(index * 4 - 5) + roundf(sin(rise * TAU) * 2.0 + rise * 7.0), -27.0 - roundf(rise * 18.0))
+		var tint := Color(1.0, 0.93, 0.80, (1.0 - rise) * 0.63)
+		steam_layer.draw_rect(Rect2(at, Vector2(2 + index % 2, 2)), tint)
+		steam_layer.draw_rect(Rect2(at + Vector2(2, -3), Vector2(3 + index % 2, 1)), Color(tint, tint.a * 0.65))

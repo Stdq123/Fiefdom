@@ -192,6 +192,31 @@ func _walk_to_exhibit() -> void:
 	var approach := world.get_node("AutumnExhibit/Approach") as Marker2D
 	await Campaign.walk_estate_road_to(tree, world, approach.global_position)
 
+func _visit_clearing() -> void:
+	await _key(KEY_M)
+	var map: Control = ui.estate_map
+	var south_pond: Button
+	for row: Button in map.row_buttons:
+		if map.row_buttons[row].title == EstateLayout.FESTIVAL_SITE_NAME:
+			south_pond = row
+			break
+	if not _expect(south_pond != null, "The regular estate map offers the South Pond clearing before the fair."):
+		return
+	map.scroll.ensure_control_visible(south_pond)
+	await _button(south_pond)
+	_expect(map.target.point == EstateLayout.FESTIVAL_APPROACH and map.road_path.has(EstateLayout.FESTIVAL_BANK_BEND),
+		"The ordinary map guides around the pond to the same stone clearing used by the fair.")
+	await _key(KEY_ESCAPE)
+	await _walk_to_exhibit()
+	var landscape: Node2D = world.get_node("Landscape")
+	_expect(world.player.position.distance_to(EstateLayout.FESTIVAL_APPROACH) < 4.0
+		and ui.directions.tracked_place.is_empty() and not world.get_node("AutumnExhibit").visible
+		and not world.get_node("WinterSupper").visible, "The clearing remains walkable between festivities.")
+	_expect(landscape._surface_at(world.player.position) == landscape.TERRAIN_AUDIO.Surface.STONE,
+		"The square returns stone footfalls even before the market stand is installed.")
+	await _snapshot("01f-ordinary-clearing")
+	await Campaign.walk_estate_road_to(tree, world, world.to_global(Vector2(66, 98)))
+
 func _verify_south_route() -> void:
 	var stand := world.get_node("AutumnExhibit") as Node2D
 	var approach := stand.get_node("Approach") as Marker2D
@@ -231,9 +256,10 @@ func _verify_south_route() -> void:
 		start = Engine.get_physics_frames()
 		await Campaign.walk_straight(tree, world.player, point)
 		walking_frames += Engine.get_physics_frames() - start
+		var surface: int = landscape._surface_at(world.player.position)
 		_expect(world.player.position.distance_to(point) < 3.0
-			and landscape._surface_at(world.player.position) == landscape.TERRAIN_AUDIO.Surface.TRACK,
-			"Reach the successive road turns on foot before arriving at the exhibition table.")
+			and surface in [landscape.TERRAIN_AUDIO.Surface.STONE, landscape.TERRAIN_AUDIO.Surface.TRACK],
+			"The route follows dirt or stone at each turn.")
 		if point == EstateLayout.FESTIVAL_BANK_BEND:
 			await _snapshot("01c-south-pond")
 			await Campaign.walk_straight(tree, world.player, point + Vector2(74, 0))
@@ -244,6 +270,8 @@ func _verify_south_route() -> void:
 			print("SOUTH_POND_SHORE ", shore)
 	_expect(travelled > 650.0 and world.player.interaction_target == stand,
 		"The pond separates the festival ground from the fork, and the path reaches the table.")
+	_expect(landscape._surface_at(world.player.position) == landscape.TERRAIN_AUDIO.Surface.STONE,
+		"Arrival at the autumn stand uses the paved surface for footsteps.")
 	print("SOUTH_FESTIVAL_WALK fork_to_stand=", roundi(travelled),
 		" seconds=", walking_frames / float(Engine.physics_ticks_per_second), " arrival=", world.player.position)
 
@@ -442,6 +470,7 @@ func _play() -> void:
 	if failed:
 		return
 	await _prepare_autumn()
+	await _visit_clearing()
 	await _grow({KEY_2: FALL_PLOTS, KEY_7: [Vector2i(6, 5)]}, 2)
 	_expect("明日秋社 · 谷样 3/3" in ui.hud.season_event_button.text,
 		"Stock readiness updates after the new crop is harvested.")

@@ -332,6 +332,7 @@ const WILD_PROPS := [
 @onready var player := get_parent().get_node("Player") as Player
 @onready var hall_rest := get_parent().get_node_or_null("HallRest")
 @onready var silk_shed := get_parent().get_node_or_null("SilkShed")
+@onready var pond_landing := get_parent().get_node_or_null("Scenery/PondLanding") as Node2D
 
 var props: Array[Vector3i] = []
 var scenery: Dictionary[Sprite2D, int] = {}
@@ -502,7 +503,7 @@ func _add_water_surface() -> void:
 		water_surface = WATER_SURFACE.new(creek_edge, 10.0,
 			[BRIDGE_DECK.grow(2.0), FORD_AREA])
 	else:
-		water_surface = WATER_SURFACE.new(estate_terrain.pond, 0.0)
+		water_surface = WATER_SURFACE.new(estate_terrain.pond_waterline, 0.0)
 	water_surface.name = "WaterSurface"
 	add_child(water_surface)
 	if wilderness:
@@ -526,6 +527,8 @@ func _place_lanterns(layer: Node2D) -> void:
 		day_lighting.place_lamp(layer, EstateLayout.FREIGHT_STOP + Vector2(37, -19), 0.80)
 		day_lighting.place_lamp(layer, EstateLayout.FESTIVAL_FORK + Vector2(13, 18), 0.74)
 		day_lighting.place_lamp(layer, EstateLayout.FESTIVAL_BANK_BEND + Vector2(-13, 20), 0.70)
+		day_lighting.place_lamp(layer, EstateLayout.FESTIVAL_GROUND + Vector2(-33, -35), 0.79, 0.12)
+		day_lighting.place_lamp(layer, EstateLayout.FESTIVAL_GROUND + Vector2(112, 69), 0.70, 0.19)
 		day_lighting.place_lamp(layer, EstateLayout.DRIVING_START + Vector2(28, -14), 0.78)
 		day_lighting.place_lamp(layer, EstateLayout.DRIVING_FINISH + Vector2(-2, -27), 0.76)
 		day_lighting.place_lamp(layer, EstateLayout.RAVINE_TRAIL_GATE + Vector2(-16, -17), 0.72)
@@ -619,6 +622,7 @@ func _draw() -> void:
 	else:
 		_draw_field_verges()
 		_draw_tracks()
+		estate_terrain.draw_festival_paving(self, SEASON_PALETTES[season][0], season == Global.Season.WINTER, raining)
 		RAVINE_RELIEF.draw_gate(self, EstateLayout.EAST_GATE, false, season, raining)
 		_draw_building_shadows()
 		_draw_hall_landing()
@@ -668,6 +672,10 @@ func _surface_at(foot: Vector2) -> TERRAIN_AUDIO.Surface:
 		for field in Global.well_fields:
 			if _field_bounds(field["center_pos"]).has_point(foot):
 				return TERRAIN_AUDIO.Surface.GRASS
+		if pond_landing.visible and EstateLayout.POND_DECK.has_point(foot):
+			return TERRAIN_AUDIO.Surface.PLANK
+		if estate_terrain.festival_stone_at(foot):
+			return TERRAIN_AUDIO.Surface.STONE
 		if RAVINE_RELIEF.gate_stone_at(foot, EstateLayout.EAST_GATE):
 			return TERRAIN_AUDIO.Surface.STONE
 		if HALL_LANDING.has_point(foot) and _hall_landing_visible():
@@ -706,6 +714,7 @@ func _add_landmark_labels() -> void:
 		_label_at(EstateLayout.SOUTH_FORK + Vector2(22, -38), "西坡 ↙  ·  灶台 →")
 		_label_at(Vector2(278, 510), "竹涧小径 →")
 		_label_at(EstateLayout.FESTIVAL_FORK + Vector2(4, 46), "↙ 南池")
+		_label_at(EstateLayout.FESTIVAL_LANE[-5] + Vector2(-16, -18), "南池畔 ↘")
 
 func _label_at(center: Vector2, text: String) -> void:
 	var label := Label.new()
@@ -745,7 +754,7 @@ func _draw_ground() -> void:
 		estate_terrain.draw_meadow(self, meadow, winter)
 		estate_terrain.draw_north_bank(self, MAP_BACKDROP.position.y, shade, sun, winter)
 		var pond_water: Color = WATER_TINTS[season]
-		estate_terrain.draw_pond(self, meadow, pond_water, winter)
+		estate_terrain.draw_pond(self, meadow, pond_water, winter, raining, pond_landing.visible)
 	var grass := shade.lightened(0.09)
 	for prop in props:
 		if prop.z in LEAFY_PROPS and (not winter or prop.z not in DORMANT_PROPS):
@@ -1043,7 +1052,8 @@ func _install_boundaries() -> void:
 		RAVINE_RELIEF.install_estate_edge(terrain)
 		var pond := CollisionPolygon2D.new()
 		pond.name = "SouthPond"
-		pond.polygon = estate_terrain.pond
+		_update_pond_collision(pond)
+		GameEvents.pond_landing_opened.connect(_update_pond_collision.bind(pond))
 		terrain.add_child(pond)
 
 	var camera := player.get_node("Camera2D") as Camera2D
@@ -1053,6 +1063,13 @@ func _install_boundaries() -> void:
 	camera.limit_top = floori(view.position.y)
 	camera.limit_bottom = ceili(view.end.y if wilderness else bounds.end.y + 62.0)
 	camera.force_update_scroll()
+
+func _update_pond_collision(edge: CollisionPolygon2D) -> void:
+	var bank := estate_terrain.pond
+	if pond_landing.visible:
+		# This ramp opens a single notch in the shore. The deck rails close its other sides.
+		bank = Geometry2D.clip_polygons(bank, EstateLayout.corners(EstateLayout.POND_DECK))[0]
+	edge.polygon = bank
 
 func _add_edge(terrain: StaticBody2D, at: Vector2, size: Vector2) -> CollisionShape2D:
 	var edge := CollisionShape2D.new()

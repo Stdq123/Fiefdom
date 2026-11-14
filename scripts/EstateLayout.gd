@@ -64,9 +64,11 @@ const FREIGHT_APPROACH := FREIGHT_STOP + Vector2(0, 23)
 const HEARTH_APPROACH := Vector2(215, 571)
 const FESTIVAL_FORK := Vector2(257, 586)
 const FESTIVAL_BANK_BEND := Vector2(146, 704)
-const POND_LANDING := Vector2(162, 713)
-const POND_TRACK := [FESTIVAL_BANK_BEND, Vector2(152, 709), POND_LANDING]
+const POND_DECK := Rect2(151, 701, 49, 26)
+const POND_LANDING := Vector2(183, 714)
+const POND_TRACK := [FESTIVAL_BANK_BEND, Vector2(153, 714), POND_LANDING]
 const FESTIVAL_GROUND := Vector2(338, 873)
+const FESTIVAL_APPROACH := FESTIVAL_GROUND + Vector2(0, 18)
 const FESTIVAL_SITE_NAME := "南池畔"
 const FESTIVAL_POND := [
 	Vector2(183, 677), Vector2(196, 658), Vector2(222, 651), Vector2(247, 652),
@@ -74,6 +76,12 @@ const FESTIVAL_POND := [
 	Vector2(342, 705), Vector2(327, 729), Vector2(309, 736), Vector2(295, 749),
 	Vector2(265, 763), Vector2(233, 764), Vector2(209, 756), Vector2(195, 745),
 	Vector2(182, 725), Vector2(175, 703),
+]
+const FESTIVAL_PAVING := [
+	Vector2(274, 870), Vector2(302, 854), Vector2(356, 852), Vector2(409, 856),
+	Vector2(442, 867), Vector2(457, 889), Vector2(458, 933), Vector2(444, 954),
+	Vector2(407, 963), Vector2(351, 960), Vector2(306, 949), Vector2(283, 930),
+	Vector2(270, 900), Vector2(271, 882),
 ]
 const RAVINE_TRAIL_GATE := Vector2(477, 568)
 const RAVINE_TRAIL_ARRIVAL := Vector2(437, 574)
@@ -139,7 +147,7 @@ const FESTIVAL_LANE := [
 	FESTIVAL_FORK, Vector2(241, 614), Vector2(206, 633), Vector2(172, 652), Vector2(150, 675),
 	FESTIVAL_BANK_BEND, Vector2(151, 736), Vector2(173, 766), Vector2(204, 789), Vector2(242, 809),
 	Vector2(273, 833), Vector2(280, 867), Vector2(287, 899), FESTIVAL_GROUND + Vector2(-23, 34),
-	FESTIVAL_GROUND + Vector2(0, 18),
+	FESTIVAL_APPROACH,
 ]
 const RAVINE_TRAIL := [
 	FESTIVAL_FORK, Vector2(292, 580), Vector2(331, 566), Vector2(375, 560),

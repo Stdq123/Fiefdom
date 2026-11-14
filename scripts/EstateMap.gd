@@ -159,9 +159,12 @@ func _collect_places() -> void:
 	if Global.is_autumn_exhibit_day():
 		places.append(_entry(Category.PLACES, "秋社展台", "沿南池西岸到场，摆三种私田收成",
 			_node_point(world.get_node("AutumnExhibit/Approach")), true))
-	if Global.is_winter_supper_day():
+	elif Global.is_winter_supper_day():
 		var detail := "沿南池西岸到场，用私仓麦备饭" if Global.winter_supper_record().is_empty() else "已备饭，可回南池畔围坐"
 		places.append(_entry(Category.PLACES, WinterSupper.PLACE, detail, _node_point(world.get_node("WinterSupper/Approach")), true))
+	else:
+		places.append(_entry(Category.PLACES, EstateLayout.FESTIVAL_SITE_NAME, "沿西岸到石坪 · 秋分摆谷样，冬至来围炉",
+			EstateLayout.FESTIVAL_APPROACH, true))
 	if Global.sheepfold.owned():
 		var sheepfold_detail := "可剪毛" if Global.can_use_sheepfold(Sheepfold.Action.SHEAR) else "查看羊毛长势与草料"
 		_add_built_place(Sheepfold.PLACE, sheepfold_detail, "SheepfoldPen", true)
@@ -590,6 +593,10 @@ func _draw_landscape() -> void:
 		pond.append(_map_point(point))
 	chart.draw_colored_polygon(pond, Color("#80a6a0"))
 	_draw_text("南池", _map_point(Vector2(258, 705)), CAPTION_SIZE, Color("#263f3b"))
+	var paving := PackedVector2Array()
+	for point: Vector2 in EstateLayout.FESTIVAL_PAVING:
+		paving.append(_map_point(point))
+	chart.draw_colored_polygon(paving, Color("#b1a187"))
 
 func _draw_road_shape(outline: PackedVector2Array, land: PackedVector2Array, ink: Color) -> void:
 	for segment in Geometry2D.intersect_polygons(outline, land):

@@ -295,7 +295,8 @@ try {
     if ($SouthRoad) {
         Start-VerifiedGame -Directory $release -Profile 'market-orders' -Name 'market-orders' -Replay 'market-orders' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'autumn-exhibit' -Name 'autumn-exhibit' -Replay 'autumn-exhibit' -Resolution $fullResolution
-        foreach ($name in 'summer-rice', 'order-preparation', 'watch-relief', 'seed-garden', 'sheepfold', 'meadow-fodder') {
+        Start-VerifiedGame -Directory $release -Profile 'summer-rice' -Name 'summer-rice' -Replay 'summer-rice' -Resolution $fullResolution
+        foreach ($name in 'order-preparation', 'watch-relief', 'seed-garden', 'sheepfold', 'meadow-fodder') {
             Start-VerifiedGame -Directory $release -Profile $name -Name $name -Replay $name
         }
     }

@@ -535,7 +535,19 @@ func _pond_after_delivery() -> void:
 	if not _expect(world.player.interaction_target == landing and not state.knows_ravine_journal(),
 		"The new dock can be reached from the bank, before learning about the ravine."):
 		return
+	var ground := world.get_node("Landscape")
+	print("POND_DECK_ARRIVE player=", world.player.position, " deck=", landing.position,
+		" surface=", ground._surface_at(world.player.position))
+	_expect(Geometry2D.is_point_in_polygon(world.player.position, PackedVector2Array(EstateLayout.FESTIVAL_POND))
+		and ground._surface_at(world.player.position) == ground.TERRAIN_AUDIO.Surface.PLANK,
+		"The walk reaches the boards over the pond and plays wooden footsteps.")
 	await _snapshot("12-pond-landing")
+	var depth: Vector2 = world.player.position
+	await Campaign.walk_straight(tree, world.player, EstateLayout.POND_LANDING + Vector2(43, 0))
+	print("POND_DECK_EDGE ", world.player.position)
+	_expect(world.player.position.x >= depth.x and world.player.position.x < EstateLayout.POND_DECK.end.x - 6,
+		"The end rail and water stop movement into the open pond.")
+	await Campaign.walk_straight(tree, world.player, landing.global_position)
 	var energy: int = state.current_stamina
 	var day: int = state.current_day
 	await _key(KEY_E)
@@ -568,8 +580,13 @@ func _pond_after_delivery() -> void:
 	estate = tree.current_scene
 	world = estate.get_node("World")
 	ui = estate.get_node("UI")
-	_expect(world.get_node("Scenery/PondLanding").visible and state.pond_landing_day() == day
+	landing = world.get_node("Scenery/PondLanding")
+	_expect(landing.visible and state.pond_landing_day() == day
 		and state.fish_collection.crucian.first_site == CreekFish.Site.POND, "The dock and its first catch survive a title continue.")
+	await Campaign.walk_estate_road_to(tree, world, landing.global_position)
+	_expect(world.player.position.distance_to(EstateLayout.POND_LANDING) < 4.0 and world.player.interaction_target == landing,
+		"A continued estate loads the dock cutout and is still walkable over the water.")
+	await _snapshot("14a-pond-resume")
 	var hearth := await _open_hearth()
 	if not _expect(hearth != null and not hearth.choices[1].disabled, "The local rice and fish make a travel meal."):
 		return

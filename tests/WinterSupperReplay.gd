@@ -261,6 +261,7 @@ func _show_scene() -> bool:
 	await _button(ui.calendar.guide)
 	_expect(ui.directions.tracked_place == WinterSupper.PLACE, "The almanac points to the festival table.")
 	await _walk_to_table()
+	_expect(not table.heated, "The table is unlit before supper or the evening watch.")
 	var guests := table.get_node("Guests")
 	var first: Node2D = guests.get_child(0)
 	state.advance_daylight(maxf(0.0, 0.57 - state.day_progress) * state.balance.daylight_seconds)
@@ -270,7 +271,7 @@ func _show_scene() -> bool:
 	_expect(first.visible and first.position != previous, "The familiar neighbor walks in along the east track.")
 	await _frame("02-arrivals")
 	await _to_evening()
-	_expect(state.day_watch_label() == "酉时" and guests.get_child(1).visible
+	_expect(state.day_watch_label() == "酉时" and guests.get_child(1).visible and table.heated
 		and table.get_node("Lanterns").get_child(0).glow.enabled and table.get_node("Lanterns").get_child(1).glow.enabled,
 		"At the announced evening watch both lamps are lit and the neighbors have arrived.")
 	await _frame("03-lanterns")

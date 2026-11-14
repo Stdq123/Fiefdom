@@ -74,8 +74,10 @@ func _draw() -> void:
 	draw_rect(Rect2(-3, -13, 2, 3), Color("#4c665e"))
 	draw_rect(Rect2(4, -2, 8, 6), Color("#75644d"))
 	draw_rect(Rect2(4, -3, 8, 2), Color("#aa8d62"))
-	if not line_visible:
-		return
+	if line_visible:
+		_draw_line()
+
+func _draw_line() -> void:
 	var float_at := (water + Vector2(sin(phase_time * 8.0) * 1.3, 1.0 if submerged else 0.0)).round()
 	var side := -1.0 if float_at.x < rod_grip.x else 1.0
 	var rod_tip := rod_grip + Vector2(side * 12.0, -9.0)
