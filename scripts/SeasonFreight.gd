@@ -2,6 +2,7 @@ extends Node2D
 class_name SeasonFreight
 
 enum RouteSection { MARKET, WEST_ROAD, ESTATE }
+enum CartView { SIDE, AWAY_CORNER, NEAR_CORNER, AWAY, NEAR }
 
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const CART_ART := preload("res://assets/world/season-order-cart.svg")
@@ -10,6 +11,8 @@ const WHEEL_SOUNDS := [preload("res://assets/audio/freight/wheel-1.wav"), preloa
 const ARRIVAL_SOUND := preload("res://assets/audio/freight/wagon-stop.wav")
 const WHEEL_SPACING := 46.0
 const HEARING_RANGE := 230.0
+const CART_FRAME := Vector2(96, 64)
+const SHAFT_ENDS := [Vector2(33, -11), Vector2(25, -23), Vector2(25, 1), Vector2(0, -28), Vector2(0, 9)]
 const WEST_MARKET := preload("res://scripts/WestMarketLayout.gd")
 const WEST_ROAD := preload("res://scripts/WestRoadLayout.gd")
 
@@ -25,6 +28,7 @@ static var route_length := estate_start + estate_road.get_baked_length()
 
 @onready var cart: Sprite2D = $Cart
 @onready var cargo: Sprite2D = $Cargo
+@onready var rim: Sprite2D = $Rim
 @onready var driver: NeighborMotion = $Driver
 @onready var sign: Label = $Sign
 @onready var parked_shape: CollisionShape2D = $Stand/Shape
@@ -38,10 +42,10 @@ var focused := false
 var shown_order := ""
 var arrival_line := ""
 var parked := false
-var side_cart := _frame(CART_ART, Rect2(0, 0, 84, 48))
-var front_cart := _frame(CART_ART, Rect2(140, 0, 44, 48))
-var side_cargo := _frame(CART_ART, Rect2(84, 0, 56, 26))
-var front_cargo := _frame(CART_ART, Rect2(92, 0, 40, 26))
+var cart_views := _cart_frames(0.0)
+var rim_views := _cart_frames(CART_FRAME.x)
+var side_cargo := _frame(CART_ART, Rect2(0, 320, 48, 32))
+var end_cargo := _frame(CART_ART, Rect2(48, 320, 48, 32))
 var portrait := _frame(DRIVER_ART, Rect2(0, 96, 48, 48))
 
 static func _estate_curve() -> Curve2D:
@@ -67,6 +71,21 @@ static func _frame(texture: Texture2D, region: Rect2) -> AtlasTexture:
 	atlas.region = region
 	atlas.filter_clip = true
 	return atlas
+
+static func _cart_frames(column: float) -> Array[AtlasTexture]:
+	var frames: Array[AtlasTexture] = []
+	for view in CartView.size():
+		frames.append(_frame(CART_ART, Rect2(Vector2(column, view * CART_FRAME.y), CART_FRAME)))
+	return frames
+
+static func _cart_view(heading: Vector2) -> CartView:
+	var x := absf(heading.x)
+	var y := absf(heading.y)
+	if y <= x * 0.42:
+		return CartView.SIDE
+	if x <= y * 0.42:
+		return CartView.AWAY if heading.y < 0.0 else CartView.NEAR
+	return CartView.AWAY_CORNER if heading.y < 0.0 else CartView.NEAR_CORNER
 
 func _ready() -> void:
 	driver.set_motion_sheet(_frame(DRIVER_ART, Rect2(0, 0, 128, 96)))
@@ -158,18 +177,25 @@ func _pose(road: Curve2D, offset: float, moving: bool, same_trip: bool) -> void:
 	travelling = moving
 	position = road.sample_baked(offset)
 	var heading := road.sample_baked(offset + 4.0) - road.sample_baked(offset - 4.0)
-	var horizontal := absf(heading.x) >= absf(heading.y)
 	var bob := 0.0
 	if moved > 0.04 and moving:
 		bob = driver.walk(heading.normalized() * moved)
 	else:
 		driver.stand()
-		driver.face(Vector2.LEFT if route_section == RouteSection.MARKET else Vector2.DOWN)
-	cart.texture = side_cart if horizontal else front_cart
-	cart.position.y = -19.0 + bob
-	cargo.texture = side_cargo if horizontal else front_cargo
-	cargo.position = Vector2(-6, -28 + bob) if horizontal else Vector2(0, -32 + bob)
-	driver.position = Vector2(40, -6) if horizontal else Vector2(0, 9)
+		driver.face((Vector2.LEFT if route_section == RouteSection.MARKET else Vector2.DOWN) if parked else heading)
+	var view := _cart_view(heading)
+	var end_on := view == CartView.AWAY or view == CartView.NEAR
+	cart.texture = cart_views[view]
+	rim.texture = rim_views[view]
+	cart.flip_h = heading.x < 0.0 and not end_on
+	rim.flip_h = cart.flip_h
+	cart.position.y = -17.0 + bob
+	rim.position.y = cart.position.y
+	cargo.texture = end_cargo if end_on else side_cargo
+	cargo.position = Vector2(0, -24 + bob)
+	# Offsets share the axle anchor. At a stop the driver steps to the road side to receive the player.
+	driver.position = SHAFT_ENDS[view] * Vector2(-1 if cart.flip_h else 1, 1) if moving else Vector2(40, -6)
+	driver.z_index = -1 if moving and (view == CartView.AWAY_CORNER or view == CartView.AWAY) else 0
 	sign.position = driver.position + Vector2(-34, -35)
 	sign.visible = parked
 	sign.text = GamepadInput.interact_hint("申禾") if focused else "申禾"

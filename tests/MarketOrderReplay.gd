@@ -53,6 +53,11 @@ func _snapshot(name: String) -> void:
 		return
 	await tree.create_timer(0.24).timeout
 	await RenderingServer.frame_post_draw
+	_capture_frame(name)
+
+func _capture_frame(name: String) -> void:
+	if capture_dir.is_empty() or DisplayServer.get_name() == "headless":
+		return
 	var image := tree.root.get_texture().get_image()
 	_expect(image.save_png(capture_dir.path_join(name + ".png")) == OK, "Save the frame " + name)
 	print("ORDER_FRAME ", name, " window=", tree.root.size, " image=", image.get_size())
@@ -219,6 +224,9 @@ func _deliver() -> void:
 	_expect(freight.cargo.visible and "酉时发车" in book.status.text and state.food_storage == before_grain + reward
 		and state.money == before_money and state.player_inventory == 2 and state.king_storage == 1,
 		"The cart loads the delivery, advertises its departure and pays the chosen reward.")
+	_expect(freight.rim.get_index() > freight.cargo.get_index() and freight.rim.position == freight.cart.position
+		and freight.rim.texture.get_size() == freight.cart.texture.get_size() and not freight.cart.flip_h,
+		"At the market, goods lie inside the matching bed and its near rim.")
 	await _snapshot("03-delivery-receipt")
 	if waiting_shipment and _has_audio():
 		_expect(freight_sounds == ["receipt"], "The completed trade plays one receipt cue.")
@@ -337,13 +345,22 @@ func _try_freight_bench() -> void:
 	await _snapshot("07-waiting-for-wagon")
 	var saw_approach := false
 	var saw_walking := false
+	var saw_yard_turn := false
 	while wait_panel.visible and wait_window.time_left > 0.0:
 		saw_approach = saw_approach or ("赶车过来" in wait_panel.status.text and wagon.travelling)
 		saw_walking = saw_walking or (wagon.travelling and wagon.driver.walking)
+		if (not saw_yard_turn and wagon.travelling and wagon.cart.flip_h and wagon.driver.position.x < 0.0
+				and wagon.position.distance_to(EstateLayout.FREIGHT_STOP) < 95.0):
+			saw_yard_turn = true
+			_expect(wagon.rim.flip_h and wagon.rim.position == wagon.cart.position,
+				"The near rim turns with the wagon as the driver leads from the left.")
+			if _has_audio() and not capture_dir.is_empty():
+				await RenderingServer.frame_post_draw
+			_capture_frame("07a-wagon-turn")
 		await tree.create_timer(0.05).timeout
 	await tree.physics_frame
 	var sat_seconds := 6.0 - wait_window.time_left
-	_expect(not wait_panel.visible and not player.resting and wagon.arrived and saw_approach and saw_walking
+	_expect(not wait_panel.visible and not player.resting and wagon.arrived and saw_approach and saw_walking and saw_yard_turn
 		and sat_seconds <= 5.0 and sat_seconds < resumed_remaining and state.day_progress - arrival < 0.004
 		and state.seed_garden_day() == 0 and state.day_watch_label() == "戌时",
 		"Waiting ends at this wagon's normal arrival with the final approach and the seed relay still to come.")
@@ -357,6 +374,8 @@ func _try_freight_bench() -> void:
 	if record:
 		await tree.create_timer(0.6).timeout
 		_save_freight_record(record, "07-wheels-and-arrival")
+	_expect(wagon.cart.flip_h and wagon.rim.flip_h and wagon.driver.position.x > 0.0,
+		"The parked cart faces its arrival direction and the driver stands beside the handoff.")
 	await _key(KEY_E)
 	dialog = ui.get_node_or_null("Control/DialoguePanel") as Control
 	if _expect(dialog != null and dialog.name_label.text == "申禾" and state.market_trip_target.is_empty(),
@@ -566,12 +585,32 @@ func _set_watch(progress: float) -> void:
 	await tree.process_frame
 
 func _freight_to_pavilion() -> void:
-	var market_cart := tree.current_scene.get_node("Freight") as SeasonFreight
+	var market := tree.current_scene as Node2D
+	var market_cart := market.get_node("Freight") as SeasonFreight
+	var east_side: Texture2D = market_cart.cart.texture
+	var east_rim: Texture2D = market_cart.rim.texture
+	var camera := market.player.get_node("Camera2D") as Camera2D
+	var camera_start := camera.position
+	var capturing := _has_audio() and not capture_dir.is_empty()
+	var bend_offset := 57.0
+	if capturing:
+		# Reframe the bend without advancing the walking replay's approach to the bridge.
+		camera.position = market.to_global(SeasonFreight.market_road.sample_baked(bend_offset)) - market.player.global_position
+		camera.reset_smoothing()
+	var turn := SeasonOrders.EVENING_DISPATCH + SeasonOrders.TRAVEL_FRACTION * bend_offset / SeasonFreight.route_length
+	await _set_watch(turn)
+	_expect(market_cart.travelling and market_cart.cart.texture != east_side and market_cart.rim.texture != east_rim
+		and not market_cart.cart.flip_h and market_cart.driver.position.y < -10.0,
+		"On the northbound bend, the shaft and driver point away in a matching wagon frame.")
+	if capturing:
+		await RenderingServer.frame_post_draw
+		_capture_frame("04a-northbound-market-turn")
+		camera.position = camera_start
+		camera.reset_smoothing()
 	await _set_watch(SeasonOrders.EVENING_DISPATCH + 0.02)
 	_expect(market_cart.travelling and market_cart.driver.walking and market_cart.route_offset > 0.0,
 		"The driver and loaded cart move along the market road at the advertised watch.")
 	await _snapshot("05-market-departure")
-	var market := tree.current_scene as Node2D
 	await Campaign.walk_to_market_exit(tree, market)
 	if not await _cross(market.player, [], &"ui_right", state.WEST_ROAD_SCENE):
 		return
