@@ -17,6 +17,7 @@ const MAP_GRID_ITEM := preload("res://scripts/MapGridItem.gd")
 @onready var well_field_selector: OptionButton = $HBoxContainer/RightPanel/封地概览/WellFieldSelector
 @onready var steward_note: Label = %StewardNote
 @onready var steward_picker: OptionButton = %StewardPicker
+@onready var fill_steward_plans: CheckBox = %FillStewardPlans
 @onready var apply_steward: Button = %ApplySteward
 @onready var steward_preview: Label = %StewardPreview
 @onready var seed_plan_picker: OptionButton = $HBoxContainer/RightPanel/封地概览/SeedPlan/SeedPicker
@@ -72,9 +73,11 @@ func _ready() -> void:
 	seed_plan_picker.item_selected.connect(_refresh_seed_plan_preview.unbind(1))
 	rotate_seed.toggled.connect(_refresh_seed_plan_preview.unbind(1))
 	GameEvents.field_rotation_changed.connect(_refresh_seed_plan_preview)
+	GameEvents.field_rotation_changed.connect(_refresh_steward_choices)
 	apply_private_plan.pressed.connect(_apply_private_seed_plan)
 	sowing_rations.pressed.connect(GameEvents.night_rations_requested.emit)
 	steward_picker.item_selected.connect(_refresh_steward_preview.unbind(1))
+	fill_steward_plans.toggled.connect(func(_enabled: bool): _refresh_steward_preview.call_deferred())
 	apply_steward.pressed.connect(_apply_steward_handover)
 	_refresh_seed_choices()
 	refresh_well_fields()
@@ -426,6 +429,8 @@ func _refresh_steward_choices() -> void:
 	var field_id := well_field_selector.get_selected_id()
 	var previous := steward_picker.get_selected_metadata() as RetainerData
 	var same_field := steward_field_id == field_id
+	if not same_field:
+		fill_steward_plans.set_pressed_no_signal(true)
 	steward_field_id = field_id
 	steward_picker.get_parent().visible = Global.field_steward_unlocked()
 	steward_picker.clear()
@@ -455,6 +460,10 @@ func _manages_selected_field(data: RetainerData) -> bool:
 	return (data.duty == RetainerData.Duty.STEWARD
 		and Global.stewarded_field(data).field_id == well_field_selector.get_selected_id())
 
+func _selected_steward() -> RetainerData:
+	var index := steward_picker.get_selected_id()
+	return Global.retainers[index] if index >= 0 and index < Global.retainers.size() else null
+
 func _steward_fill_targets() -> Array[Vector2i]:
 	var targets: Array[Vector2i] = []
 	for item: MAP_GRID_ITEM in map_grid_container.get_children():
@@ -465,7 +474,10 @@ func _steward_fill_targets() -> Array[Vector2i]:
 
 func _refresh_steward_preview() -> void:
 	steward_preview.visible = Global.field_steward_unlocked()
-	var data := steward_picker.get_selected_metadata() as RetainerData
+	var data := _selected_steward()
+	var targets := _steward_fill_targets()
+	var already_assigned := data != null and _manages_selected_field(data)
+	fill_steward_plans.visible = data != null and not already_assigned and not targets.is_empty()
 	var has_tilled_plot := map_grid_container.get_children().any(
 		func(tile: MAP_GRID_ITEM) -> bool: return Global.tilled_cells.has(tile.grid_pos))
 	var till_hint := "先翻田，再安排续播。"
@@ -477,8 +489,9 @@ func _refresh_steward_preview() -> void:
 		if not has_tilled_plot:
 			steward_preview.text += " " + till_hint
 		return
-	var already_assigned := _manages_selected_field(data)
-	var targets := _steward_fill_targets()
+	var keep_plans := fill_steward_plans.visible and not fill_steward_plans.button_pressed
+	if keep_plans:
+		targets.clear()
 	var public_count := 0
 	for cell in targets:
 		public_count += int(Global.is_public_plot(cell))
@@ -504,15 +517,22 @@ func _refresh_steward_preview() -> void:
 	if private_count > 0:
 		plans.append("私田 %d 格按时令续播" % private_count)
 	var plan_note := "，".join(plans)
-	if plan_note.is_empty():
+	if keep_plans:
+		plan_note = "沿用当前的作物和续播安排。"
+	elif plan_note.is_empty():
 		plan_note = "无可补齐的续播" if has_tilled_plot else till_hint
 	steward_preview.text = "%s · %s · 粮仓 %d 份\n%s" % [assignment, ration_note, Global.food_storage, plan_note]
 
 func _apply_steward_handover() -> void:
-	var data := steward_picker.get_selected_metadata() as RetainerData
+	var data := _selected_steward()
+	if data == null:
+		return
 	var field := Global.get_well_field(well_field_selector.get_selected_id())
+	var already_assigned := _manages_selected_field(data)
 	var targets := _steward_fill_targets()
-	if not _manages_selected_field(data):
+	if not already_assigned and not fill_steward_plans.button_pressed:
+		targets.clear()
+	if not already_assigned:
 		if not Global.assign_duty(data, RetainerData.Duty.STEWARD):
 			return
 		Global.assign_retainer_plot(data, field.center_pos)

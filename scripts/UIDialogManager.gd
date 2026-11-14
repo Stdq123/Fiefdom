@@ -405,7 +405,7 @@ func _council_reaction(speaker: String, usual_line: String) -> String:
 
 func _field_keeper_season_line() -> String:
 	if Global.field_rotation.signed_day == Global.current_day:
-		return "我把咱们的两茬收成记在田南。往后哪一畦想这么种，翻开簿子指给我看，我照着接茬。"
+		return "我把咱们的两茬收成记在田南。翻开簿子，可以定下茬，也可以托留任的门客管这块井田。"
 	if Global.has_rain():
 		return "今早雨落下来，我就把轮作簿往架里推了推。等雨小了，咱们再看豆茬里长了什么。"
 	match Global.season_index():
@@ -423,19 +423,19 @@ func show_rotation_book(highlight_soil: Callable, open_plans: Callable) -> void:
 	var story := Global.field_rotation
 	var note := "渠伯记 · 井田 %d" % story.field_number
 	var count := Global.fertile_cells.size()
-	var summary := "第 %d 天，先前种过菽的私田收下%s，多收一份。\n现在有 %d 格地留着豆茬的肥。可让照料门客交替播种菽和所选作物。" % [
+	var summary := "第 %d 天，先前种过菽的私田收下%s，多收一份。\n现在有 %d 格地留着豆茬的肥。照料门客可按簿子续播。任命管事后，这块井田的收割和浇水也可交给他。" % [
 		story.harvest_day, Global.rotation_crop_name(), count]
 	var action := "标出肥地（%d 格）" % count if count > 0 else "标出肥地"
 	var disabled: Array[int] = []
 	if count == 0:
 		disabled.append(0)
-	var dialog := _open("轮作簿", note, summary, [action, "安排轮作", "合上"], disabled, ROTATION_BOOK.ART)
+	var dialog := _open("轮作簿", note, summary, [action, "安排轮作与管事", "合上"], disabled, ROTATION_BOOK.ART)
 	AudioManager.play_sfx(ROTATION_BOOK.TAP)
 	dialog.option_selected.connect(func(index: int):
 		if index == 0 and not Global.fertile_cells.is_empty():
 			highlight_soil.call()
 		elif index == 1:
-			open_plans.call()
+			open_plans.call(story.field_number - 1)
 	)
 
 func show_water_source(starter_tiles: int, rice_plots: int, open_study: Callable,

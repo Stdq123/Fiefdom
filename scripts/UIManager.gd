@@ -391,6 +391,8 @@ func _on_retainer_interacted(data: RetainerData) -> void:
 
 func _on_rotation_book_interacted() -> void:
 	world.set_channel_mode(false)
+	if directions.tracked_place == "轮作簿":
+		directions.clear_tracking()
 	dialog_manager.show_rotation_book(world.irrigation_overlay.highlight_fertile_cells, _show_estate_management)
 
 func _on_water_source_interacted() -> void:
@@ -465,6 +467,12 @@ func _refresh_opening_action() -> void:
 		and is_instance_valid(world.neighbor_actor(VisitorData.FIELD_KEEPER))):
 		_show_opening_neighbor(VisitorData.FIELD_KEEPER)
 		return
+	if Global.field_rotation.signed_day == Global.current_day:
+		_set_opening_action("找轮作簿", "田南的轮作簿可以安排下茬和井田管事。", _guide_rotation_book)
+		return
+	if Global.field_rotation.ready_to_sign() and is_instance_valid(world.neighbor_actor(VisitorData.FIELD_KEEPER)):
+		_set_opening_action("找渠伯记轮作", "请渠伯把两茬收成记进轮作簿。", _on_neighbor_directions_requested.bind(VisitorData.FIELD_KEEPER))
+		return
 	if not early_estate:
 		hud.opening_action.hide()
 		return
@@ -478,6 +486,12 @@ func _refresh_opening_action() -> void:
 		_set_opening_action("查看开垦筹备", "查看第二块井田所需的门客、铜钱和粮食。", _on_reclaim_pressed)
 		return
 	hud.opening_action.hide()
+
+func _guide_rotation_book() -> void:
+	var book := world.get_node("FieldRotationBook") as Node2D
+	directions.follow_place("轮作簿", world.to_local(book.global_position))
+	if Global.is_indoors():
+		hud.practice_label.text = "已标出轮作簿 · 从南门回田边"
 
 func _show_promotion_action() -> bool:
 	var qualified := Global.eligible_for_promotion()

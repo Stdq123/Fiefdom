@@ -157,6 +157,16 @@ size_flags_horizontal = 3
 mouse_default_cursor_shape = 2
 fit_to_longest_item = false
 
+[node name="FillStewardPlans" type="CheckBox" parent="HBoxContainer/RightPanel/封地概览/StewardHandover"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(114, 34)
+layout_mode = 2
+button_pressed = true
+mouse_default_cursor_shape = 2
+text = "补齐续播"
+tooltip_text = "为没有安排的已翻田格补齐续播。可取消勾选，留作自己安排。"
+
 [node name="ApplySteward" type="Button" parent="HBoxContainer/RightPanel/封地概览/StewardHandover"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(145, 34)
@@ -164,7 +174,7 @@ layout_mode = 2
 mouse_default_cursor_shape = 2
 disabled = true
 text = "交给管事"
-tooltip_text = "分派当前井田并补齐续播。保留已有安排和正在生长的作物。"
+tooltip_text = "确认交接这块井田。现有的续播安排和在田作物会保留。"
 
 [node name="StewardPreview" type="Label" parent="HBoxContainer/RightPanel/封地概览"]
 unique_name_in_owner = true

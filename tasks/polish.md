@@ -21,7 +21,7 @@
 - **经营到结局**。按自己的节奏选一条路线，记下哪几天改变了经营方式、哪些操作重复得最累、哪次遇见人物或走过某处让你想再去。结算后退出，再从标题「继续游戏」读回，核对路线和结算日期。
 - **回报**。记下系统和显卡、键鼠或手柄、实际窗口尺寸、总游玩时间及停在的游戏日期。能复现的问题附上当时的截图或一段操作顺序。画面、节奏和手感直接写感受即可。
 
-本包包含时令交货后的返程指路和缺粮时的野果坳指路。解压后验证标题启动、两条新档路线、战败恢复、延期研究和两个结局的退出重启。 [本包校验](../build/polish-berry-rations/final-headless/manifest.txt)
+本包包含轮作簿交接井田、时令交货后的返程指路和缺粮时的野果坳指路。解压后验证标题启动、两条新档路线、战败恢复、延期研究和两个结局的退出重启。 [本包校验](../build/polish-first-field-steward/delivery-headless/manifest.txt)
 
 ## 从新档到第一次收获
 
@@ -1058,3 +1058,9 @@
 - 转粮、购粮和一匹余绸仍无法供齐时，今夜安排标出可采的野果和入仓量。点按钮从东关进竹涧，路标继续指向野果坳。当天已采药或采果时收起入口，采摘仍使用原有的一日一次规则。 [1920×1080 缺粮入口](../build/polish-berry-rations/final-capture/1920x1080/orders-rations-fruit-option.png) · [竹涧路标](../build/polish-berry-rations/final-capture/1920x1080/orders-rations-ravine-route.png) · [1024×768 缺粮入口](../build/polish-berry-rations/final-capture/1024x768/05-uncovered-shortage.png)
 - 同一交货路线在第 43、45、46 天各走一趟，每次采回 5 份，原先缺粮的四晚均供齐。该局第 47 天请议，第 57 天呈交新税册并达成改革结局，第 58 天读回结局后续营。田务、交货、采集与敌袭按默认规则运行。 [新档长线回放](../build/polish-berry-rations/final-capture/reformed-orders.log) · [原回放](../build/polish-order-journey/campaign-verified/reformed-orders.log)
 - 101 项源码场景、46 项无窗口发行检查和 8 次隔离桌面运行通过。两种窗口核对了缺粮入口，专项覆盖可直接补足时不显示、采药后收起和隔日重新可用。上版存档接续、两个结局退出重启和连续运行 90.557 秒通过，两次构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-berry-rations/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-berry-rations/source.log) · [发行回归](../build/polish-berry-rations/final-headless.log) · [隔离桌面](../build/polish-berry-rations/final-capture.log) · [重复构建](../build/polish-berry-rations/rebuild.log)
+
+## 从轮作簿交接第一块井田
+
+- 轮作多收一份后，手记可指路找渠伯记簿。记完当天可循手记找到井田西南的轮作簿，打开记载的井田并任命管事。交接页列出全员夜粮和可补的续播格数。取消勾选「补齐续播」后照旧收割和浇水，留空的续播由玩家日后安排。第二块井田完工也可开放管事岗位。 [轮作簿](../build/polish-first-field-steward/delivery-capture/1920x1080/first-steward-rotation-book.png) · [1024×768 交接](../build/polish-first-field-steward/delivery-capture/1024x768/first-steward-handoff.png)
+- 单井田新档第 9 天收下轮作麻，第 10 天记簿并任命渠伯，全员每夜用粮从 4 份增为 5 份。确认交接后存档并从标题继续，公田的菽黍轮作与私田原有安排保留。第 27 天暂停私田续播，靠公田轮作和两株桑备粮。第 59 天议税，第 64 天呈交新税册，第 65 天可续营。这局手动田间操作共 152 次，全部发生在交接之前，交接后的当日田务回放记到 117 份收成。全程供足口粮。 [单井田长线回放](../build/polish-first-field-steward/delivery-headless/reformed-first-steward.log)
+- 101 项源码场景、35 项无窗口发行检查和 13 次隔离桌面运行通过。两个窗口均核对轮作簿、交接确认和单井田结算。双结局、战败恢复、延期研究、上版存档接续、两个结局退出重启及 90.722 秒连续运行通过。两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-first-field-steward/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-first-field-steward/source-final.log) · [发行回归](../build/polish-first-field-steward/delivery-headless.log) · [隔离桌面](../build/polish-first-field-steward/delivery-capture.log) · [重复构建](../build/polish-first-field-steward/rebuild.log)

@@ -128,7 +128,7 @@ func _collect_places() -> void:
 	var relief := Global.watch_relief_day() > 0
 	var watch_detail := "拦索已备" if Global.watch_snare_armed else ("巡粮已到，查看到货记录" if relief else "查看守备口信")
 	_add_built_place("东路岗", watch_detail, "Scenery/EastWatch", relief)
-	_add_built_place("轮作簿", "查看轮作约定", "FieldRotationBook")
+	_add_built_place("轮作簿", "查看轮作与管事安排", "FieldRotationBook")
 	if Global.road_rest_built():
 		_add_built_place("亭西歇脚处", "在长凳旁休息", "RoadRest")
 	var garden_day := Global.seed_garden_day()

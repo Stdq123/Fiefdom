@@ -5,6 +5,10 @@ const SECOND := Vector2i(9, 5)
 const RICE := Vector2i(4, 5)
 const MULBERRY := Vector2i(6, 6)
 const SECOND_MULBERRY := Vector2i(5, 4)
+const ROTATION_PLOT := Vector2i(6, 4)
+const ROTATION_CASH_PLOTS := [Vector2i(4, 4), Vector2i(4, 6), Vector2i(5, 6), Vector2i(6, 5)]
+const FIRST_STEWARD := "渠伯"
+const PUBLIC_ROTATION := "rotation:millet"
 const SPRING_ORDER_PLOTS := {Vector2i(4, 4): KEY_5, Vector2i(4, 5): KEY_4,
 	Vector2i(5, 4): KEY_5, Vector2i(6, 4): KEY_1, Vector2i(6, 5): KEY_1}
 const AUTUMN_ORDER_PLOTS := {Vector2i(4, 4): KEY_5, Vector2i(4, 6): KEY_2,
@@ -26,6 +30,7 @@ var nights_short := 0
 var use_night_rations := false
 var use_field_steward := false
 var use_season_orders := false
+var use_rotation_steward := false
 var order_capture_directory := ""
 var petition_day := 0
 var deliveries := 0
@@ -34,6 +39,8 @@ var steward_day := 0
 var managed_harvests := 0
 var manual_field_actions := 0
 var second_field_actions := 0
+var first_field_actions_at_handoff := 0
+var rotation_steward_captures := ""
 var paused_private_sowing := false
 var ration_silk_sales := 0
 var ration_forage_trips := 0
@@ -317,7 +324,7 @@ func _prepare_workshop_and_canal() -> void:
 
 func _make_silk() -> void:
 	var workshop = state.silk_workshop
-	if not workshop.built or (not use_field_steward and workshop.bolts > 0):
+	if not workshop.built or (not use_field_steward and not use_rotation_steward and workshop.bolts > 0):
 		return
 	var panel := _management(4)
 	var silk := panel.get_node("HBoxContainer/RightPanel/蚕桑")
@@ -527,6 +534,139 @@ func _steward_workday() -> void:
 	await tree.create_timer(6.0).timeout
 	managed_harvests += state.king_storage - start_tribute + state.private_harvest_total - start_private
 
+func _rotation_choice(actor: Node2D, choice: String, frame := "") -> bool:
+	if not _expect(is_instance_valid(actor), "The rotation interaction can be reached in the estate."):
+		return false
+	await walk_straight(tree, world.player, actor.global_position + Vector2(0, 16))
+	_key(KEY_E)
+	await tree.process_frame
+	var dialog := ui.get_node_or_null("Control/DialoguePanel") as Control
+	var button := _find_button(dialog, choice) if dialog else null
+	if not _expect(button != null, "The rotation conversation offers " + choice):
+		return false
+	if not rotation_steward_captures.is_empty() and not frame.is_empty():
+		await _capture_ending(rotation_steward_captures, frame)
+	await _click(button.get_global_rect().get_center())
+	await tree.process_frame
+	return true
+
+func _show_first_field_plan(panel: Control, cell: Vector2i, id: String, rotating := false) -> void:
+	var picker: OptionButton = panel.seed_plan_picker
+	for index in range(1, picker.item_count):
+		if picker.get_item_metadata(index) == id:
+			picker.select(index)
+			picker.item_selected.emit(index)
+			break
+	panel.rotate_seed.set_pressed_no_signal(rotating)
+	for tile: Button in panel.map_grid_container.get_children():
+		if tile.grid_pos == cell:
+			await _click(tile.get_global_rect().get_center())
+			return
+
+func _appoint_first_field_steward() -> void:
+	var keeper: Node2D = world.neighbor_actor(FIRST_STEWARD)
+	if not _expect(keeper != null and state.well_fields.size() == 1 and not state.field_steward_unlocked(),
+		"The new estate can earn a first-field handoff by working with Qu Bo."):
+		return
+	if not await _rotation_choice(keeper, "一起记进轮作簿"):
+		return
+	if not _expect(ui.hud.opening_action.visible and ui.hud.opening_action.text == "找轮作簿",
+		"The estate journal points to the signed book."):
+		return
+	await _click(ui.hud.opening_action.get_global_rect().get_center())
+	_expect(ui.directions.destination().title == "轮作簿", "The opening action marks the book in the estate.")
+	if not await _rotation_choice(world.get_node("FieldRotationBook"), "安排轮作与管事", "first-steward-rotation-book"):
+		return
+	var panel: Control = ui.panel_manager.management_panel_instance
+	if not _expect(panel.visible and panel.well_field_selector.get_selected_id() == 0 and panel.steward_picker.has_focus(),
+		"The real field book opens its own field with focus on the steward picker."):
+		return
+	var public: int = state.king_storage
+	var private_yield: int = state.private_harvest_total
+	var before: int = state.retainer_food_cost()
+	await _show_first_field_plan(panel, FIRST, "millet", true)
+	await _show_first_field_plan(panel, RICE, "rice")
+	for cell in ROTATION_CASH_PLOTS:
+		await _show_first_field_plan(panel, cell, "hemp")
+	for cell in [MULBERRY, SECOND_MULBERRY]:
+		await _show_first_field_plan(panel, cell, "mulberry")
+	var picker: OptionButton = panel.steward_picker
+	picker.select(1)
+	picker.item_selected.emit(1)
+	var worker = picker.get_selected_metadata()
+	await tree.process_frame
+	if not _expect(panel.fill_steward_plans.visible and panel.fill_steward_plans.button_pressed
+		and "私田 1 格" in panel.steward_preview.text, "The only unplanned annual plot is quoted for optional reseeding."):
+		return
+	await _click(panel.fill_steward_plans.get_global_rect().get_center())
+	await tree.process_frame
+	_expect(not panel.fill_steward_plans.button_pressed and "沿用当前" in panel.steward_preview.text,
+		"Before the handoff the player can leave established sowing plans in place: %s pressed=%s." % [
+			panel.steward_preview.text, panel.fill_steward_plans.button_pressed])
+	if not rotation_steward_captures.is_empty():
+		await _capture_ending(rotation_steward_captures, "first-steward-handoff")
+	var apply: Button = panel.apply_steward
+	if not _expect(apply.is_visible_in_tree() and not apply.disabled and state.can_assign_duty(worker, worker.Duty.STEWARD),
+		"The handoff button is available for the selected worker."):
+		return
+	await _click(apply.get_global_rect().get_center())
+	await tree.process_frame
+	if not _expect(worker.name == FIRST_STEWARD and worker.duty == worker.Duty.STEWARD
+		and state.stewarded_field(worker).field_id == 0 and state.retainer_food_cost() == before + 1
+		and state.field_seed_plans[FIRST] == PUBLIC_ROTATION and not state.field_seed_plans.has(ROTATION_PLOT)
+		and state.king_storage == public and state.private_harvest_total == private_yield,
+		"Qu Bo takes the first field for the quoted ration before any harvest."):
+		return
+	steward_name = worker.name
+	steward_day = state.current_day
+	first_field_actions_at_handoff = manual_field_actions
+	await _click(panel.close_button.get_global_rect().get_center())
+	print("CAMPAIGN_FIRST_STEWARD day=", steward_day, " ration=", before, "->", state.retainer_food_cost(),
+		" manual_actions_to_handoff=", first_field_actions_at_handoff)
+	await _save_return_continue()
+	worker = state.retainers.front()
+	_expect(state.well_fields.size() == 1 and worker.name == FIRST_STEWARD and worker.duty == worker.Duty.STEWARD
+		and worker.assigned_area == FIRST and state.retainer_food_cost() == before + 1
+		and state.field_seed_plans[FIRST] == PUBLIC_ROTATION and not state.field_seed_plans.has(ROTATION_PLOT),
+		"Continue keeps the earned one-field stewardship, meal cost and selected sowing plans.")
+
+func _rotation_workday() -> void:
+	var worker = state.retainers.front()
+	if not _expect(worker.name == steward_name and worker.duty == worker.Duty.STEWARD,
+		"The first-field steward remains at work."):
+		return
+	var start: int = state.king_storage + state.private_harvest_total
+	for tick in 60:
+		var pending: bool = state.tilled_cells.keys().any(func(cell: Vector2i) -> bool:
+			return state.field_job(worker, cell) != state.FieldJob.NONE)
+		if not pending:
+			break
+		await tree.create_timer(0.45).timeout
+	managed_harvests += state.king_storage + state.private_harvest_total - start
+	rice_harvested = rice_harvested or state.crop_stock.count("rice") > 0
+
+func _stop_rotation_cash_plots() -> void:
+	var panel := _management(0)
+	panel.show_estate(0)
+	panel.focus_sowing_plans()
+	await tree.process_frame
+	if not _expect(not panel.apply_private_plan.disabled, "Plan to stop private sowing while the public rotation continues."):
+		return
+	await _click(panel.apply_private_plan.get_global_rect().get_center())
+	await tree.process_frame
+	await _click(panel.close_button.get_global_rect().get_center())
+	paused_private_sowing = true
+	_expect(state.field_seed_plans.get(FIRST) == PUBLIC_ROTATION and state.field_seed_plans.size() == 1,
+		"Pausing clears private sowing and leaves the public rotation scheduled.")
+	print("CAMPAIGN_FIRST_STEWARD_SOWING day=", state.current_day, " gap=", state.tax_council_public_gap())
+
+func _resume_rotation_cash_plots() -> void:
+	var panel := _management(0)
+	panel.show_estate(0)
+	for cell in ROTATION_CASH_PLOTS:
+		await _show_first_field_plan(panel, cell, "hemp")
+	await _click(panel.close_button.get_global_rect().get_center())
+
 func _pause_private_sowing() -> void:
 	var gap: int = state.tax_council_public_gap()
 	var readiness_day: int = state.tax_council_start_day() - floori(float(state.balance.days_per_year) / 2.0)
@@ -550,7 +690,7 @@ func _pause_private_sowing() -> void:
 	print("CAMPAIGN_SOWING day=", state.current_day, " gap=", gap, " public_plan=", public_plan)
 
 func _fund_rations_with_silk() -> void:
-	if not use_field_steward or state.night_rations_plan().uncovered == 0:
+	if (not use_field_steward and not use_rotation_steward) or state.night_rations_plan().uncovered == 0:
 		return
 	await _click(ui.hud.rations_button.get_global_rect().get_center())
 	var panel := ui.get_node_or_null("Control/NightRationsPanel") as Control
@@ -571,7 +711,7 @@ func _fund_rations_with_silk() -> void:
 	await _click(panel.close_button.get_global_rect().get_center())
 
 func _forage_for_rations() -> void:
-	if not use_season_orders or state.night_rations_plan().uncovered == 0:
+	if (not use_season_orders and not use_rotation_steward) or state.night_rations_plan().uncovered == 0:
 		return
 	await _click(ui.hud.rations_button.get_global_rect().get_center())
 	var panel := ui.get_node_or_null("Control/NightRationsPanel") as Control
@@ -671,11 +811,14 @@ func _capture_ending(directory: String, name: String) -> void:
 		"The ending frame can be captured.")
 
 func run(game_tree: SceneTree, branch: String, release_required := false, capture_directory := "", delegated := false,
-		stewarded := false, ordering := false) -> void:
+		stewarded := false, ordering := false, rotation_steward := false) -> void:
 	tree = game_tree
 	use_night_rations = delegated
 	use_field_steward = stewarded
 	use_season_orders = ordering
+	use_rotation_steward = rotation_steward
+	if rotation_steward:
+		rotation_steward_captures = capture_directory
 	if ordering:
 		order_capture_directory = capture_directory
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated replay profile."):
@@ -709,6 +852,17 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 	var literacy_target: int = state.irrigation.UNLOCK_LITERACY_LEVEL
 	while state.current_day < 100 and not tree.paused and not state.tax_council_waiting() and state.outcome == state.Outcome.RUNNING:
 		await _recruit()
+		if use_rotation_steward and steward_day == 0:
+			var keeper: Node2D = world.neighbor_actor(FIRST_STEWARD)
+			if state.rotation_offer_ready():
+				if not await _rotation_choice(keeper, "约定试一回轮作"):
+					_end(true)
+					return
+			elif state.field_rotation.ready_to_sign():
+				await _appoint_first_field_steward()
+				if failures > 0:
+					_end(true)
+					return
 		if state.player_stats.get_level(literacy_art) < literacy_target:
 			_study()
 		var expanded: bool = state.well_fields.size() >= 2
@@ -720,7 +874,14 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 			await _steward_workday()
 			if state.tax_council_waiting():
 				break
-		var need_expansion: bool = not expanded and state.current_rank >= state.Rank.ZHONG_SHI and state.retainers.size() >= 3
+		var first_managed := use_rotation_steward and steward_day > 0
+		if first_managed and not paused_private_sowing and state.current_day >= 27:
+			await _stop_rotation_cash_plots()
+			if failures > 0:
+				_end(true)
+				return
+		var need_expansion: bool = (not use_rotation_steward and not expanded
+			and state.current_rank >= state.Rank.ZHONG_SHI and state.retainers.size() >= 3)
 		var rank_factor: int = state.current_rank + 1
 		var expansion_cost: int = state.balance.reclamation_cost_copper * rank_factor
 		var expansion_food: int = state.balance.reclamation_cost_food * rank_factor
@@ -728,29 +889,35 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 		var prioritize_tribute := _seek_petition()
 		var order_plots := _order_plots()
 		var in_second_year: bool = use_season_orders and state.get_current_year() == state.TAX_COUNCIL_YEAR - 1
-		_harvest_and_tend(FIRST, KEY_1 if state.fertile_cells.has(FIRST) else KEY_5, true)
+		if not first_managed:
+			_harvest_and_tend(FIRST, KEY_1 if state.fertile_cells.has(FIRST) else KEY_5, true)
 		if field_ready and not use_field_steward:
 			_harvest_and_tend(SECOND, KEY_1 if state.fertile_cells.has(SECOND) else KEY_5, true)
-		for x in range(4, 7):
-			for y in range(4, 7):
-				var cell := Vector2i(x, y)
-				if cell == FIRST:
-					continue
-				var grow: bool = not expanded or cell == MULBERRY or (x == 6 and available_provisions < 12)
-				var silk_plot := cell == MULBERRY or (use_field_steward and cell == SECOND_MULBERRY)
-				if (paused_private_sowing or prioritize_tribute) and not silk_plot:
-					continue
-				var seed_key := KEY_7
-				if silk_plot and prepared:
-					seed_key = KEY_6
-					grow = true
-				if cell == RICE and prepared and not rice_harvested:
-					seed_key = KEY_3
-					grow = true
-				if in_second_year and not silk_plot and seed_key != KEY_3:
-					grow = order_plots.has(cell)
-					seed_key = order_plots.get(cell, seed_key)
-				_harvest_and_tend(cell, seed_key, grow)
+		if first_managed:
+			await _rotation_workday()
+		else:
+			for x in range(4, 7):
+				for y in range(4, 7):
+					var cell := Vector2i(x, y)
+					if cell == FIRST:
+						continue
+					var grow: bool = not expanded or cell == MULBERRY or (x == 6 and available_provisions < 12)
+					var silk_plot := cell == MULBERRY or ((use_field_steward or use_rotation_steward) and cell == SECOND_MULBERRY)
+					if (paused_private_sowing or prioritize_tribute) and not silk_plot:
+						continue
+					var seed_key := KEY_7
+					if silk_plot and prepared:
+						seed_key = KEY_6
+						grow = true
+					if cell == RICE and prepared and not rice_harvested:
+						seed_key = KEY_3
+						grow = true
+					if use_rotation_steward and cell == ROTATION_PLOT and state.field_rotation.beans_day == 0:
+						seed_key = KEY_5
+					if in_second_year and not silk_plot and seed_key != KEY_3:
+						grow = order_plots.has(cell)
+						seed_key = order_plots.get(cell, seed_key)
+					_harvest_and_tend(cell, seed_key, grow)
 		if not prepared and state.money >= 58 and state.player_stats.get_level(literacy_art) >= literacy_target:
 			await _prepare_workshop_and_canal()
 			prepared = true
@@ -792,8 +959,10 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 		"Ordinary harvests and sleep reach the year, rank and contribution gates."):
 		_end(true)
 		return
-	_expect(state.well_fields.size() == 2 and state.well_fields[1]["is_unlocked"] and rice_harvested and state.raids_defeated >= 1
-		and state.silk_workshop.bolts > 0, "The campaign includes expansion, irrigated rice, silk and an actual defense.")
+	var expected_fields := 1 if use_rotation_steward else 2
+	_expect(state.well_fields.size() == expected_fields and state.well_fields.back().is_unlocked and rice_harvested
+		and state.raids_defeated >= 1 and state.silk_workshop.bolts > 0,
+		"The campaign has the planned field count, irrigated rice, silk and an actual defense.")
 	print("CAMPAIGN_DECISION day=", state.current_day, " public_ratio=", state.public_contribution_ratio(), " copper=", state.money)
 	if branch == "traditional":
 		if not use_field_steward and not use_season_orders:
@@ -819,6 +988,8 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 	_expect(state.outcome == state.Outcome.RUNNING and state.route_objectives()[0]["value"] == 0, "Pre-choice harvest cannot satisfy the ending.")
 	if use_field_steward:
 		await _resume_private_sowing()
+	elif use_rotation_steward:
+		await _resume_rotation_cash_plots()
 
 	var silk_panel := _management(4).get_node("HBoxContainer/RightPanel/蚕桑")
 	silk_panel.buttons[5 if branch == "traditional" else 4].pressed.emit()
@@ -827,7 +998,7 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 	if not _expect(state.outcome == state.Outcome.RUNNING and state.route_objectives()[1]["value"] == 1, "Silk counts on the matching branch without skipping the other objectives."):
 		_end(true)
 		return
-	if use_field_steward and branch == "reformed":
+	if (use_field_steward or use_rotation_steward) and branch == "reformed":
 		var panel := _management(4)
 		var sell: Button = panel.silk_panel.buttons[4]
 		var cash_target: int = state.balance.ending_reformed_wealth + 3 * state.retainer_food_cost() * state.balance.market_food_price
@@ -837,7 +1008,10 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 	await _save_return_continue()
 	var last_day: int = state.current_day + 28
 	while state.current_day < last_day and state.outcome == state.Outcome.RUNNING and not state.route_ready_to_present():
-		_harvest_and_tend(FIRST, KEY_1 if state.fertile_cells.has(FIRST) else KEY_5, true)
+		if use_rotation_steward:
+			await _rotation_workday()
+		else:
+			_harvest_and_tend(FIRST, KEY_1 if state.fertile_cells.has(FIRST) else KEY_5, true)
 		if use_field_steward:
 			await _steward_workday()
 			for x in range(4, 7):
@@ -845,7 +1019,7 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 					var cell := Vector2i(x, y)
 					if cell != FIRST and cell != MULBERRY:
 						_harvest_and_tend(cell, KEY_7, branch == "reformed" or x == 6)
-		else:
+		elif not use_rotation_steward:
 			_harvest_and_tend(SECOND, KEY_1 if state.fertile_cells.has(SECOND) else KEY_5, true)
 			for x in range(8, 11):
 				for y in range(4, 7):
@@ -865,7 +1039,7 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 		print("CAMPAIGN_MISSING ", state.route_objectives())
 		_end(true)
 		return
-	if branch == "reformed" and not use_season_orders:
+	if branch == "reformed" and not use_season_orders and not use_rotation_steward:
 		var earned: int = state.money
 		ui.hud.route_progress.pressed.emit()
 		state.money = state.balance.ending_reformed_wealth - 1
@@ -905,6 +1079,15 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 	if use_night_rations:
 		_expect(delegated_nights > 0 and state.night_rations.enabled,
 			"Nightly rations operate through the campaign and survive its save and continue.")
+	if use_rotation_steward:
+		var worker = state.retainers.front()
+		var first_field_actions := manual_field_actions - second_field_actions
+		_expect(steward_day == state.field_rotation.signed_day and state.stewarded_field(worker).field_id == 0
+			and worker.duty == worker.Duty.STEWARD and paused_private_sowing and nights_short == 0
+			and first_field_actions == first_field_actions_at_handoff and managed_harvests > 30,
+			"The earned steward works the original field through the ending and survives reloads.")
+		print("CAMPAIGN_FIRST_STEWARD_SETTLED day=", state.current_day, " first_actions=", first_field_actions,
+			" first_after_handoff=", first_field_actions - first_field_actions_at_handoff, " managed_yield=", managed_harvests)
 	if use_season_orders:
 		_expect(petition_day > 0 and petition_day < state.tax_council_start_day() and deliveries >= 2,
 			"Deliver season orders and petition before the regular council in an ordinary new game.")
@@ -912,6 +1095,7 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 			"The order campaign follows the berry route and feeds everyone through to its ending.")
 	var outcome_view := tree.current_scene.get_node("CampaignHUD")
 	var ending: Control = outcome_view.summary
+	var ending_capture := ("first-steward-" if use_rotation_steward else "") + "ending-" + branch
 	if not _expect(ending != null and ending.shot == ending.Shot.CEREMONY and ending.film.visible and not ui.visible
 			and ending.stage.global_position == stand.global_position,
 			"The film starts at the same ledger the player just presented."):
@@ -920,13 +1104,13 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 	if not capture_directory.is_empty():
 		await tree.create_timer(2.0).timeout
 		_expect(ending.shot == ending.Shot.CEREMONY, "The ceremony starts with the envoy's arrival.")
-		await _capture_ending(capture_directory, "ending-" + branch + "-ceremony")
+		await _capture_ending(capture_directory, ending_capture + "-ceremony")
 		await tree.create_timer(2.1).timeout
 		_expect(ending.shot == ending.Shot.FIELD, "The film returns to the fields after the handoff.")
-		await _capture_ending(capture_directory, "ending-" + branch + "-fields")
+		await _capture_ending(capture_directory, ending_capture + "-fields")
 		if not ending.report.visible:
 			await ending.film_finished
-		await _capture_ending(capture_directory, "ending-" + branch)
+		await _capture_ending(capture_directory, ending_capture)
 	else:
 		ending.skip_button.pressed.emit()
 	var final_goals: Array[Dictionary] = state.route_objectives()
@@ -950,7 +1134,7 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 		and ending.stay_button.has_focus() and state.outcome == expected,
 		"Reading a pre-victory save shows its actual destination and focuses staying at the ending.")
 	if not capture_directory.is_empty():
-		await _capture_ending(capture_directory, "ending-" + branch + "-restore")
+		await _capture_ending(capture_directory, ending_capture + "-restore")
 	_key(KEY_ESCAPE)
 	await tree.process_frame
 	_expect(not ending.restore_confirmation.visible and ending.restore_button.has_focus() and state.outcome == expected,

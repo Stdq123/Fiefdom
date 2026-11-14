@@ -193,7 +193,7 @@ func _field_keeper_story() -> Array[String]:
 			story.harvest_day, story.field_number, Global.rotation_crop_name()]
 	if story.signed_day > 0:
 		note += "\n第 %d 天 · 把这次收成记进轮作簿。" % story.signed_day
-		return [note, "沿井田西南的岔路翻看轮作簿，可以标出现在留肥的田格。"]
+		return [note, "沿井田西南的岔路翻看轮作簿，可以标出肥地、安排轮作和管事。"]
 	if story.ready_to_sign():
 		return [note, "再找渠伯，把这一格田的两茬收成记下来。"]
 	if story.beans_day > 0:

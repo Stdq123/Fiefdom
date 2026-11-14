@@ -40,6 +40,9 @@ func _run() -> void:
 		"reformed-orders":
 			var replay = load("res://tests/CampaignReplay.gd").new()
 			await replay.run(tree, "reformed", true, capture_directory, true, false, true)
+		"reformed-first-steward":
+			var replay = load("res://tests/CampaignReplay.gd").new()
+			await replay.run(tree, "reformed", true, capture_directory, true, false, false, true)
 		"ending-film":
 			var replay = load("res://tests/EndingFilmReplay.gd").new()
 			await replay.run(tree, capture_directory)

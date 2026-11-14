@@ -220,6 +220,7 @@ try {
         foreach ($name in 'traditional-steward', 'reformed-steward') {
             Start-VerifiedGame -Directory $release -Profile $name -Name $name -Replay $name
         }
+        Start-VerifiedGame -Directory $release -Profile 'reformed-first-steward' -Name 'reformed-first-steward' -Replay 'reformed-first-steward' -Resolution $fullResolution
     }
     if ($OrderCampaign) {
         Start-VerifiedGame -Directory $release -Profile 'reformed-orders' -Name 'reformed-orders' -Replay 'reformed-orders' -Resolution $fullResolution
@@ -310,6 +311,9 @@ try {
     if ($Capture) {
         foreach ($size in $fullResolution, '1024x768') {
             Start-VerifiedGame -Directory $release -Profile "render-$size" -Name "render-$size" -Replay 'visual' -Resolution $size
+        }
+        if ($StewardCampaign) {
+            Start-VerifiedGame -Directory $release -Profile 'first-steward-compact' -Name 'reformed-first-steward-1024x768' -Replay 'reformed-first-steward' -Resolution '1024x768'
         }
         if ($RouteGoals) {
             Start-VerifiedGame -Directory $release -Profile 'council-prep-compact' -Name 'council-prep-1024x768' -Replay 'council-prep' -Resolution '1024x768'

@@ -1885,7 +1885,7 @@ func assign_duty(retainer: RetainerData, duty: RetainerData.Duty) -> bool:
 	return true
 
 func field_steward_unlocked() -> bool:
-	return well_fields.size() > 1 and well_fields[1].is_unlocked
+	return field_rotation.signed_day > 0 or (well_fields.size() > 1 and well_fields[1].is_unlocked)
 
 func stewarded_field(retainer: RetainerData) -> Dictionary:
 	for field in well_fields:

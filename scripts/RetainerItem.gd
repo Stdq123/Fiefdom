@@ -20,6 +20,7 @@ func _ready() -> void:
 	GameEvents.retainer_duty_changed.connect(_on_duty_changed)
 	GameEvents.retainer_assigned.connect(_on_duty_changed.unbind(1))
 	GameEvents.well_field_reclaimed.connect(_refresh_duty.unbind(2))
+	GameEvents.field_rotation_changed.connect(_refresh_duty)
 	GameEvents.silk_changed.connect(_refresh_duty)
 
 func setup(p_data: RetainerData) -> void:
@@ -41,7 +42,7 @@ func _refresh_duty() -> void:
 	if data.duty == RetainerData.Duty.STEWARD:
 		tooltip += " · 收割、浇水、按计划续播"
 	elif not Global.field_steward_unlocked():
-		tooltip += " · 第二块井田完工后可任管事"
+		tooltip += " · 记完轮作簿或第二块井田完工后可任管事"
 	duty_picker.tooltip_text = tooltip
 	field_picker.visible = data.duty == RetainerData.Duty.STEWARD
 	custom_minimum_size.y = $HBoxContainer.get_combined_minimum_size().y + 16.0
