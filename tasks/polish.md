@@ -21,7 +21,7 @@
 - **经营到结局**。按自己的节奏选一条路线，记下哪几天改变了经营方式、哪些操作重复得最累、哪次遇见人物或走过某处让你想再去。结算后退出，再从标题「继续游戏」读回，核对路线和结算日期。
 - **回报**。记下系统和显卡、键鼠或手柄、实际窗口尺寸、总游玩时间及停在的游戏日期。能复现的问题附上当时的截图或一段操作顺序。画面、节奏和手感直接写感受即可。
 
-本包包含封地、溪桥道、西市和竹涧的斜俯视更新，也能一次处理一块井田内同类的翻地、播种、浇水或收获。柳湾和砾滩有低岩台，浅滩可沿踏石过溪。时令货车的车辕随道路转向，靠近可听见木轮声。采完野果或办完市集事务后可点「回井田」，沿金线过关回到第一块井田的田口。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本轮试玩包](../build/polish-field-batch/final/Fiefdom-1.0.0-Windows-x64.zip) · [本包校验](../build/polish-field-batch/final/headless/manifest.txt)
+本包包含封地、溪桥道、西市和竹涧的斜俯视更新。堂屋、蚕棚和南路亭能看到右侧屋檐与台基，路牌、木栏和木料有厚度，雨棚立柱会按脚下位置遮住人物。按住 Shift 或手柄 LT 可一次处理一块井田内同类的农事。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本轮试玩包](../build/polish-building-depth/final/Fiefdom-1.0.0-Windows-x64.zip) · [本包校验](../build/polish-building-depth/final/headless/manifest.txt)
 
 ## 从新档到第一次收获
 
@@ -1157,3 +1157,9 @@
 - 新档种同样九格黍，从翻地到第 3 天收成，逐格点 45 次。旧版连耕可拖动 5 次，每次依次经过另外八格。新版在同一个格子点 5 次即可。三次回放均在首收获得 1 份贡粮、8 份私田黍和 40 铜钱，余 8 粮、73 体力。专项复核中途松键可只浇一格，剩下八格在体力差一份时都保持原样。另用双井田存档验证收第一块井田后，第二块的熟田仍在。第 3 天熟田可从标题重读再批量收割，回执分别列出公私田收成。 [逐格结算](../build/polish-field-batch/final/input-comparison/single.log) · [连耕结算](../build/polish-field-batch/final/input-comparison/drag.log) · [整田结算](../build/polish-field-batch/final/input-comparison/batch.log) · [双井田检查](../build/polish-field-batch/final/headless/field-batch-mixed.log)
 - 另在两条新档长线回放里，用 Shift 加左键成批浇水和收割。传统线 70 次处理 280 格，改革线 75 次处理 336 格。与同一经营安排的逐格回放相比，结局日期和结算一致，两个结局都续营了一天。 [传统整田通关](../build/polish-field-batch/final/campaign-batch-proof/traditional.log) · [改革整田通关](../build/polish-field-batch/final/campaign-batch-proof/reformed.log)
 - 104 项源码场景、34 项无窗口发行检查及 14 次隔离桌面运行通过。同一 Windows 包从新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局可退出重启，上一版的第 4 天存档可接续。回放覆盖委派备粮、管事经营、交货经营和 90.696 秒连续运行。干净配置启动为 1920×1080，另在隔离桌面核对 1024×768 的键鼠和模拟手柄输入。使用相同行尾的干净构建与验证包的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-field-batch/final/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-field-batch/source-final.log) · [无窗口发行](../build/polish-field-batch/headless-final.log) · [隔离桌面](../build/polish-field-batch/capture-final.log) · [重复构建](../build/polish-field-batch/committed-checkout/matched-icon-hashes.log)
+
+## 封地建筑与路边物件的斜俯视
+
+- 堂屋、蚕棚、南路亭和亭东雨棚露出侧墙或后排柱脚。屋瓦、门槛和石阶各有受光面和暗面。路牌、木栏和堆木加上板厚、柱顶与断面，按脚下位置排序。清晨和薄暮标题重新在封地取景。图集由项目内绘制，按原有世界尺寸切图。 [堂屋与路牌实机对照](../build/polish-building-depth/final/hall-before-after.png) · [蚕棚与南路亭实机对照](../build/polish-building-depth/final/shelter-before-after.png) · [图集尺寸和透明边缘](../build/polish-building-depth/work/art-atlas/asset-report.json)
+- 在 1920×1080 和 1024×768 的隔离桌面走过堂前、南路亭和蚕棚门前，并通过东关进出竹涧。谷雨专项走到同一根雨棚前柱的两边，分别拍到遮挡和露出，在棚下继续与弋戎交谈。堂屋与蚕棚进屋、原田格耕作和道路指引通过回归。干净配置启动时画面为 1920×1080。 [雨棚遮挡](../build/polish-building-depth/final/rain-shelter-occlusion.png) · [1024×768 雨棚回放](../build/polish-building-depth/final/rain-confirmed/pavilion-stories-1024x768.log) · [默认窗口回放](../build/polish-building-depth/final/native/native-building.log)
+- 104 项源码回归通过，解压包另通过 43 项无窗口发行检查和 20 次隔离桌面发行回放。两条新档路线在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，均可退出重启后读回。上一版第 4 天进度可接续，连续运行 91.03 秒，两次构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-building-depth/final/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-building-depth/source-final.log) · [无窗口发行](../build/polish-building-depth/final/headless.log) · [隔离桌面](../build/polish-building-depth/final/capture.log) · [重复构建](../build/polish-building-depth/final/hashes.log)
