@@ -21,7 +21,7 @@
 - **经营到结局**。按自己的节奏选一条路线，记下哪几天改变了经营方式、哪些操作重复得最累、哪次遇见人物或走过某处让你想再去。结算后退出，再从标题「继续游戏」读回，核对路线和结算日期。
 - **回报**。记下系统和显卡、键鼠或手柄、实际窗口尺寸、总游玩时间及停在的游戏日期。能复现的问题附上当时的截图或一段操作顺序。画面、节奏和手感直接写感受即可。
 
-本包包含封地、溪桥道、西市和竹涧的斜俯视更新。按住 Shift 或手柄 LT 可一次处理一块井田内同类的农事。第一次纳贡后可从手记接上轮作并安排井田管事。右上日期栏可查看秋社谷样还缺什么、冬至两道菜的食材和份数，并给会场或柳湾指路。解压版已回放两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本轮试玩包](../build/polish-season-notices/final/Fiefdom-1.0.0-Windows-x64.zip) · [本包校验](../build/polish-season-notices/final/headless/manifest.txt)
+本包包含封地、溪桥道、西市和竹涧的斜俯视更新。按住 Shift 或手柄 LT 可一次处理一块井田内同类的农事。第一次纳贡后可从手记接上轮作并安排井田管事。右上日期栏可查看秋社谷样与冬至围炉食材。南池畔新增有路灯的石坪，夏单到货后可走上钓台。解压版已回放两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本轮试玩包](../build/polish-south-pond-depth/final/Fiefdom-1.0.0-Windows-x64.zip) · [本包校验](../build/polish-south-pond-depth/final/headless/manifest.txt)
 
 ## 从新档到第一次收获
 
@@ -1175,3 +1175,9 @@
 - 默认提前三天在右上显示秋社或冬至备办情况。点击活动条，或按 C／手柄 View，翻到活动日期。秋社列出三种谷样还差几种、已熟私田和来得及补播的旱作。冬至可比较麦菽粥与鱼麦羹，已学垂钓时可直接标出柳湾。仍可用单独的「历书」按钮查看今日。 [日期栏](../build/polish-season-notices/final/capture/1920x1080/01d-autumn-notice.png) · [秋社备办](../build/polish-season-notices/final/capture/1920x1080/01e-autumn-plan.png) · [冬至备办](../build/polish-season-notices/final/capture/1024x768/08-winter-plan.png)
 - 在新档第 13 天从两种谷样补种到齐，第 16 天按历书指路到南池畔，验证带回和分享两种结算。接着从第 19 天的冬至提醒种麦，第 21 天收割，第 22 天带一份麦找禾伯煮粥。存读档保留秋社赠菽和围炉回执，次日的备粮记录计入一份围炉饭。另一条新档第 21 天循历书去柳湾钓得鲫鱼，选择鱼麦羹后当夜四份口粮均由羹补足。 [1920×1080 秋冬连走](../build/polish-season-notices/final/capture/autumn-exhibit.log) · [1024×768 秋冬连走](../build/polish-season-notices/final/capture/autumn-exhibit-1024x768.log) · [柳湾与鱼麦羹](../build/polish-season-notices/final/capture/winter-supper.log) · [手柄 View](../build/polish-season-notices/final/capture/1920x1080/02b-gamepad-season-notice.png)
 - 105 项源码回归通过。解压包通过 38 项无窗口发行检查、90.725 秒连续运行和 13 次隔离桌面运行。干净配置启动为 1920×1080。新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局均可退出重启后读回。上版第 4 天存档可接续。两次干净构建的 ZIP 校验值一致。 [源码回归](../build/polish-season-notices/source-final.log) · [无窗口发行](../build/polish-season-notices/final/headless.log) · [隔离桌面](../build/polish-season-notices/final/capture.log) · [默认窗口](../build/polish-season-notices/final/native/default-window.log) · [重复构建](../build/polish-season-notices/final/hashes.log)
+
+## 从南池西岸走上钓台和节庆石坪
+
+- 远岸岩面降到水线，近岸可见浅水、碎石和芦苇。沿临水小路能看到灯和石坪。秋社展台露出棚面、木梁和侧面，冬至炉桌可见锅沿、开炉后的热气和炭火。平日也可以从封地舆图指路到南池畔。 [南池与秋社前后对比](../build/polish-south-pond-depth/final/south-pond-before-after.png) · [钓台与冬至炉桌](../build/polish-south-pond-depth/final/south-pond-fishing-and-supper.png) · [平日石坪](../build/polish-south-pond-depth/final/capture/1920x1080/01f-ordinary-clearing.png)
+- 1920×1080 和 1024×768 的秋社回放从新档沿真实路线进场。第 13 天可用舆图到空石坪，秋分到台前可摆谷样，冬至可用禾伯添的菽备饭。夏单专项于第 10 天上台进入原水面范围，脚下为木板，栏杆挡住往深水方向的行走。钓得鲫鱼后从标题读回，再走上台，最后到灶台备稻鱼羹。 [1920×1080 秋冬回放](../build/polish-south-pond-depth/final/capture/autumn-exhibit.log) · [1024×768 秋冬回放](../build/polish-south-pond-depth/final/capture/autumn-exhibit-1024x768.log) · [默认窗口钓台回放](../build/polish-south-pond-depth/final/dock-reopen/1920x1080/pond-landing.log) · [1024×768 钓台回放](../build/polish-south-pond-depth/final/dock-reopen/1024x768/pond-landing.log)
+- 用上一版 Windows 包从新档走到第 10 天，保存开台与钓得鲫鱼的进度。新版加载后保留鱼获和地点，可沿路走上新木台。原存档校验值未变。105 项源码回归通过。解压包通过 32 项无窗口发行检查、90.697 秒连续运行以及 15 次隔离桌面运行。干净配置默认 1920×1080。传统线第 56 天、改革线第 59 天到结局，均可重启后读回。两次干净构建的 ZIP 校验值一致。 [旧钓台存档](../build/polish-south-pond-depth/final/legacy-dock/load-previous-dock.log) · [源码回归](../build/polish-south-pond-depth/source-final.log) · [无窗口发行](../build/polish-south-pond-depth/final/headless.log) · [隔离桌面](../build/polish-south-pond-depth/final/capture.log) · [重复构建](../build/polish-south-pond-depth/final/hashes.log)
