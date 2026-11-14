@@ -73,7 +73,10 @@ static func input_direction() -> Vector2:
 	return GamepadInput.move_direction() if direction.is_zero_approx() else direction
 
 func world_controls_blocked() -> bool:
-	return conversation_open or resting or menu_open or MapTravel.active
+	return combat_paused() or resting
+
+func combat_paused() -> bool:
+	return conversation_open or menu_open or MapTravel.active
 
 func _physics_process(delta: float) -> void:
 	var direction := input_direction()

@@ -3,10 +3,14 @@ extends CharacterBody2D
 enum Type { WILD_DOG, SCOUT }
 enum State { IDLE, PATROL, CHASE, ATTACK, EAT }
 enum Attack { NONE, BITE, SHOT, CROP }
+enum Pose { IDLE, STRIDE_A, GATHER, STRIDE_B, BRACE, READY, RELEASE, HIT, FALL }
 
 const ARROW_SCENE := preload("res://scenes/Arrow.tscn")
 const ARROW := preload("res://scripts/Arrow.gd")
 const FLOATING_TEXT := preload("res://scenes/FloatingText.tscn")
+const ENEMY_MOTION := preload("res://assets/characters/enemy-motion.svg")
+const BOW_DRAW := preload("res://assets/audio/combat/scout-draw.wav")
+const ARROW_HIT := preload("res://assets/audio/combat/arrow-hit.wav")
 const GROWL := preload("res://assets/audio/combat/dog-windup.wav")
 const SNARE_SNAP := preload("res://assets/audio/plank-2.wav")
 const NO_CROP := Vector2i(-1, -1)
@@ -15,6 +19,10 @@ const BITE_HALF_ANGLE := PI / 5.0
 const SNARE_REACH := 3.0
 const WINDUP_INK := Color("#f1bc73")
 const STRIKE_INK := Color("#f08d6b")
+const HIT_INK := Color("#ffb18c")
+const WALK_CYCLE := [Pose.STRIDE_A, Pose.GATHER, Pose.STRIDE_B, Pose.GATHER]
+const RELEASE_SECONDS := 0.18
+const HIT_SECONDS := 0.16
 
 @export var type: Type = Type.WILD_DOG
 var raid := false
@@ -32,10 +40,11 @@ var windup_left := 0.0
 var windup_duration := 0.0
 var aim := Vector2.RIGHT
 var aim_point := Vector2.ZERO
-var pose_tween: Tween
-var hit_tween: Tween
+var walk_distance := 0.0
+var release_left := 0.0
+var hit_left := 0.0
 var crossing_snare := false
-var raid_player: Player
+var actor: Player
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var attack_cue: Node2D = $AttackCue
@@ -43,13 +52,17 @@ var raid_player: Player
 func _ready() -> void:
 	add_to_group("enemies")
 	_setup_stats()
+	sprite.texture = ENEMY_MOTION
+	sprite.hframes = Pose.size()
+	sprite.vframes = Type.size()
+	_show_pose(Pose.IDLE)
 	attack_cue.material = preload("res://resources/world_hint_material.tres")
 	attack_cue.draw.connect(_draw_attack_cue)
 	world_ref = get_parent()
+	actor = world_ref.get_node_or_null("Player") as Player
 	state = State.PATROL
 	if raid:
 		add_to_group("estate_raiders")
-		raid_player = world_ref.player
 		if Global.raid_health > 0:
 			health = Global.raid_health
 		crossing_snare = Global.watch_snare_armed
@@ -65,19 +78,21 @@ func _setup_stats() -> void:
 			health = 10
 			speed = 80.0
 			attack_range = 30.0
-			sprite.texture = CharacterArt.wild_dog()
 		Type.SCOUT:
 			health = 30
 			speed = 50.0
 			attack_range = 150.0
-			sprite.texture = CharacterArt.scout()
 
 func _physics_process(delta: float) -> void:
-	if is_queued_for_deletion():
+	if is_queued_for_deletion() or health <= 0 or (is_instance_valid(actor) and actor.combat_paused()):
 		return
-	if raid and (crossing_snare or Global.raid_snare_left > 0.0) and raid_player.world_controls_blocked():
+	hit_left = maxf(0.0, hit_left - delta)
+	sprite.modulate = Color.WHITE.lerp(HIT_INK, hit_left / HIT_SECONDS)
+	release_left = maxf(0.0, release_left - delta)
+	if raid and (crossing_snare or Global.raid_snare_left > 0.0) and actor.resting:
 		return
 	if raid and Global.raid_snare_left > 0.0:
+		_update_motion(0.0)
 		Global.raid_snare_left = maxf(0.0, Global.raid_snare_left - delta)
 		attack_cue.queue_redraw()
 		if Global.raid_snare_left == 0.0:
@@ -92,6 +107,7 @@ func _physics_process(delta: float) -> void:
 		windup_left = maxf(0.0, windup_left - delta)
 		if windup_left == 0.0:
 			_release_attack()
+		_update_motion(0.0)
 		attack_cue.queue_redraw()
 		return
 
@@ -135,12 +151,32 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	if not is_zero_approx(velocity.x):
 		sprite.flip_h = velocity.x < 0.0
+	_update_motion(get_position_delta().length())
+
+func _show_pose(pose: Pose) -> void:
+	sprite.frame_coords = Vector2i(pose, type)
+
+func _update_motion(distance: float) -> void:
+	if pending_attack != Attack.NONE:
+		_show_pose(Pose.BRACE if windup_left > windup_duration * 0.52 else Pose.READY)
+	elif hit_left > 0.0:
+		_show_pose(Pose.HIT)
+	elif release_left > 0.0:
+		_show_pose(Pose.RELEASE)
+	elif distance > 0.04:
+		var distance_per_frame := 4.0 if type == Type.WILD_DOG else 5.0
+		walk_distance = fposmod(walk_distance + distance, distance_per_frame * WALK_CYCLE.size())
+		_show_pose(WALK_CYCLE[floori(walk_distance / distance_per_frame)])
+	else:
+		walk_distance = 0.0
+		_show_pose(Pose.IDLE)
 
 func _cross_snare() -> void:
 	var destination := EstateLayout.EAST_RAID_SNARE
 	velocity = position.direction_to(destination) * speed
 	sprite.flip_h = velocity.x < 0.0
 	move_and_slide()
+	_update_motion(get_position_delta().length())
 	if position.distance_squared_to(destination) <= SNARE_REACH * SNARE_REACH:
 		crossing_snare = false
 		velocity = Vector2.ZERO
@@ -187,20 +223,18 @@ func _start_attack(attack: Attack, target: Vector2, duration: float) -> void:
 	windup_duration = duration
 	windup_left = duration
 	velocity = Vector2.ZERO
-	if pose_tween:
-		pose_tween.kill()
-	pose_tween = create_tween().set_parallel()
-	var brace := Vector2(0.92, 1.10) if attack == Attack.SHOT else Vector2(1.14, 0.83)
-	pose_tween.tween_property(sprite, "scale", brace, 0.16)
-	pose_tween.tween_property(sprite, "position", Vector2(0, -6) - aim * 3.0, 0.16)
+	_show_pose(Pose.BRACE)
 	if type == Type.WILD_DOG:
 		AudioManager.play_world_sfx(GROWL, self)
+	elif attack == Attack.SHOT:
+		AudioManager.play_world_sfx(BOW_DRAW, self, -5.0, 255.0)
 	attack_cue.queue_redraw()
 
 func _release_attack() -> void:
 	var attack := pending_attack
 	pending_attack = Attack.NONE
 	attack_cooldown = Global.balance.enemy_recovery
+	release_left = RELEASE_SECONDS
 	match attack:
 		Attack.SHOT:
 			var arrow = ARROW_SCENE.instantiate()
@@ -218,12 +252,6 @@ func _release_attack() -> void:
 		Attack.CROP:
 			world_ref.destroy_crop(target_crop_pos)
 
-	if pose_tween:
-		pose_tween.kill()
-	sprite.position = Vector2(0, -6) + aim * (2.0 if attack == Attack.SHOT else 7.0)
-	pose_tween = create_tween().set_parallel()
-	pose_tween.tween_property(sprite, "position", Vector2(0, -6), 0.18)
-	pose_tween.tween_property(sprite, "scale", Vector2.ONE, 0.18)
 	if is_instance_valid(player_ref):
 		state = State.ATTACK
 	else:
@@ -288,10 +316,11 @@ func _on_detection_area_body_exited(body: Node2D) -> void:
 			_resume_patrol()
 
 func is_under_bow_pointer(world_point: Vector2) -> bool:
-	return not is_queued_for_deletion() and sprite.is_visible_in_tree() and sprite.is_pixel_opaque(sprite.to_local(world_point))
+	return health > 0 and not is_queued_for_deletion() and sprite.is_visible_in_tree() \
+		and sprite.is_pixel_opaque(sprite.to_local(world_point))
 
 func take_damage(amount: int, guard_name := "") -> void:
-	if is_queued_for_deletion() or amount <= 0:
+	if is_queued_for_deletion() or health <= 0 or amount <= 0:
 		return
 	health -= amount
 	if raid:
@@ -302,19 +331,32 @@ func take_damage(amount: int, guard_name := "") -> void:
 	feedback.scale = Vector2.ONE * 0.65
 	feedback.position = position + Vector2(-9, -29)
 	get_parent().add_child(feedback)
+	AudioManager.play_world_sfx(ARROW_HIT, self, -5.0, 235.0)
 	if health <= 0:
 		_die(guard_name)
 		return
-	if hit_tween:
-		hit_tween.kill()
-	sprite.modulate = Color("#ffb18c")
-	hit_tween = create_tween()
-	hit_tween.tween_property(sprite, "modulate", Color.WHITE, 0.2)
+	hit_left = HIT_SECONDS
+	sprite.modulate = HIT_INK
+	_update_motion(0.0)
 
 func _die(guard_name: String) -> void:
+	remove_from_group("enemies")
 	if raid:
+		remove_from_group("estate_raiders")
 		Global.defeat_raid(guard_name)
 	Global.player_stats.add_xp(PlayerStats.Art.ARCHERY, 20)
 	Global.money += 2
 	GameEvents.money_changed.emit(Global.money)
-	queue_free()
+	set_deferred("collision_layer", 0)
+	set_deferred("collision_mask", 0)
+	$HurtBox.set_deferred("collision_layer", 0)
+	pending_attack = Attack.NONE
+	attack_cue.hide()
+	_show_pose(Pose.HIT)
+	sprite.modulate = HIT_INK
+	var retreat := create_tween()
+	retreat.tween_interval(0.055)
+	retreat.tween_callback(_show_pose.bind(Pose.FALL))
+	retreat.tween_property(sprite, "modulate", Color.WHITE, 0.06)
+	retreat.tween_property(sprite, "modulate:a", 0.0, 0.14)
+	retreat.tween_callback(queue_free)

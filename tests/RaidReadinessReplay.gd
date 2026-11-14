@@ -10,6 +10,7 @@ var world: Node2D
 var ui: CanvasLayer
 var capture_dir := ""
 var failed := false
+var combat_feedback := false
 
 func _expect(condition: bool, detail: String) -> bool:
 	if not condition:
@@ -68,6 +69,15 @@ func _sleep() -> void:
 	await _button(ui.sleep_button)
 	await tree.create_timer(1.16).timeout
 
+func _key(code: Key) -> void:
+	for down in [true, false]:
+		var event := InputEventKey.new()
+		event.physical_keycode = code
+		event.keycode = code
+		event.pressed = down
+		tree.root.push_input(event, true)
+		await tree.process_frame
+
 func _reach_raid_eve() -> bool:
 	tree.change_scene_to_file(state.TITLE_SCENE)
 	await tree.scene_changed
@@ -95,13 +105,7 @@ func _night_panel() -> Control:
 func _agree_rotation() -> bool:
 	var keeper: Node2D = world.neighbor_actor("渠伯")
 	await Campaign.walk_to(tree, world.player, keeper.global_position + Vector2(0, 15))
-	for down in [true, false]:
-		var event := InputEventKey.new()
-		event.physical_keycode = KEY_E
-		event.keycode = KEY_E
-		event.pressed = down
-		tree.root.push_input(event, true)
-		await tree.process_frame
+	await _key(KEY_E)
 	var dialog: Control = ui.get_node_or_null("Control/DialoguePanel")
 	if not _expect(dialog != null and dialog.name_label.text == "渠伯", "Speak to Qu Bo on the eve of the raid."):
 		return false
@@ -180,6 +184,9 @@ func _defend() -> void:
 	_expect(destination.point != old_point and destination.point == world.to_local(raider.global_position),
 		"The waypoint follows the enemy's movement.")
 	var art := raider.get_node("Sprite2D") as Sprite2D
+	if combat_feedback:
+		_expect(art.frame_coords.x in [raider.Pose.STRIDE_A, raider.Pose.STRIDE_B, raider.Pose.GATHER],
+			"The moving dog cycles through its running poses.")
 	for shot in 4:
 		if state.raid_day == 0:
 			break
@@ -196,13 +203,160 @@ func _defend() -> void:
 	print("RAID_READY_DEFENSE day=", state.current_day, " defeated=", state.raids_defeated, " losses=", state.last_defense.get("losses"),
 		" tribute=", state.king_storage, " private=", state.player_inventory)
 
-func run(game_tree: SceneTree) -> void:
+func _second_raid() -> void:
+	# Stage the next raid on its usual schedule, with the player at the field's south approach.
+	var scout_day: int = state.balance.raid_first_day + state.balance.raid_interval_days
+	state.current_day = scout_day - 1
+	await Campaign.walk_estate_road_to(tree, world, Vector2(100, 148))
+	await _sleep()
+	var scout := tree.get_first_node_in_group("estate_raiders") as Node2D
+	if not _expect(state.raid_day == scout_day and scout != null and scout.type == scout.Type.SCOUT,
+			"The second actual raid starts with a scout."):
+		return
+	var recording := _record_sfx()
+	await _face_scout(scout)
+	_finish_sfx(recording)
+
+func _face_scout(scout: Node2D) -> void:
+	var frames_seen := {}
+	for frame in 230:
+		if scout.pending_attack == scout.Attack.SHOT:
+			break
+		frames_seen[scout.sprite.frame_coords.x] = true
+		await tree.physics_frame
+	if not _expect(scout.pending_attack == scout.Attack.SHOT and frames_seen.size() >= 3,
+			"The scout walks through several distinct frames and starts its marked shot."):
+		return
+	var health: int = state.health
+	var aim: Vector2 = scout.aim
+	ui.dialog_manager.show_retainer_dialog(state.retainers.front(), "")
+	if not _expect(world.player.conversation_open, "Regular dialogue locks player movement during the threat."):
+		return
+	var windup: float = scout.windup_left
+	var phase: Vector2i = scout.sprite.frame_coords
+	await tree.create_timer(1.0).timeout
+	_expect(scout.windup_left == windup and scout.sprite.frame_coords == phase and state.health == health,
+		"Ordinary dialogue stops enemy windup and preserves its displayed phase.")
+	await _key(KEY_ESCAPE)
+	if not await _dodge_arrow(scout, aim, health):
+		return
+	await _shoot_down_scout(scout)
+
+func _dodge_arrow(scout: Node2D, aim: Vector2, health: int) -> bool:
+	for frame in 48:
+		if scout.sprite.frame_coords.x == scout.Pose.READY:
+			break
+		await tree.physics_frame
+	_expect(scout.sprite.frame_coords.x == scout.Pose.READY and scout.attack_cue.visible,
+		"Full draw uses a distinct pose while the ground lane is still visible.")
+	await _capture("05-scout-at-full-draw")
+	var action := &"ui_up" if absf(aim.x) >= 0.7 else &"ui_right"
+	Input.action_press(action)
+	var arrow: Area2D
+	for frame in 55:
+		await tree.physics_frame
+		for child in world.get_children():
+			if child is Area2D and child.get("hostile") == true:
+				arrow = child
+				break
+		if arrow:
+			break
+	Input.action_release(action)
+	if not _expect(arrow != null and scout.aim == aim and scout.sprite.frame_coords.x == scout.Pose.RELEASE,
+			"The shot releases once along the original marked lane."):
+		return false
+	ui.dialog_manager.show_retainer_dialog(state.retainers.front(), "")
+	var start := arrow.position
+	var distance_left: float = arrow.distance_left
+	await tree.create_timer(0.30).timeout
+	if not _expect(is_instance_valid(arrow), "A released arrow survives a pause in the middle of its flight."):
+		return false
+	_expect(arrow.position == start and arrow.distance_left == distance_left and state.health == health,
+		"The hostile arrow holds its position and range while dialogue is open.")
+	await _key(KEY_ESCAPE)
+	await _capture("06-scout-release")
+	await tree.create_timer(0.6).timeout
+	if not _expect(not is_instance_valid(arrow) and state.health == health,
+			"The arrow resumes and misses the player standing beside its original lane."):
+		return false
+	# Exercise a contact already reported by physics as the dialogue opens.
+	await _overlap_on_dialogue(scout, health)
+	return not failed
+
+func _overlap_on_dialogue(scout: Node2D, health: int) -> void:
+	ui.dialog_manager.show_retainer_dialog(state.retainers.front(), "")
+	var arrow: Area2D = scout.ARROW_SCENE.instantiate()
+	var damage: int = state.balance.scout_arrow_damage
+	arrow.hostile = true
+	arrow.damage = damage
+	arrow.set_collision_mask_value(4, false)
+	arrow.set_collision_mask_value(2, true)
+	arrow.position = world.player.position - Vector2(5, 0)
+	world.add_child(arrow)
+	await tree.create_timer(0.20).timeout
+	if not _expect(is_instance_valid(arrow) and arrow.collision_pending and state.health == health,
+			"Physics can report contact during a dialogue without damaging the player."):
+		return
+	await _key(KEY_ESCAPE)
+	await tree.physics_frame
+	await tree.physics_frame
+	_expect(not is_instance_valid(arrow) and state.health == health - damage,
+		"The overlapping arrow resolves exactly one hit when the player can act again.")
+
+func _shoot_down_scout(scout: Node2D) -> void:
+	var money: int = state.money
+	for health in [20, 10, 0]:
+		var art := scout.sprite as Sprite2D
+		var point := art.get_global_transform_with_canvas() * Vector2(0.5, -10.5)
+		await _click(point, MOUSE_BUTTON_RIGHT)
+		for frame in 35:
+			if not is_instance_valid(scout) or scout.health == health:
+				break
+			await tree.physics_frame
+		if not _expect(is_instance_valid(scout) and scout.health == health, "An aimed arrow takes ten health from the scout."):
+			return
+		if health == 20:
+			await _capture("07-scout-hit")
+	if not _expect(state.raids_defeated == 2 and state.raid_day == 0 and state.money == money + 2 and state.last_defense.get("losses") == 0
+		and not scout.is_in_group("enemies") and tree.get_nodes_in_group("estate_raiders").is_empty(),
+		"The last arrow ends the raid and awards its reward while the sprite plays its exit."):
+		return
+	await tree.create_timer(0.11).timeout
+	_expect(is_instance_valid(scout) and scout.sprite.frame_coords.x == scout.Pose.FALL,
+		"The beaten scout visibly falls after leaving targeting and collision.")
+	await _capture("08-scout-falls")
+	await tree.create_timer(0.25).timeout
+	_expect(not is_instance_valid(scout), "The played-out actor removes itself.")
+	print("RAID_FEEDBACK scout_day=", state.current_day, " losses=", state.last_defense.get("losses"),
+		" defeated=", state.raids_defeated, " health=", state.health, " reward=", state.money - money)
+
+func _record_sfx() -> AudioEffectRecord:
+	if capture_dir.is_empty() or DisplayServer.get_name() == "headless":
+		return null
+	var recorder := AudioEffectRecord.new()
+	recorder.format = AudioStreamWAV.FORMAT_16_BITS
+	AudioServer.add_bus_effect(AudioServer.get_bus_index(&"SFX"), recorder)
+	recorder.set_recording_active(true)
+	return recorder
+
+func _finish_sfx(recorder: AudioEffectRecord) -> void:
+	if not recorder:
+		return
+	recorder.set_recording_active(false)
+	var wave := recorder.get_recording()
+	var bus := AudioServer.get_bus_index(&"SFX")
+	AudioServer.remove_bus_effect(bus, AudioServer.get_bus_effect_count(bus) - 1)
+	if _expect(wave != null and wave.get_length() >= 1.0, "Write the live fight's sound effects."):
+		_expect(wave.save_to_wav(capture_dir.path_join("scout-fight")) == OK, "Save the scout fight recording.")
+
+func run(game_tree: SceneTree, capture := "", include_scout := false) -> void:
 	tree = game_tree
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated first raid profile."):
 		tree.quit(1)
 		return
 	state = tree.root.get_node("Global")
-	capture_dir = OS.get_environment("FIEFDOM_RAID_CAPTURES")
+	capture_dir = capture if not capture.is_empty() else OS.get_environment("FIEFDOM_RAID_CAPTURES")
+	combat_feedback = include_scout
 	tree.root.notify_mouse_entered()
 	seed(911)
 	if await _reach_raid_eve():
@@ -212,6 +366,8 @@ func run(game_tree: SceneTree) -> void:
 			await _verify_baseline()
 		elif await _verify_preparation(alert) and await _continue_at_raid():
 			await _defend()
+			if include_scout and not failed:
+				await _second_raid()
 	if not failed:
 		print("SCENARIO_OK")
 	tree.quit(1 if failed else 0)

@@ -5,4 +5,4 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var replay = load("res://tests/RaidReadinessReplay.gd").new()
-	await replay.run(self)
+	await replay.run(self, "", true)

@@ -12,6 +12,7 @@ param(
     [switch]$ManagementNavigation,
     [switch]$SixArts,
     [switch]$BowAim,
+    [switch]$RaidFeedback,
     [switch]$WinterSupper,
     [switch]$WinterRoadRations,
     [switch]$KeyBindings,
@@ -80,8 +81,8 @@ function Start-VerifiedGame {
     $arguments = @('--quit-after', $frameLimit, '--log-file', ('"' + $log + '"'))
     $arguments += if ($Replay -eq 'soak') {
         '--max-fps', '60', '--audio-driver', 'Dummy'
-    } elseif ($Resolution -and $Replay -eq 'ambience-travel') {
-        # Audio playback and recordings follow wall time during the trip.
+    } elseif ($Resolution -and $Replay -in 'ambience-travel', 'raid-feedback') {
+        # Audio playback and recordings follow wall time.
         '--max-fps', '60'
     } else {
         '--fixed-fps', '60'
@@ -140,6 +141,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldStrokeReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ManagementNavigationReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/EndingFilmReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/RaidReadinessReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RecruitmentLedgerReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RavineShortcutReplay.gd') -Destination $testDirectory
     foreach ($file in 'MarketOrderReplay.gd', 'AutumnExhibitReplay.gd', 'SheepfoldReplay.gd', 'RavineMapReplay.gd', 'CreekTrapReplay.gd', 'FieldNightReplay.gd', 'CouncilSilkReplay.gd') {
@@ -180,6 +182,9 @@ try {
     }
     if ($BowAim) {
         Start-VerifiedGame -Directory $release -Profile 'bow-aim' -Name 'bow-aim' -Replay 'bow-aim'
+    }
+    if ($RaidFeedback) {
+        Start-VerifiedGame -Directory $release -Profile 'raid-feedback' -Name 'raid-feedback' -Replay 'raid-feedback' -Resolution $fullResolution
     }
     if ($WinterSupper) {
         Start-VerifiedGame -Directory $release -Profile 'winter-supper' -Name 'winter-supper' -Replay 'winter-supper'
@@ -324,6 +329,9 @@ try {
         }
         if ($AmbienceTravel) {
             Start-VerifiedGame -Directory $release -Profile 'ambience-travel-compact' -Name 'ambience-travel-1024x768' -Replay 'ambience-travel' -Resolution '1024x768'
+        }
+        if ($RaidFeedback) {
+            Start-VerifiedGame -Directory $release -Profile 'raid-feedback-compact' -Name 'raid-feedback-1024x768' -Replay 'raid-feedback' -Resolution '1024x768'
         }
         if ($RouteGoals) {
             Start-VerifiedGame -Directory $release -Profile 'council-prep-compact' -Name 'council-prep-1024x768' -Replay 'council-prep' -Resolution '1024x768'

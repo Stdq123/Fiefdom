@@ -105,6 +105,9 @@ func resume_duty_at_dawn() -> void:
 		set_state(State.IDLE)
 
 func _guard(delta: float) -> void:
+	var player: Player = get_parent().player
+	if player.combat_paused():
+		return
 	guard_cooldown = maxf(0.0, guard_cooldown - delta)
 	if guard_cooldown > 0.0:
 		return
