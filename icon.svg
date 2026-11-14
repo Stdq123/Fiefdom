@@ -1,1 +1,5 @@
-<svg height="128" width="128" xmlns="http://www.w3.org/2000/svg"><rect width="128" height="128" fill="#4287f5" /></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">采邑春秋 · 应用图标</title>
+  <rect width="256" height="256" rx="48" fill="#A13D32"/>
+  <path id="seal" fill="#F4EDE1" fill-rule="evenodd" transform="translate(30 30) scale(0.765625)" d="M49 18H228Q238 18 238 28V207L207 238H28Q18 238 18 228V49Z M32.5 56L56 32.5H84.5V84.5H32.5Z M100.5 32.5H155.5V84.5H100.5Z M171.5 32.5H216.5L223.5 39.5V84.5H171.5Z M32.5 100.5H84.5V155.5H32.5Z M171.5 100.5H223.5V155.5H171.5Z M32.5 171.5H84.5V223.5H39.5L32.5 216.5Z M100.5 171.5H155.5V223.5H100.5Z M171.5 171.5H223.5V200L200 223.5H171.5Z"/>
+</svg>

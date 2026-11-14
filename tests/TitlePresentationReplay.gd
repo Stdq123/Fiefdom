@@ -76,10 +76,16 @@ func _frame(name: String) -> void:
 	print("TITLE_FRAME ", name, " window=", tree.root.size, " image=", frame.get_size())
 
 func _opening_menu(title: Control) -> void:
-	var heading: Label = title.get_node("Center/Menu/Heading")
-	var font := heading.get_theme_font("font")
-	for index in heading.text.length():
-		_expect(font.has_char(heading.text.unicode_at(index)), "The shipped heading font contains every title glyph.")
+	await tree.process_frame
+	var logo := title.get_node_or_null("Center/Menu/Logo") as TextureRect
+	if _expect(logo != null and logo.texture != null, "The title loads the official logo texture."):
+		var divider: HSeparator = title.get_node("Center/Menu/Divider")
+		_expect(logo.is_visible_in_tree() and logo.size.y > 0.0
+			and title.menu.get_global_rect().encloses(logo.get_global_rect())
+			and logo.get_global_rect().end.y <= divider.get_global_rect().position.y,
+			"The logo is visible inside the menu and fits above the divider.")
+		_expect(logo.mouse_filter == Control.MOUSE_FILTER_IGNORE and logo.focus_mode == Control.FOCUS_NONE
+			and logo.accessibility_name == "采邑春秋", "The logo announces the title without taking mouse or keyboard focus.")
 	_expect(not title.continue_button.visible and not title.archive_button.visible and title.new_button.has_focus(),
 		"With a fresh profile, New Game is the first visible and focused action.")
 	await _frame("01-morning-title")
@@ -98,7 +104,7 @@ func _opening_menu(title: Control) -> void:
 	await _frame("02-dusk-title")
 	light.seek(41.5, true)
 	_expect(is_zero_approx(twilight.modulate.a), "The cycle returns to the morning exposure.")
-	print("TITLE_LIGHT glyphs=", heading.text.length(), " middle_alpha=", blend, " campaign_clock=", state.day_progress)
+	print("TITLE_LIGHT middle_alpha=", blend, " campaign_clock=", state.day_progress)
 	var settings_button := title.get_node("Center/Menu/Settings") as Button
 	await _button(settings_button)
 	var settings: Panel = title.settings_panel

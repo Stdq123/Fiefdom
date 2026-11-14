@@ -14,8 +14,12 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
+boot_splash/show_image=false
+boot_splash/bg_color=Color(0.067, 0.111, 0.088, 1)
+config/icon="res://icon.svg"
 config/name="Fiefdom"
 config/version="1.0.0"
+config/windows_native_icon="res://assets/branding/fiefdom.ico"
 run/main_scene="res://scenes/Title.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 

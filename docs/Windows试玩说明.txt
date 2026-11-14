@@ -214,7 +214,8 @@
 
 地图素材
   标题背景在游戏内同一机位以 2560×1440 拍摄堂屋、井田和西廊入口，采用清晨与薄暮两帧。
-  标题四字采用 Ma Shan Zheng Project Authors 的 Ma Shan Zheng 字体子集（SIL OFL 1.1）。许可随包附带。
+  标题使用「井田印」标志，印章中央为公田，外围八格为私田。Windows 程序图标沿用同一印章。
+  标志题字取自 Ma Shan Zheng Project Authors 的 Ma Shan Zheng 字体（SIL OFL 1.1），已转为矢量路径。许可随包附带。
   发布页 https://github.com/google/fonts/tree/main/ofl/mashanzheng
   部分林木、蕨草、树桩和新井田清草阶段的碎石来自 Pixel-Boy 与 AAA 的 Ninja Adventure Asset Pack（CC0 1.0）。
   发布页 https://pixel-boy.itch.io/ninja-adventure-asset-pack
