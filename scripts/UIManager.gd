@@ -1121,6 +1121,9 @@ func _request_sleep() -> void:
 	if Global.tax_council_waiting():
 		_on_sleep_pressed()
 		return
+	var field_work_settled := false
+	if Global.wait_for_fields_before_sleep and Global.first_tribute_delivered():
+		field_work_settled = not world.wait_for_retainers().is_empty()
 	var plan := Global.night_rations_plan()
 	var ration_warning := ""
 	if not plan.departing.is_empty():
@@ -1128,6 +1131,8 @@ func _request_sleep() -> void:
 	if not Global.first_tribute_delivered() and _warn_before_first_tribute(ration_warning):
 		return
 	if not ration_warning.is_empty():
+		if field_work_settled:
+			ration_warning = "门客已收工。\n" + ration_warning
 		world.set_channel_mode(false)
 		dialog_manager.show_bedtime_warning("门客口粮", ration_warning,
 			{"查看今夜安排": _show_night_rations.bind(false, true)}, _on_sleep_pressed)
@@ -1191,6 +1196,7 @@ func _on_sleep_pressed() -> void:
 			return
 		var previous_rank := Global.current_rank
 		var research_fee := Global.research_fee_due(Global.current_day + 1)
+		var field_work := Global.field_wait_report.duplicate()
 		Global.begin_next_day()
 		var tribute_penalty := Global.restore_stamina()
 		if Global.outcome != Global.Outcome.RUNNING:
@@ -1203,7 +1209,7 @@ func _on_sleep_pressed() -> void:
 		for field in unfinished:
 			if field["is_unlocked"]:
 				completed.append(field["field_id"] + 1)
-		Global.record_dawn(previous_rank, completed, research_fee, tribute_penalty)
+		Global.record_dawn(previous_rank, completed, research_fee, tribute_penalty, field_work)
 		hud.refresh_morning_record()
 		Global.save_automatically("dawn")
 		dawn_caption.text = "第 %d 天 · %s · %s" % [Global.current_day, Global.get_current_solar_term(), Global.day_watch_label()]

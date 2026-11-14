@@ -241,6 +241,16 @@ theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(0.83, 0.87, 0.67, 1)
 autowrap_mode = 3
 
+[node name="WaitBeforeSleep" type="CheckButton" parent="Center/Window/Content/Scroll/Body/Plan/FieldPlan/Row/Details"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+text = "过夜前让门客收工"
+tooltip_text = "每次点睡觉或过夜，先用当天剩余时辰做门客能接手的田务。敌袭或待议税时不能候工。"
+
 [node name="SheepNote" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/FieldPlan/Row/Details"]
 unique_name_in_owner = true
 visible = false
@@ -486,6 +496,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(196, 34)
 layout_mode = 2
 mouse_default_cursor_shape = 2
+action_mode = 1
 tooltip_text = "每人领足份额后才用粮，余下按留任顺序分餐。"
 
 [node name="MealForecast" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/Preview"]
@@ -517,6 +528,14 @@ unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.87, 0.91, 0.73, 1)
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+
+[node name="FieldWaitReceipt" type="Label" parent="Center/Window/Content/Scroll/Body/LastCard/Results"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.83, 0.87, 0.67, 1)
 theme_override_font_sizes/font_size = 16
 autowrap_mode = 3
 

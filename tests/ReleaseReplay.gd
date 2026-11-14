@@ -48,6 +48,12 @@ func _run() -> void:
 			var replay = load("res://tests/CampaignReplay.gd").new()
 			await replay.run(tree, "reformed", true, capture_directory, true, false, false, true,
 				arguments[0] == "reformed-field-work-wait")
+		"reformed-bedtime-steward":
+			var replay = load("res://tests/CampaignReplay.gd").new()
+			replay.use_bedtime_work = true
+			await replay.run(tree, "reformed", true, capture_directory, true, false, false, true)
+		"field-bedtime":
+			await load("res://tests/FieldWorkWaitReplay.gd").new().run_bedtime(tree, capture_directory)
 		"ending-film":
 			var replay = load("res://tests/EndingFilmReplay.gd").new()
 			await replay.run(tree, capture_directory)
@@ -527,6 +533,9 @@ func _legacy_continue() -> void:
 		return
 	if state.retainers.size() != legacy_save["retainers"].size() or state.retainers[0].name != original_retainer["name"] or state.retainers[0].school != int(original_retainer["school"]):
 		_fail("Loading the old save must preserve the retainer identity and school.")
+		return
+	if not legacy_save.has("wait_for_fields_before_sleep") and state.wait_for_fields_before_sleep:
+		_fail("A save made before the sleep policy was added must keep the shortcut off.")
 		return
 	var ui := tree.current_scene.get_node("UI")
 	ui.sleep_button.pressed.emit()

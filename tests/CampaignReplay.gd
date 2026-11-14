@@ -32,6 +32,8 @@ var use_field_steward := false
 var use_season_orders := false
 var use_rotation_steward := false
 var use_field_wait := false
+var use_bedtime_work := false
+var bedtime_waits := 0
 var use_reform_sale := false
 var field_wait_days := 0
 var field_wait_seconds := 0.0
@@ -206,7 +208,16 @@ func _click_cell(cell: Vector2i) -> void:
 
 func _sleep() -> void:
 	var evening: int = state.current_day
+	var follows_bedtime_plan: bool = use_bedtime_work and state.wait_for_fields_before_sleep
+	var before: int = state.king_storage + state.private_harvest_total
+	var earlier_work: Dictionary = state.field_wait_report.duplicate() if follows_bedtime_plan else {}
 	ui.sleep_button.pressed.emit()
+	if follows_bedtime_plan:
+		var work: Dictionary = state.field_wait_report
+		managed_harvests += state.king_storage + state.private_harvest_total - before
+		if work != earlier_work:
+			bedtime_waits += 1
+			rice_harvested = rice_harvested or state.crop_stock.count("rice") > 0
 	await tree.create_timer(1.08).timeout
 	var meal: Dictionary = state.night_rations.last
 	if meal.get("day", 0) == evening:
@@ -684,6 +695,20 @@ func _appoint_first_field_steward() -> void:
 		and worker.assigned_area == FIRST and state.retainer_food_cost() == before + 1
 		and state.field_seed_plans[FIRST] == PUBLIC_ROTATION and not state.field_seed_plans.has(ROTATION_PLOT),
 		"Continue keeps the earned one-field stewardship, meal cost and selected sowing plans.")
+	if use_bedtime_work:
+		await _enable_bedtime_work()
+
+func _enable_bedtime_work() -> void:
+	await _click(ui.hud.rations_button.get_global_rect().get_center())
+	var panel := ui.get_node_or_null("Control/NightRationsPanel") as Control
+	if not _expect(panel != null and panel.wait_before_sleep.is_visible_in_tree(),
+			"The now-stewarded campaign can choose bedtime work in Tonight's Plan."):
+		return
+	panel.scroll.ensure_control_visible(panel.wait_before_sleep)
+	await tree.process_frame
+	await _click(panel.wait_before_sleep.get_global_rect().get_center())
+	_expect(state.wait_for_fields_before_sleep, "Opt in from the normal policy control.")
+	await _click(panel.close_button.get_global_rect().get_center())
 
 func _rotation_workday() -> void:
 	var worker = state.retainers.front()
@@ -691,13 +716,15 @@ func _rotation_workday() -> void:
 		"The first-field steward remains at work."):
 		return
 	var start: int = state.king_storage + state.private_harvest_total
-	if use_field_wait:
+	if use_bedtime_work or use_field_wait:
 		# In the existing route the guard and steward both work during a raid. Let
 		# the guard finish that same fight before using the new action.
 		while state.raid_day > 0 and state.outcome == state.Outcome.RUNNING and not tree.paused:
 			if not await _watch_steward_tick():
 				break
-		await _wait_for_steward()
+		if use_field_wait or (use_bedtime_work and state.tax_reform_choice != state.TaxReformChoice.NONE):
+			# Harvest may complete the final ledger. On that day review it before deciding to sleep.
+			await _wait_for_steward()
 	else:
 		for tick in 60:
 			var pending: bool = state.tilled_cells.keys().any(func(cell: Vector2i) -> bool:
@@ -1187,6 +1214,11 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 			_expect(field_wait_days > 25, "The steward finishes paid daylight work through the campaign.")
 			print("CAMPAIGN_FIELD_WAIT times=", field_wait_days, " game_seconds=", snappedf(field_wait_seconds, 0.001),
 				" interaction_msec=", field_wait_interaction_msec)
+		if use_bedtime_work:
+			_expect(state.wait_for_fields_before_sleep and bedtime_waits > 25 and field_wait_days < 20,
+				"Most of the route uses one sleep action, with explicit waiting available for the ending.")
+			print("CAMPAIGN_BEDTIME_WORK sleeps=", bedtime_waits, " explicit_waits=", field_wait_days,
+				" days=", state.current_day, " yield=", managed_harvests)
 	if use_season_orders:
 		_expect(petition_day > 0 and petition_day < state.tax_council_start_day() and deliveries >= 2,
 			"Deliver season orders and petition before the regular council in an ordinary new game.")

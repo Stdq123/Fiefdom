@@ -62,6 +62,7 @@ var last_field_night: Dictionary = {}
 var last_dawn: Dictionary = {}
 var away_field_report: Dictionary = {}
 var field_wait_report: Dictionary = {}
+var wait_for_fields_before_sleep := false
 var _away_work_elapsed: Dictionary[RetainerData, float] = {}
 var player_inventory: int:
 	get: return crop_stock.count()
@@ -265,6 +266,7 @@ func _reset_campaign() -> void:
 	last_dawn.clear()
 	away_field_report.clear()
 	field_wait_report.clear()
+	wait_for_fields_before_sleep = false
 	_away_work_elapsed.clear()
 	season_order_receipts.clear()
 	seed_garden_gift = ""
@@ -623,7 +625,8 @@ func begin_next_day() -> void:
 		GameEvents.sheepfold_changed.emit()
 	GameEvents.daylight_changed.emit()
 
-func record_dawn(previous_rank: Rank, completed_fields: Array[int], research_fee: int, tribute_penalty: int) -> void:
+func record_dawn(previous_rank: Rank, completed_fields: Array[int], research_fee: int, tribute_penalty: int,
+		field_work: Dictionary = {}) -> void:
 	last_dawn = {
 		"day": current_day - 1,
 		"rank_change": int(current_rank) - int(previous_rank),
@@ -632,6 +635,8 @@ func record_dawn(previous_rank: Rank, completed_fields: Array[int], research_fee
 		"research_gap": maxi(0, research_fee - money) if research_choice_pending else 0,
 		"tribute_penalty": tribute_penalty,
 	}
+	if not field_work.is_empty():
+		last_dawn.field_wait = field_work
 
 func has_morning_record() -> bool:
 	return not last_dawn.is_empty() or not last_field_night.is_empty() or not night_rations.last.is_empty()
@@ -1047,6 +1052,12 @@ func field_wait_offer() -> Dictionary:
 				can_finish = can_finish or _field_work_seconds(worker) <= time_left
 		plots += int(covered)
 	return {"plots": plots, "available": can_finish and raid_day == 0 and not tax_council_waiting()}
+
+func set_wait_for_fields_before_sleep(enabled: bool) -> void:
+	if outcome != Outcome.RUNNING or enabled == wait_for_fields_before_sleep or (enabled and not first_tribute_delivered()):
+		return
+	wait_for_fields_before_sleep = enabled
+	GameEvents.field_wait_policy_changed.emit()
 
 func wait_for_field_work() -> Dictionary:
 	if not field_wait_offer().available:
@@ -3297,6 +3308,7 @@ func _save_snapshot(origin: String) -> Error:
 		"last_dawn": last_dawn,
 		"away_field_report": away_field_report,
 		"field_wait_report": field_wait_report,
+		"wait_for_fields_before_sleep": wait_for_fields_before_sleep,
 		"reputation": reputation,
 		"days_without_contribution": days_without_contribution,
 		"active_crops": saved_crops,
@@ -3796,9 +3808,8 @@ func load_game(path := "") -> Error:
 	if not away_field_report.is_empty():
 		away_field_report.pending = away.get("pending") == true
 		away_field_report.first_tribute = away.get("first_tribute") == true
-	field_wait_report = _restore_field_work_report(data.get("field_wait_report"), saved_day)
-	if not field_wait_report.is_empty():
-		field_wait_report.minutes = clampi(_read_save_int(data.field_wait_report.get("minutes"), 0), 0, DAY_MINUTES)
+	field_wait_report = _restore_field_wait_report(data.get("field_wait_report"), saved_day)
+	wait_for_fields_before_sleep = data.get("wait_for_fields_before_sleep") == true
 	_away_work_elapsed.clear()
 	reputation = _read_save_int(data.get("reputation"), 0)
 	days_without_contribution = maxi(0, _read_save_int(data.get("days_without_contribution"), 0))
@@ -3938,7 +3949,7 @@ func _restore_dawn(record: Variant, saved_day: int) -> Dictionary:
 			var number := _read_save_int(value, 0)
 			if number > 1 and number <= well_fields.size() and well_fields[number - 1]["is_unlocked"]:
 				completed.append(number)
-	return {
+	var restored := {
 		"day": saved_day - 1,
 		"rank_change": clampi(_read_save_int(record.get("rank_change"), 0), -1, 1),
 		"completed_fields": completed,
@@ -3946,6 +3957,16 @@ func _restore_dawn(record: Variant, saved_day: int) -> Dictionary:
 		"research_gap": maxi(0, _read_save_int(record.get("research_gap"), 0)),
 		"tribute_penalty": maxi(0, _read_save_int(record.get("tribute_penalty"), 0)),
 	}
+	var field_work := _restore_field_wait_report(record.get("field_wait"), saved_day - 1)
+	if not field_work.is_empty():
+		restored.field_wait = field_work
+	return restored
+
+func _restore_field_wait_report(record: Variant, day: int) -> Dictionary:
+	var report := _restore_field_work_report(record, day)
+	if not report.is_empty():
+		report.minutes = clampi(_read_save_int(record.get("minutes"), 0), 0, DAY_MINUTES)
+	return report
 
 func _restore_field_work_report(record: Variant, saved_day: int) -> Dictionary:
 	if not record is Dictionary or _read_save_int(record.get("day"), 0) != saved_day:

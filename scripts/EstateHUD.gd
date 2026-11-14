@@ -134,6 +134,7 @@ func _ready() -> void:
 	_refresh_shortcuts()
 	GameEvents.silk_changed.connect(_refresh_silk_stock)
 	GameEvents.daylight_changed.connect(_refresh_watch)
+	GameEvents.field_wait_policy_changed.connect(_refresh_sleep_tooltip)
 	_refresh_watch()
 	GameEvents.health_changed.connect(_update_health)
 	GameEvents.season_order_pin_changed.connect(_refresh_pinned_order)
@@ -322,6 +323,8 @@ func refresh_tribute() -> void:
 
 func _refresh_sleep_tooltip() -> void:
 	sleep_button.tooltip_text = "结束今天，恢复体力"
+	if Global.wait_for_fields_before_sleep:
+		sleep_button.tooltip_text += "\n已安排门客在剩余时辰先收工。"
 	if fields_needing_water > 0:
 		sleep_button.tooltip_text += "\n%d 格作物缺水会停长。查看「今夜安排」。" % fields_needing_water
 	var penalty := Global.tribute_penalty_tonight()

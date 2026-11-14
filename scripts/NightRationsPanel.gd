@@ -33,6 +33,7 @@ const WINDOW_MARGIN := 16.0
 @onready var field_warning: Label = %FieldWarning
 @onready var field_wait_note: Label = %FieldWaitNote
 @onready var wait_button: Button = %WaitForFieldWork
+@onready var wait_before_sleep: CheckButton = %WaitBeforeSleep
 @onready var sheep_note: Label = %SheepNote
 @onready var silk_note: Label = %SilkNote
 @onready var find_plot: Button = %FindPlot
@@ -60,6 +61,7 @@ const WINDOW_MARGIN := 16.0
 @onready var last_card: PanelContainer = %LastCard
 @onready var receipt: Label = %Receipt
 @onready var field_receipt: Label = %FieldReceipt
+@onready var field_wait_receipt: Label = %FieldWaitReceipt
 @onready var silk_receipt: Label = %SilkReceipt
 @onready var milestones: Label = %Milestones
 @onready var plan_field: Button = %PlanField
@@ -99,6 +101,7 @@ func _ready() -> void:
 	find_plot.pressed.connect(dry_plot_requested.emit)
 	find_ready_plot.pressed.connect(harvest_requested.emit)
 	wait_button.pressed.connect(_wait_for_field_work)
+	wait_before_sleep.toggled.connect(Global.set_wait_for_fields_before_sleep)
 	find_harvest.pressed.connect(harvest_requested.emit)
 	find_tribute.pressed.connect(tribute_field_requested.emit)
 	plan_field.pressed.connect(_open_field_management)
@@ -120,6 +123,7 @@ func _ready() -> void:
 		sleep_requested.emit()
 	)
 	GameEvents.night_rations_changed.connect(_refresh)
+	GameEvents.field_wait_policy_changed.connect(_refresh_field_wait)
 	GameEvents.season_order_pin_changed.connect(_refresh)
 	GameEvents.sheepfold_changed.connect(_refresh)
 	GameEvents.silk_changed.connect(_refresh)
@@ -288,7 +292,8 @@ func _refresh() -> void:
 	silk_receipt.text = "昨夜蚕棚 · " + last_silk
 	milestones.text = "\n".join(Global.dawn_milestones())
 	milestones.visible = not milestones.text.is_empty()
-	last_card.visible = receipt.visible or field_receipt.visible or silk_receipt.visible or milestones.visible
+	last_card.visible = (receipt.visible or field_receipt.visible or field_wait_receipt.visible
+		or silk_receipt.visible or milestones.visible)
 	page_button.visible = last_card.visible
 
 func _refresh_night_offer(plan: Dictionary) -> void:
@@ -457,15 +462,14 @@ func _refresh_fields() -> void:
 func _refresh_field_wait() -> void:
 	if settling_field_work or show_previous or not wait_for_retainers.is_valid():
 		return
+	wait_before_sleep.visible = Global.first_tribute_delivered() and (Global.wait_for_fields_before_sleep
+		or Global.retainers.any(func(worker: RetainerData) -> bool: return worker.works_fields()))
+	wait_before_sleep.set_pressed_no_signal(Global.wait_for_fields_before_sleep)
 	var report := Global.field_wait_report
 	var offer := Global.field_wait_offer()
 	var notes := PackedStringArray()
 	if not report.is_empty():
-		var time := " · 约 %s" % _work_duration(report.minutes) if report.get("minutes", 0) > 0 else ""
-		notes.append("等待结果 · " + Global.field_work_summary(report, Global.FIELD_WORK_JOBS) + time)
-		var yields := Global.field_work_summary(report, Global.FIELD_WORK_YIELDS)
-		if not yields.is_empty():
-			notes.append(yields)
+		notes.append(_describe_field_work("等待结果", report))
 	if offer.plots > 0:
 		if Global.raid_day > 0:
 			notes.append("击退来敌后再等收工。")
@@ -485,6 +489,13 @@ func _refresh_field_wait() -> void:
 
 func _work_duration(minutes: int) -> String:
 	return "%d 刻钟" % roundi(minutes / 15.0) if minutes >= 15 else "一刻钟内"
+
+func _describe_field_work(heading: String, report: Dictionary) -> String:
+	var line := heading + " · " + Global.field_work_summary(report, Global.FIELD_WORK_JOBS)
+	if report.get("minutes", 0) > 0:
+		line += " · 约 %s" % _work_duration(report.minutes)
+	var yields := Global.field_work_summary(report, Global.FIELD_WORK_YIELDS)
+	return line + "\n" + yields if not yields.is_empty() else line
 
 func _wait_for_field_work() -> void:
 	if settling_field_work or show_previous or not wait_button.is_visible_in_tree():
@@ -573,6 +584,10 @@ func _refresh_field_receipt() -> void:
 	field_receipt.visible = not details.is_empty()
 	if field_receipt.visible:
 		field_receipt.text = "第 %d 夜田务 · %s" % [report.day, " · ".join(details)]
+	var field_work: Dictionary = Global.last_dawn.get("field_wait", {})
+	field_wait_receipt.visible = not field_work.is_empty()
+	if field_wait_receipt.visible:
+		field_wait_receipt.text = _describe_field_work("睡前收工", field_work)
 
 func _describe_ripe(report: Dictionary) -> String:
 	if report.public_ripe + report.private_ripe == 0:
