@@ -22,6 +22,8 @@ var world: Node2D
 var hud: Control
 var tracked_neighbor := ""
 var tracked_plot: Variant = null
+var order_work: Dictionary = {}
+var _order_work_dirty := true
 var tracked_site := -1
 var tracked_place := ""
 var tracked_place_point := Vector2.ZERO
@@ -47,6 +49,17 @@ func setup(estate_world: Node2D, estate_hud: Control) -> void:
 	GameEvents.seed_garden_arrived.connect(_refresh_road_network)
 	GameEvents.pond_landing_opened.connect(_refresh_road_network)
 	GameEvents.day_advanced.connect(_expire_winter_supper_route.unbind(1))
+	GameEvents.day_advanced.connect(_dirty_order_work.unbind(1))
+	GameEvents.season_order_pin_changed.connect(_dirty_order_work)
+	GameEvents.inventory_changed.connect(_dirty_order_work.unbind(1))
+	GameEvents.crop_harvested.connect(_dirty_order_work.unbind(1))
+	GameEvents.management_visibility_changed.connect(_dirty_order_work.unbind(1))
+	GameEvents.farm_state_changed.connect(_dirty_order_work)
+	GameEvents.channels_changed.connect(_dirty_order_work)
+	GameEvents.retainer_recruited.connect(_dirty_order_work.unbind(1))
+	GameEvents.retainer_departed.connect(_dirty_order_work.unbind(1))
+	GameEvents.well_field_reclaimed.connect(_dirty_order_work.unbind(2))
+	GameEvents.tax_reform_choice_made.connect(_dirty_order_work.unbind(1))
 	road_guide.z_index = -2
 	road_guide.hide()
 	world.add_child(road_guide)
@@ -102,6 +115,36 @@ func follow_rotation_plot(cell: Vector2i, status: int) -> bool:
 	_track_field_plot(cell)
 	return true
 
+func follow_order_work(plan: Dictionary) -> void:
+	clear_tracking()
+	Global.field_route_status = Global.OrderFieldRoute.PREPARE
+	_order_work_dirty = false
+	if plan.action == Global.OrderWork.SOW:
+		world.select_seed(plan.crop_id)
+	_track_order_work(plan)
+
+func _track_order_work(plan: Dictionary) -> void:
+	order_work = plan
+	tracked_plot = plan.cell
+	hud.cancel_directions.text = "备货私田 · 取消指路"
+	hud.cancel_directions.show()
+
+func _dirty_order_work() -> void:
+	_order_work_dirty = true
+
+func _refresh_order_work() -> void:
+	if not _order_work_dirty:
+		return
+	_order_work_dirty = false
+	var plan := Global.season_order_work(Global.pinned_season_order())
+	if plan.is_empty():
+		clear_tracking()
+		return
+	if plan != order_work:
+		if tracked_plot != null and tracked_plot != plan.cell:
+			world.tile_map.get_node("FieldCursor").clear_plot_hover(tracked_plot)
+		_track_order_work(plan)
+
 func _track_field_plot(cell: Vector2i) -> void:
 	tracked_plot = cell
 	var status := Global.field_route_status
@@ -111,6 +154,9 @@ func _track_field_plot(cell: Vector2i) -> void:
 
 func _refresh_field_route() -> void:
 	var status := Global.field_route_status
+	if status == Global.OrderFieldRoute.PREPARE:
+		_refresh_order_work()
+		return
 	if status < 0:
 		if tracked_plot != null:
 			clear_tracking()
@@ -204,7 +250,8 @@ func destination() -> Dictionary:
 	var site := Global.get_well_field(tracked_site)
 	if not site.is_empty() and not site["is_unlocked"]:
 		return {"title": "井田 %d 工地" % (tracked_site + 1), "point": _cell_position(site["center_pos"])}
-	if tracked_plot != null and Global.field_route_status >= 0 and world.matches_field_route(tracked_plot, Global.field_route_status):
+	if tracked_plot != null and Global.field_route_status >= 0 and (Global.field_route_status == Global.OrderFieldRoute.PREPARE
+		or world.matches_field_route(tracked_plot, Global.field_route_status)):
 		return {"title": _field_plot_label(tracked_plot), "point": _cell_position(tracked_plot)}
 	if not tracked_neighbor.is_empty():
 		var actor: Node2D = world.neighbor_actor(tracked_neighbor)
@@ -228,6 +275,16 @@ func _cell_position(cell: Vector2i) -> Vector2:
 	return world.to_local(tiles.to_global(tiles.map_to_local(cell)))
 
 func _field_plot_label(cell: Vector2i) -> String:
+	if Global.field_route_status == Global.OrderFieldRoute.PREPARE and not order_work.is_empty():
+		var name := ItemManager.crop_label(order_work.crop_id)
+		match int(order_work.action):
+			Global.OrderWork.SOW:
+				if not Global.tilled_cells.has(cell):
+					return "备货私田 · 翻地种%s" % name
+				return "备货私田 · 播%s" % name if world.current_seed_id == order_work.crop_id else "备货私田 · 换%s种" % name
+			Global.OrderWork.WATER: return "备货私田 · 给%s浇水" % name
+			Global.OrderWork.HARVEST: return "备货私田 · 收%s" % name
+			Global.OrderWork.WAIT: return "%s · 最早第 %d 天收" % [name, order_work.day]
 	if Global.field_route_status in Global.ROTATION_ROUTES:
 		return world.rotation_plot_caption(cell)
 	if Global.field_route_status == Global.TributeRoute.TEND:
@@ -247,6 +304,8 @@ func arrive_at(speaker: String) -> void:
 func clear_tracking() -> void:
 	tracked_neighbor = ""
 	tracked_plot = null
+	order_work = {}
+	_order_work_dirty = true
 	Global.field_route_status = -1
 	Global.field_route_public_only = false
 	Global.rotation_route_cell = null

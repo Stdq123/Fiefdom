@@ -165,11 +165,13 @@ enum CropWater { DRY, BLOCKED, HAND, CANAL, RAIN }
 enum NightGrowth { READY, DRY, BLOCKED, GROW, RIPEN }
 enum MulberryRoute { PLANT = 5, WATER, HARVEST }
 enum TributeRoute { TEND = 8 }
-enum OrderFieldRoute { HARVEST = 9 }
+enum OrderFieldRoute { HARVEST = 9, PREPARE = 13 }
 enum RotationRoute { BEANS = 10, FOLLOWUP, CLEAR }
+enum OrderWork { HARVEST, WATER, SOW, WAIT }
 const ROTATION_ROUTES := [RotationRoute.BEANS, RotationRoute.FOLLOWUP, RotationRoute.CLEAR]
 const FIELD_ROUTE_STATES := [NightGrowth.READY, NightGrowth.DRY, NightGrowth.BLOCKED,
-	MulberryRoute.PLANT, MulberryRoute.WATER, MulberryRoute.HARVEST, TributeRoute.TEND, OrderFieldRoute.HARVEST] + ROTATION_ROUTES
+	MulberryRoute.PLANT, MulberryRoute.WATER, MulberryRoute.HARVEST, TributeRoute.TEND,
+	OrderFieldRoute.HARVEST, OrderFieldRoute.PREPARE] + ROTATION_ROUTES
 enum Season { SPRING, SUMMER, AUTUMN, WINTER }
 const SEASON_NAMES := ["春", "夏", "秋", "冬"]
 
@@ -609,7 +611,7 @@ func begin_next_day() -> void:
 	current_day += 1
 	day_progress = 0.0
 	last_dawn.clear()
-	if field_route_status not in ROTATION_ROUTES:
+	if field_route_status not in ROTATION_ROUTES and field_route_status != OrderFieldRoute.PREPARE:
 		field_route_status = -1
 		rotation_route_cell = null
 	field_route_public_only = false
@@ -2349,6 +2351,80 @@ func has_season_order_harvest(schedule: Dictionary) -> bool:
 		if is_season_order_harvest(cell, schedule):
 			return true
 	return false
+
+func season_order_work(schedule: Dictionary) -> Dictionary:
+	if (schedule.is_empty() or outcome != Outcome.RUNNING or current_day < schedule.start
+		or current_day > schedule.end or season_order_delivered_at(schedule) > 0):
+		return {}
+	var best := {}
+	for crop_id: String in schedule.order.need:
+		var missing := season_order_crop_gap(schedule, crop_id)
+		if missing == 0:
+			continue
+		var plan := _order_crop_work(crop_id, missing, schedule.end)
+		if not plan.is_empty() and (best.is_empty() or plan.action < best.action
+			or (plan.action == best.action and plan.day < best.day)):
+			best = plan
+	return best
+
+func _order_crop_work(crop_id: String, missing: int, deadline: int) -> Dictionary:
+	var crop := ItemManager.get_crop(crop_id)
+	var sow_day := current_day + sowing_nights(crop)
+	var dry := {}
+	var growing := {}
+	var sow := {}
+	var sow_priority := -1
+	var expected := 0
+	var watered := 0
+	for field: Dictionary in well_fields:
+		if not field.is_unlocked:
+			continue
+		var center: Vector2i = field.center_pos
+		for y in [1, 0, -1]:
+			for x in [0, -1, 1]:
+				var cell := center + Vector2i(x, y)
+				if is_public_plot(cell):
+					continue
+				var plant: Dictionary = active_crops.get(cell, {})
+				if plant.is_empty():
+					var priority := _order_sowing_priority(cell, crop_id, crop.is_water_crop)
+					if sow_day <= deadline and priority > sow_priority:
+						sow = _order_work_at(cell, crop_id, OrderWork.SOW, sow_day)
+						sow_priority = priority
+					continue
+				if plant.id != crop_id:
+					continue
+				var status := crop_night_status(cell)
+				if status == NightGrowth.READY:
+					return _order_work_at(cell, crop_id, OrderWork.HARVEST, current_day)
+				var ready_day := current_day + int(plant.growth_nights) - int(plant.age)
+				if status == NightGrowth.BLOCKED or ready_day > deadline:
+					continue
+				var yield_bonus := crop_rotation_bonus(cell, crop)
+				var amounts := harvest_proceeds(false, crop.sell_price, yield_bonus, tax_reform_choice, tax_rate)
+				expected += int(amounts.stock)
+				if status == NightGrowth.DRY:
+					if dry.is_empty() or ready_day < dry.day:
+						dry = _order_work_at(cell, crop_id, OrderWork.WATER, ready_day)
+				else:
+					watered += int(amounts.stock)
+					if growing.is_empty() or ready_day < growing.day:
+						growing = _order_work_at(cell, crop_id, OrderWork.WAIT, ready_day)
+	if watered < missing and not dry.is_empty():
+		return dry
+	if expected < missing and not sow.is_empty():
+		return sow
+	return growing
+
+func _order_sowing_priority(cell: Vector2i, crop_id: String, needs_canal: bool) -> int:
+	var supplied := irrigation.supplies(cell)
+	var plan: String = field_seed_plans.get(cell, "")
+	if (needs_canal and not supplied) or (not plan.is_empty() and next_seed_for_plan(cell, plan) != crop_id):
+		return -1
+	return 2 * int(supplied) + int(tilled_cells.has(cell))
+
+func _order_work_at(cell: Vector2i, crop_id: String, action: OrderWork, day: int) -> Dictionary:
+	return {"cell": cell, "crop_id": crop_id, "action": action, "day": day}
 
 func private_rice_plots() -> Array[Vector2i]:
 	var plots: Array[Vector2i] = []

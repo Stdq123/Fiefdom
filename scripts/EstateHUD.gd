@@ -139,7 +139,13 @@ func _ready() -> void:
 	GameEvents.season_order_pin_changed.connect(_refresh_pinned_order)
 	GameEvents.day_advanced.connect(_refresh_pinned_order.unbind(1))
 	GameEvents.inventory_changed.connect(_refresh_pinned_order.unbind(1))
+	GameEvents.management_visibility_changed.connect(_refresh_pinned_order.unbind(1))
 	GameEvents.crop_harvested.connect(_refresh_pinned_order.unbind(1))
+	GameEvents.farm_state_changed.connect(_refresh_pinned_order)
+	GameEvents.channels_changed.connect(_refresh_pinned_order)
+	GameEvents.well_field_reclaimed.connect(_refresh_pinned_order.unbind(2))
+	GameEvents.retainer_recruited.connect(_refresh_pinned_order.unbind(1))
+	GameEvents.retainer_departed.connect(_refresh_pinned_order.unbind(1))
 	GameEvents.fish_changed.connect(_refresh_pinned_order)
 	GameEvents.silk_changed.connect(_refresh_pinned_order)
 	GameEvents.tax_reform_choice_made.connect(_refresh_pinned_order.unbind(1))
@@ -206,6 +212,14 @@ func _refresh_pinned_order() -> void:
 		action = "去西市交货"
 	elif harvest:
 		action = "收备货私田"
+	else:
+		var plan := Global.season_order_work(schedule)
+		if not plan.is_empty():
+			var label := ItemManager.crop_label(plan.crop_id)
+			match int(plan.action):
+				Global.OrderWork.WATER: action = "给%s浇水" % label
+				Global.OrderWork.SOW: action = "种%s · 第 %d 天截止" % [label, schedule.end]
+				Global.OrderWork.WAIT: action = "%s最早第 %d 天收" % [label, plan.day]
 	pinned_order.text = "时令单   %s   ·   %s" % [amounts, action]
 	pinned_order.tooltip_text = pinned_order.text
 

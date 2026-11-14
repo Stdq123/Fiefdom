@@ -22,6 +22,7 @@ const CROP_PROGRESS := {
 @onready var copper_button: Button = $Current/Content/Rewards/Copper
 @onready var food_button: Button = $Current/Content/Rewards/Food
 @onready var pin_button: Button = $Current/Content/Actions/Pin
+@onready var field_work_button: Button = $Current/Content/FieldWork
 @onready var fish_route_button: Button = $Current/Content/Actions/FishRoute
 @onready var produce_route_button: Button = $Current/Content/Actions/ProduceRoute
 @onready var water_route_button: Button = $Current/Content/Actions/WaterRoute
@@ -42,6 +43,7 @@ func _ready() -> void:
 	copper_button.pressed.connect(_deliver.bind(false))
 	food_button.pressed.connect(_deliver.bind(true))
 	pin_button.toggled.connect(Global.pin_season_order)
+	field_work_button.pressed.connect(GameEvents.season_order_work_requested.emit)
 	next_plan_button.toggled.connect(Global.pin_season_order.bind(true))
 	fish_route_button.pressed.connect(func(): GameEvents.ravine_trip_requested.emit(fish_route_target))
 	produce_route_button.pressed.connect(GameEvents.west_market_directions_requested.emit.bind(MarketStall.TITLES[MarketStall.Kind.GRAIN]))
@@ -88,6 +90,7 @@ func _refresh() -> void:
 	var pinned := Global.is_season_order_pinned(schedule)
 	pin_button.set_pressed_no_signal(pinned)
 	pin_button.text = "取消田边跟踪" if pinned else "在田边跟踪此单"
+	_refresh_field_work(schedule)
 	_refresh_produce_route(order)
 	var rice_water_gap := Global.rice_order_water_gap(schedule) if pin_button.visible else 0
 	water_route_button.visible = rice_water_gap > 0
@@ -169,6 +172,19 @@ func _refresh() -> void:
 	last_receipt.visible = delivered_on == 0 and not receipt.is_empty()
 	if last_receipt.visible:
 		last_receipt.text = "上次这张单在第 %d 天交齐。" % receipt.day
+
+func _refresh_field_work(schedule: Dictionary) -> void:
+	var plan := Global.season_order_work(schedule) if not at_market else {}
+	field_work_button.visible = not plan.is_empty()
+	if not field_work_button.visible:
+		return
+	var label := ItemManager.crop_label(plan.crop_id)
+	match int(plan.action):
+		Global.OrderWork.HARVEST: field_work_button.text = "标出已熟的%s" % label
+		Global.OrderWork.WATER: field_work_button.text = "标出待浇的%s" % label
+		Global.OrderWork.SOW: field_work_button.text = "标出空私田 · 换%s种" % label
+		Global.OrderWork.WAIT: field_work_button.text = "查看田里的%s" % label
+	field_work_button.tooltip_text = "在田边跟踪此单，并标出一格私田。"
 
 func _refresh_produce_route(order: Dictionary) -> void:
 	var crop := Global.market_produce_crop()

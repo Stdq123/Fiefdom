@@ -256,6 +256,7 @@ func _connect_signals() -> void:
 	GameEvents.sheepfold_requested.connect(_on_sheepfold_requested)
 	GameEvents.retainer_interacted.connect(_on_retainer_interacted)
 	GameEvents.season_board_interacted.connect(_on_season_board_interacted)
+	GameEvents.season_order_work_requested.connect(_on_season_order_work_requested)
 	GameEvents.freight_bench_interacted.connect(_on_freight_bench_interacted)
 	GameEvents.freight_arrival_interacted.connect(_on_freight_arrival_interacted)
 	GameEvents.seed_garden_requested.connect(_on_seed_garden_requested)
@@ -891,9 +892,16 @@ func _on_ravine_trip_requested(place: String) -> void:
 		hud.practice_label.text = "已标出东关 · 从南门回封地"
 
 func _on_pinned_order_pressed() -> void:
+	if _estate_controls_busy() or world.player.training_cart.visible:
+		return
 	var order := Global.pinned_season_order()
 	if not order.is_empty() and Global.can_deliver_season_order(order):
 		_on_west_market_directions_requested(Global.MARKET_ORDERS)
+		return
+	var plan := Global.season_order_work(order)
+	if not plan.is_empty() and (plan.action != Global.OrderWork.WAIT
+		or Global.field_route_status == Global.OrderFieldRoute.PREPARE):
+		_follow_order_work(plan)
 		return
 	if directions.follow_field_route(Global.OrderFieldRoute.HARVEST):
 		panel_manager.hide_management_panel()
@@ -901,6 +909,22 @@ func _on_pinned_order_pressed() -> void:
 			hud.practice_label.text = "已标出备货私田 · 从南门回田边"
 		return
 	_on_season_board_interacted()
+
+func _on_season_order_work_requested() -> void:
+	var order := Global.season_order()
+	var plan := Global.season_order_work(order)
+	if plan.is_empty():
+		return
+	if not Global.is_season_order_pinned(order):
+		Global.pin_season_order(true)
+	_follow_order_work(plan)
+
+func _follow_order_work(plan: Dictionary) -> void:
+	world.set_channel_mode(false)
+	directions.follow_order_work(plan)
+	panel_manager.hide_management_panel()
+	if Global.is_indoors():
+		hud.practice_label.text = "已标出备货私田 · 从南门回田边"
 
 func _on_season_board_interacted() -> void:
 	world.set_channel_mode(false)

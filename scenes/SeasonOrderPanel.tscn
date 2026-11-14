@@ -95,6 +95,13 @@ mouse_default_cursor_shape = 2
 toggle_mode = true
 text = "在田边跟踪此单"
 
+[node name="FieldWork" type="Button" parent="Current/Content"]
+visible = false
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+
 [node name="FishRoute" type="Button" parent="Current/Content/Actions"]
 visible = false
 custom_minimum_size = Vector2(0, 36)

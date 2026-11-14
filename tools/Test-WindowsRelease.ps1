@@ -150,6 +150,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RecruitmentLedgerReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RavineShortcutReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RotationGuideReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/OpeningOrderReplay.gd') -Destination $testDirectory
     foreach ($file in 'MarketOrderReplay.gd', 'AutumnExhibitReplay.gd', 'SheepfoldReplay.gd', 'RavineMapReplay.gd', 'CreekTrapReplay.gd', 'FieldNightReplay.gd', 'FieldWorkWaitReplay.gd', 'CouncilSilkReplay.gd') {
         Copy-Item -LiteralPath (Join-Path $repo "tests/$file") -Destination $testDirectory
     }
@@ -232,6 +233,7 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'tribute-plan' -Name 'tribute-plan' -Replay 'tribute-plan'
         Start-VerifiedGame -Directory $release -Profile 'estate-progress' -Name 'estate-progress' -Replay 'estate-progress' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'recruitment-ledger' -Name 'recruitment-ledger' -Replay 'recruitment-ledger' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'opening-order' -Name 'opening-order' -Replay 'opening-order' -Resolution $fullResolution
     }
     if ($RotationGuide) {
         Start-VerifiedGame -Directory $release -Profile 'rotation-guide' -Name 'rotation-guide' -Replay 'rotation-guide' -Resolution $fullResolution
@@ -404,6 +406,7 @@ try {
             Start-VerifiedGame -Directory $release -Profile 'opening-compact' -Name 'opening-1024x768' -Replay 'estate-directions' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'estate-progress-compact' -Name 'estate-progress-1024x768' -Replay 'estate-progress' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'recruitment-compact' -Name 'recruitment-ledger-1024x768' -Replay 'recruitment-ledger' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'opening-order-compact' -Name 'opening-order-1024x768' -Replay 'opening-order-pad' -Resolution '1024x768'
         }
         if ($RotationGuide) {
             Start-VerifiedGame -Directory $release -Profile 'rotation-guide-compact' -Name 'rotation-guide-1024x768' -Replay 'rotation-guide' -Resolution '1024x768'

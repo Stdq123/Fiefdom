@@ -250,6 +250,13 @@ func _run() -> void:
 			replay.from_older_save = arguments[0] == "order-preparation-old-save"
 			replay.capture_path = capture_directory
 			await replay.run(tree)
+		"opening-order", "opening-order-pad", "opening-order-write-old", "opening-order-resume-old":
+			var replay = load("res://tests/OpeningOrderReplay.gd").new()
+			replay.use_gamepad = arguments[0] == "opening-order-pad"
+			replay.write_old_checkpoint = arguments[0] == "opening-order-write-old"
+			replay.from_older_save = arguments[0] == "opening-order-resume-old"
+			replay.capture_dir = capture_directory
+			await replay.run(tree)
 		"watch-relief", "watch-relief-baseline", "watch-relief-old-save":
 			var replay = load("res://tests/WatchReliefReplay.gd").new()
 			replay.baseline = arguments[0] == "watch-relief-baseline"
