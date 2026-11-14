@@ -28,6 +28,7 @@ const ACTG_SCENERY := preload("res://assets/world/actg/swamp.png")
 const MOUNTAIN_POST_BAMBOO := preload("res://assets/world/mountain-post/bamboo.png")
 const ESTATE_STORAGE := preload("res://assets/world/estate-storage.svg")
 const RAVINE_ACCENTS := preload("res://assets/world/momonga/ravine-accents.png")
+const RAVINE_BANKS := preload("res://scripts/RavineBanks.gd")
 const RAVINE_ACCENT_PROPS := [Prop.RAVINE_ROCK, Prop.RAVINE_SHOOT, Prop.RAVINE_RUSH]
 const MEADOW_FLOWERS := {
 	Prop.WHITE_BLOOM: preload("res://assets/world/mini-meadow/flower_white.png"),
@@ -107,7 +108,7 @@ const LEAFY_PROPS := [Prop.OAK, Prop.BLOSSOM_TREE, Prop.GROVE_TREE, Prop.GROVE_C
 const DORMANT_PROPS := [Prop.FLOWERS, Prop.FERN, Prop.RAVINE_SHOOT, Prop.RAVINE_RUSH, Prop.WHITE_BLOOM, Prop.PINK_BLOOM]
 const BERRY_GROVE := RavineLayout.FRUIT + Vector2(-17, 8)
 const BRIDGE := RavineLayout.BRIDGE
-const BRIDGE_DECK := Rect2(BRIDGE - Vector2(27, 13), Vector2(54, 26))
+const BRIDGE_DECK := RavineLayout.BRIDGE_DECK
 const FORD := RavineLayout.FORD
 const FORD_AREA := Rect2(FORD - Vector2(35, 17), Vector2(70, 34))
 const CROSSING_HALF_DEPTH := 16.0
@@ -482,6 +483,10 @@ func _add_water_surface() -> void:
 		water_surface = WATER_SURFACE.new(estate_terrain.pond, 0.0)
 	water_surface.name = "WaterSurface"
 	add_child(water_surface)
+	if wilderness:
+		var cascade := RAVINE_BANKS.new()
+		cascade.name = "BridgeCascade"
+		add_child(cascade)
 
 func _place_lanterns(layer: Node2D) -> void:
 	if wilderness:
@@ -583,6 +588,7 @@ func _draw() -> void:
 		draw_colored_polygon(PackedVector2Array(RavineLayout.WILLOW_BANK), gravel)
 		_draw_tracks()
 		_draw_creek()
+		RAVINE_BANKS.draw_banks(self, season, raining)
 		_draw_crossings()
 	else:
 		_draw_field_verges()
@@ -911,21 +917,6 @@ func _draw_creek() -> void:
 	WATER_SURFACE.draw_shore(self, bank, silt, water, winter, [BRIDGE_DECK.grow(4.0), FORD_AREA])
 
 func _draw_crossings() -> void:
-	var deck := BRIDGE_DECK
-	draw_rect(deck.grow(2), Color("#534332"))
-	draw_rect(deck, Color("#ba9967"))
-	for plank in 10:
-		var x := deck.position.x + 2 + plank * 5
-		draw_rect(Rect2(x, deck.position.y + 2, 1, 22), Color("#96744d"))
-		draw_rect(Rect2(x + 1, deck.position.y + 2, 2, 1), Color("#dec18b"))
-	for side: float in [-1.0, 1.0]:
-		var rail_y := BRIDGE.y + side * 13
-		draw_rect(Rect2(BRIDGE.x - 27, rail_y - 1, 54, 2), Color("#795636"))
-		for end: float in [-1.0, 1.0]:
-			var foot := BRIDGE + Vector2(end * 25, side * 13)
-			draw_rect(Rect2(foot - Vector2(2, 3), Vector2(4, 7)), Color("#755538"))
-			draw_rect(Rect2(foot - Vector2(1, 3), Vector2(2, 2)), Color("#dec18b"))
-
 	var ford_water: Color = WATER_TINTS[season]
 	var shoal := PackedVector2Array()
 	var edge_y: Array[float] = [-17.0, -12.0, -6.0, 4.0, 12.0, 17.0]

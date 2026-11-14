@@ -2,6 +2,7 @@ extends RefCounted
 
 const Campaign := preload("res://tests/CampaignReplay.gd")
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
+const TERRAIN_AUDIO := preload("res://scripts/TerrainAudio.gd")
 const MOVEMENT := [&"ui_left", &"ui_right", &"ui_up", &"ui_down"]
 
 var tree: SceneTree
@@ -12,6 +13,7 @@ var map: Control
 var guide: Node2D
 var failures := 0
 var map_capture_dir := ""
+var bridge_captured := false
 
 func _expect(condition: bool, detail: String) -> bool:
 	if not condition:
@@ -47,13 +49,14 @@ func _move(action: StringName, frames: int) -> void:
 	await Campaign.wait_for_map_change(tree)
 
 func _capture_map_frame(name: String) -> void:
-	if map_capture_dir.is_empty():
+	if map_capture_dir.is_empty() or DisplayServer.get_name() == "headless":
 		return
 	await tree.create_timer(0.2).timeout
 	await RenderingServer.frame_post_draw
 	var image := tree.root.get_texture().get_image()
 	_expect(image != null and not image.is_empty() and image.save_png(map_capture_dir.path_join(name + ".png")) == OK,
 		"Save the rendered ravine frame %s." % name)
+	print("RAVINE_FRAME ", name, " window=", tree.root.size, " image=", image.get_size())
 
 func _plan_from_estate() -> bool:
 	var ui: CanvasLayer = tree.current_scene.get_node("UI")
@@ -153,6 +156,14 @@ func _walk_route(allow_exit := false) -> bool:
 			return _expect(allow_exit and tree.current_scene.name == "Main", "Only a route to West Gate should leave the ravine.")
 		if not _expect(player.position.distance_to(point) <= 3.0, "The player should reach %s from %s along the marked path." % [point, player.position]):
 			return false
+		if point == RavineLayout.BRIDGE:
+			var landscape: Node2D = ravine.get_node("Landscape")
+			_expect(landscape._surface_at(player.position) == TERRAIN_AUDIO.Surface.PLANK,
+				"The crossing still sounds like wood under the player's feet.")
+			print("RAVINE_BRIDGE_DEPTH crossing=", player.position, " deck=", LANDSCAPE.BRIDGE_DECK)
+			if not bridge_captured:
+				await _capture_map_frame("01a-on-wooden-bridge")
+				bridge_captured = true
 		if not guide.route.is_empty() and guide.route[0].distance_to(path[0]) >= 16.0:
 			refreshed = true
 	if path.size() > 2 and path[0].distance_to(path[-1]) >= 32.0:
@@ -211,6 +222,35 @@ func _cross_the_ravine() -> bool:
 	_expect(home.x > 310.0 and home.x < 381.0, "The marked way home returns inside the estate's East Gate.")
 	print("RAVINE_MAP_FORD home=", home)
 	return true
+
+func _check_bridge_weather() -> void:
+	var bridge := ravine.get_node_or_null("CreekBridge") as Node2D
+	if bridge == null:
+		return
+	var railing := bridge.get_node("NearRail") as Node2D
+	var sprite := player.get_node("Sprite2D") as Sprite2D
+	var cascade: Node2D = ravine.get_node("Landscape/BridgeCascade")
+	var frame: int = cascade.frame
+	await tree.create_timer(0.18).timeout
+	_expect(cascade.frame != frame, "Foam moves down the cascade while the water above and below it remains visible.")
+	_expect(bridge.position == RavineLayout.BRIDGE and bridge.z_index < sprite.z_index
+		and bridge.z_index + railing.z_index == sprite.z_index and bridge.position.y + railing.position.y > player.position.y,
+		"The walkway sorts below the player and its near rail sorts in front while crossing.")
+	await Campaign.walk_straight(tree, player, Vector2(104, RavineLayout.BRIDGE.y))
+	await Campaign.walk_straight(tree, player, Vector2(104, -43))
+	var upstream := player.position
+	await Campaign.walk_straight(tree, player, upstream + Vector2(60, 0))
+	_expect(player.position.x < RavineLayout.BRIDGE.x and player.position.y < RavineLayout.BRIDGE.y - 30.0,
+		"The deep water next to the cascade still stops the player.")
+	await Campaign.walk_ravine_to(tree, ravine, RavineLayout.BRIDGE)
+	for day in [6, 19]:
+		while state.current_day < day:
+			state.begin_next_day()
+		tree.root.get_node("GameEvents").day_advanced.emit(day)
+		_expect(bridge.season == state.season_index() and bridge.wet == (day == 6)
+			and LANDSCAPE.BRIDGE_DECK.has_point(player.position), "The same working bridge updates its rain and winter art.")
+		await _capture_map_frame("06-bridge-rain" if day == 6 else "07-bridge-frost")
+		print("RAVINE_BRIDGE_WEATHER day=", day, " wet=", bridge.wet, " season=", bridge.season)
 
 func _load_journal_waypoint(location: Dictionary) -> bool:
 	await _click(map.journal_button)
@@ -325,6 +365,9 @@ func run(game_tree: SceneTree) -> void:
 		await _move(&"ui_right", 213)
 		if _bind_ravine() and await _cross_the_ravine():
 			await _check_journal()
+			if not map_capture_dir.is_empty() and not tree.paused:
+				await Campaign.walk_ravine_to(tree, ravine, RavineLayout.BRIDGE)
+				await _check_bridge_weather()
 	tree.paused = false
 	tree.unload_current_scene()
 	for node in tree.root.get_node("AudioManager").get_children():

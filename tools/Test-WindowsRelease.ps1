@@ -333,6 +333,9 @@ try {
         if ($OrderCampaign) {
             Start-VerifiedGame -Directory $release -Profile 'freight-wait-compact' -Name 'freight-wait-1024x768' -Replay 'freight-wait' -Resolution '1024x768'
         }
+        if ($RavineLayout) {
+            Start-VerifiedGame -Directory $release -Profile 'ravine-map-compact' -Name 'ravine-map-1024x768' -Replay 'ravine-map' -Resolution '1024x768'
+        }
         if ($AmbienceTravel) {
             Start-VerifiedGame -Directory $release -Profile 'ambience-travel-compact' -Name 'ambience-travel-1024x768' -Replay 'ambience-travel' -Resolution '1024x768'
         }
