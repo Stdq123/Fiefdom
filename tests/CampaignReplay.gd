@@ -32,6 +32,7 @@ var use_field_steward := false
 var use_season_orders := false
 var use_rotation_steward := false
 var use_field_wait := false
+var use_reform_sale := false
 var field_wait_days := 0
 var field_wait_seconds := 0.0
 var field_wait_interaction_msec := 0
@@ -287,6 +288,34 @@ func _enable_night_rations() -> void:
 	policy.budget.value = state.balance.market_food_price * 5
 	_expect(state.night_rations.enabled, "The alternate campaign has opted in to nightly rations.")
 	await _click(policy.close_button.get_global_rect().get_center())
+
+func _sell_towards_reform_ending() -> void:
+	if not use_reform_sale or state.reform_sale_quote().is_empty():
+		return
+	for goal: Dictionary in state.route_objectives():
+		if goal.kind != state.RouteGoal.COPPER and goal.value < goal.target:
+			return
+	var balance: int = state.money
+	var stock: int = state.player_inventory
+	await _click(ui.hud.route_progress.get_global_rect().get_center())
+	var book: Control = ui.route_goals
+	if not _expect(book.modal.visible, "Open the unfinished reform goals from the journal."):
+		return
+	var action := _find_button(book.rows, "查看售粮报价")
+	if not _expect(action != null and action.is_visible_in_tree(), "Read the current crop sale estimate in the copper goal."):
+		return
+	await _click(action.get_global_rect().get_center())
+	var panel: Control = ui.panel_manager.management_panel_instance
+	var market: Control = panel.market_panel
+	if not _expect(market.reform_sale_button.is_visible_in_tree() and market.reform_sale_button.has_focus(),
+		"The copper goal opens the exact quote at the existing market."):
+		return
+	await _click(market.reform_sale_button.get_global_rect().get_center())
+	_expect(state.money > balance and state.player_inventory < stock and "售出" in market.receipt.text,
+		"Accepting the quote sells the listed crops once and shows the new balance.")
+	print("CAMPAIGN_REFORM_SALE day=", state.current_day, " amount=", stock - state.player_inventory,
+		" copper=", balance, "->", state.money, " food=", state.food_storage)
+	await _click(panel.close_button.get_global_rect().get_center())
 
 func _recruit() -> void:
 	if state.current_day < 6 or state.retainers.size() >= 3 or world.active_visitors.is_empty():
@@ -1090,6 +1119,7 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 					var cell := Vector2i(x, y)
 					if cell != SECOND:
 						_harvest_and_tend(cell, KEY_7, branch == "reformed" or x == 8)
+		await _sell_towards_reform_ending()
 		await _fund_rations_with_silk()
 		_provision(state.retainer_food_cost())
 		await _forage_for_rations()

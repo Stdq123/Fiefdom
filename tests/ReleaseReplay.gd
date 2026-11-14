@@ -28,6 +28,10 @@ func _run() -> void:
 		"traditional", "reformed":
 			var replay = load("res://tests/CampaignReplay.gd").new()
 			await replay.run(tree, arguments[0], true, capture_directory)
+		"reformed-market-sale":
+			var replay = load("res://tests/CampaignReplay.gd").new()
+			replay.use_reform_sale = true
+			await replay.run(tree, "reformed", true, capture_directory)
 		"save-ending-traditional", "save-ending-reformed", "resume-ending-traditional", "resume-ending-reformed":
 			var replay = load("res://tests/EndingFilmReplay.gd").new()
 			await replay.run_process_restart(tree, arguments[0].ends_with("traditional"), arguments[0].begins_with("resume-"))
@@ -111,6 +115,7 @@ func _run() -> void:
 			await replay.run(tree)
 		"route-goals", "route-goals-legacy":
 			var replay = load("res://tests/RouteGoalsReplay.gd").new()
+			replay.capture_dir = capture_directory
 			replay.legacy = arguments[0] == "route-goals-legacy"
 			await replay.run(tree)
 		"council-prep", "council-prep-legacy", "council-petition", "council-one-field":

@@ -5,4 +5,6 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var replay = load("res://tests/CampaignReplay.gd").new()
-	await replay.run(self, "reformed", false, "", OS.get_cmdline_user_args().has("delegate-rations"))
+	var arguments := OS.get_cmdline_user_args()
+	replay.use_reform_sale = arguments.has("reform-sale")
+	await replay.run(self, "reformed", false, "", arguments.has("delegate-rations"))

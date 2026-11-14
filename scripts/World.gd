@@ -510,7 +510,8 @@ func is_crop_ripe(grid_pos: Vector2i) -> bool:
 
 func council_harvest_forecast(choice: Global.TaxReformChoice) -> Dictionary:
 	var totals := {"plots": 0, "tribute": 0, "stock": 0, "copper": 0, "leaves": 0, "levy": 0}
-	var rate := clampf(Global.balance.reformed_tax_rate, 0.0, 1.0)
+	var rate := (Global.tax_rate if Global.tax_reform_choice == Global.TaxReformChoice.REFORMED
+		else clampf(Global.balance.reformed_tax_rate, 0.0, 1.0))
 	for cell: Vector2i in active_crops:
 		var tile := tile_map.get_cell_tile_data(cell)
 		if tile == null or not is_crop_ripe(cell):

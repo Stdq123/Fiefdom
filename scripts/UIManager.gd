@@ -83,13 +83,14 @@ func _ready() -> void:
 	hud.leave_cart.pressed.connect(world.get_node("DrivingPractice").dismount)
 	hud.handover_button.pressed.connect(_open_handover)
 	handover.find_keeper_requested.connect(_on_neighbor_directions_requested.bind(VisitorData.FIELD_KEEPER))
+	route_goals.world = world
 	hud.route_progress.pressed.connect(_open_route_goals)
 	route_goals.action_requested.connect(_on_route_goal_action)
 	world.get_node("Scenery/EndingRecord").visibility_changed.connect(_refresh_ledger_route)
 	council_preparation.world = world
 	hud.council_prep_button.pressed.connect(_open_council_preparation)
 	hud.guide.six_arts.pressed.connect(_show_six_arts)
-	council_preparation.fields_requested.connect(_guide_public_harvest)
+	council_preparation.fields_requested.connect(_guide_ripe_harvest.bind(true))
 	council_preparation.public_plot_requested.connect(_follow_tribute_plot.bind(Global.TributeRoute.TEND))
 	council_preparation.sowing_plans_requested.connect(_show_sowing_plans)
 	council_preparation.six_arts_requested.connect(_show_six_arts)
@@ -187,8 +188,8 @@ func _open_council_preparation() -> void:
 	if not _map_controls_blocked():
 		council_preparation.open_map()
 
-func _guide_public_harvest() -> void:
-	if not directions.follow_field_route(Global.NightGrowth.READY, true):
+func _guide_ripe_harvest(public_only: bool) -> void:
+	if not directions.follow_field_route(Global.NightGrowth.READY, public_only):
 		estate_map.open_fields()
 
 func _show_six_arts() -> void:
@@ -205,12 +206,15 @@ func _open_handover() -> void:
 
 func _on_route_goal_action(kind: Global.RouteGoal) -> void:
 	match kind:
-		Global.RouteGoal.TRIBUTE, Global.RouteGoal.TAXED_HARVEST:
-			estate_map.open_fields()
+		Global.RouteGoal.TRIBUTE:
+			_guide_ripe_harvest(true)
+		Global.RouteGoal.TAXED_HARVEST:
+			_guide_ripe_harvest(false)
 		Global.RouteGoal.OFFER_SILK, Global.RouteGoal.SELL_SILK:
 			_show_silk()
 		Global.RouteGoal.COPPER:
 			_show_market()
+			panel_manager.management_panel_instance.market_panel.focus_reform_sale()
 		Global.RouteGoal.RAIDS:
 			if Global.raid_day > 0 or Global.is_raid_day(Global.current_day + 1):
 				_on_raid_alert_pressed()

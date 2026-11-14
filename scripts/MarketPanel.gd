@@ -17,9 +17,12 @@ const SHORTAGE_COLOR := Color("#e5b981")
 @onready var crop_stock: Label = $Stock/Crops/Label
 @onready var copper_stock: Label = $Stock/Copper/Label
 @onready var food_label: Label = $FoodLabel
-@onready var sell_button: Button = $SellButton
-@onready var convert_button: Button = $ConvertButton
-@onready var buy_button: Button = $BuyFoodButton
+@onready var reform_sale: HBoxContainer = $ReformSale
+@onready var reform_sale_note: Label = $ReformSale/Note
+@onready var reform_sale_button: Button = $ReformSale/SellSurplus
+@onready var sell_button: Button = $TradeActions/SellButton
+@onready var convert_button: Button = $TradeActions/ConvertButton
+@onready var buy_button: Button = $TradeActions/BuyFoodButton
 @onready var reserve_kind: OptionButton = $ReserveKind
 @onready var reserve_label: Label = $ReservePlan
 @onready var reserve_button: Button = $ReserveActions/ReserveButton
@@ -27,6 +30,7 @@ const SHORTAGE_COLOR := Color("#e5b981")
 @onready var receipt: Label = $Receipt
 
 var return_to_survey: Callable
+var reform_quote: Dictionary = {}
 
 func _ready() -> void:
 	crop_choice.add_item("全部")
@@ -37,6 +41,7 @@ func _ready() -> void:
 	$QuantityRow/Five.pressed.connect(func(): quantity.value = 5)
 	all_crops.pressed.connect(func(): quantity.value = Global.crop_stock.count(_selected_crop()))
 	sell_button.pressed.connect(_sell)
+	reform_sale_button.pressed.connect(_sell_reform_surplus)
 	convert_button.pressed.connect(_convert)
 	buy_button.pressed.connect(_buy)
 	reserve_kind.add_item("三夜口粮", ReserveKind.HOUSEHOLD)
@@ -59,11 +64,17 @@ func _ready() -> void:
 	GameEvents.retainer_recruited.connect(_refresh.unbind(1))
 	GameEvents.retainer_departed.connect(_refresh.unbind(1))
 	GameEvents.rank_changed.connect(_refresh.unbind(1))
+	GameEvents.tax_reform_choice_made.connect(_refresh.unbind(1))
 	GameEvents.day_advanced.connect(func(_day: int):
 		receipt.text = ""
 		_refresh()
 	)
 	_refresh()
+
+func focus_reform_sale() -> void:
+	if reform_sale_button.is_visible_in_tree():
+		reform_sale_button.grab_focus()
+		GamepadInput.snap_pointer_to_focus.call_deferred()
 
 func show_reclamation_reserve(return_action: Callable) -> void:
 	return_to_survey = return_action
@@ -110,8 +121,29 @@ func _refresh() -> void:
 		food_label.add_theme_color_override("font_color", SHORTAGE_COLOR)
 	else:
 		food_label.remove_theme_color_override("font_color")
+	_refresh_reform_sale()
 	_refresh_trade()
 	_refresh_reserve(nightly)
+
+func _refresh_reform_sale() -> void:
+	reform_quote = Global.reform_sale_quote()
+	var had_focus := reform_sale_button.has_focus()
+	reform_sale.visible = not reform_quote.is_empty()
+	if reform_quote.is_empty():
+		if had_focus:
+			crop_choice.grab_focus()
+			GamepadInput.snap_pointer_to_focus.call_deferred()
+		return
+	var retained := PackedStringArray()
+	if reform_quote.rations > 0:
+		retained.append("今夜所缺口粮 %d 份" % reform_quote.rations)
+	if reform_quote.held > 0:
+		retained.append("时令与节庆用料 %d 份" % reform_quote.held)
+	reform_sale_note.text = "售 %s · 售后 %d / %d 铜钱" % [
+		ItemManager.describe_crops(reform_quote.used), reform_quote.balance, reform_quote.target]
+	if not retained.is_empty():
+		reform_sale_note.text += "\n保留 " + " · ".join(retained)
+	reform_sale_button.text = "出售 %d 份 · +%d 铜钱" % [reform_quote.amount, reform_quote.gain]
 
 func _refresh_trade() -> void:
 	var amount := int(quantity.value)
@@ -123,16 +155,18 @@ func _refresh_trade() -> void:
 	var copper_shortage := purchase - Global.money
 	var crop_shortage := amount - available
 	all_crops.disabled = available == 0
-	convert_button.text = "作物转粮 · %d %s → %d 粮食" % [amount, label, amount]
-	sell_button.text = "出售作物 · %d %s → %d 铜钱" % [amount, label, amount * Global.balance.market_crop_price]
-	buy_button.text = "购买粮食 · %d 铜钱 → %d 粮食" % [purchase, amount]
+	convert_button.text = "转粮 · +%d 份" % amount
+	sell_button.text = "出售 · +%d 铜钱" % (amount * Global.balance.market_crop_price)
+	buy_button.text = "买粮 %d 份 · −%d 铜钱" % [amount, purchase]
 	convert_button.disabled = not valid or crop_shortage > 0
 	sell_button.disabled = convert_button.disabled
 	buy_button.disabled = not valid or copper_shortage > 0
 	var quantity_hint := "" if valid else "请输入至少 1 份"
-	convert_button.tooltip_text = "还差 %d 份作物" % crop_shortage if crop_shortage > 0 else quantity_hint
-	sell_button.tooltip_text = convert_button.tooltip_text
-	buy_button.tooltip_text = "还差 %d 铜钱" % copper_shortage if copper_shortage > 0 else quantity_hint
+	var crop_hint := "还差 %d 份作物" % crop_shortage if crop_shortage > 0 else quantity_hint
+	convert_button.tooltip_text = "%d %s换 %d 份粮" % [amount, label, amount] if not convert_button.disabled else crop_hint
+	sell_button.tooltip_text = "出售 %d 份%s" % [amount, label] if not sell_button.disabled else crop_hint
+	buy_button.tooltip_text = "买入 %d 份粮" % amount if not buy_button.disabled else (
+		"还差 %d 铜钱" % copper_shortage if copper_shortage > 0 else quantity_hint)
 	var use := Global.market_crop_plan(amount, crop_id)
 	if not use.is_empty():
 		debit_plan.text = "会取用   " + ItemManager.describe_crops(use) + _order_stock_note(use)
@@ -214,6 +248,16 @@ func _sell() -> void:
 	var lots := ItemManager.describe_crops(Global.market_crop_plan(amount, id))
 	if Global.sell_crops(amount, id):
 		receipt.text = "售出 %s · 铜钱 +%d" % [lots, amount * Global.balance.market_crop_price]
+
+func _sell_reform_surplus() -> void:
+	var sale := Global.sell_crops_for_reform(reform_quote)
+	if sale.is_empty():
+		_refresh()
+		receipt.text = "库存或用粮已有变化，请核对新报价。"
+		return
+	receipt.text = "售出 %s · 现有 %d 铜钱" % [ItemManager.describe_crops(sale.used), sale.balance]
+	if sale.balance >= sale.target:
+		receipt.text += " · 铜钱已达标"
 
 func _convert() -> void:
 	var amount := int(quantity.value)

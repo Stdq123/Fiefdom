@@ -2672,6 +2672,34 @@ func sell_crops(amount: int, crop_id := "") -> bool:
 	var use := market_crop_plan(amount, crop_id)
 	return not use.is_empty() and _market_exchange(use, -amount * balance.market_crop_price, 0)
 
+func reform_sale_quote() -> Dictionary:
+	var target := balance.ending_reformed_wealth
+	var price := balance.market_crop_price
+	if (outcome != Outcome.RUNNING or tax_reform_choice != TaxReformChoice.REFORMED
+		or not ending_record.is_empty() or money >= target or price <= 0):
+		return {}
+
+	var tonight := _night_rations_supply_plan(current_day, night_rations)
+	var keep := season_order_crops_to_keep()
+	for id: String in tonight.reserved:
+		keep[id] = maxi(int(keep.get(id, 0)), int(tonight.reserved[id]))
+	var held := 0
+	for id: String in keep:
+		held += mini(crop_stock.count(id), int(keep[id]))
+	var surplus := player_inventory - held - int(tonight.missing)
+	var needed := ceili(float(target - money) / price)
+	var amount := mini(needed, surplus)
+	if amount <= 0:
+		return {}
+	return {"amount": amount, "used": crop_stock.plan(amount, "", keep), "gain": amount * price,
+		"balance": money + amount * price, "target": target, "rations": tonight.missing, "held": held}
+
+func sell_crops_for_reform(expected: Dictionary) -> Dictionary:
+	var quote := reform_sale_quote()
+	if quote.is_empty() or quote != expected or not _market_exchange(quote.used, -int(quote.gain), 0):
+		return {}
+	return quote
+
 func affordable_market_food() -> int:
 	return floori(float(money) / balance.market_food_price)
 

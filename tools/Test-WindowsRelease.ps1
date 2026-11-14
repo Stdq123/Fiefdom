@@ -223,7 +223,8 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'council-one-field' -Name 'council-one-field' -Replay 'council-one-field' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'council-petition' -Name 'council-petition' -Replay 'council-petition'
         Start-VerifiedGame -Directory $release -Profile 'council-silk' -Name 'council-silk' -Replay 'council-silk'
-        Start-VerifiedGame -Directory $release -Profile 'route-goals' -Name 'route-goals' -Replay 'route-goals'
+        Start-VerifiedGame -Directory $release -Profile 'route-goals' -Name 'route-goals' -Replay 'route-goals' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'reformed-market-sale' -Name 'reformed-market-sale' -Replay 'reformed-market-sale'
         Start-VerifiedGame -Directory $release -Profile 'ending-film' -Name 'ending-film' -Replay 'ending-film'
     }
     if ($Opening) {
@@ -385,6 +386,7 @@ try {
         if ($RouteGoals) {
             Start-VerifiedGame -Directory $release -Profile 'council-prep-compact' -Name 'council-prep-1024x768' -Replay 'council-prep' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'council-one-field-compact' -Name 'council-one-field-1024x768' -Replay 'council-one-field' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'route-goals-compact' -Name 'route-goals-1024x768' -Replay 'route-goals' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'ending-film-compact' -Name 'ending-film-1024x768' -Replay 'ending-film' -Resolution '1024x768'
         }
         if ($Rations) {
