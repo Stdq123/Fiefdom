@@ -12,6 +12,7 @@ var capture_dir := ""
 var failed := false
 var summer := false
 var waiting_shipment := false
+var freight_sounds: Array[String] = []
 
 func _expect(ok: bool, message: String) -> bool:
 	if not ok:
@@ -55,6 +56,44 @@ func _snapshot(name: String) -> void:
 	var image := tree.root.get_texture().get_image()
 	_expect(image.save_png(capture_dir.path_join(name + ".png")) == OK, "Save the frame " + name)
 	print("ORDER_FRAME ", name, " window=", tree.root.size, " image=", image.get_size())
+
+func _track_freight_sound(node: Node) -> void:
+	if not (node is AudioStreamPlayer or node is AudioStreamPlayer2D):
+		return
+	var stream: AudioStream = node.stream
+	if stream == null or not stream.resource_path.begins_with("res://assets/audio/freight/"):
+		return
+	var cue := stream.resource_path.get_file().get_basename()
+	freight_sounds.append(cue)
+	_expect(node.bus == &"SFX" and (cue == "receipt") == (node is AudioStreamPlayer),
+		"Use a regular receipt cue and position the wagon cues in the world, all on the SFX bus.")
+	if node is AudioStreamPlayer2D:
+		var wagon := node.get_parent().get_node_or_null("Freight") as SeasonFreight
+		_expect(wagon != null and (wagon.arrived if cue == "wagon-stop" else wagon.travelling),
+			"Play freight audio in the corresponding wagon pose.")
+	print("FREIGHT_SOUND ", cue, " day=", state.current_day, " clock=", snappedf(state.day_progress, 0.0001))
+
+func _record_freight() -> AudioEffectRecord:
+	if not waiting_shipment or not _has_audio() or capture_dir.is_empty():
+		return null
+	var record := AudioEffectRecord.new()
+	AudioServer.add_bus_effect(AudioServer.get_bus_index(&"SFX"), record)
+	record.set_recording_active(true)
+	return record
+
+func _save_freight_record(record: AudioEffectRecord, name: String) -> void:
+	if record == null:
+		return
+	record.set_recording_active(false)
+	var wave := record.get_recording()
+	var bus := AudioServer.get_bus_index(&"SFX")
+	AudioServer.remove_bus_effect(bus, AudioServer.get_bus_effect_count(bus) - 1)
+	if _expect(wave != null and wave.get_length() > 0.4, "Record the SFX bus for " + name):
+		_expect(wave.save_to_wav(capture_dir.path_join(name)) == OK, "Save the SFX recording for " + name)
+		print("FREIGHT_RECORD ", name, " seconds=", snappedf(wave.get_length(), 0.01))
+
+func _has_audio() -> bool:
+	return DisplayServer.get_name() != "headless"
 
 func _cross(actor: Player, waypoints: Array, action: StringName, path: String) -> bool:
 	for at: Vector2 in waypoints:
@@ -175,11 +214,17 @@ func _deliver() -> void:
 	var before_grain: int = state.food_storage
 	var before_money: int = state.money
 	var reward: int = state.season_order_rewards(state.season_order()).food
+	var record := _record_freight()
 	await _button(book.food_button)
 	_expect(freight.cargo.visible and "酉时发车" in book.status.text and state.food_storage == before_grain + reward
 		and state.money == before_money and state.player_inventory == 2 and state.king_storage == 1,
 		"The cart loads the delivery, advertises its departure and pays the chosen reward.")
 	await _snapshot("03-delivery-receipt")
+	if waiting_shipment and _has_audio():
+		_expect(freight_sounds == ["receipt"], "The completed trade plays one receipt cue.")
+	if record:
+		await tree.create_timer(0.3).timeout
+		_save_freight_record(record, "03-season-order-receipt")
 	if summer:
 		await _summer_handoff(book)
 		return
@@ -254,6 +299,7 @@ func _try_freight_bench() -> void:
 	var money: int = state.money
 	var stamina: int = state.current_stamina
 	var before: float = state.day_progress
+	var arrivals_before := freight_sounds.count("wagon-stop")
 	await _tap_pad(JOY_BUTTON_X)
 	dialog = ui.get_node_or_null("Control/DialoguePanel") as Control
 	if not _expect(dialog != null and dialog.name_label.text == "候货座", "Use the gamepad to reopen the bench."):
@@ -267,6 +313,7 @@ func _try_freight_bench() -> void:
 	await _tap_pad(JOY_BUTTON_B)
 	_expect(not wait_panel.visible and not player.resting and not player.seated and state.day_progress < arrival
 		and state.market_trip_target == state.FREIGHT_YARD, "Standing up leaves the shipment on its way and keeps directions.")
+	_expect(freight_sounds.count("wagon-stop") == arrivals_before, "Standing up before arrival leaves the parking cue silent.")
 	var stopped: float = state.day_progress
 	if not await _continue(state.ESTATE_SCENE):
 		return
@@ -283,19 +330,19 @@ func _try_freight_bench() -> void:
 	dialog = await _open_bench()
 	if dialog == null:
 		return
+	var first_sound := freight_sounds.size()
+	var record := _record_freight()
 	await _button(dialog.choices[0])
-	var wait_started := Engine.get_process_frames()
+	var wait_window := tree.create_timer(6.0)
 	await _snapshot("07-waiting-for-wagon")
-	var wait_seconds := 0.0
 	var saw_approach := false
 	var saw_walking := false
-	while wait_panel.visible and wait_seconds < 6.0:
+	while wait_panel.visible and wait_window.time_left > 0.0:
 		saw_approach = saw_approach or ("赶车过来" in wait_panel.status.text and wagon.travelling)
 		saw_walking = saw_walking or (wagon.travelling and wagon.driver.walking)
 		await tree.create_timer(0.05).timeout
-		wait_seconds += 0.05
 	await tree.physics_frame
-	var sat_seconds := float(Engine.get_process_frames() - wait_started) / 60.0
+	var sat_seconds := 6.0 - wait_window.time_left
 	_expect(not wait_panel.visible and not player.resting and wagon.arrived and saw_approach and saw_walking
 		and sat_seconds <= 5.0 and sat_seconds < resumed_remaining and state.day_progress - arrival < 0.004
 		and state.seed_garden_day() == 0 and state.day_watch_label() == "戌时",
@@ -303,12 +350,23 @@ func _try_freight_bench() -> void:
 	_expect(resources == Vector4i(state.current_day, state.king_storage, state.player_inventory, state.food_storage)
 		and state.money == money and state.current_stamina == stamina and state.pending_freight_receipt() == receipt,
 		"Waiting spends no stock, stamina, or money and does not settle an overnight.")
+	if _has_audio():
+		var approach := freight_sounds.slice(first_sound)
+		_expect("wheel-1" in approach and "wheel-2" in approach and approach.back() == "wagon-stop"
+			and approach.count("wagon-stop") == 1, "The ordinary approach rolls through both wheel sounds and parks once.")
+	if record:
+		await tree.create_timer(0.6).timeout
+		_save_freight_record(record, "07-wheels-and-arrival")
 	await _key(KEY_E)
 	dialog = ui.get_node_or_null("Control/DialoguePanel") as Control
 	if _expect(dialog != null and dialog.name_label.text == "申禾" and state.market_trip_target.is_empty(),
 			"Talk to the arriving driver from the usual approach and clear the route."):
 		await _snapshot("08-talk-to-the-driver")
 		await _key(KEY_ESCAPE)
+	if _has_audio() and await _continue(state.ESTATE_SCENE):
+		wagon = tree.current_scene.get_node("World/Freight") as SeasonFreight
+		_expect(wagon.arrived and freight_sounds.count("wagon-stop") == arrivals_before + 1,
+			"An already parked wagon is quiet after talking and after reloading.")
 	print("FREIGHT_WAIT_DONE day=", state.current_day, " remaining_before_sit=", snappedf(resumed_remaining, 0.01),
 		" sat_seconds=", snappedf(sat_seconds, 0.01),
 		" resumed_clock=", snappedf(stopped, 0.0001))
@@ -719,6 +777,7 @@ func _check_wait_boundaries() -> void:
 	ui.directions.follow_freight_yard()
 	await _set_watch(SeasonOrders.MORNING_DISPATCH + 0.01)
 	var before_raid: float = state.day_progress
+	var arrivals_before := freight_sounds.count("wagon-stop")
 	state.raid_day = state.current_day
 	events.raid_started.emit()
 	dialog = await _open_bench()
@@ -739,6 +798,7 @@ func _check_wait_boundaries() -> void:
 	events.raid_started.emit()
 	_expect(not ui.freight_wait.visible and not world.player.resting,
 		"A raid interrupts a wait and gives movement controls back immediately.")
+	_expect(freight_sounds.count("wagon-stop") == arrivals_before, "A raid interruption leaves the parking cue silent.")
 	state.raid_day = 0
 	events.raid_defeated.emit()
 	dialog = await _open_bench()
@@ -752,6 +812,8 @@ func _check_wait_boundaries() -> void:
 		and state.food_storage == 9 and state.king_storage == 1 and state.player_inventory == 0
 		and state.active_crops.get(crop, {}).get("age") == 1 and state.active_crops.get(private_crop, {}).get("age") == 1,
 		"Sitting for the morning wagon preserves the overnight results and the cargo from spring.")
+	if _has_audio():
+		_expect(freight_sounds.count("wagon-stop") == arrivals_before + 1, "The morning wagon parks once.")
 	await _key(KEY_E)
 	dialog = ui.get_node_or_null("Control/DialoguePanel") as Control
 	_expect(dialog != null and dialog.name_label.text == "申禾" and "托的菽和黍" in dialog.text_label.text,
@@ -767,6 +829,8 @@ func _check_wait_boundaries() -> void:
 	await _button(dialog.choices[0])
 	await tree.create_timer(4.95).timeout
 	_expect(wagon.arrived and wagon.shown_order == "summer", "The evening cart replaces the morning cart when it reaches the yard.")
+	if _has_audio():
+		_expect(freight_sounds.count("wagon-stop") == arrivals_before + 2, "The evening wagon has its own single parking cue.")
 	await _key(KEY_E)
 	_expect(state.market_trip_target.is_empty(), "Talking to the tracked cart clears the remaining directions.")
 	await _key(KEY_ESCAPE)
@@ -812,6 +876,8 @@ func run(game_tree: SceneTree) -> void:
 	state = tree.root.get_node("Global")
 	if capture_dir.is_empty():
 		capture_dir = OS.get_environment("FIEFDOM_ORDER_CAPTURES")
+	if waiting_shipment and _has_audio():
+		tree.node_added.connect(_track_freight_sound)
 	tree.root.notify_mouse_entered()
 	tree.change_scene_to_file(state.TITLE_SCENE)
 	await tree.scene_changed
@@ -819,6 +885,8 @@ func run(game_tree: SceneTree) -> void:
 	if waiting_shipment:
 		if not failed:
 			await _check_wait_boundaries()
+		if _has_audio():
+			tree.node_added.disconnect(_track_freight_sound)
 		if not failed:
 			print("SCENARIO_OK")
 		tree.quit(1 if failed else 0)

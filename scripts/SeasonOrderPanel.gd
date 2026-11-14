@@ -260,6 +260,6 @@ func _show_cargo(needs: Dictionary, delivered: bool) -> void:
 
 func _deliver(paid_in_food: bool) -> void:
 	if Global.deliver_season_order(start_day, paid_in_food):
-		AudioManager.play_ui_sfx(1.12)
+		AudioManager.play_sfx(preload("res://assets/audio/freight/receipt.wav"), -10.0)
 	else:
 		_refresh()

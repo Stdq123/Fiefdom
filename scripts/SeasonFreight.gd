@@ -6,7 +6,10 @@ enum RouteSection { MARKET, WEST_ROAD, ESTATE }
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const CART_ART := preload("res://assets/world/season-order-cart.svg")
 const DRIVER_ART := preload("res://assets/characters/freight-driver.svg")
-const ROAD_STEP := preload("res://assets/audio/plank-1.wav")
+const WHEEL_SOUNDS := [preload("res://assets/audio/freight/wheel-1.wav"), preload("res://assets/audio/freight/wheel-2.wav")]
+const ARRIVAL_SOUND := preload("res://assets/audio/freight/wagon-stop.wav")
+const WHEEL_SPACING := 46.0
+const HEARING_RANGE := 230.0
 const WEST_MARKET := preload("res://scripts/WestMarketLayout.gd")
 const WEST_ROAD := preload("res://scripts/WestRoadLayout.gd")
 
@@ -116,13 +119,14 @@ func _sync_position() -> void:
 		travelling = false
 		return
 	var has_cargo := not lot.is_empty() and delivery_day >= Global.current_day
+	var same_trip: bool = travelling and has_cargo and shown_order == lot.order.id
 	if has_cargo and shown_order != lot.order.id:
 		_load_cargo(lot.order)
 	var relayed := (shown_order == SeasonOrders.WATCH_RELIEF or shown_order == SeasonOrders.WINTER_WOVEN_GOODS
 		or shown_order in SeasonOrders.SEED_ORDERS)
 	cargo.visible = has_cargo and not (arrived and relayed)
 	var start: float = [0.0, west_road_start, estate_start][route_section]
-	_pose(roads[route_section], 0.0 if at_origin else distance - start, not parked)
+	_pose(roads[route_section], 0.0 if at_origin else distance - start, not parked, same_trip)
 
 func _set_parked(active: bool) -> void:
 	if parked != active:
@@ -147,7 +151,7 @@ func _load_cargo(order: Dictionary) -> void:
 		cargo.add_child(produce)
 		index += 1
 
-func _pose(road: Curve2D, offset: float, moving: bool) -> void:
+func _pose(road: Curve2D, offset: float, moving: bool, same_trip: bool) -> void:
 	var previous_offset := route_offset
 	var moved := maxf(0.0, offset - previous_offset) if travelling else 0.0
 	route_offset = offset
@@ -158,8 +162,6 @@ func _pose(road: Curve2D, offset: float, moving: bool) -> void:
 	var bob := 0.0
 	if moved > 0.04 and moving:
 		bob = driver.walk(heading.normalized() * moved)
-		if moved < 12.0 and floori(offset / 33.0) != floori(previous_offset / 33.0):
-			AudioManager.play_world_sfx(ROAD_STEP, self, -18.0, 110.0)
 	else:
 		driver.stand()
 		driver.face(Vector2.LEFT if route_section == RouteSection.MARKET else Vector2.DOWN)
@@ -171,6 +173,14 @@ func _pose(road: Curve2D, offset: float, moving: bool) -> void:
 	sign.position = driver.position + Vector2(-34, -35)
 	sign.visible = parked
 	sign.text = GamepadInput.interact_hint("申禾") if focused else "申禾"
+	if not same_trip or Global.is_indoors():
+		return
+	if arrived and moved < WHEEL_SPACING:
+		AudioManager.play_world_sfx(ARRIVAL_SOUND, self, -12.0, HEARING_RANGE)
+	elif moving and moved > 0.04 and moved < 12.0:
+		var wheel := floori(offset / WHEEL_SPACING)
+		if wheel > floori(previous_offset / WHEEL_SPACING):
+			AudioManager.play_world_sfx(WHEEL_SOUNDS[wheel % WHEEL_SOUNDS.size()], self, -14.0, HEARING_RANGE)
 
 func can_interact_from(foot: Vector2) -> bool:
 	return arrived and not Global.is_indoors() and global_position.distance_squared_to(foot) < 40.0 * 40.0

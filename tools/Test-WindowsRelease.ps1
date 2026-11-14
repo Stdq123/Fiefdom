@@ -81,7 +81,7 @@ function Start-VerifiedGame {
     $arguments = @('--quit-after', $frameLimit, '--log-file', ('"' + $log + '"'))
     $arguments += if ($Replay -eq 'soak') {
         '--max-fps', '60', '--audio-driver', 'Dummy'
-    } elseif ($Resolution -and $Replay -in 'ambience-travel', 'raid-feedback', 'west-market') {
+    } elseif ($Resolution -and $Replay -in 'ambience-travel', 'raid-feedback', 'west-market', 'freight-wait') {
         # Audio playback and recordings follow wall time.
         '--max-fps', '60'
     } else {
