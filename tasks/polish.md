@@ -21,7 +21,7 @@
 - **经营到结局**。按自己的节奏选一条路线，记下哪几天改变了经营方式、哪些操作重复得最累、哪次遇见人物或走过某处让你想再去。结算后退出，再从标题「继续游戏」读回，核对路线和结算日期。
 - **回报**。记下系统和显卡、键鼠或手柄、实际窗口尺寸、总游玩时间及停在的游戏日期。能复现的问题附上当时的截图或一段操作顺序。画面、节奏和手感直接写感受即可。
 
-本包包含封地、溪桥道、西市和竹涧的固定斜俯视地图。可在堂前看陶罐和谷袋，也可从东关沿木桥上望溪台，或到野果坳看采摘前后。按住 Shift 或手柄 LT 可一次处理一块井田内同类的农事。第一次纳贡后可从手记接上轮作并安排井田管事。封地内从「今夜安排」点「等门客收工」，可在过夜前查收成与剩下的田务。右上日期栏可为秋社留谷样、为冬至按菜留料。夏单到货后可走上南池西岸的钓台，冬至缺鱼可从历书或禾伯处指路过去。结局时，参与本局经营的一位留任门客会到场。解压版已回放两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本轮试玩包](../build/polish-oblique-scenery/release/windows/Fiefdom-1.0.0-Windows-x64.zip) · [本包校验](../build/polish-oblique-scenery/release/hashes.log)
+本包包含封地、溪桥道、西市和竹涧的固定斜俯视地图。可在堂前看陶罐和谷袋，也可从东关沿木桥上望溪台，或到野果坳看采摘前后。按住 Shift 或手柄 LT 可一次处理一块井田内同类的农事。第一次纳贡后可从手记接上轮作并安排井田管事。首茬收成选择留作物后，可按交货簿标出的私田补种、浇水和收获，货齐就能循路去西市。封地内从「今夜安排」点「等门客收工」，可在过夜前查收成与剩下的田务。右上日期栏可为秋社留谷样、为冬至按菜留料。夏单到货后可走上南池西岸的钓台，冬至缺鱼可从历书或禾伯处指路过去。结局时，参与本局经营的一位留任门客会到场。解压版已回放两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本轮试玩包](../build/polish-opening-errand/release/final/windows/Fiefdom-1.0.0-Windows-x64.zip) · [本包校验](../build/polish-opening-errand/release/final/hashes.log)
 
 ## 从新档到第一次收获
 
@@ -1229,3 +1229,10 @@
 - 封地、溪桥道和西市沿用竹涧的松树画法。阔叶树、花树与灌木的枝叶盖住背光面，露出的树根和投影接到地面。雨天影子变淡，落叶树冬季露出枝杈。陶罐的口沿与罐腹分开画，谷袋保留暗侧面和可辨的袋口。标题的清晨与薄暮重拍。 [同机位实机对比](../build/polish-oblique-scenery/release/oblique-map-and-props.png) · [透明图集裁切](../build/polish-oblique-scenery/art-check/slot-check.log) · [标题实机](../build/polish-oblique-scenery/release/capture/1920x1080/01-morning-title.png)
 - 从新档走过堂前陶罐的前后、竹涧木桥、望溪台和浅滩。陶罐在角色走到后方时仍保留不透明的口沿，野果入粮仓时果实在原处消失。谷雨和冬至往返溪桥道与西市，核对了树影、冬松和路口，西市指路、交易与续档通过。1024×768 窗口按原有 16:9 比例显示，背包的作物、路餐和野药可辨。 [默认 1920×1080](../build/polish-oblique-scenery/release/native/default-window.log) · [1024×768 西市雪景](../build/polish-oblique-scenery/release/capture/1024x768/05-market-snow.png) · [1024×768 背包](../build/polish-oblique-scenery/release/compact-backpack/06-packed-wild-herbs.png)
 - 110 项源码回归通过。Windows 解压包通过 31 项无窗口检查与发行脚本的 27 次隔离桌面运行，并连续运行 90.718 秒。传统和改革路线分别在第 56 天和第 59 天通关，两条结局可退出重启后读回，上一版第 3 天存档可续至第 4 天。两次干净构建的 ZIP 校验值一致。首次玩家的独立试玩与长线体验仍待验收。 [Windows 1.0 x64](../build/polish-oblique-scenery/release/windows/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-oblique-scenery/source-all-final.log) · [无窗口发行](../build/polish-oblique-scenery/release/headless.log) · [隔离桌面](../build/polish-oblique-scenery/release/capture.log) · [包校验](../build/polish-oblique-scenery/release/hashes.log)
+
+## 首茬收成接到第一张时令单
+
+- 第 3 天收下首贡与私田黍后，从「首茬收成」选择留作物，再点交货簿里的「标出空私田 · 换菽种」。标记依田格情况提示翻地、播种、浇水、最早收获日或收割。过夜和从标题续档后接着照料，货齐时跟踪条通向西市收货牌。仍可手动换种或取消指路。补播需赶得上交期，田格须满足用水与既有续播安排。 [第 3 天交货簿](../build/polish-opening-errand/release/final/native/opening-order/01-first-order-beans.png) · [隔夜后的田务](../build/polish-opening-errand/release/final/native/opening-order/04-dawn-beans.png)
+- 用默认 1920×1080 在隔离桌面从标题开新档，按提示在第 5 天于西市交货，领到 5 份口粮，首贡留在王室库房。上一版解压包生成的第 3 天存档也走完同一段。 [第 5 天收据](../build/polish-opening-errand/release/final/native/opening-order/07-spring-receipt.png) · [新档回放](../build/polish-opening-errand/release/final/native/opening-order/replay.log) · [旧档回放](../build/polish-opening-errand/release/final/native/opening-order-resume-old/replay.log)
+- 111 项源码回归通过。最终解压包通过 35 项无窗口检查和发行脚本的 27 次隔离桌面运行。1024×768 用手柄指针和 A 选中标记，随后换种和交货均通过。夏单在第 10 天用通渠后的稻交货。普通新档分别在第 56、59 天通关，单井田委派在第 64 天通关。两个结局可关闭游戏后续档。90.8 秒连续运行通过。 [源码回归](../build/polish-opening-errand/source-final-all.log) · [1024×768 回放](../build/polish-opening-errand/release/final/capture/opening-order-1024x768.log) · [发行检查](../build/polish-opening-errand/release/final/headless.log) · [隔离桌面](../build/polish-opening-errand/release/final/capture.log)
+- 本包重建后校验值一致。另用默认 1920×1080 核对堂前陶罐的前后遮挡、溪桥道往返西市、竹涧的桥板与台阶，以及入冬后同一条路线。 [包校验](../build/polish-opening-errand/release/final/reproducible-build.log) · [堂前陶罐](../build/polish-opening-errand/release/final/native/ravine-map/00d-behind-jar.png) · [竹涧望溪台](../build/polish-opening-errand/release/final/native/ravine-map/01b-lookout-steps.png) · [溪桥道](../build/polish-opening-errand/release/final/native/west-road-visual/replay.log)
