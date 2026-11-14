@@ -3750,7 +3750,7 @@ func _restore_night_rations(record: Variant, saved_day: int, roster: Array[Retai
 		restored.priority = roster[priority]
 	var festival_day := _read_save_int(record.get("festival_day"), 0)
 	var recipe: Variant = record.get("festival_recipe", "")
-	if can_set_festival_pantry(festival_day):
+	if _festival_pantry_open(festival_day, saved_day):
 		if is_autumn_exhibit_day(festival_day):
 			restored.festival_day = festival_day
 		elif recipe is String and recipe in WinterSupper.MENU and is_winter_supper_day(festival_day):

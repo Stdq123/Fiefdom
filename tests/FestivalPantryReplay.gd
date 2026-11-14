@@ -133,6 +133,30 @@ func _winter() -> void:
 		and not state.can_set_festival_pantry(22), "The fish-soup choice is applied overnight, and expires by the one-day feast.")
 	print("RATIONS_WINTER_PANTRY meal=", served.get("used"), " supper_wheat=", state.crop_stock.count("wheat"))
 
+func _resume_after_ending() -> void:
+	var path := "user://ending-pantry.json"
+	_save_fixture(path, 21, {"wheat": 3, "hemp": 1}, {})
+	var finished: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+	finished.outcome = state.Outcome.TRADITIONAL
+	finished.night_rations.festival_day = 22
+	finished.night_rations.festival_recipe = WinterSupper.FISH
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	file.store_string(JSON.stringify(finished))
+	file.close()
+	if not await _load(path):
+		return
+	if not _expect(state.outcome == state.Outcome.TRADITIONAL and state.night_rations.festival_day == 22,
+		"Loading the ending preserves the next day's valid reservation."):
+		return
+	var ending := tree.current_scene.get_node("CampaignHUD").summary as Control
+	await _click(ending.continue_button)
+	var restored: Dictionary = state.night_rations_plan()
+	_expect(state.outcome == state.Outcome.RUNNING and restored.festival_pantry.get("held") == {"wheat": 1}
+		and restored.current_reserved == {"hemp": 1, "wheat": 2} and restored.uncovered == 1,
+		"Continuing after victory keeps a separate third wheat for the feast alongside the winter order.")
+	print("RATIONS_PANTRY_CONTINUE day=", state.current_day, " held=", restored.festival_pantry.get("held"),
+		" order=", restored.current_reserved)
+
 func run(game_tree: SceneTree) -> void:
 	tree = game_tree
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated festival pantry profile."):
@@ -146,6 +170,8 @@ func run(game_tree: SceneTree) -> void:
 	await _autumn()
 	if not failed:
 		await _winter()
+	if not failed:
+		await _resume_after_ending()
 	tree.change_scene_to_file(state.TITLE_SCENE)
 	await tree.scene_changed
 	tree.root.get_node("AudioManager").bgm_player.stop()
