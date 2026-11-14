@@ -242,7 +242,9 @@ func _choose_what_to_harvest() -> void:
 		"Only the mature public plot is marked by the preparation action.")
 	await _save_route()
 	_expect(state.current_day == 49 and state.field_route_public_only and ui.directions.tracked_plot == PUBLIC
-		and state.private_harvest_total == 71, "Continue restores the public-only field route and current ledger.")
+		and state.private_harvest_total == 71 and state.deferred_field_sowing.has(PRIVATE_WHEAT)
+		and state.deferred_field_sowing.has(PRIVATE_MILLET) and state.planned_field_seed(PRIVATE_WHEAT).is_empty(),
+		"Continue restores the public route, ledger, and temporary hold on the two now empty plots.")
 	await _snapshot("04-public-route-reloaded")
 	await _click_plot(PUBLIC)
 	_expect(state.king_storage == 30 and state.private_harvest_total == 71 and not state.tax_council_waiting()
@@ -267,7 +269,8 @@ func _adjust_private_sowing() -> bool:
 	await _button(book.sowing_button)
 	var panel: Control = ui.panel_manager.management_panel_instance
 	if not _expect(panel.visible and not book.modal.visible and not tree.paused and panel.apply_private_plan.has_focus()
-		and panel.apply_private_plan.text == "取消私田 · 2 格" and state.field_seed_plans.size() == 3,
+		and panel.apply_private_plan.text == "暂缓私田 · 2 格" and state.field_seed_plans.size() == 3
+		and state.deferred_field_sowing.is_empty(),
 		"Open a focused preview for the affected field and leave the plans alone until confirmation."):
 		return false
 	await _snapshot("03b-private-sowing-preview")
@@ -281,18 +284,31 @@ func _adjust_private_sowing() -> bool:
 	await tree.process_frame
 	_expect(panel.visible and panel.sowing_rations.has_focus() and state.field_seed_plans.size() == 3,
 		"Closing the ration ledger returns focus to the sowing plan.")
-	panel.apply_private_plan.grab_focus()
-	await _key(KEY_ENTER)
+	if DisplayServer.get_name() != "headless" and tree.root.size.x < 1280:
+		var controller = load("res://tests/GamepadReplay.gd").new()
+		controller.tree = tree
+		controller.pad = tree.root.get_node("GamepadInput")
+		tree.root.notify_mouse_exited()
+		await controller._click(panel.apply_private_plan, true)
+		_expect(controller.failures == 0, "Use the controller to confirm a hold in the compact window.")
+	else:
+		panel.apply_private_plan.grab_focus()
+		await _key(KEY_ENTER)
 	await tree.process_frame
-	var changed: bool = state.field_seed_plans.size() == 1 and state.field_seed_plans.get(PUBLIC) == "millet"
-	_expect(changed and world.is_crop_ripe(PRIVATE_WHEAT) and world.is_crop_ripe(PRIVATE_MILLET),
-		"The public plan and both standing private crops remain after removing the next private sowing.")
+	var changed: bool = state.field_seed_plans.size() == 3 and state.field_seed_plans.get(PUBLIC) == "millet" \
+		and state.field_seed_plans.get(PRIVATE_WHEAT) == "seasonal" and state.field_seed_plans.get(PRIVATE_MILLET) == "beans"
+	_expect(changed and world.is_crop_ripe(PRIVATE_WHEAT) and world.is_crop_ripe(PRIVATE_MILLET)
+		and state.deferred_field_sowing.size() == 2 and not state.deferred_field_sowing.has(PUBLIC),
+		"Defer both private plans without clearing them, changing the public plan, or removing standing crops.")
+	await _snapshot("03d-private-sowing-held")
 	await _button(panel.close_button)
 	await _open_book()
-	_expect(not book.sowing_button.visible and "还差 1 份纳贡" in book.contribution_status.text,
-		"Only the next sowing changed, so the warning clears while the current ledger still needs its tribute.")
+	_expect(not book.sowing_button.visible and "2 格已暂缓" in book.sowing_note.text
+		and "还差 1 份纳贡" in book.contribution_status.text,
+		"The ledger records both holds while the public contribution is still short.")
 	await _key(KEY_ESCAPE)
-	print("COUNCIL_PREP_SOWING public=", state.field_seed_plans.get(PUBLIC), " private_plans=", state.field_seed_plans.size() - 1)
+	print("COUNCIL_PREP_SOWING public=", state.field_seed_plans.get(PUBLIC), " private_plans=", state.field_seed_plans.size() - 1,
+		" deferred=", state.deferred_field_sowing.size())
 	return not failed
 
 func _meet_and_choose() -> void:
@@ -317,11 +333,15 @@ func _meet_and_choose() -> void:
 	var decision := await Campaign.meet_tax_envoy(tree)
 	if not _expect(decision != null and tree.paused, "Walk to the envoy and open the real council."):
 		return
+	_expect("2 格私田会恢复续播" in decision.text_label.text, "The envoy explains how the deferred plans will resume.")
+	await _snapshot("06a-resume-preview")
 	await _button(decision.option_buttons[state.TaxReformChoice.TRADITIONAL])
 	await _button(decision.confirm_button)
 	await _continue()
 	_expect(state.tax_reform_choice == state.TaxReformChoice.TRADITIONAL and state.tax_reform_day == 50
 		and state.king_storage == 31 and state.private_harvest_total == 71 and world.is_crop_ripe(LEFTOVER_WHEAT)
+		and state.deferred_field_sowing.is_empty() and state.field_seed_plans.get(PRIVATE_WHEAT) == "seasonal"
+		and state.field_seed_plans.get(PRIVATE_MILLET) == "beans"
 		and ui.hud.route_progress.visible and not ui.hud.council_prep_button.visible,
 		"Continue from the council save and proceed to the ending goals.")
 	await _button(ui.hud.route_progress)

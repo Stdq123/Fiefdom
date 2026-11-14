@@ -227,7 +227,7 @@ func _show_estate_management(field_id := -1) -> void:
 
 func _show_sowing_plans(field_id: int) -> void:
 	_show_estate_management(field_id)
-	panel_manager.management_panel_instance.focus_sowing_plans()
+	panel_manager.management_panel_instance.focus_sowing_plans(true)
 
 func _connect_signals() -> void:
 	GameEvents.day_advanced.connect(update_ui.unbind(1))

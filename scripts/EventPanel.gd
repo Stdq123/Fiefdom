@@ -99,6 +99,7 @@ func _select(choice: Global.TaxReformChoice) -> void:
 		option_buttons[id].set_pressed_no_signal(id == choice)
 		cards[id].add_theme_stylebox_override("panel", selected_style if id == choice else card_style)
 	confirm_button.disabled = choice == Global.TaxReformChoice.NONE
+	confirm_button.text = "延期研究" if choice == Global.TaxReformChoice.DELAYED else "定案"
 	selection_label.text = ("选定方案后可定案。" if confirm_button.disabled else
 		"当前选择 · " + option_buttons[choice].text)
 

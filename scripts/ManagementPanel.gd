@@ -5,6 +5,8 @@ const SEASON_ORDER_PANEL := preload("res://scenes/SeasonOrderPanel.tscn")
 const NEIGHBOR_JOURNAL := preload("res://scenes/NeighborJournal.tscn")
 const FISH_LEDGER := preload("res://scripts/FishLedger.gd")
 const MAP_GRID_ITEM := preload("res://scripts/MapGridItem.gd")
+const DEFER_SOWING := "defer_sowing"
+const RESUME_SOWING := "resume_sowing"
 
 @onready var sections: HBoxContainer = %Sections
 @onready var section_hint: Label = %SectionHint
@@ -39,6 +41,8 @@ var neighbor_journal: Control
 var fish_ledger: Control
 var silk_panel: VBoxContainer
 var steward_field_id := -1
+var defer_sowing_index := -1
+var resume_sowing_index := -1
 
 var retainer_item_scene = preload("res://scenes/RetainerItem.tscn")
 var silk_panel_script = preload("res://scripts/SilkPanel.gd")
@@ -63,6 +67,12 @@ func _ready() -> void:
 		seed_plan_picker.set_item_metadata(seed_plan_picker.item_count - 1, seed_id)
 	seed_plan_picker.add_item("按时令续播")
 	seed_plan_picker.set_item_metadata(seed_plan_picker.item_count - 1, FieldSeedPlan.SEASONAL)
+	defer_sowing_index = seed_plan_picker.item_count
+	seed_plan_picker.add_item("暂缓到议税定案")
+	seed_plan_picker.set_item_metadata(defer_sowing_index, DEFER_SOWING)
+	resume_sowing_index = seed_plan_picker.item_count
+	seed_plan_picker.add_item("现在恢复续播")
+	seed_plan_picker.set_item_metadata(resume_sowing_index, RESUME_SOWING)
 	seed_plan_picker.add_item("取消续播")
 	seed_plan_picker.set_item_metadata(seed_plan_picker.item_count - 1, "")
 	for picker in [seed_plan_picker, steward_picker]:
@@ -214,9 +224,9 @@ func show_estate(field_id := -1) -> void:
 	focus.grab_focus()
 	GamepadInput.snap_pointer_to_focus.call_deferred()
 
-func focus_sowing_plans() -> void:
+func focus_sowing_plans(for_council := false) -> void:
 	var cancel_index := seed_plan_picker.item_count - 1
-	seed_plan_picker.select(cancel_index)
+	seed_plan_picker.select(defer_sowing_index if for_council else cancel_index)
 	_refresh_seed_plan_preview()
 	var focus: Control = seed_plan_picker if apply_private_plan.disabled else apply_private_plan
 	focus.grab_focus()
@@ -578,7 +588,7 @@ func _refresh_field_tiles() -> void:
 func _apply_seed_plan(item: MAP_GRID_ITEM) -> void:
 	if seed_plan_picker.selected == 0:
 		return
-	Global.set_field_seed_plan(item.grid_pos, _selected_seed_plan())
+	_apply_sowing_choice(item.grid_pos, _selected_seed_plan())
 	item.refresh_plot()
 	_refresh_stewards()
 	_refresh_seed_plan_preview()
@@ -597,18 +607,39 @@ func _refresh_seed_choices() -> void:
 			label += " · 需渠水"
 		seed_plan_picker.set_item_text(index, label)
 
+func _apply_sowing_choice(cell: Vector2i, plan: String) -> void:
+	match plan:
+		DEFER_SOWING: Global.set_field_sowing_deferred(cell, true)
+		RESUME_SOWING: Global.set_field_sowing_deferred(cell, false)
+		_: Global.set_field_seed_plan(cell, plan)
+
 func _private_plan_targets(plan: String) -> Array[Vector2i]:
 	var targets: Array[Vector2i] = []
 	for item: MAP_GRID_ITEM in map_grid_container.get_children():
 		var cell := item.grid_pos
-		if not Global.is_public_plot(cell) and Global.can_plan_field_seed(cell) and Global.field_seed_plans.get(cell, "") != plan:
-			targets.append(cell)
+		if Global.is_public_plot(cell) or not Global.can_plan_field_seed(cell):
+			continue
+		var deferred := Global.deferred_field_sowing.has(cell)
+		match plan:
+			DEFER_SOWING:
+				if not deferred and Global.can_defer_field_sowing(cell):
+					targets.append(cell)
+			RESUME_SOWING:
+				if deferred:
+					targets.append(cell)
+			_:
+				if Global.field_seed_plans.get(cell, "") != plan:
+					targets.append(cell)
 	return targets
 
 func _refresh_seed_plan_preview() -> void:
+	seed_plan_picker.set_item_disabled(defer_sowing_index, not Global.field_sowing_can_defer())
+	seed_plan_picker.set_item_disabled(resume_sowing_index, Global.deferred_field_sowing.is_empty())
+	if seed_plan_picker.is_item_disabled(seed_plan_picker.selected):
+		seed_plan_picker.select(0)
 	var seed_id: String = "" if seed_plan_picker.selected == 0 else seed_plan_picker.get_selected_metadata()
 	var crop := ItemManager.get_crop(seed_id)
-	sowing_rations.visible = seed_plan_picker.selected > 0 and seed_id.is_empty()
+	sowing_rations.visible = seed_plan_picker.selected > 0 and seed_id in ["", DEFER_SOWING]
 	rotate_seed.visible = Global.field_rotation.signed_day > 0
 	rotate_seed.disabled = not rotate_seed.visible or crop == null or not FieldSeedPlan.supports_rotation(crop)
 	if rotate_seed.disabled:
@@ -622,6 +653,14 @@ func _refresh_seed_plan_preview() -> void:
 	var plan := _selected_seed_plan()
 	var targets := _private_plan_targets(plan)
 	apply_private_plan.disabled = targets.is_empty()
+	if seed_id == DEFER_SOWING:
+		apply_private_plan.text = "暂缓私田 · %d 格" % targets.size()
+		seed_plan_note.text = "可点单格。照料、收获和手播照常。门客口粮照旧，定案后恢复续播。"
+		return
+	if seed_id == RESUME_SOWING:
+		apply_private_plan.text = "恢复私田 · %d 格" % targets.size()
+		seed_plan_note.text = "可点单格。空畦可照原安排补播，在田作物收完再接续。"
+		return
 	if seed_id.is_empty():
 		apply_private_plan.text = "取消私田 · %d 格" % targets.size()
 		seed_plan_note.text = "清除后续的播种安排，田里的作物继续生长。门客仍按原定份额用粮。"
@@ -679,9 +718,13 @@ func _apply_private_seed_plan() -> void:
 	var plan := _selected_seed_plan()
 	var targets := _private_plan_targets(plan)
 	for cell in targets:
-		Global.set_field_seed_plan(cell, plan)
+		_apply_sowing_choice(cell, plan)
 	_refresh_field_tiles()
-	if FieldSeedPlan.is_rotation(plan):
+	if plan == DEFER_SOWING:
+		seed_plan_note.text = "已暂缓 %d 格私田。现有作物和今夜口粮照常。" % targets.size()
+	elif plan == RESUME_SOWING:
+		seed_plan_note.text = "已恢复 %d 格私田原来的续播。" % targets.size()
+	elif FieldSeedPlan.is_rotation(plan):
 		seed_plan_note.text = "已安排 %d 格私田轮作" % targets.size()
 	elif plan == FieldSeedPlan.SEASONAL:
 		seed_plan_note.text = "已安排 %d 格私田按时令续播" % targets.size()

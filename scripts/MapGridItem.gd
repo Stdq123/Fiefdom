@@ -31,17 +31,21 @@ func refresh_plot() -> void:
 	icon = ItemManager.crop_picture(display_crop).texture if display_crop else null
 	if next_seed:
 		var waiting := next_seed.is_water_crop and not Global.irrigation.supplies(grid_pos)
+		var deferred := Global.deferred_field_sowing.has(grid_pos)
 		if FieldSeedPlan.is_rotation(plan):
 			var main_crop := ItemManager.get_crop(FieldSeedPlan.crop_id(plan))
-			var next_label := "待渠水" if waiting else "下茬%s" % next_seed.crop_name
+			var next_label := "暂缓" if deferred else ("待渠水" if waiting else "下茬%s" % next_seed.crop_name)
 			text += "\n菽 ↔ %s · %s" % [main_crop.crop_name, next_label]
 		elif plan == FieldSeedPlan.SEASONAL:
-			text += "\n时令续播 · %s" % next_seed.crop_name
+			text += "\n时令续播 · %s" % ("暂缓" if deferred else next_seed.crop_name)
 		else:
-			text += "\n续播 %s%s" % [next_seed.crop_name, " · 待渠水" if waiting else ""]
+			var status := " · 暂缓" if deferred else (" · 待渠水" if waiting else "")
+			text += "\n续播 %s%s" % [next_seed.crop_name, status]
 		tooltip_text = "接通水渠后才会补播稻种" if waiting else "照料门客或管事会在空畦上补播"
 		if plan == FieldSeedPlan.SEASONAL:
 			tooltip_text = "按补播当天的时令和供水选种。当前作物照常生长。"
+		if deferred:
+			tooltip_text = "定下田制后按原安排续播，也可在这里提前恢复。"
 
 func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 	return data is RetainerData

@@ -150,6 +150,7 @@ var field_route_status := -1
 var field_route_public_only := false
 var rotation_route_cell: Variant = null
 var field_seed_plans: Dictionary[Vector2i, String] = {}
+var deferred_field_sowing: Dictionary[Vector2i, bool] = {}
 var fertile_cells: Dictionary[Vector2i, bool] = {}
 var irrigation: Irrigation
 var first_channel_growth_day := 0
@@ -334,6 +335,7 @@ func _reset_campaign() -> void:
 	field_route_public_only = false
 	rotation_route_cell = null
 	field_seed_plans.clear()
+	deferred_field_sowing.clear()
 	fertile_cells.clear()
 	irrigation = Irrigation.new()
 	first_channel_growth_day = 0
@@ -934,9 +936,26 @@ func set_field_seed_plan(cell: Vector2i, plan: String) -> void:
 	if not can_plan_field_seed(cell):
 		return
 	if plan.is_empty():
-		field_seed_plans.erase(cell)
+		_clear_seed_plan(cell)
 	elif FieldSeedPlan.is_valid(plan) and (not FieldSeedPlan.is_rotation(plan) or field_rotation.signed_day > 0):
 		field_seed_plans[cell] = plan
+
+func _clear_seed_plan(cell: Vector2i) -> void:
+	field_seed_plans.erase(cell)
+	deferred_field_sowing.erase(cell)
+
+func can_defer_field_sowing(cell: Vector2i) -> bool:
+	return (field_sowing_can_defer() and not is_public_plot(cell)
+		and field_seed_plans.has(cell) and can_plan_field_seed(cell))
+
+func field_sowing_can_defer() -> bool:
+	return outcome == Outcome.RUNNING and tax_reform_choice in [TaxReformChoice.NONE, TaxReformChoice.DELAYED]
+
+func set_field_sowing_deferred(cell: Vector2i, deferred: bool) -> void:
+	if not deferred:
+		deferred_field_sowing.erase(cell)
+	elif can_defer_field_sowing(cell):
+		deferred_field_sowing[cell] = true
 
 func next_seed_for_plan(cell: Vector2i, plan: String) -> String:
 	if plan == FieldSeedPlan.SEASONAL:
@@ -949,7 +968,7 @@ func next_seed_for_plan(cell: Vector2i, plan: String) -> String:
 	return FieldSeedPlan.crop_id(plan) if prepared else FieldSeedPlan.BEANS
 
 func planned_field_seed(cell: Vector2i) -> String:
-	if active_crops.has(cell):
+	if active_crops.has(cell) or deferred_field_sowing.has(cell):
 		return ""
 	var seed_id := next_seed_for_plan(cell, field_seed_plans.get(cell, ""))
 	if seed_id.is_empty():
@@ -966,7 +985,7 @@ func sow_field_crop(cell: Vector2i, seed_id: String) -> bool:
 	active_crops[cell] = {"id": seed_id, "data": seed, "age": 0,
 		"growth_nights": sowing_nights(seed), "watered": false, "requires_channel": seed.is_water_crop}
 	if seed.is_perennial:
-		field_seed_plans.erase(cell)
+		_clear_seed_plan(cell)
 	GameEvents.farm_state_changed.emit()
 	return true
 
@@ -2432,7 +2451,8 @@ func _order_crop_work(crop_id: String, missing: int, deadline: int) -> Dictionar
 func _order_sowing_priority(cell: Vector2i, crop_id: String, needs_canal: bool) -> int:
 	var supplied := irrigation.supplies(cell)
 	var plan: String = field_seed_plans.get(cell, "")
-	if (needs_canal and not supplied) or (not plan.is_empty() and next_seed_for_plan(cell, plan) != crop_id):
+	var follows_plan := plan.is_empty() or deferred_field_sowing.has(cell) or next_seed_for_plan(cell, plan) == crop_id
+	if (needs_canal and not supplied) or not follows_plan:
 		return -1
 	return 2 * int(supplied) + int(tilled_cells.has(cell))
 
@@ -3209,6 +3229,9 @@ func _save_snapshot(origin: String) -> Error:
 	var saved_seed_plans := {}
 	for cell in field_seed_plans:
 		saved_seed_plans[_cell_key(cell)] = field_seed_plans[cell]
+	var saved_deferred_sowing: Array[String] = []
+	for cell in deferred_field_sowing:
+		saved_deferred_sowing.append(_cell_key(cell))
 
 	var saved_fertility := []
 	for cell in fertile_cells:
@@ -3316,6 +3339,7 @@ func _save_snapshot(origin: String) -> Error:
 		"active_crops": saved_crops,
 		"tilled_cells": saved_soil,
 		"field_seed_plans": saved_seed_plans,
+		"deferred_field_sowing": saved_deferred_sowing,
 		"fertile_cells": saved_fertility,
 		"irrigation_channels": saved_channels,
 		"irrigation_field_gates": saved_field_gates,
@@ -3888,6 +3912,7 @@ func load_game(path := "") -> Error:
 	hall_shelf_id = saved_shelf if _valid_hall_decor(saved_shelf, HallDecor.Slot.SHELF) else HallDecor.DEFAULT_SHELF
 	field_rotation = _restore_field_rotation(data.get("field_rotation"), saved_day)
 	field_seed_plans.clear()
+	deferred_field_sowing.clear()
 	var seed_plans: Variant = data.get("field_seed_plans")
 	if seed_plans is Dictionary:
 		for key in seed_plans:
@@ -3895,6 +3920,12 @@ func load_game(path := "") -> Error:
 			var plan: Variant = seed_plans[key]
 			if cell is Vector2i and plan is String:
 				set_field_seed_plan(cell, plan)
+	var deferred_plots: Variant = data.get("deferred_field_sowing")
+	if deferred_plots is Array:
+		for key in deferred_plots:
+			var cell = _read_save_cell(key)
+			if cell is Vector2i:
+				set_field_sowing_deferred(cell, true)
 	ending_record = _saved_ending_record(data)
 	if ending_record.is_empty() and outcome in [Outcome.TRADITIONAL, Outcome.REFORMED]:
 		ending_record = _capture_ending(outcome)

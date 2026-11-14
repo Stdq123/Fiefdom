@@ -107,6 +107,8 @@ func _event_data(world: Node, final_choice: bool) -> Dictionary:
 			greeting = "一年研究期满。请卿定下采邑今后的田赋。"
 	elif Global.current_day < Global.tax_council_start_day():
 		greeting = "西市呈上了卿的交货回执。君上准卿提前议定田赋，请先看这份账。"
+	if not Global.deferred_field_sowing.is_empty():
+		greeting += "\n定下田制后，暂缓的 %d 格私田会恢复续播。" % Global.deferred_field_sowing.size()
 	return {
 		"title": "国君密诏 · 初税亩",
 		"speaker": "国君使者 · 召简",
@@ -181,6 +183,7 @@ func _on_tax_reform_choice(choice: Global.TaxReformChoice) -> void:
 	Global.tax_reform_year = Global.get_current_year()
 	Global.tax_reform_day = Global.current_day
 	if choice != Global.TaxReformChoice.DELAYED:
+		Global.deferred_field_sowing.clear()
 		Global.set_route_baseline()
 	match choice:
 		Global.TaxReformChoice.REFORMED:

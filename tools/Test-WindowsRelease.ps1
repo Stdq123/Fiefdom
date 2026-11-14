@@ -46,7 +46,8 @@ param(
     [switch]$RavineLayout,
     [switch]$FishMarketOrders,
     [switch]$MarketWayfinding,
-    [switch]$MarketDyeYard
+    [switch]$MarketDyeYard,
+    [switch]$SowingHold
 )
 
 $ErrorActionPreference = 'Stop'
@@ -153,6 +154,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RotationGuideReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/OpeningOrderReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/MarketDyeYardReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/SowingHoldReplay.gd') -Destination $testDirectory
     foreach ($file in 'MarketOrderReplay.gd', 'AutumnExhibitReplay.gd', 'SheepfoldReplay.gd', 'RavineMapReplay.gd', 'CreekTrapReplay.gd', 'FieldNightReplay.gd', 'FieldWorkWaitReplay.gd', 'CouncilSilkReplay.gd') {
         Copy-Item -LiteralPath (Join-Path $repo "tests/$file") -Destination $testDirectory
     }
@@ -229,6 +231,10 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'route-goals' -Name 'route-goals' -Replay 'route-goals' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'reformed-market-sale' -Name 'reformed-market-sale' -Replay 'reformed-market-sale'
         Start-VerifiedGame -Directory $release -Profile 'ending-film' -Name 'ending-film' -Replay 'ending-film'
+    }
+    if ($SowingHold) {
+        Start-VerifiedGame -Directory $release -Profile 'sowing-hold' -Name 'sowing-hold' -Replay 'sowing-hold' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'reformed-sowing-hold' -Name 'reformed-sowing-hold' -Replay 'reformed-sowing-hold'
     }
     if ($Opening) {
         Start-VerifiedGame -Directory $release -Profile 'opening' -Name 'opening' -Replay 'estate-directions' -Resolution $fullResolution
@@ -399,6 +405,9 @@ try {
         }
         if ($PavilionEvening) {
             Start-VerifiedGame -Directory $release -Profile 'pavilion-stories-compact' -Name 'pavilion-stories-1024x768' -Replay 'pavilion-stories' -Resolution '1024x768'
+        }
+        if ($SowingHold) {
+            Start-VerifiedGame -Directory $release -Profile 'sowing-hold-compact' -Name 'sowing-hold-1024x768' -Replay 'sowing-hold' -Resolution '1024x768'
         }
         if ($RouteGoals) {
             Start-VerifiedGame -Directory $release -Profile 'council-prep-compact' -Name 'council-prep-1024x768' -Replay 'council-prep' -Resolution '1024x768'

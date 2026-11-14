@@ -53,6 +53,10 @@ var second_field_actions := 0
 var first_field_actions_at_handoff := 0
 var rotation_steward_captures := ""
 var paused_private_sowing := false
+var compare_private_sowing := false
+var use_reversible_sowing := false
+var saved_private_plans: Dictionary = {}
+var sowing_resume_clicks := 0
 var ration_silk_sales := 0
 var ration_forage_trips := 0
 
@@ -821,7 +825,13 @@ func _wait_for_steward() -> void:
 func _stop_rotation_cash_plots() -> void:
 	var panel := _management(0)
 	panel.show_estate(0)
-	panel.focus_sowing_plans()
+	if compare_private_sowing:
+		saved_private_plans = state.field_seed_plans.duplicate()
+		saved_private_plans.erase(FIRST)
+	if use_reversible_sowing:
+		panel.focus_sowing_plans(true)
+	else:
+		panel.focus_sowing_plans()
 	await tree.process_frame
 	if not _expect(not panel.apply_private_plan.disabled, "Plan to stop private sowing while the public rotation continues."):
 		return
@@ -829,16 +839,38 @@ func _stop_rotation_cash_plots() -> void:
 	await tree.process_frame
 	await _click(panel.close_button.get_global_rect().get_center())
 	paused_private_sowing = true
-	_expect(state.field_seed_plans.get(FIRST) == PUBLIC_ROTATION and state.field_seed_plans.size() == 1,
-		"Pausing clears private sowing and leaves the public rotation scheduled.")
+	if use_reversible_sowing:
+		_expect(state.field_seed_plans.size() == saved_private_plans.size() + 1
+			and state.deferred_field_sowing.size() == saved_private_plans.size() and not state.deferred_field_sowing.has(FIRST),
+			"The private plans stay on record while the public rotation keeps working.")
+	else:
+		_expect(state.field_seed_plans.size() == 1, "The original Cancel action clears all private plans.")
+	_expect(state.field_seed_plans.get(FIRST) == PUBLIC_ROTATION, "The public rotation is still scheduled.")
 	print("CAMPAIGN_FIRST_STEWARD_SOWING day=", state.current_day, " gap=", state.tax_council_public_gap())
 
 func _resume_rotation_cash_plots() -> void:
-	var panel := _management(0)
-	panel.show_estate(0)
-	for cell in ROTATION_CASH_PLOTS:
-		await _show_first_field_plan(panel, cell, "hemp")
-	await _click(panel.close_button.get_global_rect().get_center())
+	if use_reversible_sowing:
+		_expect(state.deferred_field_sowing.is_empty(), "The council decision removes the holds.")
+	else:
+		var panel := _management(0)
+		panel.show_estate(0)
+		await tree.process_frame
+		if compare_private_sowing:
+			var seed_rules = load("res://scripts/FieldSeedPlan.gd")
+			for cell: Vector2i in saved_private_plans:
+				var plan: String = saved_private_plans[cell]
+				await _show_first_field_plan(panel, cell, seed_rules.crop_id(plan), seed_rules.is_rotation(plan))
+				sowing_resume_clicks += 1
+		else:
+			for cell in ROTATION_CASH_PLOTS:
+				await _show_first_field_plan(panel, cell, "hemp")
+		await _click(panel.close_button.get_global_rect().get_center())
+	if compare_private_sowing:
+		for cell: Vector2i in saved_private_plans:
+			var restored: String = state.field_seed_plans.get(cell, "")
+			_expect(restored == saved_private_plans[cell], "Restore %s at %s, got %s." % [saved_private_plans[cell], cell, restored])
+		print("CAMPAIGN_RESUME plots=", saved_private_plans.size(), " manual_plot_clicks=", sowing_resume_clicks,
+			" decision_day=", state.tax_reform_day)
 
 func _pause_private_sowing() -> void:
 	var gap: int = state.tax_council_public_gap()
@@ -851,6 +883,7 @@ func _pause_private_sowing() -> void:
 		return
 	await _click(ledger.sowing_button.get_global_rect().get_center())
 	var panel: Control = ui.panel_manager.management_panel_instance
+	panel.focus_sowing_plans()
 	if not _expect(panel.visible and panel.well_field_selector.get_selected_id() == 1 and panel.apply_private_plan.has_focus()
 		and panel.apply_private_plan.text.begins_with("取消私田"), "The ledger opens the two private plots at the cancel preview."):
 		return

@@ -53,8 +53,19 @@ func _run() -> void:
 			var replay = load("res://tests/CampaignReplay.gd").new()
 			replay.use_bedtime_work = true
 			await replay.run(tree, "reformed", true, capture_directory, true, false, false, true)
+		"reformed-sowing-hold", "reformed-sowing-rebuild":
+			var replay = load("res://tests/CampaignReplay.gd").new()
+			replay.use_bedtime_work = true
+			replay.compare_private_sowing = true
+			replay.use_reversible_sowing = arguments[0] == "reformed-sowing-hold"
+			await replay.run(tree, "reformed", true, capture_directory, true, false, false, true)
 		"field-bedtime":
 			await load("res://tests/FieldWorkWaitReplay.gd").new().run_bedtime(tree, capture_directory)
+		"sowing-hold", "sowing-previous-write", "sowing-previous-resume":
+			var replay = load("res://tests/SowingHoldReplay.gd").new()
+			replay.capture_dir = capture_directory
+			replay.previous_mode = arguments[0].trim_prefix("sowing-previous-") if arguments[0] != "sowing-hold" else ""
+			await replay.run(tree)
 		"ending-film":
 			var replay = load("res://tests/EndingFilmReplay.gd").new()
 			await replay.run(tree, capture_directory)

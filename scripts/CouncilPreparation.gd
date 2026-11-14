@@ -160,16 +160,21 @@ func _refresh_sowing_plans(gap: int) -> void:
 			for y in range(-1, 2):
 				for x in range(-1, 2):
 					var cell := center + Vector2i(x, y)
-					if cell != center and Global.field_seed_plans.has(cell):
+					if cell != center and Global.field_seed_plans.has(cell) and not Global.deferred_field_sowing.has(cell):
 						count += 1
 			private_plans += count
 			if count > most_in_one_field:
 				most_in_one_field = count
 				sowing_field_id = field.field_id
-	sowing_note.visible = private_plans > 0
-	sowing_button.visible = sowing_note.visible
-	if sowing_note.visible:
-		sowing_note.text = "%d 格私田仍在续播。可停播下一茬，腾出几夜补公田纳贡。" % private_plans
+	var deferred := Global.deferred_field_sowing.size()
+	sowing_note.visible = private_plans > 0 or deferred > 0
+	sowing_button.visible = private_plans > 0
+	var notes := PackedStringArray()
+	if private_plans > 0:
+		notes.append("%d 格私田仍在续播。可暂缓下一茬，保留原定种法。" % private_plans)
+	if deferred > 0:
+		notes.append("%d 格已暂缓，定案后接续。" % deferred)
+	sowing_note.text = " ".join(notes)
 
 func _refresh_petition() -> void:
 	var delivered := Global.tax_council_petition_order_count()
