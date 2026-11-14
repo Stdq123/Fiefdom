@@ -21,7 +21,7 @@
 - **经营到结局**。按自己的节奏选一条路线，记下哪几天改变了经营方式、哪些操作重复得最累、哪次遇见人物或走过某处让你想再去。结算后退出，再从标题「继续游戏」读回，核对路线和结算日期。
 - **回报**。记下系统和显卡、键鼠或手柄、实际窗口尺寸、总游玩时间及停在的游戏日期。能复现的问题附上当时的截图或一段操作顺序。画面、节奏和手感直接写感受即可。
 
-本包包含封地、溪桥道、西市和竹涧的斜俯视更新。柳湾和砾滩有低岩台，浅滩可沿踏石过溪。采完野果或办完市集事务后可点「回井田」，沿金线过关回到第一块井田的田口。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本轮试玩包](../build/polish-ravine-shelves/release/Fiefdom-1.0.0-Windows-x64.zip) · [本包校验](../build/polish-ravine-shelves/release/headless-final/manifest.txt)
+本包包含封地、溪桥道、西市和竹涧的斜俯视更新。柳湾和砾滩有低岩台，浅滩可沿踏石过溪。时令货车的车斗与护栏分层，车辕随道路转向，靠近可听见木轮声。采完野果或办完市集事务后可点「回井田」，沿金线过关回到第一块井田的田口。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本轮试玩包](../build/polish-freight-audio/combined-brand/release/Fiefdom-1.0.0-Windows-x64.zip) · [本包校验](../build/polish-freight-audio/combined-brand/headless/manifest.txt)
 
 ## 从新档到第一次收获
 
@@ -1144,3 +1144,9 @@
 - 柳湾和砾滩的钓点画出了临水岩面、碎石与近水暗边。浅滩的六块踏石露出踏面和石边，水纹向下游移动。谷雨压暗湿岩，立冬的霜留在岸沿。竹涧、封地和西市用同一套斜俯视石块，竹涧的高石按石脚挡住行走。 [实机前后对比](../build/polish-ravine-shelves/release/banks-before-after.png) · [跨浅滩](../build/polish-ravine-shelves/release/capture-final/1920x1080/03a-ford-stepping-stones.png) · [立冬的砾滩](../build/polish-ravine-shelves/release/capture-final/1920x1080/07b-shoal-frost.png) · [五款散石的尺寸和透明边缘](../build/polish-ravine-shelves/final/art/asset-report.json)
 - 从新档实走木桥、浅滩、西门和柳湾，检查石脚会挡人、深水挡住横穿、钓点站在干地。1920×1080 和 1024×768 均回放砾滩放竹笼、跨季读档收两尾鳜鱼、换柳湾收鲫鱼。再沿南路小径续档回田，复核水迹、试筏和西市交鱼。 [1920×1080 竹笼画面](../build/polish-ravine-shelves/release/trap-capture/1920x1080/creek-traps/02-shoal-basket.png) · [1024×768 竹笼记录](../build/polish-ravine-shelves/release/trap-capture/1024x768/creek-traps.log) · [无尺寸参数启动的窗口记录](../build/polish-ravine-shelves/release/native/viewport.log)
 - 103 项源码场景、36 项无窗口发行检查和 21 次隔离桌面运行通过。从新档第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局均可重启后读回。上一版第 4 天存档可接续。连续运行 90.756 秒，两次构建的 ZIP 校验值一致。 [源码回归](../build/polish-ravine-shelves/source-release-final.log) · [无窗口发行](../build/polish-ravine-shelves/release/headless-final.log) · [隔离桌面](../build/polish-ravine-shelves/release/capture-final.log) · [重复构建](../build/polish-ravine-shelves/release/hashes.log)
+
+## 时令货车的斜俯视与声音
+
+- 车斗底、护栏、轮轴和车辕按侧面、斜向和端面绘制，货袋与该单的作物露在护栏内侧。过弯时申禾随车辕换方向，到站站在卸货场原来的交谈处。西市装车、溪桥道过桥、南路转弯和卸货后的对白都用解压版走过。 [西市改动前后和转弯](../build/polish-freight-audio/combined-brand/release/wagon-in-market.png) · [溪桥道](../build/polish-freight-audio/combined-brand/native/market-orders/05a-bridge-shipment.png) · [南路转弯](../build/polish-freight-audio/combined-brand/capture/1920x1080/07a-wagon-turn.png)
+- 从新档交出春单时响两下竹简。候货时两种木轮声靠近，再响一次停靠声，并出现到货提示。取消候货、遇袭起身、读回已停好的货车都未触发停靠声。第 7 天的早晚两批货各响一次，过夜消耗与公私田生长按原安排结算。音效出处写入随包说明。 [实机录音](../build/polish-freight-audio/combined-brand/release/Season-Freight.mp3) · [1920×1080 回放](../build/polish-freight-audio/combined-brand/capture/freight-wait.log) · [1024×768 回放](../build/polish-freight-audio/combined-brand/capture/freight-wait-1024x768.log)
+- 31 项无窗口发行检查和 13 次隔离桌面运行通过。从新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局均可退出重启后读回。上一版第 4 天存档可接续，连续运行 90.758 秒。版内包含井田印，标题和 Windows 程序图标均已取帧核对。干净配置不传窗口尺寸时为 1920×1080。两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-freight-audio/combined-brand/release/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-freight-audio/combined-brand/source-release.log) · [无窗口发行](../build/polish-freight-audio/combined-brand/headless.log) · [隔离桌面](../build/polish-freight-audio/combined-brand/capture.log) · [程序图标](../build/polish-freight-audio/combined-brand/native/executable-icon.png) · [重复构建](../build/polish-freight-audio/combined-brand/hashes.log)
