@@ -21,7 +21,7 @@
 - **经营到结局**。按自己的节奏选一条路线，记下哪几天改变了经营方式、哪些操作重复得最累、哪次遇见人物或走过某处让你想再去。结算后退出，再从标题「继续游戏」读回，核对路线和结算日期。
 - **回报**。记下系统和显卡、键鼠或手柄、实际窗口尺寸、总游玩时间及停在的游戏日期。能复现的问题附上当时的截图或一段操作顺序。画面、节奏和手感直接写感受即可。
 
-本包包含封地、溪桥道、西市和竹涧的斜俯视更新。采完野果或办完市集事务后可点「回井田」，沿金线过关回到第一块井田的田口。若过夜会有门客因缺餐离任，也可先从提醒打开备粮安排。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本轮试玩包](../build/polish-estate-return/final/Fiefdom-1.0.0-Windows-x64.zip) · [本包校验](../build/polish-estate-return/final/headless/manifest.txt)
+本包包含封地、溪桥道、西市和竹涧的斜俯视更新。柳湾和砾滩有低岩台，浅滩可沿踏石过溪。采完野果或办完市集事务后可点「回井田」，沿金线过关回到第一块井田的田口。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本轮试玩包](../build/polish-ravine-shelves/release/Fiefdom-1.0.0-Windows-x64.zip) · [本包校验](../build/polish-ravine-shelves/release/headless-final/manifest.txt)
 
 ## 从新档到第一次收获
 
@@ -1138,3 +1138,9 @@
 - 竹涧、西市和溪桥道可点「回井田」。金线随关口切换地图，回封地后接到第一块井田南侧的田口，走到就收起。竹涧南路小径已开放且谷内走这边更近时，地图会标出南路。指路可取消，也可沿途保存后继续。 [采果后的入口](../build/polish-estate-return/final/capture/1920x1080/return-ravine-after-gathering.png) · [南路小径的预览](../build/polish-estate-return/final/capture/1920x1080/return-shoal-region.png) · [回到东关的金线](../build/polish-estate-return/final/capture/1920x1080/return-ravine-on-estate.png)
 - 1920×1080 和 1024×768 都从新档照手记收下首贡和私田作物，第 6 天进竹涧采得 5 份野果，经西门回到田口，留存的菽、时令单和公田作物继续有效。两种尺寸都用手柄从西市启动返程，在溪桥道取消再开始，保存后从标题读回，走完桥和封地道路。另从砾滩钓鱼后经南路续档返程。 [1024×768 西市回放](../build/polish-estate-return/final/capture/market-wayfinding-1024x768.log) · [溪桥道续档](../build/polish-estate-return/final/capture/1920x1080/return-market-bridge-resume.png) · [南路回放](../build/polish-estate-return/final/capture/ravine-shortcut.log)
 - 103 项源码场景、34 项无窗口发行检查和 18 次隔离桌面运行通过。解压版从新档第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，均可退出重启后读回。上版第 4 天进度可接续。连续运行 90.64 秒，两次构建的 ZIP 校验值一致。 [源码回归](../build/polish-estate-return/source-release.log) · [无窗口发行](../build/polish-estate-return/final/headless.log) · [隔离桌面](../build/polish-estate-return/final/capture-retry.log) · [重复构建](../build/polish-estate-return/final/hashes.log)
+
+## 柳湾、砾滩与浅滩踏石
+
+- 柳湾和砾滩的钓点画出了临水岩面、碎石与近水暗边。浅滩的六块踏石露出踏面和石边，水纹向下游移动。谷雨压暗湿岩，立冬的霜留在岸沿。竹涧、封地和西市用同一套斜俯视石块，竹涧的高石按石脚挡住行走。 [实机前后对比](../build/polish-ravine-shelves/release/banks-before-after.png) · [跨浅滩](../build/polish-ravine-shelves/release/capture-final/1920x1080/03a-ford-stepping-stones.png) · [立冬的砾滩](../build/polish-ravine-shelves/release/capture-final/1920x1080/07b-shoal-frost.png) · [五款散石的尺寸和透明边缘](../build/polish-ravine-shelves/final/art/asset-report.json)
+- 从新档实走木桥、浅滩、西门和柳湾，检查石脚会挡人、深水挡住横穿、钓点站在干地。1920×1080 和 1024×768 均回放砾滩放竹笼、跨季读档收两尾鳜鱼、换柳湾收鲫鱼。再沿南路小径续档回田，复核水迹、试筏和西市交鱼。 [1920×1080 竹笼画面](../build/polish-ravine-shelves/release/trap-capture/1920x1080/creek-traps/02-shoal-basket.png) · [1024×768 竹笼记录](../build/polish-ravine-shelves/release/trap-capture/1024x768/creek-traps.log) · [无尺寸参数启动的窗口记录](../build/polish-ravine-shelves/release/native/viewport.log)
+- 103 项源码场景、36 项无窗口发行检查和 21 次隔离桌面运行通过。从新档第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局均可重启后读回。上一版第 4 天存档可接续。连续运行 90.756 秒，两次构建的 ZIP 校验值一致。 [源码回归](../build/polish-ravine-shelves/source-release-final.log) · [无窗口发行](../build/polish-ravine-shelves/release/headless-final.log) · [隔离桌面](../build/polish-ravine-shelves/release/capture-final.log) · [重复构建](../build/polish-ravine-shelves/release/hashes.log)
