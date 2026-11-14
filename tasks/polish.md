@@ -21,7 +21,7 @@
 - **经营到结局**。按自己的节奏选一条路线，记下哪几天改变了经营方式、哪些操作重复得最累、哪次遇见人物或走过某处让你想再去。结算后退出，再从标题「继续游戏」读回，核对路线和结算日期。
 - **回报**。记下系统和显卡、键鼠或手柄、实际窗口尺寸、总游玩时间及停在的游戏日期。能复现的问题附上当时的截图或一段操作顺序。画面、节奏和手感直接写感受即可。
 
-本包包含封地、溪桥道、西市和竹涧的斜俯视更新。柳湾和砾滩有低岩台，浅滩可沿踏石过溪。时令货车的车斗与护栏分层，车辕随道路转向，靠近可听见木轮声。采完野果或办完市集事务后可点「回井田」，沿金线过关回到第一块井田的田口。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本轮试玩包](../build/polish-freight-audio/combined-brand/release/Fiefdom-1.0.0-Windows-x64.zip) · [本包校验](../build/polish-freight-audio/combined-brand/headless/manifest.txt)
+本包包含封地、溪桥道、西市和竹涧的斜俯视更新，也能一次处理一块井田内同类的翻地、播种、浇水或收获。柳湾和砾滩有低岩台，浅滩可沿踏石过溪。时令货车的车辕随道路转向，靠近可听见木轮声。采完野果或办完市集事务后可点「回井田」，沿金线过关回到第一块井田的田口。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本轮试玩包](../build/polish-field-batch/final/Fiefdom-1.0.0-Windows-x64.zip) · [本包校验](../build/polish-field-batch/final/headless/manifest.txt)
 
 ## 从新档到第一次收获
 
@@ -1150,3 +1150,10 @@
 - 车斗底、护栏、轮轴和车辕按侧面、斜向和端面绘制，货袋与该单的作物露在护栏内侧。过弯时申禾随车辕换方向，到站站在卸货场原来的交谈处。西市装车、溪桥道过桥、南路转弯和卸货后的对白都用解压版走过。 [西市改动前后和转弯](../build/polish-freight-audio/combined-brand/release/wagon-in-market.png) · [溪桥道](../build/polish-freight-audio/combined-brand/native/market-orders/05a-bridge-shipment.png) · [南路转弯](../build/polish-freight-audio/combined-brand/capture/1920x1080/07a-wagon-turn.png)
 - 从新档交出春单时响两下竹简。候货时两种木轮声靠近，再响一次停靠声，并出现到货提示。取消候货、遇袭起身、读回已停好的货车都未触发停靠声。第 7 天的早晚两批货各响一次，过夜消耗与公私田生长按原安排结算。音效出处写入随包说明。 [实机录音](../build/polish-freight-audio/combined-brand/release/Season-Freight.mp3) · [1920×1080 回放](../build/polish-freight-audio/combined-brand/capture/freight-wait.log) · [1024×768 回放](../build/polish-freight-audio/combined-brand/capture/freight-wait-1024x768.log)
 - 103 项源码场景、31 项无窗口发行检查和 13 次隔离桌面运行通过。从新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局均可退出重启后读回。上一版第 4 天存档可接续，连续运行 90.758 秒。版内包含井田印，标题和 Windows 程序图标均已取帧核对。干净配置不传窗口尺寸时为 1920×1080。两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-freight-audio/combined-brand/release/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-freight-audio/combined-brand/source-release.log) · [无窗口发行](../build/polish-freight-audio/combined-brand/headless.log) · [隔离桌面](../build/polish-freight-audio/combined-brand/capture.log) · [程序图标](../build/polish-freight-audio/combined-brand/native/executable-icon.png) · [重复构建](../build/polish-freight-audio/combined-brand/hashes.log)
+
+## 预览后一起处理井田农事
+
+- 指向田格时按住 Shift 或手柄 LT，会框出本井田可做相同农事的格子，并列出公田、私田和总耗力。左键或 A 确认一次。体力不足时显示差额，松开即可继续单格操作或拖动连耕。挖渠时按住同一键仍为填渠。 [整田翻地和收获回执](../build/polish-field-batch/final/field-batch-preview-and-receipt.png) · [1024×768 体力不足](../build/polish-field-batch/final/capture/1024x768/field-batch-02-insufficient-water.png) · [1024×768 手柄预览](../build/polish-field-batch/final/native/verified-gamepad/02a-field-batch-pad.png)
+- 新档种同样九格黍，从翻地到第 3 天收成，逐格点 45 次。旧版连耕可拖动 5 次，每次依次经过另外八格。新版在同一个格子点 5 次即可。三次回放均在首收获得 1 份贡粮、8 份私田黍和 40 铜钱，余 8 粮、73 体力。专项复核中途松键可只浇一格，剩下八格在体力差一份时都保持原样。另用双井田存档验证收第一块井田后，第二块的熟田仍在。第 3 天熟田可从标题重读再批量收割，回执分别列出公私田收成。 [逐格结算](../build/polish-field-batch/final/input-comparison/single.log) · [连耕结算](../build/polish-field-batch/final/input-comparison/drag.log) · [整田结算](../build/polish-field-batch/final/input-comparison/batch.log) · [双井田检查](../build/polish-field-batch/final/headless/field-batch-mixed.log)
+- 另在两条新档长线回放里，用 Shift 加左键成批浇水和收割。传统线 70 次处理 280 格，改革线 75 次处理 336 格。与同一经营安排的逐格回放相比，结局日期和结算一致，两个结局都续营了一天。 [传统整田通关](../build/polish-field-batch/final/campaign-batch-proof/traditional.log) · [改革整田通关](../build/polish-field-batch/final/campaign-batch-proof/reformed.log)
+- 104 项源码场景、34 项无窗口发行检查及 14 次隔离桌面运行通过。同一 Windows 包从新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局可退出重启，上一版的第 4 天存档可接续。回放覆盖委派备粮、管事经营、交货经营和 90.696 秒连续运行。干净配置启动为 1920×1080，另在隔离桌面核对 1024×768 的键鼠和模拟手柄输入。使用相同行尾的干净构建与验证包的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-field-batch/final/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-field-batch/source-final.log) · [无窗口发行](../build/polish-field-batch/headless-final.log) · [隔离桌面](../build/polish-field-batch/capture-final.log) · [重复构建](../build/polish-field-batch/committed-checkout/matched-icon-hashes.log)
