@@ -142,13 +142,21 @@ func _reformed() -> void:
 	await _estate()
 	if await _open_goals():
 		_expect(state.route_objectives() == totals and "2/4" in ui.route_goals.summary.text, "Continue rebuilds the goals from the saved accounts.")
-		await _button(_action(Global.RouteGoal.COPPER))
+		var pad = load("res://tests/GamepadReplay.gd").new()
+		pad.tree = tree
+		pad.pad = tree.root.get_node("GamepadInput")
+		tree.root.notify_mouse_exited()
+		await pad._click(_action(Global.RouteGoal.COPPER), true)
 		market = ui.panel_manager.management_panel_instance.market_panel
+		_expect(market.reform_sale_button.has_focus()
+			and market.reform_sale_button.get_global_rect().has_point(pad.pad.cursor.position),
+			"The controller pointer reaches the focused quote after the market is laid out.")
 		await _capture("06-reform-sale-quote")
-		await _key(KEY_ENTER)
+		await pad._tap(JOY_BUTTON_A)
 		_expect(state.money == 180 and state.player_inventory == 3 and state.crop_stock.count("millet") == 1
 			and not market.reform_sale.visible and "铜钱已达标" in market.receipt.text
-			and market.crop_choice.has_focus(), "Confirm the quote by keyboard, retain the spring order's millet and show the receipt.")
+			and market.crop_choice.has_focus() and pad.failures == 0,
+			"Confirm the quote by controller, retain the spring order's millet and show the receipt.")
 		await _capture("07-reform-sale-complete")
 		await _key(KEY_ESCAPE)
 		if await _open_goals():

@@ -74,7 +74,15 @@ func _ready() -> void:
 func focus_reform_sale() -> void:
 	if reform_sale_button.is_visible_in_tree():
 		reform_sale_button.grab_focus()
-		GamepadInput.snap_pointer_to_focus.call_deferred()
+		_snap_reform_focus(reform_sale_button)
+
+func _snap_reform_focus(control: Control) -> void:
+	if not GamepadInput.active:
+		return
+	# The market tab is resized after its visibility changes.
+	await get_tree().process_frame
+	if control.has_focus():
+		GamepadInput.snap_pointer_to_focus()
 
 func show_reclamation_reserve(return_action: Callable) -> void:
 	return_to_survey = return_action
@@ -132,7 +140,7 @@ func _refresh_reform_sale() -> void:
 	if reform_quote.is_empty():
 		if had_focus:
 			crop_choice.grab_focus()
-			GamepadInput.snap_pointer_to_focus.call_deferred()
+			_snap_reform_focus(crop_choice)
 		return
 	var retained := PackedStringArray()
 	if reform_quote.rations > 0:
