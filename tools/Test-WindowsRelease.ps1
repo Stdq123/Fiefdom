@@ -39,6 +39,7 @@ param(
     [switch]$FieldStroke,
     [switch]$FieldRoutes,
     [switch]$MorningRecord,
+    [switch]$FieldWorkWait,
     [switch]$PavilionEvening,
     [switch]$SouthRoad,
     [switch]$WatchRelief,
@@ -78,7 +79,7 @@ function Start-VerifiedGame {
         (New-Item -ItemType Directory -Path $profilePath).FullName
     }
     $log = Join-Path $evidence "$Name.log"
-    $frameLimit = if ($Replay -like '*-steward' -or $Replay -eq 'reformed-orders') { '42000' } elseif ($Replay) { '12000' } else { '180' }
+    $frameLimit = if ($Replay -like '*-steward' -or $Replay -in 'reformed-orders', 'reformed-field-work-wait') { '42000' } elseif ($Replay) { '12000' } else { '180' }
     $arguments = @('--quit-after', $frameLimit, '--log-file', ('"' + $log + '"'))
     $arguments += if ($Replay -eq 'soak') {
         '--max-fps', '60', '--audio-driver', 'Dummy'
@@ -149,7 +150,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RecruitmentLedgerReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RavineShortcutReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RotationGuideReplay.gd') -Destination $testDirectory
-    foreach ($file in 'MarketOrderReplay.gd', 'AutumnExhibitReplay.gd', 'SheepfoldReplay.gd', 'RavineMapReplay.gd', 'CreekTrapReplay.gd', 'FieldNightReplay.gd', 'CouncilSilkReplay.gd') {
+    foreach ($file in 'MarketOrderReplay.gd', 'AutumnExhibitReplay.gd', 'SheepfoldReplay.gd', 'RavineMapReplay.gd', 'CreekTrapReplay.gd', 'FieldNightReplay.gd', 'FieldWorkWaitReplay.gd', 'CouncilSilkReplay.gd') {
         Copy-Item -LiteralPath (Join-Path $repo "tests/$file") -Destination $testDirectory
     }
     @'
@@ -288,6 +289,10 @@ try {
     if ($MorningRecord) {
         Start-VerifiedGame -Directory $release -Profile 'field-nights' -Name 'field-nights' -Replay 'field-nights' -Resolution $fullResolution
     }
+    if ($FieldWorkWait) {
+        Start-VerifiedGame -Directory $release -Profile 'field-work-wait' -Name 'field-work-wait' -Replay 'field-work-wait' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'reformed-field-work-wait' -Name 'reformed-field-work-wait' -Replay 'reformed-field-work-wait'
+    }
     if ($PavilionEvening) {
         Start-VerifiedGame -Directory $release -Profile 'pavilion-evening' -Name 'pavilion-evening' -Replay 'pavilion-evening'
         Start-VerifiedGame -Directory $release -Profile 'pavilion-stories' -Name 'pavilion-stories' -Replay 'pavilion-stories' -Resolution $fullResolution
@@ -402,6 +407,9 @@ try {
         if ($FieldStroke) {
             Start-VerifiedGame -Directory $release -Profile 'field-stroke-compact' -Name 'field-stroke-1024x768' -Replay 'field-stroke' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'field-batch-compact' -Name 'field-batch-1024x768' -Replay 'field-batch' -Resolution '1024x768'
+        }
+        if ($FieldWorkWait) {
+            Start-VerifiedGame -Directory $release -Profile 'field-work-wait-compact' -Name 'field-work-wait-1024x768' -Replay 'field-work-wait' -Resolution '1024x768'
         }
     }
     if ($Soak) {

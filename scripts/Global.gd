@@ -35,14 +35,15 @@ const GATHERING_BEATS := 4
 const GATHERING_MIN_HITS := 3
 const GATHERING_MUSIC_XP := 30
 const FIELD_NIGHT_COUNTS := ["ready", "growing", "public_ripe", "private_ripe", "dry", "blocked"]
-const AWAY_FIELD_JOBS := ["watered", "harvested", "sown"]
-const AWAY_FIELD_YIELDS := ["tribute", "stock", "copper", "leaves"]
-const AWAY_FIELD_TOTALS := {
+const FIELD_WORK_JOBS := ["watered", "harvested", "sown"]
+const FIELD_WORK_YIELDS := ["tribute", "stock", "copper", "leaves"]
+const FIELD_WORK_TOTALS := {
 	"watered": "浇水 %d 格", "harvested": "收割 %d 格", "sown": "补播 %d 格", "tribute": "国库 +%d",
 	"stock": "私仓 +%d", "copper": "铜钱 +%d", "leaves": "桑叶 +%d",
 }
 const DAY_START_HOUR := 6.0
 const DAY_END_HOUR := 22.0
+const DAY_MINUTES := int((DAY_END_HOUR - DAY_START_HOUR) * 60.0)
 const DAY_WATCHES := ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
 
 # Game balance configuration
@@ -60,6 +61,7 @@ var night_rations := NightRations.new()
 var last_field_night: Dictionary = {}
 var last_dawn: Dictionary = {}
 var away_field_report: Dictionary = {}
+var field_wait_report: Dictionary = {}
 var _away_work_elapsed: Dictionary[RetainerData, float] = {}
 var player_inventory: int:
 	get: return crop_stock.count()
@@ -260,6 +262,7 @@ func _reset_campaign() -> void:
 	last_field_night.clear()
 	last_dawn.clear()
 	away_field_report.clear()
+	field_wait_report.clear()
 	_away_work_elapsed.clear()
 	season_order_receipts.clear()
 	seed_garden_gift = ""
@@ -611,6 +614,7 @@ func begin_next_day() -> void:
 		rotation_route_cell = null
 	field_route_public_only = false
 	away_field_report.clear()
+	field_wait_report.clear()
 	_away_work_elapsed.clear()
 	if sheepfold.owned():
 		sheepfold.settle_night(sheep_feed(sheepfold.fodder, current_day - 1), balance.sheep_wool_nights)
@@ -1014,55 +1018,125 @@ func advance_away_field_work(seconds: float) -> void:
 	for worker in retainers:
 		if not worker.works_fields():
 			continue
-		var period := balance.away_field_work_seconds / maxf(0.1, worker.get_work_efficiency())
+		var period := _field_work_seconds(worker)
 		var elapsed: float = _away_work_elapsed.get(worker, 0.0) + seconds
 		while elapsed >= period and outcome == Outcome.RUNNING:
-			var cell := _away_work_plot(worker)
+			var cell := _timed_work_plot(worker)
 			if cell == RetainerData.NO_ASSIGNMENT:
 				elapsed = 0.0
 				break
 			elapsed -= period
-			_finish_away_field_work(field_job(worker, cell), cell)
+			var first_tribute := _finish_timed_field_work(field_job(worker, cell), cell, away_field_report)
+			away_field_report.first_tribute = away_field_report.get("first_tribute", false) or first_tribute
+			away_field_report.pending = true
 		_away_work_elapsed[worker] = elapsed
 
-func _away_work_plot(worker: RetainerData) -> Vector2i:
+func field_wait_offer() -> Dictionary:
+	if outcome != Outcome.RUNNING or retainers.is_empty():
+		return {"plots": 0, "available": false}
+	var time_left := _daylight_left()
+	var plots := 0
+	var can_finish := false
+	for cell: Vector2i in tilled_cells:
+		var covered := false
+		for worker in retainers:
+			if field_job(worker, cell) != FieldJob.NONE:
+				covered = true
+				can_finish = can_finish or _field_work_seconds(worker) <= time_left
+		plots += int(covered)
+	return {"plots": plots, "available": can_finish and raid_day == 0 and not tax_council_waiting()}
+
+func wait_for_field_work() -> Dictionary:
+	if not field_wait_offer().available:
+		return {}
+	var limit := _daylight_left()
+	var elapsed := 0.0
+	# Workers share the remaining daylight. A plot stays reserved until its job finishes.
+	var booked: Dictionary[RetainerData, Dictionary] = {}
+	var reserved: Array[Vector2i] = []
+	var workers := retainers.filter(func(worker: RetainerData) -> bool: return worker.works_fields())
+	var first_tribute := false
+	while outcome == Outcome.RUNNING and raid_day == 0:
+		var next: RetainerData
+		for worker in workers:
+			if not booked.has(worker):
+				var finish := elapsed + _field_work_seconds(worker)
+				if finish > limit:
+					continue
+				var cell := _timed_work_plot(worker, reserved)
+				if cell == RetainerData.NO_ASSIGNMENT:
+					continue
+				booked[worker] = {"cell": cell, "job": field_job(worker, cell), "finish": finish}
+				reserved.append(cell)
+			if next == null or booked[worker].finish < booked[next].finish:
+				next = worker
+		if next == null:
+			break
+		var task := booked[next]
+		booked.erase(next)
+		reserved.erase(task.cell)
+		# Publish a new watch after the job reaching it has settled.
+		var seconds: float = task.finish - elapsed
+		elapsed = task.finish
+		if retainers.has(next) and field_job(next, task.cell) == task.job:
+			var delivered := _finish_timed_field_work(task.job, task.cell, field_wait_report)
+			first_tribute = first_tribute or delivered
+		advance_daylight(seconds)
+	if elapsed > 0.0 and not field_wait_report.is_empty():
+		field_wait_report.minutes = mini(DAY_MINUTES, int(field_wait_report.get("minutes", 0)) + _field_wait_minutes(elapsed))
+	return {"seconds": elapsed, "first_tribute": first_tribute}
+
+func _field_wait_minutes(seconds: float) -> int:
+	return roundi(seconds * DAY_MINUTES / maxf(1.0, balance.daylight_seconds))
+
+func _daylight_left() -> float:
+	return (1.0 - day_progress) * maxf(1.0, balance.daylight_seconds)
+
+func _field_work_seconds(worker: RetainerData) -> float:
+	return balance.away_field_work_seconds / maxf(0.1, worker.get_work_efficiency())
+
+func _timed_work_plot(worker: RetainerData, reserved: Array[Vector2i] = []) -> Vector2i:
 	var anchor := worker.assigned_area if worker.assigned_area != RetainerData.NO_ASSIGNMENT else FIRST_FIELD_CENTER
 	var nearest := RetainerData.NO_ASSIGNMENT
 	var distance := INF
 	for cell: Vector2i in tilled_cells:
 		var distance_to_anchor := cell.distance_squared_to(anchor)
-		if distance_to_anchor < distance and field_job(worker, cell) != FieldJob.NONE:
+		if distance_to_anchor < distance and cell not in reserved and field_job(worker, cell) != FieldJob.NONE:
 			nearest = cell
 			distance = distance_to_anchor
 	return nearest
 
-func _finish_away_field_work(job: FieldJob, cell: Vector2i) -> void:
-	if away_field_report.is_empty():
-		away_field_report = {"day": current_day, "first_tribute": false}
-		for key in AWAY_FIELD_TOTALS:
-			away_field_report[key] = 0
+func _finish_timed_field_work(job: FieldJob, cell: Vector2i, report: Dictionary) -> bool:
+	if report.is_empty():
+		report.day = current_day
+		for key in FIELD_WORK_TOTALS:
+			report[key] = 0
 	match job:
 		FieldJob.WATER:
-			water_field_crop(cell)
-			away_field_report.watered += 1
+			if water_field_crop(cell):
+				report.watered += 1
 		FieldJob.SOW:
-			sow_field_crop(cell, planned_field_seed(cell))
-			away_field_report.sown += 1
+			if sow_field_crop(cell, planned_field_seed(cell)):
+				report.sown += 1
 		FieldJob.HARVEST:
 			var harvest := harvest_field_crop(cell)
-			away_field_report.harvested += 1
-			away_field_report.first_tribute = away_field_report.first_tribute or harvest.first_tribute
-			for key in AWAY_FIELD_YIELDS:
-				away_field_report[key] += harvest[key]
-	away_field_report.pending = true
+			if not harvest.is_empty():
+				report.harvested += 1
+				for key in FIELD_WORK_YIELDS:
+					report[key] += harvest[key]
+				return harvest.first_tribute
+	return false
 
 func away_field_summary(keys: Array = []) -> String:
-	var included_keys := AWAY_FIELD_TOTALS.keys() if keys.is_empty() else keys
+	return field_work_summary(away_field_report, keys)
+
+func field_work_summary(report: Dictionary, keys: Array = []) -> String:
+	var included_keys := FIELD_WORK_TOTALS.keys() if keys.is_empty() else keys
 	var results := PackedStringArray()
 	for key in included_keys:
-		var count: int = away_field_report.get(key, 0)
+		var count: int = report.get(key, 0)
 		if count > 0:
-			results.append(AWAY_FIELD_TOTALS[key] % count)
+			results.append(FIELD_WORK_TOTALS[key] % count)
 	return " · ".join(results)
 
 func acknowledge_away_field_work() -> bool:
@@ -3085,6 +3159,7 @@ func _save_snapshot(origin: String) -> Error:
 		"last_field_night": last_field_night,
 		"last_dawn": last_dawn,
 		"away_field_report": away_field_report,
+		"field_wait_report": field_wait_report,
 		"reputation": reputation,
 		"days_without_contribution": days_without_contribution,
 		"active_crops": saved_crops,
@@ -3579,7 +3654,14 @@ func load_game(path := "") -> Error:
 	silk_sample_day = clampi(_read_save_int(data.get("silk_sample_day"), 0), 0, saved_day)
 	food_storage = maxi(0, _read_save_int(data.get("food_storage"), 10))
 	last_field_night = _restore_field_night(data.get("last_field_night"), saved_day)
-	away_field_report = _restore_away_field_report(data.get("away_field_report"), saved_day)
+	var away: Variant = data.get("away_field_report")
+	away_field_report = _restore_field_work_report(away, saved_day)
+	if not away_field_report.is_empty():
+		away_field_report.pending = away.get("pending") == true
+		away_field_report.first_tribute = away.get("first_tribute") == true
+	field_wait_report = _restore_field_work_report(data.get("field_wait_report"), saved_day)
+	if not field_wait_report.is_empty():
+		field_wait_report.minutes = clampi(_read_save_int(data.field_wait_report.get("minutes"), 0), 0, DAY_MINUTES)
 	_away_work_elapsed.clear()
 	reputation = _read_save_int(data.get("reputation"), 0)
 	days_without_contribution = maxi(0, _read_save_int(data.get("days_without_contribution"), 0))
@@ -3728,12 +3810,11 @@ func _restore_dawn(record: Variant, saved_day: int) -> Dictionary:
 		"tribute_penalty": maxi(0, _read_save_int(record.get("tribute_penalty"), 0)),
 	}
 
-func _restore_away_field_report(record: Variant, saved_day: int) -> Dictionary:
+func _restore_field_work_report(record: Variant, saved_day: int) -> Dictionary:
 	if not record is Dictionary or _read_save_int(record.get("day"), 0) != saved_day:
 		return {}
-	var report := {"day": saved_day, "pending": record.get("pending") == true,
-		"first_tribute": record.get("first_tribute") == true}
-	for key in AWAY_FIELD_TOTALS:
+	var report := {"day": saved_day}
+	for key in FIELD_WORK_TOTALS:
 		report[key] = maxi(0, _read_save_int(record.get(key), 0))
 	return report
 

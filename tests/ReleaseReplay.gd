@@ -40,9 +40,10 @@ func _run() -> void:
 		"reformed-orders":
 			var replay = load("res://tests/CampaignReplay.gd").new()
 			await replay.run(tree, "reformed", true, capture_directory, true, false, true)
-		"reformed-first-steward":
+		"reformed-first-steward", "reformed-field-work-wait":
 			var replay = load("res://tests/CampaignReplay.gd").new()
-			await replay.run(tree, "reformed", true, capture_directory, true, false, false, true)
+			await replay.run(tree, "reformed", true, capture_directory, true, false, false, true,
+				arguments[0] == "reformed-field-work-wait")
 		"ending-film":
 			var replay = load("res://tests/EndingFilmReplay.gd").new()
 			await replay.run(tree, capture_directory)
@@ -219,6 +220,9 @@ func _run() -> void:
 			await replay.run(tree)
 		"field-nights":
 			var replay = load("res://tests/FieldNightReplay.gd").new()
+			await replay.run(tree, capture_directory)
+		"field-work-wait":
+			var replay = load("res://tests/FieldWorkWaitReplay.gd").new()
 			await replay.run(tree, capture_directory)
 		"pavilion-evening", "pavilion-evening-legacy":
 			var replay = load("res://tests/PavilionEveningReplay.gd").new()

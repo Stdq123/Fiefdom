@@ -31,6 +31,8 @@ const WINDOW_MARGIN := 16.0
 @onready var find_tribute: Button = %FindTribute
 @onready var field_forecast: Label = %FieldForecast
 @onready var field_warning: Label = %FieldWarning
+@onready var field_wait_note: Label = %FieldWaitNote
+@onready var wait_button: Button = %WaitForFieldWork
 @onready var sheep_note: Label = %SheepNote
 @onready var silk_note: Label = %SilkNote
 @onready var find_plot: Button = %FindPlot
@@ -73,6 +75,8 @@ const WINDOW_MARGIN := 16.0
 var show_previous := false
 var focus_shortage := false
 var completed_field_id := -1
+var wait_for_retainers: Callable
+var settling_field_work := false
 
 func _ready() -> void:
 	budget.max_value = NightRations.MAX_COPPER_LIMIT
@@ -94,6 +98,7 @@ func _ready() -> void:
 	close_button.pressed.connect(queue_free)
 	find_plot.pressed.connect(dry_plot_requested.emit)
 	find_ready_plot.pressed.connect(harvest_requested.emit)
+	wait_button.pressed.connect(_wait_for_field_work)
 	find_harvest.pressed.connect(harvest_requested.emit)
 	find_tribute.pressed.connect(tribute_field_requested.emit)
 	plan_field.pressed.connect(_open_field_management)
@@ -128,9 +133,12 @@ func _ready() -> void:
 	GameEvents.farm_state_changed.connect(_refresh_fields)
 	GameEvents.crop_harvested.connect(_refresh_fields.unbind(1))
 	GameEvents.channels_changed.connect(_refresh_fields)
+	GameEvents.daylight_changed.connect(_refresh_field_wait)
 	GameEvents.day_advanced.connect(_refresh.unbind(1))
 	GameEvents.raid_started.connect(_refresh_raid_plan)
 	GameEvents.raid_defeated.connect(_refresh_raid_plan)
+	GameEvents.raid_started.connect(_refresh_field_wait)
+	GameEvents.raid_defeated.connect(_refresh_field_wait)
 	GameEvents.watch_snare_changed.connect(_refresh_raid_plan)
 	_refresh()
 	_show_page(show_previous)
@@ -194,6 +202,8 @@ func _release_festival_reserve() -> void:
 		delegate.grab_focus()
 
 func _refresh() -> void:
+	if settling_field_work:
+		return
 	_refresh_raid_plan()
 	_refresh_fields()
 	sheep_note.visible = Global.sheepfold.owned()
@@ -417,6 +427,8 @@ func _refresh_raid_plan() -> void:
 	raid_instructions.text = instructions
 
 func _refresh_fields() -> void:
+	if settling_field_work:
+		return
 	_refresh_tribute()
 	var report := Global.field_night_forecast()
 	field_forecast.text = "已有 %d 格可收 · 今夜预计 %d 格生长" % [
@@ -424,10 +436,10 @@ func _refresh_fields() -> void:
 	var ripe := _describe_ripe(report)
 	if not ripe.is_empty():
 		field_forecast.text += "\n明早新熟 · " + ripe
-	var away_jobs := Global.away_field_summary(Global.AWAY_FIELD_JOBS)
+	var away_jobs := Global.away_field_summary(Global.FIELD_WORK_JOBS)
 	if not away_jobs.is_empty():
 		field_forecast.text += "\n外出田务 · " + away_jobs
-		var away_yields := Global.away_field_summary(Global.AWAY_FIELD_YIELDS)
+		var away_yields := Global.away_field_summary(Global.FIELD_WORK_YIELDS)
 		if not away_yields.is_empty():
 			field_forecast.text += "\n" + away_yields
 	var warnings := PackedStringArray()
@@ -440,6 +452,49 @@ func _refresh_fields() -> void:
 	find_plot.visible = report.dry > 0
 	find_ready_plot.visible = report.ready > 0
 	find_harvest.visible = show_previous and report.ready > 0
+	_refresh_field_wait()
+
+func _refresh_field_wait() -> void:
+	if settling_field_work or show_previous or not wait_for_retainers.is_valid():
+		return
+	var report := Global.field_wait_report
+	var offer := Global.field_wait_offer()
+	var notes := PackedStringArray()
+	if not report.is_empty():
+		var time := " · 约 %s" % _work_duration(report.minutes) if report.get("minutes", 0) > 0 else ""
+		notes.append("等待结果 · " + Global.field_work_summary(report, Global.FIELD_WORK_JOBS) + time)
+		var yields := Global.field_work_summary(report, Global.FIELD_WORK_YIELDS)
+		if not yields.is_empty():
+			notes.append(yields)
+	if offer.plots > 0:
+		if Global.raid_day > 0:
+			notes.append("击退来敌后再等收工。")
+		elif Global.tax_council_waiting():
+			notes.append("先到堂前议税。")
+		elif not offer.available:
+			notes.append("今日时辰已晚。剩下的田务可亲手做。")
+		else:
+			notes.append("门客可接手 %d 格。做完即停，最晚到亥时。" % offer.plots)
+	var had_focus := wait_button.has_focus()
+	wait_button.visible = offer.available
+	field_wait_note.text = "\n".join(notes)
+	field_wait_note.visible = not notes.is_empty()
+	if had_focus and not wait_button.visible:
+		%Sleep.grab_focus()
+		GamepadInput.snap_pointer_to_focus.call_deferred()
+
+func _work_duration(minutes: int) -> String:
+	return "%d 刻钟" % roundi(minutes / 15.0) if minutes >= 15 else "一刻钟内"
+
+func _wait_for_field_work() -> void:
+	if settling_field_work or show_previous or not wait_button.is_visible_in_tree():
+		return
+	settling_field_work = true
+	var result: Dictionary = wait_for_retainers.call()
+	settling_field_work = false
+	_refresh()
+	if result.get("seconds", 0.0) > 0.0:
+		AudioManager.play_ui_sfx()
 
 func _refresh_field_management() -> void:
 	var completed: Array = Global.last_dawn.get("completed_fields", [])

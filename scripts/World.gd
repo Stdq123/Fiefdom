@@ -174,6 +174,19 @@ func restore_crops_visuals() -> void:
 	for grid_pos in active_crops:
 		_draw_crop(grid_pos)
 
+func wait_for_retainers() -> Dictionary:
+	var result := Global.wait_for_field_work()
+	if result.is_empty():
+		return result
+	crops_layer.clear()
+	restore_crops_visuals()
+	for worker: Retainer in retainer_instances.values():
+		if worker.data.works_fields() and worker.target_grid_pos != Retainer.NO_CELL:
+			worker.set_state(Retainer.State.IDLE)
+	if result.first_tribute:
+		_announce_first_tribute()
+	return result
+
 func _draw_crop(grid_pos: Vector2i) -> void:
 	var crop: Dictionary = active_crops[grid_pos]
 	var data: CropData = crop["data"]
@@ -914,12 +927,15 @@ func harvest_crop(grid_pos: Vector2i, worker: Retainer = null) -> bool:
 		tile_map.get_node("FieldCursor").clear_plot_hover(grid_pos)
 		player.show_action(Player.Action.HARVEST, to_global(get_crop_world_pos(grid_pos)))
 	if harvest.first_tribute:
-		AudioManager.play_event_sound("first_tribute")
-		var receipt := "首份纳贡已入库"
-		if Global.rotation_offer_ready() and neighbor_actor(VisitorData.FIELD_KEEPER):
-			receipt += " · 可找渠伯谈轮作"
-		GameEvents.world_notice.emit(receipt)
+		_announce_first_tribute()
 	return true
+
+func _announce_first_tribute() -> void:
+	AudioManager.play_event_sound("first_tribute")
+	var receipt := "首份纳贡已入库"
+	if Global.rotation_offer_ready() and neighbor_actor(VisitorData.FIELD_KEEPER):
+		receipt += " · 可找渠伯谈轮作"
+	GameEvents.world_notice.emit(receipt)
 
 func spawn_floating_text(grid_pos: Vector2i, text: String, color: Color) -> void:
 	var instance := floating_text_scene.instantiate() as Label

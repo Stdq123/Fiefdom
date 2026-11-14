@@ -233,6 +233,14 @@ theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(0.94, 0.75, 0.54, 1)
 autowrap_mode = 3
 
+[node name="FieldWaitNote" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/FieldPlan/Row/Details"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.83, 0.87, 0.67, 1)
+autowrap_mode = 3
+
 [node name="SheepNote" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/FieldPlan/Row/Details"]
 unique_name_in_owner = true
 visible = false
@@ -251,6 +259,14 @@ autowrap_mode = 3
 [node name="FieldActions" type="VBoxContainer" parent="Center/Window/Content/Scroll/Body/Plan/FieldPlan/Row"]
 layout_mode = 2
 size_flags_vertical = 4
+
+[node name="WaitForFieldWork" type="Button" parent="Center/Window/Content/Scroll/Body/Plan/FieldPlan/Row/FieldActions"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(108, 34)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "等门客收工"
 
 [node name="FindPlot" type="Button" parent="Center/Window/Content/Scroll/Body/Plan/FieldPlan/Row/FieldActions"]
 unique_name_in_owner = true

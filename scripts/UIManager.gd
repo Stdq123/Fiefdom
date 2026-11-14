@@ -117,7 +117,7 @@ func _show_away_field_report() -> void:
 	if not Global.acknowledge_away_field_work():
 		return
 	var report := Global.away_field_report
-	var notice := "今日外出田务 · " + Global.away_field_summary(Global.AWAY_FIELD_JOBS)
+	var notice := "今日外出田务 · " + Global.away_field_summary(Global.FIELD_WORK_JOBS)
 	if report.first_tribute:
 		report.first_tribute = false
 		AudioManager.play_event_sound("first_tribute")
@@ -774,6 +774,7 @@ func _show_night_rations(show_previous := false, focus_shortage := false) -> voi
 	var panel := NIGHT_RATIONS_PANEL.instantiate()
 	panel.show_previous = show_previous
 	panel.focus_shortage = focus_shortage
+	panel.wait_for_retainers = world.wait_for_retainers
 	var previous_focus := get_viewport().gui_get_focus_owner()
 	var player: Player = world.player
 	player.conversation_open = true

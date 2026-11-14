@@ -31,6 +31,11 @@ var use_night_rations := false
 var use_field_steward := false
 var use_season_orders := false
 var use_rotation_steward := false
+var use_field_wait := false
+var field_wait_days := 0
+var field_wait_seconds := 0.0
+var field_wait_interaction_msec := 0
+var field_watch_seconds := 0.0
 var order_capture_directory := ""
 var petition_day := 0
 var deliveries := 0
@@ -657,14 +662,51 @@ func _rotation_workday() -> void:
 		"The first-field steward remains at work."):
 		return
 	var start: int = state.king_storage + state.private_harvest_total
-	for tick in 60:
-		var pending: bool = state.tilled_cells.keys().any(func(cell: Vector2i) -> bool:
-			return state.field_job(worker, cell) != state.FieldJob.NONE)
-		if not pending:
-			break
-		await tree.create_timer(0.45).timeout
+	if use_field_wait:
+		# In the existing route the guard and steward both work during a raid. Let
+		# the guard finish that same fight before using the new action.
+		while state.raid_day > 0 and state.outcome == state.Outcome.RUNNING and not tree.paused:
+			if not await _watch_steward_tick():
+				break
+		await _wait_for_steward()
+	else:
+		for tick in 60:
+			var pending: bool = state.tilled_cells.keys().any(func(cell: Vector2i) -> bool:
+				return state.field_job(worker, cell) != state.FieldJob.NONE)
+			if not pending:
+				break
+			await _watch_steward_tick()
 	managed_harvests += state.king_storage + state.private_harvest_total - start
 	rice_harvested = rice_harvested or state.crop_stock.count("rice") > 0
+
+func _watch_steward_tick() -> bool:
+	var start: float = state.day_progress
+	await tree.create_timer(0.45).timeout
+	var spent: float = (state.day_progress - start) * state.balance.daylight_seconds
+	field_watch_seconds += maxf(0.0, spent)
+	return spent > 0.0
+
+func _wait_for_steward() -> void:
+	if not state.field_wait_offer().available:
+		return
+	var time := Time.get_ticks_msec()
+	var day: int = state.current_day
+	var stamina: int = state.current_stamina
+	await _click(ui.hud.rations_button.get_global_rect().get_center())
+	var panel := ui.get_node_or_null("Control/NightRationsPanel") as Control
+	if not _expect(panel != null and panel.wait_button.is_visible_in_tree(), "Find the wait action on tonight's sheet."):
+		return
+	panel.scroll.ensure_control_visible(panel.wait_button)
+	await tree.process_frame
+	var start: float = state.day_progress
+	await _click(panel.wait_button.get_global_rect().get_center())
+	if not _expect(state.day_progress > start and state.current_day == day and state.current_stamina == stamina,
+		"Waiting settles work and advances the daylight without resting or spending player stamina."):
+		return
+	field_wait_days += 1
+	field_wait_seconds += (state.day_progress - start) * state.balance.daylight_seconds
+	await _click(panel.close_button.get_global_rect().get_center())
+	field_wait_interaction_msec += Time.get_ticks_msec() - time
 
 func _stop_rotation_cash_plots() -> void:
 	var panel := _management(0)
@@ -832,12 +874,13 @@ func _capture_ending(directory: String, name: String) -> void:
 		"The ending frame can be captured.")
 
 func run(game_tree: SceneTree, branch: String, release_required := false, capture_directory := "", delegated := false,
-		stewarded := false, ordering := false, rotation_steward := false) -> void:
+		stewarded := false, ordering := false, rotation_steward := false, field_wait := false) -> void:
 	tree = game_tree
 	use_night_rations = delegated
 	use_field_steward = stewarded
 	use_season_orders = ordering
 	use_rotation_steward = rotation_steward
+	use_field_wait = field_wait
 	if rotation_steward:
 		rotation_steward_captures = capture_directory
 	if ordering:
@@ -1109,6 +1152,11 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 			"The earned steward works the original field through the ending and survives reloads.")
 		print("CAMPAIGN_FIRST_STEWARD_SETTLED day=", state.current_day, " first_actions=", first_field_actions,
 			" first_after_handoff=", first_field_actions - first_field_actions_at_handoff, " managed_yield=", managed_harvests)
+		print("CAMPAIGN_FIELD_WATCH active_seconds=", snappedf(field_watch_seconds, 0.001))
+		if use_field_wait:
+			_expect(field_wait_days > 25, "The steward finishes paid daylight work through the campaign.")
+			print("CAMPAIGN_FIELD_WAIT times=", field_wait_days, " game_seconds=", snappedf(field_wait_seconds, 0.001),
+				" interaction_msec=", field_wait_interaction_msec)
 	if use_season_orders:
 		_expect(petition_day > 0 and petition_day < state.tax_council_start_day() and deliveries >= 2,
 			"Deliver season orders and petition before the regular council in an ordinary new game.")
