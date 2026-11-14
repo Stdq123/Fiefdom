@@ -119,7 +119,8 @@ func _run() -> void:
 			break
 
 	_check(state.king_storage >= 10 and state.quest_completed, "The first tribute quest completes from crops harvested in a fresh game")
-	_check(state.current_rank >= state.Rank.ZHONG_SHI and state.retainers.size() == 3 and "开垦第二块井田" in guide.heading.text, "Ordinary crops, market actions, visitors and sleep reach the second field prerequisites")
+	_check(state.current_rank >= state.Rank.ZHONG_SHI and state.retainers.size() == 3
+		and "可开垦第二块井田" in guide.text, "Ordinary crops, market actions, visitors and sleep reach the second field prerequisites")
 	ui.reclaim_button.pressed.emit()
 	await process_frame
 	var reclaim := ui.get_node("Control/ReclamationPanel")
@@ -132,7 +133,8 @@ func _run() -> void:
 	if state.well_fields.size() != 2:
 		quit(1)
 		return
-	_check("开垦第二块井田" in guide.heading.text and "0/4" in guide.text, "The guide shows the construction countdown.")
+	_check("晋升" in guide.heading.text and "第二块井田 · 已完成 0/4 夜" in guide.text,
+		"The guide displays promotion requirements alongside the active construction.")
 	for day in range(4):
 		await _sleep(ui)
 	_check(guide.heading.text == "晋升" + state.rank_names[state.current_rank + 1],

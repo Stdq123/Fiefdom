@@ -1,6 +1,7 @@
 extends "res://scripts/SurveyMap.gd"
 
 signal fields_requested()
+signal public_plot_requested()
 signal six_arts_requested()
 signal silk_requested()
 signal orders_requested()
@@ -29,6 +30,10 @@ const PENDING := Color("#f2bc85")
 @onready var mixed_title: Label = %MixedTitle
 @onready var mixed_preview: Label = %MixedPreview
 @onready var mixed_result: Label = %MixedResult
+@onready var public_plan_card: PanelContainer = %PublicPlanCard
+@onready var public_plan_title: Label = %PublicPlanTitle
+@onready var public_plan_detail: Label = %PublicPlanDetail
+@onready var public_plan_button: Button = %PublicPlanButton
 @onready var field_button: Button = %FieldButton
 @onready var sowing_note: Label = %SowingNote
 @onready var sowing_button: Button = %SowingButton
@@ -44,6 +49,9 @@ func _ready() -> void:
 	field_button.pressed.connect(func():
 		close_map()
 		fields_requested.emit())
+	public_plan_button.pressed.connect(func():
+		close_map()
+		public_plot_requested.emit())
 	sowing_button.pressed.connect(func():
 		close_map()
 		sowing_plans_requested.emit(sowing_field_id))
@@ -109,12 +117,35 @@ func _refresh_on_open() -> void:
 		mixed_preview.text = "纳贡 +%d · " % tribute + mixed_preview.text
 	_describe_projection(mixed_result, tribute, private_yield)
 	field_button.text = "指路收公田" if tribute > 0 else "查看井田"
+	_refresh_public_plan(gap > 0 and tribute == 0)
+	if public_plan_card.visible:
+		preview_heading.text = "筹备下次纳贡" if totals.plots == 0 else "筹备纳贡与收成"
 
 	var bolts := Global.silk_workshop.bolts
 	var silk_target := Global.balance.ending_silk_target
 	silk_stock.text = "备绸 · %d / %d 匹" % [bolts, silk_target]
 	silk_stock.modulate = READY if bolts >= silk_target else PENDING
 	silk_button.text = "查看蚕桑" if bolts >= silk_target else "准备丝绸"
+
+func _refresh_public_plan(needs_crop: bool) -> void:
+	var plan := Global.tribute_field_plan() if needs_crop else {}
+	public_plan_card.visible = not plan.is_empty()
+	if plan.is_empty():
+		return
+	public_plan_title.text = "井田 %d · 公田" % plan.field
+	public_plan_button.text = "选种并标出公田" if not plan.seed_id.is_empty() else "标出公田"
+	var earliest := "最早第 %d 天可收。" % plan.ready_day
+	match plan.status:
+		Global.NightGrowth.BLOCKED:
+			public_plan_detail.text = "%s缺渠水。接通水渠后才能生长。" % plan.crop
+		Global.NightGrowth.DRY:
+			public_plan_detail.text = "%s待浇。\n" % plan.crop + earliest
+		Global.NightGrowth.READY:
+			public_plan_detail.text = "%s已成熟。" % plan.crop
+		Global.NightGrowth.GROW, Global.NightGrowth.RIPEN:
+			public_plan_detail.text = "%s今夜有水。\n" % plan.crop + earliest
+		_:
+			public_plan_detail.text = "播%s后供水。\n" % plan.crop + earliest
 
 func _refresh_sowing_plans(gap: int) -> void:
 	var private_plans := 0

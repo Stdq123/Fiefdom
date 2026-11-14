@@ -66,7 +66,7 @@ func refresh() -> void:
 		and Global.ending_record.is_empty())
 	council_prep.visible = (Global.outcome == Global.Outcome.RUNNING
 		and Global.tax_reform_choice == Global.TaxReformChoice.NONE and not Global.tax_council_waiting()
-		and (Global.current_rank >= Global.Rank.SHANG_SHI
+		and (Global.current_rank >= Global.Rank.ZHONG_SHI
 			or (Global.well_fields.size() > 1 and Global.well_fields[1].is_unlocked)))
 	var can_petition := council_prep.visible and Global.can_petition_tax_council()
 	council_prep.text = "请议已就绪" if can_petition else "查议税条件"
@@ -104,23 +104,20 @@ func refresh() -> void:
 		if gap < 0:
 			tribute = "查看纳贡条件"
 		_describe("筹备初税亩", "%s\n公田 %.2f%% · %s" % [date, Global.public_contribution_ratio() * 100.0, tribute])
-	elif Global.well_fields.size() >= 2:
-		var field: Dictionary = Global.well_fields[1]
-		if not field["is_unlocked"]:
-			var progress: int = field["reclamation_progress"]
-			_describe("开垦第二块井田", "已完成 %d/%d 夜 · %s\n睡觉可推进。" % [
-				progress, Global.RECLAMATION_NIGHTS, Global.reclamation_stage(progress)])
-		else:
-			_show_next_promotion()
-	elif not Global.first_tribute_delivered() and Global.current_rank == Global.Rank.XIA_SHI:
+	elif Global.current_rank >= Global.Rank.ZHONG_SHI:
+		_show_next_promotion()
+		if Global.well_fields.size() == 1:
+			if Global.reclamation_plan().ready:
+				text += "\n可开垦第二块井田。"
+		elif not Global.well_fields[1].is_unlocked:
+			var progress: int = Global.well_fields[1].reclamation_progress
+			text += "\n第二块井田 · 已完成 %d/%d 夜" % [progress, Global.RECLAMATION_NIGHTS]
+	elif not Global.first_tribute_delivered():
 		_show_first_tribute()
-	elif (Global.current_rank == Global.Rank.XIA_SHI and Global.private_harvest_total == 0
-		and not Global.eligible_for_promotion()):
+	elif Global.private_harvest_total == 0 and not Global.eligible_for_promotion():
 		_describe("第一茬私田", _opening_field_step(_first_private_cell(), false))
-	elif Global.current_rank == Global.Rank.XIA_SHI:
-		_show_first_promotion()
 	else:
-		_show_first_expansion()
+		_show_first_promotion()
 	if Global.first_tribute_delivered() or Global.private_harvest_total > 0:
 		tending_first_private = false
 	_refresh_first_private_button()
@@ -168,13 +165,14 @@ func _show_first_promotion() -> void:
 		_describe(title, "纳贡或交谈积声望，达标后过夜晋升。\n招募一人会花 %d 声望。" % Global.balance.recruit_reputation_requirement)
 
 func _show_next_promotion() -> void:
-	if Global.current_rank == Global.Rank.XIA_SHI:
-		_show_first_promotion()
-		return
 	var title := "晋升" + String(Global.rank_names[Global.current_rank + 1])
 	var reputation := "声望 %d/%d" % [Global.reputation, Global.promotion_reputation()]
 	if Global.eligible_for_promotion():
-		_describe(title, reputation + " · 过夜核定爵位。")
+		var penalty := Global.tribute_penalty_tonight()
+		if Global.reputation - penalty < Global.promotion_reputation():
+			_describe(title, reputation + "\n今夜欠贡会扣 %d 声望。先补纳贡。" % penalty)
+		else:
+			_describe(title, reputation + " · 过夜核定爵位。")
 		return
 	var required_art := Global.balance.upper_rank_art_level
 	var best_art := Global.highest_six_art_level()
@@ -183,18 +181,6 @@ func _show_next_promotion() -> void:
 		_describe(title, "%s\n任一六艺需 %d 级，当前最高 %d 级。" % [reputation, required_art, best_art])
 	else:
 		_describe(title, reputation + "\n纳贡或同来客交谈积声望。")
-
-func _show_first_expansion() -> void:
-	var plan := Global.reclamation_plan()
-	if plan.ready:
-		_describe("开垦第二块井田", "点「开垦」勘定田址。立桩后 %d 夜完工。" % Global.RECLAMATION_NIGHTS)
-	elif plan.workers_needed > 0:
-		_describe("延揽门客 · %d/%d 人" % [Global.retainers.size(), Global.RECLAMATION_RETAINERS],
-			"交谈可积声望，招募一人花 %d 声望。点「开垦」查看来客与筹备进度。" %
-			Global.balance.recruit_reputation_requirement)
-	else:
-		_describe("筹措开垦物资", "铜钱 %d/%d · 粮食 %d/%d\n收私田赚铜钱，作物可到市场换粮。" %
-			[Global.money, plan.copper, Global.food_storage, plan.grain])
 
 func _describe(title: String, detail: String) -> void:
 	heading.text = title

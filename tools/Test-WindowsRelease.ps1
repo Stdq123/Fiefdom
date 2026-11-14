@@ -220,6 +220,7 @@ try {
     }
     if ($RouteGoals) {
         Start-VerifiedGame -Directory $release -Profile 'council-prep' -Name 'council-prep' -Replay 'council-prep' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'council-one-field' -Name 'council-one-field' -Replay 'council-one-field' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'council-petition' -Name 'council-petition' -Replay 'council-petition'
         Start-VerifiedGame -Directory $release -Profile 'council-silk' -Name 'council-silk' -Replay 'council-silk'
         Start-VerifiedGame -Directory $release -Profile 'route-goals' -Name 'route-goals' -Replay 'route-goals'
@@ -383,6 +384,7 @@ try {
         }
         if ($RouteGoals) {
             Start-VerifiedGame -Directory $release -Profile 'council-prep-compact' -Name 'council-prep-1024x768' -Replay 'council-prep' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'council-one-field-compact' -Name 'council-one-field-1024x768' -Replay 'council-one-field' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'ending-film-compact' -Name 'ending-film-1024x768' -Replay 'ending-film' -Resolution '1024x768'
         }
         if ($Rations) {

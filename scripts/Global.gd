@@ -1188,6 +1188,7 @@ func tribute_field_plan() -> Dictionary:
 	var plan := {}
 	var sowing_seed := ""
 	var earliest := INF
+	var best_can_grow := false
 	for field in well_fields:
 		if not field["is_unlocked"]:
 			continue
@@ -1206,8 +1207,11 @@ func tribute_field_plan() -> Dictionary:
 		else:
 			crop_data = crop.data
 			nights = maxi(0, int(crop.growth_nights) - int(crop.age))
-		if nights < earliest or (nights == earliest and plan.status == NightGrowth.BLOCKED and status != NightGrowth.BLOCKED):
+		var can_grow := status != NightGrowth.BLOCKED
+		if (plan.is_empty() or (can_grow and not best_can_grow)
+			or (can_grow == best_can_grow and nights < earliest)):
 			earliest = nights
+			best_can_grow = can_grow
 			plan = {"cell": cell, "field": int(field["field_id"]) + 1, "status": status,
 				"seed_id": seed, "crop": crop_data.crop_name, "ready_day": current_day + nights}
 	return plan
