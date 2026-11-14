@@ -166,19 +166,24 @@ func place_scenery(layer: Node2D) -> void:
 	var wet_tint := Color(0.88, 0.94, 0.99) if Global.has_rain() else Color.WHITE
 	for index in TREES.size():
 		_prop(layer, TREES[index], tree_art[_tree_variety(index)]).self_modulate = wet_tint
-	var willow_sheet: Texture2D = LANDSCAPE.WINTER_WILLOW if winter else LANDSCAPE.ACTG_SCENERY
-	var willow_region: Rect2 = Rect2(Vector2.ZERO, willow_sheet.get_size()) if winter else LANDSCAPE.EXTERNAL_REGIONS[LANDSCAPE.Prop.WILLOW]
-	var willow := LANDSCAPE.atlas_texture(willow_sheet, willow_region)
-	_prop(layer, Vector2(36, -55), willow).scale = Vector2.ONE * 0.72
-	_prop(layer, Vector2(-73, 111), willow).scale = Vector2.ONE * 0.81
+	var willow := LANDSCAPE.riverside_texture(LANDSCAPE.Prop.WILLOW, season)
+	var reedbed := LANDSCAPE.riverside_texture(LANDSCAPE.Prop.REEDS, season)
+	var plant_tint := LANDSCAPE.riverside_tint(season, Global.has_rain())
+	var willow_at_water := _prop(layer, Vector2(36, -55), willow)
+	willow_at_water.scale = Vector2.ONE * 0.72
+	willow_at_water.self_modulate = plant_tint
+	var willow_at_road := _prop(layer, Vector2(-73, 111), willow)
+	willow_at_road.scale = Vector2.ONE * 0.81
+	willow_at_road.self_modulate = plant_tint
 	for mark: Vector3i in BANK_PROPS:
 		if winter and mark.z == LANDSCAPE.Prop.FLOWERS:
 			continue
 		var frame := Vector2(mark.z % 8, floori(mark.z / 8.0))
-		var texture := LANDSCAPE.atlas_texture(LANDSCAPE.SCENERY, Rect2(frame * 48.0, Vector2(48, 48)))
+		var texture := reedbed if mark.z == LANDSCAPE.Prop.REEDS \
+			else LANDSCAPE.atlas_texture(LANDSCAPE.SCENERY, Rect2(frame * 48.0, Vector2(48, 48)))
 		var sprite := _prop(layer, Vector2(mark.x, mark.y), texture)
 		sprite.flip_h = mark.z == LANDSCAPE.Prop.SIGNPOST and mark.x < 0
-		sprite.self_modulate = wet_tint
+		sprite.self_modulate = plant_tint if mark.z == LANDSCAPE.Prop.REEDS else wet_tint
 
 func _prop(layer: Node2D, foot: Vector2, texture: AtlasTexture) -> Sprite2D:
 	var sprite := Sprite2D.new()

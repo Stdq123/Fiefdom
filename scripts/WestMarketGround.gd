@@ -254,10 +254,16 @@ func place_scenery(layer: Node2D) -> void:
 	var fence := LANDSCAPE.atlas_texture(LANDSCAPE.SCENERY, Rect2(336, 48, 48, 48))
 	for foot: Vector2 in FENCE_FEET:
 		_prop(layer, foot, fence, 45.0, wet_tint)
+	var reedbed := LANDSCAPE.riverside_texture(LANDSCAPE.Prop.REEDS, season)
+	var plant_tint := LANDSCAPE.riverside_tint(season, Global.has_rain())
 	for detail: Vector3i in PROP_DETAILS:
-		var frame := Vector2i(detail.z % 8, floori(float(detail.z) / 8.0))
-		var texture := LANDSCAPE.atlas_texture(LANDSCAPE.SCENERY, Rect2(Vector2(frame * 48), Vector2(48, 48)))
-		_prop(layer, Vector2(detail.x, detail.y), texture, 45.0, wet_tint)
+		var foot := Vector2(detail.x, detail.y)
+		if detail.z == LANDSCAPE.Prop.REEDS:
+			_prop(layer, foot, reedbed, 26.0, plant_tint)
+		else:
+			var frame := Vector2i(detail.z % 8, floori(float(detail.z) / 8.0))
+			var texture := LANDSCAPE.atlas_texture(LANDSCAPE.SCENERY, Rect2(Vector2(frame * 48), Vector2(48, 48)))
+			_prop(layer, foot, texture, 45.0, wet_tint)
 	for jar: Vector3i in STORAGE:
 		var tint: Color = LANDSCAPE.STORAGE_TINTS[STORAGE_PROPS[jar.z]]
 		var texture := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_STORAGE, Rect2(jar.z * 16, 0, 16, 16))

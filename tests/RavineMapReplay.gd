@@ -106,6 +106,18 @@ func _bind_ravine() -> bool:
 		enemy.set_physics_process(false)
 	return true
 
+func _check_junction_posts() -> void:
+	var scenery := ravine.get_node("Scenery")
+	var names := ["野果坳", "浅滩", "望溪台", "南路小径"]
+	for index in names.size():
+		var post := scenery.get_node_or_null(names[index] + "路牌") as Sprite2D
+		if not _expect(post != null and post.is_visible_in_tree(), "The %s fork has a physical sign." % names[index]):
+			continue
+		var art := post.texture as AtlasTexture
+		_expect(art != null and art.atlas == LANDSCAPE.RAVINE_WAYPOSTS and art.region.position == Vector2(index * 32, 0),
+			"The %s sign points into its lane." % names[index])
+	print("RAVINE_MAP_JUNCTIONS fruit=north ford=southeast lookout=northeast south=down")
+
 func _layout_fits() -> bool:
 	var panel: Control = map.modal.get_node("Center/Panel")
 	if not tree.root.get_visible_rect().encloses(panel.get_global_rect()):
@@ -497,13 +509,16 @@ func run(game_tree: SceneTree) -> void:
 			"The estate approach has a matching stone sill.")
 		await _capture_map_frame("00a-east-gate")
 		await _move(&"ui_right", 38)
-		if _bind_ravine() and await _cross_the_ravine():
-			await _check_journal()
-			if not tree.paused:
-				await _check_fruit()
-			if not map_capture_dir.is_empty() and not tree.paused:
-				await Campaign.walk_ravine_to(tree, ravine, RavineLayout.BRIDGE)
-				await _check_ravine_weather()
+		if _bind_ravine():
+			await tree.process_frame
+			_check_junction_posts()
+			if await _cross_the_ravine():
+				await _check_journal()
+				if not tree.paused:
+					await _check_fruit()
+				if not map_capture_dir.is_empty() and not tree.paused:
+					await Campaign.walk_ravine_to(tree, ravine, RavineLayout.BRIDGE)
+					await _check_ravine_weather()
 	tree.paused = false
 	tree.unload_current_scene()
 	for node in tree.root.get_node("AudioManager").get_children():

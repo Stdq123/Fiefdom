@@ -53,14 +53,16 @@ func _run() -> void:
 	var orchard := _tree_at(estate, ORCHARD_FOOT)
 	var pine := _tree_at(estate, Vector2(85, -20))
 	var sapling := _tree_at(estate, Vector2(115, -42))
-	if oak == null or orchard == null or pine == null or sapling == null:
-		push_error("The estate's spring trees must be present.")
+	var bamboo := _tree_at(estate, Vector2(-66, -50))
+	if oak == null or orchard == null or pine == null or sapling == null or bamboo == null:
+		push_error("The estate's spring trees and bamboo must be present.")
 		quit(1)
 		return
 	var oak_anchor := oak.offset
 	var orchard_anchor := orchard.offset
 	var pine_anchor := pine.offset
 	var sapling_anchor := sapling.offset
+	var bamboo_anchor := bamboo.offset
 	_expect(not estate.ground_cover.ground_marks.is_empty() and not estate.ground_cover.frost_marks.is_empty(),
 		"The estate has both warm-season marks and winter frost details.")
 	for season in 4:
@@ -75,6 +77,9 @@ func _run() -> void:
 			and sapling.texture.atlas == estate.WOODLAND and sapling.texture.region.position == Vector2(0, winter_row)
 			and pine.offset == pine_anchor and sapling.offset == sapling_anchor,
 			"The estate's pine and sapling share the ravine's art and keep their feet through winter.")
+		var bamboo_row: int = estate.RIVERSIDE_WINTER_ROW if season == state.Season.WINTER else 0
+		_expect(bamboo.texture.atlas == estate.RIVERSIDE_PLANTS and bamboo.texture.region.position == Vector2(88, bamboo_row)
+			and bamboo.offset == bamboo_anchor, "Bamboo keeps its base when frost appears.")
 	var snowy_point := Vector2(190, 201)
 	_expect(estate._surface_at(snowy_point) == TerrainAudio.Surface.SNOW, "The lower winter field margin has snow.")
 	var tile_map := current_scene.get_node("World/TileMapLayer") as TileMapLayer
@@ -104,8 +109,9 @@ func _run() -> void:
 	var landscape := current_scene.get_node("Landscape")
 	var terrain := landscape.terrain_audio as TerrainAudio
 	var willow := _tree_at(landscape, Vector2(225, -169))
-	_expect(willow != null and willow.texture.atlas.resource_path.get_file() == "winter-willow.svg",
-		"Winter replaces the green willow silhouette with bare branches.")
+	_expect(willow != null and willow.texture.atlas == landscape.RIVERSIDE_PLANTS
+		and willow.texture.region.position.y == landscape.RIVERSIDE_WINTER_ROW,
+		"Winter replaces the green willow silhouette with bare branches in the shared atlas.")
 	var snow_samples: Dictionary[String, bool] = {}
 	walker.footstep.connect(func(at: Vector2) -> void:
 		if absf(at.y - 97) < 3.0 and at.x >= -253 and at.x <= -208:
