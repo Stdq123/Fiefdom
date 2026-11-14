@@ -4,16 +4,20 @@ class_name PavilionRest
 const PLACE := "亭前晚坐"
 const RAIN_PLACE := "亭东雨棚"
 const START := (17.0 - Global.DAY_START_HOUR) / (Global.DAY_END_HOUR - Global.DAY_START_HOUR)
+const RAIN_START := (15.0 - Global.DAY_START_HOUR) / (Global.DAY_END_HOUR - Global.DAY_START_HOUR)
 const SEATS := [Vector2(-25, 3), Vector2(12, -16), Vector2(-12, -13),
 	Vector2(25, 0), Vector2(21, 22), Vector2(-22, 22)]
-const RAIN_SEATS := [Vector2(-30, -8), Vector2(-10, -8), Vector2(10, -8),
-	Vector2(30, -8), Vector2(29, 9), Vector2(-29, 9)]
+const RAIN_SEATS := [Vector2(-30, -10), Vector2(-11, -14), Vector2(10, -14),
+	Vector2(30, -10), Vector2(30, 10), Vector2(-28, 10)]
+const GUEST_SEAT := Vector2(8, 20)
+const RAIN_GUEST_SEAT := Vector2(8, 13)
 const APPROACH := Vector2(0, 15)
 
 @onready var hint: Label = $Hint
 @onready var mats: Node2D = $Mats
 @onready var dry_lamps: Node2D = $DryLamps
 @onready var rain_lamps: Node2D = $RainLamps
+var focused := false
 
 func _ready() -> void:
 	mats.draw.connect(_draw_mats)
@@ -29,23 +33,29 @@ func _ready() -> void:
 	_refresh()
 
 func _refresh() -> void:
-	visible = Global.day_progress >= START and Global.raid_day == 0 \
-		and Global.outcome == Global.Outcome.RUNNING
 	var shelter := is_rain_shelter()
-	var interaction_origin := gathering_approach() if shelter else gathering_center()
-	if position != interaction_origin:
-		position = interaction_origin
+	visible = Global.day_progress >= rest_start() and Global.raid_day == 0 \
+		and Global.outcome == Global.Outcome.RUNNING
+	var approach := gathering_approach()
+	if position != approach:
+		position = approach
 		mats.position = gathering_center() - position
+		dry_lamps.position = mats.position
 		rain_lamps.position = mats.position
-		mats.queue_redraw()
-		queue_redraw()
+	refresh_table()
 	dry_lamps.visible = not shelter
 	rain_lamps.visible = shelter
-	if not visible:
-		hint.hide()
+
+func refresh_table() -> void:
+	mats.queue_redraw()
+	queue_redraw()
+	_refresh_hint()
 
 func is_rain_shelter() -> bool:
 	return Global.has_rain()
+
+static func rest_start() -> float:
+	return RAIN_START if Global.has_rain() else START
 
 func gathering_name() -> String:
 	return RAIN_PLACE if is_rain_shelter() else PLACE
@@ -54,7 +64,8 @@ func gathering_center() -> Vector2:
 	return EstateLayout.PAVILION_SHELTER if is_rain_shelter() else EstateLayout.PAVILION_SEATS
 
 func gathering_approach() -> Vector2:
-	return EstateLayout.PAVILION_SHELTER_APPROACH if is_rain_shelter() else EstateLayout.PAVILION_SEATS + APPROACH
+	return (EstateLayout.PAVILION_SHELTER_APPROACH if is_rain_shelter() else EstateLayout.PAVILION_SEATS + APPROACH) \
+		+ Vector2(-10, 0)
 
 func seat_for(data: RetainerData) -> Vector2:
 	var index := VisitorData.NEIGHBORS.find(data.name)
@@ -63,18 +74,30 @@ func seat_for(data: RetainerData) -> Vector2:
 		return gathering_center() + seats[index]
 	return Vector2.INF
 
+func guest_seat() -> Vector2:
+	return gathering_center() + (RAIN_GUEST_SEAT if is_rain_shelter() else GUEST_SEAT)
+
 func can_interact_from(foot: Vector2) -> bool:
-	return is_visible_in_tree() and get_parent().to_local(foot).distance_to(gathering_approach()) < 13.0
+	return is_visible_in_tree() and global_position.distance_to(foot) < 13.0
 
 func set_interaction_focused(focused: bool) -> void:
-	hint.text = GamepadInput.interact_hint("今夜安排")
-	hint.visible = focused
+	self.focused = focused
+	_refresh_hint()
+
+func _refresh_hint() -> void:
+	var story: String = get_parent().pavilion_story_id() if visible else ""
+	var label := "灯下小谈" if not story.is_empty() else "今夜安排"
+	hint.text = GamepadInput.interact_hint(label) if focused else label
+	hint.visible = visible and (focused or not story.is_empty())
 
 func interact() -> void:
-	GameEvents.night_rations_requested.emit()
+	GameEvents.pavilion_table_requested.emit()
 
 func _draw_mats() -> void:
-	var seats := RAIN_SEATS if is_rain_shelter() else SEATS
+	var seats := (RAIN_SEATS if is_rain_shelter() else SEATS).duplicate()
+	var guest: Visitor = get_parent().current_visitor_actor()
+	if is_instance_valid(guest) and guest.activity == VisitorData.VisitActivity.PAVILION_REST:
+		seats.append(guest_seat() - gathering_center())
 	for seat: Vector2 in seats:
 		var mat := Rect2(seat + Vector2(-9, -2), Vector2(18, 7))
 		mats.draw_rect(mat, Color("#403b2b"))
@@ -97,3 +120,8 @@ func _draw() -> void:
 	draw_rect(Rect2(-3, -15, 7, 9), Color("#805b4d"))
 	draw_rect(Rect2(-1, -14, 2, 7), Color("#ae8062"))
 	draw_rect(Rect2(-3, -16, 7, 2), Color("#cca36e"))
+	if not get_parent().pavilion_story_id().is_empty():
+		draw_rect(Rect2(-12, -10, 9, 5), Color("#4c3928"))
+		draw_rect(Rect2(-11, -11, 8, 4), Color("#d8bd85"))
+		draw_line(Vector2(-9, -11), Vector2(-9, -7), Color("#887047"), 1.0)
+		draw_line(Vector2(-6, -11), Vector2(-6, -7), Color("#887047"), 1.0)

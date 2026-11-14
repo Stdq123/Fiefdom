@@ -206,6 +206,9 @@ func _run() -> void:
 			replay.legacy = arguments[0] == "pavilion-evening-legacy"
 			replay.capture_path = capture_directory
 			await replay.run(tree)
+		"pavilion-stories":
+			var replay = load("res://tests/PavilionVisitReplay.gd").new()
+			await replay.run(tree, capture_directory, true)
 		"market-orders", "summer-rice":
 			var replay = load("res://tests/MarketOrderReplay.gd").new()
 			replay.summer = arguments[0] == "summer-rice"

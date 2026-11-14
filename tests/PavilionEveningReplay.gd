@@ -82,7 +82,7 @@ func _first_night() -> bool:
 	await _key(KEY_ESCAPE)
 	var food: int = state.food_storage
 	var table: PavilionRest = world.pavilion_rest
-	await _walk(world.player, [table.position + PavilionRest.APPROACH])
+	await _walk(world.player, [world.to_global(table.gathering_approach())])
 	await _key(KEY_E)
 	var plan := ui.get_node_or_null("Control/NightRationsPanel") as Control
 	if not _expect(plan != null and state.food_storage == food and "1 份" in plan.need.text,
@@ -210,7 +210,7 @@ func _rain_walk() -> bool:
 		return false
 	keeper.set_physics_process(false)
 	state.set_field_seed_plan(RAIN_PRIVATE, "millet")
-	await _time_at(PavilionRest.START + 0.003)
+	await _time_at(PavilionRest.rest_start() + 0.003)
 	keeper.set_physics_process(true)
 	var worked := false
 	var walked := false
@@ -317,7 +317,7 @@ func _play() -> void:
 			"The genuine previous save keeps the evening clock, household and crops at the relocated pavilion."):
 			return
 		var table: PavilionRest = world.pavilion_rest
-		await Campaign.walk_estate_road_to(tree, world, table.global_position + PavilionRest.APPROACH)
+		await Campaign.walk_estate_road_to(tree, world, world.to_global(table.gathering_approach()))
 		await _key(KEY_E)
 		_expect(ui.has_node("Control/NightRationsPanel"), "The table on the new road opens the night plan after continuing the save.")
 		await _snapshot("01-legacy-evening-table")

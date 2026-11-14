@@ -79,6 +79,8 @@ func follow_travel_clock(next: VisitorData.VisitActivity, foot: Vector2, heading
 		sprite.face(heading)
 
 func visit_location() -> String:
+	if activity == VisitorData.VisitActivity.PAVILION_REST and Global.has_rain():
+		return PavilionRest.RAIN_PLACE
 	return data.meeting_place if activity == VisitorData.VisitActivity.NONE else VisitorData.ACTIVITY_STOPS[activity].place
 
 func visit_note() -> String:
@@ -106,12 +108,15 @@ func _update_hint() -> void:
 		hint.text = data.name
 		if focused:
 			hint.text += " · " + GamepadInput.interact_key()
-		elif activity != VisitorData.VisitActivity.NONE and not walking_to_stop:
+		elif activity != VisitorData.VisitActivity.NONE and not walking_to_stop and not resting_at_pavilion():
 			hint.text += " · " + _activity_task()
 		hint.modulate = Color("#f6d493") if focused else Color.WHITE
 
 func _physics_process(delta: float) -> void:
-	if not walking_to_stop:
+	if activity == VisitorData.VisitActivity.PAVILION_REST and Global.raid_day > 0:
+		velocity = Vector2.ZERO
+		sprite.stand()
+	elif not walking_to_stop:
 		_idle_at_stop(delta)
 	elif is_instance_valid(observer) and observer.conversation_open:
 		velocity = Vector2.ZERO

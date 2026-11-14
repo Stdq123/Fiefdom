@@ -116,6 +116,7 @@ var retainers: Array[RetainerData] = []
 var days_without_contribution: int
 var visitor_encounters: Dictionary[String, int] = {}
 var neighbor_met_days: Dictionary[String, int] = {}
+var pavilion_stories_heard: Dictionary[String, int] = {}
 enum DepartureReason { UNRECORDED, HUNGER, REFORM }
 enum RecruitmentBlock { NONE, UNAVAILABLE, DAILY_LIMIT, JUST_LEFT, REPUTATION, FOOD }
 var neighbor_departures: Dictionary[String, Dictionary] = {}
@@ -296,6 +297,7 @@ func _reset_campaign() -> void:
 	retainers = [_starter_retainer()]
 	visitor_encounters.clear()
 	neighbor_met_days.clear()
+	pavilion_stories_heard.clear()
 	neighbor_met_days[VisitorData.FIELD_KEEPER] = current_day
 	neighbor_departures.clear()
 	last_recruit_day = 0
@@ -360,6 +362,15 @@ func knows_neighbor(speaker: String) -> bool:
 func meet_neighbor(speaker: String) -> void:
 	if speaker in VisitorData.NEIGHBORS and not knows_neighbor(speaker):
 		neighbor_met_days[speaker] = current_day
+
+func hear_pavilion_story(id: String, day: int) -> void:
+	if outcome != Outcome.RUNNING or day != current_day or raid_day > 0 or id not in PavilionStories.IDS \
+			or pavilion_stories_heard.has(id) or not PavilionStories.available(id):
+		return
+	pavilion_stories_heard[id] = day
+	for speaker: String in PavilionStories.speakers(id):
+		meet_neighbor(speaker)
+	GameEvents.pavilion_story_heard.emit()
 
 func talk_to_visitor(visitor_name: String) -> void:
 	if visitor_encounters.get(visitor_name, 0) == current_day:
@@ -1372,6 +1383,9 @@ func _capture_ending(result: Outcome) -> Dictionary:
 
 func _ending_memories() -> Array[String]:
 	var events: Array[Dictionary] = []
+	for id: String in PavilionStories.IDS:
+		if pavilion_stories_heard.has(id):
+			events.append({"day": pavilion_stories_heard[id], "text": PavilionStories.STORIES[id].memory})
 	if field_rotation.signed_day > 0:
 		events.append({"day": field_rotation.signed_day, "text": "渠伯把%s的收成记进轮作簿。" % rotation_crop_name()})
 	if ravine_journal.garden_day > 0:
@@ -2975,6 +2989,7 @@ func _save_snapshot(origin: String) -> Error:
 		"visitor_encounters": visitor_encounters.keys(),
 		"visitor_talk_days": visitor_encounters,
 		"neighbor_met_days": neighbor_met_days,
+		"pavilion_stories_heard": pavilion_stories_heard,
 		"neighbor_departures": neighbor_departures,
 		"field_rotation": {
 			"promise_day": field_rotation.promise_day,
@@ -3460,6 +3475,13 @@ func load_game(path := "") -> Error:
 			if first_day > 0 and first_day <= saved_day:
 				neighbor_met_days[speaker] = first_day
 	_restore_neighbor_departures(data.get("neighbor_departures"), saved_day)
+	pavilion_stories_heard.clear()
+	var heard: Variant = data.get("pavilion_stories_heard")
+	if heard is Dictionary:
+		for id: String in PavilionStories.IDS:
+			var day := _read_save_int(heard.get(id), 0)
+			if day > 0 and day <= saved_day:
+				pavilion_stories_heard[id] = day
 	last_recruit_day = clampi(_read_save_int(data.get("last_recruit_day"), 0), 0, saved_day)
 	last_recruit_outside_rotation = data.get("last_recruit_outside_rotation", data.get("last_recruit_from_handoff", false)) == true
 	road_provisions_delivered = data.get("road_provisions_delivered", false) == true

@@ -123,6 +123,9 @@ func _collect_places() -> void:
 	var pavilion: PavilionRest = world.pavilion_rest
 	if pavilion.visible:
 		var detail := "门客在亭檐下避雨，可交谈或查看今夜口粮" if pavilion.is_rain_shelter() else "与门客说话、查看今夜口粮"
+		var story: String = world.pavilion_story_id()
+		if not story.is_empty():
+			detail = "可在席案听「%s」或查看今夜口粮" % PavilionStories.STORIES[story].title
 		places.append(_entry(Category.PLACES, pavilion.gathering_name(), detail, pavilion.gathering_approach()))
 	_add_built_place("药圃", "采药处", "HerbGarden")
 	var relief := Global.watch_relief_day() > 0

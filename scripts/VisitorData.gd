@@ -212,12 +212,10 @@ func has_pavilion_rest() -> bool:
 	return true
 
 static func pavilion_rest_seconds() -> float:
-	var hour := 15.0 if Global.has_rain() else 17.0
-	var start := inverse_lerp(Global.DAY_START_HOUR, Global.DAY_END_HOUR, hour)
-	return (Global.day_progress - start) * maxf(Global.balance.daylight_seconds, 1.0)
+	return (Global.day_progress - PavilionRest.rest_start()) * maxf(Global.balance.daylight_seconds, 1.0)
 
 static func pavilion_rest_plan() -> String:
-	return "申时到南路亭避雨" if Global.has_rain() else "酉时到南路亭歇脚"
+	return "申时到亭东雨棚避雨" if Global.has_rain() else "酉时到南路亭歇脚"
 
 func pavilion_greeting() -> String:
 	var lines := PAVILION_RAIN_LINES if Global.has_rain() else PAVILION_LINES

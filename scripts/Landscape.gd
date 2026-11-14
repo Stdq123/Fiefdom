@@ -85,8 +85,6 @@ const HALL_FOOT := EstateLayout.HALL_FOOT
 const HALL_LANDING := EstateLayout.HALL_LANDING
 const SOUTH_PAVILION := EstateLayout.SOUTH_PAVILION
 const PAVILION_TURN := EstateLayout.PAVILION_TURN
-const PAVILION_REST_FOOT := SOUTH_PAVILION + Vector2(5, 5)
-const PAVILION_WATER := PAVILION_REST_FOOT + Vector2(10, -4)
 const SILK_SHED_FOOT := EstateLayout.SILK_SHED_FOOT
 const SCENE_LANDMARK := -1
 const SCENE_WEST_COURT := -2
@@ -594,7 +592,6 @@ func _draw() -> void:
 		if Global.road_provisions_delivered:
 			var provisions := Rect2(SOUTH_PAVILION + Vector2(31, 0), Vector2(14, 10))
 			draw_texture_rect_region(ROAD_PAVILION, provisions, Rect2(48, 30, 14, 10))
-		_draw_pavilion_rest()
 		if Global.silk_sample_day > 0 and _ground_clear(SILK_SAMPLE_BOUNDS):
 			draw_texture_rect(SILK_SAMPLE, SILK_SAMPLE_BOUNDS, false, _prop_tint(-1))
 	for prop in props:
@@ -643,20 +640,6 @@ func _surface_at(foot: Vector2) -> TERRAIN_AUDIO.Surface:
 		if wilderness or _ground_clear(Rect2(foot, Vector2.ONE)):
 			return TERRAIN_AUDIO.Surface.SNOW
 	return TERRAIN_AUDIO.Surface.GRASS
-
-func _draw_pavilion_rest() -> void:
-	var guest: Visitor = get_parent().current_visitor_actor()
-	if not is_instance_valid(guest) or not guest.resting_at_pavilion():
-		return
-	var mat := PAVILION_REST_FOOT + Vector2(-11, -2)
-	draw_rect(Rect2(mat + Vector2(0, 1), Vector2(22, 6)), Color("#373b2d"))
-	draw_rect(Rect2(mat + Vector2(1, 0), Vector2(20, 5)), Color("#ad9565"))
-	for offset in range(2, 21, 3):
-		draw_rect(Rect2(mat + Vector2(offset, 1), Vector2(1, 3)), Color("#786647"))
-	var bowl := PAVILION_WATER
-	draw_rect(Rect2(bowl + Vector2(-3, 1), Vector2(7, 3)), Color("#694837"))
-	draw_rect(Rect2(bowl + Vector2(-4, 0), Vector2(9, 2)), Color("#b78c61"))
-	draw_rect(Rect2(bowl + Vector2(-2, 0), Vector2(5, 1)), Color("#5e6553"))
 
 func _add_landmark_labels() -> void:
 	if wilderness:

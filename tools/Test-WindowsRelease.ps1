@@ -142,6 +142,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ManagementNavigationReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/EndingFilmReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RaidReadinessReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/PavilionVisitReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RecruitmentLedgerReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RavineShortcutReplay.gd') -Destination $testDirectory
     foreach ($file in 'MarketOrderReplay.gd', 'AutumnExhibitReplay.gd', 'SheepfoldReplay.gd', 'RavineMapReplay.gd', 'CreekTrapReplay.gd', 'FieldNightReplay.gd', 'CouncilSilkReplay.gd') {
@@ -277,6 +278,7 @@ try {
     }
     if ($PavilionEvening) {
         Start-VerifiedGame -Directory $release -Profile 'pavilion-evening' -Name 'pavilion-evening' -Replay 'pavilion-evening'
+        Start-VerifiedGame -Directory $release -Profile 'pavilion-stories' -Name 'pavilion-stories' -Replay 'pavilion-stories' -Resolution $fullResolution
     }
     if ($WatchRelief) {
         Start-VerifiedGame -Directory $release -Profile 'watch-relief' -Name 'watch-relief' -Replay 'watch-relief'
@@ -332,6 +334,9 @@ try {
         }
         if ($RaidFeedback) {
             Start-VerifiedGame -Directory $release -Profile 'raid-feedback-compact' -Name 'raid-feedback-1024x768' -Replay 'raid-feedback' -Resolution '1024x768'
+        }
+        if ($PavilionEvening) {
+            Start-VerifiedGame -Directory $release -Profile 'pavilion-stories-compact' -Name 'pavilion-stories-1024x768' -Replay 'pavilion-stories' -Resolution '1024x768'
         }
         if ($RouteGoals) {
             Start-VerifiedGame -Directory $release -Profile 'council-prep-compact' -Name 'council-prep-1024x768' -Replay 'council-prep' -Resolution '1024x768'

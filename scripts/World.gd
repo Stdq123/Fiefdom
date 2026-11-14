@@ -73,6 +73,9 @@ func _ready() -> void:
 			GameEvents.ravine_journal_changed, GameEvents.east_watch_built]:
 		milestone.connect(_update_visitor_activity)
 	GameEvents.daylight_changed.connect(_update_visitor_clock)
+	GameEvents.raid_defeated.connect(_update_visitor_clock)
+	GameEvents.pavilion_story_heard.connect(pavilion_rest.refresh_table)
+	GameEvents.retainer_location_changed.connect(pavilion_rest.refresh_table)
 	GameEvents.tax_reform_choice_made.connect(_on_tax_reform_choice_made)
 	GameEvents.management_visibility_changed.connect(_end_sweep.unbind(1))
 	GameEvents.estate_room_changed.connect(_on_estate_room_changed)
@@ -232,7 +235,7 @@ func path_to_pavilion_seat(from: Vector2, seat: Vector2) -> Array[Vector2]:
 		path.append_array(Array(_follow_lane(LANDSCAPE.ESTATE_SOUTH_LANE, start, EstateLayout.PAVILION_JUNCTION)))
 		path.append_array(EstateLayout.PAVILION_COURT.slice(0, -1))
 	if pavilion_rest.is_rain_shelter():
-		var approach := pavilion_rest.gathering_approach()
+		var approach := EstateLayout.PAVILION_SHELTER_APPROACH
 		if coming_from_road:
 			path.append_array(EstateLayout.PAVILION_SHELTER_PATH)
 		elif from.y >= approach.y:
@@ -855,7 +858,7 @@ func silk_trip_stop() -> Dictionary:
 		VisitorData.SilkTrip.STALL:
 			note = "在西市绸摊，酉时到南路亭"
 		VisitorData.SilkTrip.RETURN_ROAD:
-			return {"title": "陶辛 · 酉时南路亭", "place": "南路亭", "point": LANDSCAPE.PAVILION_REST_FOOT,
+			return {"title": "陶辛 · 酉时南路亭", "place": "南路亭", "point": pavilion_rest.guest_seat(),
 				"note": "正返程，酉时到南路亭"}
 		_:
 			return {}
@@ -971,6 +974,7 @@ func _visitor_arrived(_visitor: Visitor) -> void:
 
 func _report_visitor_activity() -> void:
 	visitor_changed.emit(current_visitor())
+	pavilion_rest.refresh_table()
 
 func _update_visitor_activity() -> void:
 	_refresh_handoff_visitor(true)
@@ -993,12 +997,11 @@ func _update_visitor_clock() -> void:
 				_remove_visitor(visitor)
 			_report_visitor_activity()
 		VisitorData.SilkTrip.PAVILION:
-			if visitor and visitor.activity == VisitorData.VisitActivity.PAVILION_REST:
-				return
-			if visitor:
-				_remove_visitor(visitor)
-			_place_scheduled_visitor(false)
-			_report_visitor_activity()
+			if not visitor:
+				_place_scheduled_visitor(false)
+				_report_visitor_activity()
+			elif _apply_pavilion_visit(visitor, true):
+				_report_visitor_activity()
 		_:
 			if visitor and _apply_pavilion_visit(visitor, true):
 				_report_visitor_activity()
@@ -1006,11 +1009,12 @@ func _update_visitor_clock() -> void:
 func _apply_pavilion_visit(visitor: Visitor, walk_in: bool) -> bool:
 	var from_market := visitor.data.silk_trip() == VisitorData.SilkTrip.PAVILION
 	if (visitor.activity == VisitorData.VisitActivity.PAVILION_REST or (not from_market and not visitor.data.has_pavilion_rest())
-		or VisitorData.pavilion_rest_seconds() < 0.0 or Global.outcome != Global.Outcome.RUNNING):
+		or VisitorData.pavilion_rest_seconds() < 0.0 or Global.outcome != Global.Outcome.RUNNING
+		or Global.raid_day > 0):
 		return false
 	var path := _path_to_pavilion(visitor)
 	var elapsed := 0.0 if walk_in else VisitorData.pavilion_rest_seconds()
-	visitor.go_to_activity(VisitorData.VisitActivity.PAVILION_REST, path, LANDSCAPE.PAVILION_WATER,
+	visitor.go_to_activity(VisitorData.VisitActivity.PAVILION_REST, path, pavilion_rest.gathering_center(),
 		Global.day_progress < 1.0, elapsed)
 	return true
 
@@ -1027,9 +1031,27 @@ func _path_to_pavilion(visitor: Visitor) -> PackedVector2Array:
 		path = _follow_lane(LANDSCAPE.GARDEN_TRACK, start, LANDSCAPE.GARDEN_TRACK[0])
 	if not path.is_empty():
 		start = path[-1]
-	path.append_array(_follow_lane(LANDSCAPE.ESTATE_SOUTH_LANE, start, LANDSCAPE.PAVILION_TURN))
-	path.append_array(PackedVector2Array([EstateLayout.SOUTH_PAVILION + Vector2(-14, 3), LANDSCAPE.PAVILION_REST_FOOT]))
+	path.append_array(_follow_lane(LANDSCAPE.ESTATE_SOUTH_LANE, start, EstateLayout.PAVILION_JUNCTION))
+	path.append_array(PackedVector2Array(EstateLayout.PAVILION_COURT))
+	if pavilion_rest.is_rain_shelter():
+		path.append_array(PackedVector2Array(EstateLayout.PAVILION_SHELTER_PATH.slice(1)))
+	path.append(pavilion_rest.guest_seat())
 	return path
+
+func _pavilion_has_neighbor(speaker: String) -> bool:
+	var person := neighbor_actor(speaker)
+	if person is Retainer:
+		return person.resting_at_pavilion()
+	return person is Visitor and person.resting_at_pavilion()
+
+func pavilion_story_id() -> String:
+	if pavilion_rest == null or not pavilion_rest.visible:
+		return ""
+	for id: String in PavilionStories.IDS:
+		if not Global.pavilion_stories_heard.has(id) and PavilionStories.available(id) \
+				and PavilionStories.speakers(id).all(_pavilion_has_neighbor):
+			return id
+	return ""
 
 func _follow_lane(lane: Array, from: Vector2, destination: Vector2) -> PackedVector2Array:
 	var closest := Vector2.ZERO

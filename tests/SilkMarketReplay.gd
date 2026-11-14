@@ -293,7 +293,7 @@ func _back_to_pavilion() -> bool:
 	_expect(world.neighbor_actor(TAO) == null and "返程" in world.silk_trip_note(), "No estate duplicate while the merchant is on the road.")
 	var stop: Dictionary = ui.directions.destination()
 	_expect(ui.directions.tracked_neighbor == TAO and "酉时南路亭" in stop.get("title", "")
-		and stop.point == world.get_node("Landscape").PAVILION_REST_FOOT,
+		and stop.point == world.pavilion_rest.guest_seat(),
 		"On the estate, the guide points to his next stop at the pavilion.")
 	var journal := await _merchant_journal()
 	_expect(journal.locate_button.text == "指路去南路亭", "The neighbor journal also offers the next stop instead of the gate.")
@@ -319,7 +319,7 @@ func _back_to_pavilion() -> bool:
 	_expect(ui.directions.destination().point.distance_to(tao.position) < 2.0,
 		"Once back on the estate, the pointer resumes tracking the actual merchant.")
 	await _snapshot("05-back-on-the-estate")
-	for frame in 840:
+	for frame in 1080:
 		if tao.resting_at_pavilion():
 			break
 		await tree.physics_frame

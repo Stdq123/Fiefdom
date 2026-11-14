@@ -47,6 +47,34 @@ func show_tribute_bedtime(message: String, mark_plot: Callable, sleep: Callable)
 			sleep.call()
 	)
 
+func show_pavilion_story(id: String, place: String, open_rations: Callable) -> void:
+	if parent_node.has_node("DialoguePanel"):
+		return
+	var story: Dictionary = PavilionStories.STORIES[id]
+	var dialog := _open("南路亭", place, "席上正说起「%s」。" % story.title,
+		["坐下听一会", "今夜安排", "离开"], [], null)
+	dialog.choices[0].grab_focus()
+	dialog.option_selected.connect(func(index: int):
+		if index == 0:
+			dialog.tree_exited.connect(_pavilion_story_line.bind(id, place, Global.current_day, 0), CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+		elif index == 1:
+			dialog.tree_exited.connect(open_rations, CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+	)
+
+func _pavilion_story_line(id: String, place: String, day: int, index: int) -> void:
+	if day != Global.current_day or parent_node.has_node("DialoguePanel"):
+		return
+	var story: Dictionary = PavilionStories.STORIES[id]
+	var last: bool = index == story.lines.size() - 1
+	var speaker: String = story.speakers[index % story.speakers.size()]
+	var dialog := _open(speaker, place, story.lines[index], ["听完起身" if last else "接着听"], [], null)
+	dialog.option_selected.connect(func(_choice: int):
+		if last:
+			Global.hear_pavilion_story(id, day)
+		else:
+			dialog.tree_exited.connect(_pavilion_story_line.bind(id, place, day, index + 1), CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+	)
+
 func show_first_harvest(open_orders: Callable) -> Control:
 	var use := Global.market_crop_plan(1)
 	var crop: String = use.keys()[0]

@@ -95,7 +95,7 @@ func _wait_for_walk(guest: Visitor) -> bool:
 func _wait_for_arrival(guest: Visitor) -> bool:
 	for frame in 840:
 		if guest.resting_at_pavilion():
-			return _expect(guest.position == Landscape.PAVILION_REST_FOOT, "The visitor settles at the pavilion.")
+			return _expect(guest.position == world.pavilion_rest.guest_seat(), "The visitor settles at the common table.")
 		await tree.physics_frame
 	return _expect(false, "Finish walking to the pavilion.")
 
@@ -193,7 +193,7 @@ func _play_opening() -> void:
 		return
 	guest = world.current_visitor_actor()
 	_expect(state.current_day == 2 and state.day_progress >= 0.91 and guest.resting_at_pavilion()
-		and guest.position == Landscape.PAVILION_REST_FOOT, "Continue a manual save at the same evening station.")
+		and guest.position == world.pavilion_rest.guest_seat(), "Continue a manual save at the same evening seat.")
 	print("PAVILION_RESTORE day=", state.current_day, " watch=", state.day_watch_label(), " foot=", guest.position)
 	await _sleep()
 	guest = world.current_visitor_actor()
@@ -235,11 +235,10 @@ func _rain_visit() -> void:
 	if not await _wait_for_arrival(guest):
 		return
 	var gathering := world.get_node("SpringGathering") as Node2D
-	_expect(guest.visit_note().ends_with("檐下避雨") and state.day_watch_label() == "申时"
+	_expect(guest.visit_note() == "亭东雨棚 · 檐下避雨"
+		and EstateLayout.PAVILION_SHELTER_FLOOR.has_point(guest.position + Vector2(0, -4))
 		and gathering.get_node("Guests").get_child_count() == 3,
-		"The rainy pavilion visit leaves the three festival guests available.")
-	_expect(gathering.get_node("BookHint").global_position.y > guest.global_position.y + 8.0,
-		"The scorebook label stays below the sheltering visitor.")
+		"The visitor rests beneath the shared roof while the three festival guests remain available.")
 	await _walk(guest.position + Vector2(26, 1))
 	await _capture("05-rain-shelter")
 	await _key(KEY_E)
@@ -276,7 +275,7 @@ func _return_during_the_walk() -> void:
 		return
 	guest = world.current_visitor_actor()
 	_expect(guest.data.name == VisitorData.EAST_WATCHER and guest.walking_to_stop and guest.position.distance_to(before) > 20.0
-		and guest.position.distance_to(Landscape.PAVILION_REST_FOOT) > 30.0,
+		and guest.position.distance_to(world.pavilion_rest.guest_seat()) > 30.0,
 		"Returning from the ravine restores the visitor partway through the evening walk.")
 	print("PAVILION_REENTRY watch=", state.day_watch_label(), " foot=", guest.position, " walking=", guest.walking_to_stop)
 	var before_save := guest.position
@@ -293,7 +292,7 @@ func _check_scheduled_guests() -> void:
 		if not await _load_fixture({"current_day": index, "day_progress": 0.91}):
 			return
 		var guest: Visitor = world.current_visitor_actor()
-		_expect(guest.resting_at_pavilion() and guest.position == Landscape.PAVILION_REST_FOOT
+		_expect(guest.resting_at_pavilion() and guest.position == world.pavilion_rest.guest_seat()
 			and guest.data.pavilion_greeting() == VisitorData.PAVILION_LINES[guest.data.name],
 			"Each ordinary weekday visit restores its own evening dialogue and location.")
 	var priorities := [
@@ -351,7 +350,157 @@ func _check_visits_from_facilities() -> void:
 			await _wait_for_arrival(guest)
 		print("PAVILION_FACILITY guest=", guest.data.name, " foot=", guest.position)
 
-func run(game_tree: SceneTree) -> void:
+func _choose_dialogue(label: String) -> bool:
+	var dialogue := ui.get_node_or_null("Control/DialoguePanel") as Control
+	if dialogue:
+		for choice: Button in dialogue.options_container.get_children():
+			if choice.text.begins_with(label) and not choice.disabled:
+				await _button(choice)
+				return true
+	return _expect(false, "The conversation offers " + label)
+
+func _tend_for_story() -> void:
+	var plots := [PUBLIC, PUBLIC + Vector2i.RIGHT]
+	for day in range(1, 8):
+		var tiles: TileMapLayer = world.tile_map
+		for plot: Vector2i in plots:
+			var at := tiles.get_global_transform_with_canvas() * tiles.map_to_local(plot)
+			if world.is_crop_ripe(plot):
+				await _click(at)
+			if day <= 5:
+				if not state.tilled_cells.has(plot):
+					await _click(at)
+				if not state.active_crops.has(plot):
+					await _click(at)
+				if state.field_crop_is_dry(plot):
+					await _click(at)
+		if day == 2:
+			await _meet(world.current_visitor_actor(), Vector2(0, -15))
+			if not await _choose_dialogue("交谈"):
+				return
+			await Campaign.walk_estate_road_to(tree, world, Vector2(83, 144))
+		if day < 7:
+			await _sleep()
+
+func _open_story_table(id: String) -> bool:
+	var table: PavilionRest = world.pavilion_rest
+	var approach := world.to_global(table.gathering_approach())
+	await Campaign.walk_estate_road_to(tree, world, approach)
+	if world.player.global_position.distance_to(approach) > 3.0:
+		await Campaign.walk_straight(tree, world.player, approach)
+	await _key(KEY_E)
+	var dialogue := ui.get_node_or_null("Control/DialoguePanel") as Control
+	var title: String = PavilionStories.STORIES[id].title
+	return _expect(dialogue != null and dialogue.name_label.text == "南路亭" and title in dialogue.text_label.text,
+		"The table at %s offers %s (player at %s)." % [approach, title, world.player.global_position])
+
+func _hear_story_lines(id: String, middle_capture := "") -> void:
+	var story: Dictionary = PavilionStories.STORIES[id]
+	for index in story.lines.size():
+		var dialogue := ui.get_node_or_null("Control/DialoguePanel") as Control
+		var speaker: String = story.speakers[index % story.speakers.size()]
+		if not _expect(dialogue != null and dialogue.name_label.text == speaker and dialogue.portrait.texture != null
+				and dialogue.text_label.text == story.lines[index], "Hear %s speak in %s." % [speaker, story.title]):
+			return
+		if index == 1 and not middle_capture.is_empty():
+			await _capture(middle_capture)
+		if not await _choose_dialogue("听完起身" if index == story.lines.size() - 1 else "接着听"):
+			return
+	_expect(state.pavilion_stories_heard.get(id) == state.current_day and world.pavilion_story_id().is_empty(),
+		"Finishing the talk records it once and frees the original table interaction.")
+
+func _hear_road_grain() -> void:
+	await _tend_for_story()
+	if not _expect(state.current_day == 7 and state.king_storage >= 1 and state.player_inventory >= 1,
+			"Tend the public and private plots normally through day seven."):
+		return
+	var guest: Visitor = world.current_visitor_actor()
+	await _meet(guest, Vector2(0, -15))
+	if not await _choose_dialogue("送路粮"):
+		return
+	_expect(state.road_provisions_day == 7 and state.pavilion_stories_heard.is_empty(), "Give Ji Qing one private crop before the gathering.")
+	_skip_to(0.74)
+	if not await _wait_for_arrival(guest):
+		return
+	var keeper := world.neighbor_actor(VisitorData.FIELD_KEEPER) as Retainer
+	for frame in 600:
+		if keeper.resting_at_pavilion():
+			break
+		await tree.physics_frame
+	if not _expect(keeper.resting_at_pavilion() and world.pavilion_story_id() == "road_grain",
+			"The offer starts when the worker and the visitor both sit after their normal activities."):
+		return
+	await _key(KEY_M)
+	var map: Control = ui.estate_map
+	var place: Array = map.places.filter(func(entry: Dictionary) -> bool: return entry.title == PavilionRest.PLACE)
+	_expect(place.size() == 1 and "路粮匣" in place[0].detail, "The chart names the available talk at the common table.")
+	await _key(KEY_ESCAPE)
+	if not await _open_story_table("road_grain") or not await _choose_dialogue("今夜安排"):
+		return
+	var panel: Control = ui.get_node_or_null("Control/NightRationsPanel")
+	if not _expect(panel != null and state.pavilion_stories_heard.is_empty(), "The table still opens tonight's plan without starting the talk."):
+		return
+	await _button(panel.get_node("%Close"))
+	if not await _open_story_table("road_grain") or not await _choose_dialogue("坐下"):
+		return
+	await _key(KEY_ESCAPE)
+	_expect(state.pavilion_stories_heard.is_empty() and world.pavilion_story_id() == "road_grain",
+		"Leaving mid-conversation keeps it available and writes no memory.")
+	await _capture("07-table-ready")
+	if not await _open_story_table("road_grain") or not await _choose_dialogue("坐下"):
+		return
+	await _hear_story_lines("road_grain", "08-qu-bo-replies")
+	await _save()
+	if not await _title(true):
+		return
+	await _button(ui.hud.neighbors_button)
+	var management: Control = ui.panel_manager.management_panel_instance
+	var journal: Control = management.neighbor_journal
+	for speaker: String in [VisitorData.ROAD_KEEPER, VisitorData.FIELD_KEEPER]:
+		await _button(journal.roster.get_node(speaker))
+		_expect("第 7 天 · 季青和渠伯聊起" in journal.memory.text, "Both journals remember the completed encounter after continuing.")
+	await _capture("09-neighbor-journal")
+	await _button(management.get_node("CloseButton"))
+	_expect(state.pavilion_stories_heard.size() == 1 and world.pavilion_story_id().is_empty()
+		and state._ending_memories().any(func(note: String) -> bool: return "路粮匣" in note and "聊起" in note),
+		"The completed scene can also be remembered in the closing ledger.")
+	print("PAVILION_STORY day=", state.current_day, " heard=", state.pavilion_stories_heard, " public=", state.king_storage,
+		" private=", state.player_inventory, " guest=", world.current_visitor_actor().position)
+
+func _check_story_variants() -> void:
+	var fixtures := {
+		"water_marks": {"current_day": 8, "first_channel_growth_day": 3, "channel_survey_day": 4,
+			"road_provisions_delivered": true, "pavilion_stories_heard": {"road_grain": 7}},
+		"market_cloth": {"current_day": 9, "silk_sample_day": 8,
+			"retainers": [{"name": VisitorData.ROAD_KEEPER, "school": RetainerData.School.CONFUCIAN}]},
+		"watch_lantern": {"current_day": 30, "east_watch_day": 10,
+			"last_defense": {"day": 9, "kind": 0, "losses": 0, "guard": ""},
+			"retainers": [{"name": VisitorData.EAST_WATCHER, "school": RetainerData.School.MILITARY}]},
+	}
+	for id: String in fixtures:
+		var data: Dictionary = fixtures[id]
+		data["day_progress"] = 1.0
+		if not await _load_fixture(data):
+			return
+		var table: PavilionRest = world.pavilion_rest
+		if not _expect(world.pavilion_story_id() == id and table.is_rain_shelter() == (id == "watch_lantern"),
+				"The saved favor makes the talk available while both neighbors are seated: " + id):
+			continue
+		if not await _open_story_table(id) or not await _choose_dialogue("坐下"):
+			return
+		await _hear_story_lines(id)
+		print("PAVILION_STORY_VARIANT id=", id, " day=", state.current_day, " shelter=", table.is_rain_shelter())
+		if id == "water_marks":
+			await _button(ui.hud.neighbors_button)
+			var management: Control = ui.panel_manager.management_panel_instance
+			var journal: Control = management.neighbor_journal
+			await _button(journal.roster.get_node(VisitorData.FIELD_KEEPER))
+			var earlier: int = journal.memory.text.find("第 7 天 · 季青和渠伯")
+			var later: int = journal.memory.text.find("第 8 天 · 石墨和渠伯")
+			_expect(earlier >= 0 and later > earlier, "Both completed talks stay visible in chronological order.")
+			await _button(management.get_node("CloseButton"))
+
+func run(game_tree: SceneTree, capture := "", story_only := false) -> void:
 	tree = game_tree
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated pavilion profile."):
 		tree.quit(1)
@@ -359,14 +508,20 @@ func run(game_tree: SceneTree) -> void:
 	seed(425)
 	tree.root.notify_mouse_entered()
 	state = tree.root.get_node("Global")
-	capture_dir = OS.get_environment("FIEFDOM_PAVILION_CAPTURES")
+	capture_dir = capture if not capture.is_empty() else OS.get_environment("FIEFDOM_PAVILION_CAPTURES")
 	if await _title(false):
-		await _play_opening()
-		await _rain_visit()
-		await _return_during_the_walk()
-		await _check_scheduled_guests()
-		if DisplayServer.get_name() == "headless":
-			await _check_visits_from_facilities()
+		if story_only:
+			await _hear_road_grain()
+			await _rain_visit()
+			if DisplayServer.get_name() == "headless":
+				await _check_story_variants()
+		else:
+			await _play_opening()
+			await _rain_visit()
+			await _return_during_the_walk()
+			await _check_scheduled_guests()
+			if DisplayServer.get_name() == "headless":
+				await _check_visits_from_facilities()
 	tree.paused = false
 	tree.unload_current_scene()
 	for node in tree.root.get_node("AudioManager").get_children():

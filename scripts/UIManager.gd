@@ -264,6 +264,7 @@ func _connect_signals() -> void:
 	GameEvents.food_changed.connect(update_ui.unbind(1))
 	GameEvents.night_rations_changed.connect(update_ui)
 	GameEvents.night_rations_requested.connect(_show_night_rations)
+	GameEvents.pavilion_table_requested.connect(_on_pavilion_table_requested)
 	GameEvents.silk_changed.connect(update_ui)
 	GameEvents.ravine_journal_changed.connect(update_ui)
 	GameEvents.rank_changed.connect(update_ui.unbind(1))
@@ -381,6 +382,16 @@ func _on_gathering_guest_interacted(data: VisitorData) -> void:
 func _on_gathering_book_requested() -> void:
 	world.set_channel_mode(false)
 	dialog_manager.show_gathering_book()
+
+func _on_pavilion_table_requested() -> void:
+	world.set_channel_mode(false)
+	if world.pavilion_rest.gathering_name() == directions.tracked_place:
+		directions.clear_tracking()
+	var story: String = world.pavilion_story_id()
+	if story.is_empty():
+		_show_night_rations()
+	else:
+		dialog_manager.show_pavilion_story(story, world.pavilion_rest.gathering_name(), _show_night_rations)
 
 func _on_retainer_interacted(data: RetainerData) -> void:
 	directions.arrive_at(data.name)

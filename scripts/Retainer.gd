@@ -89,12 +89,12 @@ func pavilion_note() -> String:
 	if not evening_seat.is_finite():
 		return ""
 	if Global.has_rain():
-		return "南路亭 · 檐下避雨" if resting_at_pavilion() else "正往南路亭避雨"
+		return "亭东雨棚 · 檐下避雨" if resting_at_pavilion() else "正往亭东雨棚避雨"
 	return "南路亭 · 灯下歇脚" if resting_at_pavilion() else "正往南路亭"
 
 func restore_evening() -> void:
 	var seat: Vector2 = get_parent().pavilion_rest.seat_for(data)
-	if seat.is_finite() and VisitorData.seconds_since(PavilionRest.START) >= 6.0 and _field_target() == NO_CELL:
+	if seat.is_finite() and VisitorData.seconds_since(PavilionRest.rest_start()) >= 6.0 and _field_target() == NO_CELL:
 		position = seat
 		evening_seat = seat
 		_stand_at_stop()

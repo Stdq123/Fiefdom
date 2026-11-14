@@ -50,6 +50,7 @@ func _ready() -> void:
 	GameEvents.retainer_departed.connect(refresh.unbind(1))
 	GameEvents.food_changed.connect(refresh.unbind(1))
 	GameEvents.road_rest_changed.connect(refresh)
+	GameEvents.pavilion_story_heard.connect(refresh)
 	GameEvents.seed_garden_arrived.connect(refresh)
 	GameEvents.field_rotation_changed.connect(refresh)
 	locate_button.pressed.connect(func(): GameEvents.neighbor_directions_requested.emit(selected))
@@ -91,6 +92,8 @@ func _show_neighbor(speaker: String) -> void:
 	var garden_day := Global.seed_garden_day()
 	if speaker == VisitorData.ROAD_KEEPER and garden_day > 0:
 		memory.text += "\n第 %d 天 · 林蓼把春单的菽和黍种在亭西种圃。" % garden_day
+	for note: String in PavilionStories.heard_notes(speaker):
+		memory.text += "\n" + note
 	next_step.text = story[1]
 	var departure: Dictionary = Global.neighbor_departures.get(speaker, {})
 	if not departure.is_empty():
