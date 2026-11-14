@@ -319,8 +319,10 @@ func _check_ravine_weather() -> void:
 	var sprite := player.get_node("Sprite2D") as Sprite2D
 	var cascade: Node2D = ravine.get_node("Landscape/BridgeCascade")
 	var frame: int = cascade.frame
+	await _capture_map_frame("05a-cascade-flow")
 	await tree.create_timer(0.18).timeout
 	_expect(cascade.frame != frame, "Foam moves down the cascade while the water above and below it remains visible.")
+	await _capture_map_frame("05b-cascade-flow")
 	_expect(bridge.position == RavineLayout.BRIDGE and bridge.y_sort_enabled and deck.z_index < sprite.z_index
 		and railing.z_index == sprite.z_index and railing.global_position.y > player.position.y,
 		"The walkway sorts below the player and its near rail sorts in front while crossing.")

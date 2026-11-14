@@ -33,9 +33,15 @@ const TERRACE := [Vector2(397, -101), Vector2(405, -114), Vector2(426, -124), Ve
 	Vector2(441, -83), Vector2(419, -82), Vector2(407, -88), Vector2(397, -93)]
 const TERRACE_FRONT := [Vector2(395, -96), Vector2(397, -93), Vector2(407, -88), Vector2(419, -82),
 	Vector2(441, -83), Vector2(448, -86), Vector2(462, -94), Vector2(471, -106)]
-const STAIR_WIDTH := 24.0
+const TERRACE_LIGHT := [Vector2(397, -101), Vector2(405, -114), Vector2(426, -124), Vector2(449, -124),
+	Vector2(455, -116), Vector2(433, -108), Vector2(415, -105), Vector2(406, -95), Vector2(397, -93)]
+const TERRACE_PLANES := [
+	[Vector2(399, -100), Vector2(412, -101), Vector2(421, -98), Vector2(418, -88), Vector2(407, -88), Vector2(399, -93)],
+	[Vector2(441, -107), Vector2(463, -114), Vector2(468, -106), Vector2(460, -96), Vector2(448, -89), Vector2(440, -94)],
+]
+const STAIR_WIDTH := 27.0
 const STAIR_SPACING := 8.0
-const STAIR_RISER := 2.0
+const STAIR_RISER := 3.0
 const GATE_PAVING := Rect2(-24, -11, 37, 22)
 const BLUFF_TOP_DEPTH := 1.45
 const WEST_GATE_LAMP := RavineLayout.WEST_GATE + Vector2(17, -15)
@@ -43,7 +49,7 @@ const LOOKOUT_LAMP := RavineLayout.LOOKOUT + Vector2(-15, 10)
 const MOSS := [Color("#778653"), Color("#69864c"), Color("#867a50"), Color("#bbc4b7")]
 
 var steps: Array[PackedVector2Array] = []
-var step_surface := PackedVector2Array()
+var stair_outline := PackedVector2Array()
 var terrace_surface := PackedVector2Array(TERRACE)
 
 func _init() -> void:
@@ -62,15 +68,15 @@ func _init() -> void:
 		east.append(edges[index] + Vector2(half_width + ((index + 1) % 3), 0))
 		if index > 0:
 			steps.append(PackedVector2Array([west[index], east[index], east[index - 1], west[index - 1]]))
-	step_surface = west.duplicate()
+	stair_outline = west.duplicate()
 	east.reverse()
-	step_surface.append_array(east)
+	stair_outline.append_array(east)
 
 static func gate_stone_at(foot: Vector2, gate: Vector2) -> bool:
 	return GATE_PAVING.has_point(foot - gate)
 
 func lookout_stone_at(foot: Vector2) -> bool:
-	return Geometry2D.is_point_in_polygon(foot, step_surface) or Geometry2D.is_point_in_polygon(foot, terrace_surface)
+	return Geometry2D.is_point_in_polygon(foot, stair_outline) or Geometry2D.is_point_in_polygon(foot, terrace_surface)
 
 static func draw_gate(canvas: CanvasItem, gate: Vector2, wilderness: bool, season: int, wet: bool) -> void:
 	var rock := Color("#8c8876").lerp(Color("#5b7068"), 0.38 if wet else 0.0)
@@ -97,39 +103,59 @@ static func draw_gate(canvas: CanvasItem, gate: Vector2, wilderness: bool, seaso
 		_draw_bluff(canvas, gate, ESTATE_BANK, rock, moss)
 
 func draw_lookout(canvas: CanvasItem, season: int, wet: bool) -> void:
-	var rock := Color("#858372").lerp(Color("#597068"), 0.46 if wet else 0.0)
+	var rock := Color("#98917b").lerp(Color("#5b726b"), 0.46 if wet else 0.0)
 	var moss: Color = MOSS[season]
 	_draw_bluff(canvas, RavineLayout.LOOKOUT, LOOKOUT_WEST, rock, moss)
 	_draw_bluff(canvas, RavineLayout.LOOKOUT, LOOKOUT_EAST, rock.darkened(0.10), moss.darkened(0.09))
+	_draw_steps(canvas, rock, moss)
+	_draw_terrace(canvas, rock, moss)
+
+func _draw_steps(canvas: CanvasItem, rock: Color, moss: Color) -> void:
+	var shadow := Transform2D(0.0, Vector2(7, 7)) * stair_outline
+	canvas.draw_colored_polygon(shadow, Color("#283a32a6"))
+	var side_tone := rock.lerp(Color("#45483a"), 0.52)
 	for index in steps.size():
 		var slab := steps[index]
-		var shade := rock.lightened(0.06 + (index % 4) * 0.024)
-		canvas.draw_colored_polygon(slab, shade)
-		var front_west := slab[3]
-		var front_east := slab[2]
-		var riser := Vector2(1, -STAIR_RISER)
-		canvas.draw_colored_polygon(PackedVector2Array([front_west, front_east, front_east + riser, front_west + riser]), rock.darkened(0.37))
-		canvas.draw_line(front_west + riser, front_east + riser, shade.lightened(0.29), 1.0)
-		var joint_ratio := 0.22 + (index % 5) * 0.13
-		var joint := front_west.lerp(front_east, joint_ratio).round()
-		var back := slab[0].lerp(slab[1], joint_ratio)
-		canvas.draw_line(joint + riser, joint.lerp(back, 0.77).round(), rock.darkened(0.19), 1.0)
-		for side in [slab[0], slab[1]]:
-			canvas.draw_rect(Rect2(side - Vector2(1, 1), Vector2(3, 2)), moss)
-	canvas.draw_colored_polygon(terrace_surface, rock.lightened(0.16))
+		var shade := rock.lightened(0.04 + (index % 4) * 0.039)
+		var tread_west := (slab[3] + Vector2(-1, -STAIR_RISER + index % 2)).round()
+		var tread_east := (slab[2] + Vector2(0, -STAIR_RISER - index % 2)).round()
+		var joint_ratio := 0.24 + posmod(index * 3, 5) * 0.13
+		var joint := tread_west.lerp(tread_east, joint_ratio).round()
+		var joint_back := joint.lerp(slab[0].lerp(slab[1], joint_ratio), 0.86).round()
+		var riser_joint := slab[3].lerp(slab[2], joint_ratio).round()
+		canvas.draw_colored_polygon(PackedVector2Array([slab[0], slab[1], tread_east, joint, tread_west]), shade)
+		canvas.draw_colored_polygon(PackedVector2Array([slab[1], slab[2], slab[2] + Vector2(5, 4),
+			slab[1] + Vector2(5, 4)]), side_tone)
+		canvas.draw_colored_polygon(PackedVector2Array([tread_west, joint, riser_joint, slab[3]]), shade.darkened(0.31))
+		canvas.draw_colored_polygon(PackedVector2Array([joint, tread_east, slab[2], riser_joint]), side_tone)
+		canvas.draw_line(tread_west + Vector2(1, 0), joint - Vector2(2, 0), shade.lightened(0.26), 1.0)
+		canvas.draw_line(joint + Vector2(1, 0), tread_east - Vector2(2, 0), shade.lightened(0.19), 1.0)
+		canvas.draw_line(joint, joint_back, shade.darkened(0.23), 1.0)
+		var verge := slab[0] if index % 3 == 1 else slab[2] + Vector2(2, 0)
+		canvas.draw_rect(Rect2(verge - Vector2(1, 2), Vector2(3 + index % 2, 2)), moss.darkened(0.1))
+
+func _draw_terrace(canvas: CanvasItem, rock: Color, moss: Color) -> void:
+	var shadow := Transform2D(0.0, Vector2(8, 12)) * terrace_surface
+	canvas.draw_colored_polygon(shadow, Color("#263b328e"))
+	var walking_stone := rock.lightened(0.12)
+	canvas.draw_colored_polygon(terrace_surface, walking_stone)
+	canvas.draw_colored_polygon(PackedVector2Array(TERRACE_LIGHT), rock.lightened(0.24))
+	for face in TERRACE_PLANES:
+		canvas.draw_colored_polygon(PackedVector2Array(face), rock.lightened(0.058))
 	for index in TERRACE_FRONT.size() - 1:
 		var a: Vector2 = TERRACE_FRONT[index]
 		var b: Vector2 = TERRACE_FRONT[index + 1]
-		var seam := a.lerp(b, 0.63).round()
+		var seam := a.lerp(b, 0.42 + (index % 3) * 0.11).round()
 		if index != 3: # The stair meets this side of the landing.
-			var toe := Vector2(2, 7 + (index % 3) * 2)
-			canvas.draw_colored_polygon(PackedVector2Array([a, b, b + toe, a + toe]), rock.darkened(0.31))
-			canvas.draw_line(seam, seam + toe, rock.darkened(0.45), 1.0)
-		canvas.draw_line(a, b, rock.lightened(0.38), 1.0)
-		canvas.draw_rect(Rect2(seam - Vector2(3, 2), Vector2(4 + index % 4, 2)), moss)
-	for at: Vector2 in [Vector2(407, -96), Vector2(421, -90), Vector2(430, -115), Vector2(444, -90), Vector2(453, -102)]:
-		canvas.draw_line(at, at + Vector2(6, -2), rock.darkened(0.09), 1.0)
-		canvas.draw_line(at + Vector2(6, -2), at + Vector2(9, 0), rock.darkened(0.09), 1.0)
+			var toe := Vector2(4, 8 + (index % 3) * 2)
+			var shade := rock.darkened(0.27 + (index % 4) * 0.033)
+			canvas.draw_colored_polygon(PackedVector2Array([a, b, b + toe, a + toe]), shade)
+			canvas.draw_colored_polygon(PackedVector2Array([seam, b, b + toe, seam + toe + Vector2(-2, 0)]), shade.darkened(0.17))
+			canvas.draw_line(seam + Vector2(2, 0), seam + toe * 0.76, shade.lightened(0.14), 1.0)
+		canvas.draw_line(a, seam, walking_stone.lightened(0.17), 1.0)
+		canvas.draw_rect(Rect2(seam - Vector2(2, 2), Vector2(3 + index % 4, 2)), moss)
+	for at: Vector2 in [Vector2(406, -99), Vector2(419, -92), Vector2(430, -115), Vector2(442, -96), Vector2(452, -105)]:
+		canvas.draw_polyline(PackedVector2Array([at, at + Vector2(5, -2), at + Vector2(9, -1)]), rock.darkened(0.13), 1.0)
 
 static func install_ravine_edges(terrain: StaticBody2D) -> void:
 	_add_bluff_edge(terrain, &"WestGateNorthRock", RavineLayout.WEST_GATE, GATE_NORTH)
