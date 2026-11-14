@@ -28,6 +28,7 @@ const BUILDINGS := preload("res://assets/world/estate-buildings.svg")
 const LOOKOUT := preload("res://assets/world/stone-lookout.svg")
 const TREES := preload("res://assets/world/seasonal-trees.svg")
 const MARKET_CHOICES := MarketStall.TITLES + [Global.MARKET_ORDERS]
+const ESTATE_CHOICES := [Global.MARKET_RETURN, Global.WATER_SOURCE, Global.FREIGHT_YARD]
 const SEAL_RADIUS := 11.0
 const HERE_RADIUS := 23.0
 
@@ -105,7 +106,7 @@ func _refresh_on_open() -> void:
 	_refresh_selection()
 
 func _region_for(place: String) -> Region:
-	if place in [Global.MARKET_RETURN, Global.WATER_SOURCE]:
+	if place in ESTATE_CHOICES:
 		return Region.ESTATE
 	if place == Sheepfold.MEADOW:
 		return Region.ROAD
@@ -113,7 +114,7 @@ func _region_for(place: String) -> Region:
 
 func _active_destination() -> String:
 	var place: String = active_trip.call()
-	var listed := (place in [Global.MARKET_RETURN, Global.WATER_SOURCE, Sheepfold.MEADOW]
+	var listed := (place in ESTATE_CHOICES or place == Sheepfold.MEADOW
 		or place in MARKET_CHOICES or place in Global.ravine_trip_places())
 	return place if listed else ""
 
@@ -154,6 +155,8 @@ func _refresh_selection() -> void:
 			if region != Region.ESTATE:
 				_add_destination(Global.MARKET_RETURN, "回封地")
 			_add_destination(Global.WATER_SOURCE, "水源", "到泉边查看引水与水利研习")
+			if not Global.pending_freight_receipt().is_empty() or Global.market_trip_target == Global.FREIGHT_YARD:
+				_add_destination(Global.FREIGHT_YARD, Global.FREIGHT_YARD, "货到后可和申禾交谈")
 		Region.RAVINE:
 			for place: String in Global.ravine_trip_places():
 				_add_destination(place, place, Global.ravine_place_detail(place))
@@ -205,8 +208,8 @@ func _refresh_route() -> void:
 			route_label.text = "在%s内前往%s" % [names[0], selected_place]
 		elif selected_place == Sheepfold.MEADOW:
 			route_label.text += " → " + Sheepfold.MEADOW
-		elif selected_place == Global.WATER_SOURCE:
-			route_label.text += " → " + Global.WATER_SOURCE
+		elif selected_place in [Global.WATER_SOURCE, Global.FREIGHT_YARD]:
+			route_label.text += " → " + selected_place
 		if selected_place == active:
 			route_label.text += " · 正在指路"
 	paper.queue_redraw()

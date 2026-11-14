@@ -21,7 +21,7 @@
 - **经营到结局**。按自己的节奏选一条路线，记下哪几天改变了经营方式、哪些操作重复得最累、哪次遇见人物或走过某处让你想再去。结算后退出，再从标题「继续游戏」读回，核对路线和结算日期。
 - **回报**。记下系统和显卡、键鼠或手柄、实际窗口尺寸、总游玩时间及停在的游戏日期。能复现的问题附上当时的截图或一段操作顺序。画面、节奏和手感直接写感受即可。
 
-本包包含议税续播预览和缺粮时的余绸报价。解压后验证标题启动、两条新档路线、战败恢复、延期研究和两个结局的退出重启。 [本包校验](../build/polish-silk-rations/delivery-headless/manifest.txt)
+本包包含时令交货后的返程指路。解压后验证标题启动、两条新档路线、战败恢复、延期研究和两个结局的退出重启。 [本包校验](../build/polish-order-journey/headless/manifest.txt)
 
 ## 从新档到第一次收获
 
@@ -1045,3 +1045,10 @@
 - 铜钱不足时，今夜安排可打开蚕桑。现成丝绸卖出一匹能增加补粮量时，先显示余量和补粮明细。快捷出售为议税、传统路线和时令单留绸。出售先收铜钱，之后可按报价调整每夜购粮上限。专项从只留一匹的缺粮档进蚕桑再织一匹，售得 35 铜钱，晚间转用一份麻、花 10 铜钱买两份粮。读回晨间档，仍有一匹丝绸和 27 铜钱，贡粮及留单的两份稻保留。 [1920×1080 停播预览](../build/polish-silk-rations/delivery-capture/1920x1080/03b-private-sowing-preview.png) · [1024×768 出售报价](../build/polish-silk-rations/delivery-capture/1024x768/07-surplus-silk-quote.png) · [1024×768 出售后](../build/polish-silk-rations/delivery-capture/1024x768/08-sale-and-funded-rations.png)
 - 两条管事新档第 40 天停播，第 54 天开始用新入口在缺粮时卖绸，第 60 天议税。传统第 65 天结算，改革第 62 天结算。两条全程供足口粮，第二块井田各手动翻三格，结算读档后可续营。改革回放定案后另在蚕桑页变现，为铜钱目标和三夜用粮备款。 [传统管事回放](../build/polish-silk-rations/delivery-headless/traditional-steward.log) · [改革管事回放](../build/polish-silk-rations/delivery-headless/reformed-steward.log)
 - 101 项源码场景通过，最终布局和续播、备粮、研究费专项复测通过。最终解压包通过 38 项无窗口发行检查和 10 次隔离桌面运行。两种窗口均核对停播入口、卖绸和报价焦点。上一版生成的存档可继续，两个结局可退出重读，连续运行 90.564 秒。 [Windows 1.0 x64](../build/polish-silk-rations/delivery/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-silk-rations/source.log) · [最终源码专项](../build/polish-silk-rations/delivery-source.log) · [发行校验](../build/polish-silk-rations/delivery-headless/manifest.txt)
+
+## 从西市收据回南路卸货场
+
+- 收据显示预计到货时辰。点「指路去卸货场」，西市和溪桥道接续返程，进封地后沿南路到停车处。读档会恢复指路，和申禾交谈后清除。最后一天晚交的订单，换季后还可在新一季交货簿查前一辆车。 [1920×1080 收据](../build/polish-order-journey/capture/1920x1080/03-delivery-receipt.png) · [1920×1080 返程](../build/polish-order-journey/capture/1920x1080/05b-unloading-yard-route.png) · [1024×768 申禾对白](../build/polish-order-journey/capture/1024x768/07-south-pavilion.png)
+- 基线新档在第 28 天和第 39 天交齐两季订单，继续扩种私田时第 49 天公田贡献仅 24.47%，第 97 天仍只有 29.28%。到请议的日子，筹备账现在会在回执旁列出所缺的纳贡或爵位。 [基线回放](../build/polish-order-journey/baseline/reformed-orders.log)
+- 解压版从标题开新档，第 28 天交春单领 7 份口粮，沿返程指路等到戌时车抵，问申禾后步行至亭西种圃见林蓼。第 39 天交秋单领 26 铜钱，收窄私田播种并优先补公田。第 43 天回执齐，筹备账显示还差 4 份纳贡。第 47 天公田占比 30.77% 时提前请议，第 57 天达成改革结局，读回结局档后在第 58 天续营。这条经营路线在第 43、45、46、48 天的晚上遇到口粮不足。 [长线回放](../build/polish-order-journey/campaign-verified/reformed-orders.log) · [林蓼接货](../build/polish-order-journey/campaign-verified/1920x1080/orders-seed-garden.png) · [尚缺纳贡](../build/polish-order-journey/campaign-verified/1920x1080/orders-petition-missing-tribute.png)
+- 101 项源码场景与 50 项无窗口发行检查通过。隔离桌面核对两种窗口的收据与返程，并以默认 1920×1080 完成上述长线回放。上一版存档可续读，双结局均可退出重读，连续运行 90.637 秒。两次干净构建的 ZIP 校验值相同。 [Windows 1.0 x64](../build/polish-order-journey/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-order-journey/source.log) · [发行回归](../build/polish-order-journey/headless/verification.txt) · [隔离桌面](../build/polish-order-journey/capture/verification.txt) · [重复构建](../build/polish-order-journey/rebuild.log)

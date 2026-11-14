@@ -37,6 +37,7 @@ var road_guide := Node2D.new()
 var road_path := PackedVector2Array()
 var road_origin := Vector2.INF
 var road_target := Vector2.INF
+var freight_receipt := {}
 
 func setup(estate_world: Node2D, estate_hud: Control) -> void:
 	world = estate_world
@@ -146,6 +147,11 @@ func follow_market(place: String) -> void:
 	follow_place(place if place == Sheepfold.MEADOW else "西市 · " + place, world.to_local(gate.global_position))
 	Global.market_trip_target = place
 
+func follow_freight_yard() -> void:
+	follow_place(Global.FREIGHT_YARD, EstateLayout.FREIGHT_APPROACH)
+	freight_receipt = Global.pending_freight_receipt()
+	Global.market_trip_target = Global.FREIGHT_YARD
+
 func follow_raid() -> void:
 	clear_tracking()
 	following_raid = true
@@ -204,6 +210,7 @@ func clear_tracking() -> void:
 	Global.field_route_public_only = false
 	tracked_site = -1
 	tracked_place = ""
+	freight_receipt = {}
 	Global.ravine_trip_target = ""
 	Global.market_trip_target = ""
 	following_raid = false
@@ -253,9 +260,17 @@ func update_marker(blocked: bool) -> void:
 			return
 		clear_tracking()
 	if not tracked_place.is_empty():
+		if tracked_place == Global.FREIGHT_YARD and int(freight_receipt.get("dispatch_day", 0)) < Global.current_day:
+			clear_tracking()
+			hide()
+			return
 		var foot := world.to_local(world.player.global_position)
 		if foot.distance_to(tracked_place_point) > 12.0:
 			_mark_place(tracked_place, tracked_place_point)
+			return
+		if tracked_place == Global.FREIGHT_YARD:
+			var arrived := SeasonOrders.transit_progress(freight_receipt, Global.current_day, Global.day_progress) >= 1.0
+			_mark_place("申禾 · " + GamepadInput.interact_key() if arrived else SeasonOrders.arrival_caption(freight_receipt), tracked_place_point)
 			return
 		if not Global.ravine_trip_target.is_empty() or not Global.market_trip_target.is_empty():
 			hide()

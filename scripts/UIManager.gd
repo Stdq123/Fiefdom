@@ -60,6 +60,8 @@ func _ready() -> void:
 		Global.market_trip_target = ""
 	elif Global.market_trip_target == Global.WATER_SOURCE:
 		directions.follow_water_source()
+	elif Global.market_trip_target == Global.FREIGHT_YARD:
+		directions.follow_freight_yard()
 	elif Global.market_trip_target == VisitorData.SILK_MERCHANT:
 		if not directions.follow_neighbor(VisitorData.SILK_MERCHANT):
 			Global.market_trip_target = ""
@@ -746,10 +748,13 @@ func _show_reclamation_market(site: Variant) -> void:
 
 func _on_west_market_directions_requested(place: String) -> void:
 	world.set_channel_mode(false)
-	directions.follow_market(place)
+	if place == Global.FREIGHT_YARD:
+		directions.follow_freight_yard()
+	else:
+		directions.follow_market(place)
 	panel_manager.hide_management_panel()
 	if Global.is_indoors():
-		var destination := place if place == Sheepfold.MEADOW else "西市" + place
+		var destination := place if place in [Sheepfold.MEADOW, Global.FREIGHT_YARD] else "西市" + place
 		hud.practice_label.text = "已标出%s · 从南门回封地" % destination
 
 func _on_ravine_trip_requested(place: String) -> void:
@@ -782,6 +787,8 @@ func _on_road_rest_interacted() -> void:
 
 func _on_freight_arrival_interacted(speech: String, portrait: Texture2D, order_id: String) -> void:
 	world.set_channel_mode(false)
+	if Global.market_trip_target == Global.FREIGHT_YARD:
+		directions.clear_tracking()
 	var destination := ""
 	var guide := Callable()
 	if order_id == SeasonOrders.WATCH_RELIEF:

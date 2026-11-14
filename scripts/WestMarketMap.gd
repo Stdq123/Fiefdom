@@ -167,7 +167,7 @@ func _refresh_destination() -> void:
 	paper.queue_redraw()
 
 func _current_stop() -> String:
-	if not Global.ravine_trip_target.is_empty() or Global.market_trip_target in [Sheepfold.MEADOW, Global.WATER_SOURCE]:
+	if not Global.ravine_trip_target.is_empty() or Global.market_trip_target in [Sheepfold.MEADOW, Global.WATER_SOURCE, Global.FREIGHT_YARD]:
 		return Global.MARKET_RETURN
 	return Global.market_trip_target
 
@@ -176,8 +176,8 @@ func _destination_label(place: String) -> String:
 		return "竹涧 · " + Global.ravine_trip_target
 	if place == Global.MARKET_RETURN and Global.market_trip_target == Sheepfold.MEADOW:
 		return Sheepfold.MEADOW
-	if place == Global.MARKET_RETURN and Global.market_trip_target == Global.WATER_SOURCE:
-		return "封地 · " + Global.WATER_SOURCE
+	if place == Global.MARKET_RETURN and Global.market_trip_target in [Global.WATER_SOURCE, Global.FREIGHT_YARD]:
+		return "封地 · " + Global.market_trip_target
 	return place
 
 func _service(place: String) -> String:

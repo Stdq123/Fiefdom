@@ -16,6 +16,7 @@ const SAVE_LOCATION_NAMES := {"ravine": "竹涧", "west_market": "西市", "west
 const RAVINE_TRIP_PLACES := ["野果坳", "望溪台", "柳湾", "砾滩", SummerRaft.PLACE]
 const MARKET_ORDERS := "收货牌"
 const MARKET_RETURN := "回封地"
+const FREIGHT_YARD := "南路卸货场"
 const WATER_SOURCE := "水源"
 const MARKET_PRODUCE := ["beans", "rice", "sorghum", "wheat"]
 const TAX_ENVOY := "召简"
@@ -2104,6 +2105,19 @@ func season_order_delivered_at(schedule: Dictionary) -> int:
 	var day: int = receipt.get("day", 0)
 	return day if day >= schedule.start and day <= schedule.end else 0
 
+func pending_freight_receipt() -> Dictionary:
+	var schedule := season_order()
+	if season_order_delivered_at(schedule) > 0:
+		var receipt: Dictionary = season_order_receipts[schedule.order.id]
+		if receipt.dispatch_day >= current_day:
+			return receipt
+	if schedule.start == current_day and current_day > 1:
+		var former := season_order(current_day - 1)
+		var previous: Dictionary = season_order_receipts.get(former.order.id, {})
+		if season_order_delivered_at(former) > 0 and previous.dispatch_day == current_day:
+			return previous
+	return {}
+
 func is_season_order_pinned(schedule: Dictionary) -> bool:
 	return outcome == Outcome.RUNNING and pinned_season_start == schedule.start and season_order_delivered_at(schedule) == 0
 
@@ -3391,7 +3405,8 @@ func load_game(path := "") -> Error:
 	var saved_waypoint: Variant = data.get("ravine_waypoint")
 	restored_ravine_waypoint = saved_waypoint if resume_scene == WILDERNESS_SCENE and saved_waypoint is String else ""
 	var saved_market_trip: Variant = data.get("market_trip_target")
-	var market_places := MarketStall.TITLES + [MARKET_ORDERS, MARKET_RETURN, WATER_SOURCE, VisitorData.SILK_MERCHANT, Sheepfold.MEADOW]
+	var market_places := MarketStall.TITLES + [MARKET_ORDERS, MARKET_RETURN, FREIGHT_YARD, WATER_SOURCE,
+		VisitorData.SILK_MERCHANT, Sheepfold.MEADOW]
 	market_trip_target = saved_market_trip if saved_market_trip is String and saved_market_trip in market_places else ""
 	market_produce_bought_on = clampi(_read_save_int(data.get("market_produce_bought_on"), 0), 0, saved_day)
 	var saved_route := _read_save_int(data.get("field_route_status"), -1)

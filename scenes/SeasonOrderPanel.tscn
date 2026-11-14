@@ -122,6 +122,13 @@ layout_mode = 2
 mouse_default_cursor_shape = 2
 text = "去蚕桑备绸"
 
+[node name="FreightRoute" type="Button" parent="Current/Content/Actions"]
+visible = false
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "指路去卸货场"
+
 [node name="Next" type="PanelContainer" parent="."]
 layout_mode = 2
 theme_override_styles/panel = SubResource("Card")

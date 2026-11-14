@@ -24,6 +24,7 @@ param(
     [switch]$Opening,
     [switch]$FieldPlanning,
     [switch]$StewardCampaign,
+    [switch]$OrderCampaign,
     [switch]$FieldRotationPlans,
     [switch]$SilkMarket,
     [switch]$SilkInterior,
@@ -75,7 +76,7 @@ function Start-VerifiedGame {
         (New-Item -ItemType Directory -Path $profilePath).FullName
     }
     $log = Join-Path $evidence "$Name.log"
-    $frameLimit = if ($Replay -like '*-steward') { '42000' } elseif ($Replay) { '12000' } else { '180' }
+    $frameLimit = if ($Replay -like '*-steward' -or $Replay -eq 'reformed-orders') { '42000' } elseif ($Replay) { '12000' } else { '180' }
     $arguments = @('--quit-after', $frameLimit, '--log-file', ('"' + $log + '"'))
     $arguments += if ($Replay -eq 'soak') { '--max-fps', '60', '--audio-driver', 'Dummy' } else { '--fixed-fps', '60' }
     if ($Resolution) {
@@ -220,6 +221,9 @@ try {
             Start-VerifiedGame -Directory $release -Profile $name -Name $name -Replay $name
         }
     }
+    if ($OrderCampaign) {
+        Start-VerifiedGame -Directory $release -Profile 'reformed-orders' -Name 'reformed-orders' -Replay 'reformed-orders' -Resolution $fullResolution
+    }
     if ($FieldRotationPlans) {
         Start-VerifiedGame -Directory $release -Profile 'field-rotation-plans' -Name 'field-rotation-plans' -Replay 'field-rotation-plans'
     }
@@ -265,7 +269,8 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'watch-relief' -Name 'watch-relief' -Replay 'watch-relief'
     }
     if ($SouthRoad) {
-        foreach ($name in 'market-orders', 'summer-rice', 'order-preparation', 'watch-relief', 'seed-garden', 'autumn-exhibit', 'sheepfold', 'meadow-fodder') {
+        Start-VerifiedGame -Directory $release -Profile 'market-orders' -Name 'market-orders' -Replay 'market-orders' -Resolution $fullResolution
+        foreach ($name in 'summer-rice', 'order-preparation', 'watch-relief', 'seed-garden', 'autumn-exhibit', 'sheepfold', 'meadow-fodder') {
             Start-VerifiedGame -Directory $release -Profile $name -Name $name -Replay $name
         }
     }
@@ -312,6 +317,9 @@ try {
         }
         if ($Rations) {
             Start-VerifiedGame -Directory $release -Profile 'night-rations-compact' -Name 'night-rations-1024x768' -Replay 'night-rations' -Resolution '1024x768'
+        }
+        if ($SouthRoad) {
+            Start-VerifiedGame -Directory $release -Profile 'market-orders-compact' -Name 'market-orders-1024x768' -Replay 'market-orders' -Resolution '1024x768'
         }
         if ($Opening) {
             Start-VerifiedGame -Directory $release -Profile 'opening-compact' -Name 'opening-1024x768' -Replay 'estate-directions' -Resolution '1024x768'

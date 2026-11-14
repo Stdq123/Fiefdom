@@ -182,13 +182,22 @@ func _deliver() -> void:
 	if summer:
 		await _summer_handoff(book)
 		return
-	await _key(KEY_ESCAPE)
+	if not _expect(book.freight_route.is_visible_in_tree() and "预计第 3 天戌时到南路卸货场" in book.status.text,
+		"The paid receipt quotes the cart arrival and provides directions."):
+		return
+	await _button(book.freight_route)
+	await tree.process_frame
+	_expect(not market.counter.visible and state.market_trip_target == state.FREIGHT_YARD
+		and state.FREIGHT_YARD in market.market_map.cancel_button.text,
+		"The receipt's action starts an eastbound route without changing the booked trade.")
 	await _snapshot("04-loaded-cart")
 	if not await _continue(state.WEST_MARKET_SCENE):
 		return
 	market = tree.current_scene
 	_expect(market.get_node("Freight/Cargo").visible and not state.is_season_order_pinned(state.season_order())
-		and state.food_storage == before_grain + reward, "Continue shows the loaded cart and settled reward.")
+		and state.food_storage == before_grain + reward and state.market_trip_target == state.FREIGHT_YARD
+		and state.FREIGHT_YARD in market.market_map.cancel_button.text,
+		"Continue restores the loaded cart, settled reward and return route.")
 	await _freight_to_pavilion()
 
 func _summer_handoff(book: Control) -> void:
@@ -396,6 +405,8 @@ func _freight_to_pavilion() -> void:
 	if not await _cross(market.player, [], &"ui_right", state.WEST_ROAD_SCENE):
 		return
 	var road := tree.current_scene as Node2D
+	_expect(state.market_trip_target == state.FREIGHT_YARD and state.FREIGHT_YARD in road.get_node("%Route").text,
+		"The bridge continues the unloading-yard route through the east gate.")
 	var bridge_progress := (SeasonFreight.west_road_start + SeasonFreight.west_road.get_baked_length() * 0.5) / SeasonFreight.route_length
 	await _set_watch(SeasonOrders.EVENING_DISPATCH + SeasonOrders.TRAVEL_FRACTION * bridge_progress)
 	var road_cart := road.get_node("Freight") as SeasonFreight
@@ -405,8 +416,11 @@ func _freight_to_pavilion() -> void:
 	await _snapshot("05a-bridge-shipment")
 	if await _cross(road.player, [], &"ui_right", state.ESTATE_SCENE):
 		var estate := tree.current_scene
-		_expect(estate.get_node("World/SeasonBoard").delivered and not estate.get_node("UI").hud.pinned_order.visible,
-			"The pavilion uses the same receipt and the farm tracker clears.")
+		var ui := estate.get_node("UI")
+		_expect(estate.get_node("World/SeasonBoard").delivered and not ui.hud.pinned_order.visible
+			and ui.directions.destination().point == EstateLayout.FREIGHT_APPROACH,
+			"The paid farm tracker clears and the west gate hands off to the actual unloading yard.")
+		await _snapshot("05b-unloading-yard-route")
 		var travel := (SeasonFreight.estate_start + 115.0) / SeasonFreight.route_length
 		await _set_watch(SeasonOrders.EVENING_DISPATCH + SeasonOrders.TRAVEL_FRACTION * travel)
 		var cart := estate.get_node("World/Freight") as SeasonFreight
@@ -430,8 +444,8 @@ func _freight_to_pavilion() -> void:
 			"The west-road shipment stops in the unloading yard, with room to approach the driver.")
 		await _key(KEY_E)
 		var dialog := estate.get_node("UI/Control/DialoguePanel") as Control
-		_expect(dialog.name_label.text == "申禾" and "来亭里就能领种" in dialog.text_label.text,
-			"The driver describes where the spring seed is going.")
+		_expect(dialog.name_label.text == "申禾" and "来亭里就能领种" in dialog.text_label.text
+			and state.market_trip_target.is_empty(), "Talking to the driver completes the route and names the recipients.")
 		await _snapshot("07-south-pavilion")
 		print("ORDER_DELIVERED day=", state.current_day, " grain_reward=", state.season_order_rewards(state.season_order()).food,
 			" tribute=", state.king_storage)
@@ -537,6 +551,14 @@ func _late_delivery() -> void:
 		"The spring load remains at the market under the new summer order.")
 	await _set_watch(SeasonOrders.MORNING_DISPATCH + 0.01)
 	_expect(cart.travelling and cart.shown_order == "spring", "Yesterday's cargo departs at the next morning watch.")
+	var market := tree.current_scene
+	await _open_cart()
+	var book: Control = market.counter.orders
+	_expect(book.freight_route.visible and book.freight_route.text.begins_with("上一季货车")
+		and "第 7 天巳时" in book.freight_route.tooltip_text,
+		"The new summer page can still mark where the previous spring shipment will arrive.")
+	await _button(book.freight_route)
+	_expect(state.market_trip_target == state.FREIGHT_YARD, "The late load starts the same return route after rollover.")
 	print("ORDER_LATE day=", state.current_day, " cargo=", cart.shown_order, " offset=", snappedf(cart.route_offset, 0.1))
 
 func _legacy_receipt(path: String) -> void:
@@ -575,7 +597,8 @@ func run(game_tree: SceneTree) -> void:
 		tree.quit(1)
 		return
 	state = tree.root.get_node("Global")
-	capture_dir = OS.get_environment("FIEFDOM_ORDER_CAPTURES")
+	if capture_dir.is_empty():
+		capture_dir = OS.get_environment("FIEFDOM_ORDER_CAPTURES")
 	tree.root.notify_mouse_entered()
 	tree.change_scene_to_file(state.TITLE_SCENE)
 	await tree.scene_changed

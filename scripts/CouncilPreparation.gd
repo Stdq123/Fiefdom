@@ -152,6 +152,16 @@ func _refresh_petition() -> void:
 	petition_button.visible = ready
 	if ready:
 		petition_detail.text = "递上交货回执后，召简今日到堂前。"
+	elif delivered >= required and Global.current_day >= opening:
+		var missing := PackedStringArray()
+		if Global.current_rank < Global.Rank.DA_FU:
+			missing.append("爵位需大夫")
+		var gap := Global.tax_council_public_gap()
+		if gap > 0:
+			missing.append("还差 %d 份纳贡" % gap)
+		elif gap < 0:
+			missing.append("纳贡占比未达标")
+		petition_detail.text = "回执已齐 · " + " · ".join(missing)
 	elif Global.current_day < opening:
 		petition_detail.text = "第 %d 天起可请议，须达到大夫和纳贡门槛。" % opening
 	else:

@@ -26,6 +26,7 @@ const CROP_PROGRESS := {
 @onready var produce_route_button: Button = $Current/Content/Actions/ProduceRoute
 @onready var water_route_button: Button = $Current/Content/Actions/WaterRoute
 @onready var silk_button: Button = $Current/Content/Actions/Silk
+@onready var freight_route: Button = $Current/Content/Actions/FreightRoute
 @onready var next_heading: Label = $Next/Content/HeadingRow/Heading
 @onready var next_plan_button: Button = $Next/Content/HeadingRow/Plan
 @onready var next_silk_button: Button = $Next/Content/HeadingRow/Silk
@@ -47,6 +48,7 @@ func _ready() -> void:
 	water_route_button.pressed.connect(_follow_water_source)
 	next_water_button.pressed.connect(_follow_water_source.bind(true))
 	silk_button.pressed.connect(silk_requested.emit)
+	freight_route.pressed.connect(GameEvents.west_market_directions_requested.emit.bind(Global.FREIGHT_YARD))
 	next_silk_button.pressed.connect(silk_requested.emit)
 	visibility_changed.connect(_refresh)
 	GameEvents.season_order_pin_changed.connect(_refresh)
@@ -103,6 +105,16 @@ func _refresh() -> void:
 	_show_cargo(SeasonOrders.cargo(order), delivered_on > 0)
 
 	var receipt: Dictionary = Global.season_order_receipts.get(order.id, {})
+	var freight: Dictionary = receipt if delivered_on > 0 and int(receipt.dispatch_day) >= Global.current_day else {}
+	if freight.is_empty() and schedule.start == Global.current_day:
+		freight = Global.pending_freight_receipt()
+	freight_route.visible = Global.outcome == Global.Outcome.RUNNING and not freight.is_empty()
+	if freight_route.visible:
+		var arrived := SeasonOrders.transit_progress(freight, Global.current_day, Global.day_progress) >= 1.0
+		freight_route.text = "货已到 · 去卸货场" if arrived else "指路去卸货场"
+		freight_route.tooltip_text = "到卸货场找申禾" if arrived else SeasonOrders.arrival_caption(freight)
+		if delivered_on == 0:
+			freight_route.text = "上一季货车 · 去卸货场"
 	if delivered_on > 0:
 		var travel := SeasonOrders.transit_progress(receipt, Global.current_day, Global.day_progress)
 		var delivery := SeasonOrders.dispatch_caption(receipt) if travel < 0.0 else (
@@ -115,6 +127,8 @@ func _refresh() -> void:
 			delivery = "阿绥 · 正送往南路亭" if Global.winter_road_rations_progress() < 1.0 else "亭前路粮案 · 麦与帛已到"
 		else:
 			delivery = "申禾 · " + delivery
+		if travel < 1.0:
+			delivery += " · " + SeasonOrders.arrival_caption(receipt)
 		status.text = "第 %d 天已交 · 已领%s\n%s" % [
 			delivered_on, "口粮" if receipt.paid_in_food else "铜钱", delivery]
 		if (Global.get_current_year() == Global.TAX_COUNCIL_YEAR - 1

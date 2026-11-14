@@ -37,6 +37,9 @@ func _run() -> void:
 		"traditional-steward", "reformed-steward":
 			var replay = load("res://tests/CampaignReplay.gd").new()
 			await replay.run(tree, arguments[0].trim_suffix("-steward"), true, capture_directory, true, true)
+		"reformed-orders":
+			var replay = load("res://tests/CampaignReplay.gd").new()
+			await replay.run(tree, "reformed", true, capture_directory, true, false, true)
 		"ending-film":
 			var replay = load("res://tests/EndingFilmReplay.gd").new()
 			await replay.run(tree, capture_directory)
@@ -200,6 +203,7 @@ func _run() -> void:
 		"market-orders", "summer-rice":
 			var replay = load("res://tests/MarketOrderReplay.gd").new()
 			replay.summer = arguments[0] == "summer-rice"
+			replay.capture_dir = capture_directory
 			await replay.run(tree)
 		"order-preparation", "order-preparation-baseline", "order-preparation-old-save":
 			var replay = load("res://tests/OrderPreparationReplay.gd").new()

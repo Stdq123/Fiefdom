@@ -108,3 +108,7 @@ static func relay_progress(receipt: Dictionary, day: int, clock: float, duration
 static func dispatch_caption(receipt: Dictionary) -> String:
 	var watch := "辰时" if receipt.dispatch_day > receipt.day else "酉时"
 	return "第 %d 天%s发车" % [receipt.dispatch_day, watch]
+
+static func arrival_caption(receipt: Dictionary) -> String:
+	var watch := "巳时" if receipt.dispatch_day > receipt.day else "戌时"
+	return "预计第 %d 天%s到南路卸货场" % [receipt.dispatch_day, watch]

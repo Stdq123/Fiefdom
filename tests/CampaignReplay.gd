@@ -5,6 +5,10 @@ const SECOND := Vector2i(9, 5)
 const RICE := Vector2i(4, 5)
 const MULBERRY := Vector2i(6, 6)
 const SECOND_MULBERRY := Vector2i(5, 4)
+const SPRING_ORDER_PLOTS := {Vector2i(4, 4): KEY_5, Vector2i(4, 5): KEY_4,
+	Vector2i(5, 4): KEY_5, Vector2i(6, 4): KEY_1, Vector2i(6, 5): KEY_1}
+const AUTUMN_ORDER_PLOTS := {Vector2i(4, 4): KEY_5, Vector2i(4, 6): KEY_2,
+	Vector2i(5, 6): KEY_2, Vector2i(6, 4): KEY_7}
 const ESTATE := "res://scenes/Main.tscn"
 const TITLE := "res://scenes/Title.tscn"
 
@@ -21,6 +25,10 @@ var delegated_nights := 0
 var nights_short := 0
 var use_night_rations := false
 var use_field_steward := false
+var use_season_orders := false
+var order_capture_directory := ""
+var petition_day := 0
+var deliveries := 0
 var steward_name := ""
 var steward_day := 0
 var managed_harvests := 0
@@ -224,7 +232,8 @@ func _harvest_and_tend(cell: Vector2i, seed_key: Key, replant: bool) -> void:
 	if replant and not state.active_crops.has(cell):
 		if not state.tilled_cells.has(cell):
 			_farm_action(cell)
-		if world.current_seed_id != {KEY_1: "millet", KEY_3: "rice", KEY_5: "beans", KEY_6: "mulberry", KEY_7: "hemp"}[seed_key]:
+		if world.current_seed_id != {KEY_1: "millet", KEY_2: "sorghum", KEY_3: "rice", KEY_4: "wheat",
+				KEY_5: "beans", KEY_6: "mulberry", KEY_7: "hemp"}[seed_key]:
 			_key(seed_key)
 		_farm_action(cell)
 	if world.field_action(cell) == world.FieldAction.WATER:
@@ -236,6 +245,10 @@ func _provision(target: int, expansion := false) -> void:
 	if use_night_rations and not expansion and state.night_rations_plan().uncovered == 0:
 		return
 	var crops: int = state.player_inventory
+	if use_season_orders:
+		var reserved: Dictionary = state.season_order_crops_to_keep()
+		for id in reserved:
+			crops -= mini(state.crop_stock.count(id), int(reserved[id]))
 	if crops == 0 and state.food_storage >= target:
 		return
 	var panel := _management(1)
@@ -323,6 +336,149 @@ func _expand() -> void:
 	await _click(panel.get_node("Panel/ReclaimButton").get_global_rect().get_center())
 	await _click(panel.get_node("Panel/CloseButton").get_global_rect().get_center())
 	_expect(state.well_fields.size() == 2, "Ordinary reclamation creates the second field.")
+
+func _order_plots() -> Dictionary:
+	if not use_season_orders or state.get_current_year() != state.TAX_COUNCIL_YEAR - 1:
+		return {}
+	var schedule: Dictionary = state.season_order()
+	if state.season_order_delivered_at(schedule) != 0:
+		return {}
+	match schedule.order.id:
+		"spring_seed_share": return SPRING_ORDER_PLOTS
+		"autumn_watch_relief": return AUTUMN_ORDER_PLOTS
+	return {}
+
+func _seek_petition() -> bool:
+	return (use_season_orders and state.tax_council_petition_order_count() >= state.TAX_COUNCIL_PETITION_ORDERS
+		and state.current_day < state.tax_council_start_day())
+
+func _deliver_order() -> void:
+	if not use_season_orders or state.tax_council_waiting():
+		return
+	var order: Dictionary = state.season_order()
+	if order.order.id not in ["spring_seed_share", "autumn_watch_relief"] or state.get_current_year() != state.TAX_COUNCIL_YEAR - 1:
+		return
+	if not state.can_deliver_season_order(order):
+		return
+	var panel := _management(0)
+	panel.show_season_orders()
+	var book: Control = panel.season_order_panel
+	book.pin_button.button_pressed = true
+	_close(panel)
+	await tree.process_frame
+	await _click(ui.hud.pinned_order.get_global_rect().get_center())
+	if not _expect(state.market_trip_target == state.MARKET_ORDERS, "The ready order offers a trail to the market cart."):
+		return
+	await walk_estate_road_to(tree, world, Vector2(-270, -21))
+	if not _expect(await walk_through_gates(tree, &"ui_left", state.WEST_MARKET_SCENE), "Walk from the estate through the bridge to the market."):
+		return
+	var market := tree.current_scene
+	await walk_market_to(tree, market, market.market_map.places[state.MARKET_ORDERS])
+	_key(KEY_E)
+	await tree.process_frame
+	if not _expect(market.counter.visible and market.counter.orders.is_visible_in_tree(), "Talk to the west-market order cart."):
+		return
+	book = market.counter.orders
+	var reward: Button = book.food_button if deliveries % 2 == 0 else book.copper_button
+	await _click(reward.get_global_rect().get_center())
+	_expect(state.season_order_delivered_at(order) == state.current_day, "The cart records a real delivery for this season.")
+	deliveries += 1
+	print("CAMPAIGN_ORDER day=", state.current_day, " order=", order.order.id,
+		" reward=", reward.text, " petition_receipts=", state.tax_council_petition_order_count())
+	if not _expect(book.get("freight_route") != null and book.freight_route.is_visible_in_tree(),
+		"The paid receipt provides directions to the unloading yard."):
+		return
+	await _click(book.freight_route.get_global_rect().get_center())
+	_expect(state.market_trip_target == state.FREIGHT_YARD and not market.counter.visible,
+		"Start the return journey from the receipt.")
+	await walk_to_market_exit(tree, market)
+	if _expect(await walk_through_gates(tree, &"ui_right", state.ESTATE_SCENE), "Return from the market through the bridge."):
+		_refresh_estate()
+		_expect(ui.directions.destination().title == state.FREIGHT_YARD,
+			"The return guide reaches the destination in the estate.")
+		if deliveries == 1:
+			await _meet_freight_driver()
+		await walk_estate_road_to(tree, world, Vector2(82, 115))
+
+func _meet_freight_driver() -> void:
+	var target: Vector2 = ui.directions.destination().point
+	await walk_estate_road_to(tree, world, world.to_global(target))
+	var wagon: Node2D = world.get_node("Freight")
+	# Wait on the estate clock, with normal resident and cart updates running.
+	var started_at := Time.get_ticks_msec()
+	var remaining: float = state.balance.daylight_seconds * (1.0 - state.day_progress)
+	while not wagon.arrived and remaining > 0.0:
+		await tree.create_timer(1.0).timeout
+		remaining -= 1.0
+	await tree.process_frame
+	if not _expect(wagon.arrived and world.player.interaction_target == wagon,
+		"The afternoon wagon arrives where the receipt directed the player."):
+		return
+	_key(KEY_E)
+	await tree.process_frame
+	var dialog := ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(dialog != null and dialog.name_label.text == "申禾" and state.market_trip_target.is_empty(),
+		"Speaking to the arriving driver completes the tracked shipment."):
+		return
+	if not order_capture_directory.is_empty():
+		await _capture_ending(order_capture_directory, "orders-meet-the-driver")
+	print("CAMPAIGN_FREIGHT day=", state.current_day, " watch=", state.day_watch_label(),
+		" elapsed_ms=", Time.get_ticks_msec() - started_at)
+	var garden_choice := _find_button(dialog, "指路去亭西种圃")
+	if not _expect(garden_choice != null, "The delivery names the seed garden and offers directions."):
+		return
+	await _click(garden_choice.get_global_rect().get_center())
+	await tree.process_frame
+	var destination: Dictionary = ui.directions.destination()
+	if not _expect(destination.get("title") == "亭西种圃", "The next leg moves from the wagon to the growing beds."):
+		return
+	await walk_estate_road_to(tree, world, world.to_global(destination.point))
+	var garden: Node2D = world.get_node("Scenery/SeedGarden")
+	while state.seed_garden_day() == 0 and state.day_progress < 1.0:
+		await tree.create_timer(1.0).timeout
+	await tree.process_frame
+	if not _expect(state.seed_garden_day() == state.current_day and world.player.interaction_target == garden,
+		"The unloaded seed reaches the garden while the estate clock advances."):
+		return
+	_key(KEY_E)
+	await tree.process_frame
+	dialog = ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(dialog != null and dialog.name_label.text in ["林蓼", "亭西种圃"] and "菽和黍" in dialog.text_label.text,
+		"The garden identifies the delivered seed and its new home."):
+		return
+	if not order_capture_directory.is_empty():
+		await _capture_ending(order_capture_directory, "orders-seed-garden")
+	print("CAMPAIGN_SEED_GARDEN day=", state.current_day, " planted=", state.seed_garden_day(), " speaker=", dialog.name_label.text)
+	await _click(dialog.choices.back().get_global_rect().get_center())
+
+func _petition_early() -> void:
+	if not _seek_petition():
+		return
+	var ready: bool = state.can_petition_tax_council()
+	var opening_today: bool = state.current_day == state.tax_council_petition_day()
+	if not ready and not opening_today:
+		return
+	await _click(ui.hud.council_prep_button.get_global_rect().get_center())
+	var book: Control = ui.council_preparation
+	if not ready:
+		var gap: int = state.tax_council_public_gap()
+		_expect(book.modal.visible and not book.petition_button.visible and "回执已齐" in book.petition_detail.text
+			and ("还差 %d 份纳贡" % gap) in book.petition_detail.text,
+			"The first petition day explains the outstanding public contribution after two delivered orders.")
+		print("CAMPAIGN_PETITION_GAP day=", state.current_day, " missing=", gap)
+		if not order_capture_directory.is_empty():
+			await _capture_ending(order_capture_directory, "orders-petition-missing-tribute")
+		await _click(book.close_button.get_global_rect().get_center())
+		return
+	if not _expect(book.modal.visible and book.petition_button.is_visible_in_tree(), "Two delivered orders lead to an actionable early council."):
+		return
+	if not order_capture_directory.is_empty():
+		await _capture_ending(order_capture_directory, "orders-petition-ready")
+	await _click(book.petition_button.get_global_rect().get_center())
+	if _expect(not tree.paused and state.tax_council_waiting(), "The petition summons the envoy before the regular council."):
+		petition_day = state.current_day
+		print("CAMPAIGN_PETITION day=", petition_day, " regular=", state.tax_council_start_day(),
+			" orders=", state.tax_council_petition_order_count(), " ratio=", state.public_contribution_ratio())
 
 func _handoff_field() -> void:
 	var public: int = state.king_storage
@@ -463,10 +619,14 @@ func _capture_ending(directory: String, name: String) -> void:
 	_expect(frame != null and not frame.is_empty() and frame.save_png(directory.path_join(name + ".png")) == OK,
 		"The ending frame can be captured.")
 
-func run(game_tree: SceneTree, branch: String, release_required := false, capture_directory := "", delegated := false, stewarded := false) -> void:
+func run(game_tree: SceneTree, branch: String, release_required := false, capture_directory := "", delegated := false,
+		stewarded := false, ordering := false) -> void:
 	tree = game_tree
 	use_night_rations = delegated
 	use_field_steward = stewarded
+	use_season_orders = ordering
+	if ordering:
+		order_capture_directory = capture_directory
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated replay profile."):
 		_end(true)
 		return
@@ -514,6 +674,9 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 		var expansion_cost: int = state.balance.reclamation_cost_copper * rank_factor
 		var expansion_food: int = state.balance.reclamation_cost_food * rank_factor
 		var available_provisions: int = state.food_storage + (state.player_inventory if use_night_rations else 0)
+		var prioritize_tribute := _seek_petition()
+		var order_plots := _order_plots()
+		var in_second_year: bool = use_season_orders and state.get_current_year() == state.TAX_COUNCIL_YEAR - 1
 		_harvest_and_tend(FIRST, KEY_1 if state.fertile_cells.has(FIRST) else KEY_5, true)
 		if field_ready and not use_field_steward:
 			_harvest_and_tend(SECOND, KEY_1 if state.fertile_cells.has(SECOND) else KEY_5, true)
@@ -524,7 +687,7 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 					continue
 				var grow: bool = not expanded or cell == MULBERRY or (x == 6 and available_provisions < 12)
 				var silk_plot := cell == MULBERRY or (use_field_steward and cell == SECOND_MULBERRY)
-				if paused_private_sowing and not silk_plot:
+				if (paused_private_sowing or prioritize_tribute) and not silk_plot:
 					continue
 				var seed_key := KEY_7
 				if silk_plot and prepared:
@@ -533,12 +696,22 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 				if cell == RICE and prepared and not rice_harvested:
 					seed_key = KEY_3
 					grow = true
+				if in_second_year and not silk_plot and seed_key != KEY_3:
+					grow = order_plots.has(cell)
+					seed_key = order_plots.get(cell, seed_key)
 				_harvest_and_tend(cell, seed_key, grow)
 		if not prepared and state.money >= 58 and state.player_stats.get_level(literacy_art) >= literacy_target:
 			await _prepare_workshop_and_canal()
 			prepared = true
 			print("CAMPAIGN_BUILD day=", state.current_day, " literacy=", state.player_stats.get_level(literacy_art))
 		_make_silk()
+		await _deliver_order()
+		if failures > 0:
+			_end(true)
+			return
+		await _petition_early()
+		if state.tax_council_waiting():
+			break
 		await _fund_rations_with_silk()
 		if (need_expansion and state.money >= expansion_cost
 			and (state.food_storage + state.player_inventory < expansion_food + 10
@@ -559,7 +732,8 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 		await _sleep()
 
 	var event := await meet_tax_envoy(tree)
-	if not _expect(event != null and tree.paused and state.current_rank >= state.Rank.DA_FU and state.get_current_year() >= 3,
+	if not _expect(event != null and tree.paused and state.current_rank >= state.Rank.DA_FU
+		and (state.get_current_year() >= 3 or petition_day > 0),
 		"Ordinary harvests and sleep reach the year, rank and contribution gates."):
 		_end(true)
 		return
@@ -567,7 +741,7 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 		and state.silk_workshop.bolts > 0, "The campaign includes expansion, irrigated rice, silk and an actual defense.")
 	print("CAMPAIGN_DECISION day=", state.current_day, " public_ratio=", state.public_contribution_ratio(), " copper=", state.money)
 	if branch == "traditional":
-		if not use_field_steward:
+		if not use_field_steward and not use_season_orders:
 			_find_button(event, "暂缓").pressed.emit()
 			event.confirm_button.pressed.emit()
 			await tree.process_frame
@@ -672,6 +846,9 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 	if use_night_rations:
 		_expect(delegated_nights > 0 and state.night_rations.enabled,
 			"Nightly rations operate through the campaign and survive its save and continue.")
+	if use_season_orders:
+		_expect(petition_day > 0 and petition_day < state.tax_council_start_day() and deliveries >= 2,
+			"Deliver season orders and petition before the regular council in an ordinary new game.")
 	var outcome_view := tree.current_scene.get_node("CampaignHUD")
 	var ending: Control = outcome_view.summary
 	if not _expect(ending != null and ending.shot == ending.Shot.CEREMONY and ending.film.visible and not ui.visible
