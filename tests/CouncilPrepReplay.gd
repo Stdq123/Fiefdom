@@ -159,6 +159,17 @@ func _adjust_private_sowing() -> bool:
 		"Open a focused preview for the affected field and leave the plans alone until confirmation."):
 		return false
 	await _snapshot("03b-private-sowing-preview")
+	await _button(panel.sowing_rations)
+	var rations: Control = ui.get_node_or_null("Control/NightRationsPanel")
+	if not _expect(rations != null and "1 份" in rations.need.text and state.field_seed_plans.size() == 3,
+		"Check tonight's ration need without applying the seed plan preview."):
+		return false
+	await _snapshot("03c-sowing-rations")
+	await _key(KEY_ESCAPE)
+	await tree.process_frame
+	_expect(panel.visible and panel.sowing_rations.has_focus() and state.field_seed_plans.size() == 3,
+		"Closing the ration ledger returns focus to the sowing plan.")
+	panel.apply_private_plan.grab_focus()
 	await _key(KEY_ENTER)
 	await tree.process_frame
 	var changed: bool = state.field_seed_plans.size() == 1 and state.field_seed_plans.get(PUBLIC) == "millet"

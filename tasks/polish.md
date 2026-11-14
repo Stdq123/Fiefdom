@@ -21,7 +21,7 @@
 - **经营到结局**。按自己的节奏选一条路线，记下哪几天改变了经营方式、哪些操作重复得最累、哪次遇见人物或走过某处让你想再去。结算后退出，再从标题「继续游戏」读回，核对路线和结算日期。
 - **回报**。记下系统和显卡、键鼠或手柄、实际窗口尺寸、总游玩时间及停在的游戏日期。能复现的问题附上当时的截图或一段操作顺序。画面、节奏和手感直接写感受即可。
 
-本包沿用完成议税续播验证的 EXE 与 PCK，随包说明已补充新入口。解压后通过标题启动、两条新档路线、战败恢复、延期研究和两个结局的退出重启。 [本包校验](../build/polish-playtest/verified/manifest.txt)
+本包包含议税续播预览和缺粮时的余绸报价。解压后验证标题启动、两条新档路线、战败恢复、延期研究和两个结局的退出重启。 [本包校验](../build/polish-silk-rations/delivery-headless/manifest.txt)
 
 ## 从新档到第一次收获
 
@@ -1038,3 +1038,10 @@
 - 上一版新档交给管事后持续续播私田，第 49 天公田贡献 23.89%，第 97 天为 28.03%，均低于 30% 的议税门槛。筹备账现在会列出仍在续播的私田格数，打开安排最多的井田，预览停止续播。确认后保留在田作物与公田播种，玩家也可逐格调整或在议税后恢复。
 - 两条管事回放从默认新档出发。第 23 天把第二块井田交给渠伯，第 40 天停两格私田的下一茬。经营期间卖出多余丝绸买粮，留一匹供结局。第 59 天公田贡献达到 30% 并议税，抉择后恢复按时令续播。传统第 65 天、改革第 61 天结算，均可重新读入结局并续营。两条回放在第二块井田各手动翻地三次，之后由管事耕作。备粮委派分别生效 55 夜和 51 夜，全程供足口粮。 [持续续播基线](../build/polish-steward-campaign/traditional-steward.log) · [传统管事回放](../build/polish-council-sowing/final-strategy/traditional-steward.log) · [改革管事回放](../build/polish-council-sowing/final-strategy/reformed-steward.log)
 - 101 项源码场景、38 项无窗口发行检查和 16 次隔离桌面运行通过，含两种备粮方式与管事经营的双结局、上一版续档、退出重启和 90.656 秒连续运行。1920×1080 和 1024×768 核对筹备账、取消预览及焦点。专项检查按键确认后，原有熟田与公田播种仍在，重新打开筹备账时更新剩余安排。 [Windows 1.0 x64](../build/polish-council-sowing/Fiefdom-1.0.0-Windows-x64.zip) · [1920×1080 筹备账](../build/polish-council-sowing/capture/1920x1080/03-first-third-year.png) · [1024×768 取消预览](../build/polish-council-sowing/capture/1024x768/03b-private-sowing-preview.png) · [源码回归](../build/polish-council-sowing/source/source-matrix.txt) · [发行校验](../build/polish-council-sowing/final-headless/manifest.txt)
+
+## 停播前核对口粮，缺粮时用余绸筹款
+
+- 停播预览说明门客仍按原份额用粮，可打开「今夜安排」核对当晚，关掉账页后回到原井田和按钮。今夜安排只在有实际补粮量时报委派方案。
+- 铜钱不足时，今夜安排可打开蚕桑。现成丝绸卖出一匹能增加补粮量时，先显示余量和补粮明细。快捷出售为议税、传统路线和时令单留绸。出售先收铜钱，之后可按报价调整每夜购粮上限。专项从只留一匹的缺粮档进蚕桑再织一匹，售得 35 铜钱，晚间转用一份麻、花 10 铜钱买两份粮。读回晨间档，仍有一匹丝绸和 27 铜钱，贡粮及留单的两份稻保留。 [1920×1080 停播预览](../build/polish-silk-rations/delivery-capture/1920x1080/03b-private-sowing-preview.png) · [1024×768 出售报价](../build/polish-silk-rations/delivery-capture/1024x768/07-surplus-silk-quote.png) · [1024×768 出售后](../build/polish-silk-rations/delivery-capture/1024x768/08-sale-and-funded-rations.png)
+- 两条管事新档第 40 天停播，第 54 天开始用新入口在缺粮时卖绸，第 60 天议税。传统第 65 天结算，改革第 62 天结算。两条全程供足口粮，第二块井田各手动翻三格，结算读档后可续营。改革回放定案后另在蚕桑页变现，为铜钱目标和三夜用粮备款。 [传统管事回放](../build/polish-silk-rations/delivery-headless/traditional-steward.log) · [改革管事回放](../build/polish-silk-rations/delivery-headless/reformed-steward.log)
+- 101 项源码场景通过，最终布局和续播、备粮、研究费专项复测通过。最终解压包通过 38 项无窗口发行检查和 10 次隔离桌面运行。两种窗口均核对停播入口、卖绸和报价焦点。上一版生成的存档可继续，两个结局可退出重读，连续运行 90.564 秒。 [Windows 1.0 x64](../build/polish-silk-rations/delivery/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-silk-rations/source.log) · [最终源码专项](../build/polish-silk-rations/delivery-source.log) · [发行校验](../build/polish-silk-rations/delivery-headless/manifest.txt)

@@ -23,7 +23,8 @@ const MAP_GRID_ITEM := preload("res://scripts/MapGridItem.gd")
 @onready var rotate_seed: CheckBox = $HBoxContainer/RightPanel/封地概览/SeedPlan/RotateSeed
 @onready var apply_private_plan: Button = $HBoxContainer/RightPanel/封地概览/SeedPlan/ApplyPrivate
 @onready var seed_timing: Label = $HBoxContainer/RightPanel/封地概览/SeedTiming
-@onready var seed_plan_note: Label = $HBoxContainer/RightPanel/封地概览/SeedPlanNote
+@onready var seed_plan_note: Label = $HBoxContainer/RightPanel/封地概览/SeedPlanDetails/SeedPlanNote
+@onready var sowing_rations: Button = $HBoxContainer/RightPanel/封地概览/SeedPlanDetails/SowingRations
 @onready var market_panel: VBoxContainer = $HBoxContainer/RightPanel/市场
 @onready var food_label: Label = $HBoxContainer/RightPanel/市场/FoodLabel
 @onready var irrigation_button: Button = $HBoxContainer/RightPanel/科技/TechContainer/IrrigationButton
@@ -72,6 +73,7 @@ func _ready() -> void:
 	rotate_seed.toggled.connect(_refresh_seed_plan_preview.unbind(1))
 	GameEvents.field_rotation_changed.connect(_refresh_seed_plan_preview)
 	apply_private_plan.pressed.connect(_apply_private_seed_plan)
+	sowing_rations.pressed.connect(GameEvents.night_rations_requested.emit)
 	steward_picker.item_selected.connect(_refresh_steward_preview.unbind(1))
 	apply_steward.pressed.connect(_apply_steward_handover)
 	_refresh_seed_choices()
@@ -586,6 +588,7 @@ func _private_plan_targets(plan: String) -> Array[Vector2i]:
 func _refresh_seed_plan_preview() -> void:
 	var seed_id: String = "" if seed_plan_picker.selected == 0 else seed_plan_picker.get_selected_metadata()
 	var crop := ItemManager.get_crop(seed_id)
+	sowing_rations.visible = seed_plan_picker.selected > 0 and seed_id.is_empty()
 	rotate_seed.visible = Global.field_rotation.signed_day > 0
 	rotate_seed.disabled = not rotate_seed.visible or crop == null or not FieldSeedPlan.supports_rotation(crop)
 	if rotate_seed.disabled:
@@ -601,7 +604,7 @@ func _refresh_seed_plan_preview() -> void:
 	apply_private_plan.disabled = targets.is_empty()
 	if seed_id.is_empty():
 		apply_private_plan.text = "取消私田 · %d 格" % targets.size()
-		seed_plan_note.text = "清除后续的播种安排，田里的作物继续生长。"
+		seed_plan_note.text = "清除后续的播种安排，田里的作物继续生长。门客仍按原定份额用粮。"
 		return
 	apply_private_plan.text = "安排私田 · %d 格" % targets.size()
 	_show_seed_timing(plan, crop)

@@ -42,6 +42,7 @@ func _run() -> void:
 			await replay.run(tree, capture_directory)
 		"night-rations":
 			var replay = load("res://tests/NightRationsReplay.gd").new()
+			replay.capture_dir = capture_directory
 			await replay.run(tree)
 		"research-rations", "research-rations-legacy":
 			var replay = load("res://tests/ResearchRationsReplay.gd").new()

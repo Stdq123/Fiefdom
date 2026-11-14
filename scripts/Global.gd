@@ -2044,6 +2044,20 @@ func _count_duty(workers: Array[RetainerData], duty: RetainerData.Duty) -> int:
 func silk_thread_yield() -> int:
 	return SilkWorkshop.thread_yield(balance, silk_reelers())
 
+func silk_reserve_for_rations() -> int:
+	var keep := 0 if tax_reform_choice == TaxReformChoice.REFORMED else balance.ending_silk_target
+	if tax_reform_choice == TaxReformChoice.TRADITIONAL:
+		for goal in route_objectives():
+			if goal.kind == RouteGoal.OFFER_SILK:
+				keep = maxi(0, int(goal.target) - int(goal.value))
+	var current := season_order()
+	if season_order_delivered_at(current) == 0:
+		keep += int(current.order.get("silk", 0))
+	var upcoming := _pinned_order_after(current)
+	if not upcoming.is_empty():
+		keep += int(upcoming.order.get("silk", 0))
+	return keep
+
 func silk_night_summary(fed: Array[RetainerData]) -> String:
 	return silk_workshop.describe_tonight(balance, _count_duty(fed, RetainerData.Duty.REEL))
 
@@ -2392,21 +2406,22 @@ func night_rations_plan(finished_day := 0) -> Dictionary:
 	plan.merge(_night_meal(food_storage + int(plan.supper) + int(plan.converted) + int(plan.bought)))
 	return plan
 
-func night_rations_offer() -> Dictionary:
+func night_rations_offer(extra_copper := 0) -> Dictionary:
 	var policy := NightRations.new()
 	policy.enabled = true
 	policy.copper_limit = NightRations.MAX_COPPER_LIMIT
 	policy.partial_meals = night_rations.partial_meals
-	return _night_rations_supply_plan(current_day, policy)
+	return _night_rations_supply_plan(current_day, policy, extra_copper)
 
-func _night_rations_supply_plan(evening: int, policy: NightRations) -> Dictionary:
+func _night_rations_supply_plan(evening: int, policy: NightRations, extra_copper := 0) -> Dictionary:
 	var schedule := season_order(evening + 1)
 	var upcoming := _pinned_order_after(schedule)
 	var need := retainer_food_cost()
 	var supper := mini(need, int(winter_supper_record(evening).get("portions", 0)))
 	var fee := research_fee_due(evening + 1)
-	var reserved := fee if money >= fee else 0
-	var plan := policy.plan(need, food_storage + supper, money - reserved, crop_stock,
+	var purse := money + extra_copper
+	var reserved := fee if purse >= fee else 0
+	var plan := policy.plan(need, food_storage + supper, purse - reserved, crop_stock,
 		_order_stock_to_keep(schedule, upcoming), balance.market_food_price, _night_meal)
 	plan.supper = supper
 	plan.research_fee = fee

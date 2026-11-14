@@ -288,7 +288,8 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'key-bindings' -Name 'key-bindings-reload' -Replay 'key-bindings-reload'
     }
     if ($Rations) {
-        foreach ($name in 'night-rations', 'research-rations', 'ration-priority', 'retainer-return', 'traditional-rations', 'reformed-rations') {
+        Start-VerifiedGame -Directory $release -Profile 'night-rations' -Name 'night-rations' -Replay 'night-rations' -Resolution $fullResolution
+        foreach ($name in 'research-rations', 'ration-priority', 'retainer-return', 'traditional-rations', 'reformed-rations') {
             Start-VerifiedGame -Directory $release -Profile $name -Name $name -Replay $name
         }
     }
@@ -308,6 +309,9 @@ try {
         if ($RouteGoals) {
             Start-VerifiedGame -Directory $release -Profile 'council-prep-compact' -Name 'council-prep-1024x768' -Replay 'council-prep' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'ending-film-compact' -Name 'ending-film-1024x768' -Replay 'ending-film' -Resolution '1024x768'
+        }
+        if ($Rations) {
+            Start-VerifiedGame -Directory $release -Profile 'night-rations-compact' -Name 'night-rations-1024x768' -Replay 'night-rations' -Resolution '1024x768'
         }
         if ($Opening) {
             Start-VerifiedGame -Directory $release -Profile 'opening-compact' -Name 'opening-1024x768' -Replay 'estate-directions' -Resolution '1024x768'

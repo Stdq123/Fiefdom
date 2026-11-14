@@ -55,7 +55,7 @@ func _open() -> Control:
 	return _panel()
 
 func _capture(name: String) -> void:
-	if capture_dir.is_empty():
+	if capture_dir.is_empty() or DisplayServer.get_name() == "headless":
 		return
 	await tree.process_frame
 	await RenderingServer.frame_post_draw
@@ -75,20 +75,69 @@ func _end() -> void:
 		print("SCENARIO_OK")
 	tree.quit(1 if failed else 0)
 
+func _sell_surplus_silk(panel: Control) -> void:
+	_expect(not panel.sell_silk.visible and panel.view_silk.visible and state.silk_workshop.bolts == 1,
+		"Keep the only bolt for the council even when tonight's pantry is short.")
+	panel.scroll.ensure_control_visible(panel.view_silk)
+	await tree.process_frame
+	await _click(panel.view_silk)
+	var management: Control = ui.panel_manager.management_panel_instance
+	if not _expect(management != null and management.silk_panel.is_visible_in_tree(), "The ration shortcut opens the existing silk workshop."):
+		return
+	await _click(management.silk_panel.buttons[SilkWorkshop.Action.WEAVE])
+	await _click(management.close_button)
+	panel = await _open()
+	if not _expect(panel.sell_silk.visible and "余 1 匹" in panel.silk_offer.text and "10 铜钱" in panel.silk_offer.text
+		and state.money == 2 and state.food_storage == 1 and state.silk_workshop.bolts == 2,
+		"The surplus offer quotes actual food purchases and preserves the council bolt before any trade."):
+		return
+	panel.scroll.ensure_control_visible(panel.sell_silk)
+	await tree.process_frame
+	await _capture("07-surplus-silk-quote")
+	await _click(panel.sell_silk)
+	_expect(state.silk_workshop.bolts == 1 and state.money == 37 and state.food_storage == 1
+		and state.silk_bolts_sold == 1 and panel.accept_offer.has_focus() and not panel.sell_silk.visible
+		and "铜钱 +35" in panel.silk_sale_receipt.text,
+		"The sale books one bolt and transfers focus to the funded ration quote. Bolts: %s, copper: %s, focus: %s" % [
+			state.silk_workshop.bolts, state.money, tree.root.gui_get_focus_owner()])
+	await _capture("08-sale-and-funded-rations")
+	panel.scroll.ensure_control_visible(panel.accept_offer)
+	await tree.process_frame
+	await _click(panel.accept_offer)
+	_expect(state.night_rations.copper_limit == 10 and state.money == 37 and "补足 3 份" in panel.forecast.text,
+		"Accepting the financed quote changes only the purchase limit.")
+	await _click(panel.close_button)
+	await _sleep()
+	var meal: Dictionary = state.night_rations.last
+	_expect(state.current_day == 9 and meal.served == 4 and meal.copper == 10 and meal.bought == 2
+		and state.money == 27 and state.silk_workshop.bolts == 1 and state.king_storage == 3
+		and state.crop_stock.count("rice") == 2,
+		"The nightly settlement spends the quoted amount and leaves the public stores, silk and reserved rice intact.")
+	tree.change_scene_to_file("res://scenes/Title.tscn")
+	await tree.scene_changed
+	tree.current_scene.continue_button.pressed.emit()
+	await tree.scene_changed
+	await tree.process_frame
+	_expect(state.current_day == 9 and state.money == 27 and state.silk_workshop.bolts == 1
+		and state.night_rations.last == meal, "Continue restores the actual silk stock, remaining copper and ration settlement.")
+	print("RATIONS_SILK day=", state.current_day, " bolts=", state.silk_workshop.bolts, " purchased=", meal.bought,
+		" copper=", state.money, " fed=", meal.served, "/", meal.need)
+
 func run(game_tree: SceneTree) -> void:
 	tree = game_tree
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated nightly rations profile."):
 		_end()
 		return
 	seed(784)
-	capture_dir = OS.get_environment("FIEFDOM_RATIONS_CAPTURES")
+	if capture_dir.is_empty():
+		capture_dir = OS.get_environment("FIEFDOM_RATIONS_CAPTURES")
 	state = tree.root.get_node("Global")
 	# Start with two specialist retainers and a small, precisely accounted pantry.
 	var fixture := {
 		"current_day": 5, "food_storage": 1, "money": 12, "king_storage": 3,
 		"player_inventory": 5, "crop_stock": {"beans": 2, "millet": 1, "hemp": 2},
 		"retainers": [{"name": "渠伯", "school": 2, "duty": 1}, {"name": "季青", "school": 1, "duty": 2}],
-		"silk_workshop": {"built": true, "cocoons": 3, "night_reeling": true},
+		"silk_workshop": {"built": true, "cocoons": 3, "bolts": 1, "night_reeling": true},
 	}
 	var file := FileAccess.open("user://savegame.json", FileAccess.WRITE)
 	file.store_string(JSON.stringify(fixture))
@@ -187,6 +236,12 @@ func run(game_tree: SceneTree) -> void:
 	_expect(panel != null and "还差 2 份" in panel.forecast.text and "稻 2" in panel.keep.text,
 		"The forecast uses available copper as well as the cap and shows the uncovered amount.")
 	await _capture("05-uncovered-shortage")
+	panel.scroll.ensure_control_visible(panel.delegate)
+	await tree.process_frame
+	await _click(panel.delegate)
+	_expect(not panel.accept_offer.visible and not panel.night_offer.visible,
+		"An unfillable full-table plan offers no zero-ration delegation.")
+	await _click(panel.delegate)
 	await _click(panel.close_button)
 	reputation = state.reputation
 	await _sleep()
@@ -201,8 +256,8 @@ func run(game_tree: SceneTree) -> void:
 	_expect(panel != null and "缺 4 份" in panel.receipt.text and "渠伯、季青" in panel.receipt.text,
 		"The receipt records the actual portions and the two missed meals.")
 	await _capture("06-actual-shortage-receipt")
-	await _click(panel.close_button)
 	print("RATIONS_REPLAY protected_rice=", state.crop_stock.count("rice"), " spent=10 last_meal=", last.served, "/", last.need)
+	await _sell_surplus_silk(panel)
 	tree.change_scene_to_file("res://scenes/Title.tscn")
 	await tree.scene_changed
 	tree.root.get_node("AudioManager").bgm_player.stop()

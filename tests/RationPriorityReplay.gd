@@ -12,6 +12,8 @@ func _continue() -> void:
 
 func _choose(panel: Control, index: int) -> bool:
 	var picker: OptionButton = panel.priority_picker
+	panel.scroll.ensure_control_visible(picker)
+	await tree.process_frame
 	await _click(picker)
 	var menu := picker.get_popup()
 	if not _expect(menu.visible, "Open the normal ration priority selector."):

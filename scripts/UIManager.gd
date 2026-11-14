@@ -653,11 +653,13 @@ func _show_night_rations(show_previous := false) -> void:
 	panel_manager.hide_settings_panel()
 	var panel := NIGHT_RATIONS_PANEL.instantiate()
 	panel.show_previous = show_previous
+	var previous_focus := get_viewport().gui_get_focus_owner()
 	var player: Player = world.player
 	player.conversation_open = true
 	$Control.add_child(panel)
 	GameEvents.modal_visibility_changed.emit(true)
 	panel.market_requested.connect(_show_market)
+	panel.silk_requested.connect(_show_silk)
 	panel.duties_requested.connect(_show_estate_management)
 	panel.field_management_requested.connect(func(field_id: int):
 		panel.tree_exited.connect(_show_estate_management.bind(field_id), CONNECT_DEFERRED | CONNECT_ONE_SHOT)
@@ -675,6 +677,9 @@ func _show_night_rations(show_previous := false) -> void:
 		GameEvents.modal_visibility_changed.emit(false)
 		if is_instance_valid(player):
 			player.conversation_open = false
+		if is_instance_valid(previous_focus) and previous_focus.is_visible_in_tree() and get_viewport().gui_get_focus_owner() == null:
+			previous_focus.grab_focus()
+			GamepadInput.snap_pointer_to_focus.call_deferred()
 	)
 
 func _on_night_plot_requested(panel: Control, status: Global.NightGrowth) -> void:

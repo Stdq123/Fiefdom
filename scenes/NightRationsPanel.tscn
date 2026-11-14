@@ -379,6 +379,44 @@ mouse_default_cursor_shape = 2
 tooltip_text = "按本次报价设定每夜购粮上限，可在上方修改。"
 text = "启用夜间备粮"
 
+[node name="SilkTrade" type="HBoxContainer" parent="Center/Window/Content/Scroll/Body/Plan/Preview"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SilkOffer" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/Preview/SilkTrade"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.79, 0.87, 0.68, 1)
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+
+[node name="SellSilk" type="Button" parent="Center/Window/Content/Scroll/Body/Plan/Preview/SilkTrade"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(158, 37)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+
+[node name="ViewSilk" type="Button" parent="Center/Window/Content/Scroll/Body/Plan/Preview/SilkTrade"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(136, 37)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+text = "查看蚕桑"
+
+[node name="SilkSaleReceipt" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/Preview"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.79, 0.87, 0.68, 1)
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+
 [node name="Keep" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/Preview"]
 unique_name_in_owner = true
 layout_mode = 2

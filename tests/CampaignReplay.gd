@@ -27,6 +27,7 @@ var managed_harvests := 0
 var manual_field_actions := 0
 var second_field_actions := 0
 var paused_private_sowing := false
+var ration_silk_sales := 0
 
 static func confirm_optional_tribute_warning(ui: Node) -> void:
 	var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
@@ -312,8 +313,6 @@ func _make_silk() -> void:
 		silk.buttons[3].pressed.emit()
 	elif not silk.buttons[1].disabled:
 		silk.buttons[1].pressed.emit()
-	if use_field_steward and state.silk_workshop.bolts > state.balance.ending_silk_target:
-		silk.buttons[4].pressed.emit()
 	_close(panel)
 
 func _expand() -> void:
@@ -392,6 +391,27 @@ func _pause_private_sowing() -> void:
 	_expect(state.field_seed_plans.get(SECOND) == public_plan and not state.field_seed_plans.has(SECOND + Vector2i.DOWN)
 		and not state.field_seed_plans.has(SECOND + Vector2i.DOWN + Vector2i.RIGHT), "Pause the next private sowing while the tribute plot continues.")
 	print("CAMPAIGN_SOWING day=", state.current_day, " gap=", gap, " public_plan=", public_plan)
+
+func _fund_rations_with_silk() -> void:
+	if not use_field_steward or state.night_rations_plan().uncovered == 0:
+		return
+	await _click(ui.hud.rations_button.get_global_rect().get_center())
+	var panel := ui.get_node_or_null("Control/NightRationsPanel") as Control
+	if not _expect(panel != null, "Open the ration ledger when the steward cannot provision tonight."):
+		return
+	if panel.sell_silk.is_visible_in_tree():
+		var stock: int = state.silk_workshop.bolts
+		panel.scroll.ensure_control_visible(panel.sell_silk)
+		await tree.process_frame
+		await _click(panel.sell_silk.get_global_rect().get_center())
+		if _expect(state.silk_workshop.bolts == stock - 1, "The campaign sells one bolt through the ration quote."):
+			ration_silk_sales += 1
+			print("CAMPAIGN_RATION_SILK day=", state.current_day, " bolts=", state.silk_workshop.bolts, " copper=", state.money)
+	if panel.accept_offer.is_visible_in_tree():
+		panel.scroll.ensure_control_visible(panel.accept_offer)
+		await tree.process_frame
+		await _click(panel.accept_offer.get_global_rect().get_center())
+	await _click(panel.close_button.get_global_rect().get_center())
 
 func _resume_private_sowing() -> void:
 	if not paused_private_sowing:
@@ -519,6 +539,7 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 			prepared = true
 			print("CAMPAIGN_BUILD day=", state.current_day, " literacy=", state.player_stats.get_level(literacy_art))
 		_make_silk()
+		await _fund_rations_with_silk()
 		if (need_expansion and state.money >= expansion_cost
 			and (state.food_storage + state.player_inventory < expansion_food + 10
 				or (use_night_rations and state.food_storage < expansion_food + 10))):
@@ -577,6 +598,13 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 	if not _expect(state.outcome == state.Outcome.RUNNING and state.route_objectives()[1]["value"] == 1, "Silk counts on the matching branch without skipping the other objectives."):
 		_end(true)
 		return
+	if use_field_steward and branch == "reformed":
+		var panel := _management(4)
+		var sell: Button = panel.silk_panel.buttons[4]
+		var cash_target: int = state.balance.ending_reformed_wealth + 3 * state.retainer_food_cost() * state.balance.market_food_price
+		while state.money < cash_target and not sell.disabled:
+			sell.pressed.emit()
+		_close(panel)
 	await _save_return_continue()
 	var last_day: int = state.current_day + 28
 	while state.current_day < last_day and state.outcome == state.Outcome.RUNNING and not state.route_ready_to_present():
@@ -595,6 +623,7 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 					var cell := Vector2i(x, y)
 					if cell != SECOND:
 						_harvest_and_tend(cell, KEY_7, branch == "reformed" or x == 8)
+		await _fund_rations_with_silk()
 		_provision(state.retainer_food_cost())
 		await tree.process_frame
 		if state.outcome == state.Outcome.RUNNING and not state.route_ready_to_present():
@@ -638,6 +667,8 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 		_expect(steward_day > 0 and managed_harvests >= 12 and second_field_actions == 3
 			and paused_private_sowing and state.field_seed_plans.has(SECOND),
 			"The steward farms the second field across the campaign and keeps its saved sowing plan.")
+		_expect(ration_silk_sales > 0 and nights_short == 0,
+			"The campaign uses the quoted silk proceeds and covers every meal through the ending.")
 	if use_night_rations:
 		_expect(delegated_nights > 0 and state.night_rations.enabled,
 			"Nightly rations operate through the campaign and survive its save and continue.")

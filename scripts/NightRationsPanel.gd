@@ -1,6 +1,7 @@
 extends Control
 
 signal market_requested
+signal silk_requested
 signal duties_requested
 signal dry_plot_requested
 signal harvest_requested
@@ -42,6 +43,10 @@ const WINDOW_MARGIN := 16.0
 @onready var keep: Label = %Keep
 @onready var night_offer: Label = %NightOffer
 @onready var accept_offer: Button = %AcceptOffer
+@onready var silk_offer: Label = %SilkOffer
+@onready var sell_silk: Button = %SellSilk
+@onready var view_silk: Button = %ViewSilk
+@onready var silk_sale_receipt: Label = %SilkSaleReceipt
 @onready var priority_row: HBoxContainer = %PriorityRow
 @onready var priority_picker: OptionButton = %Priority
 @onready var meal_forecast: Label = %MealForecast
@@ -71,6 +76,11 @@ func _ready() -> void:
 	budget.value_changed.connect(_change_policy.unbind(1))
 	partial_meals.toggled.connect(_change_policy.unbind(1))
 	accept_offer.pressed.connect(_accept_night_offer)
+	sell_silk.pressed.connect(_sell_silk_for_rations)
+	view_silk.pressed.connect(func():
+		queue_free()
+		silk_requested.emit()
+	)
 	priority_picker.item_selected.connect(_select_priority)
 	body.minimum_size_changed.connect(_fit_body)
 	get_viewport().size_changed.connect(_fit_body)
@@ -193,7 +203,7 @@ func _refresh() -> void:
 		var action := "先补" if plan.uncovered > 0 else "补足"
 		forecast.text = "今夜%s %d 份 · %s" % [action, supplement, _describe_exchange(plan)]
 	else:
-		var rule := "补粮按门客整份口粮结算。" if policy.partial_meals else "凑齐才执行夜间备粮。"
+		var rule := "按门客整份口粮补粮。" if policy.partial_meals else "凑齐前，今夜暂不补粮。"
 		forecast.text = "今夜还差 %d 份。%s" % [plan.uncovered, rule]
 	if plan.supper > 0 and plan.supper < plan.need:
 		forecast.text = "围炉供 %d 份。%s" % [plan.supper, forecast.text]
@@ -240,19 +250,68 @@ func _refresh() -> void:
 func _refresh_night_offer(plan: Dictionary) -> void:
 	night_offer.hide()
 	accept_offer.hide()
+	silk_offer.hide()
+	sell_silk.hide()
+	view_silk.hide()
 	if plan.uncovered == 0:
 		return
 	var policy := Global.night_rations
 	var offer := Global.night_rations_offer()
-	if offer.uncovered >= plan.uncovered:
-		return
-	var cost: int = offer.copper
 	var portions: int = offer.converted + offer.bought
-	var action := "可补 %d 份" % portions if offer.uncovered > 0 else "可补足 %d 份" % portions
-	night_offer.text = action + " · " + _describe_exchange(offer)
-	accept_offer.text = "启用夜间备粮" if not policy.enabled else "购粮上限调至 %d 铜钱" % cost
-	night_offer.show()
-	accept_offer.show()
+	if portions > 0 and offer.uncovered < plan.uncovered:
+		var action := "可补 %d 份" % portions if offer.uncovered > 0 else "可补足 %d 份" % portions
+		night_offer.text = action + " · " + _describe_exchange(offer)
+		accept_offer.text = "启用夜间备粮" if not policy.enabled else "购粮上限调至 %d 铜钱" % offer.copper
+		night_offer.show()
+		accept_offer.show()
+	var silk_reserve := Global.silk_reserve_for_rations() if offer.uncovered > 0 and Global.silk_workshop.built else 0
+	var funded := _silk_ration_quote(offer, silk_reserve)
+	if not funded.is_empty():
+		var remaining := Global.silk_workshop.bolts - 1
+		var covered: int = funded.converted + funded.bought
+		var meal := "可补足 %d 份" % covered if funded.uncovered == 0 else "可补 %d 份" % covered
+		silk_offer.text = "卖绸后余 %d 匹 · %s\n%s" % [remaining, meal, _describe_exchange(funded)]
+		sell_silk.text = "售 1 匹丝绸 · +%d 铜钱" % Global.balance.silk_sell_price
+		silk_offer.show()
+		sell_silk.show()
+	elif offer.uncovered > 0 and Global.silk_workshop.built and Global.balance.silk_sell_price > 0:
+		var stock := Global.silk_workshop.bolts
+		silk_offer.text = "可在蚕桑页织绸，卖绸换铜钱买粮。"
+		if stock > 0 and stock <= silk_reserve:
+			silk_offer.text = "现有 %d 匹丝绸，可先留给议税或交货，再织余绸买粮。" % stock
+		silk_offer.show()
+		view_silk.show()
+
+func _silk_ration_quote(offer: Dictionary, reserve: int) -> Dictionary:
+	var price := Global.balance.silk_sell_price
+	if offer.uncovered == 0 or price <= 0 or not Global.can_use_workshop(SilkWorkshop.Action.SELL):
+		return {}
+	if Global.silk_workshop.bolts <= reserve:
+		return {}
+	var funded := Global.night_rations_offer(price)
+	if funded.converted + funded.bought <= offer.converted + offer.bought:
+		return {}
+	return funded
+
+func _sell_silk_for_rations() -> void:
+	if is_queued_for_deletion() or Global.outcome != Global.Outcome.RUNNING or not sell_silk.is_visible_in_tree():
+		return
+	if _silk_ration_quote(Global.night_rations_offer(), Global.silk_reserve_for_rations()).is_empty():
+		return
+	var had_focus := sell_silk.has_focus()
+	if Global.use_workshop(SilkWorkshop.Action.SELL):
+		silk_sale_receipt.text = "已售 1 匹丝绸 · 铜钱 +%d" % Global.balance.silk_sell_price
+		silk_sale_receipt.show()
+		AudioManager.play_ui_sfx()
+		if had_focus:
+			var focus: Control = accept_offer if accept_offer.visible else delegate
+			focus.grab_focus()
+			_reveal_sale.call_deferred(focus)
+
+func _reveal_sale(focus: Control) -> void:
+	scroll.ensure_control_visible(silk_sale_receipt)
+	scroll.ensure_control_visible(focus)
+	GamepadInput.snap_pointer_to_focus()
 
 func _refresh_meal(plan: Dictionary) -> void:
 	var short: bool = not plan.missed.is_empty()
