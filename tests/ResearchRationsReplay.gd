@@ -86,7 +86,7 @@ func _new_night(panel: Control) -> void:
 		_expect(panel.get_node("%PartialMeals").button_pressed and panel.priority_picker.selected == 2
 			and state.current_day == 50 and state.money == 105, "Continue restores the selected meal policy before any charges.")
 	var reputation: int = state.reputation
-	await _overnight(panel, "03-fee-paid-at-dawn")
+	await _overnight(panel, "03-fee-paid-at-dawn", true)
 	var last: Dictionary = state.night_rations.last
 	_expect(state.current_day == 51 and state.money == 0 and not state.research_choice_pending
 		and state.research_days_remaining() == 22 and last.copper == 5 and last.served == 2 and last.need == 4
@@ -132,7 +132,7 @@ func _check_whole_portions() -> void:
 	_expect(plan.served == 0 and plan.converted == 0 and plan.bought == 0 and plan.missing == 2,
 		"Keep the one unreserved crop when it cannot fund a complete specialist ration.")
 	await _capture("04-one-portion-in-hand")
-	await _overnight(panel)
+	await _overnight(panel, "", true)
 	_expect(state.current_day == 52 and state.crop_stock.count("hemp") == 1 and state.crop_stock.count("beans") == 1
 		and state.night_rations.last.used.is_empty() and state.night_rations.last.served == 0,
 		"The incomplete portion stays available in the morning.")

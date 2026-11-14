@@ -1857,7 +1857,7 @@ func _serve_night_rations(finished_day: int) -> Array[RetainerData]:
 	var departed := PackedStringArray()
 	for retainer: RetainerData in meal.missed:
 		missed.append(retainer.name)
-		retainer.loyalty = maxf(0.0, retainer.loyalty - NightRations.MISSED_MEAL_LOYALTY)
+		retainer.loyalty = NightRations.loyalty_after_missed_meal(retainer.loyalty)
 		if retainer.loyalty == 0.0:
 			departed.append(retainer.name)
 			dismiss_retainer(retainer, DepartureReason.HUNGER, finished_day)
@@ -2443,6 +2443,11 @@ func set_ration_priority(retainer: RetainerData) -> void:
 func night_rations_plan(finished_day := 0) -> Dictionary:
 	var plan := _night_rations_supply_plan(finished_day if finished_day > 0 else current_day, night_rations)
 	plan.merge(_night_meal(food_storage + int(plan.supper) + int(plan.converted) + int(plan.bought)))
+	var departing := PackedStringArray()
+	for retainer: RetainerData in plan.missed:
+		if NightRations.loyalty_after_missed_meal(retainer.loyalty) == 0.0:
+			departing.append(retainer.name)
+	plan.departing = departing
 	return plan
 
 func night_rations_offer(extra_copper := 0) -> Dictionary:

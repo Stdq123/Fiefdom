@@ -310,7 +310,11 @@ try {
     }
     if ($Rations) {
         Start-VerifiedGame -Directory $release -Profile 'night-rations' -Name 'night-rations' -Replay 'night-rations' -Resolution $fullResolution
-        foreach ($name in 'research-rations', 'ration-priority', 'retainer-return', 'traditional-rations', 'reformed-rations') {
+        Start-VerifiedGame -Directory $release -Profile 'ration-priority' -Name 'ration-priority' -Replay 'ration-priority' -Resolution $fullResolution
+        if ($Capture) {
+            Start-VerifiedGame -Directory $release -Profile 'ration-priority-compact' -Name 'ration-priority-1024x768' -Replay 'ration-priority' -Resolution '1024x768'
+        }
+        foreach ($name in 'research-rations', 'retainer-return', 'traditional-rations', 'reformed-rations') {
             Start-VerifiedGame -Directory $release -Profile $name -Name $name -Replay $name
         }
     }

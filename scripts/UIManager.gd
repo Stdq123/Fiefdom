@@ -676,13 +676,14 @@ func _on_raid_alert_pressed() -> void:
 	else:
 		_show_night_rations()
 
-func _show_night_rations(show_previous := false) -> void:
+func _show_night_rations(show_previous := false, focus_shortage := false) -> void:
 	if Global.outcome != Global.Outcome.RUNNING or world.player.conversation_open or (sleep_tween and sleep_tween.is_running()):
 		return
 	world.set_channel_mode(false)
 	panel_manager.hide_settings_panel()
 	var panel := NIGHT_RATIONS_PANEL.instantiate()
 	panel.show_previous = show_previous
+	panel.focus_shortage = focus_shortage
 	var previous_focus := get_viewport().gui_get_focus_owner()
 	var player: Player = world.player
 	player.conversation_open = true
@@ -991,11 +992,23 @@ func _unhandled_key_input(event: InputEvent) -> void:
 func _request_sleep() -> void:
 	if _estate_controls_busy() or Global.outcome != Global.Outcome.RUNNING:
 		return
-	if not Global.tax_council_waiting() and not Global.first_tribute_delivered() and _warn_before_first_tribute():
+	if Global.tax_council_waiting():
+		_on_sleep_pressed()
+		return
+	var plan := Global.night_rations_plan()
+	var ration_warning := ""
+	if not plan.departing.is_empty():
+		ration_warning = "今晚预计分出 %d/%d 份口粮。\n%s缺餐后将离任。" % [plan.served, plan.need, "、".join(plan.departing)]
+	if not Global.first_tribute_delivered() and _warn_before_first_tribute(ration_warning):
+		return
+	if not ration_warning.is_empty():
+		world.set_channel_mode(false)
+		dialog_manager.show_bedtime_warning("门客口粮", ration_warning,
+			{"查看今夜安排": _show_night_rations.bind(false, true)}, _on_sleep_pressed)
 		return
 	_on_sleep_pressed()
 
-func _warn_before_first_tribute() -> bool:
+func _warn_before_first_tribute(ration_warning: String) -> bool:
 	var plan := Global.tribute_field_plan()
 	if plan.is_empty():
 		return false
@@ -1022,8 +1035,12 @@ func _warn_before_first_tribute() -> bool:
 		message += "\n当前体力不足，田务需要 %d 点。" % cost
 	if penalty > 0:
 		message += "\n若今夜仍无纳贡，声望 −%d。" % penalty
+	var alternatives: Dictionary[String, Callable] = {"标出公田": _follow_tribute_plot.bind(route)}
+	if not ration_warning.is_empty():
+		message += "\n\n" + ration_warning
+		alternatives["查看今夜安排"] = _show_night_rations.bind(false, true)
 	world.set_channel_mode(false)
-	dialog_manager.show_tribute_bedtime(message, _follow_tribute_plot.bind(route), _on_sleep_pressed)
+	dialog_manager.show_bedtime_warning("第一次纳贡", message, alternatives, _on_sleep_pressed)
 	return true
 
 func _on_sleep_pressed() -> void:

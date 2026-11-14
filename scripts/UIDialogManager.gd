@@ -37,14 +37,17 @@ func setup(host: Control, estate_player: Player) -> void:
 	parent_node = host
 	player = estate_player
 
-func show_tribute_bedtime(message: String, mark_plot: Callable, sleep: Callable) -> void:
-	var dialog := _open("过夜前", "第一次纳贡", message, ["标出公田", "仍然过夜"], [], null)
+func show_bedtime_warning(context: String, message: String, alternatives: Dictionary[String, Callable], sleep: Callable) -> void:
+	var options: Array[String] = []
+	options.assign(alternatives.keys())
+	options.append("仍然过夜")
+	var dialog := _open("过夜前", context, message, options, [], null)
 	dialog.choices[0].grab_focus()
 	dialog.option_selected.connect(func(index: int):
-		if index == 0:
-			mark_plot.call()
-		else:
+		if index == options.size() - 1:
 			sleep.call()
+		else:
+			dialog.tree_exited.connect(alternatives[options[index]], CONNECT_DEFERRED | CONNECT_ONE_SHOT)
 	)
 
 func show_pavilion_story(id: String, place: String, open_rations: Callable) -> void:

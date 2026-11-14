@@ -71,7 +71,7 @@ func _reach_keeper_visit() -> void:
 			"field_number": 1, "crop_id": "wheat", "signed_day": 10},
 	})
 	await _continue()
-	await _sleep()
+	await _sleep("", true)
 	_expect(state.current_day == 50 and state.retainers.size() == 1 and state.retainers[0].name == TEACHER
 		and state.night_rations.last.departed == PackedStringArray([KEEPER, REELER]),
 		"The shortage sends the unfed keeper and reeler away while the teacher stays.")

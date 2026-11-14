@@ -68,6 +68,7 @@ const WINDOW_MARGIN := 16.0
 @onready var body: VBoxContainer = %Body
 
 var show_previous := false
+var focus_shortage := false
 var completed_field_id := -1
 
 func _ready() -> void:
@@ -130,6 +131,22 @@ func _ready() -> void:
 	_refresh()
 	_show_page(show_previous)
 	close_button.grab_focus()
+	if focus_shortage:
+		_focus_meal_options.call_deferred()
+
+func _focus_meal_options() -> void:
+	await get_tree().process_frame
+	if show_previous or is_queued_for_deletion():
+		return
+	if meal_forecast.visible:
+		scroll.ensure_control_visible(meal_forecast)
+	for button: BaseButton in [accept_offer, find_fruit, sell_silk, priority_picker, %Market]:
+		if button.is_visible_in_tree() and not button.disabled:
+			button.grab_focus()
+			if scroll.is_ancestor_of(button):
+				scroll.ensure_control_visible(button)
+			GamepadInput.snap_pointer_to_focus()
+			return
 
 func _show_page(previous: bool) -> void:
 	show_previous = previous
@@ -348,11 +365,8 @@ func _refresh_meal(plan: Dictionary) -> void:
 	if not plan.fed.is_empty():
 		lines[0] += " · 领足 " + _retainer_names(plan.fed)
 	lines.append("缺餐 · %s · 忠诚 −%d" % [_retainer_names(plan.missed), int(NightRations.MISSED_MEAL_LOYALTY)])
-	var leaving: Array = plan.missed.filter(func(worker: RetainerData) -> bool:
-		return worker.loyalty <= NightRations.MISSED_MEAL_LOYALTY
-	)
-	if not leaving.is_empty():
-		lines.append("预计离任 · " + _retainer_names(leaving))
+	if not plan.departing.is_empty():
+		lines.append("预计离任 · " + "、".join(plan.departing))
 	var grain_left := Global.food_storage + int(plan.converted) + int(plan.bought) - maxi(0, int(plan.served) - int(plan.supper))
 	if grain_left > 0:
 		lines.append("粮仓将余 %d 份，留待下次分餐。" % grain_left)

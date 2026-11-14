@@ -57,6 +57,7 @@ func _run() -> void:
 		"ration-priority", "ration-priority-legacy":
 			var replay = load("res://tests/RationPriorityReplay.gd").new()
 			replay.legacy = arguments[0] == "ration-priority-legacy"
+			replay.capture_dir = capture_directory
 			await replay.run(tree)
 		"retainer-return", "retainer-return-legacy":
 			var replay = load("res://tests/RetainerReturnReplay.gd").new()
@@ -427,8 +428,16 @@ func _research() -> void:
 	var interval: int = state.research_payment_interval()
 	var initial_money: int = state.money
 	while state.current_day < first_day + duration and not tree.paused:
+		var evening: int = state.current_day
 		ui.sleep_button.pressed.emit()
+		var bedtime := ui.get_node_or_null("Control/DialoguePanel") as Control
+		if bedtime != null and bedtime.context_label.text == "门客口粮":
+			# Keep the existing research-only budget even when the retainer leaves.
+			bedtime.choices.back().pressed.emit()
 		await tree.create_timer(1.1).timeout
+		if state.current_day != evening + 1:
+			_fail("A funded research night must advance after confirming bedtime.")
+			return
 		if state.current_day == first_day + interval:
 			var paid: int = state.money
 			if paid != initial_money - state.balance.research_monthly_cost or state.save_game() != OK or state.load_game() != OK:

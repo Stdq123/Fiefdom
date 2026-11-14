@@ -63,8 +63,24 @@ func _capture(name: String) -> void:
 	_expect(image.save_png(capture_dir.path_join(name + ".png")) == OK, "Could not capture " + name)
 	print("RATIONS_FRAME ", name, " ", image.get_size())
 
-func _sleep(dawn_capture := "") -> void:
+func _bedtime_warning() -> Control:
+	return ui.get_node_or_null("Control/DialoguePanel") as Control
+
+func _confirm_departure() -> bool:
+	var warning := _bedtime_warning()
+	if not _expect(warning != null and warning.context_label.text == "门客口粮"
+		and warning.choices.back().text == "仍然过夜", "A departure requires an explicit overnight choice."):
+		return false
+	await _click(warning.choices.back())
+	return true
+
+func _sleep(dawn_capture := "", confirm_departure := false) -> void:
 	await _click(ui.sleep_button)
+	if confirm_departure and not await _confirm_departure():
+		return
+	await _wait_for_dawn(dawn_capture)
+
+func _wait_for_dawn(dawn_capture := "") -> void:
 	await tree.create_timer(0.58).timeout
 	if not dawn_capture.is_empty():
 		await _capture(dawn_capture)

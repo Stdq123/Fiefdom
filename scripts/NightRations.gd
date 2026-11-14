@@ -10,6 +10,9 @@ var copper_limit := 0
 var priority: RetainerData
 var last: Dictionary = {}
 
+static func loyalty_after_missed_meal(loyalty: float) -> float:
+	return maxf(0.0, loyalty - MISSED_MEAL_LOYALTY)
+
 func plan(need: int, food: int, money: int, stock: CropStock, keep: Dictionary, unit_price: int,
 		allocate_meals: Callable) -> Dictionary:
 	var missing := maxi(0, need - food)
