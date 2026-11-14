@@ -21,7 +21,7 @@
 - **经营到结局**。按自己的节奏选一条路线，记下哪几天改变了经营方式、哪些操作重复得最累、哪次遇见人物或走过某处让你想再去。结算后退出，再从标题「继续游戏」读回，核对路线和结算日期。
 - **回报**。记下系统和显卡、键鼠或手柄、实际窗口尺寸、总游玩时间及停在的游戏日期。能复现的问题附上当时的截图或一段操作顺序。画面、节奏和手感直接写感受即可。
 
-本包包含封地、溪桥道、西市和竹涧的斜俯视更新。按住 Shift 或手柄 LT 可一次处理一块井田内同类的农事。第一次纳贡后可从手记接上轮作并安排井田管事。右上日期栏可为秋社留谷样、为冬至按菜留料，「今夜安排」可查询或撤销。南池畔有路灯和节庆石坪，夏单到货后可走上钓台。解压版已回放两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本轮试玩包](../build/polish-festival-pantry/release/Fiefdom-1.0.0-Windows-x64.zip) · [本包校验](../build/polish-festival-pantry/release/headless/manifest.txt)
+本包包含封地、溪桥道、西市和竹涧的斜俯视更新。按住 Shift 或手柄 LT 可一次处理一块井田内同类的农事。第一次纳贡后可从手记接上轮作并安排井田管事。右上日期栏可为秋社留谷样、为冬至按菜留料，「今夜安排」可查询或撤销。夏单到货后可走上南池西岸的钓台，冬至缺鱼可从历书或禾伯处指路过去。解压版已回放两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本轮试玩包](../build/polish-winter-fishing/release/Fiefdom-1.0.0-Windows-x64.zip) · [本包校验](../build/polish-winter-fishing/release/headless/manifest.txt)
 
 ## 从新档到第一次收获
 
@@ -1187,3 +1187,9 @@
 - 第 15 天用同一个缺粮存档比较两次过夜。取消留用后，门客转用最后一份黍，第 16 天仅剩两种谷样。选择留样并接受今夜报价后，实际花 5 铜钱买一份口粮，晨间三种谷样仍齐。两种过夜均保留国库和秋单需用的两份稷、一份菽。历书与「今夜安排」都会列出额外留样和与订单共用的作物。 [历书留样](../build/polish-festival-pantry/release/default/01-autumn-pantry.png) · [1024×768 睡前账目](../build/polish-festival-pantry/release/capture/1024x768/02-pantry-shortage.png) · [缺粮对照回放](../build/polish-festival-pantry/release/default/default-window.log)
 - 冬单已交时，留麦菽粥料会保留麦和菽。改留鱼麦羹用麦，门客仍可转用菽。新档中可提前预留尚未收获的作物，并从历书去柳湾钓鱼。秋社分享后禾伯出的菽计入配方。留用到节庆最后一天清早为止，取消时立即重算粮价。用第 21 天的结局测试档读回再续营时，冬单两份麦和围炉一份麦均保留。 [1024×768 鱼麦羹指路](../build/polish-festival-pantry/release/winter-compact/01a-fish-plan.png) · [秋社到围炉新档回放](../build/polish-festival-pantry/release/capture/autumn-exhibit-1024x768.log)
 - 106 项源码回归通过。补上结局续营的留用恢复后，最终构建再通过节庆、备粮、双结局与晨间存档在内的六项源码专项。解压包通过 38 项无窗口发行检查（含 90.743 秒连续运行）和 19 次隔离桌面运行。默认窗口为 1920×1080，另查 1024×768 的留样、备粮、指路与开席。新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局均可退出重启后读回。上一版实际生成的第三天存档可接续并过夜到第四天。两次干净构建的 ZIP 校验值一致。首次独立试玩和长线体验仍待验收。 [源码回归](../build/polish-festival-pantry/source-verified.log) · [最终构建专项](../build/polish-festival-pantry/source-release.log) · [无窗口发行](../build/polish-festival-pantry/release/windows-headless.log) · [隔离桌面](../build/polish-festival-pantry/release/windows-capture.log) · [重复构建](../build/polish-festival-pantry/release/hashes.log)
+
+## 从南池钓台取鱼回围炉
+
+- 夏单到货后，冬至备办可从历书或禾伯处标出南池钓台。钓台未开时，学过垂钓的玩家仍可去柳湾。钓起鱼后可点「去南池畔围炉」，也可用原有选项去灶台或交留鱼。隔离桌面实画面调整了结果框的展开方向，「收竿」位于画面底边内。 [历书](../build/polish-winter-fishing/release/default/winter-pond-01-almanac.png) · [禾伯指路](../build/polish-winter-fishing/release/default/winter-pond-02-host-directions.png) · [1024×768 钓鱼结果](../build/polish-winter-fishing/release/capture/1024x768/winter-pond-03-catch-and-return.png)
+- 夏单解锁专项从新档收稻、交货到走上木台。另从带有夏单回执的旧格式测试档开始，存档读回钓台指引，走到木板上钓得鲫鱼，从标题读回回程，在冬至石坪用一份私仓麦和实得的鱼煮羹。次晨口粮账记录门客领了一份围炉饭，国库保留四份。柳湾路线从新档走到第 21 天，钓鱼后存档退出再从竹涧西门回封地。预置南路小径已开时，另走过南路门并接回围炉。 [夏单解锁](../build/polish-winter-fishing/release/headless/summer-rice.log) · [南池钓鱼到过夜](../build/polish-winter-fishing/release/default/default-window.log) · [柳湾跨地图回程](../build/polish-winter-fishing/release/headless/winter-supper.log)
+- 最终界面的十项源码专项通过。解压包通过 45 项无窗口发行检查、90.757 秒连续运行和 20 次隔离桌面运行。干净配置默认 1920×1080，也核对了 1024×768 的指路、抛竿、结果按钮和围炉。新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，均可退出重启后读回。上一版程序实际生成的第三天存档可接续，两次干净构建的 ZIP 校验值一致。 [最终界面专项](../build/polish-winter-fishing/source-release.log) · [无窗口检查](../build/polish-winter-fishing/release/headless.log) · [隔离桌面回放](../build/polish-winter-fishing/release/capture.log) · [重复构建](../build/polish-winter-fishing/release/hashes.log)
