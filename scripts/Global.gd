@@ -1474,6 +1474,9 @@ func finish_campaign(result: Outcome) -> void:
 		if not ending_record.is_empty():
 			return
 		ending_record = _capture_ending(result)
+		var farewell := _ending_farewell(result)
+		if not farewell.is_empty():
+			ending_record["farewell"] = farewell
 	outcome = result
 	GameEvents.campaign_ended.emit(outcome)
 
@@ -1495,6 +1498,32 @@ func _capture_ending(result: Outcome) -> Dictionary:
 		"accounts": accounts,
 		"memories": _ending_memories()
 	}
+
+func _ending_farewell(result: Outcome) -> Dictionary:
+	var speakers := retainers.filter(func(resident: RetainerData) -> bool: return resident.name in VisitorData.NEIGHBORS)
+	if speakers.is_empty():
+		return {}
+	var traditional := result == Outcome.TRADITIONAL
+	if not traditional and tax_reform_day > 0:
+		for resident: RetainerData in speakers:
+			var departure: Dictionary = neighbor_departures.get(resident.name, {})
+			if departure.get("reason") == DepartureReason.REFORM and int(departure.get("returned_day", 0)) > tax_reform_day:
+				return {"speaker": resident.name, "line": "议税那天我卷了铺席。这回回来，还是铺在原来的地方。明早一起去田边走一趟吧。"}
+	if not well_fields.is_empty():
+		for resident: RetainerData in speakers:
+			if resident.duty == RetainerData.Duty.STEWARD:
+				var field: int = stewarded_field(resident).field_id
+				var line := ("井田 %d 我接着照料。等公田再熟，就把谷送到这里。" if traditional else
+					"井田 %d 我接着照料。等谷熟了，咱们还来这张案上照册记一笔。")
+				return {"speaker": resident.name, "line": line % (field + 1), "field": field}
+	var names := speakers.map(func(resident: RetainerData) -> String: return resident.name)
+	if not traditional and VisitorData.SILK_MERCHANT in names:
+		return {"speaker": VisitorData.SILK_MERCHANT, "line": "新册先放这儿。西市下回开张，我还想带一匹咱们的绸去。"}
+	if VisitorData.FIELD_KEEPER in names:
+		var line := ("给公田挑水那只旧桶还在。明早提上它，咱们再看看田哪儿干了。" if traditional else
+			"新册添了几亩，水照旧从一口井里挑。明早你提桶，我去田边等你。")
+		return {"speaker": VisitorData.FIELD_KEEPER, "line": line}
+	return {"speaker": names.front(), "line": "等人散了，我来收案上的木筹。明早开门，又是一日。"}
 
 func _ending_memories() -> Array[String]:
 	var events: Array[Dictionary] = []

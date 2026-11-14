@@ -73,6 +73,8 @@ func _stage_result(traditional: bool) -> void:
 	state.set_route_baseline()
 	state.raids_defeated = 3
 	state.silk_workshop.built = true
+	var keeper: RetainerData = state.retainers.front()
+	var events := tree.root.get_node("GameEvents")
 	if traditional:
 		state.king_storage += 8
 		state.silk_bolts_offered += 2
@@ -82,6 +84,7 @@ func _stage_result(traditional: bool) -> void:
 		state.field_rotation.field_number = 1
 		state.field_rotation.crop_id = "wheat"
 		state.field_rotation.signed_day = 11
+		_expect(state.assign_duty(keeper, RetainerData.Duty.STEWARD), "The keeper takes charge after the rotation book is signed.")
 	else:
 		state.private_harvest_total += 15
 		state.silk_bolts_sold += 2
@@ -92,11 +95,21 @@ func _stage_result(traditional: bool) -> void:
 		state.last_defense = {"day": 33, "kind": 0, "losses": 0, "guard": "弋戎"}
 		state.east_watch_day = 34
 		state.season_order_receipts["winter_woven_goods"] = {"day": 45, "dispatch_day": 45, "paid_in_food": false}
+		var returning := RetainerData.new(VisitorData.ROAD_KEEPER, "士人", RetainerData.School.CONFUCIAN)
+		state.retainers.append(returning)
+		state.neighbor_departures[returning.name] = {"day": 53, "reason": state.DepartureReason.REFORM, "returned_day": 57}
+		events.retainer_recruited.emit(returning)
 	var cell: Vector2i = state.well_fields[0]["center_pos"]
+	if traditional:
+		# The steward handles the first field during the handoff. Keep the second field for the continuation check.
+		var second_center := Vector2i(9, 5)
+		state.well_fields.append({"center_pos": second_center, "is_unlocked": true, "reclamation_progress": 4,
+			"field_id": 1, "assigned_retainers": []})
+		world._draw_well_field(second_center)
+		cell = second_center
 	state.tilled_cells[cell] = true
 	if _expect(world.sow_crop(cell, "millet"), "Prepare a ripe crop for play after the ending."):
 		state.active_crops[cell]["age"] = state.active_crops[cell]["growth_nights"]
-	var events := tree.root.get_node("GameEvents")
 	events.tax_reform_choice_made.emit(state.tax_reform_choice)
 	events.crop_harvested.emit(traditional)
 	await tree.process_frame
@@ -110,6 +123,8 @@ func _record_rows(ending: Control) -> Array[String]:
 		rows.append(row.get_child(0).text + " " + row.get_child(1).text)
 	for line: Label in ending.memories.get_children():
 		rows.append(line.text)
+	if ending.farewell_row.visible:
+		rows.append(ending.farewell_speaker.text + " · " + ending.farewell_line.text)
 	return rows
 
 func _watch_film(ending: Control, branch: String) -> void:
@@ -125,6 +140,8 @@ func _watch_film(ending: Control, branch: String) -> void:
 		recording.set_recording_active(true)
 	var first_position: Vector2 = ending.camera.global_position
 	var sampled_move := false
+	var guest_walk := false
+	var saw_farewell := false
 	var reached := false
 	var saw_fields := false
 	var first_audio: bool = DisplayServer.get_name() == "headless" or ending.score.playing
@@ -132,6 +149,8 @@ func _watch_film(ending: Control, branch: String) -> void:
 	var next_sample := Time.get_ticks_msec()
 	while ending.film.visible:
 		await tree.process_frame
+		if ending.guest and ending.guest.visible and ending.guest_sprite.walking:
+			guest_walk = true
 		if ending.shot == ending.Shot.CEREMONY:
 			if not reached and ending.envoy.position.is_equal_approx(ending.walk_end):
 				reached = true
@@ -139,6 +158,13 @@ func _watch_film(ending: Control, branch: String) -> void:
 				await _capture(branch + "-ceremony", capture_dir)
 			if ending.walk_sprite.walking and ending.walk_sprite.frame_coords.x in [1, 2]:
 				sampled_move = true
+		elif ending.shot == ending.Shot.FAREWELL and not saw_farewell:
+			saw_farewell = true
+			var farewell: Dictionary = state.ending_record.get("farewell", {})
+			_expect(ending.guest.visible and ending.guest.position.is_equal_approx(ending.guest_end)
+				and ending.place.text == farewell.speaker and ending.caption.text == farewell.line,
+				"The named resident arrives and speaks the stored line during the film.")
+			await _capture(branch + "-farewell", capture_dir)
 		elif ending.shot == ending.Shot.FIELD and not saw_fields:
 			saw_fields = true
 			_expect(ending.camera.global_position.distance_to(first_position) > 70.0, "The film then shows the fields.")
@@ -155,8 +181,10 @@ func _watch_film(ending: Control, branch: String) -> void:
 		AudioServer.remove_bus_effect(bus, slot)
 	_expect(reached and sampled_move and saw_fields and first_audio and ending.report.visible,
 		"The envoy walks into view, the film shows the fields, then opens the ledger.")
+	_expect(saw_farewell and guest_walk, "The film shows the neighbor walking in and speaking before the fields.")
 	await _capture(branch + "-ledger", capture_dir)
-	print("ENDING_FILM branch=", branch, " arrival=", reached, " footsteps=", sampled_move, " sampled_frames=", frames)
+	print("ENDING_FILM branch=", branch, " arrival=", reached, " footsteps=", sampled_move,
+		" farewell=", ending.farewell_speaker.text, " neighbor_walk=", guest_walk, " sampled_frames=", frames)
 
 func _ending_save_failure() -> void:
 	await _new_estate()
@@ -226,11 +254,19 @@ func _play_ending(traditional: bool) -> void:
 		_expect(latest.get("campaign") != state.campaign_id and not FileAccess.file_exists(manual_path)
 			and "保存结局" in hud.status.text, "The ledger stays available for manual saving without an automatic checkpoint.")
 	await _watch_film(ending, branch)
+	var note: Dictionary = state.ending_record.get("farewell", {})
+	_expect(ending.farewell_row.visible and ending.farewell_portrait.texture != null
+		and tree.root.get_visible_rect().encloses(ending.report.get_node("Panel").get_global_rect()),
+		"The named portrait and dialogue fit inside the report.")
 	var rows := _record_rows(ending)
 	if traditional:
+		_expect(note.get("speaker") == VisitorData.FIELD_KEEPER and note.get("field") == 0 and "井田 1" in note.line,
+			"The book remembers the actual field and its steward.")
 		_expect(rows[0].begins_with("新增公田纳贡 8 /") and "渠伯把麦的收成记进轮作簿。" in rows
 			and not rows.has("季青和你在南路亭西修了歇脚处。"), "The traditional record reflects its actual deeds.")
 	else:
+		_expect(note.get("speaker") == VisitorData.ROAD_KEEPER and "卷了铺席" in note.line,
+			"The returning reform retainer speaks ahead of the other residents.")
 		_expect(rows[0].begins_with("新增计税收成 15 /") and "季青和你在南路亭西修了歇脚处。" in rows
 			and "弋戎把守田的战果留在东岗。" in rows
 			and "阿绥把你送的麦帛搬到亭前，赶路人有了麦饼和行囊。" in rows
@@ -284,7 +320,7 @@ func _play_after_ending(ending: Control, traditional: bool, branch: String, rows
 	_expect(checkpoint["source"] == ("续营自动存档" if traditional else "手动存档"), "Continuing respects the autosave preference.")
 	var public_before: int = state.king_storage
 	var private_before: int = state.private_harvest_total
-	var cell: Vector2i = state.well_fields[0]["center_pos"]
+	var cell: Vector2i = state.well_fields.back()["center_pos"]
 	_expect(world.harvest_crop(cell), "A ripe plot remains harvestable after continuing.")
 	await tree.process_frame
 	await tree.process_frame
@@ -338,7 +374,8 @@ func _verify_old_record() -> void:
 	await tree.process_frame
 	var ending: Control = tree.current_scene.get_node("CampaignHUD").summary
 	var rows := _record_rows(ending)
-	_expect(ending.report.visible and not ending.has_route_totals and rows[0].begins_with("国库 44"),
+	_expect(ending.report.visible and not ending.has_route_totals and rows[0].begins_with("国库 44")
+		and not ending.farewell_row.visible and ending.guest == null,
 		"An old finished save shows its known totals without inventing route deltas.")
 
 func run_process_restart(game_tree: SceneTree, traditional: bool, resume: bool) -> void:
@@ -361,7 +398,9 @@ func run_process_restart(game_tree: SceneTree, traditional: bool, resume: bool) 
 		await tree.process_frame
 		var ending := tree.current_scene.get_node_or_null("CampaignHUD")
 		_expect(state.outcome == result and ending != null and ending.summary != null
-			and ending.summary.report.visible and ending.summary.heading.text == branch,
+			and ending.summary.report.visible and ending.summary.heading.text == branch
+			and ending.summary.farewell_row.visible
+			and ending.summary.farewell_speaker.text == (VisitorData.FIELD_KEEPER if traditional else VisitorData.ROAD_KEEPER),
 			"Continue opens the correct recorded ending after a full process restart.")
 	else:
 		await _new_estate()

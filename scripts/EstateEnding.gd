@@ -4,7 +4,7 @@ signal film_finished()
 signal close_requested()
 signal restore_requested()
 
-enum Shot { FIELD, CEREMONY, RECORD }
+enum Shot { FIELD, CEREMONY, FAREWELL, RECORD }
 
 const ENVOY := preload("res://assets/characters/envoy-motion.svg")
 const PROPS := preload("res://assets/world/ending-ceremonies.svg")
@@ -18,6 +18,10 @@ const FIELD_HOLD := 2.15
 const PAN_SECONDS := 1.35
 const WALK_SECONDS := 1.65
 const CEREMONY_HOLD := 2.30
+const FAREWELL_WALK := 1.15
+const FAREWELL_HOLD := 4.25
+const SCORE_FADE := 0.8
+const SCORE_DB := -6.0
 
 @onready var film: Control = %Film
 @onready var place: Label = %ShotPlace
@@ -30,6 +34,10 @@ const CEREMONY_HOLD := 2.30
 @onready var epilogue: Label = %Epilogue
 @onready var results: VBoxContainer = %Results
 @onready var memories: VBoxContainer = %Memories
+@onready var farewell_row: PanelContainer = %Farewell
+@onready var farewell_portrait: TextureRect = %FarewellPortrait
+@onready var farewell_speaker: Label = %FarewellSpeaker
+@onready var farewell_line: Label = %FarewellLine
 @onready var status: Label = %EndingStatus
 @onready var continue_button: Button = %ContinueEstate
 @onready var save_button: Button = %SaveEnding
@@ -49,11 +57,17 @@ var camera: Camera2D
 var envoy: Node2D
 var walk_sprite: NeighborMotion
 var motion: Tween
+var score_fade: Tween
 var field_focus: Vector2
 var ceremony_focus: Vector2
 var walk_start: Vector2
 var walk_end: Vector2
 var presenter: Sprite2D
+var guest: Node2D
+var guest_sprite: NeighborMotion
+var guest_start: Vector2
+var guest_end: Vector2
+var farewell: Dictionary = {}
 var accounts: Array = []
 var has_route_totals := false
 var archive_open := false
@@ -158,6 +172,10 @@ func _build_stage() -> void:
 	var fields := Global.well_fields.filter(func(field: Dictionary) -> bool: return field["is_unlocked"])
 	if not fields.is_empty():
 		var field: Dictionary = fields.front() if traditional else fields.back()
+		for candidate: Dictionary in fields:
+			if candidate.field_id == farewell.get("field", -1):
+				field = candidate
+				break
 		field_focus = estate.tile_map.to_global(estate.tile_map.map_to_local(field["center_pos"])) + Vector2(-4, -12)
 	else:
 		field_focus = estate.player.global_position
@@ -197,6 +215,8 @@ func _build_stage() -> void:
 	walk_sprite.position.y = -10.0
 	envoy.add_child(walk_sprite)
 	walk_sprite.set_motion_sheet(ENVOY)
+	if not farewell.is_empty():
+		_build_farewell_guest()
 
 	camera = Camera2D.new()
 	camera.name = "EndingCamera"
@@ -206,15 +226,40 @@ func _build_stage() -> void:
 	camera.make_current()
 	score.stream = TRADITIONAL_SCORE if traditional else REFORMED_SCORE
 
+func _build_farewell_guest() -> void:
+	guest_start = Vector2(-78, 22) if traditional else Vector2(84, 28)
+	guest_end = Vector2(-44, 8) if traditional else Vector2(43, 13)
+	guest = Node2D.new()
+	guest.name = "FarewellGuest"
+	guest.hide()
+	stage.add_child(guest)
+	guest_sprite = NeighborMotion.new()
+	guest_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	guest_sprite.position.y = -10.0
+	guest.add_child(guest_sprite)
+	guest_sprite.set_art(farewell.speaker, null)
+	var resident: Node2D = estate.neighbor_actor(farewell.speaker)
+	if is_instance_valid(resident):
+		resident.hide()
+
 func _play(from_handoff := false) -> void:
 	if motion and motion.is_running():
 		motion.kill()
+	if score_fade and score_fade.is_running():
+		score_fade.kill()
 	report.hide()
 	shade.hide()
 	film.show()
 	envoy.position = walk_start
 	walk_sprite.stand()
 	walk_sprite.face(walk_end - walk_start)
+	presenter.frame_coords = Vector2i(0, Player.Facing.BACK)
+	presenter.flip_h = false
+	if guest:
+		guest.hide()
+		guest.position = guest_start
+		guest_sprite.stand()
+		guest_sprite.face(guest_end - guest_start)
 	if from_handoff:
 		_show_ceremony()
 		camera.global_position = ceremony_focus
@@ -224,6 +269,7 @@ func _play(from_handoff := false) -> void:
 		camera.global_position = field_focus
 		camera.zoom = Vector2.ONE * 2.65
 	camera.force_update_scroll()
+	score.volume_db = SCORE_DB
 	if DisplayServer.get_name() != "headless":
 		score.play()
 	_focus_action(skip_button)
@@ -235,10 +281,26 @@ func _play(from_handoff := false) -> void:
 		motion.tween_callback(_show_ceremony)
 	motion.tween_method(_walk_to_table, 0.0, 1.0, WALK_SECONDS)
 	motion.tween_callback(_finish_handoff)
-	motion.tween_interval(CEREMONY_HOLD)
+	if guest:
+		motion.tween_interval(CEREMONY_HOLD - FAREWELL_WALK)
+		motion.tween_callback(guest.show)
+		motion.tween_method(_walk_guest, 0.0, 1.0, FAREWELL_WALK)
+		motion.tween_callback(_show_farewell)
+		motion.tween_interval(FAREWELL_HOLD)
+	else:
+		motion.tween_interval(CEREMONY_HOLD)
 	if from_handoff:
 		motion.tween_callback(_show_fields)
 		motion.tween_interval(FIELD_HOLD)
+	var length := WALK_SECONDS + CEREMONY_HOLD + FIELD_HOLD
+	if guest:
+		length += FAREWELL_HOLD
+	if not from_handoff:
+		length += PAN_SECONDS
+	if score.playing:
+		var fade_at := minf(length, score.stream.get_length())
+		score_fade = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		score_fade.tween_property(score, "volume_db", -40.0, SCORE_FADE).set_delay(maxf(0.0, fade_at - SCORE_FADE))
 	motion.tween_callback(_show_record)
 
 func _show_fields() -> void:
@@ -271,9 +333,28 @@ func _finish_handoff() -> void:
 	caption.text = ("召简接过贡簿，准封地照旧耕种，续行旧礼。" if traditional else
 		"召简收下新册。往后各户照册纳税，市上按实成交。")
 
+func _walk_guest(progress: float) -> void:
+	var next := guest_start.lerp(guest_end, progress)
+	guest_sprite.walk(next - guest.position)
+	guest.position = next
+
+func _show_farewell() -> void:
+	shot = Shot.FAREWELL
+	_face_farewell_guest()
+	place.text = farewell.speaker
+	caption.text = farewell.line
+
+func _face_farewell_guest() -> void:
+	guest_sprite.stand()
+	guest_sprite.face(presenter.position - guest.position)
+	presenter.frame_coords = Vector2i(0, Player.Facing.PROFILE)
+	presenter.flip_h = guest.position.x < presenter.position.x
+
 func _show_record() -> void:
 	if motion and motion.is_running():
 		motion.kill()
+	if score_fade and score_fade.is_running():
+		score_fade.kill()
 	score.stop()
 	if camera:
 		camera.global_position = ceremony_focus
@@ -282,6 +363,10 @@ func _show_record() -> void:
 		envoy.position = walk_end
 		walk_sprite.stand()
 		walk_sprite.face(walk_end - walk_start)
+	if guest:
+		guest.show()
+		guest.position = guest_end
+		_face_farewell_guest()
 	shot = Shot.RECORD
 	film.hide()
 	shade.show()
@@ -310,6 +395,14 @@ func _populate_record() -> void:
 		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		line.add_theme_font_size_override("font_size", 17)
 		memories.add_child(line)
+	var note: Variant = record.get("farewell")
+	if (note is Dictionary and note.get("speaker") in VisitorData.NEIGHBORS
+		and note.get("line") is String and not note.line.is_empty()):
+		farewell = note
+		farewell_portrait.texture = CharacterArt.dialogue_portrait(note.speaker, null, false)
+		farewell_speaker.text = note.speaker
+		farewell_line.text = note.line
+		farewell_row.show()
 
 func _add_result(label: String, count: String, accent: Color) -> void:
 	var row := HBoxContainer.new()

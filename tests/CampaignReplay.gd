@@ -1200,11 +1200,25 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 			"The film starts at the same ledger the player just presented."):
 		_end(true)
 		return
+	var farewell: Dictionary = state.ending_record.get("farewell", {})
+	if use_rotation_steward:
+		_expect(farewell.get("speaker") == steward_name and farewell.get("field") == 0,
+			"The earned first-field steward speaks about the field they actually manage.")
+	if not farewell.is_empty():
+		_expect(state.retainers.any(func(worker) -> bool: return worker.name == farewell.speaker),
+			"A campaign's farewell comes from one of its actual retainers.")
+		print("CAMPAIGN_FAREWELL day=", state.current_day, " branch=", branch,
+			" speaker=", farewell.speaker, " field=", farewell.get("field", -1))
 	if not capture_directory.is_empty():
 		await tree.create_timer(2.0).timeout
 		_expect(ending.shot == ending.Shot.CEREMONY, "The ceremony starts with the envoy's arrival.")
 		await _capture_ending(capture_directory, ending_capture + "-ceremony")
 		await tree.create_timer(2.1).timeout
+		if ending.guest:
+			_expect(ending.shot == ending.Shot.FAREWELL and ending.guest.visible,
+				"An actual retainer follows the envoy's handoff with a farewell.")
+			await _capture_ending(capture_directory, ending_capture + "-farewell")
+			await tree.create_timer(ending.FAREWELL_HOLD).timeout
 		_expect(ending.shot == ending.Shot.FIELD, "The film returns to the fields after the handoff.")
 		await _capture_ending(capture_directory, ending_capture + "-fields")
 		if not ending.report.visible:
