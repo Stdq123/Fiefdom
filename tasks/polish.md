@@ -1022,3 +1022,9 @@
 - 「昨夜结算」直接打开刚完工的井田安排。舆图也可打开所选完工井田，并显示该田管事。交接页列出全员每夜粮耗、粮仓现量和可补齐的公私田续播，玩家选择门客后再确认。
 - 默认新档回放在第 17 天读回晨间档，从完工记录打开井田 2，翻地后再从舆图进入并任命渠伯。全员用粮从 3 份增至 4 份，以首块井田收成备齐三夜口粮。第 20 天继续游戏时，管事和续播保留，第二块井田已由管事收下一份贡粮和一份私田作物，其间玩家无需再操作该田。
 - 101 项源码场景、36 项无窗口发行检查及 14 次隔离桌面运行通过。默认 1920×1080 和 1024×768 均核对了完工记录、舆图和交接报价。同一解压包完成两种备粮方式的双结局、上一版续档、退出重启与 90 秒连续运行。 [Windows 1.0 x64](../build/polish-steward-handoff/Fiefdom-1.0.0-Windows-x64.zip) · [完工记录](../build/polish-steward-handoff/capture/1920x1080/08-morning-field-handover.png) · [交接报价](../build/polish-steward-handoff/capture/1024x768/09-steward-quote.png) · [新档回放](../build/polish-steward-handoff/headless/estate-progress.log) · [源码回归](../build/polish-steward-handoff/source/source-matrix.txt) · [发行校验](../build/polish-steward-handoff/headless/manifest.txt)
+
+## 从议税筹备调整下一茬私田
+
+- 上一版新档交给管事后持续续播私田，第 49 天公田贡献 23.89%，第 97 天为 28.03%，均低于 30% 的议税门槛。筹备账现在会列出仍在续播的私田格数，打开安排最多的井田，预览停止续播。确认后保留在田作物与公田播种，玩家也可逐格调整或在议税后恢复。
+- 两条管事回放从默认新档出发。第 23 天把第二块井田交给渠伯，第 40 天停两格私田的下一茬。经营期间卖出多余丝绸买粮，留一匹供结局。第 59 天公田贡献达到 30% 并议税，抉择后恢复按时令续播。传统第 65 天、改革第 61 天结算，均可重新读入结局并续营。两条回放在第二块井田各手动翻地三次，之后由管事耕作。备粮委派分别生效 55 夜和 51 夜，全程供足口粮。 [持续续播基线](../build/polish-steward-campaign/traditional-steward.log) · [传统管事回放](../build/polish-council-sowing/final-strategy/traditional-steward.log) · [改革管事回放](../build/polish-council-sowing/final-strategy/reformed-steward.log)
+- 101 项源码场景、38 项无窗口发行检查和 16 次隔离桌面运行通过，含两种备粮方式与管事经营的双结局、上一版续档、退出重启和 90.656 秒连续运行。1920×1080 和 1024×768 核对筹备账、取消预览及焦点。专项检查按键确认后，原有熟田与公田播种仍在，重新打开筹备账时更新剩余安排。 [Windows 1.0 x64](../build/polish-council-sowing/Fiefdom-1.0.0-Windows-x64.zip) · [1920×1080 筹备账](../build/polish-council-sowing/capture/1920x1080/03-first-third-year.png) · [1024×768 取消预览](../build/polish-council-sowing/capture/1024x768/03b-private-sowing-preview.png) · [源码回归](../build/polish-council-sowing/source/source-matrix.txt) · [发行校验](../build/polish-council-sowing/final-headless/manifest.txt)

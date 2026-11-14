@@ -34,6 +34,9 @@ func _run() -> void:
 		"traditional-rations", "reformed-rations":
 			var replay = load("res://tests/CampaignReplay.gd").new()
 			await replay.run(tree, arguments[0].trim_suffix("-rations"), true, capture_directory, true)
+		"traditional-steward", "reformed-steward":
+			var replay = load("res://tests/CampaignReplay.gd").new()
+			await replay.run(tree, arguments[0].trim_suffix("-steward"), true, capture_directory, true, true)
 		"ending-film":
 			var replay = load("res://tests/EndingFilmReplay.gd").new()
 			await replay.run(tree, capture_directory)
@@ -93,6 +96,7 @@ func _run() -> void:
 			await replay.run(tree)
 		"council-prep", "council-prep-legacy", "council-petition":
 			var replay = load("res://tests/CouncilPrepReplay.gd").new()
+			replay.capture_dir = capture_directory
 			replay.legacy = arguments[0] == "council-prep-legacy"
 			replay.petition = arguments[0] == "council-petition"
 			await replay.run(tree)

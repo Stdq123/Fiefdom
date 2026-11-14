@@ -4,6 +4,7 @@ const FIRST := Vector2i(5, 5)
 const SECOND := Vector2i(9, 5)
 const RICE := Vector2i(4, 5)
 const MULBERRY := Vector2i(6, 6)
+const SECOND_MULBERRY := Vector2i(5, 4)
 const ESTATE := "res://scenes/Main.tscn"
 const TITLE := "res://scenes/Title.tscn"
 
@@ -19,6 +20,13 @@ var purchased_batches := 0
 var delegated_nights := 0
 var nights_short := 0
 var use_night_rations := false
+var use_field_steward := false
+var steward_name := ""
+var steward_day := 0
+var managed_harvests := 0
+var manual_field_actions := 0
+var second_field_actions := 0
+var paused_private_sowing := false
 
 static func confirm_optional_tribute_warning(ui: Node) -> void:
 	var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
@@ -200,19 +208,27 @@ func _find_button(node: Node, prefix: String) -> Button:
 			return button
 	return null
 
+func _farm_action(cell: Vector2i) -> void:
+	manual_field_actions += 1
+	if Rect2i(SECOND - Vector2i.ONE, Vector2i(3, 3)).has_point(cell):
+		second_field_actions += 1
+	world.handle_interaction(cell)
+
 func _harvest_and_tend(cell: Vector2i, seed_key: Key, replant: bool) -> void:
 	var crop: Dictionary = state.active_crops.get(cell, {})
 	if not crop.is_empty() and world.field_action(cell) == world.FieldAction.HARVEST:
-		world.handle_interaction(cell)
+		_farm_action(cell)
 		if cell == RICE and crop["data"].is_water_crop and not state.active_crops.has(cell):
 			rice_harvested = true
 	if replant and not state.active_crops.has(cell):
 		if not state.tilled_cells.has(cell):
-			world.handle_interaction(cell)
+			_farm_action(cell)
 		if world.current_seed_id != {KEY_1: "millet", KEY_3: "rice", KEY_5: "beans", KEY_6: "mulberry", KEY_7: "hemp"}[seed_key]:
 			_key(seed_key)
-		world.handle_interaction(cell)
-	if state.active_crops.has(cell) and not state.active_crops[cell]["watered"]:
+		_farm_action(cell)
+	if world.field_action(cell) == world.FieldAction.WATER:
+		_farm_action(cell)
+	elif state.active_crops.has(cell) and not state.active_crops[cell]["watered"]:
 		world.handle_interaction(cell)
 
 func _provision(target: int, expansion := false) -> void:
@@ -286,7 +302,7 @@ func _prepare_workshop_and_canal() -> void:
 
 func _make_silk() -> void:
 	var workshop = state.silk_workshop
-	if not workshop.built or workshop.bolts > 0:
+	if not workshop.built or (not use_field_steward and workshop.bolts > 0):
 		return
 	var panel := _management(4)
 	var silk := panel.get_node("HBoxContainer/RightPanel/蚕桑")
@@ -296,6 +312,8 @@ func _make_silk() -> void:
 		silk.buttons[3].pressed.emit()
 	elif not silk.buttons[1].disabled:
 		silk.buttons[1].pressed.emit()
+	if use_field_steward and state.silk_workshop.bolts > state.balance.ending_silk_target:
+		silk.buttons[4].pressed.emit()
 	_close(panel)
 
 func _expand() -> void:
@@ -306,6 +324,96 @@ func _expand() -> void:
 	await _click(panel.get_node("Panel/ReclaimButton").get_global_rect().get_center())
 	await _click(panel.get_node("Panel/CloseButton").get_global_rect().get_center())
 	_expect(state.well_fields.size() == 2, "Ordinary reclamation creates the second field.")
+
+func _handoff_field() -> void:
+	var public: int = state.king_storage
+	var private_yield: int = state.private_harvest_total
+	await _click(ui.hud.morning_button.get_global_rect().get_center())
+	var record := ui.get_node_or_null("Control/NightRationsPanel") as Control
+	if not _expect(record != null and record.plan_field.is_visible_in_tree(), "The new field opens from its morning record."):
+		return
+	await _click(record.plan_field.get_global_rect().get_center())
+	await tree.process_frame
+	var panel: Control = ui.panel_manager.management_panel_instance
+	if not _expect(panel.visible and panel.well_field_selector.get_selected_id() == 1, "The completion action selects the second field."):
+		return
+	var picker: OptionButton = panel.steward_picker
+	var keeper_index := 1
+	for index in range(1, picker.item_count):
+		var worker = picker.get_item_metadata(index)
+		if worker.name == "渠伯":
+			keeper_index = index
+			break
+	picker.select(keeper_index)
+	picker.item_selected.emit(keeper_index)
+	var keeper = picker.get_selected_metadata()
+	var before: int = state.retainer_food_cost()
+	await _click(panel.apply_steward.get_global_rect().get_center())
+	await _click(panel.close_button.get_global_rect().get_center())
+	if not _expect(state.stewarded_field(keeper).field_id == 1 and state.field_seed_plans.has(SECOND)
+		and state.king_storage == public and state.private_harvest_total == private_yield,
+		"Appoint a steward and plan the second field without booking a harvest."):
+		return
+	steward_name = keeper.name
+	steward_day = state.current_day
+	print("CAMPAIGN_STEWARD day=", steward_day, " name=", steward_name, " ration=", before, "->", state.retainer_food_cost())
+
+func _prepare_second_field() -> void:
+	for cell in [SECOND, SECOND + Vector2i.DOWN, SECOND + Vector2i.DOWN + Vector2i.RIGHT]:
+		if world.field_action(cell) == world.FieldAction.TILL:
+			_farm_action(cell)
+	await _handoff_field()
+
+func _steward_workday() -> void:
+	var start_tribute: int = state.king_storage
+	var start_private: int = state.private_harvest_total
+	# Let the steward tend the field while the player is free to walk or work elsewhere.
+	await tree.create_timer(6.0).timeout
+	managed_harvests += state.king_storage - start_tribute + state.private_harvest_total - start_private
+
+func _pause_private_sowing() -> void:
+	var gap: int = state.tax_council_public_gap()
+	var readiness_day: int = state.tax_council_start_day() - floori(float(state.balance.days_per_year) / 2.0)
+	if paused_private_sowing or gap <= 0 or state.current_rank < state.Rank.DA_FU or state.current_day < readiness_day:
+		return
+	await _click(ui.hud.council_prep_button.get_global_rect().get_center())
+	var ledger: Control = ui.council_preparation
+	if not _expect(ledger.modal.visible and ledger.sowing_button.is_visible_in_tree(), "The council ledger offers to adjust active private sowing."):
+		return
+	await _click(ledger.sowing_button.get_global_rect().get_center())
+	var panel: Control = ui.panel_manager.management_panel_instance
+	if not _expect(panel.visible and panel.well_field_selector.get_selected_id() == 1 and panel.apply_private_plan.has_focus()
+		and panel.apply_private_plan.text.begins_with("取消私田"), "The ledger opens the two private plots at the cancel preview."):
+		return
+	var public_plan: String = state.field_seed_plans[SECOND]
+	await _click(panel.apply_private_plan.get_global_rect().get_center())
+	await _click(panel.close_button.get_global_rect().get_center())
+	paused_private_sowing = true
+	_expect(state.field_seed_plans.get(SECOND) == public_plan and not state.field_seed_plans.has(SECOND + Vector2i.DOWN)
+		and not state.field_seed_plans.has(SECOND + Vector2i.DOWN + Vector2i.RIGHT), "Pause the next private sowing while the tribute plot continues.")
+	print("CAMPAIGN_SOWING day=", state.current_day, " gap=", gap, " public_plan=", public_plan)
+
+func _resume_private_sowing() -> void:
+	if not paused_private_sowing:
+		return
+	var panel := _management(0)
+	panel.show_estate(1)
+	await tree.process_frame
+	var picker: OptionButton = panel.seed_plan_picker
+	for index in picker.item_count:
+		if picker.get_item_metadata(index) == "seasonal":
+			picker.select(index)
+			picker.item_selected.emit(index)
+			break
+	await tree.process_frame
+	if not _expect(panel.apply_private_plan.is_visible_in_tree() and not panel.apply_private_plan.disabled
+		and panel.apply_private_plan.text.begins_with("安排私田"), "Seasonal sowing previews the prepared private plots."):
+		return
+	await _click(panel.apply_private_plan.get_global_rect().get_center())
+	await _click(panel.close_button.get_global_rect().get_center())
+	_expect(state.field_seed_plans.get(SECOND + Vector2i.DOWN) == "seasonal"
+		and state.field_seed_plans.get(SECOND + Vector2i.DOWN + Vector2i.RIGHT) == "seasonal",
+		"Seasonal sowing can be restored after the council decision. Plans: %s" % state.field_seed_plans)
 
 func _save_return_continue() -> void:
 	var date: int = state.current_day
@@ -335,9 +443,10 @@ func _capture_ending(directory: String, name: String) -> void:
 	_expect(frame != null and not frame.is_empty() and frame.save_png(directory.path_join(name + ".png")) == OK,
 		"The ending frame can be captured.")
 
-func run(game_tree: SceneTree, branch: String, release_required := false, capture_directory := "", delegated := false) -> void:
+func run(game_tree: SceneTree, branch: String, release_required := false, capture_directory := "", delegated := false, stewarded := false) -> void:
 	tree = game_tree
 	use_night_rations = delegated
+	use_field_steward = stewarded
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated replay profile."):
 		_end(true)
 		return
@@ -372,13 +481,21 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 		if state.player_stats.get_level(literacy_art) < literacy_target:
 			_study()
 		var expanded: bool = state.well_fields.size() >= 2
+		var field_ready: bool = expanded and state.well_fields[1]["is_unlocked"]
+		if use_field_steward and field_ready and steward_day == 0:
+			await _prepare_second_field()
+		if use_field_steward and steward_day > 0:
+			await _pause_private_sowing()
+			await _steward_workday()
+			if state.tax_council_waiting():
+				break
 		var need_expansion: bool = not expanded and state.current_rank >= state.Rank.ZHONG_SHI and state.retainers.size() >= 3
 		var rank_factor: int = state.current_rank + 1
 		var expansion_cost: int = state.balance.reclamation_cost_copper * rank_factor
 		var expansion_food: int = state.balance.reclamation_cost_food * rank_factor
 		var available_provisions: int = state.food_storage + (state.player_inventory if use_night_rations else 0)
 		_harvest_and_tend(FIRST, KEY_1 if state.fertile_cells.has(FIRST) else KEY_5, true)
-		if expanded and state.well_fields[1]["is_unlocked"]:
+		if field_ready and not use_field_steward:
 			_harvest_and_tend(SECOND, KEY_1 if state.fertile_cells.has(SECOND) else KEY_5, true)
 		for x in range(4, 7):
 			for y in range(4, 7):
@@ -386,9 +503,13 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 				if cell == FIRST:
 					continue
 				var grow: bool = not expanded or cell == MULBERRY or (x == 6 and available_provisions < 12)
+				var silk_plot := cell == MULBERRY or (use_field_steward and cell == SECOND_MULBERRY)
+				if paused_private_sowing and not silk_plot:
+					continue
 				var seed_key := KEY_7
-				if cell == MULBERRY and prepared:
+				if silk_plot and prepared:
 					seed_key = KEY_6
+					grow = true
 				if cell == RICE and prepared and not rice_harvested:
 					seed_key = KEY_3
 					grow = true
@@ -425,26 +546,29 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 		and state.silk_workshop.bolts > 0, "The campaign includes expansion, irrigated rice, silk and an actual defense.")
 	print("CAMPAIGN_DECISION day=", state.current_day, " public_ratio=", state.public_contribution_ratio(), " copper=", state.money)
 	if branch == "traditional":
-		_find_button(event, "暂缓").pressed.emit()
-		event.confirm_button.pressed.emit()
-		await tree.process_frame
-		var before: int = state.money
-		var paid := false
-		while not state.tax_council_waiting() and not tree.paused:
-			await _sleep()
-			paid = paid or state.money < before
-		event = await meet_tax_envoy(tree)
-		if not _expect(event != null and _find_button(event, "暂缓") == null and (paid or before < state.balance.research_monthly_cost),
-			"Research charges the normal cost and eventually presents a forced choice."):
-			_end(true)
-			return
-		print("CAMPAIGN_RESEARCH day=", state.current_day, " paid=", before - state.money, " days_remaining=", state.research_days_remaining())
+		if not use_field_steward:
+			_find_button(event, "暂缓").pressed.emit()
+			event.confirm_button.pressed.emit()
+			await tree.process_frame
+			var before: int = state.money
+			var paid := false
+			while not state.tax_council_waiting() and not tree.paused:
+				await _sleep()
+				paid = paid or state.money < before
+			event = await meet_tax_envoy(tree)
+			if not _expect(event != null and _find_button(event, "暂缓") == null and (paid or before < state.balance.research_monthly_cost),
+				"Research charges the normal cost and eventually presents a forced choice."):
+				_end(true)
+				return
+			print("CAMPAIGN_RESEARCH day=", state.current_day, " paid=", before - state.money, " days_remaining=", state.research_days_remaining())
 		_find_button(event, "坚守传统").pressed.emit()
 	else:
 		_find_button(event, "支持改革").pressed.emit()
 	event.confirm_button.pressed.emit()
 	await tree.process_frame
 	_expect(state.outcome == state.Outcome.RUNNING and state.route_objectives()[0]["value"] == 0, "Pre-choice harvest cannot satisfy the ending.")
+	if use_field_steward:
+		await _resume_private_sowing()
 
 	var silk_panel := _management(4).get_node("HBoxContainer/RightPanel/蚕桑")
 	silk_panel.buttons[5 if branch == "traditional" else 4].pressed.emit()
@@ -457,12 +581,20 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 	var last_day: int = state.current_day + 28
 	while state.current_day < last_day and state.outcome == state.Outcome.RUNNING and not state.route_ready_to_present():
 		_harvest_and_tend(FIRST, KEY_1 if state.fertile_cells.has(FIRST) else KEY_5, true)
-		_harvest_and_tend(SECOND, KEY_1 if state.fertile_cells.has(SECOND) else KEY_5, true)
-		for x in range(8, 11):
-			for y in range(4, 7):
-				var cell := Vector2i(x, y)
-				if cell != SECOND:
-					_harvest_and_tend(cell, KEY_7, branch == "reformed" or x == 8)
+		if use_field_steward:
+			await _steward_workday()
+			for x in range(4, 7):
+				for y in range(4, 7):
+					var cell := Vector2i(x, y)
+					if cell != FIRST and cell != MULBERRY:
+						_harvest_and_tend(cell, KEY_7, branch == "reformed" or x == 6)
+		else:
+			_harvest_and_tend(SECOND, KEY_1 if state.fertile_cells.has(SECOND) else KEY_5, true)
+			for x in range(8, 11):
+				for y in range(4, 7):
+					var cell := Vector2i(x, y)
+					if cell != SECOND:
+						_harvest_and_tend(cell, KEY_7, branch == "reformed" or x == 8)
 		_provision(state.retainer_food_cost())
 		await tree.process_frame
 		if state.outcome == state.Outcome.RUNNING and not state.route_ready_to_present():
@@ -500,6 +632,12 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 	print("CAMPAIGN_MARKET branch=", branch, " conversion_clicks=", converted_batches, " converted_units=", converted_units)
 	print("CAMPAIGN_RATIONS branch=", branch, " delegated=", use_night_rations, " manual_conversions=", converted_batches,
 		" manual_purchases=", purchased_batches, " delegated_nights=", delegated_nights, " short_nights=", nights_short)
+	print("CAMPAIGN_FARM branch=", branch, " steward=", steward_name, " manual_actions=", manual_field_actions,
+		" second_field_actions=", second_field_actions, " workday_yield=", managed_harvests)
+	if use_field_steward:
+		_expect(steward_day > 0 and managed_harvests >= 12 and second_field_actions == 3
+			and paused_private_sowing and state.field_seed_plans.has(SECOND),
+			"The steward farms the second field across the campaign and keeps its saved sowing plan.")
 	if use_night_rations:
 		_expect(delegated_nights > 0 and state.night_rations.enabled,
 			"Nightly rations operate through the campaign and survive its save and continue.")

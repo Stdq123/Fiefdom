@@ -23,6 +23,7 @@ param(
     [switch]$RouteGoals,
     [switch]$Opening,
     [switch]$FieldPlanning,
+    [switch]$StewardCampaign,
     [switch]$FieldRotationPlans,
     [switch]$SilkMarket,
     [switch]$SilkInterior,
@@ -74,7 +75,7 @@ function Start-VerifiedGame {
         (New-Item -ItemType Directory -Path $profilePath).FullName
     }
     $log = Join-Path $evidence "$Name.log"
-    $frameLimit = if ($Replay) { '12000' } else { '180' }
+    $frameLimit = if ($Replay -like '*-steward') { '42000' } elseif ($Replay) { '12000' } else { '180' }
     $arguments = @('--quit-after', $frameLimit, '--log-file', ('"' + $log + '"'))
     $arguments += if ($Replay -eq 'soak') { '--max-fps', '60', '--audio-driver', 'Dummy' } else { '--fixed-fps', '60' }
     if ($Resolution) {
@@ -198,7 +199,7 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'hall-decor' -Name 'hall-decor' -Replay 'hall-decor'
     }
     if ($RouteGoals) {
-        Start-VerifiedGame -Directory $release -Profile 'council-prep' -Name 'council-prep' -Replay 'council-prep'
+        Start-VerifiedGame -Directory $release -Profile 'council-prep' -Name 'council-prep' -Replay 'council-prep' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'council-petition' -Name 'council-petition' -Replay 'council-petition'
         Start-VerifiedGame -Directory $release -Profile 'council-silk' -Name 'council-silk' -Replay 'council-silk'
         Start-VerifiedGame -Directory $release -Profile 'route-goals' -Name 'route-goals' -Replay 'route-goals'
@@ -213,6 +214,11 @@ try {
     if ($FieldPlanning) {
         Start-VerifiedGame -Directory $release -Profile 'field-planning' -Name 'field-planning' -Replay 'field-planning'
         Start-VerifiedGame -Directory $release -Profile 'field-steward' -Name 'field-steward' -Replay 'field-steward'
+    }
+    if ($StewardCampaign) {
+        foreach ($name in 'traditional-steward', 'reformed-steward') {
+            Start-VerifiedGame -Directory $release -Profile $name -Name $name -Replay $name
+        }
     }
     if ($FieldRotationPlans) {
         Start-VerifiedGame -Directory $release -Profile 'field-rotation-plans' -Name 'field-rotation-plans' -Replay 'field-rotation-plans'
@@ -300,6 +306,7 @@ try {
             Start-VerifiedGame -Directory $release -Profile "render-$size" -Name "render-$size" -Replay 'visual' -Resolution $size
         }
         if ($RouteGoals) {
+            Start-VerifiedGame -Directory $release -Profile 'council-prep-compact' -Name 'council-prep-1024x768' -Replay 'council-prep' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'ending-film-compact' -Name 'ending-film-1024x768' -Replay 'ending-film' -Resolution '1024x768'
         }
         if ($Opening) {

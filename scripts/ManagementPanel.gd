@@ -209,6 +209,14 @@ func show_estate(field_id := -1) -> void:
 	focus.grab_focus()
 	GamepadInput.snap_pointer_to_focus.call_deferred()
 
+func focus_sowing_plans() -> void:
+	var cancel_index := seed_plan_picker.item_count - 1
+	seed_plan_picker.select(cancel_index)
+	_refresh_seed_plan_preview()
+	var focus: Control = seed_plan_picker if apply_private_plan.disabled else apply_private_plan
+	focus.grab_focus()
+	GamepadInput.snap_pointer_to_focus.call_deferred()
+
 func show_neighbors() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(neighbor_journal)
 

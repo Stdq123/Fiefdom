@@ -79,6 +79,7 @@ func _ready() -> void:
 	hud.council_prep_button.pressed.connect(_open_council_preparation)
 	hud.guide.six_arts.pressed.connect(_show_six_arts)
 	council_preparation.fields_requested.connect(_guide_public_harvest)
+	council_preparation.sowing_plans_requested.connect(_show_sowing_plans)
 	council_preparation.six_arts_requested.connect(_show_six_arts)
 	council_preparation.silk_requested.connect(_show_silk)
 	council_preparation.orders_requested.connect(_on_season_board_interacted)
@@ -202,6 +203,10 @@ func _on_route_goal_action(kind: Global.RouteGoal) -> void:
 func _show_estate_management(field_id := -1) -> void:
 	panel_manager.show_management_panel()
 	panel_manager.management_panel_instance.show_estate(field_id)
+
+func _show_sowing_plans(field_id: int) -> void:
+	_show_estate_management(field_id)
+	panel_manager.management_panel_instance.focus_sowing_plans()
 
 func _connect_signals() -> void:
 	GameEvents.day_advanced.connect(update_ui.unbind(1))

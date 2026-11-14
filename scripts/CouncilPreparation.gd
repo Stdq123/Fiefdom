@@ -4,6 +4,7 @@ signal fields_requested()
 signal six_arts_requested()
 signal silk_requested()
 signal orders_requested()
+signal sowing_plans_requested(field_id: int)
 
 const READY := Color("#c5d592")
 const PENDING := Color("#f2bc85")
@@ -29,17 +30,23 @@ const PENDING := Color("#f2bc85")
 @onready var mixed_preview: Label = %MixedPreview
 @onready var mixed_result: Label = %MixedResult
 @onready var field_button: Button = %FieldButton
+@onready var sowing_note: Label = %SowingNote
+@onready var sowing_button: Button = %SowingButton
 @onready var arts_button: Button = %ArtsButton
 @onready var silk_stock: Label = %SilkStock
 @onready var silk_button: Button = %SilkButton
 
 var world: Node2D
+var sowing_field_id := -1
 
 func _ready() -> void:
 	super()
 	field_button.pressed.connect(func():
 		close_map()
 		fields_requested.emit())
+	sowing_button.pressed.connect(func():
+		close_map()
+		sowing_plans_requested.emit(sowing_field_id))
 	arts_button.pressed.connect(func():
 		close_map()
 		six_arts_requested.emit())
@@ -81,7 +88,9 @@ func _refresh_on_open() -> void:
 	contribution.text = "公田贡献 %s · 要求 %s%%" % [
 		_percentage(), threshold]
 	account.text = "累计纳贡 %d 份 · 累计私田收成 %d 份" % [Global.king_storage, Global.private_harvest_total]
-	_describe_gap(contribution_status, Global.tax_council_public_gap())
+	var gap := Global.tax_council_public_gap()
+	_describe_gap(contribution_status, gap)
+	_refresh_sowing_plans(gap)
 	petition_card.visible = nights > 0
 	if petition_card.visible:
 		_refresh_petition()
@@ -106,6 +115,30 @@ func _refresh_on_open() -> void:
 	silk_stock.text = "备绸 · %d / %d 匹" % [bolts, silk_target]
 	silk_stock.modulate = READY if bolts >= silk_target else PENDING
 	silk_button.text = "查看蚕桑" if bolts >= silk_target else "准备丝绸"
+
+func _refresh_sowing_plans(gap: int) -> void:
+	var private_plans := 0
+	var most_in_one_field := 0
+	sowing_field_id = -1
+	if gap > 0:
+		for field in Global.well_fields:
+			if not field.is_unlocked:
+				continue
+			var center: Vector2i = field.center_pos
+			var count := 0
+			for y in range(-1, 2):
+				for x in range(-1, 2):
+					var cell := center + Vector2i(x, y)
+					if cell != center and Global.field_seed_plans.has(cell):
+						count += 1
+			private_plans += count
+			if count > most_in_one_field:
+				most_in_one_field = count
+				sowing_field_id = field.field_id
+	sowing_note.visible = private_plans > 0
+	sowing_button.visible = sowing_note.visible
+	if sowing_note.visible:
+		sowing_note.text = "%d 格私田仍在续播。可停播下一茬，腾出几夜补公田纳贡。" % private_plans
 
 func _refresh_petition() -> void:
 	var delivered := Global.tax_council_petition_order_count()

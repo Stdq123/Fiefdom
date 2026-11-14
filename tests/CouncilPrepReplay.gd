@@ -21,6 +21,7 @@ const SNAPSHOT := {
 		"4,5": {"id": "wheat", "age": 2, "growth_nights": 2},
 	},
 	"fertile_cells": ["6,5", "4,5"],
+	"field_seed_plans": {"5,5": "millet", "5,6": "beans", "6,5": "seasonal"},
 }
 
 var world: Node2D
@@ -113,7 +114,8 @@ func _choose_what_to_harvest() -> void:
 		"The real harvest forecast includes fertile wheat and counts exactly 30 percent as enough.")
 	print("COUNCIL_PREP_FORECAST tribute=29 private=68 gap=1 public_only=30.61 mixed=29.13")
 	await _snapshot("03-first-third-year")
-	await _key(KEY_ESCAPE)
+	if not await _adjust_private_sowing():
+		return
 	var copper: int = state.money
 	await _click_plot(PRIVATE_WHEAT)
 	await _click_plot(PRIVATE_MILLET)
@@ -145,6 +147,30 @@ func _choose_what_to_harvest() -> void:
 	_expect(state.current_day == 50 and state.night_rations.last.served == 1 and world.is_crop_ripe(SECOND)
 		and state.king_storage == 30 and not state.tax_council_waiting(), "The next dawn feeds the household and ripens the second public field.")
 	print("COUNCIL_PREP_DELAY day=50 tribute=30 private=71 still_needed=1 served=", state.night_rations.last.served)
+
+func _adjust_private_sowing() -> bool:
+	if not _expect(book.sowing_button.is_visible_in_tree() and "2 格私田仍在续播" in book.sowing_note.text,
+		"The ledger warns about the prepared private plots while the tribute is short."):
+		return false
+	await _button(book.sowing_button)
+	var panel: Control = ui.panel_manager.management_panel_instance
+	if not _expect(panel.visible and not book.modal.visible and not tree.paused and panel.apply_private_plan.has_focus()
+		and panel.apply_private_plan.text == "取消私田 · 2 格" and state.field_seed_plans.size() == 3,
+		"Open a focused preview for the affected field and leave the plans alone until confirmation."):
+		return false
+	await _snapshot("03b-private-sowing-preview")
+	await _key(KEY_ENTER)
+	await tree.process_frame
+	var changed: bool = state.field_seed_plans.size() == 1 and state.field_seed_plans.get(PUBLIC) == "millet"
+	_expect(changed and world.is_crop_ripe(PRIVATE_WHEAT) and world.is_crop_ripe(PRIVATE_MILLET),
+		"The public plan and both standing private crops remain after removing the next private sowing.")
+	await _button(panel.close_button)
+	await _open_book()
+	_expect(not book.sowing_button.visible and "还差 1 份纳贡" in book.contribution_status.text,
+		"Only the next sowing changed, so the warning clears while the current ledger still needs its tribute.")
+	await _key(KEY_ESCAPE)
+	print("COUNCIL_PREP_SOWING public=", state.field_seed_plans.get(PUBLIC), " private_plans=", state.field_seed_plans.size() - 1)
+	return not failed
 
 func _meet_and_choose() -> void:
 	await _open_book()
@@ -258,7 +284,8 @@ func _early_petition() -> void:
 func run(game_tree: SceneTree) -> void:
 	tree = game_tree
 	state = tree.root.get_node("Global")
-	capture_dir = OS.get_environment("FIEFDOM_COUNCIL_PREP_CAPTURES")
+	if capture_dir.is_empty():
+		capture_dir = OS.get_environment("FIEFDOM_COUNCIL_PREP_CAPTURES")
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated council preparation profile."):
 		tree.quit(1)
 		return
