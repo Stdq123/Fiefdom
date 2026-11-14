@@ -257,6 +257,7 @@ try {
     }
     if ($EstateTerrain) {
         Start-VerifiedGame -Directory $release -Profile 'estate-terrain' -Name 'estate-terrain' -Replay 'estate-terrain' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'building-scale' -Name 'building-scale' -Replay 'building-scale' -Resolution $fullResolution
     }
     if ($CanalFlow) {
         Start-VerifiedGame -Directory $release -Profile 'canal-flow' -Name 'canal-flow' -Replay 'canal-flow' -Resolution $fullResolution
@@ -353,6 +354,7 @@ try {
         }
         if ($EstateTerrain) {
             Start-VerifiedGame -Directory $release -Profile 'estate-terrain-compact' -Name 'estate-terrain-1024x768' -Replay 'estate-terrain' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'building-scale-compact' -Name 'building-scale-1024x768' -Replay 'building-scale' -Resolution '1024x768'
         }
         if ($CanalDoors) {
             Start-VerifiedGame -Directory $release -Profile 'irrigation-flow-compact' -Name 'irrigation-flow-1024x768' -Replay 'irrigation-flow' -Resolution '1024x768'

@@ -239,6 +239,21 @@ func _rain_visit() -> void:
 		and EstateLayout.PAVILION_SHELTER_FLOOR.has_point(guest.position + Vector2(0, -4))
 		and gathering.get_node("Guests").get_child_count() == 3,
 		"The visitor rests beneath the shared roof while the three festival guests remain available.")
+	var front := world.get_node_or_null("RainShelterFrontPosts") as Sprite2D
+	_expect(front != null, "The rain shelter has a separate near-post layer.")
+	if front:
+		var back := world.get_node("PavilionRainShelter") as Sprite2D
+		_expect(world.y_sort_enabled and back.z_index < world.player.z_index and front.z_index == world.player.z_index
+			and front.position.y > EstateLayout.PAVILION_SHELTER.y and front.texture.get_size() == back.texture.get_size(),
+			"The roof stays behind the people and the near posts share their foot sorting layer.")
+		await _walk(front.position + Vector2(30, -2))
+		_expect(world.player.position.distance_to(front.position + Vector2(30, -2)) < 3.0
+			and world.player.position.y < front.position.y, "Walk behind a near post on the rain shelter floor.")
+		await _capture("05a-behind-the-rain-post")
+		await _walk(front.position + Vector2(30, 9))
+		_expect(world.player.position.distance_to(front.position + Vector2(30, 9)) < 3.0
+			and world.player.position.y > front.position.y, "The same post is behind the player past its footing.")
+		await _capture("05b-in-front-of-the-rain-post")
 	await _walk(guest.position + Vector2(26, 1))
 	await _capture("05-rain-shelter")
 	await _key(KEY_E)

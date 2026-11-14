@@ -57,6 +57,16 @@
 [ext_resource type="Script" path="res://scripts/PondLanding.gd" id="49_pond_landing"]
 [ext_resource type="PackedScene" path="res://scenes/WinterRoadRations.tscn" id="50_winter_rations"]
 
+[sub_resource type="AtlasTexture" id="Texture_rain_shelter_back"]
+atlas = ExtResource("pavilion_rain_shelter")
+region = Rect2(0, 0, 92, 64)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Texture_rain_shelter_posts"]
+atlas = ExtResource("pavilion_rain_shelter")
+region = Rect2(0, 64, 92, 64)
+filter_clip = true
+
 [sub_resource type="RectangleShape2D" id="Shape_east_gate"]
 size = Vector2(8, 20)
 
@@ -492,9 +502,16 @@ horizontal_alignment = 1
 texture_filter = 1
 position = Vector2(260, 397)
 z_index = -2
-texture = ExtResource("pavilion_rain_shelter")
+texture = SubResource("Texture_rain_shelter_back")
 centered = false
 offset = Vector2(-46, -45)
+
+[node name="RainShelterFrontPosts" type="Sprite2D" parent="World"]
+texture_filter = 1
+position = Vector2(260, 407)
+texture = SubResource("Texture_rain_shelter_posts")
+centered = false
+offset = Vector2(-46, -55)
 
 [node name="PavilionRest" type="Node2D" parent="World" groups=["interactable"]]
 position = Vector2(151, 436)

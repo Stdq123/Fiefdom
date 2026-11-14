@@ -160,6 +160,9 @@ func _run() -> void:
 			var replay = load("res://tests/AmbienceTravelReplay.gd").new()
 			replay.capture_path = capture_directory
 			await replay.run(tree)
+		"building-scale":
+			OS.set_environment("FIEFDOM_SCALE_CAPTURES", capture_directory)
+			await load("res://tests/BuildingScaleReplay.gd").new().run(tree)
 		"estate-terrain", "estate-terrain-art":
 			var replay = load("res://tests/EstateTerrainReplay.gd").new()
 			replay.title_art = arguments[0] == "estate-terrain-art"

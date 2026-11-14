@@ -93,6 +93,14 @@ const PAVILION_TURN := EstateLayout.PAVILION_TURN
 const SILK_SHED_FOOT := EstateLayout.SILK_SHED_FOOT
 const SCENE_LANDMARK := -1
 const SCENE_WEST_COURT := -2
+const BUILDING_SHADOWS := {
+	Prop.HALL: [Vector2(-51, -10), Vector2(46, -10), Vector2(59, -19), Vector2(70, -8),
+		Vector2(59, 3), Vector2(26, 8), Vector2(-49, 6), Vector2(-55, 1)],
+	Prop.SILK_SHED: [Vector2(-30, -8), Vector2(27, -8), Vector2(36, -16), Vector2(45, -8),
+		Vector2(34, 4), Vector2(8, 6), Vector2(-28, 4), Vector2(-35, 0)],
+	SCENE_LANDMARK: [Vector2(-29, -13), Vector2(24, -13), Vector2(34, -23), Vector2(42, -15),
+		Vector2(34, -3), Vector2(17, 4), Vector2(-27, 4), Vector2(-33, 0)],
+}
 # Meadow, shade, sunny patches, and road for spring through winter.
 const SEASON_PALETTES := [
 	[Color("#4c6549"), Color("#3b563f"), Color("#57704c"), Color("#a08c65")],
@@ -103,9 +111,10 @@ const SEASON_PALETTES := [
 const LEAF_TINTS := [Color(1.04, 1.05, 0.98), Color(0.94, 1.06, 0.98),
 	Color(1.44, 0.88, 0.63), Color(0.82, 0.86, 1.12)]
 const WATER_TINTS := [Color("#477f81"), Color("#48847f"), Color("#52797b"), Color("#658888")]
+const ROADSIDE_PROPS := [Prop.SIGNPOST, Prop.FENCE, Prop.LOGS]
 const SORTED_PROPS := [Prop.HALL, Prop.SILK_SHED, Prop.OAK, Prop.BLOSSOM_TREE, Prop.PINE, Prop.GATE, Prop.GATE_FAR, Prop.BAMBOO,
 	Prop.GROVE_TREE, Prop.GROVE_CLUSTER, Prop.WILLOW, Prop.TALL_BAMBOO,
-	Prop.GRAIN_SACK, Prop.OPEN_SACK, Prop.JAR, Prop.LIDDED_JAR] + ROCK_PROPS
+	Prop.GRAIN_SACK, Prop.OPEN_SACK, Prop.JAR, Prop.LIDDED_JAR] + ROCK_PROPS + ROADSIDE_PROPS
 const LEAFY_PROPS := [Prop.OAK, Prop.BLOSSOM_TREE, Prop.GROVE_TREE, Prop.GROVE_CLUSTER, Prop.SHRUB, Prop.FERN,
 	Prop.FLOWERS, Prop.WILLOW, Prop.BANK_GRASS, Prop.TALL_BAMBOO, Prop.RAVINE_SHOOT, Prop.RAVINE_RUSH,
 	Prop.WHITE_BLOOM, Prop.PINK_BLOOM]
@@ -586,7 +595,8 @@ func _process(delta: float) -> void:
 	var under_roof := not wilderness and EstateLayout.PAVILION_SHELTER_FLOOR.has_point(foot)
 	AudioManager.set_world_ambience(creek_distance, birds_distance, cricket_distance, under_roof)
 	for sprite in scenery:
-		if not sprite.visible or STORAGE_TINTS.has(scenery[sprite]) or scenery[sprite] in ROCK_PROPS:
+		var prop: int = scenery[sprite]
+		if not sprite.visible or STORAGE_TINTS.has(prop) or prop in ROCK_PROPS or prop in ROADSIDE_PROPS:
 			continue
 		var from_foot := sprite.to_local(player.global_position)
 		var crown := sprite.get_rect().grow(-3.0)
@@ -610,6 +620,7 @@ func _draw() -> void:
 		_draw_field_verges()
 		_draw_tracks()
 		RAVINE_RELIEF.draw_gate(self, EstateLayout.EAST_GATE, false, season, raining)
+		_draw_building_shadows()
 		_draw_hall_landing()
 		_draw_field_banks()
 		if Global.road_provisions_delivered:
@@ -844,6 +855,18 @@ func _draw_tracks() -> void:
 		ESTATE_TERRAIN.draw_loam(self, track.surface, dust)
 	for track in track_shapes:
 		_track_gravel(track.gravel_path, track.width, dust)
+
+func _draw_building_shadows() -> void:
+	var ground_shadow := Color("#26352c")
+	ground_shadow.a = 0.20 if raining else 0.37
+	for sprite: Sprite2D in scenery:
+		var mark: int = scenery[sprite]
+		if not sprite.visible or not BUILDING_SHADOWS.has(mark):
+			continue
+		var outline := PackedVector2Array()
+		for point: Vector2 in BUILDING_SHADOWS[mark]:
+			outline.append(sprite.position + point)
+		draw_colored_polygon(outline, ground_shadow)
 
 func _hall_landing_visible() -> bool:
 	return hall_rest != null and hall_rest.visible and _fields_clear(HALL_LANDING)
