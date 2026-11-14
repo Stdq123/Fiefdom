@@ -132,10 +132,12 @@ func _process(_delta: float) -> void:
 	hud.handover_button.disabled = hud.map_button.disabled
 	hud.first_private_button.disabled = hud.map_button.disabled
 	hud.opening_action.disabled = hud.map_button.disabled
+	hud.rotation_guide_button.disabled = hud.map_button.disabled
 	hud.tribute_button.disabled = hud.map_button.disabled
 	hud.raid_alert.disabled = blocked
 	var following_canal := (Global.field_route_status == Global.NightGrowth.BLOCKED
-		or (Global.field_route_status == Global.TributeRoute.TEND and directions.tracked_plot != null
+		or ((Global.field_route_status == Global.TributeRoute.TEND or Global.field_route_status in Global.ROTATION_ROUTES)
+			and directions.tracked_plot != null
 			and Global.crop_night_status(directions.tracked_plot) == Global.NightGrowth.BLOCKED))
 	directions.update_marker(busy or world.player.training_cart.visible
 		or (world.channel_mode and not following_canal) or Global.is_indoors())
@@ -260,6 +262,7 @@ func _connect_signals() -> void:
 	GameEvents.channel_survey_learned.connect(update_ui)
 	GameEvents.raid_defeated.connect(update_ui)
 	GameEvents.retainer_duty_changed.connect(update_ui.unbind(1))
+	GameEvents.retainer_assigned.connect(_refresh_opening_action.unbind(2))
 	GameEvents.retainer_location_changed.connect(_refresh_visitor_note)
 	GameEvents.retainer_recruited.connect(update_ui.unbind(1))
 	GameEvents.retainer_departed.connect(update_ui.unbind(1))
@@ -301,6 +304,7 @@ func _connect_signals() -> void:
 	world.visitor_changed.connect(_update_visitor_note)
 	hud.cancel_directions.visibility_changed.connect(_refresh_opening_action)
 	hud.opening_action.pressed.connect(_on_opening_action)
+	hud.rotation_guide_button.pressed.connect(_open_rotation_guide)
 	sleep_button.pressed.connect(_request_sleep)
 	hud.rations_button.pressed.connect(_show_night_rations)
 	hud.tribute_button.pressed.connect(_show_night_rations)
@@ -444,7 +448,7 @@ func _on_tax_envoy_interacted() -> void:
 	EventManager.open_tax_council(world, $Control)
 
 func _on_council_invitation() -> void:
-	if Global.field_route_public_only:
+	if Global.field_route_public_only or Global.field_route_status in Global.ROTATION_ROUTES:
 		directions.clear_tracking()
 	_refresh_opening_action()
 
@@ -460,6 +464,23 @@ func _refresh_opening_action() -> void:
 	var running := Global.outcome == Global.Outcome.RUNNING
 	var first_tribute := Global.first_tribute_delivered()
 	hud.handover_button.visible = running and not first_tribute
+	var rotation := Global.field_rotation
+	var has_second_field: bool = Global.well_fields.size() > 1 and Global.well_fields[1].is_unlocked
+	var pending: bool = (rotation.waiting_for_harvest() or rotation.ready_to_sign()
+		or (rotation.signed_day == 0 and not has_second_field))
+	var signed_field := Global.get_well_field(rotation.field_number - 1)
+	var can_hand_off: bool = (rotation.signed_day > 0 and not signed_field.is_empty() and signed_field.is_unlocked
+		and not Global.retainers.any(func(worker: RetainerData) -> bool:
+			return worker.duty == RetainerData.Duty.STEWARD and Global.stewarded_field(worker).field_id == signed_field.field_id))
+	hud.rotation_guide_button.visible = running and first_tribute and not Global.tax_council_waiting() and (pending or can_hand_off)
+	if hud.rotation_guide_button.visible:
+		hud.rotation_guide_button.text = "轮作试种"
+		if can_hand_off:
+			hud.rotation_guide_button.text = "找轮作簿"
+		elif rotation.ready_to_sign():
+			hud.rotation_guide_button.text = "轮作试种 · 待记簿"
+		hud.rotation_guide_button.tooltip_text = ("标出田南的轮作簿，可安排续播与井田管事。" if can_hand_off
+			else "查看渠伯的约定、试种田格和下一步。")
 	if not running or hud.cancel_directions.visible:
 		hud.opening_action.hide()
 		return
@@ -481,12 +502,16 @@ func _refresh_opening_action() -> void:
 			return
 	if (Global.private_harvest_total == 0 and Global.rotation_offer_ready()
 		and is_instance_valid(world.neighbor_actor(VisitorData.FIELD_KEEPER))):
+		hud.rotation_guide_button.hide()
 		_show_opening_neighbor(VisitorData.FIELD_KEEPER)
 		return
 	if Global.field_rotation.signed_day == Global.current_day:
-		_set_opening_action("找轮作簿", "田南的轮作簿可以安排下茬和井田管事。", _guide_rotation_book)
-		return
+		if can_hand_off:
+			hud.rotation_guide_button.hide()
+			_set_opening_action("找轮作簿", "田南的轮作簿可以安排下茬和井田管事。", _guide_rotation_book)
+			return
 	if Global.field_rotation.ready_to_sign() and is_instance_valid(world.neighbor_actor(VisitorData.FIELD_KEEPER)):
+		hud.rotation_guide_button.hide()
 		_set_opening_action("找渠伯记轮作", "请渠伯把两茬收成记进轮作簿。", _on_neighbor_directions_requested.bind(VisitorData.FIELD_KEEPER))
 		return
 	if not early_estate:
@@ -502,6 +527,70 @@ func _refresh_opening_action() -> void:
 		_set_opening_action("查看开垦筹备", "查看第二块井田所需的门客、铜钱和粮食。", _on_reclaim_pressed)
 		return
 	hud.opening_action.hide()
+
+func _open_rotation_guide() -> void:
+	if _map_controls_blocked() or not hud.rotation_guide_button.is_visible_in_tree():
+		return
+	var story := Global.field_rotation
+	if story.signed_day > 0:
+		_guide_rotation_book()
+		return
+	if story.ready_to_sign():
+		var note := "井田 %d · 私田收下%s，多收一份。" % [story.field_number, Global.rotation_crop_name()]
+		_show_rotation_visit("两茬已收", note + "\n请渠伯记进轮作簿，随后可任命管事照料整块井田。", "指路去记簿")
+		return
+	if Global.rotation_offer_ready():
+		_show_rotation_visit("与渠伯约定",
+			"先在一格私田收菽，再在留肥的原格收下别的作物。\n记入轮作簿后，就可以托门客管一整块井田。", "指路去找渠伯")
+		return
+	var target: Dictionary = world.rotation_site()
+	if target.is_empty():
+		dialog_manager.show_rotation_guide("等待空畦", "留一格私田种菽，收成后这格就会留肥。\n眼下没有可试种的私田。开垦后的新井田也能试种。", "", Callable())
+		return
+	var cell: Vector2i = target.cell
+	var heading := "井田 %d · 私田" % target.field
+	var detail := _rotation_plot_detail(cell, target.route)
+	var label := "标出这格私田"
+	if not target.seed.is_empty():
+		label += " · 换%s种" % ItemManager.get_crop(target.seed).crop_name
+	dialog_manager.show_rotation_guide(heading, detail, label, _follow_rotation_plot.bind(cell, target.route, target.seed))
+
+func _show_rotation_visit(context: String, text: String, action: String) -> void:
+	var locate := Callable()
+	if is_instance_valid(world.neighbor_actor(VisitorData.FIELD_KEEPER)):
+		locate = _on_neighbor_directions_requested.bind(VisitorData.FIELD_KEEPER)
+	else:
+		var visit := Global.next_field_keeper_visit()
+		if visit <= Global.current_day:
+			visit += FieldRotation.VISIT_INTERVAL
+		text += "\n渠伯第 %d 天回井田西南。" % visit
+	dialog_manager.show_rotation_guide(context, text, action, locate)
+
+func _rotation_plot_detail(cell: Vector2i, route: int) -> String:
+	var crop: Dictionary = Global.active_crops.get(cell, {})
+	var detail := "收下菽后，这一格会留肥。"
+	if route == Global.RotationRoute.FOLLOWUP:
+		detail = "这格留着豆茬的肥。下一茬种黍或别的作物，收成会多一份。收后找渠伯记簿。"
+	elif route == Global.RotationRoute.CLEAR:
+		detail = "收完这茬就能腾出私田种菽。"
+	if crop.is_empty():
+		var seed := "黍" if route == Global.RotationRoute.FOLLOWUP else "菽"
+		var next := "先在标记的私田翻地，再播%s。" % seed if not Global.tilled_cells.has(cell) else "在标记的私田播%s。" % seed
+		var planned := Global.planned_field_seed(cell)
+		if not planned.is_empty():
+			detail += "\n这格已有续播安排。门客会播%s。" % ItemManager.get_crop(planned).crop_name
+		return detail + "\n" + next
+	var name: String = crop.data.crop_name
+	var nights: int = crop.growth_nights - crop.age
+	match Global.crop_night_status(cell):
+		Global.NightGrowth.READY: return detail + "\n这格%s已经可以收割。" % name
+		Global.NightGrowth.BLOCKED: return detail + "\n这格稻田断水，先把渠水接到田边。"
+		Global.NightGrowth.DRY: return detail + "\n%s还需供水 %d 夜。今天先浇水。" % [name, nights]
+	return detail + "\n今天的水已到田。%s还需供水 %d 夜。" % [name, nights]
+
+func _follow_rotation_plot(cell: Vector2i, route: int, seed: String) -> void:
+	if directions.follow_rotation_plot(cell, route) and not seed.is_empty():
+		world.select_seed(seed)
 
 func _guide_rotation_book() -> void:
 	var book := world.get_node("FieldRotationBook") as Node2D

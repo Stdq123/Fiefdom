@@ -92,9 +92,19 @@ func follow_field_route(status: int, public_only := false) -> bool:
 	_track_field_plot(cell)
 	return true
 
+func follow_rotation_plot(cell: Vector2i, status: int) -> bool:
+	if not world.matches_field_route(cell, status):
+		return false
+	clear_tracking()
+	Global.field_route_status = status
+	Global.rotation_route_cell = cell
+	_track_field_plot(cell)
+	return true
+
 func _track_field_plot(cell: Vector2i) -> void:
 	tracked_plot = cell
-	var task: String = FIELD_ROUTES[Global.field_route_status].task
+	var status := Global.field_route_status
+	var task: String = "轮作私田" if status in Global.ROTATION_ROUTES else FIELD_ROUTES[status].task
 	hud.cancel_directions.text = task + ("公田" if Global.field_route_public_only else "") + " · 取消指路"
 	hud.cancel_directions.show()
 
@@ -201,6 +211,8 @@ func _cell_position(cell: Vector2i) -> Vector2:
 	return world.to_local(tiles.to_global(tiles.map_to_local(cell)))
 
 func _field_plot_label(cell: Vector2i) -> String:
+	if Global.field_route_status in Global.ROTATION_ROUTES:
+		return world.rotation_plot_caption(cell)
 	if Global.field_route_status == Global.TributeRoute.TEND:
 		return "公田 · " + world.field_message(cell, world.field_action(cell))
 	if Global.field_route_status == Global.MulberryRoute.PLANT:
@@ -220,6 +232,7 @@ func clear_tracking() -> void:
 	tracked_plot = null
 	Global.field_route_status = -1
 	Global.field_route_public_only = false
+	Global.rotation_route_cell = null
 	tracked_site = -1
 	tracked_place = ""
 	freight_receipt = {}

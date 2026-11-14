@@ -468,6 +468,17 @@ func _field_keeper_season_line() -> String:
 			return "霜沾在木架上，我今早用袖子抹了抹。冬麦还会长，留肥的格子都能从簿里查到。"
 	return "春土一松，我又想起那把菽种。去田南翻翻吧，地里哪一格有肥，簿上现在看得见。"
 
+func show_rotation_guide(context: String, details: String, action: String, follow: Callable) -> void:
+	var options: Array[String] = ["合上"]
+	if follow.is_valid():
+		options.push_front(action)
+	var dialog := _open("轮作试种", context, details, options, [], ROTATION_BOOK.ART)
+	if follow.is_valid():
+		dialog.option_selected.connect(func(index: int):
+			if index == 0:
+				follow.call()
+		)
+
 func show_rotation_book(highlight_soil: Callable, open_plans: Callable) -> void:
 	if parent_node.has_node("DialoguePanel") or Global.field_rotation.signed_day == 0:
 		return

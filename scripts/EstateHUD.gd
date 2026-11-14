@@ -22,6 +22,7 @@ const SEED_BUTTON := preload("res://scripts/SeedButton.gd")
 @onready var tribute_button: Button = %TributeButton
 @onready var visitor_label: Label = %VisitorLabel
 @onready var opening_action: Button = %OpeningAction
+@onready var rotation_guide_button: Button = %RotationGuideButton
 @onready var first_private_button: Button = %FirstPrivateButton
 @onready var handover_button: Button = %HandoverButton
 @onready var arrival: Label = %Arrival

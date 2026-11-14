@@ -320,11 +320,116 @@ func _on_tax_reform_choice_made(choice: Global.TaxReformChoice) -> void:
 func is_crop_dry(grid_pos: Vector2i) -> bool:
 	return Global.field_crop_is_dry(grid_pos)
 
+func rotation_site() -> Dictionary:
+	if not Global.field_rotation.waiting_for_harvest():
+		return {}
+	var tracked: Variant = Global.rotation_route_cell
+	if tracked != null and Global.field_route_status in Global.ROTATION_ROUTES:
+		var target := rotation_plot(tracked)
+		if target.get("route", -1) == Global.field_route_status:
+			for field: Dictionary in Global.well_fields:
+				var center: Vector2i = field.center_pos
+				if field.is_unlocked and Rect2i(center - Vector2i.ONE, Vector2i(3, 3)).has_point(tracked):
+					return {"cell": tracked, "field": field.field_id + 1, "route": target.route, "seed": target.seed}
+	var best := {}
+	var best_priority := 0
+	var best_effort := INF
+	for field: Dictionary in Global.well_fields:
+		if not field.is_unlocked:
+			continue
+		var center: Vector2i = field.center_pos
+		for y in range(1, -2, -1):
+			for x in [0, -1, 1]:
+				var cell := center + Vector2i(x, y)
+				var target := rotation_plot(cell)
+				if target.is_empty():
+					continue
+				var cost := _rotation_plot_cost(cell, target)
+				if cost.x > best_priority or (cost.x == best_priority and cost.y < best_effort):
+					best_priority = cost.x
+					best_effort = cost.y
+					best = target
+					best["cell"] = cell
+					best["field"] = field.field_id + 1
+	return best
+
+func rotation_plot(cell: Vector2i) -> Dictionary:
+	if not Global.field_rotation.waiting_for_harvest() or Global.is_public_plot(cell) \
+			or tile_map.get_cell_source_id(cell) < 0:
+		return {}
+	var crop: Dictionary = active_crops.get(cell, {})
+	var fertile := Global.fertile_cells.has(cell)
+	var route := Global.RotationRoute.BEANS
+	var seed := "beans"
+	if crop.is_empty():
+		if fertile:
+			route = Global.RotationRoute.FOLLOWUP
+			seed = "millet"
+	elif not crop.data.restores_fertility:
+		if fertile:
+			route = Global.RotationRoute.FOLLOWUP
+		elif crop.data.is_perennial:
+			return {}
+		else:
+			route = Global.RotationRoute.CLEAR
+	if not crop.is_empty():
+		seed = ""
+	return {"route": route, "seed": seed}
+
+func _rotation_plot_cost(cell: Vector2i, target: Dictionary) -> Vector2i:
+	var crop: Dictionary = active_crops.get(cell, {})
+	if crop.is_empty():
+		var planned := Global.planned_field_seed(cell)
+		var matches_plan: bool = planned.is_empty() or (target.route == Global.RotationRoute.FOLLOWUP) == (planned != "beans")
+		var priority := 4 if target.route == Global.RotationRoute.FOLLOWUP else 2
+		# Prefer an open plot over asking the player to race an incompatible sowing plan.
+		return Vector2i(priority if matches_plan else 0, int(not Global.tilled_cells.has(cell)))
+	var status := Global.crop_night_status(cell)
+	if status == Global.NightGrowth.BLOCKED:
+		return Vector2i(0 if target.route == Global.RotationRoute.FOLLOWUP else -1, 0)
+	var remaining: int = crop.growth_nights - crop.age
+	var effort := remaining * 2 + int(status == Global.NightGrowth.DRY)
+	match target.route:
+		Global.RotationRoute.FOLLOWUP: return Vector2i(5, effort)
+		Global.RotationRoute.BEANS: return Vector2i(3, effort)
+	return Vector2i(1, effort)
+
+func rotation_plot_caption(cell: Vector2i) -> String:
+	var target := rotation_plot(cell)
+	if target.is_empty():
+		return "轮作私田"
+	var prefix := "留肥私田" if Global.fertile_cells.has(cell) else "轮作私田"
+	var action := field_action(cell)
+	var cost := field_cost(action)
+	if cost > Global.current_stamina:
+		return "%s · 体力还差 %d" % [prefix, cost - Global.current_stamina]
+	if action == FieldAction.TILL:
+		return prefix + " · 翻地"
+	if not active_crops.has(cell):
+		var seed: String = target.seed
+		var selected := ItemManager.get_crop(current_seed_id)
+		if target.route == Global.RotationRoute.BEANS and current_seed_id != seed:
+			return prefix + " · 换菽种"
+		if target.route == Global.RotationRoute.FOLLOWUP and selected.restores_fertility:
+			return prefix + " · 换种（如黍）"
+		if action == FieldAction.RICE_SEED:
+			return prefix + " · 稻需渠水，可换黍"
+		return "%s · 播%s" % [prefix, selected.crop_name]
+	match Global.crop_night_status(cell):
+		Global.NightGrowth.READY: return prefix + " · 收" + active_crops[cell].data.crop_name
+		Global.NightGrowth.DRY: return prefix + " · 待浇水"
+		Global.NightGrowth.BLOCKED: return prefix + " · 稻田断水"
+		Global.NightGrowth.RIPEN: return prefix + " · 明早可收"
+	return prefix + " · 供水后过夜"
+
 func find_field_task(status: int, public_only := false) -> Variant:
 	if status == Global.MulberryRoute.PLANT:
 		return _find_mulberry_planting_site()
 	if status == Global.TributeRoute.TEND:
 		return Global.tribute_field_plan().get("cell")
+	if status in Global.ROTATION_ROUTES:
+		var cell: Variant = Global.rotation_route_cell
+		return cell if cell != null and matches_field_route(cell, status) else null
 	var nearest: Variant = null
 	var distance := INF
 	var public_selected := false
@@ -348,6 +453,8 @@ func matches_field_route(cell: Vector2i, status: int) -> bool:
 	if status == Global.OrderFieldRoute.HARVEST:
 		var schedule := Global.pinned_season_order()
 		return not schedule.is_empty() and Global.is_season_order_harvest(cell, schedule)
+	if status in Global.ROTATION_ROUTES:
+		return rotation_plot(cell).get("route", -1) == status
 	if status == Global.MulberryRoute.PLANT:
 		return (tile_map.get_cell_source_id(cell) >= 0 and not Global.is_public_plot(cell)
 			and not active_crops.has(cell) and not Global.field_seed_plans.has(cell))

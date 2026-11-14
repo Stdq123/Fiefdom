@@ -229,11 +229,15 @@ func _opening_field_step(cell: Vector2i, is_public: bool) -> String:
 	if cost > Global.current_stamina:
 		opening_cue = OpeningCue.SLEEP
 		return "体力不足，%s需要 %d 点。点「睡觉」恢复体力。" % [opening_plot_name, cost]
-	if (not is_public and Global.field_rotation.waiting_for_harvest() and world.current_seed_id != "beans"
-		and action in [ESTATE_WORLD.FieldAction.SOW, ESTATE_WORLD.FieldAction.RICE_SEED]):
+	var rotation_seed := "millet" if Global.fertile_cells.has(cell) else "beans"
+	var needs_rotation_seed := world.current_seed_id != "beans" if rotation_seed == "beans" else world.current_seed_id == "beans"
+	if (not is_public and Global.field_rotation.waiting_for_harvest()
+			and ((action == ESTATE_WORLD.FieldAction.SOW and needs_rotation_seed) or action == ESTATE_WORLD.FieldAction.RICE_SEED)):
 		opening_cue = OpeningCue.SEED
-		opening_seed_id = "beans"
-		return "按 %s 或点「菽」换种。\n在私田播菽，收后能给下一茬留肥。" % _seed_shortcut("beans")
+		opening_seed_id = rotation_seed
+		if rotation_seed == "millet":
+			return "按 %s 或点「黍」换种。\n在这格留肥私田收下黍，可多收一份。" % _seed_shortcut(rotation_seed)
+		return "按 %s 或点「菽」换种。\n在私田播菽，收后能给下一茬留肥。" % _seed_shortcut(rotation_seed)
 	opening_cue = OpeningCue.PLOT
 	var pad := GamepadInput.active
 	var act := "按 A" if pad else "左键"

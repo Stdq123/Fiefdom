@@ -23,6 +23,7 @@ param(
     [switch]$HallDecor,
     [switch]$RouteGoals,
     [switch]$Opening,
+    [switch]$RotationGuide,
     [switch]$FieldPlanning,
     [switch]$StewardCampaign,
     [switch]$OrderCampaign,
@@ -145,6 +146,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/PavilionVisitReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RecruitmentLedgerReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RavineShortcutReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/RotationGuideReplay.gd') -Destination $testDirectory
     foreach ($file in 'MarketOrderReplay.gd', 'AutumnExhibitReplay.gd', 'SheepfoldReplay.gd', 'RavineMapReplay.gd', 'CreekTrapReplay.gd', 'FieldNightReplay.gd', 'CouncilSilkReplay.gd') {
         Copy-Item -LiteralPath (Join-Path $repo "tests/$file") -Destination $testDirectory
     }
@@ -224,6 +226,9 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'tribute-plan' -Name 'tribute-plan' -Replay 'tribute-plan'
         Start-VerifiedGame -Directory $release -Profile 'estate-progress' -Name 'estate-progress' -Replay 'estate-progress' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'recruitment-ledger' -Name 'recruitment-ledger' -Replay 'recruitment-ledger' -Resolution $fullResolution
+    }
+    if ($RotationGuide) {
+        Start-VerifiedGame -Directory $release -Profile 'rotation-guide' -Name 'rotation-guide' -Replay 'rotation-guide' -Resolution $fullResolution
     }
     if ($FieldPlanning) {
         Start-VerifiedGame -Directory $release -Profile 'field-planning' -Name 'field-planning' -Replay 'field-planning'
@@ -379,6 +384,9 @@ try {
             Start-VerifiedGame -Directory $release -Profile 'opening-compact' -Name 'opening-1024x768' -Replay 'estate-directions' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'estate-progress-compact' -Name 'estate-progress-1024x768' -Replay 'estate-progress' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'recruitment-compact' -Name 'recruitment-ledger-1024x768' -Replay 'recruitment-ledger' -Resolution '1024x768'
+        }
+        if ($RotationGuide) {
+            Start-VerifiedGame -Directory $release -Profile 'rotation-guide-compact' -Name 'rotation-guide-1024x768' -Replay 'rotation-guide' -Resolution '1024x768'
         }
         if ($FieldStroke) {
             Start-VerifiedGame -Directory $release -Profile 'field-stroke-compact' -Name 'field-stroke-1024x768' -Replay 'field-stroke' -Resolution '1024x768'

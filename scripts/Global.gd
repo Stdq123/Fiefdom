@@ -144,6 +144,7 @@ var active_crops: Dictionary = {}
 var tilled_cells: Dictionary = {}
 var field_route_status := -1
 var field_route_public_only := false
+var rotation_route_cell: Variant = null
 var field_seed_plans: Dictionary[Vector2i, String] = {}
 var fertile_cells: Dictionary[Vector2i, bool] = {}
 var irrigation: Irrigation
@@ -162,8 +163,10 @@ enum NightGrowth { READY, DRY, BLOCKED, GROW, RIPEN }
 enum MulberryRoute { PLANT = 5, WATER, HARVEST }
 enum TributeRoute { TEND = 8 }
 enum OrderFieldRoute { HARVEST = 9 }
+enum RotationRoute { BEANS = 10, FOLLOWUP, CLEAR }
+const ROTATION_ROUTES := [RotationRoute.BEANS, RotationRoute.FOLLOWUP, RotationRoute.CLEAR]
 const FIELD_ROUTE_STATES := [NightGrowth.READY, NightGrowth.DRY, NightGrowth.BLOCKED,
-	MulberryRoute.PLANT, MulberryRoute.WATER, MulberryRoute.HARVEST, TributeRoute.TEND, OrderFieldRoute.HARVEST]
+	MulberryRoute.PLANT, MulberryRoute.WATER, MulberryRoute.HARVEST, TributeRoute.TEND, OrderFieldRoute.HARVEST] + ROTATION_ROUTES
 enum Season { SPRING, SUMMER, AUTUMN, WINTER }
 const SEASON_NAMES := ["春", "夏", "秋", "冬"]
 
@@ -321,6 +324,7 @@ func _reset_campaign() -> void:
 	tilled_cells.clear()
 	field_route_status = -1
 	field_route_public_only = false
+	rotation_route_cell = null
 	field_seed_plans.clear()
 	fertile_cells.clear()
 	irrigation = Irrigation.new()
@@ -601,7 +605,9 @@ func begin_next_day() -> void:
 	current_day += 1
 	day_progress = 0.0
 	last_dawn.clear()
-	field_route_status = -1
+	if field_route_status not in ROTATION_ROUTES:
+		field_route_status = -1
+		rotation_route_cell = null
 	field_route_public_only = false
 	away_field_report.clear()
 	_away_work_elapsed.clear()
@@ -2926,6 +2932,7 @@ func _save_snapshot(origin: String) -> Error:
 		"selected_seed": selected_seed_id,
 		"field_route_status": field_route_status,
 		"field_route_public_only": field_route_public_only,
+		"rotation_route_cell": _cell_key(rotation_route_cell) if field_route_status in ROTATION_ROUTES and rotation_route_cell != null else "",
 		"current_stamina": current_stamina,
 		"health": health,
 		"outcome": outcome,
@@ -3446,6 +3453,10 @@ func load_game(path := "") -> Error:
 	field_route_status = saved_route if saved_route in FIELD_ROUTE_STATES else -1
 	field_route_public_only = (field_route_status in [NightGrowth.READY, NightGrowth.DRY, NightGrowth.BLOCKED]
 		and data.get("field_route_public_only", false) == true)
+	rotation_route_cell = _read_save_cell(data.get("rotation_route_cell")) if field_route_status in ROTATION_ROUTES else null
+	if field_route_status in ROTATION_ROUTES and (rotation_route_cell == null or not _is_well_field_cell(rotation_route_cell, restored_fields)):
+		field_route_status = -1
+		rotation_route_cell = null
 	ravine_journal = _restore_ravine_journal(data.get("ravine_journal"), saved_day)
 	restored_ravine_south = (resume_scene == WILDERNESS_SCENE and ravine_shortcut_open()
 		and data.get("ravine_south_arrival", false) == true)
