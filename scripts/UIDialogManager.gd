@@ -196,7 +196,7 @@ func show_winter_road_rations(host_present: bool) -> void:
 		if index == 0:
 			Global.pack_travel_meal(meal, ""))
 
-func show_winter_supper() -> void:
+func show_winter_supper(guide_fishing: Callable) -> void:
 	var record := Global.winter_supper_record()
 	var need := Global.retainer_food_cost()
 	if not record.is_empty():
@@ -229,10 +229,20 @@ func show_winter_supper() -> void:
 	for index in WinterSupper.MENU.size():
 		if not Global.can_prepare_winter_supper(WinterSupper.MENU[index], fish):
 			disabled.append(index)
-	var dialog := _open(WinterSupper.HOST, context, speech, ["备麦菽粥", "备鱼麦羹", "坐一会"], disabled, null)
+	var choices: Array[String] = ["备麦菽粥", "备鱼麦羹"]
+	var fishing_place := ""
+	if fish.is_empty():
+		var site := Global.winter_supper_fishing_site()
+		if site >= 0 and Global.fishing_block_reason(false, site).is_empty():
+			fishing_place = CreekFish.PLACES[site]
+			choices.append("指路去" + fishing_place)
+	choices.append("坐一会")
+	var dialog := _open(WinterSupper.HOST, context, speech, choices, disabled, null)
 	dialog.option_selected.connect(func(index: int):
 		if index < WinterSupper.MENU.size():
 			Global.prepare_winter_supper(WinterSupper.MENU[index], fish)
+		elif not fishing_place.is_empty() and index == WinterSupper.MENU.size():
+			guide_fishing.call(fishing_place)
 	)
 
 func show_travel_hearth(guide_market: Callable, guide_pond: Callable) -> void:

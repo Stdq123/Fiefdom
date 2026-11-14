@@ -168,7 +168,6 @@ visible = false
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 mouse_default_cursor_shape = 2
-text = "指路去柳湾钓鱼"
 
 [node name="KeepSamples" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Routes"]
 unique_name_in_owner = true

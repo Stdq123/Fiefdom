@@ -382,6 +382,10 @@ func _select(entry: Dictionary) -> void:
 		Category.PLACES:
 			if entry.title == Global.WATER_SOURCE:
 				directions.follow_water_source()
+			elif entry.title == Global.POND_LANDING:
+				directions.follow_pond_landing()
+			elif entry.title == WinterSupper.PLACE:
+				directions.follow_winter_supper()
 			else:
 				directions.follow_place(entry.title, entry.point)
 		Category.RAVINE:
@@ -402,6 +406,10 @@ func follow_region_destination(place: String) -> bool:
 		directions.follow_water_source()
 	elif place == Global.FREIGHT_YARD:
 		directions.follow_freight_yard()
+	elif place == Global.POND_LANDING:
+		return directions.follow_pond_landing()
+	elif place == WinterSupper.PLACE:
+		directions.follow_winter_supper()
 	elif place in Global.ravine_trip_places():
 		directions.follow_ravine(place)
 	else:

@@ -48,7 +48,7 @@ func _ready() -> void:
 		row.pressed.connect(_show_date.bind(index))
 		dates.add_child(row)
 	guide.pressed.connect(_request_directions)
-	fish_guide.pressed.connect(_follow_place.bind(CreekFish.PLACES[CreekFish.Site.POOL]))
+	fish_guide.pressed.connect(_request_fishing_directions)
 	keep_samples.toggled.connect(_set_pantry)
 	keep_porridge.toggled.connect(_set_pantry.bind(WinterSupper.BEAN))
 	keep_soup.toggled.connect(_set_pantry.bind(WinterSupper.FISH))
@@ -308,8 +308,16 @@ func _winter_plan(day: int) -> String:
 		if not prep.is_empty():
 			line += "\n" + "。".join(prep) + "。新播作物须逐夜供水。"
 		if fish.is_empty():
-			fish_guide.visible = Global.knows_ravine_journal() and Global.last_fishing_day != Global.current_day
-			if not gift and beans == 0 and not Global.knows_ravine_journal():
+			var site := Global.winter_supper_fishing_site()
+			if Global.last_fishing_day == Global.current_day:
+				line += "\n垂钓 · 今日垂钓机会已用"
+			elif site >= 0:
+				var reason := Global.fishing_block_reason(false, site)
+				fish_guide.visible = reason.is_empty()
+				fish_guide.text = "指路去" + Global.POND_LANDING if site == CreekFish.Site.POND else "指路去柳湾钓鱼"
+				if not reason.is_empty():
+					line += "\n垂钓 · " + reason
+			elif not gift and beans == 0:
 				line += "\n可到南边竹径向蒲宁学垂钓。"
 	return line
 
@@ -324,6 +332,12 @@ func _event_place(day: int) -> String:
 
 func _request_directions() -> void:
 	_follow_place(_event_place(_day(focus)))
+
+func _request_fishing_directions() -> void:
+	var site := Global.winter_supper_fishing_site()
+	if (site >= 0 and Global.fishing_block_reason(false, site).is_empty()
+			and Global.fish_for_travel_meal().is_empty()):
+		_follow_place(CreekFish.PLACES[site])
 
 func _follow_place(place: String) -> void:
 	directions_requested.emit(place)

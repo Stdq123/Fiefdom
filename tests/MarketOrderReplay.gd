@@ -572,7 +572,7 @@ func _pond_after_delivery() -> void:
 		and state.last_fishing_day == day and state.current_stamina == energy - state.balance.fishing_stamina_cost,
 		"A real catch consumes today's fishing opportunity and records its location.")
 	await _snapshot("14-pond-catch")
-	await _button(panel.actions.get_node("HearthRoute"))
+	await _button(panel.find_child("HearthRoute", true, false) as Button)
 	_expect(not tree.paused and ui.directions.tracked_place == "南路灶台" and not state.cast_fishing_line(CreekFish.Site.POND),
 		"The catch points back to the hearth and today's fishing opportunity is used.")
 	if not await _continue(state.ESTATE_SCENE):

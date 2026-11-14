@@ -140,6 +140,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/SeedGardenReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ResearchRationsReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FestivalPantryReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/WinterPondReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldStrokeReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ManagementNavigationReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/EndingFilmReplay.gd') -Destination $testDirectory
@@ -192,6 +193,7 @@ try {
     }
     if ($WinterSupper) {
         Start-VerifiedGame -Directory $release -Profile 'winter-supper' -Name 'winter-supper' -Replay 'winter-supper' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'winter-pond' -Name 'winter-pond' -Replay 'winter-pond' -Resolution $fullResolution
     }
     if ($WinterRoadRations) {
         Start-VerifiedGame -Directory $release -Profile 'winter-road-rations' -Name 'winter-road-rations' -Replay 'winter-road-rations'
@@ -381,6 +383,9 @@ try {
         if ($Rations) {
             Start-VerifiedGame -Directory $release -Profile 'night-rations-compact' -Name 'night-rations-1024x768' -Replay 'night-rations' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'festival-pantry-compact' -Name 'festival-pantry-1024x768' -Replay 'festival-pantry' -Resolution '1024x768'
+        }
+        if ($WinterSupper) {
+            Start-VerifiedGame -Directory $release -Profile 'winter-pond-compact' -Name 'winter-pond-1024x768' -Replay 'winter-pond' -Resolution '1024x768'
         }
         if ($SouthRoad) {
             Start-VerifiedGame -Directory $release -Profile 'market-orders-compact' -Name 'market-orders-1024x768' -Replay 'market-orders' -Resolution '1024x768'

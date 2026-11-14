@@ -46,6 +46,7 @@ func setup(estate_world: Node2D, estate_hud: Control) -> void:
 	_refresh_road_network()
 	GameEvents.seed_garden_arrived.connect(_refresh_road_network)
 	GameEvents.pond_landing_opened.connect(_refresh_road_network)
+	GameEvents.day_advanced.connect(_expire_winter_supper_route.unbind(1))
 	road_guide.z_index = -2
 	road_guide.hide()
 	world.add_child(road_guide)
@@ -140,6 +141,22 @@ func follow_place(title: String, point: Vector2) -> void:
 	tracked_place_point = point
 	hud.cancel_directions.text = title + " · 取消指路"
 	hud.cancel_directions.show()
+
+func follow_pond_landing() -> bool:
+	if Global.pond_landing_day() == 0:
+		return false
+	follow_place(Global.POND_LANDING, EstateLayout.POND_LANDING)
+	Global.market_trip_target = Global.POND_LANDING
+	return true
+
+func follow_winter_supper() -> void:
+	follow_place(WinterSupper.PLACE, EstateLayout.FESTIVAL_APPROACH)
+	if Global.winter_supper_route_open():
+		Global.market_trip_target = WinterSupper.PLACE
+
+func _expire_winter_supper_route() -> void:
+	if tracked_place == WinterSupper.PLACE and not Global.winter_supper_route_open():
+		clear_tracking()
 
 func follow_ravine(place: String) -> void:
 	follow_place("竹涧 · " + place, ravine_gate_point(place))
@@ -304,7 +321,11 @@ func update_marker(blocked: bool) -> void:
 			var title := "申禾 · " + GamepadInput.interact_key() if arrived else SeasonOrders.arrival_caption(freight_receipt)
 			_mark_map(Rect2(at - Vector2(8, 8), Vector2(16, 16)), title, Mark.PLACE, false)
 			return
-		if tracked_place != Global.FIELD_RETURN and (not Global.ravine_trip_target.is_empty() or not Global.market_trip_target.is_empty()):
+		if tracked_place == Global.POND_LANDING and not EstateLayout.POND_DECK.has_point(foot):
+			_mark_place(tracked_place, tracked_place_point)
+			return
+		if tracked_place not in [Global.FIELD_RETURN, Global.POND_LANDING, WinterSupper.PLACE] \
+				and (not Global.ravine_trip_target.is_empty() or not Global.market_trip_target.is_empty()):
 			hide()
 			return
 		clear_tracking()

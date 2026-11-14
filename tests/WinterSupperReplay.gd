@@ -168,17 +168,36 @@ func _fish_for_supper() -> bool:
 	_key_event(KEY_SPACE, false)
 	if not _expect(panel.phase == panel.Phase.DONE and panel.catch_icon.visible, "Land the ingredient by fishing and reeling."):
 		return false
-	await _key(KEY_ESCAPE)
+	var return_route := panel.find_child("WinterSupperRoute", true, false) as Button
+	if not _expect(return_route != null and "第 22 天冬至围炉" in panel.detail.text,
+		"A pre-solstice catch tells the player when to bring the fish and points to the winter table."):
+		return false
+	await _button(return_route)
+	_expect(not tree.paused and state.market_trip_target == WinterSupper.PLACE
+		and guide.destination_name == "西门回封地" and "封地 · 冬至围炉" in trail.ravine_map.route_status.text,
+		"The route heads back through the west gate when the southern shortcut is closed.")
+	if not _expect(state.save_game() == OK, "Save the return plan while still in the ravine."):
+		return false
+	tree.change_scene_to_file(state.TITLE_SCENE)
+	await tree.scene_changed
+	await _button(tree.current_scene.continue_button)
+	trail = tree.current_scene
+	guide = trail.get_node("RavineDirections")
+	_expect(guide.destination_name == "西门回封地" and state.market_trip_target == WinterSupper.PLACE,
+		"Continue inherits the selected exit and the winter destination.")
 	await Campaign.walk_to_ravine_exit(tree, trail)
 	if not await _cross(&"ui_left", state.ESTATE_SCENE):
 		return false
 	_estate()
+	_expect(ui.directions.tracked_place == WinterSupper.PLACE and state.market_trip_target == WinterSupper.PLACE,
+		"The route resumes on the estate road to the actual winter table after crossing the gate.")
 	await _walk(world.player, [Vector2(116, 4), Vector2(116, 96), Vector2(66, 98)])
 	await _button(ui.hud.season_event_button)
 	_expect("两道齐料" in ui.hud.season_event_button.text and "鲫鱼" in ui.calendar.event_note.text and not ui.calendar.fish_guide.visible,
 		"After fishing, the calendar shows the stored catch and retires the fishing prompt.")
 	await _key(KEY_ESCAPE)
-	print("WINTER_FISHED_FOR_SUPPER day=", state.current_day, " catch=", state.fish_for_travel_meal())
+	print("WINTER_FISHED_FOR_SUPPER day=", state.current_day, " catch=", state.fish_for_travel_meal(),
+		" return=", ui.directions.tracked_place)
 	return not failed
 
 func _defend() -> void:

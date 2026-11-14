@@ -53,6 +53,8 @@ func _ready() -> void:
 		continue_route = directions.follow.bind(goal, destinations[goal])
 	elif Global.market_trip_target == Global.FIELD_RETURN:
 		continue_route = ravine_map.follow_first_field.bind(saved_waypoint)
+	elif Global.market_trip_target == WinterSupper.PLACE:
+		continue_route = ravine_map.follow_winter_supper.bind(saved_waypoint)
 	elif not Global.market_trip_target.is_empty():
 		continue_route = ravine_map.follow_market.bind(Global.market_trip_target)
 	elif not saved_waypoint.is_empty():
@@ -127,7 +129,7 @@ func _on_fishing_requested(spot: Node2D) -> void:
 	panel.name = "FishingPanel"
 	panel.spot = spot
 	panel.angler = $Player
-	panel.route_to = ravine_map.follow_market
+	panel.route_to = ravine_map.follow_region_destination
 	$FishingUI.add_child(panel)
 
 func _open_raft_trial() -> void:

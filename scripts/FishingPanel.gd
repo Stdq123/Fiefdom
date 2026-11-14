@@ -28,6 +28,7 @@ var tension_band: ColorRect
 var catch_icon: TextureRect
 var pull_button: Button
 var actions: HBoxContainer
+var route_actions: HFlowContainer
 var sound: AudioStreamPlayer
 
 func _ready() -> void:
@@ -58,6 +59,7 @@ func _ready() -> void:
 func _build_layout() -> void:
 	theme = GAME_THEME
 	set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	grow_vertical = Control.GROW_DIRECTION_BEGIN
 	offset_left = -255.0
 	offset_right = 255.0
 	offset_top = -206.0
@@ -105,6 +107,9 @@ func _build_layout() -> void:
 	tension_band.hide()
 	line_meter.add_child(tension_band)
 	actions = HBoxContainer.new()
+	route_actions = HFlowContainer.new()
+	route_actions.hide()
+	layout.add_child(route_actions)
 	layout.add_child(actions)
 	pull_button = Button.new()
 	pull_button.focus_mode = Control.FOCUS_NONE
@@ -216,7 +221,19 @@ func _show_delivery_routes(caught: String) -> void:
 	var places := Global.fish_delivery_places(caught)
 	var fish_stall: String = MarketStall.TITLES[MarketStall.Kind.FISH]
 	var seasonal := Global.MARKET_ORDERS in places
-	if fish_stall in places:
+	var supper_day := Global.winter_supper_preparation_day()
+	if spot.site == CreekFish.Site.POND:
+		_add_route_button("HearthRoute", "去" + TravelHearth.PLACE, TravelHearth.PLACE)
+	for place in places:
+		var order := place == Global.MARKET_ORDERS
+		_add_route_button("SeasonDelivery" if order else "FishDelivery", "去西市交时令单" if order else "去西市交留鱼", place)
+	if supper_day > 0:
+		var when := "今日" if supper_day == Global.current_day else "第 %d 天" % supper_day
+		detail.text = "%s冬至围炉。带这尾鱼和一份麦，可做鱼麦羹。" % when
+		var button := _add_route_button("WinterSupperRoute", "去南池畔围炉", WinterSupper.PLACE)
+		route_actions.move_child(button, 0)
+		_focus_return_route.call_deferred(button)
+	elif fish_stall in places:
 		detail.text = "渔生正在收这种鱼。"
 		if seasonal:
 			detail.text += "这尾鱼也可交时令单。" if Global.fish_count(caught) == 1 else "时令单也已备齐。"
@@ -226,13 +243,14 @@ func _show_delivery_routes(caught: String) -> void:
 		detail.text = "带一份稻到南路灶台，可做稻鱼羹。"
 	else:
 		detail.text = "打开溪鱼簿，可添口粮或换铜钱。"
-	if spot.site == CreekFish.Site.POND:
-		_add_route_button("HearthRoute", "去" + TravelHearth.PLACE, TravelHearth.PLACE)
-	for place in places:
-		var order := place == Global.MARKET_ORDERS
-		_add_route_button("SeasonDelivery" if order else "FishDelivery", "去西市交时令单" if order else "去西市交留鱼", place)
 
-func _add_route_button(button_name: String, caption: String, place: String) -> void:
+func _focus_return_route(button: Button) -> void:
+	await get_tree().process_frame
+	if not is_queued_for_deletion():
+		button.grab_focus()
+		GamepadInput.snap_pointer_to_focus()
+
+func _add_route_button(button_name: String, caption: String, place: String) -> Button:
 	var button := Button.new()
 	button.name = button_name
 	button.text = caption
@@ -240,14 +258,15 @@ func _add_route_button(button_name: String, caption: String, place: String) -> v
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.pressed.connect(_follow_route.bind(place))
-	actions.add_child(button)
-	actions.move_child(button, actions.get_child_count() - 2)
+	route_actions.add_child(button)
+	route_actions.show()
+	return button
 
 func _follow_route(place: String) -> void:
 	if route_to.call(place):
 		queue_free()
 	else:
-		detail.text = "先靠近山路，再从竹涧舆图指路去西市。"
+		detail.text = "这里接不上山路。收竿走近道路后，再从舆图指路。"
 
 func _splash(volume_db: float, pitch: float) -> void:
 	if sound:

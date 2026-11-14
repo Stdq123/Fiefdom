@@ -158,6 +158,10 @@ func _refresh_selection() -> void:
 			_add_destination(Global.WATER_SOURCE, "水源", "到泉边查看引水与水利研习")
 			if not Global.pending_freight_receipt().is_empty() or Global.market_trip_target == Global.FREIGHT_YARD:
 				_add_destination(Global.FREIGHT_YARD, Global.FREIGHT_YARD, "货到后可和申禾交谈")
+			if Global.pond_landing_day() > 0:
+				_add_destination(Global.POND_LANDING, Global.POND_LANDING, "从南池西岸走上木台")
+			if Global.winter_supper_route_open():
+				_add_destination(WinterSupper.PLACE, WinterSupper.PLACE, "沿南池西岸去围炉石坪")
 		Region.RAVINE:
 			for place: String in Global.ravine_trip_places():
 				_add_destination(place, place, Global.ravine_place_detail(place))

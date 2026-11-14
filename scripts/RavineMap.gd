@@ -69,7 +69,7 @@ func setup(trail_guide: Node2D, walker: Player, terrain: LANDSCAPE, destinations
 	_refresh_traps()
 	_refresh_route()
 	region_map = add_region_map(Region.RAVINE, func(): return not _map_available(),
-		_regional_trip, follow_region_destination, guide.clear, _field_return_uses_south)
+		_regional_trip, follow_region_destination, guide.clear, _return_uses_south)
 
 func _map_available() -> bool:
 	return is_instance_valid(player) and not player.conversation_open and not MapTravel.active
@@ -112,7 +112,9 @@ func follow_market(place: String) -> bool:
 
 func follow_region_destination(place: String) -> bool:
 	if place == Global.FIELD_RETURN:
-		return follow_first_field(RavineLayout.SOUTH_TRAIL_NAME if _field_return_uses_south(place) else ESTATE_EXIT)
+		return follow_first_field(RavineLayout.SOUTH_TRAIL_NAME if _return_uses_south(place) else ESTATE_EXIT)
+	if place == WinterSupper.PLACE:
+		return follow_winter_supper()
 	if place == Global.MARKET_RETURN:
 		return guide.follow(ESTATE_EXIT, places[ESTATE_EXIT])
 	if places.has(place):
@@ -124,7 +126,17 @@ func follow_first_field(saved_exit: String) -> bool:
 		and Global.ravine_shortcut_open() else ESTATE_EXIT
 	return guide.follow(exit, places[exit], Global.FIELD_RETURN)
 
-func _field_return_uses_south(place: String) -> bool:
+func follow_winter_supper(saved_exit := "") -> bool:
+	var exit := ESTATE_EXIT
+	if Global.ravine_shortcut_open() and saved_exit != ESTATE_EXIT:
+		exit = RavineLayout.SOUTH_TRAIL_NAME
+	return guide.follow(exit, places[exit], WinterSupper.PLACE)
+
+func _return_uses_south(place: String) -> bool:
+	if place == WinterSupper.PLACE:
+		if Global.market_trip_target == place and not guide.destination_name.is_empty():
+			return guide.destination_name == RavineLayout.SOUTH_TRAIL_NAME
+		return Global.ravine_shortcut_open()
 	if place != Global.FIELD_RETURN or not Global.ravine_shortcut_open():
 		return false
 	if Global.market_trip_target == Global.FIELD_RETURN and not guide.destination_name.is_empty():

@@ -66,6 +66,11 @@ func _ready() -> void:
 		directions.follow_water_source()
 	elif Global.market_trip_target == Global.FREIGHT_YARD:
 		directions.follow_freight_yard()
+	elif Global.market_trip_target == Global.POND_LANDING:
+		if not directions.follow_pond_landing():
+			Global.market_trip_target = ""
+	elif Global.market_trip_target == WinterSupper.PLACE:
+		directions.follow_winter_supper()
 	elif Global.market_trip_target == VisitorData.SILK_MERCHANT:
 		if not directions.follow_neighbor(VisitorData.SILK_MERCHANT):
 			Global.market_trip_target = ""
@@ -928,8 +933,8 @@ func _on_freight_arrival_interacted(speech: String, portrait: Texture2D, order_i
 		destination = SEED_GARDEN.PLACE
 		guide = directions.follow_place.bind(destination, EstateLayout.SEED_GARDEN_APPROACH)
 	elif order_id in SeasonOrders.POND_ORDERS:
-		destination = CreekFish.PLACES[CreekFish.Site.POND]
-		guide = directions.follow_place.bind(destination, EstateLayout.POND_LANDING)
+		destination = Global.POND_LANDING
+		guide = directions.follow_pond_landing
 	elif order_id == SeasonOrders.WINTER_WOVEN_GOODS:
 		destination = WINTER_RATIONS.PLACE
 		guide = directions.follow_place.bind(destination, EstateLayout.WINTER_RATIONS_APPROACH)
@@ -944,7 +949,7 @@ func _on_winter_road_rations_interacted() -> void:
 func _on_fishing_requested(spot: Node2D) -> void:
 	if _estate_controls_blocked() or not Global.cast_fishing_line(spot.site):
 		return
-	if directions.tracked_place == CreekFish.PLACES[CreekFish.Site.POND]:
+	if directions.tracked_place == Global.POND_LANDING:
 		directions.clear_tracking()
 	var panel := FISHING_PANEL.new()
 	panel.name = "FishingPanel"
@@ -954,10 +959,10 @@ func _on_fishing_requested(spot: Node2D) -> void:
 	$Control.add_child(panel)
 
 func _follow_pond_route(place: String) -> bool:
-	if place == TravelHearth.PLACE:
-		_guide_travel_hearth()
-	else:
-		_on_west_market_directions_requested(place)
+	match place:
+		TravelHearth.PLACE: _guide_travel_hearth()
+		WinterSupper.PLACE: directions.follow_winter_supper()
+		_: _on_west_market_directions_requested(place)
 	return true
 
 func _on_seed_garden_requested() -> void:
@@ -984,18 +989,23 @@ func _guide_calendar_event(place: String) -> void:
 	if place == SummerRaft.PLACE or place == CreekFish.PLACES[CreekFish.Site.POOL]:
 		_on_ravine_trip_requested(place)
 		return
-	var path := "SpringGathering"
-	match place:
-		"秋社展台": path = "AutumnExhibit/Approach"
-		WinterSupper.PLACE: path = "WinterSupper/Approach"
-	var destination := world.get_node(path) as Node2D
-	directions.follow_place(place, world.to_local(destination.global_position))
+	world.set_channel_mode(false)
+	if place == Global.POND_LANDING:
+		directions.follow_pond_landing()
+	elif place == WinterSupper.PLACE:
+		directions.follow_winter_supper()
+	else:
+		var path := "AutumnExhibit/Approach" if place == "秋社展台" else "SpringGathering"
+		var destination := world.get_node(path) as Node2D
+		directions.follow_place(place, world.to_local(destination.global_position))
+	if Global.is_indoors() and place in [Global.POND_LANDING, WinterSupper.PLACE]:
+		hud.practice_label.text = "已标出%s · 从南门回封地" % place
 
 func _on_winter_supper_requested() -> void:
 	world.set_channel_mode(false)
 	if directions.tracked_place == WinterSupper.PLACE:
 		directions.clear_tracking()
-	dialog_manager.show_winter_supper()
+	dialog_manager.show_winter_supper(_guide_calendar_event)
 
 func _on_autumn_exhibit_requested() -> void:
 	world.set_channel_mode(false)
@@ -1019,7 +1029,7 @@ func _on_travel_hearth_interacted() -> void:
 	if directions.tracked_place == TravelHearth.PLACE:
 		directions.clear_tracking()
 	dialog_manager.show_travel_hearth(_on_west_market_directions_requested.bind(Global.MARKET_ORDERS),
-		directions.follow_place.bind(CreekFish.PLACES[CreekFish.Site.POND], EstateLayout.POND_LANDING))
+		directions.follow_pond_landing)
 
 func _on_neighbors_pressed() -> void:
 	world.set_channel_mode(false)

@@ -19,7 +19,8 @@ const MARKET_RETURN := "回封地"
 const FIELD_RETURN := "井田 1"
 const FREIGHT_YARD := "南路卸货场"
 const WATER_SOURCE := "水源"
-const ESTATE_REGIONAL_STOPS := [FIELD_RETURN, WATER_SOURCE, FREIGHT_YARD]
+const POND_LANDING := CreekFish.PLACES[CreekFish.Site.POND]
+const ESTATE_REGIONAL_STOPS := [FIELD_RETURN, WATER_SOURCE, FREIGHT_YARD, POND_LANDING, WinterSupper.PLACE]
 const MARKET_PRODUCE := ["beans", "rice", "sorghum", "wheat"]
 const TAX_ENVOY := "召简"
 const TAX_COUNCIL_YEAR := 3
@@ -806,6 +807,21 @@ func is_winter_supper_day(day := 0) -> bool:
 
 func winter_supper_record(day := 0) -> Dictionary:
 	return winter_suppers.get(day if day > 0 else current_day, {})
+
+func winter_supper_preparation_day() -> int:
+	var terms_left := SOLAR_TERMS.find(WinterSupper.TERM) - solar_term_index()
+	var day := _solar_term_start(current_day) + terms_left * maxi(1, balance.days_per_solar_term)
+	if day < current_day or day - current_day > festival_notice_lead(WinterSupper.TERM) or winter_suppers.has(day):
+		return 0
+	return day
+
+func winter_supper_route_open() -> bool:
+	return is_winter_supper_day() or winter_supper_preparation_day() > 0
+
+func winter_supper_fishing_site() -> int:
+	if pond_landing_day() > 0:
+		return CreekFish.Site.POND
+	return CreekFish.Site.POOL if knows_ravine_journal() else -1
 
 func winter_supper_bean_gift(day := 0) -> bool:
 	var date := day if day > 0 else current_day
@@ -3608,6 +3624,9 @@ func load_game(path := "") -> Error:
 	_restore_summer_raft_results(data.get("summer_raft_results"), saved_day)
 	_restore_autumn_exhibits(data.get("autumn_exhibits"), saved_day)
 	_restore_winter_suppers(data.get("winter_suppers"), saved_day)
+	if (market_trip_target == POND_LANDING and pond_landing_day() == 0
+			or market_trip_target == WinterSupper.PLACE and not winter_supper_route_open()):
+		market_trip_target = ""
 	night_rations = _restore_night_rations(data.get("night_rations"), saved_day, restored_retainers)
 	_restore_sheepfold(data.get("sheepfold"), saved_day)
 	tech_unlocked = {
