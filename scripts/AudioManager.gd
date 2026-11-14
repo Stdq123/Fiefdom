@@ -13,6 +13,7 @@ const CEREMONY_BELL := preload("res://assets/audio/music/bronze-bell.wav")
 const BAMBOO_SLIPS := preload("res://assets/audio/rotation-slip.wav")
 const TITLE_SCORE := "res://assets/audio/music/score-title.ogg"
 const RAVINE_SCORE := "res://assets/audio/music/score-ravine.ogg"
+const WEST_MARKET_SCORE := "res://assets/audio/music/score-west-market.ogg"
 const SEASON_SCORES := [
 	"res://assets/audio/music/score-spring.ogg",
 	"res://assets/audio/music/score-summer.ogg",
@@ -99,8 +100,10 @@ func _sync_score() -> void:
 		Global.TITLE_SCENE:
 			terrain_audio.fade_out()
 			path = TITLE_SCORE
-		Global.ESTATE_SCENE, Global.WEST_ROAD_SCENE, Global.WEST_MARKET_SCENE:
+		Global.ESTATE_SCENE, Global.WEST_ROAD_SCENE:
 			path = SEASON_SCORES[Global.season_index()]
+		Global.WEST_MARKET_SCENE:
+			path = WEST_MARKET_SCORE
 		Global.WILDERNESS_SCENE:
 			path = RAVINE_SCORE
 		_:

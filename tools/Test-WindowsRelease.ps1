@@ -78,7 +78,14 @@ function Start-VerifiedGame {
     $log = Join-Path $evidence "$Name.log"
     $frameLimit = if ($Replay -like '*-steward' -or $Replay -eq 'reformed-orders') { '42000' } elseif ($Replay) { '12000' } else { '180' }
     $arguments = @('--quit-after', $frameLimit, '--log-file', ('"' + $log + '"'))
-    $arguments += if ($Replay -eq 'soak') { '--max-fps', '60', '--audio-driver', 'Dummy' } else { '--fixed-fps', '60' }
+    $arguments += if ($Replay -eq 'soak') {
+        '--max-fps', '60', '--audio-driver', 'Dummy'
+    } elseif ($Resolution -and $Replay -eq 'ambience-travel') {
+        # Audio playback and recordings follow wall time during the trip.
+        '--max-fps', '60'
+    } else {
+        '--fixed-fps', '60'
+    }
     if ($Resolution) {
         $screens = (New-Item -ItemType Directory -Force -Path (Join-Path $evidence $Resolution)).FullName
         $arguments += @('--windowed', '--disable-vsync', '--resolution', $Resolution)
@@ -239,7 +246,7 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'neighbor-handoff' -Name 'neighbor-handoff' -Replay 'neighbor-handoff'
     }
     if ($AmbienceTravel) {
-        Start-VerifiedGame -Directory $release -Profile 'ambience-travel' -Name 'ambience-travel' -Replay 'ambience-travel'
+        Start-VerifiedGame -Directory $release -Profile 'ambience-travel' -Name 'ambience-travel' -Replay 'ambience-travel' -Resolution $fullResolution
     }
     if ($EstateTerrain) {
         Start-VerifiedGame -Directory $release -Profile 'estate-terrain' -Name 'estate-terrain' -Replay 'estate-terrain'
@@ -314,6 +321,9 @@ try {
         }
         if ($StewardCampaign) {
             Start-VerifiedGame -Directory $release -Profile 'first-steward-compact' -Name 'reformed-first-steward-1024x768' -Replay 'reformed-first-steward' -Resolution '1024x768'
+        }
+        if ($AmbienceTravel) {
+            Start-VerifiedGame -Directory $release -Profile 'ambience-travel-compact' -Name 'ambience-travel-1024x768' -Replay 'ambience-travel' -Resolution '1024x768'
         }
         if ($RouteGoals) {
             Start-VerifiedGame -Directory $release -Profile 'council-prep-compact' -Name 'council-prep-1024x768' -Replay 'council-prep' -Resolution '1024x768'
