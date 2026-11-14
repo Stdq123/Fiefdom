@@ -21,7 +21,7 @@
 - **经营到结局**。按自己的节奏选一条路线，记下哪几天改变了经营方式、哪些操作重复得最累、哪次遇见人物或走过某处让你想再去。结算后退出，再从标题「继续游戏」读回，核对路线和结算日期。
 - **回报**。记下系统和显卡、键鼠或手柄、实际窗口尺寸、总游玩时间及停在的游戏日期。能复现的问题附上当时的截图或一段操作顺序。画面、节奏和手感直接写感受即可。
 
-本包包含封地、溪桥道、西市和竹涧的斜俯视更新。按住 Shift 或手柄 LT 可一次处理一块井田内同类的农事。第一次纳贡后可从手记接上轮作，循标记在同一格私田种两茬，去田南安排井田管事。解压版已回放标题启动、两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本轮试玩包](../build/polish-rotation-guide/final/Fiefdom-1.0.0-Windows-x64.zip) · [本包校验](../build/polish-rotation-guide/final/headless-final/manifest.txt)
+本包包含封地、溪桥道、西市和竹涧的斜俯视更新。按住 Shift 或手柄 LT 可一次处理一块井田内同类的农事。第一次纳贡后可从手记接上轮作并安排井田管事。右上日期栏可查看秋社谷样还缺什么、冬至两道菜的食材和份数，并给会场或柳湾指路。解压版已回放两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本轮试玩包](../build/polish-season-notices/final/Fiefdom-1.0.0-Windows-x64.zip) · [本包校验](../build/polish-season-notices/final/headless/manifest.txt)
 
 ## 从新档到第一次收获
 
@@ -1169,3 +1169,9 @@
 - 上一版在第 3 天整田收下 1 份贡粮与 8 份私田黍，选定私田收成去处后，手记转到找石墨。新版仍可走这条晋升线，也可从同一张手记点「轮作试种」，约好后确认要种的私田。标记可跨夜保留、存档恢复，也可取消。收菽后再次打开手记，可标出留肥的原格并换黍种。 [上一版实机](../build/polish-rotation-guide/baseline-1920/01-rotation-after-first-harvest.png) · [新版实机](../build/polish-rotation-guide/final/capture-final/1920x1080/01-rotation-after-first-harvest.png) · [留肥原格](../build/polish-rotation-guide/final/capture-final/1920x1080/05-continued-fertile-plot.png)
 - 新档回放沿手记第 3 天约定、第 5 天收菽、第 7 天在同格收下两份黍并记簿，同期公田累计纳贡两份。次日读档可从手记找轮作簿，任命渠伯为井田管事。他按续播安排播种并浇水九格，次日实扣两份口粮。专项还检查离开视野、取消标记、多块肥地时恢复同一格、用约定前留下的肥地，以及渠伯离任后的第 6 天回访。 [1920×1080 回放](../build/polish-rotation-guide/final/capture-final/rotation-guide.log) · [1024×768 交接报价](../build/polish-rotation-guide/final/capture-final/1024x768/06-appoint-first-steward.png)
 - 105 项源码回归通过，最终构建另复核在本轮变动的 7 个源码入口。解压包通过 32 项无窗口发行检查、19 次隔离桌面发行回放和 90.721 秒连续运行。干净配置不传尺寸时为 1920×1080。第 56 天的「守礼安邦」和第 59 天的「税亩富民」均可重启读回。只经营第一块井田并交给渠伯的专项升至大夫，第 64 天达成「税亩富民」，交接后管事自主完成 117 份产出，玩家未再点第一块井田。上版第 4 天可接续，两次干净构建的 ZIP 校验值一致。 [源码回归](../build/polish-rotation-guide/source-final.log) · [最终构建专项](../build/polish-rotation-guide/source-release.log) · [无窗口发行](../build/polish-rotation-guide/final/headless-final.log) · [隔离桌面](../build/polish-rotation-guide/final/capture-final.log) · [只经营第一块井田](../build/polish-rotation-guide/final/headless-final/reformed-first-steward.log) · [连续运行](../build/polish-rotation-guide/final/soak-final.log) · [重复构建](../build/polish-rotation-guide/final/hashes.log)
+
+## 从历书备谷样和冬至围炉饭
+
+- 默认提前三天在右上显示秋社或冬至备办情况。点击活动条，或按 C／手柄 View，翻到活动日期。秋社列出三种谷样还差几种、已熟私田和来得及补播的旱作。冬至可比较麦菽粥与鱼麦羹，已学垂钓时可直接标出柳湾。仍可用单独的「历书」按钮查看今日。 [日期栏](../build/polish-season-notices/final/capture/1920x1080/01d-autumn-notice.png) · [秋社备办](../build/polish-season-notices/final/capture/1920x1080/01e-autumn-plan.png) · [冬至备办](../build/polish-season-notices/final/capture/1024x768/08-winter-plan.png)
+- 在新档第 13 天从两种谷样补种到齐，第 16 天按历书指路到南池畔，验证带回和分享两种结算。接着从第 19 天的冬至提醒种麦，第 21 天收割，第 22 天带一份麦找禾伯煮粥。存读档保留秋社赠菽和围炉回执，次日的备粮记录计入一份围炉饭。另一条新档第 21 天循历书去柳湾钓得鲫鱼，选择鱼麦羹后当夜四份口粮均由羹补足。 [1920×1080 秋冬连走](../build/polish-season-notices/final/capture/autumn-exhibit.log) · [1024×768 秋冬连走](../build/polish-season-notices/final/capture/autumn-exhibit-1024x768.log) · [柳湾与鱼麦羹](../build/polish-season-notices/final/capture/winter-supper.log) · [手柄 View](../build/polish-season-notices/final/capture/1920x1080/02b-gamepad-season-notice.png)
+- 105 项源码回归通过。解压包通过 38 项无窗口发行检查、90.725 秒连续运行和 13 次隔离桌面运行。干净配置启动为 1920×1080。新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局均可退出重启后读回。上版第 4 天存档可接续。两次干净构建的 ZIP 校验值一致。 [源码回归](../build/polish-season-notices/source-final.log) · [无窗口发行](../build/polish-season-notices/final/headless.log) · [隔离桌面](../build/polish-season-notices/final/capture.log) · [默认窗口](../build/polish-season-notices/final/native/default-window.log) · [重复构建](../build/polish-season-notices/final/hashes.log)
