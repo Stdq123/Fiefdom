@@ -227,6 +227,12 @@ func _draw_chart() -> void:
 	for surface: PackedVector2Array in ground.street:
 		paper.draw_colored_polygon(_map_outline(surface), Color("#b99c6c"))
 	paper.draw_colored_polygon(_map_outline(ground.paving), Color("#beb8a0"))
+	paper.draw_colored_polygon(_map_outline(ground.dye_paving), Color("#beb8a0"))
+	var workshop := Rect2(_map_point(LAYOUT.DYE_HOUSE + Vector2(-45, -48)), Vector2(88, 40) * _scale())
+	paper.draw_rect(workshop.grow(1.5), INK)
+	paper.draw_rect(workshop, Color("#7b8790"))
+	paper.draw_line(workshop.position + Vector2(1, workshop.size.y * 0.36),
+		Vector2(workshop.end.x - 1, workshop.position.y + workshop.size.y * 0.36), Color("#a3aba7"), 1.5)
 	var basin := Rect2(_map_point(LAYOUT.BASIN.position), LAYOUT.BASIN.size * _scale())
 	paper.draw_rect(basin, Color("#8c7c5f"))
 	paper.draw_rect(basin.grow(-2.5), Color("#739995"))

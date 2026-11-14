@@ -313,6 +313,12 @@ func _run() -> void:
 			var replay = load("res://tests/WestMarketReplay.gd").new()
 			replay.capture_dir = capture_directory
 			await replay.run(tree)
+		"market-dye-yard", "market-dye-old-write", "market-dye-old-resume":
+			var replay = load("res://tests/MarketDyeYardReplay.gd").new()
+			replay.capture_dir = capture_directory
+			replay.write_previous = arguments[0] == "market-dye-old-write"
+			replay.resume_previous = arguments[0] == "market-dye-old-resume"
+			await replay.run(tree)
 		"west-road", "west-road-baseline", "west-road-older-save":
 			var replay = load("res://tests/WestRoadReplay.gd").new()
 			replay.baseline = arguments[0] == "west-road-baseline"

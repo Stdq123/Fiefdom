@@ -287,6 +287,15 @@ func show_travel_hearth(guide_market: Callable, guide_pond: Callable) -> void:
 			guide_pond.call()
 	)
 
+func show_market_dyer(speaker: String, speech: String, portrait: Texture2D, guide_silk: Callable) -> void:
+	if parent_node.has_node("DialoguePanel"):
+		return
+	var dialog := _open(speaker, "西市 · 染工", speech, ["指路去绸摊", "离开"], [], portrait)
+	dialog.option_selected.connect(func(index: int):
+		if index == 0:
+			guide_silk.call()
+	)
+
 func show_visitor_dialog(data: VisitorData, place: String, at_pavilion := false) -> void:
 	if data.is_recruited or parent_node.has_node("DialoguePanel"):
 		return

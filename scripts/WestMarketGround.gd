@@ -22,6 +22,11 @@ const SILK_YARD := [
 	Vector2(126, 165), Vector2(152, 148), Vector2(208, 148), Vector2(250, 155), Vector2(265, 176),
 	Vector2(245, 194), Vector2(180, 200), Vector2(140, 190),
 ]
+const DYE_YARD := [
+	Vector2(220, -19), Vector2(253, -25), Vector2(299, -24), Vector2(338, -15),
+	Vector2(354, -2), Vector2(344, 18), Vector2(315, 22), Vector2(277, 24),
+	Vector2(242, 13), Vector2(219, 0),
+]
 const GROVES := [
 	Rect2(-505, -225, 166, 457), Rect2(-349, -233, 283, 65), Rect2(-48, -238, 244, 126),
 	Rect2(264, -222, 238, 205), Rect2(-327, -65, 206, 148), Rect2(-3, -62, 151, 100),
@@ -39,7 +44,7 @@ const TREE_FEET := [
 	Vector2(-371, -173), Vector2(-309, -153), Vector2(-283, -173), Vector2(-221, -173), Vector2(-157, -177),
 	Vector2(-95, -147), Vector2(-40, -156), Vector2(12, -129), Vector2(70, -162), Vector2(129, -143),
 	Vector2(205, -151), Vector2(260, -148), Vector2(287, -113), Vector2(341, -135),
-	Vector2(390, -103), Vector2(442, -119), Vector2(421, -58), Vector2(345, -45), Vector2(303, -25),
+	Vector2(390, -103), Vector2(442, -119), Vector2(421, -58), Vector2(356, -63), Vector2(199, -46),
 	Vector2(-327, -27), Vector2(-282, -11), Vector2(-244, -33), Vector2(-195, -8), Vector2(-165, 20),
 	Vector2(7, -25), Vector2(49, -38), Vector2(86, -10), Vector2(36, 15),
 	Vector2(-400, 215), Vector2(-346, 226), Vector2(-295, 235), Vector2(-198, 222), Vector2(-151, 202),
@@ -50,12 +55,13 @@ const TREE_FEET := [
 const STORAGE := [
 	Vector3i(-381, 97, 0), Vector3i(-370, 103, 1), Vector3i(-390, 108, 0), Vector3i(-218, 194, 3),
 	Vector3i(-178, -101, 2), Vector3i(-267, -112, 2), Vector3i(-259, -103, 3),
+	Vector3i(223, -7, 2), Vector3i(217, -12, 3),
 	Vector3i(130, 154, 3), Vector3i(133, 165, 2), Vector3i(256, 175, 3),
 ]
 const STORAGE_PROPS := [LANDSCAPE.Prop.GRAIN_SACK, LANDSCAPE.Prop.OPEN_SACK, LANDSCAPE.Prop.JAR, LANDSCAPE.Prop.LIDDED_JAR]
 const FENCE_FEET := [
 	Vector2(-384, 164), Vector2(-353, 184), Vector2(-319, 195), Vector2(-243, -153),
-	Vector2(137, 145), Vector2(217, 149), Vector2(333, -5), Vector2(429, 67),
+	Vector2(137, 145), Vector2(217, 149), Vector2(360, -5), Vector2(429, 67),
 ]
 const TREE_PATTERN := [LANDSCAPE.Prop.OAK, LANDSCAPE.Prop.BLOSSOM_TREE, LANDSCAPE.Prop.PINE, LANDSCAPE.Prop.OAK]
 const PROP_DETAILS := [
@@ -64,14 +70,14 @@ const PROP_DETAILS := [
 	Vector3i(-255, -152, LANDSCAPE.Prop.REEDS), Vector3i(-190, -150, LANDSCAPE.Prop.REEDS),
 	Vector3i(77, -28, LANDSCAPE.Prop.SHRUB), Vector3i(84, 37, LANDSCAPE.Prop.FLOWERS),
 	Vector3i(206, 108, LANDSCAPE.Prop.ROCK), Vector3i(290, 77, LANDSCAPE.Prop.FLOWERS),
-	Vector3i(324, -14, LANDSCAPE.Prop.SHRUB), Vector3i(369, 80, LANDSCAPE.Prop.ROCK),
+	Vector3i(351, -27, LANDSCAPE.Prop.SHRUB), Vector3i(369, 80, LANDSCAPE.Prop.ROCK),
 ]
 const RAIN_PUDDLES: Array[Rect2] = [
-	Rect2(278, 29, 38, 14), Rect2(-56, 53, 34, 15), Rect2(-159, -112, 42, 20),
+	Rect2(278, 29, 38, 14), Rect2(261, 5, 16, 7), Rect2(-56, 53, 34, 15), Rect2(-159, -112, 42, 20),
 	Rect2(232, 126, 23, 14), Rect2(-252, 149, 38, 12),
 ]
 const SNOW_DRIFTS: Array[Rect2] = [
-	Rect2(277, 45, 64, 24), Rect2(304, -1, 63, 24), Rect2(144, 86, 57, 25),
+	Rect2(277, 45, 64, 24), Rect2(304, -1, 63, 24), Rect2(232, -12, 23, 8), Rect2(144, 86, 57, 25),
 	Rect2(-2, 82, 71, 22), Rect2(-176, -104, 54, 20), Rect2(-261, -99, 57, 19),
 	Rect2(-109, -74, 45, 26), Rect2(-370, 158, 73, 22), Rect2(-255, 175, 38, 15),
 	Rect2(218, 177, 43, 19), Rect2(230, 117, 29, 21),
@@ -80,6 +86,7 @@ const SNOW_DRIFTS: Array[Rect2] = [
 var street: Array[PackedVector2Array] = []
 var street_shoulders: Array[PackedVector2Array] = []
 var paving: PackedVector2Array
+var dye_paving: PackedVector2Array
 var main_path: PackedVector2Array
 var verge_art := TERRAIN.new(LAYOUT.BOUNDS.position.y)
 var weather := ROAD_WEATHER.new(RAIN_PUDDLES, SNOW_DRIFTS)
@@ -91,9 +98,12 @@ func _ready() -> void:
 	main_path = EstateLayout.sample_road(PackedVector2Array(LAYOUT.MAIN_ROAD + [LAYOUT.EAST_OUTSIDE]))
 	paving = _road_outline(main_path, 12.0)
 	street.append(_road_outline(main_path, 22.0))
+	var dye_path := EstateLayout.sample_road(PackedVector2Array(LAYOUT.DYE_LANE))
+	dye_paving = _road_outline(dye_path, 6.0)
+	street.append(_road_outline(dye_path, 11.0))
 	for lane: Array in [LAYOUT.FISH_LANE, LAYOUT.SILK_LANE, LAYOUT.CART_DRIVE]:
 		street.append(_road_outline(EstateLayout.sample_road(PackedVector2Array(lane)), 14.0))
-	for yard: Array in [GRAIN_YARD, FISH_YARD, SILK_YARD]:
+	for yard: Array in [GRAIN_YARD, FISH_YARD, SILK_YARD, DYE_YARD]:
 		street.append(PackedVector2Array(yard))
 	for surface in street:
 		street_shoulders.append(Geometry2D.offset_polygon(surface, 2.0)[0])
@@ -150,7 +160,8 @@ func is_on_street(foot: Vector2) -> bool:
 	return false
 
 func is_on_paving(foot: Vector2) -> bool:
-	return Geometry2D.is_point_in_polygon(to_local(foot), paving)
+	var location := to_local(foot)
+	return Geometry2D.is_point_in_polygon(location, paving) or Geometry2D.is_point_in_polygon(location, dye_paving)
 
 func distance_to_trees(foot: Vector2) -> float:
 	var at := to_local(foot)
@@ -180,9 +191,17 @@ func _draw() -> void:
 		draw_colored_polygon(shoulder, dirt.lerp(meadow, 0.52))
 	for surface in street:
 		TERRAIN.draw_loam(self, surface, dirt)
+	TERRAIN.draw_paving(self, dye_paving, dirt, LAYOUT.DYE_JUNCTION.x)
 	TERRAIN.draw_paving(self, paving, dirt, LAYOUT.EAST_GATE.x)
 	_draw_basin()
 	var contact_shade := LANDSCAPE.scenery_shade(raining)
+	var house_shadow := PackedVector2Array([
+		Vector2(-46, -8), Vector2(36, -8), Vector2(61, -18), Vector2(73, -9),
+		Vector2(56, 5), Vector2(24, 11), Vector2(-36, 7), Vector2(-50, 1),
+	])
+	for index in house_shadow.size():
+		house_shadow[index] += LAYOUT.DYE_HOUSE
+	draw_colored_polygon(house_shadow, contact_shade)
 	for index in TREE_FEET.size():
 		LANDSCAPE.draw_scenery_shadow(self, TREE_FEET[index], TREE_PATTERN[index % TREE_PATTERN.size()], contact_shade)
 	for detail: Vector3i in PROP_DETAILS:

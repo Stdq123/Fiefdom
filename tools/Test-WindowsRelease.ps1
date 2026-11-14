@@ -45,7 +45,8 @@ param(
     [switch]$WatchRelief,
     [switch]$RavineLayout,
     [switch]$FishMarketOrders,
-    [switch]$MarketWayfinding
+    [switch]$MarketWayfinding,
+    [switch]$MarketDyeYard
 )
 
 $ErrorActionPreference = 'Stop'
@@ -151,6 +152,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RavineShortcutReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RotationGuideReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/OpeningOrderReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/MarketDyeYardReplay.gd') -Destination $testDirectory
     foreach ($file in 'MarketOrderReplay.gd', 'AutumnExhibitReplay.gd', 'SheepfoldReplay.gd', 'RavineMapReplay.gd', 'CreekTrapReplay.gd', 'FieldNightReplay.gd', 'FieldWorkWaitReplay.gd', 'CouncilSilkReplay.gd') {
         Copy-Item -LiteralPath (Join-Path $repo "tests/$file") -Destination $testDirectory
     }
@@ -330,6 +332,9 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'market-wayfinding' -Name 'market-wayfinding' -Replay 'market-wayfinding' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'fishing-journey' -Name 'fishing-journey' -Replay 'fishing-journey'
     }
+    if ($MarketDyeYard) {
+        Start-VerifiedGame -Directory $release -Profile 'market-dye-yard' -Name 'market-dye-yard' -Replay 'market-dye-yard' -Resolution $fullResolution
+    }
     if ($KeyBindings) {
         Start-VerifiedGame -Directory $release -Profile 'key-bindings' -Name 'key-bindings' -Replay 'key-bindings'
         Start-VerifiedGame -Directory $release -Profile 'key-bindings' -Name 'key-bindings-reload' -Replay 'key-bindings-reload' -ResumeProfile
@@ -372,6 +377,9 @@ try {
         }
         if ($MarketWayfinding) {
             Start-VerifiedGame -Directory $release -Profile 'market-wayfinding-compact' -Name 'market-wayfinding-1024x768' -Replay 'market-wayfinding' -Resolution '1024x768'
+        }
+        if ($MarketDyeYard) {
+            Start-VerifiedGame -Directory $release -Profile 'market-dye-yard-compact' -Name 'market-dye-yard-1024x768' -Replay 'market-dye-yard' -Resolution '1024x768'
         }
         if ($FishMarketOrders) {
             Start-VerifiedGame -Directory $release -Profile 'fish-market-orders-compact' -Name 'fish-market-orders-1024x768' -Replay 'fish-market-orders' -Resolution '1024x768'
