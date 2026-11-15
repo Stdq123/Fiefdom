@@ -97,8 +97,11 @@ func _draw_glints() -> void:
 	glints.draw_rect(Rect2(water + Vector2(5 - drift, -1), Vector2(2, 1)), Color("#81b4a0"))
 
 func _draw_runoff() -> void:
-	runoff.draw_colored_polygon(PackedVector2Array([Vector2(-13, 5), Vector2(13, 5),
-		Vector2(16, 10), Vector2(9, 14), Vector2(-8, 14), Vector2(-14, 11)]), Color("#26382d98"))
+	var shadow := Color("#273e358c")
+	var fade := Color(shadow, 0.0)
+	runoff.draw_polygon(PackedVector2Array([Vector2(-13, 4), Vector2(12, 4), Vector2(17, 9),
+		Vector2(13, 14), Vector2(5, 16), Vector2(-10, 14), Vector2(-16, 10)]),
+		PackedColorArray([shadow, shadow, fade, fade, fade, fade, fade]))
 	for direction: Vector2i in outlets:
 		var axis := Vector2(direction)
 		runoff.draw_line(axis * 5.0, axis * 15.0, Color("#455a48"), 5.0)

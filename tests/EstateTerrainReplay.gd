@@ -34,6 +34,8 @@ func _opening() -> void:
 	state.advance_daylight(23.0)
 	await _snapshot("00-first-field")
 	await _walk_into_field(terrain)
+	if not baseline:
+		await _walk_onto_spring_apron(terrain)
 	await _walk(Vector2(-181, 54))
 	await _walk(Vector2(-181, -21))
 	await _walk(Vector2(-270, -21))
@@ -77,6 +79,26 @@ func _walk_into_field(terrain: Node2D) -> void:
 		"Actual walking crosses the stone at the entrance and uses a dirt footstep inside the field.")
 	await _snapshot("00c-walked-into-field")
 	print("TERRAIN_FOOTSTEPS steps=", steps.size(), " inside=", area.has_point(player.position))
+
+func _walk_onto_spring_apron(terrain: Node2D) -> void:
+	var source := terrain.to_local(world.irrigation_overlay.water_source.global_position)
+	var tread := source + Vector2(-6, 15)
+	var grass := source + Vector2(32, 15)
+	_expect(terrain._surface_at(tread) == TerrainAudio.Surface.STONE and terrain._surface_at(grass) == TerrainAudio.Surface.GRASS,
+		"Only the spring apron receives stone footsteps beside the grass.")
+	await _walk(grass)
+	var steps: Array[AudioStream] = []
+	var audio: Node = terrain.terrain_audio
+	var record := func(_point: Vector2): steps.append(audio.footsteps.stream)
+	world.player.footstep.connect(record)
+	await _walk(tread)
+	world.player.footstep.disconnect(record)
+	_expect(world.player.position.distance_to(tread) < 3.0
+		and steps.any(func(step: AudioStream) -> bool: return step in audio.STEPS[TerrainAudio.Surface.STONE]),
+		"The player can walk around the basin onto its apron and hear a stone footstep.")
+	print("SPRING_APRON_WALK at=", world.player.position, " steps=", steps.size())
+	await _snapshot("00d-spring-apron")
+	await _walk(tread + Vector2(0, 9))
 
 func _silk_and_gates() -> void:
 	if title_art or failures > 0:

@@ -713,10 +713,14 @@ func _draw() -> void:
 	else:
 		_draw_field_verges()
 		_draw_tracks()
-		estate_terrain.draw_festival_paving(self, SEASON_PALETTES[season][0], season == Global.Season.WINTER, raining)
+		var winter := season == Global.Season.WINTER
+		var dirt := _track_dust()
+		estate_terrain.draw_festival_paving(self, SEASON_PALETTES[season][0], winter, raining)
 		RAVINE_RELIEF.draw_gate(self, EstateLayout.EAST_GATE, false, season, raining)
 		_draw_building_shadows()
-		_draw_hall_landing()
+		if _hall_landing_visible():
+			estate_terrain.draw_hall_court(self, dirt, winter, raining)
+		estate_terrain.draw_spring_apron(self, _tile_point(Global.irrigation.source_cell), dirt, winter, raining)
 		_draw_field_banks()
 		if Global.road_provisions_delivered:
 			var provisions := Rect2(SOUTH_PAVILION + Vector2(31, 0), Vector2(14, 10))
@@ -775,8 +779,10 @@ func _surface_at(foot: Vector2) -> TERRAIN_AUDIO.Surface:
 			return TERRAIN_AUDIO.Surface.STONE
 		if RAVINE_RELIEF.gate_stone_at(foot, EstateLayout.EAST_GATE):
 			return TERRAIN_AUDIO.Surface.STONE
-		if HALL_LANDING.has_point(foot) and _hall_landing_visible():
-			return TERRAIN_AUDIO.Surface.TRACK
+		if estate_terrain.hall_stone_at(foot) and _hall_landing_visible():
+			return TERRAIN_AUDIO.Surface.STONE
+		if estate_terrain.spring_stone_at(foot - _tile_point(Global.irrigation.source_cell)):
+			return TERRAIN_AUDIO.Surface.STONE
 	for track in track_shapes:
 		var outline: PackedVector2Array = track.shoulder if season == Global.Season.WINTER else track.surface
 		if Geometry2D.is_point_in_polygon(foot, outline):
@@ -839,6 +845,7 @@ func _draw_ground() -> void:
 	ground_cover.draw_marks(self, season, raining)
 	if estate_terrain:
 		estate_terrain.draw_meadow(self, meadow, winter)
+		estate_terrain.draw_farm_yard(self, meadow, winter, raining)
 		estate_terrain.draw_north_bank(self, MAP_BACKDROP.position.y, shade, sun, winter)
 		var pond_water: Color = WATER_TINTS[season]
 		estate_terrain.draw_pond(self, meadow, pond_water, winter, raining, pond_landing.visible)
@@ -982,32 +989,6 @@ func _draw_building_shadows() -> void:
 
 func _hall_landing_visible() -> bool:
 	return hall_rest != null and hall_rest.visible and _fields_clear(HALL_LANDING)
-
-func _draw_hall_landing() -> void:
-	if not _hall_landing_visible():
-		return
-	var at := HALL_LANDING.position
-	var stone := Color("#a79e85").darkened(0.15 if raining else 0.0)
-	draw_colored_polygon(PackedVector2Array([at + Vector2(1, 11), at + Vector2(43, 11),
-		at + Vector2(48, 16), at + Vector2(43, 18), at + Vector2(2, 18), at + Vector2(-2, 15)]),
-		Color("#373c31a6"))
-	draw_colored_polygon(PackedVector2Array([at + Vector2(4, 0), at + Vector2(39, 0),
-		at + Vector2(44, 9), at + Vector2(44, 14), at + Vector2(42, 16), at + Vector2(2, 16),
-		at + Vector2(0, 14), at + Vector2(0, 8)]), stone.darkened(0.32))
-	for step in 2:
-		var x := 4 - step * 3
-		var y := 2 + step * 6
-		var width := 36 + step * 6
-		var tread := at + Vector2(x, y)
-		draw_rect(Rect2(tread, Vector2(width, 6)), stone.darkened(0.06 * step))
-		draw_rect(Rect2(tread + Vector2(0, 4), Vector2(width, 2)), stone.darkened(0.23 + step * 0.05))
-		draw_rect(Rect2(tread + Vector2(1, 3), Vector2(width - 3, 1)), stone.lightened(0.20))
-		for joint: float in [11.0 + step * 4, 25.0 + step * 3]:
-			draw_rect(Rect2(tread + Vector2(joint, 0), Vector2(1, 5)), stone.darkened(0.28))
-		draw_rect(Rect2(tread + Vector2(width - 2, 1), Vector2(2, 3)), stone.darkened(0.20))
-	if season == Global.Season.WINTER:
-		draw_rect(Rect2(at + Vector2(1, 11), Vector2(7, 1)), Color("#c4cdba"))
-		draw_rect(Rect2(at + Vector2(37, 10), Vector2(5, 1)), Color("#c4cdba"))
 
 func _track_gravel(points: PackedVector2Array, width: float, dust: Color) -> void:
 	for index in range(points.size() - 1):

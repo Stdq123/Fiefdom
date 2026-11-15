@@ -139,9 +139,11 @@ func _check_field_layout() -> void:
 	_expect(landscape._surface_at(entry + Vector2(0, 1)) == Terrain.Surface.STONE
 		and landscape._surface_at(entry + Vector2(0, 12)) == Terrain.Surface.TRACK
 		and landscape._surface_at(entry + Vector2(0, -1)) == Terrain.Surface.TRACK
-		and landscape._surface_at(entry + Vector2(11, 10)) == Terrain.Surface.GRASS
-		and landscape._surface_at(water + Vector2(16, 0)) == Terrain.Surface.GRASS,
-		"The stone threshold meets the dirt approach and the field soil, with grass beside the water source.")
+		and landscape._surface_at(entry + Vector2(11, 10)) == Terrain.Surface.GRASS,
+		"The stone threshold meets the dirt approach and the field soil.")
+	_expect(landscape._surface_at(water + Vector2(16, 0)) == Terrain.Surface.STONE
+		and landscape._surface_at(water + Vector2(32, 0)) == Terrain.Surface.GRASS,
+		"The stone apron leads out to grass before the first field.")
 	print("DAYLIGHT_FIELD_LAYOUT field=", field, " water=", water, " tracks=", landscape.track_shapes.size())
 
 func _save_dusk() -> Dictionary:
