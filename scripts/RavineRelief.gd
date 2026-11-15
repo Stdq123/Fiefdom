@@ -246,13 +246,16 @@ static func _draw_verge_details(canvas: CanvasItem, rock: Color, turf: Color, ti
 		canvas.draw_line(root + Vector2(-1, -1), root + tallest, tips.lightened(0.11), 1.0)
 
 func draw_bridge_aprons(canvas: CanvasItem, season: int, wet: bool) -> void:
+	for index in bridge_aprons.size():
+		var pose := _bridge_apron_transform(-1.0 if index == 0 else 1.0)
+		draw_bridge_apron(canvas, bridge_aprons[index], pose, season, wet)
+
+static func draw_bridge_apron(canvas: CanvasItem, outline: PackedVector2Array, pose: Transform2D,
+		season: int, wet: bool) -> void:
 	var stone := Color("#938975").lerp(Color("#52675f"), 0.42 if wet else 0.0)
 	if season == Global.Season.WINTER:
 		stone = stone.lerp(Color("#929e9a"), 0.30)
-	var moss: Color = MOSS[season]
-	for index in bridge_aprons.size():
-		var pose := _bridge_apron_transform(-1.0 if index == 0 else 1.0)
-		_draw_apron(canvas, bridge_aprons[index], pose, BRIDGE_APRON_SLABS, stone, moss)
+	_draw_apron(canvas, outline, pose, BRIDGE_APRON_SLABS, stone, MOSS[season])
 
 static func _draw_apron(canvas: CanvasItem, outline: PackedVector2Array, pose: Transform2D,
 		slabs: Array, stone: Color, moss: Color) -> void:

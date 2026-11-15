@@ -370,10 +370,12 @@ func _run() -> void:
 			replay.write_previous = arguments[0] == "market-dye-old-write"
 			replay.resume_previous = arguments[0] == "market-dye-old-resume"
 			await replay.run(tree)
-		"west-road", "west-road-baseline", "west-road-older-save":
+		"west-road", "west-road-baseline", "west-road-older-save", "west-road-bank-rain", "west-road-bank-winter", "west-road-bank-resume":
 			var replay = load("res://tests/WestRoadReplay.gd").new()
 			replay.baseline = arguments[0] == "west-road-baseline"
 			replay.from_older_save = arguments[0] == "west-road-older-save"
+			if arguments[0].begins_with("west-road-bank-"):
+				replay.bank_check = arguments[0]
 			replay.capture_path = capture_directory
 			await replay.run(tree)
 		"market-wayfinding", "market-wayfinding-legacy", "market-wayfinding-old-save":

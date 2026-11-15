@@ -4,6 +4,7 @@ const ROAD_SCENE := "res://scenes/WestRoad.tscn"
 
 var baseline := false
 var from_older_save := false
+var bank_check := ""
 var capture_path := ""
 
 func _play() -> void:
@@ -12,11 +13,17 @@ func _play() -> void:
 	if from_older_save:
 		await _continue_old_market()
 		return
+	if bank_check == "west-road-bank-resume":
+		await _continue_from_creek()
+		return
 	await _button(tree.current_scene.new_button)
 	if tree.current_scene == null:
 		await tree.scene_changed
 	var world := tree.current_scene.get_node("World") as Node2D
 	var ui := tree.current_scene.get_node("UI") as CanvasLayer
+	if not bank_check.is_empty():
+		await _check_creek_weather(world)
+		return
 	if baseline:
 		await _button(ui.manage_button)
 		var management: Control = ui.panel_manager.management_panel_instance
@@ -122,7 +129,14 @@ func _return_and_continue(market: Node2D) -> void:
 	await Campaign.walk_straight(tree, player, Vector2(12, -70))
 	_expect(player.position.x < -43 and not Geometry2D.is_point_in_polygon(player.position, road.ground.water),
 		"Deep water stops the player at the visible bank away from the bridge.")
-	await _walk(player, [Vector2(-82, 36), Vector2(-17, 36)])
+	var west_edge := _distance_to_bank(player.position, road.ground.shelf_edges[0])
+	await _walk(player, [Vector2(-82, 36), Vector2(-53, 36)])
+	var west_step := _last_step()
+	_expect(road.ground.bridge_apron_at(player.position) and west_step.begins_with("stone-"),
+		"The west stone apron connects to the dirt road and plays a stone footstep.")
+	await Campaign.walk_straight(tree, player, Vector2(-17, 36))
+	var deck_step := _last_step()
+	_expect(deck_step.begins_with("plank-"), "The deck plays a timber footstep.")
 	_expect(road.ground.LAYOUT.BRIDGE.has_point(player.position), "The bridge connects the two banks.")
 	var bridge: Node2D = road.get_node("CreekBridge")
 	var deck: Node2D = bridge.get_node("Deck")
@@ -140,6 +154,7 @@ func _return_and_continue(market: Node2D) -> void:
 	await _snapshot("03a-behind-bridge-rail")
 	print("WEST_ROAD_RAIL foot=", player.position, " rail_y=", rail.global_position.y)
 	await Campaign.walk_straight(tree, player, Vector2(-17, 36))
+	await _check_east_bank(road, west_edge, west_step, deck_step)
 	await _button(road.get_node("%SettingsButton"))
 	var progress: float = state.day_progress
 	await tree.create_timer(0.30).timeout
@@ -186,6 +201,73 @@ func _return_and_continue(market: Node2D) -> void:
 			and state.market_trip_target.is_empty(), "The return marker clears on reaching the estate.")
 		await _snapshot("05-estate-returned")
 	print("WEST_ROAD_RETURN save_side=market facing=east continued=", not failed)
+
+func _distance_to_bank(foot: Vector2, rim: PackedVector2Array) -> float:
+	var distance := INF
+	for index in range(1, rim.size()):
+		var nearest := Geometry2D.get_closest_point_to_segment(foot, rim[index - 1], rim[index])
+		distance = minf(distance, foot.distance_to(nearest))
+	return distance
+
+func _last_step() -> String:
+	var sample: AudioStream = AudioManager.terrain_audio.footsteps.stream
+	return sample.resource_path.get_file() if sample else ""
+
+func _check_east_bank(road: Node2D, west_edge: float, west_step: String, deck_step: String) -> void:
+	var actor: Player = road.player
+	await Campaign.walk_straight(tree, actor, Vector2(67, 36))
+	var east_step := _last_step()
+	_expect(road.ground.bridge_apron_at(actor.position) and east_step.begins_with("stone-"),
+		"The east stone apron also stays walkable and plays a stone footstep.")
+	await _snapshot("03b-east-apron")
+	await _walk(actor, [Vector2(70, -70), Vector2(-82, -70)])
+	var east_edge := _distance_to_bank(actor.position, road.ground.shelf_edges[1])
+	var body := actor.get_node("CollisionShape2D") as CollisionShape2D
+	var footprint := body.shape.get_rect().size.length() * 0.5 + actor.safe_margin
+	_expect(not Geometry2D.is_point_in_polygon(actor.position, road.ground.water)
+		and west_edge <= footprint and east_edge <= footprint and actor.position.x > -27.0,
+		"Approaching from either bank stops within the actor's footprint of the painted rim.")
+	_expect(not Geometry2D.triangulate_polygon(road.ground.exposed_water).is_empty()
+		and not Geometry2D.triangulate_polygon(road.ground.deep_water).is_empty(),
+		"The water remains continuous between the two faces.")
+	await _snapshot("03c-east-bank-stop")
+	print("WEST_ROAD_BANK_EDGES west_distance=", snappedf(west_edge, 0.01), " east_distance=", snappedf(east_edge, 0.01),
+		" steps=", [west_step, deck_step, east_step], " window=", tree.root.size)
+	await _walk(actor, [Vector2(70, -70), Vector2(70, 36), Vector2(-17, 36)])
+
+func _check_creek_weather(world: Node2D) -> void:
+	var rain := bank_check == "west-road-bank-rain"
+	for day in range(1, 100):
+		if (state.has_rain(day) if rain else state.season_index(day) == state.Season.WINTER):
+			state.current_day = day
+			break
+	await Campaign.walk_estate_road_to(tree, world, Vector2(-270, -21))
+	if not await _cross(&"ui_left", ROAD_SCENE):
+		return
+	var road: Node2D = tree.current_scene
+	var deck: Node2D = road.get_node("CreekBridge")
+	_expect(deck.wet == rain and (rain or deck.season == state.Season.WINTER), "The road enters the expected rain or winter state.")
+	await Campaign.walk_straight(tree, road.player, Vector2(-17, 36))
+	_expect(road.ground.LAYOUT.BRIDGE.has_point(road.player.position) and _last_step().begins_with("plank-"),
+		"The bridge stays walkable with timber steps through seasonal weather.")
+	await _snapshot("00-rain-creek" if rain else "00-frost-creek")
+	print("WEST_ROAD_BANK_WEATHER day=", state.current_day, " rain=", rain, " season=", deck.season, " window=", tree.root.size)
+
+func _continue_from_creek() -> void:
+	await _button(tree.current_scene.continue_button)
+	if tree.current_scene == null:
+		await tree.scene_changed
+	var road: Node2D = tree.current_scene
+	if not _expect(road.scene_file_path == ROAD_SCENE and road.route_direction == Vector2.RIGHT
+		and road.player.position.distance_to(road.get_node("MarketArrival").position) < 4.0,
+		"The old bridge save restores the market-side arrival and the estate guide."):
+		return
+	await Campaign.walk_straight(tree, road.player, Vector2(-17, 36))
+	await _snapshot("00-continued-creek")
+	await Campaign.walk_straight(tree, road.player, Vector2(224, 36))
+	if await _cross(&"ui_right", state.ESTATE_SCENE):
+		_expect(state.market_trip_target.is_empty(), "The saved homeward guide clears on reaching the estate.")
+		print("WEST_ROAD_BANK_RESUME day=", state.current_day, " reached=estate")
 
 func _continue_old_market() -> void:
 	await _button(tree.current_scene.continue_button)

@@ -357,6 +357,8 @@ try {
     if ($MarketWayfinding) {
         Start-VerifiedGame -Directory $release -Profile 'west-market' -Name 'west-market' -Replay 'west-market' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'west-road' -Name 'west-road' -Replay 'west-road' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'west-road-bank-rain' -Name 'west-road-bank-rain' -Replay 'west-road-bank-rain'
+        Start-VerifiedGame -Directory $release -Profile 'west-road-bank-winter' -Name 'west-road-bank-winter' -Replay 'west-road-bank-winter'
         Start-VerifiedGame -Directory $release -Profile 'market-wayfinding' -Name 'market-wayfinding' -Replay 'market-wayfinding' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'fishing-journey' -Name 'fishing-journey' -Replay 'fishing-journey'
     }

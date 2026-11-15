@@ -207,7 +207,7 @@ func _step(foot: Vector2) -> void:
 	var surface := TRACK_AUDIO.Surface.GRASS
 	if LAYOUT.BRIDGE.has_point(foot):
 		surface = TRACK_AUDIO.Surface.PLANK
-	elif Geometry2D.is_point_in_polygon(foot, ground.pavement):
+	elif ground.bridge_apron_at(foot) or Geometry2D.is_point_in_polygon(foot, ground.pavement):
 		surface = TRACK_AUDIO.Surface.STONE
 	elif Geometry2D.is_point_in_polygon(foot, ground.track) or Geometry2D.is_point_in_polygon(foot, ground.meadow_track):
 		surface = TRACK_AUDIO.Surface.TRACK
