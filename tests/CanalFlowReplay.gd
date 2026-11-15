@@ -4,6 +4,7 @@ const Campaign := preload("res://tests/CampaignReplay.gd")
 const JOIN := Vector2i(2, 5)
 const FORK := Vector2i(3, 6)
 const FIRST_RICE := Vector2i(4, 5)
+const NEARBY_MILLET := Vector2i(4, 6)
 const SECOND_RICE := Vector2i(9, 10)
 const SECOND_CENTER := Vector2i(10, 10)
 const FAR_PLOT := Vector2i(11, 10)
@@ -82,16 +83,36 @@ func _fixture() -> bool:
 		"tilled_cells": ["4,5", "9,10"], "active_crops": {"4,5": rice, "9,10": rice},
 	}))
 	save.close()
+	if not await _continue_estate():
+		return false
+	return _expect(state.current_day == 9 and state.well_fields.size() == 2 and state.irrigation.channels.size() == DRY_CHANNELS.size(),
+		"The ordinary title loads the two fields with disconnected ditches.")
+
+func _continue_estate(manual_caption := "") -> bool:
 	tree.change_scene_to_file(state.TITLE_SCENE)
 	await tree.scene_changed
 	await tree.process_frame
 	await tree.process_frame
-	await _button(tree.current_scene.continue_button)
+	var title := tree.current_scene
+	if manual_caption.is_empty():
+		await _button(title.continue_button)
+	else:
+		await _button(title.archive_button)
+		var archive := title.get_node("SaveArchive")
+		var manual_row: Button
+		for row: Button in archive.records.get_children():
+			if row.text.begins_with(manual_caption):
+				manual_row = row
+				break
+		if not _expect(manual_row != null and not manual_row.disabled, "Show the older manual save in the archive."):
+			return false
+		await _button(manual_row)
 	if tree.current_scene == null:
 		await tree.scene_changed
+	if not _expect(tree.current_scene.name == "Main", "Continue the test estate through the title."):
+		return false
 	await _estate()
-	return _expect(state.current_day == 9 and state.well_fields.size() == 2 and state.irrigation.channels.size() == DRY_CHANNELS.size(),
-		"The ordinary title loads the two fields with disconnected ditches.")
+	return true
 
 func _capture(name: String) -> void:
 	if captures.is_empty() or DisplayServer.get_name() == "headless":
@@ -113,6 +134,12 @@ func _look_at_fields() -> void:
 
 func _has_supply() -> bool:
 	return state.irrigation.supplies(FIRST_RICE) and state.irrigation.supplies(SECOND_RICE)
+
+func _check_paddies(expected: Array[Vector2i], step: String) -> void:
+	var flooded: Dictionary = world.irrigation_overlay.flooded_rice
+	_expect(flooded.size() == expected.size() and expected.all(func(cell: Vector2i) -> bool: return flooded.has(cell)),
+		"Draw shallow water only under the supplied rice at " + step)
+	print("CANAL_PADDIES step=", step, " cells=", flooded.keys())
 
 func _connect_ditch() -> void:
 	await _button(ui.channel_button)
@@ -182,6 +209,7 @@ func _install_gate() -> void:
 	await _click(_point(SECOND_CENTER))
 	_expect(state.active_crops.has(SECOND_CENTER) and state.active_crops[SECOND_CENTER].id == "rice",
 		"Rice can be sown on the newly watered public plot through normal controls.")
+	_check_paddies([FIRST_RICE, SECOND_RICE, SECOND_CENTER], "public-rice-sown")
 	await _pointer(Vector2(645, 8))
 	await _capture("08-field-gate-open")
 	print("CANAL_FIELD_GATE crop=rice field=", SECOND_CENTER, " charged=", copper - state.money)
@@ -202,6 +230,7 @@ func _check_cutoff() -> void:
 		"Filling the join dries the downstream fork and plots.")
 	_expect(not state.irrigation.supplies(SECOND_CENTER) and state.irrigation.field_gates.has(SECOND_CENTER),
 		"The gate stays built when its upstream ditch runs dry.")
+	_check_paddies([], "source-cut")
 	_expect(world.irrigation_overlay.footbridges.size() == 1, "The deck still spans the empty ditch.")
 	await _capture("05-line-dry-again")
 	await _button(ui.sleep_button)
@@ -216,12 +245,14 @@ func _check_cutoff() -> void:
 	_expect(state.irrigation.field_gates.get(SECOND_CENTER) == Vector2i(8, 10)
 		and state.active_crops[SECOND_CENTER].age == 0 and state.crop_night_status(SECOND_CENTER) == state.NightGrowth.BLOCKED,
 		"Reload restores the dry gate and the growth pause on the public plot.")
+	_check_paddies([], "dry-save-loaded")
 	await _connect_ditch()
 	await _button(ui.sleep_button)
 	await tree.create_timer(1.12).timeout
 	_expect(_has_supply() and state.active_crops[FIRST_RICE].age == 1 and state.active_crops[SECOND_RICE].age == 1
 		and state.active_crops[SECOND_CENTER].age == 1,
 		"Reopening the join resumes rice growth next night, including the public plot.")
+	_check_paddies([FIRST_RICE, SECOND_RICE, SECOND_CENTER], "restored-after-dawn")
 	print("CANAL_GROWTH day=", state.current_day, " first=", state.active_crops[FIRST_RICE].age, " second=", state.active_crops[SECOND_RICE].age)
 	await _finish_gate_harvest()
 	await _button(ui.channel_button)
@@ -234,6 +265,7 @@ func _check_cutoff() -> void:
 	_expect(not state.irrigation.field_gates.has(SECOND_CENTER) and not state.irrigation.supplies(SECOND_CENTER)
 		and state.irrigation.supplies(SECOND_RICE) and state.money == copper,
 		"Dismantling the gate keeps the external ditch and has no extra charge.")
+	_check_paddies([FIRST_RICE], "field-gate-removed")
 	print("CANAL_FIELD_GATE_REMOVED supplied_center=", state.irrigation.supplies(SECOND_CENTER),
 		" supplied_bank=", state.irrigation.supplies(SECOND_RICE))
 
@@ -242,17 +274,51 @@ func _finish_gate_harvest() -> void:
 	for night in remaining:
 		await _button(ui.sleep_button)
 		await tree.create_timer(1.12).timeout
+	_check_paddies([FIRST_RICE, SECOND_RICE, SECOND_CENTER], "rice-ripe")
+	await _capture("09-ripe-rice")
 	var tribute: int = state.king_storage
 	var rice: int = state.crop_stock.count("rice")
 	await _click(_point(SECOND_CENTER))
 	await _click(_point(SECOND_RICE))
 	_expect(state.king_storage == tribute + 1 and state.crop_stock.count("rice") == rice + 1
 		and state.private_harvest_total == 1, "The gated public harvest goes to the treasury and the bank harvest goes to private stock.")
+	_check_paddies([FIRST_RICE], "plots-harvested")
 	print("CANAL_FIELD_GATE_HARVEST day=", state.current_day, " tribute=", state.king_storage, " private_rice=", state.crop_stock.count("rice"))
 	await _key(KEY_3)
 	await _click(_point(SECOND_CENTER))
 
-func run(game_tree: SceneTree, baseline := false, capture_path := "") -> void:
+func _resume_previous_release() -> void:
+	var manual: Dictionary = {}
+	for entry: Dictionary in state.saved_games():
+		if entry.source == "手动存档" and entry.day == 10 and entry.error == OK:
+			manual = entry
+			break
+	if not _expect(not manual.is_empty(), "Use the previous release's actual manual checkpoint."):
+		return
+	var path: String = manual.path
+	var original := FileAccess.get_sha256(path)
+	if not await _continue_estate(state.saved_game_caption(manual)):
+		return
+	if not _expect(state.current_day == 10 and state.irrigation.field_gates.has(SECOND_CENTER)
+		and state.crop_night_status(FIRST_RICE) == state.NightGrowth.BLOCKED
+		and state.crop_night_status(SECOND_CENTER) == state.NightGrowth.BLOCKED,
+		"The older manual save still has its two fields and a dry gate."):
+		return
+	await _look_at_fields()
+	await _pointer(Vector2(645, 8))
+	_check_paddies([], "previous-dry-save")
+	await _capture("00-previous-dry-save")
+	await _connect_ditch()
+	_check_paddies([FIRST_RICE, SECOND_RICE, SECOND_CENTER], "previous-save-reconnected")
+	await _capture("01-previous-save-reconnected")
+	await _button(ui.sleep_button)
+	await tree.create_timer(1.12).timeout
+	_expect(state.current_day == 11 and state.active_crops[FIRST_RICE].age == 1
+		and state.active_crops[SECOND_CENTER].age == 1 and FileAccess.get_sha256(path) == original,
+		"Rice grows after reconnecting and the old manual file keeps its bytes.")
+	print("CANAL_PREVIOUS_SAVE day=", state.current_day, " original=", original, " after=", FileAccess.get_sha256(path))
+
+func run(game_tree: SceneTree, baseline := false, capture_path := "", previous_release := false) -> void:
 	tree = game_tree
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Isolate the canal replay's profile."):
 		tree.quit(1)
@@ -261,12 +327,18 @@ func run(game_tree: SceneTree, baseline := false, capture_path := "") -> void:
 	state.balance.raid_first_day = 10000
 	captures = capture_path if not capture_path.is_empty() else OS.get_environment("FIEFDOM_CANAL_CAPTURES")
 	tree.root.notify_mouse_entered()
-	if await _fixture():
+	if previous_release:
+		await _resume_previous_release()
+	elif await _fixture():
 		await _look_at_fields()
 		_expect(not _has_supply(), "The dry route cannot water either crop.")
+		if not baseline:
+			_check_paddies([], "dry")
 		await _capture("01-dry-line")
 		await _connect_ditch()
 		_expect(_has_supply() and state.money == 70 - state.channel_cost(), "One construction click connects both fields and charges once.")
+		if not baseline:
+			_check_paddies([FIRST_RICE, SECOND_RICE], "ditch-connected")
 		await _capture("02-connected")
 		if baseline:
 			print("CANAL_BASELINE directional_flow=", state.irrigation.has_method("flow_distance"),
@@ -279,6 +351,14 @@ func run(game_tree: SceneTree, baseline := false, capture_path := "") -> void:
 			await tree.create_timer(0.18).timeout
 			_expect(world.irrigation_overlay.water_frame != first_frame, "The water layer advances while the field is idle.")
 			await _capture("03-water-in-motion")
+			await _key(KEY_1)
+			await _click(_point(NEARBY_MILLET))
+			await _click(_point(NEARBY_MILLET))
+			_expect(state.active_crops.get(NEARBY_MILLET, {}).get("id") == "millet"
+				and state.irrigation.supplies(NEARBY_MILLET), "Grow a watered dryland crop beside the flooded rice.")
+			_check_paddies([FIRST_RICE, SECOND_RICE], "rice-beside-watered-millet")
+			await _pointer(Vector2(645, 8))
+			await _capture("03a-rice-and-millet")
 			await _record_ripples()
 			await _cross_planks()
 			await _install_gate()
