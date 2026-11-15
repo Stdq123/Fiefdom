@@ -392,7 +392,9 @@ func _complete_expansion() -> void:
 	var management: Control = ui.panel_manager.management_panel_instance
 	if not _expect(not is_instance_valid(record) and is_instance_valid(management) and management.visible and not world.player.conversation_open
 		and management.well_field_selector.get_selected_id() == 1 and management.steward_picker.has_focus()
-		and "先翻田" in management.steward_preview.text, "The morning record opens the new field with clear instructions and selector focus."):
+		and management.include_untilled.is_visible_in_tree() and not management.include_untilled.button_pressed
+		and "包括未翻地" in management.steward_preview.text,
+		"The morning record selects the new field, focuses its steward picker and explains the optional soil plan."):
 		return
 	await _button(management.close_button)
 	_key(KEY_1)

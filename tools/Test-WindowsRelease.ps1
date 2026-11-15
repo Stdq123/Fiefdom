@@ -143,6 +143,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/SeedGardenReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ResearchRationsReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/MarketReserveReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldSoilReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FestivalPantryReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/WinterPondReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldStrokeReplay.gd') -Destination $testDirectory
@@ -304,6 +305,7 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'field-nights' -Name 'field-nights' -Replay 'field-nights' -Resolution $fullResolution
     }
     if ($FieldWorkWait) {
+        Start-VerifiedGame -Directory $release -Profile 'field-soil-plans' -Name 'field-soil-plans' -Replay 'field-soil-plans' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'away-field-work' -Name 'away-field-work' -Replay 'away-field-work' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'field-work-wait' -Name 'field-work-wait' -Replay 'field-work-wait' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'reformed-field-work-wait' -Name 'reformed-field-work-wait' -Replay 'reformed-field-work-wait'
@@ -445,6 +447,7 @@ try {
             Start-VerifiedGame -Directory $release -Profile 'field-batch-compact' -Name 'field-batch-1024x768' -Replay 'field-batch' -Resolution '1024x768'
         }
         if ($FieldWorkWait) {
+            Start-VerifiedGame -Directory $release -Profile 'field-soil-plans-compact' -Name 'field-soil-plans-1024x768' -Replay 'field-soil-plans' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'field-work-wait-compact' -Name 'field-work-wait-1024x768' -Replay 'field-work-wait' -Resolution '1024x768'
         }
     }

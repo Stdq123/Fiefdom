@@ -674,8 +674,12 @@ func _set_opening_action(label: String, tip: String, handler: Callable) -> void:
 	hud.opening_action.show()
 
 func _review_first_harvest() -> void:
-	var dialog := dialog_manager.show_first_harvest(_on_season_board_interacted)
+	var dialog := dialog_manager.show_first_harvest(_on_season_board_interacted, _plan_first_field)
 	dialog.option_selected.connect(_refresh_opening_action.unbind(1))
+
+func _plan_first_field() -> void:
+	_show_estate_management(0)
+	panel_manager.management_panel_instance.focus_seed_picker()
 
 func _on_opening_action() -> void:
 	if hud.opening_action.is_visible_in_tree() and not _map_controls_blocked():

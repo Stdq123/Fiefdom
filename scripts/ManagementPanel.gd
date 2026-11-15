@@ -27,6 +27,7 @@ const RESUME_SOWING := "resume_sowing"
 @onready var apply_private_plan: Button = $HBoxContainer/RightPanel/封地概览/SeedPlan/ApplyPrivate
 @onready var seed_timing: Label = $HBoxContainer/RightPanel/封地概览/SeedTiming
 @onready var seed_plan_note: Label = $HBoxContainer/RightPanel/封地概览/SeedPlanDetails/SeedPlanNote
+@onready var include_untilled: CheckBox = %IncludeUntilled
 @onready var sowing_rations: Button = $HBoxContainer/RightPanel/封地概览/SeedPlanDetails/SowingRations
 @onready var market_panel: VBoxContainer = $HBoxContainer/RightPanel/市场
 @onready var food_label: Label = $HBoxContainer/RightPanel/市场/FoodLabel
@@ -82,6 +83,7 @@ func _ready() -> void:
 		menu.add_theme_color_override("font_color", picker.get_theme_color("font_color", "Button"))
 	seed_plan_picker.item_selected.connect(_refresh_seed_plan_preview.unbind(1))
 	rotate_seed.toggled.connect(_refresh_seed_plan_preview.unbind(1))
+	include_untilled.toggled.connect(_update_soil_previews.unbind(1))
 	GameEvents.field_rotation_changed.connect(_refresh_seed_plan_preview)
 	GameEvents.field_rotation_changed.connect(_refresh_steward_choices)
 	apply_private_plan.pressed.connect(_apply_private_seed_plan)
@@ -230,6 +232,10 @@ func focus_sowing_plans(for_council := false) -> void:
 	_refresh_seed_plan_preview()
 	var focus: Control = seed_plan_picker if apply_private_plan.disabled else apply_private_plan
 	focus.grab_focus()
+	GamepadInput.snap_pointer_to_focus.call_deferred()
+
+func focus_seed_picker() -> void:
+	seed_plan_picker.grab_focus()
 	GamepadInput.snap_pointer_to_focus.call_deferred()
 
 func show_neighbors() -> void:
@@ -420,6 +426,8 @@ func refresh_well_fields() -> void:
 		_show_well_field(selected)
 
 func _show_well_field(index: int) -> void:
+	if steward_field_id != well_field_selector.get_item_id(index):
+		include_untilled.set_pressed_no_signal(false)
 	for child in map_grid_container.get_children():
 		map_grid_container.remove_child(child)
 		child.queue_free()
@@ -478,9 +486,14 @@ func _steward_fill_targets() -> Array[Vector2i]:
 	var targets: Array[Vector2i] = []
 	for item: MAP_GRID_ITEM in map_grid_container.get_children():
 		var cell := item.grid_pos
-		if Global.can_plan_field_seed(cell) and not Global.field_seed_plans.has(cell):
+		if (Global.can_plan_field_seed(cell) and not Global.field_seed_plans.has(cell)
+				and (Global.tilled_cells.has(cell) or include_untilled.button_pressed)):
 			targets.append(cell)
 	return targets
+
+func _update_soil_previews() -> void:
+	_refresh_seed_plan_preview()
+	_refresh_stewards()
 
 func _refresh_steward_preview() -> void:
 	steward_preview.visible = Global.field_steward_unlocked()
@@ -490,7 +503,8 @@ func _refresh_steward_preview() -> void:
 	fill_steward_plans.visible = data != null and not already_assigned and not targets.is_empty()
 	var has_tilled_plot := map_grid_container.get_children().any(
 		func(tile: MAP_GRID_ITEM) -> bool: return Global.tilled_cells.has(tile.grid_pos))
-	var till_hint := "先翻田，再安排续播。"
+	var till_hint := ("勾选「包括未翻地」，即可安排门客先翻地。" if include_untilled.visible
+		else "先翻田，再安排续播。")
 	apply_steward.disabled = data == null
 	apply_steward.text = "交给管事"
 	if data == null:
@@ -503,8 +517,10 @@ func _refresh_steward_preview() -> void:
 	if keep_plans:
 		targets.clear()
 	var public_count := 0
+	var untilled_count := 0
 	for cell in targets:
 		public_count += int(Global.is_public_plot(cell))
+		untilled_count += int(not Global.tilled_cells.has(cell))
 	var private_count := targets.size() - public_count
 	var ration := Global.night_ration_for_duty(RetainerData.Duty.STEWARD)
 	var change := ration - Global.retainer_night_ration(data)
@@ -526,6 +542,8 @@ func _refresh_steward_preview() -> void:
 		plans.append("公田 %d 格续播%s" % [public_count, ItemManager.crop_label(Global.tribute_seed())])
 	if private_count > 0:
 		plans.append("私田 %d 格按时令续播" % private_count)
+	if untilled_count > 0:
+		plans.append("其中 %d 格待门客翻地" % untilled_count)
 	var plan_note := "，".join(plans)
 	if keep_plans:
 		plan_note = "沿用当前的作物和续播安排。"
@@ -628,11 +646,20 @@ func _private_plan_targets(plan: String) -> Array[Vector2i]:
 				if deferred:
 					targets.append(cell)
 			_:
+				if not plan.is_empty() and not include_untilled.button_pressed and not Global.tilled_cells.has(cell):
+					continue
 				if Global.field_seed_plans.get(cell, "") != plan:
 					targets.append(cell)
 	return targets
 
 func _refresh_seed_plan_preview() -> void:
+	var had_soil_focus := include_untilled.has_focus()
+	include_untilled.visible = map_grid_container.get_children().any(func(item: MAP_GRID_ITEM) -> bool:
+		return not Global.tilled_cells.has(item.grid_pos) and Global.can_plan_field_seed(item.grid_pos))
+	if not include_untilled.visible:
+		include_untilled.set_pressed_no_signal(false)
+		if had_soil_focus:
+			focus_seed_picker()
 	seed_plan_picker.set_item_disabled(defer_sowing_index, not Global.field_sowing_can_defer())
 	seed_plan_picker.set_item_disabled(resume_sowing_index, Global.deferred_field_sowing.is_empty())
 	if seed_plan_picker.is_item_disabled(seed_plan_picker.selected):
@@ -649,6 +676,8 @@ func _refresh_seed_plan_preview() -> void:
 		apply_private_plan.disabled = true
 		apply_private_plan.text = "安排私田"
 		seed_plan_note.text = "可选固定作物或按时令续播，再点田格或批量安排私田。"
+		if include_untilled.visible:
+			seed_plan_note.text += " 生地由门客先翻。"
 		return
 	var plan := _selected_seed_plan()
 	var targets := _private_plan_targets(plan)
@@ -668,24 +697,30 @@ func _refresh_seed_plan_preview() -> void:
 	apply_private_plan.text = "安排私田 · %d 格" % targets.size()
 	_show_seed_timing(plan, crop)
 	if targets.is_empty():
-		seed_plan_note.text = "点田格可调整单格。批量范围为当前井田的已翻私田。"
+		seed_plan_note.text = ("可点单格安排翻地和下茬。" if include_untilled.visible else
+			"点田格可调整单格。批量安排当前井田的私田。")
 		return
 	var open_plots := 0
+	var untilled := 0
 	var after_harvest := 0
 	var waiting_for_water := 0
 	var changed_seed := 0
 	var needs_canal := crop != null and crop.is_water_crop
 	for cell in targets:
 		var occupied := Global.active_crops.has(cell)
+		var prepared := Global.tilled_cells.has(cell)
+		untilled += int(not prepared)
 		if occupied:
 			after_harvest += 1
 		if needs_canal and Global.next_seed_for_plan(cell, plan) == seed_id and not Global.irrigation.supplies(cell):
 			waiting_for_water += 1
-		elif not occupied:
+		elif not occupied and prepared:
 			open_plots += 1
 		if Global.field_seed_plans.has(cell):
 			changed_seed += 1
 	var details := PackedStringArray()
+	if untilled > 0:
+		details.append("%d 格先翻地" % untilled)
 	if open_plots > 0:
 		details.append("%d 格空畦可播" % open_plots)
 	if after_harvest > 0:

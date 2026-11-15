@@ -178,6 +178,9 @@ func wait_for_retainers() -> Dictionary:
 	var result := Global.wait_for_field_work()
 	if result.is_empty():
 		return result
+	for cell: Vector2i in Global.tilled_cells:
+		if tile_map.get_cell_atlas_coords(cell).y == 0:
+			_draw_tilled_plot(cell)
 	crops_layer.clear()
 	restore_crops_visuals()
 	for worker: Retainer in retainer_instances.values():
@@ -539,11 +542,15 @@ func crop_job(worker: Retainer, cell: Vector2i) -> Global.FieldJob:
 
 func find_work_crop(worker: Retainer) -> Vector2i:
 	var assigned := worker.data.assigned_area
-	if assigned != Retainer.NO_CELL and crop_job(worker, assigned) != Global.FieldJob.NONE:
+	if Global.tilled_cells.has(assigned) and crop_job(worker, assigned) != Global.FieldJob.NONE:
 		return assigned
 	var nearest := Retainer.NO_CELL
 	var distance := INF
-	for cell: Vector2i in Global.tilled_cells:
+	for cell: Vector2i in Global.field_work_cells():
+		if Global.tilled_cells.has(nearest) and not Global.tilled_cells.has(cell):
+			break
+		if cell == assigned and crop_job(worker, cell) != Global.FieldJob.NONE:
+			return cell
 		var distance_to_crop := worker.global_position.distance_squared_to(to_global(get_crop_world_pos(cell)))
 		if distance_to_crop < distance and crop_job(worker, cell) != Global.FieldJob.NONE:
 			distance = distance_to_crop
@@ -881,15 +888,24 @@ func _show_field_impact(cell: Vector2i, action: ToolGesture.Action) -> void:
 	motion.tween_callback(impact.queue_free)
 
 func _till_soil(grid_pos: Vector2i) -> void:
+	if not till_plot(grid_pos):
+		return
 	Global.current_stamina -= field_cost(FieldAction.TILL)
 	GameEvents.stamina_changed.emit(Global.current_stamina)
+	player.show_action(Player.Action.TILL, to_global(get_crop_world_pos(grid_pos)))
+
+func _draw_tilled_plot(grid_pos: Vector2i) -> void:
 	var atlas := tile_map.get_cell_atlas_coords(grid_pos)
 	tile_map.set_cell(grid_pos, 0, Vector2i(atlas.x, 1))
-	Global.tilled_cells[grid_pos] = true
+
+func till_plot(grid_pos: Vector2i) -> bool:
+	if not Global.till_field_plot(grid_pos):
+		return false
+	_draw_tilled_plot(grid_pos)
 	GameEvents.farm_state_changed.emit()
 	_show_field_impact(grid_pos, Player.Action.TILL)
-	player.show_action(Player.Action.TILL, to_global(get_crop_world_pos(grid_pos)))
 	print("Tilled at ", grid_pos)
+	return true
 
 func _plant_crop(grid_pos: Vector2i) -> void:
 	if not sow_crop(grid_pos, current_seed_id):

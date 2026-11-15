@@ -23,6 +23,8 @@ func refresh_plot() -> void:
 	text = "%s · %s" % ["公田" if public_plot else "私田", state]
 	add_theme_color_override("font_color", Color("#efce80") if public_plot else Color("#d5e3ce"))
 	tooltip_text = "可安排续播" if tilled else "先到田里翻地"
+	if not tilled and Global.can_plan_field_seed(grid_pos):
+		tooltip_text = "选好续播后点田格，门客会先翻地"
 	if not crop.is_empty() and crop.data.is_perennial:
 		tooltip_text = "桑收后留根，可反复采叶"
 	var plan: String = Global.field_seed_plans.get(grid_pos, "")
@@ -44,6 +46,8 @@ func refresh_plot() -> void:
 		tooltip_text = "接通水渠后才会补播稻种" if waiting else "照料门客或管事会在空畦上补播"
 		if plan == FieldSeedPlan.SEASONAL:
 			tooltip_text = "按补播当天的时令和供水选种。当前作物照常生长。"
+		if not tilled:
+			tooltip_text = "门客先翻地，再按安排播种。" + ("稻种需要通水的水渠。" if waiting else "")
 		if deferred:
 			tooltip_text = "定下田制后按原安排续播，也可在这里提前恢复。"
 

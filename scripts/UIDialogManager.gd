@@ -78,7 +78,7 @@ func _pavilion_story_line(id: String, place: String, day: int, index: int) -> vo
 			dialog.tree_exited.connect(_pavilion_story_line.bind(id, place, day, index + 1), CONNECT_DEFERRED | CONNECT_ONE_SHOT)
 	)
 
-func show_first_harvest(open_orders: Callable) -> Control:
+func show_first_harvest(open_orders: Callable, arrange_fields: Callable) -> Control:
 	var use := Global.market_crop_plan(1)
 	var crop: String = use.keys()[0]
 	var crop_name := ItemManager.crop_label(crop)
@@ -105,13 +105,20 @@ func show_first_harvest(open_orders: Callable) -> Control:
 	sack.atlas = ESTATE_STORAGE
 	sack.region = Rect2(0, 0, 16, 16)
 	sack.filter_clip = true
-	var dialog := _open("首茬收成", "私仓", "\n".join(lines),
-		["留作物 · 看时令单", "用 1 份%s换口粮" % crop_name, "稍后再说"], [], sack)
+	var choices: Array[String] = ["留作物 · 看时令单", "用 1 份%s换口粮" % crop_name, "稍后再说"]
+	var has_keeper := Global.retainers.any(func(worker: RetainerData) -> bool:
+		return worker.duty in [RetainerData.Duty.FIELD, RetainerData.Duty.STEWARD])
+	if has_keeper:
+		choices.insert(1, "安排门客种下茬")
+	var dialog := _open("首茬收成", "私仓", "\n".join(lines), choices, [], sack)
 	dialog.option_selected.connect(func(index: int):
 		if index == 0:
 			Global.first_harvest_reviewed = true
 			open_orders.call()
-		elif index == 1 and Global.convert_inventory_to_food(1, crop):
+		elif has_keeper and index == 1:
+			Global.first_harvest_reviewed = true
+			arrange_fields.call()
+		elif index == (2 if has_keeper else 1) and Global.convert_inventory_to_food(1, crop):
 			Global.first_harvest_reviewed = true
 			GameEvents.world_notice.emit("%s转粮 · 口粮 +1" % crop_name)
 	)

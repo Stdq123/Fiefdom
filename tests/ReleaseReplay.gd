@@ -80,6 +80,9 @@ func _run() -> void:
 		"market-reserve", "market-reserve-baseline", "market-reserve-resume":
 			var replay = load("res://tests/MarketReserveReplay.gd").new()
 			await replay.run_market_reserve(tree, arguments[0], capture_directory)
+		"field-soil-plans", "field-soil-baseline", "field-soil-resume":
+			var replay = load("res://tests/FieldSoilReplay.gd").new()
+			await replay.run_soil(tree, arguments[0], capture_directory)
 		"research-rations", "research-rations-legacy":
 			var replay = load("res://tests/ResearchRationsReplay.gd").new()
 			replay.legacy = arguments[0] == "research-rations-legacy"

@@ -35,10 +35,11 @@ const GATHERING_BEATS := 4
 const GATHERING_MIN_HITS := 3
 const GATHERING_MUSIC_XP := 30
 const FIELD_NIGHT_COUNTS := ["ready", "growing", "public_ripe", "private_ripe", "dry", "blocked"]
-const FIELD_WORK_JOBS := ["watered", "harvested", "sown"]
+const FIELD_WORK_JOBS := ["tilled", "watered", "harvested", "sown"]
 const FIELD_WORK_YIELDS := ["tribute", "stock", "copper", "leaves"]
 const FIELD_WORK_TOTALS := {
-	"watered": "浇水 %d 格", "harvested": "收割 %d 格", "sown": "补播 %d 格", "tribute": "国库 +%d",
+	"tilled": "翻地 %d 格", "watered": "浇水 %d 格", "harvested": "收割 %d 格",
+	"sown": "补播 %d 格", "tribute": "国库 +%d",
 	"stock": "私仓 +%d", "copper": "铜钱 +%d", "leaves": "桑叶 +%d",
 }
 const DAY_START_HOUR := 6.0
@@ -930,10 +931,22 @@ func water_field_crop(cell: Vector2i) -> bool:
 	return true
 
 func can_plan_field_seed(cell: Vector2i) -> bool:
-	if not tilled_cells.has(cell):
+	if not tilled_cells.has(cell) and (not first_tribute_delivered() or not _unlocked_field_contains(cell)):
 		return false
 	var crop: Dictionary = active_crops.get(cell, {})
 	return crop.is_empty() or not crop.data.is_perennial
+
+func till_field_plot(cell: Vector2i) -> bool:
+	if outcome != Outcome.RUNNING or tilled_cells.has(cell) or not _unlocked_field_contains(cell):
+		return false
+	tilled_cells[cell] = true
+	return true
+
+func _unlocked_field_contains(cell: Vector2i) -> bool:
+	for field in well_fields:
+		if field.is_unlocked and _well_field_cells(field.center_pos).has_point(cell):
+			return true
+	return false
 
 func set_field_seed_plan(cell: Vector2i, plan: String) -> void:
 	if not can_plan_field_seed(cell):
@@ -971,7 +984,7 @@ func next_seed_for_plan(cell: Vector2i, plan: String) -> String:
 	return FieldSeedPlan.crop_id(plan) if prepared else FieldSeedPlan.BEANS
 
 func planned_field_seed(cell: Vector2i) -> String:
-	if active_crops.has(cell) or deferred_field_sowing.has(cell):
+	if not tilled_cells.has(cell) or active_crops.has(cell) or deferred_field_sowing.has(cell):
 		return ""
 	var seed_id := next_seed_for_plan(cell, field_seed_plans.get(cell, ""))
 	if seed_id.is_empty():
@@ -992,7 +1005,7 @@ func sow_field_crop(cell: Vector2i, seed_id: String) -> bool:
 	GameEvents.farm_state_changed.emit()
 	return true
 
-enum FieldJob { NONE, WATER, SOW, HARVEST }
+enum FieldJob { NONE, WATER, SOW, HARVEST, TILL }
 
 func field_job(worker: RetainerData, cell: Vector2i) -> FieldJob:
 	if worker.duty == RetainerData.Duty.STEWARD:
@@ -1006,7 +1019,17 @@ func field_job(worker: RetainerData, cell: Vector2i) -> FieldJob:
 			return FieldJob.WATER
 		if not planned_field_seed(cell).is_empty():
 			return FieldJob.SOW
+		if not tilled_cells.has(cell) and field_seed_plans.has(cell) and not deferred_field_sowing.has(cell):
+			return FieldJob.TILL
 	return FieldJob.NONE
+
+func field_work_cells() -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	cells.assign(tilled_cells.keys())
+	for cell: Vector2i in field_seed_plans:
+		if not tilled_cells.has(cell):
+			cells.append(cell)
+	return cells
 
 func crop_rotation_bonus(cell: Vector2i, crop: CropData) -> int:
 	return int(not crop.restores_fertility and fertile_cells.has(cell))
@@ -1042,7 +1065,7 @@ func harvest_field_crop(cell: Vector2i) -> Dictionary:
 	return proceeds
 
 func advance_away_field_work(seconds: float) -> void:
-	if outcome != Outcome.RUNNING or tilled_cells.is_empty():
+	if outcome != Outcome.RUNNING or (tilled_cells.is_empty() and field_seed_plans.is_empty()):
 		return
 	for worker in retainers:
 		if not worker.works_fields():
@@ -1066,7 +1089,7 @@ func field_wait_offer() -> Dictionary:
 	var time_left := _daylight_left()
 	var plots := 0
 	var can_finish := false
-	for cell: Vector2i in tilled_cells:
+	for cell: Vector2i in field_work_cells():
 		var covered := false
 		for worker in retainers:
 			if field_job(worker, cell) != FieldJob.NONE:
@@ -1134,7 +1157,10 @@ func _timed_work_plot(worker: RetainerData, reserved: Array[Vector2i] = []) -> V
 	var anchor := worker.assigned_area if worker.assigned_area != RetainerData.NO_ASSIGNMENT else FIRST_FIELD_CENTER
 	var nearest := RetainerData.NO_ASSIGNMENT
 	var distance := INF
-	for cell: Vector2i in tilled_cells:
+	for cell: Vector2i in field_work_cells():
+		# Work already in cultivation takes priority over opening new soil.
+		if tilled_cells.has(nearest) and not tilled_cells.has(cell):
+			break
 		var distance_to_anchor := cell.distance_squared_to(anchor)
 		if distance_to_anchor < distance and cell not in reserved and field_job(worker, cell) != FieldJob.NONE:
 			nearest = cell
@@ -1147,6 +1173,10 @@ func _finish_timed_field_work(job: FieldJob, cell: Vector2i, report: Dictionary)
 		for key in FIELD_WORK_TOTALS:
 			report[key] = 0
 	match job:
+		FieldJob.TILL:
+			if till_field_plot(cell):
+				report.tilled += 1
+				GameEvents.farm_state_changed.emit()
 		FieldJob.WATER:
 			if water_field_crop(cell):
 				report.watered += 1

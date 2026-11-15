@@ -3,10 +3,12 @@ class_name Retainer
 
 enum State { IDLE, MOVE, WORK }
 const ARROW_SCENE := preload("res://scenes/Arrow.tscn")
+const TILL_SOUND := preload("res://assets/audio/farm/till.wav")
 const WATER_SOUND := preload("res://assets/audio/farm/retainer-water.wav")
 const SOW_SOUND := preload("res://assets/audio/farm/sow.wav")
 const HARVEST_SOUND := preload("res://assets/audio/farm/harvest.wav")
 const WORK_GESTURES := {
+	Global.FieldJob.TILL: ToolGesture.Action.TILL,
 	Global.FieldJob.WATER: ToolGesture.Action.WATER,
 	Global.FieldJob.SOW: ToolGesture.Action.SOW,
 	Global.FieldJob.HARVEST: ToolGesture.Action.HARVEST,
@@ -152,6 +154,9 @@ func _finish_field_work() -> void:
 	var world := get_parent()
 	var sound: AudioStream
 	match field_job:
+		Global.FieldJob.TILL:
+			if Global.field_job(data, target_grid_pos) == Global.FieldJob.TILL and world.till_plot(target_grid_pos):
+				sound = TILL_SOUND
 		Global.FieldJob.WATER:
 			if world.water_crop(target_grid_pos):
 				sound = WATER_SOUND

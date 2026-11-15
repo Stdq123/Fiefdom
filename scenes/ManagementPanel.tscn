@@ -230,6 +230,15 @@ theme_override_colors/font_color = Color(0.79, 0.82, 0.70, 1)
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 
+[node name="IncludeUntilled" type="CheckBox" parent="HBoxContainer/RightPanel/封地概览/SeedPlanDetails"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+text = "包括未翻地"
+tooltip_text = "批量续播和补齐管事的安排也可标记未翻地。门客先翻地，再按安排播种。"
+
 [node name="SowingRations" type="Button" parent="HBoxContainer/RightPanel/封地概览/SeedPlanDetails"]
 visible = false
 custom_minimum_size = Vector2(136, 34)
