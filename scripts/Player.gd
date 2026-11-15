@@ -256,7 +256,7 @@ func _apply_camera_zoom() -> void:
 func arrive_at(marker: Marker2D) -> void:
 	arrive_at_position(marker.global_position, marker.global_transform.x)
 
-func restore_walking_checkpoint(bounds: Rect2) -> void:
+func restore_walking_checkpoint(bounds: Rect2, fixtures: Array[Rect2] = []) -> void:
 	var checkpoint := Global.restored_walking_checkpoint
 	Global.restored_walking_checkpoint = {}
 	if checkpoint.is_empty():
@@ -270,8 +270,28 @@ func restore_walking_checkpoint(bounds: Rect2) -> void:
 		return
 	query.exclude = [get_rid()]
 	query.collision_mask = collision_mask
-	if get_world_2d().direct_space_state.intersect_shape(query, 1).is_empty():
-		arrive_at_position(checkpoint.point, checkpoint.facing)
+	var offsets: Array[Vector2] = [Vector2.ZERO]
+	const CLEARANCE := 0.8
+	# Scene-built fixtures can take a physics tick to appear in the space query.
+	for fixture in fixtures:
+		if footprint.intersects(fixture):
+			offsets.append_array([
+				Vector2(fixture.position.x - footprint.end.x - CLEARANCE, 0),
+				Vector2(fixture.end.x - footprint.position.x + CLEARANCE, 0),
+				Vector2(0, fixture.position.y - footprint.end.y - CLEARANCE),
+				Vector2(0, fixture.end.y - footprint.position.y + CLEARANCE),
+			])
+	offsets.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.length_squared() < b.length_squared())
+	var saved_transform := query.transform
+	for offset in offsets:
+		var candidate := Rect2(footprint.position + offset, footprint.size)
+		if (not bounds.encloses(candidate) or _overlaps_threshold(candidate)
+				or fixtures.any(func(fixture: Rect2) -> bool: return candidate.intersects(fixture))):
+			continue
+		query.transform = saved_transform.translated(offset)
+		if get_world_2d().direct_space_state.intersect_shape(query, 1).is_empty():
+			arrive_at_position(checkpoint.point + offset, checkpoint.facing)
+			return
 
 func _overlaps_threshold(footprint: Rect2) -> bool:
 	for area: Area2D in get_tree().get_nodes_in_group("travel_threshold"):

@@ -44,7 +44,9 @@ func _ready() -> void:
 	var destinations: Dictionary[String, Vector2] = {}
 	for stall: MarketStall in $Stalls.get_children():
 		stall.opened.connect(_open_stall)
-		destinations[MarketStall.TITLES[stall.kind]] = ground.to_local(stall.to_global(MarketStall.APPROACH))
+		var approach := ground.to_local(stall.to_global(MarketStall.APPROACH))
+		destinations[MarketStall.TITLES[stall.kind]] = approach
+		ground.add_stall_yard(stall.kind, approach, $Scenery)
 	destinations[Global.MARKET_ORDERS] = ground.to_local($OrderCart.to_global(ORDER_CART.APPROACH))
 	destinations[Global.MARKET_RETURN] = ground.to_local($EstateRoad.global_position)
 	$OrderCart.opened.connect(_open_orders)
@@ -53,7 +55,7 @@ func _ready() -> void:
 		lighting.place_lamp($Scenery, foot, 0.82)
 	lighting.place_lamp($Scenery, LAYOUT.DYE_EAVE + Vector2(-18, 4), 0.64, 0.08)
 	player.arrive_at($EstateRoadArrival)
-	player.restore_walking_checkpoint(LAYOUT.BOUNDS)
+	player.restore_walking_checkpoint(LAYOUT.BOUNDS, ground.stall_display_footprints())
 	player.footstep.connect(_step)
 	market_map.setup(self, destinations, $MarketWaypoint)
 	market_map.open_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)

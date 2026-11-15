@@ -230,6 +230,8 @@ func _draw_chart() -> void:
 		paper.draw_colored_polygon(_map_outline(surface), Color("#b99c6c"))
 	paper.draw_colored_polygon(_map_outline(ground.paving), Color("#beb8a0"))
 	paper.draw_colored_polygon(_map_outline(ground.dye_paving), Color("#beb8a0"))
+	for apron in ground.stall_paving.values():
+		paper.draw_colored_polygon(_map_outline(apron.outline), Color("#beb8a0"))
 	var workshop := Rect2(_map_point(LAYOUT.DYE_HOUSE + Vector2(-45, -48)), Vector2(88, 40) * _scale())
 	paper.draw_rect(workshop.grow(1.5), INK)
 	paper.draw_rect(workshop, Color("#7b8790"))

@@ -170,6 +170,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RotationGuideReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/OpeningOrderReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/MarketDyeYardReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/MarketStreetReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/SowingHoldReplay.gd') -Destination $testDirectory
     foreach ($file in 'MarketOrderReplay.gd', 'AutumnExhibitReplay.gd', 'SheepfoldReplay.gd', 'RavineMapReplay.gd', 'CreekTrapReplay.gd', 'FieldNightReplay.gd', 'FieldWorkWaitReplay.gd', 'AwayFieldWorkReplay.gd', 'CouncilSilkReplay.gd') {
         Copy-Item -LiteralPath (Join-Path $repo "tests/$file") -Destination $testDirectory
@@ -373,6 +374,8 @@ try {
     }
     if ($MarketWayfinding) {
         Start-VerifiedGame -Directory $release -Profile 'west-market' -Name 'west-market' -Replay 'west-market' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'market-street' -Name 'market-street' -Replay 'market-street' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'market-street-winter' -Name 'market-street-winter' -Replay 'market-street-winter'
         if ($Capture) {
             Start-VerifiedGame -Directory $release -Profile 'market-audio' -Name 'market-audio' -Replay 'market-audio' -Resolution $fullResolution
         }

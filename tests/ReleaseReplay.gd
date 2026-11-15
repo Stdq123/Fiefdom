@@ -374,6 +374,8 @@ func _run() -> void:
 			var replay = load("res://tests/WestMarketReplay.gd").new()
 			replay.capture_dir = capture_directory
 			await replay.run(tree)
+		"market-street", "market-street-before", "market-street-resume", "market-street-rain", "market-street-winter":
+			await load("res://tests/MarketStreetReplay.gd").new().run_street(tree, capture_directory, arguments[0])
 		"market-audio", "market-audio-before":
 			var replay = load("res://tests/MarketAudioReplay.gd").new()
 			replay.capture_dir = capture_directory

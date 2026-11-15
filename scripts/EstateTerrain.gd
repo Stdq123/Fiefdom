@@ -148,36 +148,6 @@ static func draw_loam(canvas: CanvasItem, polygon: PackedVector2Array, soil: Col
 		uvs.append(point / size)
 	canvas.draw_polygon(polygon, PackedColorArray([soil]), uvs, LOAM)
 
-static func draw_paving(canvas: CanvasItem, outline: PackedVector2Array, loam: Color, joint_origin: float) -> void:
-	var grout := loam.lerp(Color("#62675e"), 0.66)
-	canvas.draw_colored_polygon(outline, grout)
-	var area := Rect2(outline[0], Vector2.ZERO)
-	for point in outline:
-		area = area.expand(point)
-	for row in range(floori(area.position.y / 8.0), ceili(area.end.y / 8.0)):
-		for column in range(floori((area.position.x - joint_origin) / 15.0) - 1,
-				ceili((area.end.x - joint_origin) / 15.0)):
-			var x := joint_origin + column * 15 + posmod(row, 2) * 7
-			var y := row * 8
-			var grain := posmod(column * 7 + row * 17, 13)
-			var slab := Rect2(x, y, 13 + grain % 2, 6)
-			var corners := EstateLayout.corners(slab)
-			if not Geometry2D.is_point_in_polygon(slab.get_center(), outline):
-				continue
-			var stone := grout.lerp(Color("#bab49a"), 0.26 + 0.034 * grain)
-			var inside := true
-			for corner in corners:
-				if not Geometry2D.is_point_in_polygon(corner, outline):
-					inside = false
-					break
-			if inside:
-				canvas.draw_rect(slab, stone.darkened(0.16))
-				canvas.draw_rect(Rect2(slab.position, slab.size - Vector2(1, 1)), stone)
-				canvas.draw_rect(Rect2(slab.position + Vector2(1, 0), Vector2(4 + grain % 6, 1)), stone.lightened(0.15))
-			else:
-				for fragment in Geometry2D.intersect_polygons(corners, outline):
-					canvas.draw_colored_polygon(fragment, stone.darkened(0.09))
-
 func draw_meadow(canvas: CanvasItem, grass: Color, winter: bool) -> void:
 	for index in meadow_sprigs.size():
 		if winter and index % 3 != 0:

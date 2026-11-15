@@ -3,6 +3,8 @@ extends Node2D
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const LAYOUT := preload("res://scripts/WestMarketLayout.gd")
 const TERRAIN := preload("res://scripts/EstateTerrain.gd")
+const STONE_PAVING := preload("res://scripts/StonePaving.gd")
+const YARD_DISPLAY := preload("res://scripts/MarketYardDisplay.gd")
 const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
 const ROAD_WEATHER := preload("res://scripts/RoadWeather.gd")
 const BACKDROP := Rect2(-1600, -1300, 3200, 2600)
@@ -27,6 +29,18 @@ const DYE_YARD := [
 	Vector2(354, -2), Vector2(344, 18), Vector2(315, 22), Vector2(277, 24),
 	Vector2(242, 13), Vector2(219, 0),
 ]
+const STALL_PAVING := [
+	[Vector2(-43, -26), Vector2(31, -26), Vector2(37, -18), Vector2(37, 2),
+		Vector2(21, 10), Vector2(-21, 13), Vector2(-44, 8), Vector2(-50, 0), Vector2(-48, -15)],
+	[Vector2(-38, -22), Vector2(28, -23), Vector2(34, -9), Vector2(27, 11),
+		Vector2(-18, 16), Vector2(-46, 26), Vector2(-99, 30), Vector2(-118, 25),
+		Vector2(-121, 15), Vector2(-113, 0), Vector2(-89, -6), Vector2(-58, -1), Vector2(-47, -13)],
+	[Vector2(-45, -25), Vector2(39, -25), Vector2(48, -11), Vector2(46, 2),
+		Vector2(29, 9), Vector2(-9, 15), Vector2(-39, 14), Vector2(-50, 7), Vector2(-54, -10)],
+]
+const STALL_STONE := [Color("#ac9875"), Color("#9ca79a"), Color("#bfb19b")]
+const DISPLAY_OFFSETS := [Vector2(-42, 9), Vector2(-103, 22), Vector2(-39, 9)]
+const DISPLAY_NAMES := [&"GrainBaskets", &"FishTray", &"SilkTable"]
 const GROVES := [
 	Rect2(-505, -225, 166, 457), Rect2(-349, -233, 283, 65), Rect2(-48, -238, 244, 126),
 	Rect2(264, -222, 238, 205), Rect2(-327, -65, 206, 148), Rect2(-3, -62, 151, 100),
@@ -53,10 +67,10 @@ const TREE_FEET := [
 	Vector2(348, 164), Vector2(383, 116), Vector2(426, 144), Vector2(448, 91),
 ]
 const STORAGE := [
-	Vector3i(-381, 97, 0), Vector3i(-370, 103, 1), Vector3i(-390, 108, 0), Vector3i(-218, 194, 3),
-	Vector3i(-178, -101, 2), Vector3i(-267, -112, 2), Vector3i(-259, -103, 3),
+	Vector3i(-381, 97, 0), Vector3i(-370, 103, 1), Vector3i(-218, 194, 3),
+	Vector3i(-178, -101, 2), Vector3i(-267, -112, 2),
 	Vector3i(223, -7, 2), Vector3i(217, -12, 3),
-	Vector3i(130, 154, 3), Vector3i(133, 165, 2), Vector3i(256, 175, 3),
+	Vector3i(256, 175, 3),
 ]
 const STORAGE_PROPS := [LANDSCAPE.Prop.GRAIN_SACK, LANDSCAPE.Prop.OPEN_SACK, LANDSCAPE.Prop.JAR, LANDSCAPE.Prop.LIDDED_JAR]
 const FENCE_FEET := [
@@ -87,6 +101,11 @@ var street: Array[PackedVector2Array] = []
 var street_shoulders: Array[PackedVector2Array] = []
 var paving: PackedVector2Array
 var dye_paving: PackedVector2Array
+var stall_paving: Dictionary[int, STONE_PAVING] = {}
+var _paving_art: STONE_PAVING
+var _dye_paving_art: STONE_PAVING
+var _lane_surfaces: Array[PackedVector2Array] = []
+var _displays: Array[YARD_DISPLAY] = []
 var main_path: PackedVector2Array
 var verge_art := TERRAIN.new(LAYOUT.BOUNDS.position.y)
 var weather := ROAD_WEATHER.new(RAIN_PUDDLES, SNOW_DRIFTS)
@@ -100,13 +119,16 @@ func _ready() -> void:
 	street.append(_road_outline(main_path, 22.0))
 	var dye_path := EstateLayout.sample_road(PackedVector2Array(LAYOUT.DYE_LANE))
 	dye_paving = _road_outline(dye_path, 6.0)
-	street.append(_road_outline(dye_path, 11.0))
+	_lane_surfaces.append(_road_outline(dye_path, 11.0))
 	for lane: Array in [LAYOUT.FISH_LANE, LAYOUT.SILK_LANE, LAYOUT.CART_DRIVE]:
-		street.append(_road_outline(EstateLayout.sample_road(PackedVector2Array(lane)), 14.0))
+		_lane_surfaces.append(_road_outline(EstateLayout.sample_road(PackedVector2Array(lane)), 14.0))
+	street.append_array(_lane_surfaces)
 	for yard: Array in [GRAIN_YARD, FISH_YARD, SILK_YARD, DYE_YARD]:
 		street.append(PackedVector2Array(yard))
 	for surface in street:
 		street_shoulders.append(Geometry2D.offset_polygon(surface, 2.0)[0])
+	_paving_art = STONE_PAVING.new(paving, LAYOUT.EAST_GATE.x, _lane_surfaces)
+	_dye_paving_art = STONE_PAVING.new(dye_paving, LAYOUT.DYE_JUNCTION.x, [paving])
 
 	var basin := StaticBody2D.new()
 	basin.name = "BasinBody"
@@ -157,11 +179,39 @@ func is_on_street(foot: Vector2) -> bool:
 	for surface in street:
 		if Geometry2D.is_point_in_polygon(at, surface):
 			return true
-	return false
+	return _stall_paving_at(at)
 
 func is_on_paving(foot: Vector2) -> bool:
 	var location := to_local(foot)
-	return Geometry2D.is_point_in_polygon(location, paving) or Geometry2D.is_point_in_polygon(location, dye_paving)
+	return Geometry2D.is_point_in_polygon(location, paving) or Geometry2D.is_point_in_polygon(location, dye_paving) \
+		or _stall_paving_at(location)
+
+func _stall_paving_at(location: Vector2) -> bool:
+	for apron: STONE_PAVING in stall_paving.values():
+		if Geometry2D.is_point_in_polygon(location, apron.outline):
+			return true
+	return false
+
+func add_stall_yard(kind: MarketStall.Kind, approach: Vector2, layer: Node2D) -> void:
+	var outline := PackedVector2Array()
+	for point: Vector2 in STALL_PAVING[kind]:
+		outline.append(approach + point)
+	var joins := _lane_surfaces.duplicate()
+	joins.append(paving)
+	stall_paving[kind] = STONE_PAVING.new(outline, approach.x, joins, 18.0)
+	var foot: Vector2 = approach + DISPLAY_OFFSETS[kind]
+	var display := YARD_DISPLAY.new(kind, Global.has_rain())
+	display.name = DISPLAY_NAMES[kind]
+	display.position = foot
+	layer.add_child(display)
+	_displays.append(display)
+	queue_redraw()
+
+func stall_display_footprints() -> Array[Rect2]:
+	var footprints: Array[Rect2] = []
+	for display in _displays:
+		footprints.append(display.global_transform * YARD_DISPLAY.FOOTPRINT)
+	return footprints
 
 func distance_to_trees(foot: Vector2) -> float:
 	var at := to_local(foot)
@@ -176,6 +226,7 @@ func _draw() -> void:
 	var shade: Color = palette[1]
 	var dirt: Color = palette[3]
 	var raining := Global.has_rain()
+	var winter := Global.season_index() == Global.Season.WINTER
 	if raining:
 		meadow = meadow.lerp(Color("#344c4c"), 0.30)
 		dirt = dirt.darkened(0.16)
@@ -186,15 +237,19 @@ func _draw() -> void:
 			edge.append((grove.position + grove.size * point).round())
 		draw_colored_polygon(edge, meadow.lerp(shade, 0.48))
 	draw_texture_rect(LANDSCAPE.GRAIN, BACKDROP, true, Color(1.0, 1.0, 1.0, 0.75))
-	verge_art.draw_verge(self, main_path, 44.0, meadow, Global.season_index() == Global.Season.WINTER)
+	verge_art.draw_verge(self, main_path, 44.0, meadow, winter)
 	for shoulder in street_shoulders:
 		draw_colored_polygon(shoulder, dirt.lerp(meadow, 0.52))
 	for surface in street:
 		TERRAIN.draw_loam(self, surface, dirt)
-	TERRAIN.draw_paving(self, dye_paving, dirt, LAYOUT.DYE_JUNCTION.x)
-	TERRAIN.draw_paving(self, paving, dirt, LAYOUT.EAST_GATE.x)
+	_dye_paving_art.draw(self, dirt, winter, raining)
+	_paving_art.draw(self, dirt, winter, raining)
+	for kind: int in stall_paving:
+		stall_paving[kind].draw(self, dirt, winter, raining, STALL_STONE[kind])
 	_draw_basin()
 	var contact_shade := LANDSCAPE.scenery_shade(raining)
+	for display in _displays:
+		YARD_DISPLAY.draw_shadow(self, to_local(display.global_position), contact_shade)
 	var house_shadow := PackedVector2Array([
 		Vector2(-46, -8), Vector2(36, -8), Vector2(61, -18), Vector2(73, -9),
 		Vector2(56, 5), Vector2(24, 11), Vector2(-36, 7), Vector2(-50, 1),

@@ -3,6 +3,7 @@ extends Node2D
 const LAYOUT := preload("res://scripts/WestRoadLayout.gd")
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const TERRAIN := preload("res://scripts/EstateTerrain.gd")
+const STONE_PAVING := preload("res://scripts/StonePaving.gd")
 const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
 const ROAD_WEATHER := preload("res://scripts/RoadWeather.gd")
 const RAVINE_RELIEF := preload("res://scripts/RavineRelief.gd")
@@ -70,6 +71,7 @@ var deep_water := PackedVector2Array()
 var apron_poses: Array[Transform2D] = []
 var bridge_aprons: Array[PackedVector2Array] = []
 var pavement := Geometry2D.intersect_polygons(track, PackedVector2Array(PAVING_LIMIT))[0]
+var pavement_art := STONE_PAVING.new(pavement, LAYOUT.MARKET_GATE.x)
 var meadow := TERRAIN.new(LAYOUT.BOUNDS.position.y)
 var weather := ROAD_WEATHER.new(RAIN_PUDDLES, SNOW_DRIFTS)
 
@@ -200,7 +202,7 @@ func _draw() -> void:
 	meadow.draw_verge(self, road, ROAD_HALF_WIDTH * 2.0, grass, winter)
 	draw_colored_polygon(shoulder, loam.lerp(grass, 0.54))
 	TERRAIN.draw_loam(self, track, loam)
-	TERRAIN.draw_paving(self, pavement, loam, LAYOUT.MARKET_GATE.x)
+	pavement_art.draw(self, loam, winter, rain)
 	var stream_color: Color = LANDSCAPE.WATER_TINTS[season]
 	var silt := grass.lerp(Color("#a5a085"), 0.53)
 	draw_colored_polygon(water, stream_color.lerp(Color("#89a58b"), 0.48))
