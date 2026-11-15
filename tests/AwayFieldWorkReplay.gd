@@ -209,6 +209,12 @@ func _market_round_trip() -> void:
 		"Returning shows the work and keeps the rotation conversation available.")
 	if not baseline:
 		_expect("国库 +1" in notice.text and "私仓 +3" in notice.text, "The first return names where both harvests went.")
+		var entry: Dictionary = state.first_tribute_entry
+		_expect(entry.get("worker") == state.retainers[0].name and entry.get("day") == 12
+			and entry.get("crop") == "millet" and entry.get("amount") == 1
+			and world.get_node("Scenery/FirstTributeStand").visible,
+			"The first entry records the retainer who really harvested while the player was away.")
+		print("FIRST_TRIBUTE_AWAY ", state.first_tribute_note())
 	await _snapshot("02-return-to-estate")
 	if baseline:
 		await _button(ui.settings_button)

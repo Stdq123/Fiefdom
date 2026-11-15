@@ -951,10 +951,13 @@ func harvest_crop(grid_pos: Vector2i, worker: Retainer = null) -> bool:
 
 func _announce_first_tribute() -> void:
 	AudioManager.play_event_sound("first_tribute")
-	var receipt := "首份纳贡已入库"
+	GameEvents.world_notice.emit(first_tribute_notice())
+
+func first_tribute_notice() -> String:
+	var receipt := "首份纳贡已入库 · 堂前可翻账"
 	if Global.rotation_offer_ready() and neighbor_actor(VisitorData.FIELD_KEEPER):
 		receipt += " · 可找渠伯谈轮作"
-	GameEvents.world_notice.emit(receipt)
+	return receipt
 
 func spawn_floating_text(grid_pos: Vector2i, text: String, color: Color) -> void:
 	var instance := floating_text_scene.instantiate() as Label

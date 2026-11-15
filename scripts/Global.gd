@@ -79,6 +79,7 @@ var legacy_order_start := 0
 var pinned_season_start := 0
 var travel_meal := ""
 var king_storage: int
+var first_tribute_entry: Dictionary = {}
 var private_harvest_total: int
 var first_harvest_reviewed := false
 var money: int
@@ -277,6 +278,7 @@ func _reset_campaign() -> void:
 	pinned_season_start = 0
 	travel_meal = ""
 	king_storage = 0
+	first_tribute_entry.clear()
 	private_harvest_total = 0
 	first_harvest_reviewed = false
 	money = 0
@@ -1051,7 +1053,6 @@ func harvest_field_crop(cell: Vector2i, worker: RetainerData = null) -> Dictiona
 	var data: CropData = crop.data
 	var crop_id: String = crop.id
 	var public_plot := is_public_plot(cell)
-	var first_tribute := public_plot and not first_tribute_delivered()
 	var rotation := crop_rotation_bonus(cell, data)
 	if rotation > 0:
 		fertile_cells.erase(cell)
@@ -1064,6 +1065,9 @@ func harvest_field_crop(cell: Vector2i, worker: RetainerData = null) -> Dictiona
 	else:
 		active_crops.erase(cell)
 	var proceeds := harvest_proceeds(public_plot, data.sell_price, rotation, tax_reform_choice, tax_rate)
+	var first_tribute: bool = proceeds.tribute > 0 and not first_tribute_delivered()
+	if first_tribute:
+		first_tribute_entry = _harvest_entry(cell, crop_id, proceeds.tribute, worker)
 	_record_harvest(proceeds, crop_id)
 	_note_route_harvest(cell, crop_id, proceeds, worker)
 	player_stats.add_xp(PlayerStats.Art.MATH, 5)
@@ -1476,25 +1480,35 @@ func _note_route_harvest(cell: Vector2i, crop_id: String, proceeds: Dictionary, 
 		TaxReformChoice.REFORMED: amount = proceeds.stock
 	if amount <= 0:
 		return
+	route_harvest = _harvest_entry(cell, crop_id, amount, worker)
+	if not route_harvest.is_empty():
+		route_harvest.copper = proceeds.copper
+		route_harvest.levy = proceeds.levy
+
+func _harvest_entry(cell: Vector2i, crop_id: String, amount: int, worker: RetainerData) -> Dictionary:
 	for field: Dictionary in well_fields:
 		if field.is_unlocked and _well_field_cells(field.center_pos).has_point(cell):
-			route_harvest = {"day": current_day, "field": field.field_id, "crop": crop_id,
-				"amount": amount, "copper": proceeds.copper, "levy": proceeds.levy,
-				"worker": _route_worker_name(worker.name) if worker else ""}
-			return
+			return {"day": current_day, "field": field.field_id, "crop": crop_id, "amount": amount,
+				"worker": _harvest_worker_name(worker.name) if worker else ""}
+	return {}
+
+func first_tribute_note() -> String:
+	return "" if first_tribute_entry.is_empty() else _harvest_entry_line(first_tribute_entry) + "，入国库。"
 
 func route_harvest_note() -> String:
 	if route_harvest.is_empty():
 		return ""
-	var crop := ItemManager.get_crop(route_harvest.crop)
-	var harvester: String = "你" if route_harvest.worker.is_empty() else route_harvest.worker
 	var details := "入国库。"
 	if tax_reform_choice == TaxReformChoice.REFORMED:
 		details = "入私仓，实扣税 %d 铜钱，实收 %d 铜钱。" % [route_harvest.levy, route_harvest.copper]
-	return "第 %d 天 · %s从井田 %d 收下 %d 份%s，%s" % [route_harvest.day, harvester,
-		route_harvest.field + 1, route_harvest.amount, crop.crop_name, details]
+	return _harvest_entry_line(route_harvest) + "，" + details
 
-func _route_worker_name(value: String) -> String:
+func _harvest_entry_line(entry: Dictionary) -> String:
+	var harvester: String = "你" if entry.worker.is_empty() else entry.worker
+	return "第 %d 天 · %s从井田 %d 收下 %d 份%s" % [entry.day, harvester,
+		entry.field + 1, entry.amount, ItemManager.crop_label(entry.crop)]
+
+func _harvest_worker_name(value: String) -> String:
 	return value.replace("\n", " ").replace("\r", " ").strip_edges().left(24)
 
 func route_objectives(choice := TaxReformChoice.NONE) -> Array[Dictionary]:
@@ -3557,6 +3571,7 @@ func _save_snapshot(origin: String) -> Error:
 		"pinned_season_start": pinned_season_start,
 		"travel_meal": travel_meal,
 		"king_storage": king_storage,
+		"first_tribute_entry": first_tribute_entry,
 		"private_harvest_total": private_harvest_total,
 		"first_harvest_reviewed": first_harvest_reviewed,
 		"silk_bolts_sold": silk_bolts_sold,
@@ -4147,6 +4162,9 @@ func load_game(path := "") -> Error:
 	zhou_li_score = str(data.get("zhou_li_score", "中"))
 	quest_progress = clampi(_read_save_int(data.get("quest_progress"), king_storage), 0, quest_target)
 	quest_completed = data.get("quest_completed", quest_progress == quest_target) == true
+	first_tribute_entry = _read_harvest_entry(data.get("first_tribute_entry"), 1)
+	if first_tribute_entry.get("amount", 0) > king_storage:
+		first_tribute_entry.clear()
 	var saved_mat := str(data.get("hall_mat", HallDecor.DEFAULT_MAT))
 	var saved_shelf := str(data.get("hall_shelf", HallDecor.DEFAULT_SHELF))
 	hall_mat_id = saved_mat if _valid_hall_decor(saved_mat, HallDecor.Slot.MAT) else HallDecor.DEFAULT_MAT
@@ -4183,20 +4201,27 @@ func _saved_ending_record(data: Dictionary) -> Dictionary:
 
 func _restore_route_harvest(record: Variant) -> void:
 	route_harvest = {}
-	if not record is Dictionary or tax_reform_choice not in [TaxReformChoice.TRADITIONAL, TaxReformChoice.REFORMED]:
+	if tax_reform_choice not in [TaxReformChoice.TRADITIONAL, TaxReformChoice.REFORMED]:
 		return
+	route_harvest = _read_harvest_entry(record, maxi(1, tax_reform_day))
+	if not route_harvest.is_empty():
+		route_harvest.copper = maxi(0, _read_save_int(record.get("copper"), 0))
+		route_harvest.levy = maxi(0, _read_save_int(record.get("levy"), 0))
+
+func _read_harvest_entry(record: Variant, earliest_day: int) -> Dictionary:
+	if not record is Dictionary:
+		return {}
 	var day := _read_save_int(record.get("day"), 0)
 	var field_id := _read_save_int(record.get("field"), -1)
 	var field := get_well_field(field_id)
 	var crop: Variant = record.get("crop")
 	var amount := _read_save_int(record.get("amount"), 0)
-	if day < maxi(1, tax_reform_day) or day > current_day or not field.get("is_unlocked", false) \
+	if day < earliest_day or day > current_day or not field.get("is_unlocked", false) \
 			or not crop is String or ItemManager.get_crop(crop) == null or amount <= 0:
-		return
+		return {}
 	var worker: Variant = record.get("worker", "")
-	var worker_name := _route_worker_name(worker) if worker is String else ""
-	route_harvest = {"day": day, "field": field_id, "crop": crop, "amount": amount, "worker": worker_name,
-		"copper": maxi(0, _read_save_int(record.get("copper"), 0)), "levy": maxi(0, _read_save_int(record.get("levy"), 0))}
+	var worker_name := _harvest_worker_name(worker) if worker is String else ""
+	return {"day": day, "field": field_id, "crop": crop, "amount": amount, "worker": worker_name}
 
 func _restore_field_rotation(record: Variant, saved_day: int) -> FieldRotation:
 	var restored := FieldRotation.new()

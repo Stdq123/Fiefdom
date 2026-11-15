@@ -89,6 +89,7 @@ func _ready() -> void:
 	route_goals.action_requested.connect(_on_route_goal_action)
 	world.get_node("Scenery/EndingRecord").readiness_changed.connect(_refresh_ledger_route)
 	GameEvents.route_ledger_read_requested.connect(_open_route_goals)
+	GameEvents.first_tribute_ledger_requested.connect(_on_first_tribute_ledger_requested)
 	council_preparation.world = world
 	hud.council_prep_button.pressed.connect(_open_council_preparation)
 	hud.guide.six_arts.pressed.connect(_show_six_arts)
@@ -128,8 +129,7 @@ func _show_away_field_report() -> void:
 		lines.append(yields)
 	if report.first_tribute:
 		AudioManager.play_event_sound("first_tribute")
-		if Global.rotation_offer_ready() and world.neighbor_actor(VisitorData.FIELD_KEEPER):
-			lines.append("可找渠伯谈轮作")
+		lines.append(world.first_tribute_notice())
 	campaign_hud.show_world_notice("\n".join(lines), 5.0)
 
 func _process(_delta: float) -> void:
@@ -433,6 +433,12 @@ func _on_water_source_interacted() -> void:
 	var rice_plots: int = world.irrigation_overlay.starter_rice_plots(starter).size()
 	dialog_manager.show_water_source(starter.size(), rice_plots,
 		_show_six_arts, _show_water_technology, _dig_from_water_source.bind(starter))
+
+func _on_first_tribute_ledger_requested() -> void:
+	if world.player.conversation_open or Global.outcome != Global.Outcome.RUNNING or not Global.first_tribute_delivered():
+		return
+	world.set_channel_mode(false)
+	dialog_manager.show_first_tribute_ledger(_follow_tribute_plot.bind(Global.TributeRoute.TEND))
 
 func _guide_water_source() -> void:
 	world.set_channel_mode(false)

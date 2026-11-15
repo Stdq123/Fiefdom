@@ -56,6 +56,7 @@
 [ext_resource type="Script" path="res://scripts/SeedGarden.gd" id="48_seed_garden"]
 [ext_resource type="Script" path="res://scripts/PondLanding.gd" id="49_pond_landing"]
 [ext_resource type="PackedScene" path="res://scenes/WinterRoadRations.tscn" id="50_winter_rations"]
+[ext_resource type="Script" path="res://scripts/FirstTributeStand.gd" id="first_tribute_stand"]
 
 [sub_resource type="AtlasTexture" id="Texture_rain_shelter_back"]
 atlas = ExtResource("pavilion_rain_shelter")
@@ -100,6 +101,27 @@ script = ExtResource("11_land")
 
 [node name="Scenery" type="Node2D" parent="World"]
 y_sort_enabled = true
+
+[node name="FirstTributeStand" type="Node2D" parent="World/Scenery"]
+visible = false
+position = Vector2(42, 42)
+texture_filter = 1
+script = ExtResource("first_tribute_stand")
+
+[node name="Hint" type="Label" parent="World/Scenery/FirstTributeStand"]
+visible = false
+z_index = 6
+material = ExtResource("24_world_hint")
+offset_left = -58.0
+offset_top = -40.0
+offset_right = 58.0
+offset_bottom = -24.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.882, 0.635, 1)
+theme_override_colors/font_outline_color = Color(0.13, 0.21, 0.16, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
 
 [node name="PavilionButterfly" type="Node2D" parent="World/Scenery"]
 position = Vector2(107, 432)

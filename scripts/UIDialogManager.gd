@@ -89,6 +89,36 @@ func _pavilion_story_line(id: String, place: String, day: int, index: int) -> vo
 			dialog.tree_exited.connect(_pavilion_story_line.bind(id, place, day, index + 1), CONNECT_DEFERRED | CONNECT_ONE_SHOT)
 	)
 
+func show_first_tribute_ledger(follow_field: Callable) -> void:
+	var note := Global.first_tribute_note()
+	var lines := PackedStringArray()
+	if not note.is_empty():
+		lines.append("首份纳贡 · " + note)
+	lines.append("国库累计收贡 %d 份。" % Global.king_storage)
+	var due := Global.tribute_deadline()
+	if due > 0:
+		if Global.tribute_overdue():
+			lines.append("这次纳贡已逾期。")
+		elif due == Global.current_day:
+			lines.append("这次纳贡今夜到期。")
+		else:
+			lines.append("下次纳贡 · 第 %d 天过夜前收割公田。" % due)
+	var options: Array[String] = ["合上账册"]
+	var can_follow := due > 0 and not Global.tribute_field_plan().is_empty()
+	if can_follow:
+		options.push_front("标出公田")
+	var sack := AtlasTexture.new()
+	sack.atlas = ESTATE_STORAGE
+	sack.region = Rect2(16, 0, 16, 16)
+	sack.filter_clip = true
+	AudioManager.play_event_sound("present_ledger")
+	var dialog := _open("贡粮账", "堂前", "\n".join(lines), options, [], sack)
+	if can_follow:
+		dialog.option_selected.connect(func(index: int):
+			if index == 0:
+				dialog.tree_exited.connect(follow_field, CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+		)
+
 func show_first_harvest(open_orders: Callable, arrange_fields: Callable) -> Control:
 	var use := Global.market_crop_plan(1)
 	var crop: String = use.keys()[0]
@@ -453,6 +483,9 @@ func _show_field_keeper(context: String, appearance: Texture2D, usual_line: Stri
 			text = "豆茬的肥还在地里。找有金角标的私田，种点别的。\n若赶上谷雨，旱苗还能省一回浇水。等收了咱们再记。"
 	elif Global.rotation_offer_ready():
 		text = "荒年我只敢种黍。邻人分我一把菽种，说这地也该喘口气。\n你肯留一格私田，先收菽，再在原地收一茬吗？"
+		var tribute := Global.first_tribute_entry
+		if tribute.get("day", 0) == Global.current_day:
+			text = "堂前的竹筹记下了头一笔%s。\n" % ItemManager.crop_label(tribute.crop) + text
 		var schedule := Global.season_order()
 		if schedule.start == 1 and Global.season_order_delivered_at(schedule) == 0:
 			text += "\n西市春单也收两份菽、一份黍，第 %d 天收簿。想交货的话，这两样可以一块下种。" % schedule.end
