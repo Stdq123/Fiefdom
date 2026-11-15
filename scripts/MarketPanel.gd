@@ -23,7 +23,8 @@ const SHORTAGE_COLOR := Color("#e5b981")
 @onready var sell_button: Button = $TradeActions/SellButton
 @onready var convert_button: Button = $TradeActions/ConvertButton
 @onready var buy_button: Button = $TradeActions/BuyFoodButton
-@onready var reserve_kind: OptionButton = $ReserveKind
+@onready var reserve_kind: OptionButton = $ReserveOptions/ReserveKind
+@onready var use_reserved: CheckBox = $ReserveOptions/UseReserved
 @onready var reserve_label: Label = $ReservePlan
 @onready var reserve_button: Button = $ReserveActions/ReserveButton
 @onready var survey_button: Button = $ReserveActions/ReturnToSurvey
@@ -31,6 +32,7 @@ const SHORTAGE_COLOR := Color("#e5b981")
 
 var return_to_survey: Callable
 var reform_quote: Dictionary = {}
+var reserve_quote: Dictionary = {}
 
 func _ready() -> void:
 	crop_choice.add_item("全部")
@@ -46,7 +48,8 @@ func _ready() -> void:
 	buy_button.pressed.connect(_buy)
 	reserve_kind.add_item("三夜口粮", ReserveKind.HOUSEHOLD)
 	reserve_kind.add_item("开垦备粮", ReserveKind.RECLAMATION)
-	reserve_kind.item_selected.connect(_refresh.unbind(1))
+	reserve_kind.item_selected.connect(_change_reserve_kind.unbind(1))
+	use_reserved.toggled.connect(_refresh_reserve.unbind(1))
 	reserve_button.pressed.connect(_reserve)
 	survey_button.pressed.connect(func(): return_to_survey.call())
 	$MarketHeader/NightRations.pressed.connect(GameEvents.night_rations_requested.emit)
@@ -67,6 +70,7 @@ func _ready() -> void:
 	GameEvents.tax_reform_choice_made.connect(_refresh.unbind(1))
 	GameEvents.day_advanced.connect(func(_day: int):
 		receipt.text = ""
+		use_reserved.set_pressed_no_signal(false)
 		_refresh()
 	)
 	_refresh()
@@ -74,9 +78,9 @@ func _ready() -> void:
 func focus_reform_sale() -> void:
 	if reform_sale_button.is_visible_in_tree():
 		reform_sale_button.grab_focus()
-		_snap_reform_focus(reform_sale_button)
+		_snap_market_focus(reform_sale_button)
 
-func _snap_reform_focus(control: Control) -> void:
+func _snap_market_focus(control: Control) -> void:
 	if not GamepadInput.active:
 		return
 	# The market tab is resized after its visibility changes.
@@ -88,18 +92,24 @@ func show_reclamation_reserve(return_action: Callable) -> void:
 	return_to_survey = return_action
 	reserve_kind.select(ReserveKind.RECLAMATION)
 	quantity.value = 1
-	receipt.text = ""
-	_refresh()
+	_change_reserve_kind()
 	if reserve_button.disabled:
 		reserve_kind.grab_focus()
 	else:
 		reserve_button.grab_focus()
 
 func _on_visibility_changed() -> void:
-	if not is_visible_in_tree() and return_to_survey.is_valid():
-		return_to_survey = Callable()
-		reserve_kind.select(ReserveKind.HOUSEHOLD)
+	if not is_visible_in_tree():
+		use_reserved.set_pressed_no_signal(false)
+		if return_to_survey.is_valid():
+			return_to_survey = Callable()
+			reserve_kind.select(ReserveKind.HOUSEHOLD)
 	_refresh()
+
+func _change_reserve_kind() -> void:
+	use_reserved.set_pressed_no_signal(false)
+	receipt.text = ""
+	_refresh_reserve()
 
 func _refresh() -> void:
 	fish_book_button.visible = Global.knows_ravine_journal() or not Global.fish_collection.is_empty()
@@ -131,7 +141,7 @@ func _refresh() -> void:
 		food_label.remove_theme_color_override("font_color")
 	_refresh_reform_sale()
 	_refresh_trade()
-	_refresh_reserve(nightly)
+	_refresh_reserve()
 
 func _refresh_reform_sale() -> void:
 	reform_quote = Global.reform_sale_quote()
@@ -140,7 +150,7 @@ func _refresh_reform_sale() -> void:
 	if reform_quote.is_empty():
 		if had_focus:
 			crop_choice.grab_focus()
-			_snap_reform_focus(crop_choice)
+			_snap_market_focus(crop_choice)
 		return
 	var retained := PackedStringArray()
 	if reform_quote.rations > 0:
@@ -205,50 +215,67 @@ func _order_stock_note(use: Dictionary) -> String:
 		return " · 含本季交货作物"
 	return ""
 
-func _refresh_reserve(nightly: int) -> void:
+func _refresh_reserve() -> void:
 	survey_button.visible = return_to_survey.is_valid()
-	if reserve_kind.selected == ReserveKind.RECLAMATION:
-		_refresh_reclamation_reserve()
-		return
-	var plan := Global.food_reserve_plan(RESERVE_NIGHTS)
-	reserve_button.text = "按计划补粮"
-	reserve_button.disabled = plan.food == 0 or plan.copper > Global.money
-	if nightly == 0:
-		reserve_label.text = "招募门客后，可按每夜粮耗备粮。"
-	elif plan.food == 0:
-		reserve_label.text = "粮仓已有三夜口粮。"
-	else:
-		reserve_label.text = "补到 %d 份粮 · 用 %d 作物和 %d 铜钱" % [plan.target, plan.crops, plan.copper]
-		if plan.crops > 0:
-			reserve_label.text += "\n取用 %s%s" % [ItemManager.describe_crops(plan.used), _order_stock_note(plan.used)]
-		if reserve_button.disabled:
-			reserve_label.text += " · 还差 %d 铜钱" % (plan.copper - Global.money)
-
-func _refresh_reclamation_reserve() -> void:
-	var plan := Global.reclamation_food_plan()
-	reserve_button.text = "备齐开垦粮"
+	var construction := reserve_kind.selected == ReserveKind.RECLAMATION
+	var plan := (Global.reclamation_food_plan(use_reserved.button_pressed) if construction
+		else Global.food_reserve_plan(RESERVE_NIGHTS, use_reserved.button_pressed))
+	reserve_quote = plan
+	var can_use_reserved: bool = plan.can_use_reserved and plan.get("possible", true)
+	var focus_moved: bool = (use_reserved.has_focus() and not can_use_reserved
+		or reserve_button.has_focus() and not plan.can_order)
+	use_reserved.visible = can_use_reserved
+	if not can_use_reserved:
+		use_reserved.set_pressed_no_signal(false)
+	reserve_kind.focus_neighbor_right = reserve_kind.get_path_to(use_reserved) if can_use_reserved else NodePath()
+	reserve_button.text = "备齐开垦粮" if construction else "按计划补粮"
 	reserve_button.disabled = not plan.can_order
-	if not plan.possible:
-		reserve_label.text = "封地已达到最高田额。"
-		return
-	var lines := PackedStringArray(["立桩用粮 %d · %d 夜口粮 %d · 共 %d 份" % [
-		plan.stake_grain, Global.RECLAMATION_NIGHTS, plan.crew_food, plan.target]])
+	if focus_moved and is_visible_in_tree():
+		reserve_kind.grab_focus()
+		_snap_market_focus(reserve_kind)
+	reserve_label.text = _reserve_text(plan, construction)
+
+func _reserve_text(plan: Dictionary, construction: bool) -> String:
+	var lines := PackedStringArray()
+	if construction:
+		if not plan.possible:
+			return "封地已达到最高田额。"
+		lines.append("立桩用粮 %d · %d 夜口粮 %d · 共 %d 份" % [
+			plan.stake_grain, Global.RECLAMATION_NIGHTS, plan.crew_food, plan.target])
+	elif plan.target == 0:
+		return "招募门客后，可按每夜粮耗备粮。"
+	elif plan.food == 0:
+		return "粮仓已有三夜口粮。"
+
 	if plan.food > 0:
 		var trade := PackedStringArray()
+		if not construction:
+			trade.append("补到 %d 份粮" % plan.target)
 		if plan.crops > 0:
-			trade.append("转粮 " + ItemManager.describe_crops(plan.used) + _order_stock_note(plan.used))
-		if plan.copper > 0:
+			trade.append("转粮 " + ItemManager.describe_crops(plan.used))
+		if plan.food > plan.crops:
 			trade.append("购粮 %d 份用 %d 铜钱" % [plan.food - plan.crops, plan.copper])
 		lines.append(" · ".join(trade))
+		var crops := PackedStringArray()
+		if not plan.used_reserved.is_empty():
+			crops.append("将动用预留 " + ItemManager.describe_crops(plan.used_reserved))
+		if not plan.retained.is_empty():
+			crops.append("交货与节庆留用 " + ItemManager.describe_crops(plan.retained))
+		if not crops.is_empty():
+			lines.append(" · ".join(crops))
 	else:
 		lines.append("粮已备齐")
-	var budget := "立桩需 %d 铜钱" % plan.stake_copper
+
+	var budget := PackedStringArray()
+	if construction:
+		budget.append("立桩需 %d 铜钱" % plan.stake_copper)
+	if plan.food > 0 and plan.research_reserve > 0:
+		budget.append("第 %d 天研究费留 %d 铜钱" % [plan.research_day, plan.research_reserve])
 	if plan.copper_short > 0:
-		budget += " · 合计还差 %d 铜钱" % plan.copper_short
-	else:
-		budget = "留出 %d 铜钱立桩" % plan.stake_copper
-	lines.append(budget)
-	reserve_label.text = "\n".join(lines)
+		budget.append("还差 %d 铜钱" % plan.copper_short)
+	if not budget.is_empty():
+		lines.append(" · ".join(budget))
+	return "\n".join(lines)
 
 func _sell() -> void:
 	var amount := int(quantity.value)
@@ -278,11 +305,15 @@ func _buy() -> void:
 		receipt.text = "购粮完成 · 粮食 +%d · 铜钱 −%d" % [amount, amount * Global.balance.market_food_price]
 
 func _reserve() -> void:
-	if reserve_kind.selected == ReserveKind.RECLAMATION:
-		var order := Global.reclamation_food_plan()
-		if Global.prepare_reclamation_food():
-			receipt.text = "开垦粮已备齐 · 入仓 %d 份 · 实付 %d 铜钱" % [order.food, order.copper]
+	var quote := reserve_quote
+	if not quote.get("can_order", false):
 		return
-	var plan := Global.food_reserve_plan(RESERVE_NIGHTS)
-	if Global.prepare_food_reserve(RESERVE_NIGHTS):
-		receipt.text = "三夜粮已备好 · 粮食 +%d" % plan.food
+	var construction := reserve_kind.selected == ReserveKind.RECLAMATION
+	var committed := (Global.prepare_reclamation_food(use_reserved.button_pressed, quote) if construction
+		else Global.prepare_food_reserve(RESERVE_NIGHTS, use_reserved.button_pressed, quote))
+	if not committed:
+		_refresh()
+		receipt.text = "库存或用粮已有变化，请核对新计划。"
+		return
+	var title := "开垦粮已备齐" if construction else "三夜粮已备好"
+	receipt.text = "%s · 入仓 %d 份 · 实付 %d 铜钱" % [title, quote.food, quote.copper]

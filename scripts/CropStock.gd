@@ -19,6 +19,14 @@ func add(crop_id: String, amount: int) -> void:
 		var key := crop_id if crop_id in IDS else MIXED
 		lots[key] = count(key) + amount
 
+func reserved(keep: Dictionary) -> Dictionary[String, int]:
+	var held: Dictionary[String, int] = {}
+	for id: String in keep:
+		var amount := mini(count(id), int(keep[id]))
+		if amount > 0:
+			held[id] = amount
+	return held
+
 func plan(amount: int, crop_id := "", keep: Dictionary = {}) -> Dictionary[String, int]:
 	var use: Dictionary[String, int] = {}
 	if amount <= 0 or amount > count(crop_id):

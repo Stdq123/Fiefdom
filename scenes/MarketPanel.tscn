@@ -153,15 +153,27 @@ size_flags_vertical = 4
 mouse_default_cursor_shape = 2
 text = "按报价出售"
 
-[node name="ReserveKind" type="OptionButton" parent="."]
+[node name="ReserveOptions" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ReserveKind" type="OptionButton" parent="ReserveOptions"]
 custom_minimum_size = Vector2(150, 32)
 layout_mode = 2
-size_flags_horizontal = 0
 mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 17
 
+[node name="UseReserved" type="CheckBox" parent="ReserveOptions"]
+visible = false
+layout_mode = 2
+focus_neighbor_left = NodePath("../ReserveKind")
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 17
+text = "动用预留作物"
+
 [node name="ReservePlan" type="Label" parent="."]
 layout_mode = 2
+theme_override_font_sizes/font_size = 16
 autowrap_mode = 3
 
 [node name="ReserveActions" type="HBoxContainer" parent="."]

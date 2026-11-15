@@ -18,11 +18,7 @@ static func loyalty_after_missed_meal(loyalty: float) -> float:
 func plan(need: int, food: int, money: int, stock: CropStock, keep: Dictionary, unit_price: int,
 		allocate_meals: Callable) -> Dictionary:
 	var missing := maxi(0, need - food)
-	var reserved: Dictionary[String, int] = {}
-	for id: String in keep:
-		var amount := mini(stock.count(id), int(keep[id]))
-		if amount > 0:
-			reserved[id] = amount
+	var reserved := stock.reserved(keep)
 	var result := {
 		"need": need, "missing": missing, "uncovered": missing, "reserved": reserved,
 		"used": {}, "converted": 0, "bought": 0, "copper": 0,

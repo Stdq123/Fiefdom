@@ -2768,6 +2768,12 @@ func _festival_pantry(evening: int, order_keep: Dictionary) -> Dictionary:
 			shared[id] = available - extra
 	return {"name": name, "held": held, "shared": shared}
 
+func _ration_crop_limits(order_keep: Dictionary, pantry: Dictionary) -> Dictionary:
+	var keep := order_keep.duplicate()
+	for id: String in pantry.get("held", {}):
+		keep[id] = int(keep.get(id, 0)) + int(pantry.held[id])
+	return keep
+
 func night_rations_plan(finished_day := 0) -> Dictionary:
 	var plan := _night_rations_supply_plan(finished_day if finished_day > 0 else current_day, night_rations)
 	plan.merge(_night_meal(food_storage + int(plan.supper) + int(plan.converted) + int(plan.bought)))
@@ -2795,9 +2801,7 @@ func _night_rations_supply_plan(evening: int, policy: NightRations, extra_copper
 	var reserved := fee if purse >= fee else 0
 	var order_keep := _order_stock_to_keep(schedule, upcoming)
 	var pantry := _festival_pantry(evening, order_keep)
-	var keep := order_keep.duplicate()
-	for id: String in pantry.get("held", {}):
-		keep[id] = int(keep.get(id, 0)) + int(pantry.held[id])
+	var keep := _ration_crop_limits(order_keep, pantry)
 	var plan := policy.plan(need, food_storage + supper, purse - reserved, crop_stock, keep, balance.market_food_price, _night_meal)
 	plan.festival_pantry = pantry
 	plan.supper = supper
@@ -2880,34 +2884,63 @@ func convert_inventory_to_food(amount: int, crop_id := "") -> bool:
 	var use := market_crop_plan(amount, crop_id)
 	return not use.is_empty() and _market_exchange(use, 0, amount)
 
-func food_reserve_plan(nights: int) -> Dictionary:
-	return _food_reserve_for(maxi(0, nights) * retainer_food_cost())
+func food_reserve_plan(nights: int, use_reserved := false) -> Dictionary:
+	return _food_reserve_for(maxi(0, nights) * retainer_food_cost(), nights, use_reserved)
 
-func _food_reserve_for(target: int) -> Dictionary:
+func _food_reserve_for(target: int, nights: int, use_reserved: bool) -> Dictionary:
 	var needed := maxi(0, target - food_storage)
-	var crops := mini(player_inventory, needed)
-	return {"target": target, "crops": crops, "food": needed, "copper": (needed - crops) * balance.market_food_price,
-		"used": market_crop_plan(crops)}
+	var order_keep := season_order_crops_to_keep()
+	var pantry := _festival_pantry(current_day, order_keep)
+	var held := crop_stock.reserved(_ration_crop_limits(order_keep, pantry))
+	var surplus := player_inventory - NightRations.stock_count(held)
+	var crops := mini(needed, player_inventory if use_reserved else surplus)
+	var use := crop_stock.plan(crops, "", held)
+	var tapped := {}
+	for id: String in use:
+		var left := crop_stock.count(id) - use[id]
+		var from_hold := int(held.get(id, 0)) - left
+		if from_hold > 0:
+			tapped[id] = from_hold
+			if left > 0:
+				held[id] = left
+			else:
+				held.erase(id)
 
-func prepare_food_reserve(nights: int) -> bool:
-	var plan := food_reserve_plan(nights)
-	return plan.food > 0 and _market_exchange(plan.used, plan.copper, plan.food)
+	var until_fee := research_days_until_payment()
+	var fee_day := current_day + until_fee
+	var fee := research_fee_due(fee_day) if until_fee <= nights else 0
+	var research_reserve := fee if fee <= money else 0
+	var copper := (needed - crops) * balance.market_food_price
+	var copper_short := maxi(0, copper + research_reserve - money)
+	return {
+		"target": target, "crops": crops, "food": needed, "copper": copper,
+		"used": use, "retained": held, "used_reserved": tapped,
+		"can_use_reserved": needed > surplus and surplus < player_inventory,
+		"research_reserve": research_reserve, "research_day": fee_day if research_reserve > 0 else 0,
+		"copper_short": copper_short, "can_order": outcome == Outcome.RUNNING and needed > 0 and copper_short == 0,
+	}
 
-func reclamation_food_plan() -> Dictionary:
+func prepare_food_reserve(nights: int, use_reserved := false, expected: Dictionary = {}) -> bool:
+	var plan := food_reserve_plan(nights, use_reserved)
+	return _accept_food_reserve(plan, expected)
+
+func reclamation_food_plan(use_reserved := false) -> Dictionary:
 	var site := reclamation_plan()
-	var plan := _food_reserve_for(int(site.grain) + int(site.crew_food))
+	var plan := _food_reserve_for(int(site.grain) + int(site.crew_food), RECLAMATION_NIGHTS, use_reserved)
 	plan.possible = site.possible
 	plan.stake_grain = site.grain
 	plan.stake_copper = site.copper
 	plan.crew_food = site.crew_food
-	plan.copper_short = maxi(0, int(site.copper) + int(plan.copper) - money)
-	plan.can_order = (outcome == Outcome.RUNNING and plan.possible and plan.food > 0
-		and (plan.copper == 0 or plan.copper_short == 0))
+	plan.copper_short = maxi(0, int(site.copper) + int(plan.copper) + int(plan.research_reserve) - money)
+	plan.can_order = plan.can_order and plan.possible and (plan.copper == 0 or plan.copper_short == 0)
 	return plan
 
-func prepare_reclamation_food() -> bool:
-	var plan := reclamation_food_plan()
-	return plan.can_order and _market_exchange(plan.used, plan.copper, plan.food)
+func prepare_reclamation_food(use_reserved := false, expected: Dictionary = {}) -> bool:
+	return _accept_food_reserve(reclamation_food_plan(use_reserved), expected)
+
+func _accept_food_reserve(plan: Dictionary, expected: Dictionary) -> bool:
+	return (plan.can_order and (expected.is_empty() or expected == plan)
+		and _market_exchange(plan.used, plan.copper, plan.food))
 
 func _market_exchange(use: Dictionary, copper_spent: int, food_gained: int) -> bool:
 	if copper_spent > money or not crop_stock.spend(use):

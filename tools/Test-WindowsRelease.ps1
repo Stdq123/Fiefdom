@@ -142,6 +142,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/WatchReliefReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/SeedGardenReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ResearchRationsReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/MarketReserveReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FestivalPantryReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/WinterPondReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldStrokeReplay.gd') -Destination $testDirectory
@@ -349,6 +350,7 @@ try {
     if ($Rations) {
         Start-VerifiedGame -Directory $release -Profile 'night-rations' -Name 'night-rations' -Replay 'night-rations' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'festival-pantry' -Name 'festival-pantry' -Replay 'festival-pantry' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'market-reserve' -Name 'market-reserve' -Replay 'market-reserve' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'ration-priority' -Name 'ration-priority' -Replay 'ration-priority' -Resolution $fullResolution
         if ($Capture) {
             Start-VerifiedGame -Directory $release -Profile 'ration-priority-compact' -Name 'ration-priority-1024x768' -Replay 'ration-priority' -Resolution '1024x768'
@@ -419,6 +421,7 @@ try {
         if ($Rations) {
             Start-VerifiedGame -Directory $release -Profile 'night-rations-compact' -Name 'night-rations-1024x768' -Replay 'night-rations' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'festival-pantry-compact' -Name 'festival-pantry-1024x768' -Replay 'festival-pantry' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'market-reserve-compact' -Name 'market-reserve-1024x768' -Replay 'market-reserve' -Resolution '1024x768'
         }
         if ($WinterSupper) {
             Start-VerifiedGame -Directory $release -Profile 'winter-pond-compact' -Name 'winter-pond-1024x768' -Replay 'winter-pond' -Resolution '1024x768'
