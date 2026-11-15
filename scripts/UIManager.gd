@@ -91,6 +91,7 @@ func _ready() -> void:
 	world.get_node("Scenery/EndingRecord").readiness_changed.connect(_refresh_ledger_route)
 	GameEvents.route_ledger_read_requested.connect(_open_route_goals)
 	GameEvents.first_tribute_ledger_requested.connect(_on_first_tribute_ledger_requested)
+	GameEvents.rank_book_requested.connect(_on_rank_book_requested)
 	council_preparation.world = world
 	hud.council_prep_button.pressed.connect(_open_council_preparation)
 	hud.guide.six_arts.pressed.connect(_show_six_arts)
@@ -451,6 +452,12 @@ func _on_first_tribute_ledger_requested() -> void:
 		return
 	world.set_channel_mode(false)
 	dialog_manager.show_first_tribute_ledger(_follow_tribute_plot.bind(Global.TributeRoute.TEND))
+
+func _on_rank_book_requested() -> void:
+	if world.player.conversation_open or Global.is_indoors() or not Global.has_rank_book():
+		return
+	world.set_channel_mode(false)
+	dialog_manager.show_rank_book(_on_reclaim_pressed)
 
 func _guide_water_source() -> void:
 	world.set_channel_mode(false)

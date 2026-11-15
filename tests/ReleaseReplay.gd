@@ -226,10 +226,11 @@ func _run() -> void:
 			replay.baseline = arguments[0] == "irrigation-flow-baseline"
 			replay.legacy = arguments[0] == "irrigation-flow-legacy"
 			await replay.run_irrigation(tree, capture_directory)
-		"estate-progress":
+		"estate-progress", "estate-progress-before-rank-book", "rank-book-legacy":
 			var replay = load("res://tests/EstateProgressReplay.gd").new()
 			replay.capture_dir = capture_directory
-			await replay.run(tree)
+			replay.rank_book_baseline = arguments[0] == "estate-progress-before-rank-book"
+			await replay.run(tree, arguments[0] == "rank-book-legacy")
 		"recruitment-ledger", "recruitment-ledger-legacy":
 			var replay = load("res://tests/RecruitmentLedgerReplay.gd").new()
 			replay.legacy = arguments[0] == "recruitment-ledger-legacy"

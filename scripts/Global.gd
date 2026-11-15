@@ -189,6 +189,7 @@ enum Rank {
 }
 const WELL_FIELD_LIMITS: Array[int] = [1, 2, 4, 9, 16]
 var current_rank: Rank = Rank.XIA_SHI
+var rank_record: Dictionary = {}
 var attire_id := PlayerAttire.DEFAULT
 var hall_mat_id := HallDecor.DEFAULT_MAT
 var hall_shelf_id := HallDecor.DEFAULT_SHELF
@@ -350,6 +351,7 @@ func _reset_campaign() -> void:
 	sheepfold = Sheepfold.new()
 	tech_unlocked = {"irrigation": false, "composite_bow": false}
 	current_rank = Rank.XIA_SHI
+	rank_record.clear()
 	attire_id = PlayerAttire.DEFAULT
 	hall_mat_id = HallDecor.DEFAULT_MAT
 	hall_shelf_id = HallDecor.DEFAULT_SHELF
@@ -656,7 +658,7 @@ func dawn_milestones() -> PackedStringArray:
 	var lines := PackedStringArray()
 	var rank_change: int = last_dawn.get("rank_change", 0)
 	if rank_change > 0:
-		lines.append("晋升%s · 井田上限 %d 块 · 堂屋添了新衣" % [rank_names[current_rank], max_well_fields])
+		lines.append("晋升%s · 井田上限 %d 块 · 堂前挂了爵册" % [rank_names[current_rank], max_well_fields])
 	elif rank_change < 0:
 		lines.append("削爵至%s · 井田上限 %d 块" % [rank_names[current_rank], max_well_fields])
 	var completed: Array = last_dawn.get("completed_fields", [])
@@ -1571,12 +1573,12 @@ func _strip_rank() -> void:
 	if current_rank == Rank.XIA_SHI:
 		finish_campaign(Outcome.DEFEAT_ESTATE)
 		return
+	var previous := current_rank
 	current_rank = (current_rank - 1) as Rank
 	if not can_wear_attire(attire_id):
 		change_attire(PlayerAttire.DEFAULT)
 	days_without_contribution = 0
-	_update_max_well_fields()
-	GameEvents.rank_changed.emit(current_rank)
+	_record_rank_change(previous)
 
 func hurt_player(damage: int) -> void:
 	if outcome != Outcome.RUNNING or damage <= 0:
@@ -3183,11 +3185,19 @@ func eligible_for_promotion() -> bool:
 func check_rank_up() -> bool:
 	if not eligible_for_promotion():
 		return false
+	var previous := current_rank
 	current_rank = (current_rank + 1) as Rank
-	_update_max_well_fields()
 	print("Promoted to ", rank_names[current_rank], "!")
-	GameEvents.rank_changed.emit(current_rank)
+	_record_rank_change(previous)
 	return true
+
+func _record_rank_change(previous: Rank) -> void:
+	rank_record = {"day": current_day, "previous": previous, "rank": current_rank}
+	_update_max_well_fields()
+	GameEvents.rank_changed.emit(current_rank)
+
+func has_rank_book() -> bool:
+	return outcome == Outcome.RUNNING and (current_rank > Rank.XIA_SHI or not rank_record.is_empty())
 
 func promotion_reputation() -> int:
 	match current_rank:
@@ -3647,6 +3657,7 @@ func _save_snapshot(origin: String) -> Error:
 		"sheepfold": sheepfold.save_record(),
 		"tech_unlocked": tech_unlocked,
 		"current_rank": current_rank,
+		"rank_record": rank_record,
 		"attire": attire_id,
 		"hall_mat": hall_mat_id,
 		"hall_shelf": hall_shelf_id,
@@ -4145,6 +4156,7 @@ func load_game(path := "") -> Error:
 		"composite_bow": technology.get("composite_bow", false) == true
 	}
 	current_rank = clampi(_read_save_int(data.get("current_rank"), Rank.XIA_SHI), Rank.XIA_SHI, Rank.QING) as Rank
+	rank_record = _restore_rank_record(data.get("rank_record"), saved_day)
 	var saved_attire: String = str(data.get("attire", PlayerAttire.DEFAULT))
 	attire_id = saved_attire if can_wear_attire(saved_attire) else PlayerAttire.DEFAULT
 	tax_reform_choice = clampi(_read_save_int(data.get("tax_reform_choice"), TaxReformChoice.NONE),
@@ -4254,6 +4266,20 @@ func _restore_field_night(record: Variant, saved_day: int) -> Dictionary:
 	for key in FIELD_NIGHT_COUNTS:
 		report[key] = maxi(0, _read_save_int(record.get(key), 0))
 	return report
+
+func _restore_rank_record(record: Variant, saved_day: int) -> Dictionary:
+	if record is Dictionary:
+		var day := _read_save_int(record.get("day"), 0)
+		var previous := _read_save_int(record.get("previous"), -1)
+		var rank := _read_save_int(record.get("rank"), -1)
+		if day > 0 and day <= saved_day and rank == current_rank and rank_names.has(previous) and absi(previous - rank) == 1:
+			return {"day": day, "previous": previous, "rank": rank}
+	# An older save from the morning of a rank change still has its settlement.
+	var change: int = last_dawn.get("rank_change", 0)
+	var previous := int(current_rank) - change
+	if change != 0 and rank_names.has(previous):
+		return {"day": saved_day, "previous": previous, "rank": current_rank}
+	return {}
 
 func _restore_dawn(record: Variant, saved_day: int) -> Dictionary:
 	if not record is Dictionary or saved_day <= 1 or _read_save_int(record.get("day"), 0) != saved_day - 1:

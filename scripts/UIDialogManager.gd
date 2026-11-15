@@ -119,6 +119,29 @@ func show_first_tribute_ledger(follow_field: Callable) -> void:
 				dialog.tree_exited.connect(follow_field, CONNECT_DEFERRED | CONNECT_ONE_SHOT)
 		)
 
+func show_rank_book(open_survey: Callable) -> void:
+	var rank: String = Global.rank_names[Global.current_rank]
+	var lines := PackedStringArray()
+	var record := Global.rank_record
+	if not record.is_empty():
+		var day: int = record.day
+		var previous: String = Global.rank_names[record.previous]
+		var change := "由%s晋为%s" if record.previous < Global.current_rank else "由%s降为%s"
+		lines.append("第 %d 天 · %s · %s。" % [day, Global.get_current_solar_term(day), change % [previous, rank]])
+	else:
+		lines.append("现爵 · %s" % rank)
+	lines.append("井田上限 %d 块 · 已有 %d 块。" % [Global.max_well_fields, Global.well_fields.size()])
+	if not record.is_empty() and record.previous < Global.current_rank:
+		lines.append("堂屋衣架添了新装。")
+	if Global.well_fields.size() < Global.max_well_fields:
+		lines.append("若要添田，可先翻开垦簿核对人手和粮钱。")
+	AudioManager.play_event_sound("present_ledger")
+	var dialog := _open("爵册", "堂前 · " + rank, "\n".join(lines), ["查看开垦簿", "合上爵册"], [], null)
+	dialog.option_selected.connect(func(index: int):
+		if index == 0:
+			dialog.tree_exited.connect(open_survey, CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+	)
+
 func show_first_harvest(open_orders: Callable, arrange_fields: Callable) -> Control:
 	var use := Global.market_crop_plan(1)
 	var crop: String = use.keys()[0]

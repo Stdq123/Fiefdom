@@ -5,6 +5,8 @@ const PUBLIC := Vector2i(5, 5)
 const EXPANSION := Vector2i(9, 5)
 const EXPANSION_PRIVATE := EXPANSION + Vector2i.DOWN
 const HOME := Vector2(42, 98)
+const HALL_BOOK := "World/Scenery/HallRankBook"
+const HALL_BOOK_APPROACH := Vector2(-43, 65)
 const MOVEMENT := [&"ui_left", &"ui_right", &"ui_up", &"ui_down"]
 
 var tree: SceneTree
@@ -12,6 +14,7 @@ var state: Node
 var world: Node2D
 var ui: CanvasLayer
 var capture_dir := ""
+var rank_book_baseline := false
 var failures := 0
 var promoted_day := 0
 var commissioned_day := 0
@@ -112,6 +115,10 @@ func _open_survey() -> Control:
 	return ui.get_node_or_null("Control/ReclamationPanel")
 
 func _check_opening() -> bool:
+	var book := tree.current_scene.get_node_or_null(HALL_BOOK) as Node2D
+	if not rank_book_baseline and not _expect(book != null and not book.visible and not book.is_in_group("interactable"),
+		"The rank book has yet to be posted when the player starts as a lower officer."):
+		return false
 	var sheet := await _open_survey()
 	if not _expect(sheet != null, "Open the same reclamation ledger available to the player."):
 		return false
@@ -316,6 +323,53 @@ func _night() -> void:
 		if _expect(record != null and "晋升中士" in record.milestones.text and "井田上限 2 块" in record.milestones.text,
 			"The new title and field allowance remain readable after the fade."):
 			await _button(record.close_button)
+			await _check_rank_book(promoted_day, "02e-rank-book-first-reading", true)
+
+func _check_rank_book(day: int, frame: String, open_survey := false) -> void:
+	var previous_position: Vector2 = world.player.position
+	await _walk_to(HALL_BOOK_APPROACH)
+	if rank_book_baseline:
+		await _capture("02c-hall-before-rank-book")
+		await _walk_to(previous_position)
+		return
+	var book := tree.current_scene.get_node_or_null(HALL_BOOK) as Node2D
+	if not _expect(book != null and book.visible and book.is_in_group("interactable")
+		and book.get_parent().y_sort_enabled and world.player.interaction_target == book and book.get_node("Hint").visible,
+		"Walk up to the posted rank book at the hall."):
+		return
+	if open_survey:
+		await _capture("02c-rank-book-posted")
+		await _walk_to(HALL_BOOK_APPROACH + Vector2(0, -23))
+		await tree.create_timer(0.14).timeout
+		_expect(book.self_modulate.a < 0.65 and book.get_node("Hint").visible,
+			"The stand fades when it covers the actor and the prompt stays visible.")
+		await _capture("02d-walk-behind-rank-book")
+		await _walk_to(HALL_BOOK_APPROACH)
+		await tree.create_timer(0.14).timeout
+		_expect(is_equal_approx(book.self_modulate.a, 1.0), "The stand becomes opaque again in front of the actor.")
+	_key(KEY_E, 101)
+	await tree.process_frame
+	var dialog := ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(dialog != null and dialog.name_label.text == "爵册", "E at the stand opens the rank book."):
+		return
+	var expected := "第 %d 天 · %s · 由下士晋为中士" % [day, state.get_current_solar_term(day)] if day > 0 else "现爵 · 中士"
+	_expect(expected in dialog.text_label.text and "井田上限 2 块 · 已有 %d 块" % state.well_fields.size() in dialog.text_label.text
+		and (day > 0 or "第 " not in dialog.text_label.text), "The book reports the known title, allowance and the actual date if present.")
+	await _capture(frame)
+	if open_survey:
+		var resources := Vector3i(state.money, state.food_storage, state.well_fields.size())
+		await _button(_find_button(dialog, "查看开垦簿"))
+		var survey := ui.get_node_or_null("Control/ReclamationPanel") as Control
+		if _expect(survey != null and survey.plan.has_space and not world.player.conversation_open
+			and resources == Vector3i(state.money, state.food_storage, state.well_fields.size()),
+			"The book hands off to the actual survey without staking or spending."):
+			await _capture("02f-survey-from-rank-book")
+			_key(KEY_ESCAPE)
+			await tree.process_frame
+	else:
+		await _button(_find_button(dialog, "合上爵册"))
+	await _walk_to(previous_position)
+	print("ESTATE_RANK_BOOK day=", state.current_day, " record_day=", day, " fields=", state.well_fields.size())
 
 func _check_shortage() -> void:
 	var action: Button = ui.hud.opening_action
@@ -494,8 +548,12 @@ func _try_stewardship() -> void:
 		"Three ordinary nights produce both kinds of harvest with no player field clicks and preserve the appointment on Continue.")
 	print("ESTATE_PROGRESS_STEWARD day=", state.current_day, " tribute=", state.king_storage - tribute,
 		" private=", state.private_harvest_total - private_yield, " ration=", after_need, " manual_field_clicks=0")
+	if not rank_book_baseline:
+		_expect(state.last_dawn.get("rank_change", 0) == 0 and state.rank_record.get("day", 0) == promoted_day,
+			"The rank record outlives the settlement where the promotion happened.")
+		await _check_rank_book(promoted_day, "10-rank-book-on-continue")
 
-func run(game_tree: SceneTree) -> void:
+func run(game_tree: SceneTree, legacy_rank_book := false) -> void:
 	tree = game_tree
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated profile."):
 		tree.quit(1)
@@ -507,6 +565,12 @@ func run(game_tree: SceneTree) -> void:
 	if tree.root.size.x < 900:
 		tree.root.size = Vector2i(1280, 720)
 	tree.root.notify_mouse_entered()
+	if legacy_rank_book:
+		if await _load_title(true) and _expect(state.current_rank == state.Rank.ZHONG_SHI and state.rank_record.is_empty(),
+			"A promoted save predating the rank book can stand without a recorded date."):
+			await _check_rank_book(0, "10-rank-book-on-legacy-continue")
+		await _end()
+		return
 	if await _load_title(false) and await _check_opening():
 		while state.current_day < 36 and failures == 0:
 			await _defend()
@@ -535,6 +599,9 @@ func run(game_tree: SceneTree) -> void:
 	if state.has_method("reclamation_food_plan"):
 		_expect(used_construction_reserve and construction_provision_clicks == 1,
 			"Reserve construction provisions in one market action during the natural first expansion.")
+	await _end()
+
+func _end() -> void:
 	tree.unload_current_scene()
 	for node in tree.root.get_node("AudioManager").get_children():
 		if node is AudioStreamPlayer:

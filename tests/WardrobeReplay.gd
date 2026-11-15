@@ -106,5 +106,7 @@ func _play() -> void:
 	state.reputation = state.balance.rank_strip_threshold
 	state.restore_stamina()
 	_expect(state.current_rank == state.Rank.XIA_SHI, "The usual lack of tribute can lower the rank.")
+	_expect(state.has_rank_book() and state.rank_record == {"day": state.current_day, "previous": state.Rank.ZHONG_SHI,
+		"rank": state.Rank.XIA_SHI}, "A demotion replaces the posted record and keeps it available at the lowest rank.")
 	_check_outfit(PlayerAttire.DEFAULT)
 	print("WARDROBE_ROUND_TRIP day=", state.current_day, " west_market=true demoted_attire=", state.attire_id)

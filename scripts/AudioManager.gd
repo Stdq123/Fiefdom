@@ -244,8 +244,11 @@ func _make_tone_sequence(frequencies: Array, duration: float) -> AudioStreamWAV:
 
 # Event handlers
 func _on_rank_changed(new_rank: Global.Rank) -> void:
-	print("Audio: Playing rank up sound!")
-	play_event_sound("rank_up")
+	var record := Global.rank_record
+	if record.get("day") == Global.current_day and record.get("rank") == new_rank and record.previous > new_rank:
+		play_sfx(BAMBOO_SLIPS, -11.0, 0.82)
+	else:
+		play_event_sound("rank_up")
 
 func _on_tax_reform_triggered() -> void:
 	play_sfx(CEREMONY_BELL, -12.0, 0.78)
