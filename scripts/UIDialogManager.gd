@@ -30,6 +30,17 @@ const COUNCIL_REACTIONS := {
 	],
 }
 
+const COUNCIL_HARVEST_REACTIONS := {
+	VisitorData.ROAD_KEEPER: [
+		"刚从堂前过来，公筐在案边，头一笔收成也写上了。有人问这筐送哪儿，我就打开贡簿给他看。",
+		"亭里那册已经写了第一笔收成。早先有人问谷归谁、扣了几文，我请他自己翻开来看。",
+	],
+	VisitorData.SILK_MERCHANT: [
+		"贡簿已有头一笔谷了。我给案边留了块干净地方，呈交时好把绸和谷分开放。",
+		"我翻过亭里的新税册。成价扣完还剩几文，写在一处就看明白了。回西市我也照着记一回账。",
+	],
+}
+
 var parent_node: Control
 var player: Player
 
@@ -410,7 +421,9 @@ func show_retainer_dialog(data: RetainerData, pavilion_note: String) -> void:
 	var usual := data.resident_line()
 	var speech := usual
 	if not favor.is_valid():
-		speech = _council_reaction(data.name, speech)
+		speech = _route_worker_line(data.name)
+		if speech.is_empty():
+			speech = _council_reaction(data.name, usual)
 	if at_pavilion:
 		var has_follow_up := favor.is_valid() or speech != usual
 		speech = evening + "\n" + speech if has_follow_up else evening
@@ -445,6 +458,10 @@ func _show_field_keeper(context: String, appearance: Texture2D, usual_line: Stri
 			text += "\n西市春单也收两份菽、一份黍，第 %d 天收簿。想交货的话，这两样可以一块下种。" % schedule.end
 		options.push_front("约定试一回轮作")
 		follow_up = Global.agree_to_rotation
+	if not guest and not follow_up.is_valid() and not story.waiting_for_harvest():
+		var report := _route_worker_line(VisitorData.FIELD_KEEPER)
+		if not report.is_empty():
+			text = report
 	if not evening.is_empty() and text != evening:
 		text = evening + "\n" + text
 	var return_index := -1
@@ -473,12 +490,22 @@ func _council_reaction(speaker: String, usual_line: String) -> String:
 	var days := Global.current_day - Global.tax_reform_day
 	if not COUNCIL_REACTIONS.has(speaker) or days >= SeasonOrders.TERMS_PER_SEASON * maxi(1, Global.balance.days_per_solar_term):
 		return usual_line
+	var lines: Array = COUNCIL_REACTIONS[speaker] if Global.route_harvest.is_empty() else COUNCIL_HARVEST_REACTIONS[speaker]
 	match Global.tax_reform_choice:
 		Global.TaxReformChoice.TRADITIONAL:
-			return COUNCIL_REACTIONS[speaker][0]
+			return lines[0]
 		Global.TaxReformChoice.REFORMED:
-			return COUNCIL_REACTIONS[speaker][1]
+			return lines[1]
 	return usual_line
+
+func _route_worker_line(speaker: String) -> String:
+	var entry := Global.route_harvest
+	if entry.is_empty() or entry.worker != speaker or entry.day != Global.current_day:
+		return ""
+	var crop := ItemManager.get_crop(entry.crop)
+	if Global.tax_reform_choice == Global.TaxReformChoice.TRADITIONAL:
+		return "井田 %d 的%s我收好了。公筐在堂前，竹筹也搁到贡簿旁。明早我再去看田。" % [entry.field + 1, crop.crop_name]
+	return "井田 %d 的%s已收进私仓。这趟实收和税钱，我一块写进南路亭的册子里了。" % [entry.field + 1, crop.crop_name]
 
 func _field_keeper_season_line() -> String:
 	if Global.field_rotation.signed_day == Global.current_day:

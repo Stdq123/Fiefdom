@@ -182,6 +182,7 @@ func _on_tax_reform_choice(choice: Global.TaxReformChoice) -> void:
 	Global.tax_reform_choice = choice
 	Global.tax_reform_year = Global.get_current_year()
 	Global.tax_reform_day = Global.current_day
+	Global.route_harvest.clear()
 	if choice != Global.TaxReformChoice.DELAYED:
 		Global.deferred_field_sowing.clear()
 		Global.set_route_baseline()

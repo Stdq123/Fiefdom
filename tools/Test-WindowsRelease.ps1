@@ -134,6 +134,7 @@ function Install-Replay([string]$Directory) {
         Copy-Item -LiteralPath (Join-Path $repo "tests/$file") -Destination $testDirectory
     }
     Copy-Item -LiteralPath (Join-Path $repo 'tests/CanalDoorReplay.gd'), (Join-Path $repo 'tests/CanalFlowReplay.gd'), (Join-Path $repo 'tests/EstateProgressReplay.gd'), (Join-Path $repo 'tests/SilkInteriorReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/RouteLedgerReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/IrrigationFlowReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/TributePlanReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/BackpackReplay.gd') -Destination $testDirectory
@@ -232,6 +233,7 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'council-petition' -Name 'council-petition' -Replay 'council-petition'
         Start-VerifiedGame -Directory $release -Profile 'council-silk' -Name 'council-silk' -Replay 'council-silk'
         Start-VerifiedGame -Directory $release -Profile 'route-goals' -Name 'route-goals' -Replay 'route-goals' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'route-ledger' -Name 'route-ledger' -Replay 'route-ledger' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'reformed-market-sale' -Name 'reformed-market-sale' -Replay 'reformed-market-sale'
         Start-VerifiedGame -Directory $release -Profile 'ending-film' -Name 'ending-film' -Replay 'ending-film'
     }
@@ -421,6 +423,7 @@ try {
             Start-VerifiedGame -Directory $release -Profile 'council-prep-compact' -Name 'council-prep-1024x768' -Replay 'council-prep' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'council-one-field-compact' -Name 'council-one-field-1024x768' -Replay 'council-one-field' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'route-goals-compact' -Name 'route-goals-1024x768' -Replay 'route-goals' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'route-ledger-compact' -Name 'route-ledger-1024x768' -Replay 'route-ledger' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'ending-film-compact' -Name 'ending-film-1024x768' -Replay 'ending-film' -Resolution '1024x768'
         }
         if ($Rations) {

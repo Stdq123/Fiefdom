@@ -50,6 +50,7 @@ func setup(estate_world: ESTATE_WORLD) -> void:
 	world = estate_world
 	world.seed_selected.connect(refresh.unbind(1))
 	world.get_node("Scenery/EndingRecord").visibility_changed.connect(refresh)
+	world.get_node("Scenery/EndingRecord").readiness_changed.connect(refresh.unbind(1))
 	Global.player_stats.level_up.connect(refresh.unbind(2))
 	GameEvents.stamina_changed.connect(refresh.unbind(1))
 	refresh()

@@ -153,9 +153,17 @@ func _collect_places() -> void:
 			_node_point(world.get_node("WinterRoadRations/Approach")), true))
 	var record_stand := world.get_node("Scenery/EndingRecord")
 	if record_stand.visible:
-		var task := "翻看通关当天的账目" if record_stand.archived else "呈交账簿，开启结尾"
-		places.push_front(_entry(Category.PLACES, record_stand.record_name, "%s · %s" % [record_stand.place_name, task],
-			_node_point(record_stand), not record_stand.archived, record_stand.texture))
+		var task := "查看定案后的收成与目标"
+		if record_stand.archived:
+			task = "翻看通关当天的账目"
+		elif record_stand.ready_to_present:
+			task = "呈交账簿，开启结尾"
+		var entry := _entry(Category.PLACES, record_stand.record_name, "%s · %s" % [record_stand.place_name, task],
+			_node_point(record_stand), record_stand.ready_to_present, record_stand.texture)
+		if record_stand.ready_to_present or record_stand.archived:
+			places.push_front(entry)
+		else:
+			places.append(entry)
 	if Global.is_autumn_exhibit_day():
 		places.append(_entry(Category.PLACES, "秋社展台", "沿南池西岸到场，摆三种私田收成",
 			_node_point(world.get_node("AutumnExhibit/Approach")), true))

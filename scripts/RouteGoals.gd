@@ -26,6 +26,7 @@ const GUIDANCE := {
 
 @onready var heading: Label = %RouteTitle
 @onready var summary: Label = %RouteSummary
+@onready var harvest_entry: Label = %HarvestEntry
 @onready var rows: VBoxContainer = %GoalRows
 
 var world: Node2D
@@ -36,11 +37,13 @@ func _map_available() -> bool:
 func _refresh_on_open() -> void:
 	var goals := Global.route_objectives()
 	var complete := goals.filter(func(goal: Dictionary) -> bool: return goal.value >= goal.target).size()
-	var title := "守礼安邦" if Global.tax_reform_choice == Global.TaxReformChoice.TRADITIONAL else "税亩富民"
-	heading.text = title + " · 结局目标"
+	heading.text = "贡簿 · 守礼安邦" if Global.tax_reform_choice == Global.TaxReformChoice.TRADITIONAL else "新税册 · 税亩富民"
 	summary.text = "已达成 %d/%d 项" % [complete, goals.size()]
 	if Global.tax_reform_day > 0:
 		summary.text = "第 %d 天定案 · " % Global.tax_reform_day + summary.text
+	var entry := Global.route_harvest_note()
+	harvest_entry.text = entry
+	harvest_entry.visible = not entry.is_empty()
 	for row in rows.get_children():
 		rows.remove_child(row)
 		row.queue_free()

@@ -87,7 +87,8 @@ func _ready() -> void:
 	route_goals.world = world
 	hud.route_progress.pressed.connect(_open_route_goals)
 	route_goals.action_requested.connect(_on_route_goal_action)
-	world.get_node("Scenery/EndingRecord").visibility_changed.connect(_refresh_ledger_route)
+	world.get_node("Scenery/EndingRecord").readiness_changed.connect(_refresh_ledger_route)
+	GameEvents.route_ledger_read_requested.connect(_open_route_goals)
 	council_preparation.world = world
 	hud.council_prep_button.pressed.connect(_open_council_preparation)
 	hud.guide.six_arts.pressed.connect(_show_six_arts)
@@ -183,9 +184,9 @@ func _open_route_goals() -> void:
 	else:
 		route_goals.open_map()
 
-func _refresh_ledger_route() -> void:
+func _refresh_ledger_route(ready: bool) -> void:
 	var stand := world.get_node("Scenery/EndingRecord") as Sprite2D
-	if not stand.visible and not stand.record_name.is_empty() and directions.tracked_place == stand.record_name:
+	if not ready and directions.tracked_place == stand.record_name:
 		directions.clear_tracking()
 
 func _open_council_preparation() -> void:

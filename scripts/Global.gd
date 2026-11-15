@@ -220,6 +220,7 @@ var tax_reform_day: int = 0
 var tax_council_invited := false
 var research_choice_pending := false
 var route_baseline: Dictionary[String, int] = {}
+var route_harvest: Dictionary = {}
 var ending_record: Dictionary = {}
 var tax_rate: float = 0.0  # 改革后的税率（0.0-1.0，默认0表示未改革）
 var zhou_li_score: String = "中"  # 周礼评分（上上/上中/中上/中/中下/下中/下下）
@@ -358,6 +359,7 @@ func _reset_campaign() -> void:
 	tax_council_invited = false
 	research_choice_pending = false
 	route_baseline.clear()
+	route_harvest.clear()
 	ending_record.clear()
 	tax_rate = 0.0
 	zhou_li_score = "中"
@@ -1042,7 +1044,7 @@ func field_work_cells() -> Array[Vector2i]:
 func crop_rotation_bonus(cell: Vector2i, crop: CropData) -> int:
 	return int(not crop.restores_fertility and fertile_cells.has(cell))
 
-func harvest_field_crop(cell: Vector2i) -> Dictionary:
+func harvest_field_crop(cell: Vector2i, worker: RetainerData = null) -> Dictionary:
 	if outcome != Outcome.RUNNING or not field_crop_is_ripe(cell):
 		return {}
 	var crop: Dictionary = active_crops[cell]
@@ -1063,6 +1065,7 @@ func harvest_field_crop(cell: Vector2i) -> Dictionary:
 		active_crops.erase(cell)
 	var proceeds := harvest_proceeds(public_plot, data.sell_price, rotation, tax_reform_choice, tax_rate)
 	_record_harvest(proceeds, crop_id)
+	_note_route_harvest(cell, crop_id, proceeds, worker)
 	player_stats.add_xp(PlayerStats.Art.MATH, 5)
 	var leaves := collect_mulberry_leaves(proceeds.stock) if not public_plot and crop_id == "mulberry" else 0
 	if not public_plot and (rotation > 0 or data.restores_fertility):
@@ -1086,7 +1089,7 @@ func advance_away_field_work(seconds: float) -> void:
 				elapsed = 0.0
 				break
 			elapsed -= period
-			var first_tribute := _finish_timed_field_work(field_job(worker, cell), cell, away_field_report)
+			var first_tribute := _finish_timed_field_work(field_job(worker, cell), cell, away_field_report, worker)
 			away_field_report.first_tribute = away_field_report.get("first_tribute", false) or first_tribute
 			away_field_report.pending = true
 		_away_work_elapsed[worker] = elapsed
@@ -1145,7 +1148,7 @@ func wait_for_field_work() -> Dictionary:
 		var seconds: float = task.finish - elapsed
 		elapsed = task.finish
 		if retainers.has(next) and field_job(next, task.cell) == task.job:
-			var delivered := _finish_timed_field_work(task.job, task.cell, field_wait_report)
+			var delivered := _finish_timed_field_work(task.job, task.cell, field_wait_report, next)
 			first_tribute = first_tribute or delivered
 		advance_daylight(seconds)
 	if elapsed > 0.0 and not field_wait_report.is_empty():
@@ -1175,7 +1178,7 @@ func _timed_work_plot(worker: RetainerData, reserved: Array[Vector2i] = []) -> V
 			distance = distance_to_anchor
 	return nearest
 
-func _finish_timed_field_work(job: FieldJob, cell: Vector2i, report: Dictionary) -> bool:
+func _finish_timed_field_work(job: FieldJob, cell: Vector2i, report: Dictionary, worker: RetainerData) -> bool:
 	if report.is_empty():
 		report.day = current_day
 		for key in FIELD_WORK_TOTALS:
@@ -1192,7 +1195,7 @@ func _finish_timed_field_work(job: FieldJob, cell: Vector2i, report: Dictionary)
 			if sow_field_crop(cell, planned_field_seed(cell)):
 				report.sown += 1
 		FieldJob.HARVEST:
-			var harvest := harvest_field_crop(cell)
+			var harvest := harvest_field_crop(cell, worker)
 			if not harvest.is_empty():
 				report.harvested += 1
 				for key in FIELD_WORK_YIELDS:
@@ -1464,6 +1467,36 @@ func set_route_baseline(saved: Dictionary = {}) -> void:
 		"sold": clampi(_read_save_int(saved.get("sold"), silk_bolts_sold), 0, silk_bolts_sold)
 	}
 
+func _note_route_harvest(cell: Vector2i, crop_id: String, proceeds: Dictionary, worker: RetainerData) -> void:
+	if not route_harvest.is_empty() or not ending_record.is_empty():
+		return
+	var amount := 0
+	match tax_reform_choice:
+		TaxReformChoice.TRADITIONAL: amount = proceeds.tribute
+		TaxReformChoice.REFORMED: amount = proceeds.stock
+	if amount <= 0:
+		return
+	for field: Dictionary in well_fields:
+		if field.is_unlocked and _well_field_cells(field.center_pos).has_point(cell):
+			route_harvest = {"day": current_day, "field": field.field_id, "crop": crop_id,
+				"amount": amount, "copper": proceeds.copper, "levy": proceeds.levy,
+				"worker": _route_worker_name(worker.name) if worker else ""}
+			return
+
+func route_harvest_note() -> String:
+	if route_harvest.is_empty():
+		return ""
+	var crop := ItemManager.get_crop(route_harvest.crop)
+	var harvester: String = "你" if route_harvest.worker.is_empty() else route_harvest.worker
+	var details := "入国库。"
+	if tax_reform_choice == TaxReformChoice.REFORMED:
+		details = "入私仓，实扣税 %d 铜钱，实收 %d 铜钱。" % [route_harvest.levy, route_harvest.copper]
+	return "第 %d 天 · %s从井田 %d 收下 %d 份%s，%s" % [route_harvest.day, harvester,
+		route_harvest.field + 1, route_harvest.amount, crop.crop_name, details]
+
+func _route_worker_name(value: String) -> String:
+	return value.replace("\n", " ").replace("\r", " ").strip_edges().left(24)
+
 func route_objectives(choice := TaxReformChoice.NONE) -> Array[Dictionary]:
 	var baseline: Dictionary = route_baseline if choice == TaxReformChoice.NONE else {}
 	if choice == TaxReformChoice.NONE:
@@ -1675,7 +1708,11 @@ func _ending_memories() -> Array[String]:
 		moments.append("渠水已送到 %d 块井田。" % irrigated)
 	if silk_workshop.built:
 		moments.append("蚕室已能养蚕、缫丝和织绸。")
-	return moments.slice(0, 3)
+	var account_notes := moments.slice(0, 3)
+	var harvest_note := route_harvest_note()
+	if not harvest_note.is_empty():
+		account_notes.push_front(harvest_note)
+	return account_notes
 
 func continue_after_ending(position: Vector2, direction: Vector2) -> Error:
 	var tree := get_tree()
@@ -3605,6 +3642,7 @@ func _save_snapshot(origin: String) -> Error:
 		"tax_council_invited": tax_council_invited,
 		"research_choice_pending": research_choice_pending,
 		"route_baseline": route_baseline,
+		"route_harvest": route_harvest,
 		"tax_rate": tax_rate,
 		"zhou_li_score": zhou_li_score,
 		"quest_progress": quest_progress,
@@ -4105,6 +4143,7 @@ func load_game(path := "") -> Error:
 	if tax_reform_choice in [TaxReformChoice.TRADITIONAL, TaxReformChoice.REFORMED]:
 		var saved_baseline = data.get("route_baseline", {})
 		set_route_baseline(saved_baseline if saved_baseline is Dictionary else {})
+	_restore_route_harvest(data.get("route_harvest"))
 	zhou_li_score = str(data.get("zhou_li_score", "中"))
 	quest_progress = clampi(_read_save_int(data.get("quest_progress"), king_storage), 0, quest_target)
 	quest_completed = data.get("quest_completed", quest_progress == quest_target) == true
@@ -4141,6 +4180,23 @@ func _saved_ending_record(data: Dictionary) -> Dictionary:
 			and record.get("accounts") is Array and not record["accounts"].is_empty():
 			return record
 	return {}
+
+func _restore_route_harvest(record: Variant) -> void:
+	route_harvest = {}
+	if not record is Dictionary or tax_reform_choice not in [TaxReformChoice.TRADITIONAL, TaxReformChoice.REFORMED]:
+		return
+	var day := _read_save_int(record.get("day"), 0)
+	var field_id := _read_save_int(record.get("field"), -1)
+	var field := get_well_field(field_id)
+	var crop: Variant = record.get("crop")
+	var amount := _read_save_int(record.get("amount"), 0)
+	if day < maxi(1, tax_reform_day) or day > current_day or not field.get("is_unlocked", false) \
+			or not crop is String or ItemManager.get_crop(crop) == null or amount <= 0:
+		return
+	var worker: Variant = record.get("worker", "")
+	var worker_name := _route_worker_name(worker) if worker is String else ""
+	route_harvest = {"day": day, "field": field_id, "crop": crop, "amount": amount, "worker": worker_name,
+		"copper": maxi(0, _read_save_int(record.get("copper"), 0)), "levy": maxi(0, _read_save_int(record.get("levy"), 0))}
 
 func _restore_field_rotation(record: Variant, saved_day: int) -> FieldRotation:
 	var restored := FieldRotation.new()

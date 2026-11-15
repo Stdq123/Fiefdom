@@ -1276,6 +1276,10 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 	print("CAMPAIGN_END branch=", branch, " day=", state.current_day, " rank=", state.current_rank, " fields=", state.well_fields.size(),
 		" public=", state.king_storage, " private=", state.private_harvest_total, " copper=", state.money,
 		" raids=", state.raids_defeated, " goals=", state.route_objectives())
+	var ledger_note: String = state.route_harvest_note()
+	_expect(not ledger_note.is_empty() and ledger_note in state.ending_record.memories,
+		"The first actual post-council harvest stays on the finished ledger.")
+	print("CAMPAIGN_LEDGER branch=", branch, " ", ledger_note)
 	print("CAMPAIGN_MARKET branch=", branch, " conversion_clicks=", converted_batches, " converted_units=", converted_units)
 	print("CAMPAIGN_RATIONS branch=", branch, " delegated=", use_night_rations, " manual_conversions=", converted_batches,
 		" manual_purchases=", purchased_batches, " delegated_nights=", delegated_nights, " short_nights=", nights_short)

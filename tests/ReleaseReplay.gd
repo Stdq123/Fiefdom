@@ -142,6 +142,9 @@ func _run() -> void:
 			replay.capture_dir = capture_directory
 			replay.legacy = arguments[0] == "route-goals-legacy"
 			await replay.run(tree)
+		"route-ledger", "route-ledger-legacy":
+			var replay = load("res://tests/RouteLedgerReplay.gd").new()
+			await replay.run_ledger(tree, capture_directory, arguments[0] == "route-ledger-legacy")
 		"council-prep", "council-prep-legacy", "council-petition", "council-one-field":
 			var replay = load("res://tests/CouncilPrepReplay.gd").new()
 			replay.capture_dir = capture_directory
