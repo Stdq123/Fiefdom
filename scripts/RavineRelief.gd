@@ -28,15 +28,50 @@ const LOOKOUT_EAST: Array[Vector3] = [
 	Vector3(35, 57, 32), Vector3(47, 50, 40), Vector3(61, 51, 36), Vector3(80, 42, 37),
 	Vector3(97, 50, 23), Vector3(114, 47, 16), Vector3(130, 40, 5),
 ]
-# Low, walkable verges join the creek bank and the foot of the hill to the trail.
+# The east bank opens into sunlit grass between the cascade and the ridge.
+const BRIDGE_CLEARING := [
+	Vector2(166, -58), Vector2(188, -100), Vector2(234, -117), Vector2(271, -114),
+	Vector2(296, -102), Vector2(347, -115), Vector2(385, -88), Vector2(386, -48),
+	Vector2(361, -12), Vector2(347, 23), Vector2(321, 49), Vector2(276, 71),
+	Vector2(231, 77), Vector2(188, 68), Vector2(158, 43), Vector2(155, 6), Vector2(164, -24),
+]
+const RIDGE_CLEARING := [
+	Vector2(315, 6), Vector2(327, -45), Vector2(360, -74), Vector2(400, -77),
+	Vector2(445, -84), Vector2(493, -74), Vector2(534, -57), Vector2(560, -26),
+	Vector2(572, 4), Vector2(555, 32), Vector2(524, 53), Vector2(483, 73),
+	Vector2(443, 87), Vector2(390, 68), Vector2(360, 49), Vector2(335, 39),
+]
+# Walkable slopes run out into grass at their toes, except for exposed seams in the turf.
 const BRIDGE_VERGE: Array[Vector3] = [
-	Vector3(169, 57, 2), Vector3(183, 56, 4), Vector3(196, 60, 8), Vector3(209, 58, 9),
-	Vector3(228, 54, 11), Vector3(243, 56, 9), Vector3(260, 52, 11), Vector3(273, 48, 8),
-	Vector3(290, 47, 6), Vector3(309, 39, 2),
+	Vector3(168, 62, 3), Vector3(179, 59, 8), Vector3(193, 65, 9), Vector3(204, 68, 14),
+	Vector3(222, 66, 16), Vector3(236, 63, 15), Vector3(252, 63, 17), Vector3(267, 58, 15),
+	Vector3(286, 52, 12), Vector3(300, 49, 9), Vector3(315, 46, 6), Vector3(329, 43, 2),
 ]
 const RIDGE_VERGE: Array[Vector3] = [
-	Vector3(343, 27, 2), Vector3(356, 25, 5), Vector3(370, 20, 9), Vector3(381, 15, 10),
-	Vector3(395, 9, 12), Vector3(410, 2, 12), Vector3(426, -8, 10), Vector3(447, -18, 6), Vector3(463, -23, 2),
+	Vector3(347, 40, 2), Vector3(360, 38, 7), Vector3(373, 34, 11), Vector3(387, 32, 12),
+	Vector3(402, 24, 13), Vector3(418, 19, 17), Vector3(433, 13, 15), Vector3(447, 6, 13),
+	Vector3(461, 1, 15), Vector3(478, -8, 13), Vector3(495, -17, 9), Vector3(512, -21, 2),
+]
+const VERGE_EXPOSURES := [
+	[Vector2(180, 57), Vector2(186, 51), Vector2(197, 51), Vector2(205, 53), Vector2(200, 58), Vector2(190, 61)],
+	[Vector2(220, 58), Vector2(230, 55), Vector2(240, 55), Vector2(251, 51), Vector2(258, 53),
+		Vector2(252, 58), Vector2(240, 61), Vector2(228, 60)],
+	[Vector2(277, 49), Vector2(283, 43), Vector2(295, 43), Vector2(292, 48), Vector2(286, 50)],
+	[Vector2(373, 27), Vector2(377, 23), Vector2(390, 22), Vector2(391, 25), Vector2(383, 28)],
+	[Vector2(405, 13), Vector2(410, 7), Vector2(422, 5), Vector2(432, 3), Vector2(431, 7),
+		Vector2(424, 11), Vector2(414, 14)],
+	[Vector2(446, -1), Vector2(455, -7), Vector2(462, -5), Vector2(473, -10), Vector2(481, -8),
+		Vector2(474, -4), Vector2(461, 1), Vector2(452, 2)],
+]
+const VERGE_TUFTS: Array[Vector3] = [
+	Vector3(177, 55, 4), Vector3(190, 49, 5), Vector3(208, 56, 6), Vector3(215, 49, 4),
+	Vector3(219, 61, 3), Vector3(248, 48, 5), Vector3(259, 52, 5), Vector3(266, 60, 3),
+	Vector3(278, 46, 6), Vector3(301, 41, 4), Vector3(310, 40, 3),
+	Vector3(207, -17, 4), Vector3(215, -13, 4), Vector3(220, -18, 6), Vector3(249, -71, 5),
+	Vector3(259, -68, 4), Vector3(290, -32, 5), Vector3(296, -28, 3), Vector3(299, -35, 4),
+	Vector3(358, 38, 4), Vector3(365, 32, 6), Vector3(389, 26, 5), Vector3(400, 12, 6),
+	Vector3(413, 17, 4), Vector3(437, 6, 5), Vector3(442, 0, 4), Vector3(454, -7, 6),
+	Vector3(480, -10, 5), Vector3(490, -14, 3), Vector3(501, -19, 4),
 ]
 # Paving is described at the actual bridge and first stair, with bevels below the walkable tops.
 const BRIDGE_APRON := [Vector2(-3, -12), Vector2(7, -12), Vector2(12, -9), Vector2(23, -8),
@@ -88,8 +123,12 @@ const SLOPE_MARKS := [
 const LOOKOUT_SCREE := [Vector3(310, -91, 4), Vector3(333, -76, 6), Vector3(348, -80, 3),
 	Vector3(380, -74, 5), Vector3(366, -59, 3), Vector3(395, -27, 4), Vector3(437, -29, 7),
 	Vector3(454, -39, 3), Vector3(476, -33, 5), Vector3(497, -44, 4), Vector3(531, -58, 6)]
-const STAIR_WIDTH := 27.0
-const STAIR_SPACING := 8.0
+# Rows give the ridge-lane segment, fraction along it, and widths west and east of the tread center.
+const STAIR_ROWS: Array[Vector4] = [
+	Vector4(1, 0.0, 17, 15), Vector4(1, 0.24, 16, 14), Vector4(1, 0.50, 14, 16),
+	Vector4(2, 0.0, 18, 17), Vector4(2, 0.24, 16, 14), Vector4(2, 0.55, 15, 14),
+	Vector4(2, 0.83, 16, 14), Vector4(3, 0.0, 15, 14), Vector4(3, 1.0, 12, 13),
+]
 const STAIR_RISER := 3.0
 const GATE_PAVING := Rect2(-24, -11, 37, 22)
 const BLUFF_TOP_DEPTH := 1.45
@@ -107,19 +146,15 @@ func _init() -> void:
 	for side: float in [-1.0, 1.0]:
 		bridge_aprons.append(_bridge_apron_transform(side) * PackedVector2Array(BRIDGE_APRON))
 	stair_apron = Transform2D(0.0, RavineLayout.RIDGE_LANE[1]) * PackedVector2Array(STAIR_APRON)
-	var approach := RavineLayout.RIDGE_LANE.slice(1, 5)
-	var edges: Array[Vector2] = [approach[0]]
-	for point: Vector2 in approach.slice(1):
-		var start := edges[-1]
-		var span := maxi(1, roundi((start.y - point.y) / STAIR_SPACING))
-		for step in range(1, span + 1):
-			edges.append(start.lerp(point, float(step) / span).round())
 	var west := PackedVector2Array()
 	var east := PackedVector2Array()
-	for index in edges.size():
-		var half_width := STAIR_WIDTH * 0.5
-		west.append(edges[index] - Vector2(half_width + (index % 3), 0))
-		east.append(edges[index] + Vector2(half_width + ((index + 1) % 3), 0))
+	for index in STAIR_ROWS.size():
+		var row := STAIR_ROWS[index]
+		var segment := int(row.x)
+		var start: Vector2 = RavineLayout.RIDGE_LANE[segment]
+		var center := start.lerp(RavineLayout.RIDGE_LANE[segment + 1], row.y).round()
+		west.append(center - Vector2(row.z, 0))
+		east.append(center + Vector2(row.w, 0))
 		if index > 0:
 			steps.append(PackedVector2Array([west[index], east[index], east[index - 1], west[index - 1]]))
 	stair_outline = west.duplicate()
@@ -145,14 +180,27 @@ static func _bridge_apron_transform(side: float) -> Transform2D:
 	return Transform2D(Vector2(side if side > 0.0 else -0.78, -0.18), Vector2.DOWN, sill)
 
 func draw_trail_verges(canvas: CanvasItem, season: int, wet: bool) -> void:
-	var stone := Color("#989178").lerp(Color("#586a60"), 0.56 if wet else 0.0)
-	var tips: Color = MOSS[season].darkened(0.15 if wet else 0.0)
-	var turf := tips.lerp(Color("#465f43"), 0.73 if season == Global.Season.WINTER else 0.54)
-	_draw_low_verge(canvas, BRIDGE_VERGE, stone, turf, tips)
-	_draw_low_verge(canvas, RIDGE_VERGE, stone.darkened(0.07), turf, tips)
+	var frost := season == Global.Season.WINTER
+	var stone := Color("#a0987c").lerp(Color("#586a60"), 0.56 if wet else 0.0)
+	var tips: Color = MOSS[season].darkened(0.19 if wet else 0.0)
+	var turf := tips.lerp(Color("#465f43"), 0.73 if frost else 0.48)
+	var sunlit := Color(turf.lightened(0.15 if not wet else 0.06), 0.52 if not wet else 0.37)
+	_draw_clearing(canvas, BRIDGE_CLEARING, Vector2(254, -25), sunlit)
+	_draw_clearing(canvas, RIDGE_CLEARING, Vector2(425, -7), Color(sunlit, sunlit.a * 0.85))
+	_draw_low_verge(canvas, BRIDGE_VERGE, turf)
+	_draw_low_verge(canvas, RIDGE_VERGE, turf)
+	_draw_verge_details(canvas, stone, turf, tips)
 
-static func _draw_low_verge(canvas: CanvasItem, profile: Array[Vector3], rock: Color, turf: Color, tips: Color) -> void:
-	var contact := Color("#243d2d")
+static func _draw_clearing(canvas: CanvasItem, outline: Array, center: Vector2, light: Color) -> void:
+	var edge := Color(light, 0.0)
+	for index in outline.size():
+		canvas.draw_polygon(PackedVector2Array([center, outline[index], outline[(index + 1) % outline.size()]]),
+			PackedColorArray([light, edge, edge]))
+
+static func _draw_low_verge(canvas: CanvasItem, profile: Array[Vector3], turf: Color) -> void:
+	var crest := turf.lightened(0.055)
+	var grassy_face := turf.darkened(0.105)
+	var contact := Color("#243d2d", 0.35)
 	for index in profile.size() - 1:
 		var a := profile[index]
 		var b := profile[index + 1]
@@ -160,34 +208,42 @@ static func _draw_low_verge(canvas: CanvasItem, profile: Array[Vector3], rock: C
 		var toe_b := Vector2(b.x, b.y)
 		var rim_a := toe_a - Vector2(0, a.z)
 		var rim_b := toe_b - Vector2(0, b.z)
-		var cap_a := rim_a - Vector2(1, 7 + a.z * 0.6)
-		var cap_b := rim_b - Vector2(1, 7 + b.z * 0.6)
-		var lip_a := rim_a.lerp(toe_a, 0.36 + (index % 4) * 0.09)
-		var lip_b := rim_b.lerp(toe_b, 0.36 + ((index + 1) % 4) * 0.09)
+		var cap_a := rim_a - Vector2(3, 12 + a.z * 0.8)
+		var cap_b := rim_b - Vector2(3, 12 + b.z * 0.8)
+		var lip_a := rim_a.lerp(toe_a, 0.51)
+		var lip_b := rim_b.lerp(toe_b, 0.51)
 		canvas.draw_polygon(PackedVector2Array([rim_a, rim_b, cap_b, cap_a]),
-			PackedColorArray([turf, turf, Color(turf, 0.04), Color(turf, 0.04)]))
-		canvas.draw_colored_polygon(PackedVector2Array([rim_a, rim_b, lip_b, lip_a]), turf.lightened(0.025))
-		canvas.draw_polygon(PackedVector2Array([lip_a, lip_b, toe_b, toe_a]), PackedColorArray([
-			turf.darkened(0.08), turf.darkened(0.08), turf.darkened(0.29), turf.darkened(0.29)]))
-		var drift := Vector2(8, 7)
+			PackedColorArray([crest, crest, Color(turf, 0.0), Color(turf, 0.0)]))
+		canvas.draw_polygon(PackedVector2Array([rim_a, rim_b, lip_b, lip_a]), PackedColorArray([
+			crest, crest, grassy_face, grassy_face]))
+		canvas.draw_polygon(PackedVector2Array([lip_a, lip_b, toe_b, toe_a]),
+			PackedColorArray([grassy_face, grassy_face, contact, contact]))
+		var drift := Vector2(12, 10)
 		canvas.draw_polygon(PackedVector2Array([toe_a, toe_b, toe_b + drift, toe_a + drift]),
-			PackedColorArray([Color(contact, 0.56), Color(contact, 0.56), Color(contact, 0.0), Color(contact, 0.0)]))
-		# Exposed seams are short patches in the grass face.
-		if maxf(a.z, b.z) >= 7.0 and index % 4 != 2:
-			var seam_left := lip_a.lerp(lip_b, 0.12 + (index % 3) * 0.08).round()
-			var crest := rim_a.lerp(rim_b, 0.38)
-			var seam_high := crest.lerp(lip_a.lerp(lip_b, 0.38), 0.34 + (index % 3) * 0.20).round()
-			var seam_right := lip_a.lerp(lip_b, 0.83).round()
-			var low_left := toe_a.lerp(toe_b, 0.32 + (index % 3) * 0.06).round() - Vector2(0, 1)
-			var low_right := toe_a.lerp(toe_b, 0.68 + (index % 2) * 0.11).round() - Vector2(0, 1)
-			var tone := rock.lerp(turf, 0.23 + (index % 3) * 0.08)
-			canvas.draw_polygon(PackedVector2Array([seam_left, seam_high, seam_right, low_right, low_left]),
-				PackedColorArray([tone, tone, tone.darkened(0.12), tone.darkened(0.36), tone.darkened(0.25)]))
-			canvas.draw_line(seam_high, seam_high.lerp(seam_right, 0.68), tone.lightened(0.18), 1.0)
-		var tufts := rim_a.lerp(rim_b, 0.26 + (index % 3) * 0.17).round()
-		canvas.draw_rect(Rect2(tufts - Vector2(2, 1), Vector2(4 + index % 4, 2)), turf.lightened(0.14))
-		canvas.draw_line(tufts, tufts + Vector2(-2, -2 - index % 4), Color(tips, 0.84), 1.0)
-		canvas.draw_line(tufts + Vector2(1, 0), tufts + Vector2(3, -3), Color(tips, 0.72), 1.0)
+			PackedColorArray([contact, contact, Color(contact, 0.0), Color(contact, 0.0)]))
+
+static func _draw_verge_details(canvas: CanvasItem, rock: Color, turf: Color, tips: Color) -> void:
+	for index in VERGE_EXPOSURES.size():
+		var top := PackedVector2Array(VERGE_EXPOSURES[index])
+		var stone := rock.lerp(turf, 0.32 + (index % 3) * 0.075)
+		var base := Transform2D(0.0, Vector2(2, 3 + index % 2)) * top
+		canvas.draw_colored_polygon(base, stone.lerp(Color("#3c4b39"), 0.55))
+		canvas.draw_colored_polygon(top, stone)
+		canvas.draw_polyline(top.slice(0, 3), stone.lightened(0.15), 1.0)
+		var cleft := top[2].lerp(top[3], 0.39).round()
+		canvas.draw_line(cleft, cleft.lerp(top[-2], 0.60).round(), stone.darkened(0.30), 1.0)
+	for index in VERGE_TUFTS.size():
+		var tuft := VERGE_TUFTS[index]
+		var root := Vector2(tuft.x, tuft.y)
+		var reach := tuft.z
+		canvas.draw_colored_polygon(PackedVector2Array([root + Vector2(-reach, 0), root + Vector2(1, -2),
+			root + Vector2(reach + 3, 0), root + Vector2(3, 2), root + Vector2(-reach + 1, 2)]), turf.darkened(0.19))
+		var leaning := Vector2(-reach, -reach * 0.62).round()
+		var tallest := Vector2(1.0 - index % 4, -reach - index % 3)
+		canvas.draw_colored_polygon(PackedVector2Array([root + Vector2(-2, 1), root + leaning,
+			root + Vector2(-1, -2), root + tallest, root + Vector2(2, -2),
+			root + Vector2(reach, -reach * 0.68).round(), root + Vector2(3, 1)]), Color(tips, 0.82))
+		canvas.draw_line(root + Vector2(-1, -1), root + tallest, tips.lightened(0.11), 1.0)
 
 func draw_bridge_aprons(canvas: CanvasItem, season: int, wet: bool) -> void:
 	var stone := Color("#938975").lerp(Color("#52675f"), 0.42 if wet else 0.0)
@@ -287,34 +343,49 @@ func _draw_lookout_slopes(canvas: CanvasItem, rock: Color, moss: Color, frost: b
 		canvas.draw_line(at + Vector2(1, -2), at + Vector2(width - 2, -3), highlight, 1.0)
 
 func _draw_steps(canvas: CanvasItem, rock: Color, moss: Color) -> void:
-	var side_tone := rock.lerp(Color("#47473a"), 0.62)
-	var footing := rock.lerp(Color("#2d4336"), 0.78)
+	var side_tone := rock.lerp(Color("#47473a"), 0.55)
+	var footing := rock.lerp(Color("#2d4336"), 0.72)
+	var shadow := Color("#26382e83")
+	# The exposed right-hand face grows uphill into the bedrock beside the landing.
 	for index in steps.size():
 		var slab := steps[index]
-		var shade := rock.lightened(0.055 + (index % 4) * 0.032)
-		var tread_west := (slab[3] + Vector2(-1, -STAIR_RISER + index % 2)).round()
-		var tread_east := (slab[2] + Vector2(0, -STAIR_RISER - index % 2)).round()
+		var front := slab[2]
+		var back := slab[1]
+		var toe_front := front + Vector2(5 + index * 1.1, 4 + index * 1.85)
+		var toe_back := back + Vector2(6.1 + index * 1.1, 5.85 + index * 1.85)
+		var edge_front := front.lerp(toe_front, 0.47).round()
+		var edge_back := back.lerp(toe_back, 0.47).round()
+		var shadow_drift := Vector2(6, 5)
+		canvas.draw_polygon(PackedVector2Array([toe_back, toe_front, toe_front + shadow_drift, toe_back + shadow_drift]),
+			PackedColorArray([shadow, shadow, Color(shadow, 0.0), Color(shadow, 0.0)]))
+		canvas.draw_polygon(PackedVector2Array([edge_back, edge_front, toe_front, toe_back]), PackedColorArray([
+			footing.lightened(0.06), footing.lightened(0.05), footing.darkened(0.16), footing.darkened(0.16)]))
+		var side := side_tone.lightened(0.03 * (index % 3))
+		canvas.draw_colored_polygon(PackedVector2Array([back, front, edge_front, edge_back]), side)
+		var fissure := edge_front.lerp(edge_back, 0.45).round()
+		canvas.draw_line(fissure, fissure.lerp(toe_front, 0.72).round(), footing.darkened(0.24), 1.0)
+		if index % 3 == 2:
+			canvas.draw_line(edge_front.lerp(edge_back, 0.16).round(), fissure, moss.darkened(0.13), 1.5)
+	for index in steps.size():
+		var slab := steps[index]
+		var shade := rock.lightened(0.11 + (index % 4) * 0.034)
+		var riser := minf(STAIR_RISER, (slab[2].y - slab[1].y) / 2.0)
+		var tread_west := (slab[3] + Vector2(-1, -riser + index % 2)).round()
+		var tread_east := (slab[2] + Vector2(0, -riser)).round()
 		var joint_ratio := 0.24 + posmod(index * 3, 5) * 0.13
-		var joint := tread_west.lerp(tread_east, joint_ratio).round()
-		var joint_back := joint.lerp(slab[0].lerp(slab[1], joint_ratio), 0.86).round()
+		var joint := (tread_west.lerp(tread_east, joint_ratio) + Vector2(0, -1)).round()
+		var joint_back := slab[0].lerp(slab[1], joint_ratio + 0.07).round()
+		var joint_kink := (joint.lerp(joint_back, 0.58) + Vector2(-2, 0)).round()
 		var riser_joint := slab[3].lerp(slab[2], joint_ratio).round()
-		var toe_front: Vector2 = slab[2] + Vector2(5, 3 + index)
-		var toe_back: Vector2 = slab[1] + Vector2(5, 4 + index)
-		var ledge_front := slab[2].lerp(toe_front, 0.43).round()
-		var ledge_back := slab[1].lerp(toe_back, 0.43).round()
-		var side := side_tone.lightened(0.025 * (index % 3))
-		canvas.draw_colored_polygon(PackedVector2Array([slab[1], slab[2], ledge_front, ledge_back]), side)
-		if index > 1:
-			canvas.draw_colored_polygon(PackedVector2Array([ledge_back, ledge_front, toe_front, toe_back]), footing)
-			canvas.draw_line(ledge_back, ledge_front, side.darkened(0.17), 1.0)
-		canvas.draw_colored_polygon(PackedVector2Array([slab[0], slab[1], tread_east, joint, tread_west]), shade)
+		canvas.draw_colored_polygon(PackedVector2Array([slab[0], joint_back, joint_kink, joint, tread_west]), shade)
+		canvas.draw_colored_polygon(PackedVector2Array([joint_back, slab[1], tread_east, joint, joint_kink]), shade.darkened(0.07))
 		canvas.draw_colored_polygon(PackedVector2Array([tread_west, joint, riser_joint, slab[3]]), shade.darkened(0.31))
 		canvas.draw_colored_polygon(PackedVector2Array([joint, tread_east, slab[2], riser_joint]), side_tone)
 		canvas.draw_line(tread_west + Vector2(1, 0), joint - Vector2(2, 0), shade.lightened(0.26), 1.0)
 		canvas.draw_line(joint + Vector2(1, 0), tread_east - Vector2(2, 0), shade.lightened(0.19), 1.0)
-		canvas.draw_line(joint, joint_back, shade.darkened(0.23), 1.0)
-		var verge := slab[0] if index % 3 == 1 else slab[2] + Vector2(2, 0)
-		canvas.draw_rect(Rect2(verge - Vector2(1, 2), Vector2(3 + index % 2, 2)), moss.darkened(0.1))
+		canvas.draw_polyline(PackedVector2Array([joint, joint_kink, joint_back]), shade.darkened(0.20), 1.0)
+		var nick := tread_west.lerp(joint, 0.48).round() - Vector2(0, 2)
+		canvas.draw_line(nick, nick + Vector2(3 + index % 3, 0), Color(shade.lightened(0.15), 0.72), 1.0)
 
 func _draw_terrace_faces(canvas: CanvasItem, rock: Color, moss: Color) -> void:
 	var contact := Color("#26382eae")

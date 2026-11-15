@@ -23,11 +23,23 @@ const CASCADE_LIP: Array[Vector2] = [Vector2(116, -69), Vector2(122, -67), Vecto
 	Vector2(137, -64), Vector2(145, -65), Vector2(151, -68)]
 const CASCADE_BASE: Array[Vector2] = [Vector2(120, -43), Vector2(126, -40), Vector2(134, -35),
 	Vector2(141, -35), Vector2(148, -39), Vector2(153, -44)]
-const PLUNGE_POOL := [Vector2(120, -43), Vector2(125, -48), Vector2(142, -46), Vector2(151, -42),
-	Vector2(154, -34), Vector2(151, -27), Vector2(145, -18), Vector2(137, -15),
-	Vector2(128, -22), Vector2(123, -30)]
-const FALL_BOUNDS := Rect2(112, -78, 47, 72)
-const POOL_BOUNDS := Rect2(119, -47, 38, 36)
+const PLUNGE_POOL := [Vector2(119, -43), Vector2(123, -48), Vector2(137, -49), Vector2(150, -45),
+	Vector2(154, -41), Vector2(156, -34), Vector2(155, -19), Vector2(150, -11), Vector2(142, -9),
+	Vector2(132, -14), Vector2(126, -22), Vector2(123, -33)]
+# Tops begin at the water lip. The feet sit against the wet bank below it.
+const CASCADE_BANKS := [
+	{
+		"top": [Vector2(116, -69), Vector2(110, -69), Vector2(103, -66), Vector2(99, -72),
+			Vector2(96, -87), Vector2(105, -96), Vector2(115, -93), Vector2(118, -84)],
+		"foot": [Vector2(120, -49), Vector2(114, -52), Vector2(106, -54), Vector2(100, -64)],
+	},
+	{
+		"top": [Vector2(151, -68), Vector2(161, -70), Vector2(169, -69), Vector2(178, -78),
+			Vector2(193, -87), Vector2(188, -92), Vector2(176, -96), Vector2(163, -94), Vector2(155, -87)],
+		"foot": [Vector2(153, -47), Vector2(164, -52), Vector2(175, -57), Vector2(183, -72)],
+	},
+]
+const FALL_BOUNDS := Rect2(111, -83, 49, 78)
 const FORD_RIPPLES := [Vector2(-9, 6), Vector2(1, 9), Vector2(12, 7)]
 const FORD_BOUNDS := Rect2(RavineLayout.FORD - Vector2(15, 0), Vector2(36, 27))
 
@@ -134,8 +146,48 @@ static func draw_banks(canvas: CanvasItem, season: int, wet: bool) -> void:
 	_ledge(canvas, EAST_UPPER, 1.0, season, wet)
 	_ledge(canvas, WEST_LOWER, -1.0, season, wet)
 	_ledge(canvas, EAST_LOWER, 1.0, season, wet)
+	_draw_cascade_banks(canvas, season, wet)
 	_shelf_faces(canvas, RavineLayout.WILLOW_WATERLINE, WILLOW_LEDGE, 1.0, season, wet)
 	_shelf_faces(canvas, RavineLayout.GRAVEL_WATERLINE, GRAVEL_LEDGE, -1.0, season, wet)
+
+static func _draw_cascade_banks(canvas: CanvasItem, season: int, wet: bool) -> void:
+	var moss: Color = MOSS[season]
+	var rock := Color("#9b9575").lerp(Color("#587267"), 0.44 if wet else 0.0)
+	if season == Global.Season.WINTER:
+		rock = rock.lerp(Color("#a5b4aa"), 0.35)
+	for bank_index in CASCADE_BANKS.size():
+		var bank: Dictionary = CASCADE_BANKS[bank_index]
+		var top := PackedVector2Array(bank.top)
+		var foot := PackedVector2Array(bank.foot)
+		for index in foot.size() - 1:
+			var a := top[index]
+			var b := top[index + 1]
+			var base_a := foot[index]
+			var base_b := foot[index + 1]
+			var face := rock.darkened(0.13 + (index + bank_index) * 0.051)
+			var seam_a := a.lerp(base_a, 0.46).round()
+			var seam_b := b.lerp(base_b, 0.60).round()
+			_gradient_quad(canvas, base_a, base_b, base_b + Vector2(4, 5), base_a + Vector2(4, 5),
+				Color("#183d4794"), Color("#183d4700"))
+			_gradient_quad(canvas, a, b, seam_b, seam_a, face, face.darkened(0.15))
+			_gradient_quad(canvas, seam_a, seam_b, base_b, base_a, face.darkened(0.24), Color("#405852"))
+			var joint := (a.lerp(b, 0.63)).round()
+			var split := seam_a.lerp(seam_b, 0.40).round()
+			var toe := base_a.lerp(base_b, 0.67).round()
+			canvas.draw_polyline(PackedVector2Array([joint, split, toe]), face.darkened(0.28), 1.0)
+			canvas.draw_line(seam_a, split, face.lightened(0.087), 1.0)
+		canvas.draw_colored_polygon(top, rock.lightened(0.08 - bank_index * 0.04))
+		var cap := top.slice(3)
+		cap.append(top[-1].lerp(top[1], 0.37).round())
+		cap.append(top[3].lerp(top[1], 0.45).round())
+		var turf := moss.darkened(0.16 if wet else 0.06)
+		var colors := PackedColorArray()
+		for index in cap.size():
+			colors.append(Color(turf, 0.36 if index == 0 or index >= cap.size() - 2 else 0.95))
+		canvas.draw_polygon(cap, colors)
+		var ledge := top[0].lerp(top[1], 0.38).round()
+		canvas.draw_polyline(PackedVector2Array([ledge, top[1], top[1].lerp(top[2], 0.72).round()]),
+			rock.lightened(0.17), 1.0)
 
 static func draw_fishing_shelves(canvas: CanvasItem, season: int, wet: bool) -> void:
 	_shelf_top(canvas, RavineLayout.WILLOW_BANK, Color("#878471"), season, wet)
@@ -242,7 +294,7 @@ func _draw() -> void:
 	var pool := PackedVector2Array(PLUNGE_POOL)
 	var pool_colors := PackedColorArray()
 	for point in pool:
-		pool_colors.append(Color(water.lerp(Color("#294f58"), 0.60), 0.62 * (1.0 - smoothstep(-40.0, -16.0, point.y))))
+		pool_colors.append(Color(water.lerp(Color("#274d59"), 0.72), 0.72 * (1.0 - smoothstep(-38.0, -10.0, point.y))))
 	draw_polygon(pool, pool_colors)
 	# Each tongue has a lit crest, a tinted face and a broken fan at the point of impact.
 	rng.seed = 78
@@ -252,7 +304,7 @@ func _draw() -> void:
 		var foot := CASCADE_BASE[index]
 		var next_foot := CASCADE_BASE[index + 1]
 		var face := water.lightened(0.07 + 0.045 * (index % 3))
-		var upstream := Vector2(-1, -13 - index % 3)
+		var upstream := Vector2(-1, -16 - index % 3)
 		draw_polygon(PackedVector2Array([lip + upstream, next_lip + upstream, next_lip, lip]), PackedColorArray([
 			Color(water, 0.0), Color(water, 0.0), Color(face.lightened(0.1), 0.87), Color(face.lightened(0.1), 0.92)]))
 		draw_polygon(PackedVector2Array([lip, next_lip, next_foot, foot]), PackedColorArray([
@@ -279,8 +331,8 @@ func _draw() -> void:
 func _draw_pool_wakes(foam: Color) -> void:
 	for index in 3:
 		var phase := float(posmod(frame + index * 8, 24)) / 24.0
-		var center := (POOL_BOUNDS.get_center() + Vector2(-4.5 + phase * 4.0, -10.0 + phase * 15.0)).round()
-		var span := 4.0 + phase * 9.0
+		var center := (Vector2(135, -38) + Vector2(5, 24) * phase).round()
+		var span := 5.0 + phase * 8.0
 		var front := (center + Vector2(0, 1.0 + phase * 4.0)).round()
 		var left := (center - Vector2(span, 0)).round()
 		var right := (center + Vector2(span, 0)).round()

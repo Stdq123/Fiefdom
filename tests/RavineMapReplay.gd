@@ -303,6 +303,11 @@ func _check_approach_surfaces(landscape: Node2D) -> void:
 	for at: Vector2 in [west, east, stair_foot]:
 		_expect(landscape._surface_at(at) == TERRAIN_AUDIO.Surface.STONE,
 			"Only the actual approach stone should sound like stone at %s." % at)
+	var landing: Vector2 = RavineLayout.RIDGE_LANE[2] + Vector2(-9, 9)
+	var grass: Vector2 = RavineLayout.RIDGE_LANE[2] + Vector2(-36, 8)
+	_expect(landscape._surface_at(landing) == TERRAIN_AUDIO.Surface.STONE
+		and landscape._surface_at(grass) == TERRAIN_AUDIO.Surface.GRASS,
+		"The broad tread sounds like stone while the grass alongside it remains soft ground.")
 	_expect(landscape._surface_at(center) == TERRAIN_AUDIO.Surface.PLANK
 		and landscape._surface_at(RavineLayout.MAIN_TRAIL[-3]) == TERRAIN_AUDIO.Surface.TRACK,
 		"The bridge planks and the earth lane keep distinct footsteps next to the stone aprons.")
@@ -429,6 +434,11 @@ func _check_ravine_weather() -> void:
 			and LANDSCAPE.BRIDGE_DECK.has_point(player.position), "The same working bridge updates its rain and winter art.")
 		await _capture_map_frame("06-bridge-rain" if day == 6 else "07-bridge-frost")
 		print("RAVINE_BRIDGE_WEATHER day=", day, " wet=", bridge.wet, " season=", bridge.season)
+		if day == 6:
+			await Campaign.walk_ravine_to(tree, ravine, RavineLayout.RIDGE_FORK)
+			_expect(player.position.distance_to(RavineLayout.RIDGE_FORK) < 4.0,
+				"The rainy approach remains open between the bridge and the stone steps.")
+			await _capture_map_frame("06a-east-bank-rain")
 		await Campaign.walk_ravine_to(tree, ravine, RavineLayout.GRAVEL_SHOAL + Vector2(0, 12))
 		_expect(Geometry2D.is_point_in_polygon(player.position, PackedVector2Array(RavineLayout.GRAVEL_BAR)),
 			"The fishing platform still has dry standing room in the rain and frost.")
