@@ -149,7 +149,7 @@ var winter_suppers: Dictionary[int, Dictionary] = {}
 var active_crops: Dictionary = {}
 var tilled_cells: Dictionary = {}
 var field_route_status := -1
-var field_route_public_only := false
+var field_route_scope := FieldScope.ALL
 var rotation_route_cell: Variant = null
 var field_seed_plans: Dictionary[Vector2i, String] = {}
 var deferred_field_sowing: Dictionary[Vector2i, bool] = {}
@@ -167,6 +167,8 @@ enum FieldGateSite { AVAILABLE, LOCKED, NOT_EDGE, NO_WATER, ALREADY_BUILT, NO_FU
 enum ReclamationSite { OPEN, EDGE, NEAR_FIELD, SOURCE, CANAL, ROAD, LANDMARK }
 enum CropWater { DRY, BLOCKED, HAND, CANAL, RAIN }
 enum NightGrowth { READY, DRY, BLOCKED, GROW, RIPEN }
+enum FieldScope { ALL, PUBLIC, PRIVATE }
+const FIELD_SCOPE_NAMES := {FieldScope.PUBLIC: "公田", FieldScope.PRIVATE: "私田"}
 enum MulberryRoute { PLANT = 5, WATER, HARVEST }
 enum TributeRoute { TEND = 8 }
 enum OrderFieldRoute { HARVEST = 9, PREPARE = 13 }
@@ -338,7 +340,7 @@ func _reset_campaign() -> void:
 	active_crops.clear()
 	tilled_cells.clear()
 	field_route_status = -1
-	field_route_public_only = false
+	field_route_scope = FieldScope.ALL
 	rotation_route_cell = null
 	field_seed_plans.clear()
 	deferred_field_sowing.clear()
@@ -627,7 +629,7 @@ func begin_next_day() -> void:
 	if field_route_status not in ROTATION_ROUTES and field_route_status != OrderFieldRoute.PREPARE:
 		field_route_status = -1
 		rotation_route_cell = null
-	field_route_public_only = false
+	field_route_scope = FieldScope.ALL
 	away_field_report.clear()
 	field_wait_report.clear()
 	_away_work_elapsed.clear()
@@ -1245,6 +1247,9 @@ func is_public_plot(cell: Vector2i) -> bool:
 		if field["is_unlocked"] and field["center_pos"] == cell:
 			return true
 	return false
+
+func field_scope_matches(cell: Vector2i, scope: FieldScope) -> bool:
+	return scope == FieldScope.ALL or is_public_plot(cell) == (scope == FieldScope.PUBLIC)
 
 func night_growth(crop: Dictionary, water: CropWater) -> NightGrowth:
 	var nights_left: int = crop["growth_nights"] - crop["age"]
@@ -3543,7 +3548,8 @@ func _save_snapshot(origin: String) -> Error:
 		"west_road_from_market": scene.resume_from_market() if location == "west_road" else false,
 		"selected_seed": selected_seed_id,
 		"field_route_status": field_route_status,
-		"field_route_public_only": field_route_public_only,
+		"field_route_scope": field_route_scope,
+		"field_route_public_only": field_route_scope == FieldScope.PUBLIC,
 		"rotation_route_cell": _cell_key(rotation_route_cell) if field_route_status in ROTATION_ROUTES and rotation_route_cell != null else "",
 		"current_stamina": current_stamina,
 		"health": health,
@@ -4071,8 +4077,13 @@ func load_game(path := "") -> Error:
 	market_produce_bought_on = clampi(_read_save_int(data.get("market_produce_bought_on"), 0), 0, saved_day)
 	var saved_route := _read_save_int(data.get("field_route_status"), -1)
 	field_route_status = saved_route if saved_route in FIELD_ROUTE_STATES else -1
-	field_route_public_only = (field_route_status in [NightGrowth.READY, NightGrowth.DRY, NightGrowth.BLOCKED]
-		and data.get("field_route_public_only", false) == true)
+	var legacy_scope := FieldScope.PUBLIC if data.get("field_route_public_only", false) == true else FieldScope.ALL
+	var saved_scope := _read_save_int(data.get("field_route_scope"), legacy_scope)
+	field_route_scope = FieldScope.ALL
+	if saved_scope == FieldScope.PUBLIC and field_route_status in [NightGrowth.READY, NightGrowth.DRY, NightGrowth.BLOCKED]:
+		field_route_scope = FieldScope.PUBLIC
+	elif saved_scope == FieldScope.PRIVATE and field_route_status == NightGrowth.READY:
+		field_route_scope = FieldScope.PRIVATE
 	rotation_route_cell = _read_save_cell(data.get("rotation_route_cell")) if field_route_status in ROTATION_ROUTES else null
 	if field_route_status in ROTATION_ROUTES and (rotation_route_cell == null or not _is_well_field_cell(rotation_route_cell, restored_fields)):
 		field_route_status = -1

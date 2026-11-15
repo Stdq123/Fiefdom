@@ -91,7 +91,7 @@ func _reformed() -> void:
 	await _button(_action(Global.RouteGoal.TAXED_HARVEST))
 	var chart: Control = ui.estate_map
 	_expect(not ui.route_goals.modal.visible and not chart.modal.visible and not tree.paused
-		and state.field_route_status == state.NightGrowth.READY and not state.field_route_public_only,
+		and state.field_route_status == state.NightGrowth.READY and state.field_route_scope == state.FieldScope.ALL,
 		"Mature taxed crops are tracked directly from the goals.")
 	if not await _follow_harvests(3):
 		return

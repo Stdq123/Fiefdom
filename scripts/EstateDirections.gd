@@ -97,13 +97,13 @@ func follow_neighbor(speaker: String) -> bool:
 	hud.cancel_directions.show()
 	return true
 
-func follow_field_route(status: int, public_only := false) -> bool:
-	var cell: Variant = world.find_field_task(status, public_only)
+func follow_field_route(status: int, scope := Global.FieldScope.ALL) -> bool:
+	var cell: Variant = world.find_field_task(status, scope)
 	if cell == null:
 		return false
 	clear_tracking()
 	Global.field_route_status = status
-	Global.field_route_public_only = public_only
+	Global.field_route_scope = scope
 	_track_field_plot(cell)
 	return true
 
@@ -152,7 +152,7 @@ func _track_field_plot(cell: Vector2i) -> void:
 		world.set_sow_from_plan(true)
 	tracked_plot = cell
 	var task: String = "轮作私田" if status in Global.ROTATION_ROUTES else FIELD_ROUTES[status].task
-	hud.cancel_directions.text = task + ("公田" if Global.field_route_public_only else "") + " · 取消指路"
+	hud.cancel_directions.text = task + str(Global.FIELD_SCOPE_NAMES.get(Global.field_route_scope, "")) + " · 取消指路"
 	hud.cancel_directions.show()
 
 func _refresh_field_route() -> void:
@@ -168,12 +168,12 @@ func _refresh_field_route() -> void:
 		clear_tracking()
 		return
 	if tracked_plot != null:
-		if world.matches_field_route(tracked_plot, status):
+		if Global.field_scope_matches(tracked_plot, Global.field_route_scope) and world.matches_field_route(tracked_plot, status):
 			return
 		if status == Global.MulberryRoute.PLANT and Global.active_crops.get(tracked_plot, {}).get("id") == "mulberry":
 			clear_tracking()
 			return
-	var next: Variant = world.find_field_task(status, Global.field_route_public_only, tracked_plot)
+	var next: Variant = world.find_field_task(status, Global.field_route_scope, tracked_plot)
 	if next == null:
 		clear_tracking()
 	else:
@@ -256,7 +256,8 @@ func destination() -> Dictionary:
 	var site := Global.get_well_field(tracked_site)
 	if not site.is_empty() and not site["is_unlocked"]:
 		return {"title": "井田 %d 工地" % (tracked_site + 1), "point": _cell_position(site["center_pos"])}
-	if tracked_plot != null and Global.field_route_status >= 0 and (Global.field_route_status == Global.OrderFieldRoute.PREPARE
+	if tracked_plot != null and Global.field_route_status >= 0 and Global.field_scope_matches(tracked_plot, Global.field_route_scope) \
+		and (Global.field_route_status == Global.OrderFieldRoute.PREPARE
 		or world.matches_field_route(tracked_plot, Global.field_route_status)):
 		return {"title": _field_plot_label(tracked_plot), "point": _cell_position(tracked_plot)}
 	if not tracked_neighbor.is_empty():
@@ -315,7 +316,7 @@ func clear_tracking() -> void:
 	order_work = {}
 	_order_work_dirty = true
 	Global.field_route_status = -1
-	Global.field_route_public_only = false
+	Global.field_route_scope = Global.FieldScope.ALL
 	Global.rotation_route_cell = null
 	tracked_site = -1
 	tracked_place = ""

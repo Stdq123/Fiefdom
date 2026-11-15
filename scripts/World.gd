@@ -442,7 +442,7 @@ func rotation_plot_caption(cell: Vector2i) -> String:
 		Global.NightGrowth.RIPEN: return prefix + " · 明早可收"
 	return prefix + " · 供水后过夜"
 
-func find_field_task(status: int, public_only := false, previous: Variant = null) -> Variant:
+func find_field_task(status: int, scope := Global.FieldScope.ALL, previous: Variant = null) -> Variant:
 	if status == Global.MulberryRoute.PLANT:
 		return _find_mulberry_planting_site()
 	if status == Global.TributeRoute.TEND:
@@ -458,11 +458,11 @@ func find_field_task(status: int, public_only := false, previous: Variant = null
 	var candidates: Dictionary = Global.field_seed_plans if planned_sowing else active_crops
 	var current_field := _working_field_at(previous) if planned_sowing and previous != null else Rect2i()
 	for cell: Vector2i in candidates:
-		if not matches_field_route(cell, status):
+		if not Global.field_scope_matches(cell, scope) or not matches_field_route(cell, status):
 			continue
 		var is_public := Global.is_public_plot(cell)
 		var preferred := current_field.has_point(cell) if planned_sowing else is_public
-		if (public_only and not is_public) or (preferred_selected and not preferred):
+		if preferred_selected and not preferred:
 			continue
 		var distance_to_plot := start.distance_squared_to(get_crop_world_pos(cell))
 		if preferred != preferred_selected or distance_to_plot < distance:
@@ -664,13 +664,33 @@ func field_batch_targets(cell: Vector2i, action: FieldAction) -> Array[Vector2i]
 	var targets: Array[Vector2i] = []
 	if not FIELD_COSTS.has(action) or Global.outcome != Global.Outcome.RUNNING:
 		return targets
+	var scope := harvest_batch_scope() if action == FieldAction.HARVEST else Global.FieldScope.ALL
+	if not Global.field_scope_matches(cell, scope):
+		return targets
 	var bounds := _working_field_at(cell)
 	for y in range(bounds.position.y, bounds.end.y):
 		for x in range(bounds.position.x, bounds.end.x):
 			var plot := Vector2i(x, y)
-			if field_action(plot) == action:
+			if Global.field_scope_matches(plot, scope) and field_action(plot) == action:
 				targets.append(plot)
 	return targets
+
+func harvest_batch_scope() -> Global.FieldScope:
+	return Global.field_route_scope if Global.field_route_status == Global.NightGrowth.READY else Global.FieldScope.ALL
+
+func batch_harvest_totals(plots: Array[Vector2i]) -> Dictionary:
+	var totals := {"tribute": 0, "stock": 0, "copper": 0, "levy": 0, "leaves": 0}
+	for cell in plots:
+		var crop: Dictionary = active_crops[cell]
+		var data: CropData = crop.data
+		var public_plot := Global.is_public_plot(cell)
+		var proceeds := Global.harvest_proceeds(public_plot, data.sell_price, Global.crop_rotation_bonus(cell, data),
+			Global.tax_reform_choice, Global.tax_rate)
+		for key in proceeds:
+			totals[key] += proceeds[key]
+		if not public_plot and crop.id == "mulberry":
+			totals.leaves += proceeds.stock * Global.balance.mulberry_leaves_per_harvest
+	return totals
 
 func _apply_field_batch(cell: Vector2i) -> void:
 	var action := field_action(cell)

@@ -24,6 +24,8 @@ const PLOT_DETAIL_WIDTH := 16.0
 @onready var tabs: HBoxContainer = %Tabs
 @onready var field_routes: HFlowContainer = %FieldRoutes
 @onready var harvest_route: Button = %HarvestRoute
+@onready var public_harvest_route: Button = %PublicHarvestRoute
+@onready var private_harvest_route: Button = %PrivateHarvestRoute
 @onready var water_route: Button = %WaterRoute
 @onready var canal_route: Button = %CanalRoute
 @onready var sow_route: Button = %SowRoute
@@ -67,6 +69,8 @@ func setup(estate_world: Node2D, guide: Control, blocked: Callable) -> void:
 	for tab: Button in tabs.get_children():
 		tab.pressed.connect(_show_category.bind(tab.get_index()))
 	harvest_route.pressed.connect(_start_field_route.bind(Global.NightGrowth.READY))
+	public_harvest_route.pressed.connect(_start_field_route.bind(Global.NightGrowth.READY, Global.FieldScope.PUBLIC))
+	private_harvest_route.pressed.connect(_start_field_route.bind(Global.NightGrowth.READY, Global.FieldScope.PRIVATE))
 	water_route.pressed.connect(_start_field_route.bind(Global.NightGrowth.DRY))
 	canal_route.pressed.connect(_start_field_route.bind(Global.NightGrowth.BLOCKED))
 	sow_route.pressed.connect(_start_field_route.bind(Global.SowingRoute.READY))
@@ -85,8 +89,8 @@ func open_fields() -> void:
 		category = Category.FIELDS
 		open_map()
 
-func _start_field_route(task: int) -> void:
-	if directions.follow_field_route(task):
+func _start_field_route(task: int, scope := Global.FieldScope.ALL) -> void:
+	if directions.follow_field_route(task, scope):
 		close_map()
 
 func _open_field_management() -> void:
@@ -326,6 +330,15 @@ func _show_category(next: Category) -> void:
 		entrance_legend.text = "▱ 田口 · 金框 公田" if fields.any(func(field: Dictionary) -> bool: return field.public) else "▱ 田口"
 		var report := Global.field_night_forecast()
 		_update_field_button(harvest_route, "■ 可收", report.ready)
+		var public_ready := 0
+		for cell: Vector2i in field_tasks:
+			if field_tasks[cell] == Global.NightGrowth.READY and Global.is_public_plot(cell):
+				public_ready += 1
+		var can_split: bool = public_ready > 0 and public_ready < report.ready
+		public_harvest_route.visible = can_split
+		private_harvest_route.visible = can_split
+		_update_field_button(public_harvest_route, "收公田", public_ready)
+		_update_field_button(private_harvest_route, "收私田", report.ready - public_ready)
 		_update_field_button(water_route, "◇ 待浇", report.dry)
 		_update_field_button(canal_route, "× 断水", report.blocked)
 		sow_route.visible = not Global.field_seed_plans.is_empty()

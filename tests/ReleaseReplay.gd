@@ -261,6 +261,8 @@ func _run() -> void:
 		"sowing-route", "sowing-route-pad", "sowing-route-before", "sowing-route-legacy":
 			var replay = load("res://tests/SowingRouteReplay.gd").new()
 			await replay.run_guided_sowing(tree, capture_directory, arguments[0])
+		"harvest-scope", "harvest-scope-pad", "harvest-scope-before", "harvest-scope-resume":
+			await load("res://tests/HarvestScopeReplay.gd").new().run_harvest_scope(tree, capture_directory, arguments[0])
 		"field-routes", "field-routes-legacy":
 			var replay = load("res://tests/FieldRoutesReplay.gd").new()
 			replay.legacy = arguments[0] == "field-routes-legacy"

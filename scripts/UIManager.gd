@@ -197,7 +197,8 @@ func _open_council_preparation() -> void:
 		council_preparation.open_map()
 
 func _guide_ripe_harvest(public_only: bool) -> void:
-	if not directions.follow_field_route(Global.NightGrowth.READY, public_only):
+	var scope := Global.FieldScope.PUBLIC if public_only else Global.FieldScope.ALL
+	if not directions.follow_field_route(Global.NightGrowth.READY, scope):
 		estate_map.open_fields()
 
 func _show_six_arts() -> void:
@@ -484,7 +485,7 @@ func _on_tax_envoy_interacted() -> void:
 	EventManager.open_tax_council(world, $Control)
 
 func _on_council_invitation() -> void:
-	if (Global.field_route_public_only or Global.field_route_status == Global.TributeRoute.TEND
+	if (Global.field_route_scope == Global.FieldScope.PUBLIC or Global.field_route_status == Global.TributeRoute.TEND
 		or Global.field_route_status in Global.ROTATION_ROUTES):
 		directions.clear_tracking()
 	_refresh_opening_action()
@@ -876,7 +877,8 @@ func _on_tribute_field_requested(panel: Control) -> void:
 		panel.queue_free()
 
 func _follow_tribute_plot(route: int) -> bool:
-	if not directions.follow_field_route(route, route != Global.TributeRoute.TEND):
+	var scope := Global.FieldScope.ALL if route == Global.TributeRoute.TEND else Global.FieldScope.PUBLIC
+	if not directions.follow_field_route(route, scope):
 		return false
 	if route == Global.TributeRoute.TEND:
 		var seed: String = Global.tribute_field_plan().seed_id

@@ -238,17 +238,17 @@ func _choose_what_to_harvest() -> void:
 	_expect("还差 2 份纳贡" in book.contribution_status.text and "29.70% · 还差 1 份纳贡" in book.public_result.text,
 		"The book accounts for the two private harvests before the public crop.")
 	await _button(book.field_button)
-	_expect(state.field_route_public_only and ui.directions.tracked_plot == PUBLIC and not tree.paused,
+	_expect(state.field_route_scope == state.FieldScope.PUBLIC and ui.directions.tracked_plot == PUBLIC and not tree.paused,
 		"Only the mature public plot is marked by the preparation action.")
 	await _save_route()
-	_expect(state.current_day == 49 and state.field_route_public_only and ui.directions.tracked_plot == PUBLIC
+	_expect(state.current_day == 49 and state.field_route_scope == state.FieldScope.PUBLIC and ui.directions.tracked_plot == PUBLIC
 		and state.private_harvest_total == 71 and state.deferred_field_sowing.has(PRIVATE_WHEAT)
 		and state.deferred_field_sowing.has(PRIVATE_MILLET) and state.planned_field_seed(PRIVATE_WHEAT).is_empty(),
 		"Continue restores the public route, ledger, and temporary hold on the two now empty plots.")
 	await _snapshot("04-public-route-reloaded")
 	await _click_plot(PUBLIC)
 	_expect(state.king_storage == 30 and state.private_harvest_total == 71 and not state.tax_council_waiting()
-		and not state.field_route_public_only and ui.directions.tracked_plot == null and world.is_crop_ripe(LEFTOVER_WHEAT),
+		and state.field_route_scope == state.FieldScope.ALL and ui.directions.tracked_plot == null and world.is_crop_ripe(LEFTOVER_WHEAT),
 		"After the public harvest the route clears even with ripe private wheat nearby.")
 	await _open_book()
 	_expect(not book.public_card.visible and book.field_button.text == "查看井田", "Without ripe public crops the ledger opens the field map.")
@@ -321,11 +321,11 @@ func _meet_and_choose() -> void:
 	controller.pad = tree.root.get_node("GamepadInput")
 	tree.root.notify_mouse_exited()
 	await controller._click(book.field_button, true)
-	_expect(controller.failures == 0 and state.field_route_public_only and ui.directions.tracked_plot == SECOND,
+	_expect(controller.failures == 0 and state.field_route_scope == state.FieldScope.PUBLIC and ui.directions.tracked_plot == SECOND,
 		"A controller can follow the public crop on the second field.")
 	await _click_plot(SECOND)
 	_expect(state.king_storage == 31 and state.private_harvest_total == 71 and state.tax_council_waiting()
-		and not ui.hud.council_prep_button.visible and not state.field_route_public_only,
+		and not ui.hud.council_prep_button.visible and state.field_route_scope == state.FieldScope.ALL,
 		"The predicted harvest summons the envoy and closes the preparation step.")
 	await _button(ui.hud.opening_action)
 	_expect(ui.directions.tracked_neighbor == state.TAX_ENVOY, "The journal now leads to the envoy.")
@@ -351,7 +351,7 @@ func _meet_and_choose() -> void:
 
 func _old_save() -> void:
 	await _continue()
-	_expect(state.current_day == 49 and state.current_rank == state.Rank.DA_FU and not state.field_route_public_only
+	_expect(state.current_day == 49 and state.current_rank == state.Rank.DA_FU and state.field_route_scope == state.FieldScope.ALL
 		and state.king_storage == 29 and state.private_harvest_total == 68, "A genuine previous save can open the new ledger.")
 	await _open_book()
 	_expect("还差 1 份纳贡" in book.contribution_status.text, "The old record calculates the same remaining contribution.")

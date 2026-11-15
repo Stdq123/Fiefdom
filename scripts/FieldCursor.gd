@@ -80,6 +80,12 @@ func _process(_delta: float) -> void:
 		if not plots.is_empty():
 			_show_field_preview(cell, action, plots)
 			return
+		if action == world.FieldAction.HARVEST:
+			var scope: Global.FieldScope = world.harvest_batch_scope()
+			if not Global.field_scope_matches(cell, scope):
+				var modifier := "LT" if GamepadInput.active else Preferences.key_label(KeyBindings.FILL)
+				_place_caption(cell, "批量只收%s\n松开 %s 可单格收割" % [Global.FIELD_SCOPE_NAMES[scope], modifier], Color("#efaa84"))
+				return
 
 	var is_public: bool = tile.get_custom_data("is_public_field")
 	var cost: int = world.field_cost(action)
@@ -107,6 +113,7 @@ func _show_field_preview(cell: Vector2i, action: int, plots: Array[Vector2i]) ->
 	var title: String = "整田" + world.FIELD_WORK_LABELS[action]
 	var seeds: Dictionary[Vector2i, String] = {}
 	var varieties := {}
+	var harvest_note := ""
 	if action == world.FieldAction.SOW:
 		if world.sow_from_plan:
 			title = "按安排播种"
@@ -116,9 +123,19 @@ func _show_field_preview(cell: Vector2i, action: int, plots: Array[Vector2i]) ->
 				varieties[seed] = int(varieties.get(seed, 0)) + 1
 		else:
 			title += ItemManager.crop_label(world.current_seed_id)
+	elif action == world.FieldAction.HARVEST:
+		var scope: Global.FieldScope = world.harvest_batch_scope()
+		if scope != Global.FieldScope.ALL:
+			title = "批收" + Global.FIELD_SCOPE_NAMES[scope]
+		var totals: Dictionary = world.batch_harvest_totals(plots)
+		harvest_note = Global.field_work_summary(totals, ["tribute", "stock", "copper", "leaves"])
+		if totals.levy > 0:
+			harvest_note += " · 扣税 %d" % totals.levy
 	var work := "%s · 公田 %d · 私田 %d" % [title, public_plots, plots.size() - public_plots]
 	if not varieties.is_empty():
 		work += "\n" + ItemManager.describe_crops(varieties)
+	if not harvest_note.is_empty():
+		work += "\n" + harvest_note
 	var accept := "A 确认" if GamepadInput.active else "左键确认"
 	var cost_line := ("%d 体力 · %s" % [cost, accept] if can_afford
 		else "需 %d 体力 · 还差 %d" % [cost, cost - Global.current_stamina])

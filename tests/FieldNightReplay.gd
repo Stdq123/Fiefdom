@@ -261,7 +261,7 @@ func _first_rice() -> void:
 		"A disconnected first tribute names the need for a canal."):
 		return
 	await _button(warning.choices.front())
-	_expect(state.field_route_public_only and ui.directions.tracked_plot == PUBLIC,
+	_expect(state.field_route_scope == state.FieldScope.PUBLIC and ui.directions.tracked_plot == PUBLIC,
 		"The shortcut marks the public plot when both rice plots lack water.")
 	if not _expect(state.save_game() == OK and state.load_game(state.manual_save_path()) == OK,
 		"Save and reload the public-only irrigation route."):
@@ -269,9 +269,9 @@ func _first_rice() -> void:
 	await tree.scene_changed
 	await _use_estate()
 	await tree.process_frame
-	_expect(state.field_route_public_only and ui.directions.tracked_plot == PUBLIC,
+	_expect(state.field_route_scope == state.FieldScope.PUBLIC and ui.directions.tracked_plot == PUBLIC,
 		"The public-only route resumes on the same rice plot. status=%s public_only=%s plot=%s" % [
-			state.field_route_status, state.field_route_public_only, ui.directions.tracked_plot])
+			state.field_route_status, state.field_route_scope == state.FieldScope.PUBLIC, ui.directions.tracked_plot])
 
 func _first_deadline() -> void:
 	var deadline: int = state.balance.no_contribution_threshold
