@@ -701,11 +701,13 @@ func _draw() -> void:
 	if wilderness:
 		creek_profile.draw_shoulder(self, SEASON_PALETTES[season][0], season, raining)
 		RAVINE_BANKS.draw_fishing_shelves(self, season, raining)
+		ravine_relief.draw_trail_verges(self, season, raining)
 		_draw_tracks()
 		RAVINE_RELIEF.draw_gate(self, RavineLayout.WEST_GATE, true, season, raining)
 		ravine_relief.draw_lookout(self, season, raining)
 		creek_profile.draw_water(self, WATER_TINTS[season], season, raining)
 		RAVINE_BANKS.draw_banks(self, season, raining)
+		ravine_relief.draw_bridge_aprons(self, season, raining)
 		_draw_crossings()
 	else:
 		_draw_field_verges()
@@ -749,7 +751,8 @@ func _surface_at(foot: Vector2) -> TERRAIN_AUDIO.Surface:
 			return TERRAIN_AUDIO.Surface.PLANK
 		if absf(foot.y - FORD.y) < CROSSING_HALF_DEPTH and absf(foot.x - creek_x(foot.y)) < WATER_HALF_WIDTH:
 			return TERRAIN_AUDIO.Surface.SHALLOWS
-		if RAVINE_RELIEF.gate_stone_at(foot, RavineLayout.WEST_GATE) or ravine_relief.lookout_stone_at(foot):
+		if (RAVINE_RELIEF.gate_stone_at(foot, RavineLayout.WEST_GATE)
+				or ravine_relief.lookout_stone_at(foot) or ravine_relief.approach_stone_at(foot)):
 			return TERRAIN_AUDIO.Surface.STONE
 	else:
 		if EstateLayout.PAVILION_SHELTER_FLOOR.has_point(foot) \

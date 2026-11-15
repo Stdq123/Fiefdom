@@ -185,6 +185,8 @@ func _walk_route(allow_exit := false, climb_frame := "01b-lookout-steps") -> boo
 			_expect(landscape._surface_at(player.position) == TERRAIN_AUDIO.Surface.SHALLOWS,
 				"The shallow steps stay inside the wadeable strip.")
 			await _capture_map_frame("03a-ford-stepping-stones")
+		if point == RavineLayout.RIDGE_FORK and not climb_frame.ends_with("frost") and guide.destination_name == "望溪台":
+			await _capture_map_frame("01d-bridge-to-lookout")
 		if point == RavineLayout.RIDGE_LANE[2] and guide.destination_name == "望溪台":
 			var landscape: Node2D = ravine.get_node("Landscape")
 			_expect(landscape._surface_at(player.position) == TERRAIN_AUDIO.Surface.STONE
@@ -207,6 +209,7 @@ func _cross_the_ravine() -> bool:
 	var landscape: Node2D = ravine.get_node("Landscape")
 	_expect(landscape._surface_at(RavineLayout.WEST_GATE) == TERRAIN_AUDIO.Surface.STONE,
 		"The west gate's stone sill spans the path through the rocks.")
+	_check_approach_surfaces(landscape)
 	if not map_capture_dir.is_empty():
 		var daytime: float = state.day_progress
 		state.advance_daylight((0.96 - daytime) * state.balance.daylight_seconds)
@@ -251,6 +254,16 @@ func _cross_the_ravine() -> bool:
 		await _capture_map_frame("02a-herbs-on-ledge")
 		await Campaign.walk_straight(tree, player, RavineLayout.HERBS)
 	await _check_lookout_face(landscape)
+	var shoulder: Vector2 = RavineLayout.MAIN_TRAIL[-2]
+	var below := shoulder + Vector2(-2, 45)
+	await Campaign.walk_straight(tree, player, shoulder)
+	await Campaign.walk_straight(tree, player, below)
+	_expect(player.position.distance_to(below) < 4.0 and guide.route.is_empty()
+		and landscape._surface_at(player.position) == TERRAIN_AUDIO.Surface.GRASS,
+		"The low bridge verge can be crossed into the grass with ordinary movement and without a route.")
+	await _capture_map_frame("01e-bridge-verge")
+	await Campaign.walk_straight(tree, player, shoulder)
+	await Campaign.walk_straight(tree, player, RavineLayout.RIDGE_FORK)
 
 	if not await _select_place("砾滩"):
 		return false
@@ -278,6 +291,22 @@ func _cross_the_ravine() -> bool:
 		return _expect(await Campaign.walk_through_gates(tree, &"ui_left", state.ESTATE_SCENE),
 			"Return through the open pass after checking the edge.")
 	return false
+
+func _check_approach_surfaces(landscape: Node2D) -> void:
+	var deck := RavineLayout.BRIDGE_DECK
+	var center := deck.get_center()
+	var offset := Vector2(deck.size.x * 0.5 + 14.0, 0)
+	var west := center - offset - Vector2(0, 2)
+	var east := center + offset - Vector2(0, 2)
+	var first_step: Vector2 = RavineLayout.RIDGE_LANE[1]
+	var stair_foot := first_step.lerp(RavineLayout.RIDGE_FORK, 0.32)
+	for at: Vector2 in [west, east, stair_foot]:
+		_expect(landscape._surface_at(at) == TERRAIN_AUDIO.Surface.STONE,
+			"Only the actual approach stone should sound like stone at %s." % at)
+	_expect(landscape._surface_at(center) == TERRAIN_AUDIO.Surface.PLANK
+		and landscape._surface_at(RavineLayout.MAIN_TRAIL[-3]) == TERRAIN_AUDIO.Surface.TRACK,
+		"The bridge planks and the earth lane keep distinct footsteps next to the stone aprons.")
+	print("RAVINE_APPROACH_SURFACES west=", west, " east=", east, " stairs=", stair_foot)
 
 func _check_lookout_face(landscape: Node2D) -> void:
 	var side := Vector2(379, -58)
