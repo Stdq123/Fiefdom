@@ -13,6 +13,9 @@ const RESUME_SOWING := "resume_sowing"
 @onready var close_button: Button = $CloseButton
 @onready var retainer_panel: VBoxContainer = $HBoxContainer/LeftPanel
 @onready var retainer_count: Label = %RetainerCount
+@onready var roster_meal: HBoxContainer = %RosterMeal
+@onready var roster_meal_summary: Label = %RosterMealSummary
+@onready var roster_night_rations: Button = %RosterNightRations
 @onready var empty_roster: Label = %EmptyRoster
 @onready var retainer_list_container: VBoxContainer = $HBoxContainer/LeftPanel/ScrollContainer/VBoxContainer
 @onready var map_grid_container: GridContainer = $HBoxContainer/RightPanel/封地概览/GridContainer
@@ -60,6 +63,12 @@ var music_practice_script = preload("res://scripts/MusicPractice.gd")
 
 func _ready() -> void:
 	refresh_retainers()
+	roster_night_rations.pressed.connect(GameEvents.night_rations_requested.emit)
+	for changed: Signal in [GameEvents.food_changed, GameEvents.money_changed, GameEvents.inventory_changed]:
+		changed.connect(_refresh_ration_previews.unbind(1))
+	for changed: Signal in [GameEvents.retainer_duty_changed, GameEvents.retainer_recruited, GameEvents.retainer_departed]:
+		changed.connect(_refresh_roster_meals.unbind(1))
+	GameEvents.night_rations_changed.connect(_refresh_ration_previews)
 	well_field_selector.item_selected.connect(_show_well_field)
 	seed_plan_picker.add_item("选择续播方式")
 	for seed_id: String in CropData.IDS:
@@ -103,7 +112,6 @@ func _ready() -> void:
 	GameEvents.retainer_assigned.connect(_refresh_steward_choices.unbind(2))
 	GameEvents.retainer_recruited.connect(_refresh_steward_choices.unbind(1))
 	GameEvents.retainer_departed.connect(_refresh_steward_choices.unbind(1))
-	GameEvents.food_changed.connect(_refresh_steward_preview.unbind(1))
 	GameEvents.retainer_assigned.connect(_show_steward_assignment)
 	GameEvents.tax_reform_choice_made.connect(_refresh_field_tiles.unbind(1))
 	setup_six_arts()
@@ -251,6 +259,7 @@ func _announce_visibility() -> void:
 	var opened := is_visible_in_tree()
 	GameEvents.management_visibility_changed.emit(opened)
 	if opened:
+		_refresh_roster_meals()
 		previous_focus = get_viewport().gui_get_focus_owner()
 		section_buttons[tabs.current_tab].grab_focus()
 		GamepadInput.snap_pointer_to_focus.call_deferred()
@@ -413,6 +422,23 @@ func refresh_retainers() -> void:
 		var item = retainer_item_scene.instantiate()
 		retainer_list_container.add_child(item)
 		item.setup(r)
+	_refresh_roster_meals()
+
+func _refresh_ration_previews() -> void:
+	_refresh_roster_meals()
+	if map_grid_container.is_visible_in_tree():
+		_refresh_steward_preview()
+
+func _refresh_roster_meals() -> void:
+	roster_meal.visible = not Global.retainers.is_empty()
+	if not roster_meal.is_visible_in_tree():
+		return
+	var meal := Global.night_rations_plan()
+	var short: bool = meal.served < meal.need
+	roster_meal_summary.text = ("今夜可供 %d/%d 份" % [meal.served, meal.need] if short else "今夜口粮齐 · %d 份" % meal.need)
+	if not meal.departing.is_empty():
+		roster_meal_summary.text += "\n预计离任 · " + "、".join(meal.departing)
+	roster_meal_summary.add_theme_color_override("font_color", Color("#f0b591") if short else Color("#c5d2b7"))
 
 func refresh_well_fields() -> void:
 	var previous_id := well_field_selector.get_selected_id()
@@ -525,12 +551,17 @@ func _refresh_steward_preview() -> void:
 		public_count += int(Global.is_public_plot(cell))
 		untilled_count += int(not Global.tilled_cells.has(cell))
 	var private_count := targets.size() - public_count
-	var ration := Global.night_ration_for_duty(RetainerData.Duty.STEWARD)
-	var change := ration - Global.retainer_night_ration(data)
+	var meal := Global.night_rations_after_duty(data, RetainerData.Duty.STEWARD)
 	var household := Global.retainer_food_cost()
 	var ration_note := "全员每夜用粮 %d 份" % household
-	if change != 0:
-		ration_note = "全员每夜用粮 %d → %d 份" % [household, household + change]
+	if meal.need != household:
+		ration_note = "全员每夜用粮 %d → %d 份" % [household, meal.need]
+	if meal.served < meal.need:
+		ration_note += " · 今夜可供 %d/%d 份" % [meal.served, meal.need]
+		if not meal.departing.is_empty():
+			ration_note += " · 离任 " + "、".join(meal.departing)
+	elif meal.copper > 0:
+		ration_note += " · 今夜购粮 %d 铜钱" % meal.copper
 	var field_number := well_field_selector.get_selected_id() + 1
 	var assignment := "井田 %d" % field_number
 	if already_assigned:

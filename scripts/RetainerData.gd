@@ -113,7 +113,10 @@ func get_appearance_texture() -> Texture2D:
 	return CharacterArt.retainer(school)
 
 func duty_name() -> String:
-	match duty:
+	return duty_label(duty)
+
+static func duty_label(role: Duty) -> String:
+	match role:
 		Duty.REEL: return "蚕桑缫丝"
 		Duty.TEACH: return "礼仪教习"
 		Duty.GUARD: return "封地守卫"

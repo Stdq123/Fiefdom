@@ -144,6 +144,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/WatchReliefReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/SeedGardenReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ResearchRationsReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/DutyRationsReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/MarketReserveReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldSoilReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FestivalPantryReplay.gd'), (Join-Path $repo 'tests/CalendarTomorrowReplay.gd') -Destination $testDirectory
@@ -378,7 +379,7 @@ try {
         if ($Capture) {
             Start-VerifiedGame -Directory $release -Profile 'ration-priority-compact' -Name 'ration-priority-1024x768' -Replay 'ration-priority' -Resolution '1024x768'
         }
-        foreach ($name in 'research-rations', 'retainer-return', 'traditional-rations', 'reformed-rations') {
+        foreach ($name in 'research-rations', 'duty-rations', 'retainer-return', 'traditional-rations', 'reformed-rations') {
             Start-VerifiedGame -Directory $release -Profile $name -Name $name -Replay $name
         }
     }

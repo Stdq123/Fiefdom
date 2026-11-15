@@ -99,6 +99,28 @@ theme_override_font_sizes/font_size = 15
 [node name="RosterDivider" type="HSeparator" parent="HBoxContainer/LeftPanel"]
 layout_mode = 2
 
+[node name="RosterMeal" type="HBoxContainer" parent="HBoxContainer/LeftPanel"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RosterMealSummary" type="Label" parent="HBoxContainer/LeftPanel/RosterMeal"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="RosterNightRations" type="Button" parent="HBoxContainer/LeftPanel/RosterMeal"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(91, 34)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 14
+text = "今夜安排"
+
 [node name="EmptyRoster" type="Label" parent="HBoxContainer/LeftPanel"]
 unique_name_in_owner = true
 visible = false

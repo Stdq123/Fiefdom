@@ -2092,10 +2092,10 @@ func _apply_confucian_loyalty_aura() -> void:
 			if retainer.school != RetainerData.School.CONFUCIAN:
 				retainer.loyalty = minf(100.0, retainer.loyalty + loyalty_boost)
 
-func retainer_food_cost() -> int:
+func retainer_food_cost(servings: Dictionary[RetainerData, int] = {}) -> int:
 	var cost := 0
 	for retainer in retainers:
-		cost += retainer_night_ration(retainer)
+		cost += int(servings.get(retainer, retainer_night_ration(retainer)))
 	return cost
 
 func retainer_night_ration(retainer: RetainerData) -> int:
@@ -2104,7 +2104,7 @@ func retainer_night_ration(retainer: RetainerData) -> int:
 func night_ration_for_duty(duty: RetainerData.Duty) -> int:
 	return 1 + (0 if duty == RetainerData.Duty.FIELD else balance.specialist_food_per_night)
 
-func _night_meal(available: int) -> Dictionary:
+func _night_meal(available: int, servings: Dictionary[RetainerData, int] = {}) -> Dictionary:
 	var order := retainers.duplicate()
 	if night_rations.priority:
 		order.erase(night_rations.priority)
@@ -2113,7 +2113,7 @@ func _night_meal(available: int) -> Dictionary:
 	var missed: Array[RetainerData] = []
 	var served := 0
 	for retainer in order:
-		var portions := retainer_night_ration(retainer)
+		var portions: int = servings.get(retainer, retainer_night_ration(retainer))
 		if portions <= available - served:
 			served += portions
 			fed.append(retainer)
@@ -2995,8 +2995,15 @@ func _ration_crop_limits(order_keep: Dictionary, pantry: Dictionary) -> Dictiona
 	return keep
 
 func night_rations_plan(finished_day := 0) -> Dictionary:
-	var plan := _night_rations_supply_plan(finished_day if finished_day > 0 else current_day, night_rations)
-	plan.merge(_night_meal(food_storage + int(plan.supper) + int(plan.converted) + int(plan.bought)))
+	return _forecast_night_rations(finished_day if finished_day > 0 else current_day)
+
+func night_rations_after_duty(retainer: RetainerData, duty: RetainerData.Duty) -> Dictionary:
+	var servings: Dictionary[RetainerData, int] = {retainer: night_ration_for_duty(duty)}
+	return _forecast_night_rations(current_day, servings)
+
+func _forecast_night_rations(evening: int, servings: Dictionary[RetainerData, int] = {}) -> Dictionary:
+	var plan := _night_rations_supply_plan(evening, night_rations, 0, servings)
+	plan.merge(_night_meal(food_storage + int(plan.supper) + int(plan.converted) + int(plan.bought), servings))
 	var departing := PackedStringArray()
 	for retainer: RetainerData in plan.missed:
 		if NightRations.loyalty_after_missed_meal(retainer.loyalty) == 0.0:
@@ -3011,10 +3018,11 @@ func night_rations_offer(extra_copper := 0) -> Dictionary:
 	policy.partial_meals = night_rations.partial_meals
 	return _night_rations_supply_plan(current_day, policy, extra_copper)
 
-func _night_rations_supply_plan(evening: int, policy: NightRations, extra_copper := 0) -> Dictionary:
+func _night_rations_supply_plan(evening: int, policy: NightRations, extra_copper := 0,
+		servings: Dictionary[RetainerData, int] = {}) -> Dictionary:
 	var schedule := season_order(evening + 1)
 	var upcoming := _pinned_order_after(schedule)
-	var need := retainer_food_cost()
+	var need := retainer_food_cost(servings)
 	var supper := mini(need, int(winter_supper_record(evening).get("portions", 0)))
 	var fee := research_fee_due(evening + 1)
 	var purse := money + extra_copper
@@ -3022,7 +3030,8 @@ func _night_rations_supply_plan(evening: int, policy: NightRations, extra_copper
 	var order_keep := _order_stock_to_keep(schedule, upcoming)
 	var pantry := _festival_pantry(evening, order_keep)
 	var keep := _ration_crop_limits(order_keep, pantry)
-	var plan := policy.plan(need, food_storage + supper, purse - reserved, crop_stock, keep, balance.market_food_price, _night_meal)
+	var plan := policy.plan(need, food_storage + supper, purse - reserved, crop_stock, keep,
+		balance.market_food_price, _night_meal.bind(servings))
 	plan.festival_pantry = pantry
 	plan.supper = supper
 	plan.research_fee = fee
