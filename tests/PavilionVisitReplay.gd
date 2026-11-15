@@ -4,6 +4,7 @@ const Campaign := preload("res://tests/CampaignReplay.gd")
 const Landscape := preload("res://scripts/Landscape.gd")
 const TerrainAudio := preload("res://scripts/TerrainAudio.gd")
 const PUBLIC := Vector2i(5, 5)
+const EVENING_NOTICE := "灯下小谈"
 
 var tree: SceneTree
 var state: Node
@@ -11,6 +12,7 @@ var world: Node2D
 var ui: CanvasLayer
 var capture_dir := ""
 var failures := 0
+var story_variant := "pavilion-stories"
 
 func _expect(condition: bool, message: String) -> bool:
 	if not condition:
@@ -423,6 +425,69 @@ func _hear_story_lines(id: String, middle_capture := "") -> void:
 			return
 	_expect(state.pavilion_stories_heard.get(id) == state.current_day and world.pavilion_story_id().is_empty(),
 		"Finishing the talk records it once and frees the original table interaction.")
+	_expect(EVENING_NOTICE not in ui.hud.rations_button.tooltip_text, "The heard talk leaves the evening shortcut.")
+
+func _guide_from_tonight(id: String, frame: String, gamepad := false) -> bool:
+	var story: Dictionary = PavilionStories.STORIES[id]
+	var pavilion: PavilionRest = world.pavilion_rest
+	var day: int = state.current_day
+	var food: int = state.food_storage
+	var hours: float = state.day_progress
+	if not _expect(EVENING_NOTICE in ui.hud.rations_button.tooltip_text,
+		"The current estate displays that a new conversation has both speakers."):
+		return false
+	await _button(ui.hud.rations_button)
+	var panel := ui.get_node_or_null("Control/NightRationsPanel") as Control
+	if not _expect(panel != null and panel.pavilion_story.is_visible_in_tree() and story.title in panel.pavilion_title.text
+		and pavilion.gathering_name() in panel.pavilion_people.text
+		and String(story.speakers[0]) in panel.pavilion_people.text and String(story.speakers[1]) in panel.pavilion_people.text
+		and panel.scroll.get_global_rect().encloses(panel.find_pavilion.get_global_rect()),
+		"The ordinary evening sheet names the talk, both people, the site and a visible directions button."):
+		return false
+	await _capture(frame + "-plan")
+	if gamepad:
+		var pad = load("res://tests/GamepadReplay.gd").new()
+		pad.tree = tree
+		pad.pad = GamepadInput
+		await pad._click(panel.find_pavilion)
+		_expect(pad.failures == 0, "A controller can select the pavilion directions while the panel is open.")
+	else:
+		await _button(panel.find_pavilion)
+	if not _expect(not ui.has_node("Control/NightRationsPanel") and ui.directions.tracked_place == EVENING_NOTICE
+		and ui.directions.tracked_place_point == pavilion.gathering_approach() and state.current_day == day
+		and state.food_storage == food and state.day_progress < hours + 0.02 and state.pavilion_stories_heard.get(id, 0) == 0,
+		"Close the sheet and mark the right approach without advancing to another watch, spending food or hearing early."):
+		return false
+	var hint: Label = pavilion.hint
+	var hint_bounds := hint.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, hint.size)
+	var readable_place_hint: bool = hint.is_visible_in_tree() and ui.hud.map_space_clear(hint_bounds)
+	var readable_marker: bool = ui.directions.caption.is_visible_in_tree() and ui.hud.map_space_clear(ui.directions.plaque)
+	_expect(readable_place_hint or readable_marker, "The destination stays readable near the bottom of the viewport.")
+	if readable_place_hint and ui.directions.mark == ui.directions.Mark.PLACE:
+		_expect(not ui.directions.caption.is_visible_in_tree(), "The route uses the visible table label once it is in view.")
+	await _capture(frame + "-route")
+	print("PAVILION_INVITATION id=", id, " day=", day, " place=", pavilion.gathering_name(),
+		" target=", ui.directions.tracked_place_point, " controller=", gamepad)
+	return true
+
+func _archive_old_evening() -> void:
+	await _button(ui.hud.rations_button)
+	var panel := ui.get_node_or_null("Control/NightRationsPanel") as Control
+	if not _expect(panel != null and panel.get_node_or_null("%PavilionStory") == null and world.pavilion_story_id() == "road_grain",
+		"The previous Windows release has the same two people and story while Tonight's Plan has no way to find them."):
+		return
+	await _capture("06-old-tonight")
+	await _button(panel.close_button)
+	await _save()
+	_expect(FileAccess.file_exists(state.manual_save_path()), "Use Settings to create the previous release's actual evening save.")
+	print("PAVILION_INVITATION_BEFORE day=", state.current_day, " story=", world.pavilion_story_id(), " food=", state.food_storage)
+
+func _resume_old_evening() -> void:
+	if not _expect(state.current_day == 7 and world.pavilion_story_id() == "road_grain" and state.pavilion_stories_heard.is_empty(),
+		"The old evening save restores the actual unread talk and its seated neighbors."):
+		return
+	if await _guide_from_tonight("road_grain", "06-continued") and await _open_story_table("road_grain") and await _choose_dialogue("坐下"):
+		await _hear_story_lines("road_grain", "08-continued-conversation")
 
 func _hear_road_grain() -> void:
 	await _tend_for_story()
@@ -434,6 +499,7 @@ func _hear_road_grain() -> void:
 	if not await _choose_dialogue("送路粮"):
 		return
 	_expect(state.road_provisions_day == 7 and state.pavilion_stories_heard.is_empty(), "Give Ji Qing one private crop before the gathering.")
+	_expect(EVENING_NOTICE not in ui.hud.rations_button.tooltip_text, "The daytime gift does not advertise an empty table.")
 	_skip_to(0.74)
 	if not await _wait_for_arrival(guest):
 		return
@@ -444,6 +510,19 @@ func _hear_road_grain() -> void:
 		await tree.physics_frame
 	if not _expect(keeper.resting_at_pavilion() and world.pavilion_story_id() == "road_grain",
 			"The offer starts when the worker and the visitor both sit after their normal activities."):
+		return
+	if story_variant == "pavilion-stories-before":
+		await _archive_old_evening()
+		return
+	_expect(EVENING_NOTICE in ui.hud.rations_button.text, "The estate's ordinary evening button reports the talk when the rations are ready.")
+	var stored_food: int = state.food_storage
+	state.food_storage = 0
+	GameEvents.food_changed.emit(0)
+	_expect("缺粮" in ui.hud.rations_button.text and EVENING_NOTICE in ui.hud.rations_button.tooltip_text,
+		"Urgent rations keep their place above the social invitation.")
+	state.food_storage = stored_food
+	GameEvents.food_changed.emit(stored_food)
+	if not await _guide_from_tonight("road_grain", "06-clear-evening"):
 		return
 	await _key(KEY_M)
 	var map: Control = ui.estate_map
@@ -488,7 +567,8 @@ func _check_story_variants() -> void:
 			"road_provisions_delivered": true, "pavilion_stories_heard": {"road_grain": 7}},
 		"market_cloth": {"current_day": 9, "silk_sample_day": 8,
 			"retainers": [{"name": VisitorData.ROAD_KEEPER, "school": RetainerData.School.CONFUCIAN}]},
-		"watch_lantern": {"current_day": 30, "east_watch_day": 10,
+		"watch_lantern": {"current_day": 30, "east_watch_day": 10, "king_storage": 12,
+			"private_harvest_total": 24, "current_rank": state.Rank.ZHONG_SHI,
 			"last_defense": {"day": 9, "kind": 0, "losses": 0, "guard": ""},
 			"retainers": [{"name": VisitorData.EAST_WATCHER, "school": RetainerData.School.MILITARY}]},
 	}
@@ -501,6 +581,8 @@ func _check_story_variants() -> void:
 		if not _expect(world.pavilion_story_id() == id and table.is_rain_shelter() == (id == "watch_lantern"),
 				"The saved favor makes the talk available while both neighbors are seated: " + id):
 			continue
+		if id == "watch_lantern" and not await _guide_from_tonight(id, "10-rain-shelter", story_variant == "pavilion-stories-pad"):
+			return
 		if not await _open_story_table(id) or not await _choose_dialogue("坐下"):
 			return
 		await _hear_story_lines(id)
@@ -524,12 +606,16 @@ func run(game_tree: SceneTree, capture := "", story_only := false) -> void:
 	tree.root.notify_mouse_entered()
 	state = tree.root.get_node("Global")
 	capture_dir = capture if not capture.is_empty() else OS.get_environment("FIEFDOM_PAVILION_CAPTURES")
-	if await _title(false):
+	if await _title(story_variant == "pavilion-stories-legacy"):
 		if story_only:
-			await _hear_road_grain()
-			await _rain_visit()
-			if DisplayServer.get_name() == "headless":
-				await _check_story_variants()
+			if story_variant == "pavilion-stories-legacy":
+				await _resume_old_evening()
+			else:
+				await _hear_road_grain()
+				if story_variant != "pavilion-stories-before":
+					await _rain_visit()
+					if DisplayServer.get_name() == "headless" or story_variant == "pavilion-stories-pad":
+						await _check_story_variants()
 		else:
 			await _play_opening()
 			await _rain_visit()

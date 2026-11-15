@@ -1,8 +1,11 @@
 extends Node2D
 class_name PavilionRest
 
+signal story_changed(story_id: String, place: String)
+
 const PLACE := "亭前晚坐"
 const RAIN_PLACE := "亭东雨棚"
+const STORY_LABEL := "灯下小谈"
 const START := (17.0 - Global.DAY_START_HOUR) / (Global.DAY_END_HOUR - Global.DAY_START_HOUR)
 const RAIN_START := (15.0 - Global.DAY_START_HOUR) / (Global.DAY_END_HOUR - Global.DAY_START_HOUR)
 const SEATS := [Vector2(-25, 3), Vector2(12, -16), Vector2(-12, -13),
@@ -18,6 +21,7 @@ const APPROACH := Vector2(0, 15)
 @onready var dry_lamps: Node2D = $DryLamps
 @onready var rain_lamps: Node2D = $RainLamps
 var focused := false
+var story_id := ""
 
 func _ready() -> void:
 	mats.draw.connect(_draw_mats)
@@ -47,9 +51,14 @@ func _refresh() -> void:
 	rain_lamps.visible = shelter
 
 func refresh_table() -> void:
+	var next_story: String = get_parent().pavilion_story_id()
+	var changed := next_story != story_id
+	story_id = next_story
 	mats.queue_redraw()
 	queue_redraw()
 	_refresh_hint()
+	if changed:
+		story_changed.emit(story_id, gathering_name())
 
 func is_rain_shelter() -> bool:
 	return Global.has_rain()
@@ -85,10 +94,9 @@ func set_interaction_focused(focused: bool) -> void:
 	_refresh_hint()
 
 func _refresh_hint() -> void:
-	var story: String = get_parent().pavilion_story_id() if visible else ""
-	var label := "灯下小谈" if not story.is_empty() else "今夜安排"
+	var label := STORY_LABEL if not story_id.is_empty() else "今夜安排"
 	hint.text = GamepadInput.interact_hint(label) if focused else label
-	hint.visible = visible and (focused or not story.is_empty())
+	hint.visible = visible and (focused or not story_id.is_empty())
 
 func interact() -> void:
 	GameEvents.pavilion_table_requested.emit()
@@ -120,7 +128,7 @@ func _draw() -> void:
 	draw_rect(Rect2(-3, -15, 7, 9), Color("#805b4d"))
 	draw_rect(Rect2(-1, -14, 2, 7), Color("#ae8062"))
 	draw_rect(Rect2(-3, -16, 7, 2), Color("#cca36e"))
-	if not get_parent().pavilion_story_id().is_empty():
+	if not story_id.is_empty():
 		draw_rect(Rect2(-12, -10, 9, 5), Color("#4c3928"))
 		draw_rect(Rect2(-11, -11, 8, 4), Color("#d8bd85"))
 		draw_line(Vector2(-9, -11), Vector2(-9, -7), Color("#887047"), 1.0)

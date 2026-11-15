@@ -205,6 +205,41 @@ layout_mode = 2
 size_flags_vertical = 4
 mouse_default_cursor_shape = 2
 
+[node name="PavilionStory" type="PanelContainer" parent="Center/Window/Content/Scroll/Body/Plan"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_styles/panel = SubResource("Ledger")
+
+[node name="Row" type="HBoxContainer" parent="Center/Window/Content/Scroll/Body/Plan/PavilionStory"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Details" type="VBoxContainer" parent="Center/Window/Content/Scroll/Body/Plan/PavilionStory/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="PavilionTitle" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/PavilionStory/Row/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.945, 0.827, 0.553, 1)
+theme_override_font_sizes/font_size = 18
+
+[node name="PavilionPeople" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/PavilionStory/Row/Details"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="FindPavilion" type="Button" parent="Center/Window/Content/Scroll/Body/Plan/PavilionStory/Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(115, 34)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+text = "指路去席案"
+
 [node name="FieldPlan" type="PanelContainer" parent="Center/Window/Content/Scroll/Body/Plan"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("Ledger")

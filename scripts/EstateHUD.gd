@@ -65,6 +65,7 @@ const SEED_BUTTON := preload("res://scripts/SeedButton.gd")
 var seed_buttons: Dictionary = {}
 var save_notice_tween: Tween
 var fields_needing_water := 0
+var pavilion_story_available := false
 var reclamation_mode := false
 var indoors := false
 var driving := false
@@ -294,6 +295,9 @@ func refresh_rations() -> void:
 	elif Global.tribute_penalty_tonight() > 0:
 		rations_button.text = "今夜安排 · 纳贡到期"
 		tone = Color("#efbf8a")
+	elif pavilion_story_available:
+		rations_button.text = "今夜安排 · " + PavilionRest.STORY_LABEL
+		tone = Color("#f1d38d")
 	elif plan.missing > 0:
 		rations_button.text = "今夜安排 · 口粮可补足"
 		tone = Color("#c7dcaf")
@@ -304,6 +308,8 @@ func refresh_rations() -> void:
 		rations_button.text = "今夜安排"
 	rations_button.add_theme_color_override("font_color", tone)
 	rations_button.tooltip_text = "查看田务和用粮\n粮仓 %d 份 · 今夜所需 %d 份" % [Global.food_storage, plan.need]
+	if pavilion_story_available:
+		rations_button.tooltip_text += "\n邻居已入席，可指路去听灯下小谈。"
 
 func refresh_tribute() -> void:
 	var due := Global.tribute_deadline()

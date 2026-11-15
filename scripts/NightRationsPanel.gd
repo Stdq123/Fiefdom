@@ -9,6 +9,7 @@ signal tribute_field_requested
 signal field_management_requested(field_id: int)
 signal sleep_requested
 signal east_watch_requested
+signal pavilion_story_requested
 
 const GOOD := Color("#c7dcaf")
 const SHORT := Color("#efbf8a")
@@ -29,6 +30,10 @@ const WINDOW_MARGIN := 16.0
 @onready var tribute_details: Label = %TributeDetails
 @onready var tribute_goal: Label = %TributeGoal
 @onready var find_tribute: Button = %FindTribute
+@onready var pavilion_story: PanelContainer = %PavilionStory
+@onready var pavilion_title: Label = %PavilionTitle
+@onready var pavilion_people: Label = %PavilionPeople
+@onready var find_pavilion: Button = %FindPavilion
 @onready var field_forecast: Label = %FieldForecast
 @onready var field_warning: Label = %FieldWarning
 @onready var field_wait_note: Label = %FieldWaitNote
@@ -105,6 +110,7 @@ func _ready() -> void:
 	wait_before_sleep.toggled.connect(Global.set_wait_for_fields_before_sleep)
 	find_harvest.pressed.connect(harvest_requested.emit)
 	find_tribute.pressed.connect(tribute_field_requested.emit)
+	find_pavilion.pressed.connect(pavilion_story_requested.emit)
 	plan_field.pressed.connect(_open_field_management)
 	find_watch.pressed.connect(func():
 		queue_free()
@@ -150,6 +156,13 @@ func _ready() -> void:
 	close_button.grab_focus()
 	if focus_shortage:
 		_focus_meal_options.call_deferred()
+
+func show_pavilion_story(story_id: String, place: String) -> void:
+	pavilion_story.visible = not story_id.is_empty()
+	if pavilion_story.visible:
+		var story: Dictionary = PavilionStories.STORIES[story_id]
+		pavilion_title.text = "%s · %s" % [PavilionRest.STORY_LABEL, story.title]
+		pavilion_people.text = "%s已入席 · %s" % ["、".join(story.speakers), place]
 
 func _focus_meal_options() -> void:
 	await get_tree().process_frame

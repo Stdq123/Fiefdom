@@ -402,7 +402,12 @@ func update_marker(blocked: bool) -> void:
 func _mark_place(title: String, point: Vector2) -> void:
 	_show_road_route(point)
 	var at := world.get_global_transform_with_canvas() * point
-	_mark_map(Rect2(at - Vector2(8, 8), Vector2(16, 16)), title, Mark.PLACE, false)
+	var readable_hint := false
+	if title == PavilionRest.STORY_LABEL:
+		var hint: Label = world.pavilion_rest.hint
+		var hint_bounds := hint.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, hint.size)
+		readable_hint = hint.is_visible_in_tree() and hud.map_space_clear(hint_bounds)
+	_mark_map(Rect2(at - Vector2(8, 8), Vector2(16, 16)), title, Mark.PLACE, readable_hint)
 
 func _show_road_route(point: Vector2) -> void:
 	var foot := world.to_local(world.player.global_position)
@@ -456,7 +461,11 @@ func _mark_map(bounds: Rect2, label_text: String, style: Mark, near: bool) -> vo
 			var badge_size := text_size + Vector2(18, 10)
 			var clearance := bounds.size.y + 6.0 if style == Mark.PLOT else 7.0
 			plaque = Rect2(Vector2(bounds.get_center().x - badge_size.x / 2.0, bounds.end.y + clearance), badge_size)
-			if hud.map_space_clear(plaque):
+			var has_space: bool = hud.map_space_clear(plaque)
+			if style == Mark.PLACE and not has_space:
+				plaque.position.y = bounds.position.y - badge_size.y - clearance
+				has_space = hud.map_space_clear(plaque)
+			if has_space:
 				caption.position = plaque.position + Vector2(9, 5)
 				caption.show()
 	else:

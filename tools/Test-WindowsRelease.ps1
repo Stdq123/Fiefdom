@@ -416,7 +416,7 @@ try {
             Start-VerifiedGame -Directory $release -Profile 'raid-feedback-compact' -Name 'raid-feedback-1024x768' -Replay 'raid-feedback' -Resolution '1024x768'
         }
         if ($PavilionEvening) {
-            Start-VerifiedGame -Directory $release -Profile 'pavilion-stories-compact' -Name 'pavilion-stories-1024x768' -Replay 'pavilion-stories' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'pavilion-stories-compact' -Name 'pavilion-stories-1024x768' -Replay 'pavilion-stories-pad' -Resolution '1024x768'
         }
         if ($SowingHold) {
             Start-VerifiedGame -Directory $release -Profile 'sowing-hold-compact' -Name 'sowing-hold-1024x768' -Replay 'sowing-hold' -Resolution '1024x768'

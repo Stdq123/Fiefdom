@@ -319,6 +319,8 @@ func _connect_signals() -> void:
 	GameEvents.ravine_trip_requested.connect(_on_ravine_trip_requested)
 
 	world.seed_selected.connect(_refresh_seed_belt.unbind(1))
+	world.pavilion_rest.story_changed.connect(_refresh_pavilion_story.unbind(1))
+	_refresh_pavilion_story(world.pavilion_story_id())
 	world.channel_mode_changed.connect(_on_channel_mode_changed)
 	world.channel_feedback.connect(hud.show_channel_help)
 	world.irrigation_overlay.preview_changed.connect(func(message: String): hud.canal_preview.text = message)
@@ -408,13 +410,19 @@ func _on_gathering_book_requested() -> void:
 
 func _on_pavilion_table_requested() -> void:
 	world.set_channel_mode(false)
-	if world.pavilion_rest.gathering_name() == directions.tracked_place:
+	if directions.tracked_place in [world.pavilion_rest.gathering_name(), PavilionRest.STORY_LABEL]:
 		directions.clear_tracking()
 	var story: String = world.pavilion_story_id()
 	if story.is_empty():
 		_show_night_rations()
 	else:
 		dialog_manager.show_pavilion_story(story, world.pavilion_rest.gathering_name(), _show_night_rations)
+
+func _refresh_pavilion_story(story_id: String) -> void:
+	hud.pavilion_story_available = not story_id.is_empty()
+	hud.refresh_rations()
+	if story_id.is_empty() and directions.tracked_place == PavilionRest.STORY_LABEL:
+		directions.clear_tracking()
 
 func _on_retainer_interacted(data: RetainerData) -> void:
 	directions.arrive_at(data.name)
@@ -805,6 +813,8 @@ func _show_night_rations(show_previous := false, focus_shortage := false) -> voi
 	var player: Player = world.player
 	player.conversation_open = true
 	$Control.add_child(panel)
+	world.pavilion_rest.story_changed.connect(panel.show_pavilion_story)
+	panel.show_pavilion_story(world.pavilion_story_id(), world.pavilion_rest.gathering_name())
 	GameEvents.modal_visibility_changed.emit(true)
 	panel.market_requested.connect(_show_market)
 	panel.silk_requested.connect(_show_silk)
@@ -815,6 +825,7 @@ func _show_night_rations(show_previous := false, focus_shortage := false) -> voi
 	panel.dry_plot_requested.connect(_on_night_plot_requested.bind(panel, Global.NightGrowth.DRY))
 	panel.harvest_requested.connect(_on_night_plot_requested.bind(panel, Global.NightGrowth.READY))
 	panel.tribute_field_requested.connect(_on_tribute_field_requested.bind(panel))
+	panel.pavilion_story_requested.connect(_guide_pavilion_story.bind(panel))
 	panel.east_watch_requested.connect(_guide_east_watch)
 	panel.sleep_requested.connect(func():
 		panel_manager.hide_management_panel()
@@ -829,6 +840,15 @@ func _show_night_rations(show_previous := false, focus_shortage := false) -> voi
 			previous_focus.grab_focus()
 			GamepadInput.snap_pointer_to_focus.call_deferred()
 	)
+
+func _guide_pavilion_story(panel: Control) -> void:
+	if world.pavilion_story_id().is_empty():
+		return
+	directions.follow_place(PavilionRest.STORY_LABEL, world.pavilion_rest.gathering_approach())
+	panel_manager.hide_management_panel()
+	panel.queue_free()
+	if Global.is_indoors():
+		hud.practice_label.text = "从南门出去，循标记去席案。"
 
 func _on_night_plot_requested(panel: Control, status: Global.NightGrowth) -> void:
 	if directions.follow_field_route(status):

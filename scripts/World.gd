@@ -308,6 +308,7 @@ func _on_retainer_departed(data: RetainerData) -> void:
 	elif data.name == VisitorData.RAVINE_GUIDE:
 		_refresh_handoff_visitor()
 		_report_visitor_activity()
+	pavilion_rest.refresh_table()
 
 func _on_road_provisions_delivered() -> void:
 	var cell := tile_map.local_to_map(tile_map.to_local(player.global_position))
