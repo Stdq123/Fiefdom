@@ -442,7 +442,7 @@ func rotation_plot_caption(cell: Vector2i) -> String:
 		Global.NightGrowth.RIPEN: return prefix + " · 明早可收"
 	return prefix + " · 供水后过夜"
 
-func find_field_task(status: int, public_only := false) -> Variant:
+func find_field_task(status: int, public_only := false, previous: Variant = null) -> Variant:
 	if status == Global.MulberryRoute.PLANT:
 		return _find_mulberry_planting_site()
 	if status == Global.TributeRoute.TEND:
@@ -452,22 +452,28 @@ func find_field_task(status: int, public_only := false) -> Variant:
 		return cell if cell != null and matches_field_route(cell, status) else null
 	var nearest: Variant = null
 	var distance := INF
-	var public_selected := false
+	var preferred_selected := false
 	var start := estate_player_point()
-	for cell: Vector2i in active_crops:
+	var planned_sowing := status == Global.SowingRoute.READY
+	var candidates: Dictionary = Global.field_seed_plans if planned_sowing else active_crops
+	var current_field := _working_field_at(previous) if planned_sowing and previous != null else Rect2i()
+	for cell: Vector2i in candidates:
 		if not matches_field_route(cell, status):
 			continue
 		var is_public := Global.is_public_plot(cell)
-		if (public_only or public_selected) and not is_public:
+		var preferred := current_field.has_point(cell) if planned_sowing else is_public
+		if (public_only and not is_public) or (preferred_selected and not preferred):
 			continue
-		var distance_to_crop := start.distance_squared_to(get_crop_world_pos(cell))
-		if is_public != public_selected or distance_to_crop < distance:
+		var distance_to_plot := start.distance_squared_to(get_crop_world_pos(cell))
+		if preferred != preferred_selected or distance_to_plot < distance:
 			nearest = cell
-			distance = distance_to_crop
-			public_selected = is_public
+			distance = distance_to_plot
+			preferred_selected = preferred
 	return nearest
 
 func matches_field_route(cell: Vector2i, status: int) -> bool:
+	if status == Global.SowingRoute.READY:
+		return not Global.planned_field_seed(cell).is_empty()
 	if status == Global.TributeRoute.TEND:
 		return Global.is_public_plot(cell)
 	if status == Global.OrderFieldRoute.HARVEST:

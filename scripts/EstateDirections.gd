@@ -16,6 +16,7 @@ const FIELD_ROUTES := {
 	Global.MulberryRoute.HARVEST: {"task": "采桑叶", "plot": "可收"},
 	Global.TributeRoute.TEND: {"task": "照料公田"},
 	Global.OrderFieldRoute.HARVEST: {"task": "收交货作物", "plot": "备货"},
+	Global.SowingRoute.READY: {"task": "按安排播种"},
 }
 
 var world: Node2D
@@ -146,8 +147,10 @@ func _refresh_order_work() -> void:
 		_track_order_work(plan)
 
 func _track_field_plot(cell: Vector2i) -> void:
-	tracked_plot = cell
 	var status := Global.field_route_status
+	if status == Global.SowingRoute.READY and tracked_plot == null:
+		world.set_sow_from_plan(true)
+	tracked_plot = cell
 	var task: String = "轮作私田" if status in Global.ROTATION_ROUTES else FIELD_ROUTES[status].task
 	hud.cancel_directions.text = task + ("公田" if Global.field_route_public_only else "") + " · 取消指路"
 	hud.cancel_directions.show()
@@ -161,13 +164,16 @@ func _refresh_field_route() -> void:
 		if tracked_plot != null:
 			clear_tracking()
 		return
+	if status == Global.SowingRoute.READY and tracked_plot != null and not world.sow_from_plan:
+		clear_tracking()
+		return
 	if tracked_plot != null:
 		if world.matches_field_route(tracked_plot, status):
 			return
 		if status == Global.MulberryRoute.PLANT and Global.active_crops.get(tracked_plot, {}).get("id") == "mulberry":
 			clear_tracking()
 			return
-	var next: Variant = world.find_field_task(status, Global.field_route_public_only)
+	var next: Variant = world.find_field_task(status, Global.field_route_public_only, tracked_plot)
 	if next == null:
 		clear_tracking()
 	else:
@@ -294,6 +300,8 @@ func _field_plot_label(cell: Vector2i) -> String:
 			return "私田 · 翻地种桑"
 		return "私田 · 播桑" if world.planting_seed(cell) == "mulberry" else "私田 · 换桑种"
 	var land := "公田" if Global.is_public_plot(cell) else "私田"
+	if Global.field_route_status == Global.SowingRoute.READY:
+		return "%s · 按安排播%s" % [land, ItemManager.crop_label(Global.planned_field_seed(cell))]
 	var crop: CropData = Global.active_crops[cell].data
 	return "%s · %s%s" % [crop.crop_name, FIELD_ROUTES[Global.field_route_status].plot, land]
 

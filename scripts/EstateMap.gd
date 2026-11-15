@@ -10,6 +10,7 @@ const WINTER_RATIONS := preload("res://scripts/WinterRoadRations.gd")
 const PAPER := Color("#ded2ac")
 const INK := Color("#3e3c2a")
 const GOLD := Color("#f2ce78")
+const SEED_GREEN := Color("#c5dfa6")
 const WATER := Color("#386f74")
 const DRY := Color("#865b42")
 const PERSON := Color("#475e73")
@@ -18,10 +19,11 @@ const MAP_MARGIN := 19.0
 
 @onready var chart: Control = %Chart
 @onready var tabs: HBoxContainer = %Tabs
-@onready var field_routes: HBoxContainer = %FieldRoutes
+@onready var field_routes: HFlowContainer = %FieldRoutes
 @onready var harvest_route: Button = %HarvestRoute
 @onready var water_route: Button = %WaterRoute
 @onready var canal_route: Button = %CanalRoute
+@onready var sow_route: Button = %SowRoute
 @onready var manage_field: Button = %ManageField
 @onready var ravine_note: Label = %RavineNote
 @onready var listing: VBoxContainer = %Listing
@@ -60,6 +62,7 @@ func setup(estate_world: Node2D, guide: Control, blocked: Callable) -> void:
 	harvest_route.pressed.connect(_start_field_route.bind(Global.NightGrowth.READY))
 	water_route.pressed.connect(_start_field_route.bind(Global.NightGrowth.DRY))
 	canal_route.pressed.connect(_start_field_route.bind(Global.NightGrowth.BLOCKED))
+	sow_route.pressed.connect(_start_field_route.bind(Global.SowingRoute.READY))
 	manage_field.pressed.connect(_open_field_management)
 	chart.draw.connect(_draw_chart)
 	chart.gui_input.connect(_chart_input)
@@ -205,16 +208,20 @@ func _collect_fields() -> void:
 			var ripe := 0
 			var dry := 0
 			var blocked := 0
+			var sowable := 0
 			for y in range(-1, 2):
 				for x in range(-1, 2):
 					var cell := center + Vector2i(x, y)
 					var task := Global.crop_night_status(cell)
+					if task == -1 and not Global.planned_field_seed(cell).is_empty():
+						task = Global.SowingRoute.READY
 					if task in Global.FIELD_ROUTE_STATES:
 						field_tasks[cell] = task
 					match task:
 						Global.NightGrowth.READY: ripe += 1
 						Global.NightGrowth.DRY: dry += 1
 						Global.NightGrowth.BLOCKED: blocked += 1
+						Global.SowingRoute.READY: sowable += 1
 			detail = "渠水 %d/9 格 · 可收 %d 格" % [watered.size(), ripe]
 			if Global.irrigation.field_gates.has(center):
 				var inlet: Vector2i = Global.irrigation.field_gates[center]
@@ -223,6 +230,8 @@ func _collect_fields() -> void:
 				needs.append("待浇 %d" % dry)
 			if blocked > 0:
 				needs.append("断水 %d" % blocked)
+			if sowable > 0:
+				needs.append("待播 %d" % sowable)
 			var stewards := PackedStringArray()
 			for worker: RetainerData in Global.retainers:
 				if worker.duty == RetainerData.Duty.STEWARD and Global.stewarded_field(worker).field_id == id:
@@ -309,6 +318,8 @@ func _show_category(next: Category) -> void:
 		_update_field_button(harvest_route, "■ 可收", report.ready)
 		_update_field_button(water_route, "◇ 待浇", report.dry)
 		_update_field_button(canal_route, "× 断水", report.blocked)
+		sow_route.visible = not Global.field_seed_plans.is_empty()
+		_update_field_button(sow_route, "● 待播", field_tasks.values().count(Global.SowingRoute.READY))
 	ravine_note.visible = category == Category.RAVINE
 	if ravine_note.visible:
 		ravine_note.text = Global.ravine_outing_status() + "\n东岸一带有野狗和斥候。"
@@ -679,6 +690,9 @@ func _draw_field_task(cell: Vector2i, task: int) -> void:
 			for diagonal in [Vector2(3, 3), Vector2(3, -3)]:
 				chart.draw_line(at - diagonal, at + diagonal, INK, 3.5, true)
 				chart.draw_line(at - diagonal, at + diagonal, Color("#ffb38f"), 1.5, true)
+		Global.SowingRoute.READY:
+			chart.draw_circle(at, 4.0, INK, true, -1.0, true)
+			chart.draw_circle(at, 2.6, SEED_GREEN, true, -1.0, true)
 
 func _draw_place(place: Dictionary) -> void:
 	var at := _map_point(place.point)

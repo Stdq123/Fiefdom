@@ -171,11 +171,12 @@ enum MulberryRoute { PLANT = 5, WATER, HARVEST }
 enum TributeRoute { TEND = 8 }
 enum OrderFieldRoute { HARVEST = 9, PREPARE = 13 }
 enum RotationRoute { BEANS = 10, FOLLOWUP, CLEAR }
+enum SowingRoute { READY = 14 }
 enum OrderWork { HARVEST, WATER, SOW, WAIT }
 const ROTATION_ROUTES := [RotationRoute.BEANS, RotationRoute.FOLLOWUP, RotationRoute.CLEAR]
 const FIELD_ROUTE_STATES := [NightGrowth.READY, NightGrowth.DRY, NightGrowth.BLOCKED,
 	MulberryRoute.PLANT, MulberryRoute.WATER, MulberryRoute.HARVEST, TributeRoute.TEND,
-	OrderFieldRoute.HARVEST, OrderFieldRoute.PREPARE] + ROTATION_ROUTES
+	OrderFieldRoute.HARVEST, OrderFieldRoute.PREPARE, SowingRoute.READY] + ROTATION_ROUTES
 enum Season { SPRING, SUMMER, AUTUMN, WINTER }
 const SEASON_NAMES := ["春", "夏", "秋", "冬"]
 

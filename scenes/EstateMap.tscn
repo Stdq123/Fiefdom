@@ -150,11 +150,12 @@ mouse_default_cursor_shape = 2
 toggle_mode = true
 text = "竹涧"
 
-[node name="FieldRoutes" type="HBoxContainer" parent="MapModal/Center/Panel/Layout/Content/Index"]
+[node name="FieldRoutes" type="HFlowContainer" parent="MapModal/Center/Panel/Layout/Content/Index"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 5
+theme_override_constants/h_separation = 5
+theme_override_constants/v_separation = 5
 
 [node name="HarvestRoute" type="Button" parent="MapModal/Center/Panel/Layout/Content/Index/FieldRoutes"]
 unique_name_in_owner = true
@@ -184,6 +185,17 @@ size_flags_horizontal = 3
 mouse_default_cursor_shape = 2
 tooltip_text = "依次标出需接通水渠的稻田"
 theme_override_colors/font_color = Color(0.98, 0.70, 0.56, 1)
+theme_override_font_sizes/font_size = 14
+
+[node name="SowRoute" type="Button" parent="MapModal/Center/Panel/Layout/Content/Index/FieldRoutes"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+tooltip_text = "按续播安排选种，先标出近处能播的空畦。播完一块井田后标出下一块。"
+theme_override_colors/font_color = Color(0.77, 0.87, 0.65, 1)
 theme_override_font_sizes/font_size = 14
 
 [node name="ManageField" type="Button" parent="MapModal/Center/Panel/Layout/Content/Index"]
