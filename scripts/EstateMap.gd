@@ -16,6 +16,9 @@ const DRY := Color("#865b42")
 const PERSON := Color("#475e73")
 const CAPTION_SIZE := 15
 const MAP_MARGIN := 19.0
+const FIELD_VIEW_PADDING := Vector2(154, 132)
+const FIELD_VIEW_MINIMUM := Vector2(270, 220)
+const PLOT_DETAIL_WIDTH := 16.0
 
 @onready var chart: Control = %Chart
 @onready var tabs: HBoxContainer = %Tabs
@@ -30,6 +33,7 @@ const MAP_MARGIN := 19.0
 @onready var scroll: ScrollContainer = %IndexScroll
 @onready var date: Label = %Date
 @onready var status: Label = %DirectionStatus
+@onready var entrance_legend: Label = %EntranceLegend
 @onready var clear_button: Button = %ClearDirections
 
 var world: Node2D
@@ -48,6 +52,9 @@ var target: Dictionary = {}
 var road_path := PackedVector2Array()
 var region_map: Control
 var selected_field_id := -1
+var chart_center := EstateLayout.BOUNDS.get_center()
+var chart_scale := 1.0
+var north_mark_at := Vector2.ZERO
 
 func setup(estate_world: Node2D, guide: Control, blocked: Callable) -> void:
 	world = estate_world
@@ -83,7 +90,7 @@ func _start_field_route(task: int) -> void:
 		close_map()
 
 func _open_field_management() -> void:
-	if selected_field_id < 0:
+	if not manage_field.visible:
 		return
 	close_map()
 	field_management_requested.emit(selected_field_id)
@@ -239,7 +246,8 @@ func _collect_fields() -> void:
 			if not stewards.is_empty():
 				needs.append("管事 " + "、".join(stewards))
 		var entry := _entry(Category.FIELDS, title, detail, _cell_point(center))
-		entry.merge({"field_id": id, "worksite": working, "watered": watered, "needs": " · ".join(needs)})
+		entry.merge({"field_id": id, "cell": center, "public": Global.is_public_plot(center),
+			"worksite": working, "watered": watered, "needs": " · ".join(needs)})
 		fields.append(entry)
 
 func _collect_people() -> void:
@@ -313,7 +321,9 @@ func _show_category(next: Category) -> void:
 		Category.PEOPLE: entries = people
 		Category.RAVINE: entries = _ravine_places()
 	field_routes.visible = category == Category.FIELDS
+	entrance_legend.visible = field_routes.visible
 	if field_routes.visible:
+		entrance_legend.text = "▱ 田口 · 金框 公田" if fields.any(func(field: Dictionary) -> bool: return field.public) else "▱ 田口"
 		var report := Global.field_night_forecast()
 		_update_field_button(harvest_route, "■ 可收", report.ready)
 		_update_field_button(water_route, "◇ 待浇", report.dry)
@@ -451,10 +461,11 @@ func _refresh_destination() -> void:
 			status.text += " · 经竹涧小径"
 	else:
 		match category:
-			Category.FIELDS: status.text = "选一类田务，做完一格会标出下一格。"
+			Category.FIELDS: status.text = "点井田细看，选田务指路。"
 			Category.RAVINE: status.text = "选个去处，沿金色标记进竹涧。"
 			_: status.text = "点选目的地，回到封地后沿金色标记走。"
 	selected_field_id = -1
+	var selected_row: Button
 	for row in row_buttons:
 		var entry: Dictionary = row_buttons[row]
 		var selected: String = target.get("title", "")
@@ -463,11 +474,14 @@ func _refresh_destination() -> void:
 			Category.RAVINE: selected = Global.ravine_trip_target
 		var row_selected: bool = entry.title == selected
 		row.set_pressed_no_signal(row_selected)
-		if row_selected and entry.kind == Category.FIELDS and not entry.worksite:
+		if row_selected and entry.kind == Category.FIELDS:
 			selected_field_id = entry.field_id
-	manage_field.visible = selected_field_id >= 0
+			selected_row = row
+	manage_field.visible = selected_field_id >= 0 and not fields[selected_field_id].worksite
 	if manage_field.visible:
 		manage_field.text = "安排井田 %d" % (selected_field_id + 1)
+	if selected_row:
+		scroll.ensure_control_visible.call_deferred(selected_row)
 	_layout_chart()
 
 func _chart_input(event: InputEvent) -> void:
@@ -481,6 +495,9 @@ func _chart_input(event: InputEvent) -> void:
 		chart.accept_event()
 
 func _entry_at(at: Vector2) -> Dictionary:
+	var field := _field_at_map(at)
+	if category == Category.FIELDS and not field.is_empty():
+		return field
 	var closest: Dictionary = {}
 	var distance := 11.0
 	var pins := people + places if category == Category.PEOPLE else places
@@ -494,17 +511,19 @@ func _entry_at(at: Vector2) -> Dictionary:
 			closest = entry
 	if not closest.is_empty():
 		return closest
+	return field
+
+func _field_at_map(at: Vector2) -> Dictionary:
 	for field in fields:
 		if _field_rect(field.point).has_point(at):
 			return field
 	return {}
 
 func _map_scale() -> float:
-	var usable := chart.size - Vector2.ONE * (MAP_MARGIN * 2.0)
-	return minf(usable.x / LANDSCAPE.ESTATE_BOUNDS.size.x, usable.y / LANDSCAPE.ESTATE_BOUNDS.size.y)
+	return chart_scale
 
 func _map_point(point: Vector2) -> Vector2:
-	return chart.size * 0.5 + (point - LANDSCAPE.ESTATE_BOUNDS.get_center()) * _map_scale()
+	return chart.size * 0.5 + (point - chart_center) * chart_scale
 
 func _field_rect(point: Vector2) -> Rect2:
 	var extent := Vector2(tiles.tile_set.tile_size) * (3.0 * _map_scale())
@@ -517,7 +536,29 @@ func _place_pin(place: Dictionary) -> Rect2:
 		return Rect2(at - Vector2(extent.x * 0.5, extent.y - 3.0), extent)
 	return Rect2(at - Vector2(6, 6), Vector2(12, 12))
 
+func _update_chart_view() -> void:
+	var usable := (chart.size - Vector2.ONE * (MAP_MARGIN * 2.0)).max(Vector2.ONE)
+	var bounds := EstateLayout.BOUNDS
+	chart_center = bounds.get_center()
+	chart_scale = minf(usable.x / bounds.size.x, usable.y / bounds.size.y)
+	if category != Category.FIELDS or fields.is_empty():
+		return
+	var area := Rect2(fields[0].point, Vector2.ZERO)
+	for field in fields:
+		area = area.expand(field.point)
+	var padding := Vector2(tiles.tile_set.tile_size) * 3.0 + FIELD_VIEW_PADDING
+	var span := (area.size + padding).max(FIELD_VIEW_MINIMUM)
+	chart_center = area.get_center()
+	chart_scale = minf(usable.x / span.x, usable.y / span.y)
+	if selected_field_id >= 0 and not _can_draw_plots():
+		chart_center = fields[selected_field_id].point
+		chart_scale = minf(usable.x / FIELD_VIEW_MINIMUM.x, usable.y / FIELD_VIEW_MINIMUM.y)
+
+func _can_draw_plots() -> bool:
+	return category == Category.FIELDS and float(tiles.tile_set.tile_size.x) * chart_scale >= PLOT_DETAIL_WIDTH
+
 func _layout_chart() -> void:
+	_update_chart_view()
 	captions.clear()
 	var occupied: Array[Rect2] = []
 	for place in places:
@@ -525,16 +566,25 @@ func _layout_chart() -> void:
 	for field in fields:
 		var footprint := _field_rect(field.point).grow(2.0)
 		if category == Category.FIELDS:
-			footprint = footprint.grow_side(SIDE_TOP, 15.0)
+			footprint = footprint.grow_side(SIDE_TOP, 15.0).grow_side(SIDE_BOTTOM, 15.0)
 		occupied.append(footprint)
 	if category == Category.PEOPLE:
 		for person in people:
 			occupied.append(Rect2(_map_point(person.point) - Vector2(8, 8), Vector2(16, 16)))
-	occupied.append(Rect2(_map_point(_player_point()) - Vector2(9, 9), Vector2(18, 18)))
+	var player_at := _player_marker_position(_map_point(_player_point()))
+	occupied.append(Rect2(player_at - Vector2(11, 11), Vector2(22, 22)))
 	var target_bounds := Rect2()
 	if not target.is_empty():
 		target_bounds = Rect2(_map_point(target.point) - Vector2(15, 15), Vector2(30, 30))
 		occupied.append(target_bounds)
+	var right := chart.size.x - 43.0
+	var bottom := chart.size.y - 32.0
+	north_mark_at = Vector2(right, 59)
+	for at: Vector2 in [north_mark_at, Vector2(43, 59), Vector2(right, bottom), Vector2(43, bottom)]:
+		if not occupied.any(func(rect: Rect2) -> bool: return rect.intersects(_north_mark_bounds(at))):
+			north_mark_at = at
+			break
+	occupied.append(_north_mark_bounds(north_mark_at))
 
 	var font := chart.get_theme_default_font()
 	var safe := Rect2(Vector2.ZERO, chart.size).grow(-12.0)
@@ -564,8 +614,6 @@ func _layout_chart() -> void:
 func _draw_chart() -> void:
 	var sheet := Rect2(Vector2.ZERO, chart.size)
 	chart.draw_rect(sheet, PAPER)
-	chart.draw_rect(sheet.grow(-4.0), Color("#ab9770"), false, 1.0)
-	chart.draw_rect(sheet.grow(-8.0), Color("#b7a47d"), false, 1.0)
 	for index in 192:
 		var point := Vector2(17 + (index * 311) % int(chart.size.x - 34.0),
 			17 + (index * 179) % int(chart.size.y - 34.0))
@@ -580,7 +628,7 @@ func _draw_chart() -> void:
 	_draw_channels()
 	for field in fields:
 		_draw_field(field)
-	if category == Category.FIELDS:
+	if _can_draw_plots():
 		for cell in field_tasks:
 			_draw_field_task(cell, field_tasks[cell])
 	for place in places:
@@ -593,11 +641,44 @@ func _draw_chart() -> void:
 		var radius := 7.0 if category == Category.FIELDS and Global.field_route_status >= 0 else 13.0
 		chart.draw_arc(point, radius, 0.0, TAU, 32, INK, 3.6, true)
 		chart.draw_arc(point, radius, 0.0, TAU, 32, GOLD, 2.0, true)
-	var here := _map_point(_player_point())
-	chart.draw_circle(here, 7.0, INK, true, -1.0, true)
-	chart.draw_circle(here, 4.7, GOLD, true, -1.0, true)
-	chart.draw_circle(here, 2.0, Color("#fff3cb"), true, -1.0, true)
+	_draw_player_position()
 	_draw_north_mark()
+	_draw_paper_border(sheet.size)
+
+func _draw_paper_border(size: Vector2) -> void:
+	var edge := 8.0
+	chart.draw_rect(Rect2(0, 0, size.x, edge), PAPER)
+	chart.draw_rect(Rect2(0, size.y - edge, size.x, edge), PAPER)
+	chart.draw_rect(Rect2(0, 0, edge, size.y), PAPER)
+	chart.draw_rect(Rect2(size.x - edge, 0, edge, size.y), PAPER)
+	var sheet := Rect2(Vector2.ZERO, size)
+	chart.draw_rect(sheet.grow(-4.0), Color("#ab9770"), false, 1.0)
+	chart.draw_rect(sheet.grow(-8.0), Color("#b7a47d"), false, 1.0)
+
+func _player_marker_position(here: Vector2) -> Vector2:
+	if category != Category.FIELDS:
+		return here
+	var center := chart.size * 0.5
+	var extent := (center - Vector2.ONE * (MAP_MARGIN + 4.0)).max(Vector2.ONE)
+	var offset := here - center
+	var edge := maxf(absf(offset.x) / extent.x, absf(offset.y) / extent.y)
+	return center + offset / edge if edge > 1.0 else here
+
+func _draw_player_position() -> void:
+	var here := _map_point(_player_point())
+	var at := _player_marker_position(here)
+	if at != here:
+		var forward := at.direction_to(here)
+		var across := forward.orthogonal()
+		var tip := at + forward * 9.0
+		var left := at - forward * 5.0 + across * 6.0
+		var right := at - forward * 5.0 - across * 6.0
+		chart.draw_colored_polygon(PackedVector2Array([tip, left, right]), GOLD)
+		chart.draw_polyline(PackedVector2Array([tip, left, right, tip]), INK, 2.0, true)
+		return
+	chart.draw_circle(at, 7.0, INK, true, -1.0, true)
+	chart.draw_circle(at, 4.7, GOLD, true, -1.0, true)
+	chart.draw_circle(at, 2.0, Color("#fff3cb"), true, -1.0, true)
 
 func _draw_landscape() -> void:
 	for sprite: Sprite2D in landscape.scenery:
@@ -659,6 +740,13 @@ func _draw_field(field: Dictionary) -> void:
 		chart.draw_rect(area, DRY, false, 2.0)
 	else:
 		chart.draw_rect(area, Color("#a2a87a"))
+		if _can_draw_plots():
+			for y in range(-1, 2):
+				for x in range(-1, 2):
+					var plot: Vector2i = field.cell + Vector2i(x, y)
+					if Global.tilled_cells.has(plot):
+						var plot_area := Rect2(at + Vector2(x, y) * cell - cell * 0.5, cell)
+						chart.draw_rect(plot_area.grow(-0.75), Color("#b9986d"))
 		for watered_cell: Vector2i in field.watered:
 			var wet := _map_point(_cell_point(watered_cell))
 			chart.draw_rect(Rect2(wet - cell * 0.5, cell), Color("#84a8a1"))
@@ -667,12 +755,28 @@ func _draw_field(field: Dictionary) -> void:
 				area.position + Vector2(cell.x * offset, area.size.y), Color("#6e7859"))
 			chart.draw_line(area.position + Vector2(0, cell.y * offset),
 				area.position + Vector2(area.size.x, cell.y * offset), Color("#6e7859"))
-		chart.draw_rect(Rect2(at - cell * 0.5, cell), Color("#6e5734"), false, 1.4)
+		if field.public:
+			chart.draw_rect(Rect2(at - cell * 0.5, cell).grow(-1.2), Color("#745529"), false, 2.4)
+			if _can_draw_plots():
+				chart.draw_rect(Rect2(at - cell * 0.5, cell).grow(-2.6), GOLD, false, 1.4)
 		var boundary := EstateLayout.field_boundary(area, entrance, cell.x)
 		chart.draw_polyline(boundary, Color("#576345"), 1.6, true)
+		if _can_draw_plots() and entrance != Vector2.ZERO:
+			_draw_field_entrance(at + entrance * area.size * 0.5, entrance, cell.x)
 	var number_y := area.end.y + 8.0 if entrance == Vector2.UP else area.position.y - 8.0
 	var number_at := Vector2(at.x, number_y) if category == Category.FIELDS else at
-	_draw_text(str(field.field_id + 1), number_at, 12, INK)
+	var safe := Rect2(Vector2.ZERO, chart.size).grow(-9.0)
+	if category == Category.FIELDS and not safe.encloses(area.grow_side(SIDE_TOP, 14).grow_side(SIDE_BOTTOM, 14)):
+		return
+	var name := "井田 %d" % (field.field_id + 1) if _can_draw_plots() else str(field.field_id + 1)
+	_draw_text(name, number_at, 12, INK)
+
+func _draw_field_entrance(mouth: Vector2, normal: Vector2, width: float) -> void:
+	var shoulder := normal.orthogonal() * width * 0.31
+	var edge := mouth + normal * 5.0
+	var step := PackedVector2Array([mouth - shoulder, mouth + shoulder, edge + shoulder, edge - shoulder])
+	chart.draw_colored_polygon(step, Color("#d1be96"))
+	chart.draw_polyline(PackedVector2Array([step[0], step[3], step[2], step[1]]), Color("#755d42"), 1.4, true)
 
 func _draw_field_task(cell: Vector2i, task: int) -> void:
 	var at := _map_point(_cell_point(cell))
@@ -723,8 +827,11 @@ func _draw_text(content: String, center: Vector2, font_size: int, color: Color) 
 	chart.draw_string(font, center + Vector2(-width * 0.5, baseline), content,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
 
+func _north_mark_bounds(at: Vector2) -> Rect2:
+	return Rect2(at - Vector2(20, 36), Vector2(40, 59))
+
 func _draw_north_mark() -> void:
-	var at := Vector2(chart.size.x - 43.0, 59.0)
+	var at := north_mark_at
 	_draw_text("北", at + Vector2(0, -24), 16, INK)
 	chart.draw_colored_polygon(PackedVector2Array([at + Vector2(0, -12), at + Vector2(5, 7),
 		at + Vector2(0, 4), at + Vector2(-5, 7)]), INK)

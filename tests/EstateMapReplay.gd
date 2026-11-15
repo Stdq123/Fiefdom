@@ -218,10 +218,14 @@ func _check_fields() -> bool:
 		"The survey agrees with the saved network and crop maturity.")
 	_expect(site.detail == "整地 · 还需 2 夜" and site.point == world.get_crop_world_pos(WORKSITE),
 		"The worksite has the right position and remaining nights.")
+	_expect(map._can_draw_plots() and map.entrance_legend.visible and base.public and not site.public,
+		"A local view shows individual work and recognizes the live public plot.")
+	await _capture("02a-local-field-area")
 	var point: Vector2 = map.chart.get_global_rect().position + map._map_point(site.point)
 	await _click(point)
 	_expect(guide.tracked_site == 1 and map.target.point == site.point and "井田 2 工地" in map.status.text,
 		"Clicking the mapped footprint starts the existing worksite directions.")
+	_expect(not map.manage_field.visible, "A worksite can be inspected without presenting field management.")
 	await _capture("02-field-survey")
 	await _key(KEY_ESCAPE)
 	_expect(not map.modal.visible and not tree.paused and guide.visible and guide.tracked_site == 1,
@@ -314,22 +318,109 @@ func _cross_east_gate() -> void:
 		"The estate's survey opens again at the new player position with no obsolete target.")
 	print("ESTATE_MAP_ROUND_TRIP returned=", world.player.position)
 
-func run(game_tree: SceneTree) -> void:
+func _spread_fields() -> void:
+	await _button(map.close_button)
+	state.current_rank = state.Rank.QING
+	state._update_max_well_fields()
+	var bounds: Rect2i = state.RECLAMATION_BOUNDS.grow(-1)
+	var rows := [bounds.end.y - 1, bounds.position.y] + range(bounds.position.y + 1, bounds.end.y - 1)
+	for y: int in rows:
+		for x in range(bounds.position.x, bounds.end.x):
+			if state.add_well_field(Vector2i(x, y)):
+				var field: Dictionary = state.well_fields.back()
+				field.is_unlocked = true
+				field.reclamation_progress = state.RECLAMATION_NIGHTS
+			if state.well_fields.size() == 16:
+				break
+		if state.well_fields.size() == 16:
+			break
+	if not _expect(state.well_fields.size() == 16, "Reach the supported limit at valid reclamation sites, got %d." % state.well_fields.size()):
+		return
+	var far_plot: Vector2i = state.well_fields[4].center_pos
+	state.till_field_plot(far_plot)
+	state.sow_field_crop(far_plot, "millet")
+	tree.change_scene_to_file(state.ESTATE_SCENE)
+	await tree.scene_changed
+	await _bind_estate()
+	await _button(ui.hud.farm_status)
+	await tree.process_frame
+	var paper := Rect2(Vector2.ZERO, map.chart.size).grow(-8.0)
+	for field: Dictionary in map.fields:
+		_expect(paper.encloses(map._field_rect(field.point)), "The spread view fits the actual field footprint.")
+	var overview_scale: float = map._map_scale()
+	_expect(not map._can_draw_plots(), "The overview uses field numbers while an individual plot is too narrow for its task marker.")
+	await _capture("07-spread-field-overview")
+	var distant: Dictionary = map.fields[4]
+	await _click(map.chart.get_global_rect().position + map._map_point(distant.point))
+	await tree.process_frame
+	_expect(map.selected_field_id == 4 and map.target.title == distant.title and map._can_draw_plots()
+		and map.manage_field.visible and map.field_tasks[far_plot] == state.NightGrowth.DRY,
+		"Select an actual distant footprint to see its task, field entrance and management action.")
+	_expect(not paper.has_point(map._map_point(world.estate_player_point())),
+		"Inspecting the distant field covers the case where the player is beyond the chart edge.")
+	var player_at: Vector2 = map._player_marker_position(map._map_point(world.estate_player_point()))
+	var selected_row := _row(distant.title)
+	_expect(paper.has_point(player_at) and not map._north_mark_bounds(map.north_mark_at).has_point(player_at),
+		"Keep the player arrow %s in the paper %s and clear of the compass." % [player_at, paper])
+	var scroll_rect: Rect2 = map.scroll.get_global_rect()
+	_expect(scroll_rect.grow(1.0).encloses(selected_row.get_global_rect()),
+		"Scroll the chosen row %s into the index %s." % [selected_row.get_global_rect(), scroll_rect])
+	await _capture("08-distant-field-detail")
+	print("ESTATE_MAP_SPREAD fields=", map.fields.size(), " overview_scale=", overview_scale,
+		" focused_scale=", map._map_scale(), " focused_field=", map.selected_field_id + 1)
+	await _button(map.clear_button)
+	_expect(is_equal_approx(map._map_scale(), overview_scale), "Clearing the field target fits the whole area again.")
+	await _button(map.close_button)
+	# Preview the same ledger after the council has transferred the central plots to private use.
+	state.tax_reform_choice = state.TaxReformChoice.REFORMED
+	await _button(ui.hud.farm_status)
+	var row := _row(distant.title)
+	map.scroll.ensure_control_visible(row)
+	await tree.process_frame
+	await _button(row)
+	_expect(map.selected_field_id == 4 and not map.fields[4].public and not map.fields[0].public,
+		"The same field still zooms, and the former public plots have private styling after reform.")
+	await _capture("09-private-after-reform")
+
+func _check_legacy_plots() -> void:
+	tree.change_scene_to_file(state.TITLE_SCENE)
+	await tree.scene_changed
+	await tree.process_frame
+	await _button(tree.current_scene.continue_button)
+	if tree.current_scene == null:
+		await tree.scene_changed
+	await _bind_estate()
+	await _button(ui.hud.farm_status)
+	if not _expect(map.modal.visible and map.fields.size() == 2 and map._can_draw_plots()
+		and state.field_route_status == state.SowingRoute.READY and guide.tracked_plot != null,
+		"The previous package's manual save preserves two wells and its active sowing directions."):
+		return
+	_expect("待播 5" in map.sow_route.text and map.fields[0].public and map.fields[1].public,
+		"Five unsown plots and the two central public plots remain legible in the enlarged view.")
+	await _capture("10-previous-save-local-view")
+	print("ESTATE_MAP_LEGACY day=", state.current_day, " fields=", map.fields.size(), " next=", guide.tracked_plot)
+
+func run(game_tree: SceneTree, captures := "", legacy := false) -> void:
 	tree = game_tree
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use the survey replay's isolated profile."):
 		tree.quit(1)
 		return
 	seed(4821)
 	state = tree.root.get_node("Global")
-	capture_dir = OS.get_environment("FIEFDOM_ESTATE_MAP_CAPTURES")
+	capture_dir = captures if not captures.is_empty() else OS.get_environment("FIEFDOM_ESTATE_MAP_CAPTURES")
 	if tree.root.size.x < 900:
 		tree.root.size = Vector2i(1280, 720)
 	tree.root.notify_mouse_entered()
-	await _new_estate()
-	if await _load_expansion():
-		await _check_input_ownership()
-		if await _check_fields() and await _meet_visitor() and await _check_after_dawn():
-			await _cross_east_gate()
+	if legacy:
+		await _check_legacy_plots()
+	else:
+		await _new_estate()
+		if await _load_expansion():
+			await _check_input_ownership()
+			if await _check_fields() and await _meet_visitor() and await _check_after_dawn():
+				await _cross_east_gate()
+				if failures == 0:
+					await _spread_fields()
 	tree.paused = false
 	tree.unload_current_scene()
 	for stream in tree.root.get_node("AudioManager").get_children():

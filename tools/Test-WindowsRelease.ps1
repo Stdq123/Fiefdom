@@ -151,6 +151,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldStrokeReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/PlannedSowingReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/SowingRouteReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/EstateMapReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ManagementNavigationReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/EndingFilmReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RaidReadinessReplay.gd') -Destination $testDirectory
@@ -308,6 +309,7 @@ try {
     if ($FieldRoutes) {
         Start-VerifiedGame -Directory $release -Profile 'field-routes' -Name 'field-routes' -Replay 'field-routes'
         Start-VerifiedGame -Directory $release -Profile 'sowing-route' -Name 'sowing-route' -Replay 'sowing-route' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'estate-map' -Name 'estate-map' -Replay 'estate-map' -Resolution $fullResolution
     }
     if ($MorningRecord) {
         Start-VerifiedGame -Directory $release -Profile 'field-nights' -Name 'field-nights' -Replay 'field-nights' -Resolution $fullResolution
@@ -459,6 +461,7 @@ try {
         }
         if ($FieldRoutes) {
             Start-VerifiedGame -Directory $release -Profile 'sowing-route-compact' -Name 'sowing-route-1024x768' -Replay 'sowing-route-pad' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'estate-map-compact' -Name 'estate-map-1024x768' -Replay 'estate-map' -Resolution '1024x768'
         }
         if ($FieldWorkWait) {
             Start-VerifiedGame -Directory $release -Profile 'field-soil-plans-compact' -Name 'field-soil-plans-1024x768' -Replay 'field-soil-plans' -Resolution '1024x768'

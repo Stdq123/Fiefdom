@@ -42,6 +42,9 @@ func _start_sowing_route(capture := "") -> bool:
 			"Both wells map six prepared plots. Reported %s, %s." % [map.sow_route.text, map.field_tasks]):
 			return false
 		_expect(tree.root.get_visible_rect().encloses(map.sow_route.get_global_rect()), "The new route control fits in the map.")
+		_expect(map._can_draw_plots() and map.entrance_legend.is_visible_in_tree(),
+			"Both wells have room for individual task markers and a visible entrance key.")
+		print("ESTATE_MAP_PLOT_PITCH fields=2 chart_units=", map._map_scale() * tiles.tile_set.tile_size.x)
 		await _capture(capture)
 	if controller:
 		await controller._click(map.sow_route)
