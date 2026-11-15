@@ -412,16 +412,22 @@ func _verify_meadow_seasons() -> void:
 	await _key(KEY_E)
 	_expect(state.sheepfold.fodder == portions * 2 and state.player_inventory == stock
 		and state.money == money and state.king_storage == tribute, "Cut grass spends no wheat, tribute or copper.")
+	var saved_foot: Vector2 = road.player.global_position
+	var saved_facing: Vector2 = road.player.facing_direction()
 	_expect(state.save_game() == OK, "Save after cutting grass while still on the bridge road.")
 	await _resume()
+	await tree.physics_frame
+	await tree.process_frame
 	road = tree.current_scene
 	if not _expect(road.scene_file_path == state.WEST_ROAD_SCENE and state.sheepfold.fodder == portions * 2
-		and state.sheepfold.last_meadow_cut == cut_day, "Continue preserves the feed and the cut meadow."):
+		and state.sheepfold.last_meadow_cut == cut_day and road.player.global_position.is_equal_approx(saved_foot)
+		and road.player.facing_direction() == saved_facing
+		and road.player.interaction_target == road.get_node("FodderMeadow"),
+		"Continue preserves the feed and places the walker back by the cut meadow."):
 		return
-	await _walk_to_meadow(road)
 	await _key(KEY_E)
 	_expect(state.sheepfold.fodder == portions * 2 and "本季已收" in road.get_node("FodderMeadow/Hint").text,
-		"Reentering the meadow does not refill it in the same season.")
+		"Returning to the saved meadow does not refill it in the same season.")
 	if not await _back_from_meadow(road):
 		return
 	while state.current_day < 19 and not failed:

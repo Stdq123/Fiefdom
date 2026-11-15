@@ -53,6 +53,7 @@ func _ready() -> void:
 		lighting.place_lamp($Scenery, foot, 0.82)
 	lighting.place_lamp($Scenery, LAYOUT.DYE_EAVE + Vector2(-18, 4), 0.64, 0.08)
 	player.arrive_at($EstateRoadArrival)
+	player.restore_walking_checkpoint(LAYOUT.BOUNDS)
 	player.footstep.connect(_step)
 	market_map.setup(self, destinations, $MarketWaypoint)
 	market_map.open_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)

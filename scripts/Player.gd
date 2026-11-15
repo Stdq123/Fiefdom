@@ -256,6 +256,35 @@ func _apply_camera_zoom() -> void:
 func arrive_at(marker: Marker2D) -> void:
 	arrive_at_position(marker.global_position, marker.global_transform.x)
 
+func restore_walking_checkpoint(bounds: Rect2) -> void:
+	var checkpoint := Global.restored_walking_checkpoint
+	Global.restored_walking_checkpoint = {}
+	if checkpoint.is_empty():
+		return
+	var feet: CollisionShape2D = $CollisionShape2D
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = feet.shape
+	query.transform = feet.global_transform.translated(checkpoint.point - global_position)
+	var footprint: Rect2 = query.transform * feet.shape.get_rect()
+	if not bounds.encloses(footprint) or _overlaps_threshold(footprint):
+		return
+	query.exclude = [get_rid()]
+	query.collision_mask = collision_mask
+	if get_world_2d().direct_space_state.intersect_shape(query, 1).is_empty():
+		arrive_at_position(checkpoint.point, checkpoint.facing)
+
+func _overlaps_threshold(footprint: Rect2) -> bool:
+	for area: Area2D in get_tree().get_nodes_in_group("travel_threshold"):
+		if not area.monitoring:
+			continue
+		for child in area.get_children():
+			var sensor := child as CollisionShape2D
+			if sensor != null and not sensor.disabled and sensor.shape != null:
+				var threshold: Rect2 = sensor.global_transform * sensor.shape.get_rect()
+				if footprint.intersects(threshold):
+					return true
+	return false
+
 func facing_direction() -> Vector2:
 	match facing_row:
 		Facing.BACK: return Vector2.UP

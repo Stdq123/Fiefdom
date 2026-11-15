@@ -5,6 +5,7 @@ extends Area2D
 @export var player_path: NodePath
 
 func _ready() -> void:
+	add_to_group("travel_threshold")
 	body_entered.connect(_on_body_entered)
 	MapTravel.prepare.call_deferred(destination)
 

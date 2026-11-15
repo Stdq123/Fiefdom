@@ -34,6 +34,7 @@ func _ready() -> void:
 	Global.restored_west_road_from_market = false
 	ground.place_scenery($Scenery)
 	add_child(WOODEN_BRIDGE.new(LAYOUT.BRIDGE))
+	player.restore_walking_checkpoint(LAYOUT.BOUNDS)
 	network = TRACK_DIRECTION.new([LAYOUT.ROAD, LAYOUT.MEADOW_TRACK], self, player)
 	scheduled_guest = Global.visitor_for_day(Global.current_day)
 	$DialogManager.setup($UI/Control, player)
@@ -41,7 +42,6 @@ func _ready() -> void:
 		$DayLighting.place_lamp($Scenery, foot, 0.82)
 	$Waypoint.draw.connect(_draw_waypoint)
 	player.footstep.connect(_step)
-	settings.save_resume_hint = "续档时从溪桥道较近的一侧路口继续。"
 	%SettingsButton.icon = HUDIcons.icon(HUDIcons.Symbol.SETTINGS)
 	%SettingsButton.pressed.connect(settings.show)
 	settings.visibility_changed.connect(_update_modal)

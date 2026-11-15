@@ -123,8 +123,9 @@ func _run() -> void:
 	_expect(current_scene.get_node("World/Scenery/EastWatch").visible and state.last_defense.get("guard") == "弋戎",
 		"The watch board and defender survive a reload.")
 
-	await _move(&"ui_up", 48)
-	await _move(&"ui_right", 213)
+	world = current_scene.get_node("World")
+	await Campaign.walk_estate_road_to(self, world, world.get_node("EastArrival").global_position)
+	await _move(&"ui_right", 26)
 	_expect(current_scene.name == "Wilderness", "The wild route can be entered after defending the estate.")
 	if current_scene.name != "Wilderness":
 		quit(1)

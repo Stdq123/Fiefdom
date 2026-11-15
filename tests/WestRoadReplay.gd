@@ -157,12 +157,14 @@ func _return_and_continue(market: Node2D) -> void:
 	await _check_east_bank(road, west_edge, west_step, deck_step)
 	await _button(road.get_node("%SettingsButton"))
 	var progress: float = state.day_progress
+	var saved_foot := player.global_position
+	var saved_facing := player.facing_direction()
 	await tree.create_timer(0.30).timeout
 	_expect(road.settings.visible and state.day_progress == progress, "The road clock pauses in settings.")
 	await _button(road.settings.save_button)
 	var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(state.manual_save_path()))
 	_expect(saved.location == "west_road" and saved.west_road_from_market and saved.market_trip_target == state.MARKET_RETURN,
-		"Save records the nearer gate and the trip target.")
+		"Save records the entrance fallback and the trip target.")
 	tree.change_scene_to_file(state.TITLE_SCENE)
 	await tree.scene_changed
 	await tree.process_frame
@@ -174,8 +176,8 @@ func _return_and_continue(market: Node2D) -> void:
 	road = tree.current_scene
 	if not _expect(road.scene_file_path == ROAD_SCENE, "Continue returns to the bridge road."):
 		return
-	_expect(road.player.position == road.get_node("MarketArrival").position and road.route_direction == Vector2.RIGHT,
-		"Continue starts inside the market-side gate and points toward the estate.")
+	_expect(road.player.global_position.is_equal_approx(saved_foot) and road.player.facing_direction() == saved_facing
+		and road.route_direction == Vector2.RIGHT, "Continue restores the saved bridge position, facing and estate route.")
 	await _snapshot("04-road-continued")
 	await _key(KEY_M)
 	overview = road.region_map
@@ -200,7 +202,7 @@ func _return_and_continue(market: Node2D) -> void:
 		_expect(world.player.position.distance_to(world.get_node("WestMarketArrival").position) < 4.0
 			and state.market_trip_target.is_empty(), "The return marker clears on reaching the estate.")
 		await _snapshot("05-estate-returned")
-	print("WEST_ROAD_RETURN save_side=market facing=east continued=", not failed)
+	print("WEST_ROAD_RETURN saved_position=", saved_foot, " facing=", saved_facing, " continued=", not failed)
 
 func _distance_to_bank(foot: Vector2, rim: PackedVector2Array) -> float:
 	var distance := INF

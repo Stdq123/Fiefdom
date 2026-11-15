@@ -143,6 +143,11 @@ func _grow_and_harvest() -> bool:
 	if not _expect(tracked.is_visible_in_tree() and "菽 0/2" in tracked.text and "第 6 天" in tracked.text,
 		"The spring pin survives a title continue and shows what to grow."):
 		return false
+	var farm_approach := world.to_global(Vector2(82, 115))
+	await Campaign.walk_estate_road_to(tree, world, farm_approach)
+	if not _expect(world.player.global_position.distance_to(farm_approach) < 5.0,
+		"Walk from the restored west road arrival to the first field before tending it."):
+		return false
 	var beans := [Vector2i(5, 4), Vector2i(6, 4), Vector2i(6, 6)] if summer else BEANS
 	var millet := [Vector2i(4, 5), Vector2i(4, 6), Vector2i(5, 5)] if summer else MILLET
 	var plots := beans + millet
@@ -161,8 +166,10 @@ func _grow_and_harvest() -> bool:
 		if night == harvest_day - 1:
 			await _button(tracked)
 			var preview: Control = ui.panel_manager.management_panel_instance
-			_expect(preview.season_order_panel.is_visible_in_tree() and "3 格明日熟" in preview.season_order_panel.status.text,
-				"The order distinguishes watered crops that can ripen overnight.")
+			if not _expect(preview != null and preview.season_order_panel.is_visible_in_tree()
+				and "3 格明日熟" in preview.season_order_panel.status.text,
+				"The order distinguishes watered crops that can ripen overnight."):
+				return false
 			await _snapshot("02a-tomorrow-harvest")
 			await _button(preview.close_button)
 		if summer:
@@ -603,6 +610,7 @@ func _set_watch(progress: float) -> void:
 
 func _freight_to_pavilion() -> void:
 	var market := tree.current_scene as Node2D
+	await Campaign.walk_to_market_exit(tree, market)
 	var market_cart := market.get_node("Freight") as SeasonFreight
 	var east_side: Texture2D = market_cart.cart.texture
 	var east_rim: Texture2D = market_cart.rim.texture
@@ -628,7 +636,6 @@ func _freight_to_pavilion() -> void:
 	_expect(market_cart.travelling and market_cart.driver.walking and market_cart.route_offset > 0.0,
 		"The driver and loaded cart move along the market road at the advertised watch.")
 	await _snapshot("05-market-departure")
-	await Campaign.walk_to_market_exit(tree, market)
 	if not await _cross(market.player, [], &"ui_right", state.WEST_ROAD_SCENE):
 		return
 	var road := tree.current_scene as Node2D

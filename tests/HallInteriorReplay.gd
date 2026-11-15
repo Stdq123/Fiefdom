@@ -150,6 +150,8 @@ func _read_desk() -> bool:
 
 func _save_and_restore() -> bool:
 	await _press(ui.settings_button)
+	var saved_foot := player.global_position
+	var saved_facing := player.facing_direction()
 	var settings: Control = ui.panel_manager.settings_panel_instance
 	var saved := false
 	for button: Button in settings.find_children("*", "Button", true, false):
@@ -164,14 +166,16 @@ func _save_and_restore() -> bool:
 	if not await _estate():
 		return false
 	return _expect(state.estate_room == state.EstateRoom.HALL and room.room_camera.is_current()
-		and player.global_position.is_equal_approx(room.get_node("Wake").global_position)
+		and player.global_position.is_equal_approx(saved_foot) and player.facing_direction() == saved_facing
 		and not state.can_practice_today(PlayerStats.Art.LITERACY)
 		and state.active_crops[PUBLIC].watered and not state.active_crops[PRIVATE].watered,
 		"The manual save retains the room, practice and both plots.")
 
 func _bed_plan() -> Control:
+	await _walk_in_room(Vector2(0.0, 24.0))
 	await Campaign.walk_to(tree, player, room.get_node("Wake").global_position)
-	if not _expect(player.interaction_target == room.get_node("Bed"), "Reach the bed's foot on the floor."):
+	if not _expect(player.interaction_target == room.get_node("Bed"),
+		"Reach the bed's foot on the floor from the restored position, currently %s." % room.to_local(player.global_position)):
 		return null
 	await _key(KEY_E)
 	var plan := ui.get_node_or_null("Control/NightRationsPanel") as Control

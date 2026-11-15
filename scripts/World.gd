@@ -111,6 +111,8 @@ func _ready() -> void:
 
 	# Restore crop visuals
 	restore_crops_visuals()
+	if not Global.is_indoors():
+		player.restore_walking_checkpoint(EstateLayout.BOUNDS)
 
 	if Global.raid_day > 0:
 		_spawn_raider()

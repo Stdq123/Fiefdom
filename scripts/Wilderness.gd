@@ -18,6 +18,7 @@ func _ready() -> void:
 	add_child(WOODEN_BRIDGE.new(RavineLayout.BRIDGE_DECK))
 	if not MapTravel.active:
 		$Player.arrive_at($SouthTrailArrival if Global.restored_ravine_south else $WestArrival)
+		$Player.restore_walking_checkpoint(RavineLayout.BOUNDS)
 	Global.restored_ravine_south = false
 	GameEvents.fishing_requested.connect(_on_fishing_requested)
 	raft_landing.trial_requested.connect(_open_raft_trial)
@@ -114,7 +115,6 @@ func _setup_settings(view: Control) -> void:
 
 func _open_settings() -> void:
 	if not get_tree().paused and not MapTravel.active and Global.outcome == Global.Outcome.RUNNING:
-		settings.save_resume_hint = "从竹涧南路小径继续" if resume_from_south_trail() else "从竹涧西门继续"
 		settings.show()
 
 func _unhandled_key_input(event: InputEvent) -> void:

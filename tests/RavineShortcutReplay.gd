@@ -113,7 +113,7 @@ func _reach_shoal(use_shortcut: bool) -> Node2D:
 	print("SHORTCUT_WALK gate=", "south" if use_shortcut else "east", " seconds=", snappedf(seconds, 0.01))
 	return ravine
 
-func _save_in_ravine(ravine: Node2D, hint: String) -> bool:
+func _save_in_ravine(ravine: Node2D) -> bool:
 	await _key(KEY_ESCAPE)
 	var panel: Control = ravine.settings
 	if not _expect(panel.visible and tree.paused, "Open the normal settings panel in the ravine."):
@@ -122,8 +122,9 @@ func _save_in_ravine(ravine: Node2D, hint: String) -> bool:
 		if button.text == "保存游戏":
 			await _button(button)
 			break
-	_expect(panel.save_status.text == "游戏已保存 · " + hint and state.latest_saved_game().get("location") == "竹涧",
-		"Saving names the resume point and keeps the ravine in the save archive.")
+	var message := "游戏已保存 · 从竹涧西门继续" if baseline else "游戏已保存"
+	_expect(panel.save_status.text == message and state.latest_saved_game().get("location") == "竹涧",
+		"Saving keeps the ravine in the save archive.")
 	await _snapshot("05-save")
 	await _button(panel.close_button)
 	return not failed
@@ -208,19 +209,23 @@ func _play() -> void:
 		return
 	if baseline:
 		ravine.ravine_map.follow_place("柳湾")
-		await _save_in_ravine(ravine, "从竹涧西门继续")
+		await _save_in_ravine(ravine)
 		return
 	await _choose_field_return(ravine)
 	var stamina: int = state.current_stamina
 	var health: int = state.health
 	var time: float = state.day_progress
-	if not await _save_in_ravine(ravine, "从竹涧南路小径继续"):
+	var walker := ravine.get_node("Player") as Player
+	var saved_foot := walker.global_position
+	var saved_facing := walker.facing_direction()
+	if not await _save_in_ravine(ravine):
 		return
 	await _continue_from_title()
 	ravine = tree.current_scene
 	if not _expect(ravine.scene_file_path == state.WILDERNESS_SCENE
-		and ravine.get_node("Player").position.distance_to(ravine.get_node("SouthTrailArrival").position) < 3.0,
-		"The new save continues at the south entrance."):
+		and ravine.get_node("Player").global_position.is_equal_approx(saved_foot)
+		and ravine.get_node("Player").facing_direction() == saved_facing,
+		"The new save continues beside the shallows."):
 		return
 	_expect(state.current_stamina == stamina and state.health == health and absf(state.day_progress - time) < 0.01
 		and state.fish_count(fish_id) == 1 and state.last_fishing_day == 7 and state.last_forage_day != 7

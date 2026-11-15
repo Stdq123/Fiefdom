@@ -80,7 +80,7 @@ func _play() -> void:
 	chart = market.get_node("UI/Control/WestMarketMap")
 	await tree.create_timer(0.05).timeout
 	_expect(state.market_trip_target == "鱼摊" and chart.cancel_button.visible,
-		"Continue in the market restores the selected stall from the eastern entrance.")
+		"Continue in the market restores the route to the selected stall.")
 	if not await _trade_at_fish_stall():
 		return
 	await _follow_to_cart_and_home()
@@ -219,9 +219,10 @@ func _bridge_and_continue() -> void:
 	await _key(KEY_M)
 	await _button(road.get_node("CampaignHUD").field_return_button)
 	await _button(road.get_node("%SettingsButton"))
+	var saved_foot: Vector2 = road.player.global_position
 	await _button(road.settings.save_button)
 	var saved: Dictionary = state.latest_saved_game()
-	if not _expect(road.settings.save_status.text.begins_with("游戏已保存 · 续档时从溪桥道")
+	if not _expect(road.settings.save_status.text == "游戏已保存"
 		and saved.get("location") == "溪桥道", "Save the return trip in the bridge settings."):
 		return
 	var day: int = state.current_day
@@ -233,6 +234,7 @@ func _bridge_and_continue() -> void:
 	road = tree.current_scene
 	await tree.process_frame
 	if not _expect(road.scene_file_path == state.WEST_ROAD_SCENE and state.market_trip_target == state.FIELD_RETURN
+		and road.player.global_position.is_equal_approx(saved_foot)
 		and not road.route.is_empty() and road.route[-1] == ROAD_LAYOUT.ESTATE_GATE,
 		"Continuing from the title restores the bridge leg of the return trip."):
 		return

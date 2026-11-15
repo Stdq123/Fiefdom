@@ -106,6 +106,7 @@ var market_produce_bought_on := 0
 var restored_ravine_waypoint := ""
 var restored_ravine_south := false
 var restored_west_road_from_market := false
+var restored_walking_checkpoint: Dictionary = {}
 var fish_collection: Dictionary[String, Dictionary] = {}
 var fish_order_receipt: Dictionary = {}
 var creek_trap: Dictionary = {}
@@ -310,6 +311,7 @@ func _reset_campaign() -> void:
 	restored_ravine_waypoint = ""
 	restored_ravine_south = false
 	restored_west_road_from_market = false
+	restored_walking_checkpoint.clear()
 	creek_trap.clear()
 	fish_collection.clear()
 	fish_order_receipt.clear()
@@ -3690,6 +3692,13 @@ func _save_snapshot(origin: String) -> Error:
 		"quest_progress": quest_progress,
 		"quest_completed": quest_completed
 	}
+	if origin.is_empty() and location != null and outcome == Outcome.RUNNING and not MapTravel.active:
+		var actor := get_tree().get_first_node_in_group("player") as Player
+		if actor != null and scene.is_ancestor_of(actor) and not actor.training_cart.visible:
+			data["walking_checkpoint"] = {
+				"x": actor.global_position.x, "y": actor.global_position.y,
+				"facing": _cell_key(Vector2i(actor.facing_direction())),
+			}
 
 	var pending_path := "%s.%d.tmp" % [path, OS.get_process_id()]
 	var file := FileAccess.open(pending_path, FileAccess.WRITE)
@@ -4057,6 +4066,9 @@ func load_game(path := "") -> Error:
 	var saved_room := _read_save_int(data.get("estate_room"), legacy_room)
 	estate_room = (saved_room as EstateRoom if outcome == Outcome.RUNNING and resume_scene == ESTATE_SCENE
 		and saved_room in EstateRoom.values() else EstateRoom.OUTDOORS)
+	restored_walking_checkpoint = {}
+	if outcome == Outcome.RUNNING and data.get("save_origin", "") == "" and SAVE_SCENES.has(data.get("location")):
+		restored_walking_checkpoint = _read_walking_checkpoint(data.get("walking_checkpoint"))
 	raid_day = clampi(_read_save_int(data.get("raid_day"), 0), 0, saved_day)
 	raid_kind = clampi(_read_save_int(data.get("raid_kind"), 0), 0, 1)
 	raid_health = maxi(-1, _read_save_int(data.get("raid_health"), -1))
@@ -4522,6 +4534,18 @@ func _read_save_number(value: Variant, fallback: float) -> float:
 	if (value is float or value is int) and is_finite(float(value)):
 		return float(value)
 	return fallback
+
+func _read_walking_checkpoint(record: Variant) -> Dictionary:
+	if not record is Dictionary:
+		return {}
+	var point := Vector2(_read_save_number(record.get("x"), INF), _read_save_number(record.get("y"), INF))
+	if not point.is_finite():
+		return {}
+	var saved_facing: Variant = _read_save_cell(record.get("facing"))
+	var facing := Vector2.DOWN
+	if saved_facing in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+		facing = Vector2(saved_facing)
+	return {"point": point, "facing": facing}
 
 func _restore_crop_stock(record: Variant, total: int) -> void:
 	crop_stock = CropStock.new()

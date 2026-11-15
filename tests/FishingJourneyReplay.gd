@@ -70,6 +70,9 @@ func _ravine_checkpoint(gamepad: RefCounted) -> bool:
 	var progress: float = state.day_progress
 	var stamina: int = state.current_stamina
 	var health: int = state.health
+	var walker := ravine.get_node("Player") as Player
+	var saved_foot := walker.global_position
+	var saved_facing := walker.facing_direction()
 	await _key(KEY_M)
 	_expect(not chart.modal.visible, "The map shortcut leaves settings in control.")
 	var controls := {}
@@ -77,7 +80,7 @@ func _ravine_checkpoint(gamepad: RefCounted) -> bool:
 		controls[action.text] = action
 	await _button(controls["保存游戏"])
 	var latest: Dictionary = state.latest_saved_game()
-	_expect(settings.save_status.text == "游戏已保存 · 从竹涧西门继续" and latest.get("location") == "竹涧"
+	_expect(settings.save_status.text == "游戏已保存" and latest.get("location") == "竹涧"
 		and is_equal_approx(state.day_progress, progress), "The save names the checkpoint and holds the day clock.")
 	await _snapshot("06a-ravine-save")
 	await _button(controls["读取游戏"])
@@ -110,8 +113,8 @@ func _ravine_checkpoint(gamepad: RefCounted) -> bool:
 		return false
 	var player := ravine.get_node("Player") as Player
 	var guide := ravine.get_node("RavineDirections")
-	_expect(player.position.is_equal_approx(ravine.get_node("WestArrival").position)
-		and player.facing_direction() == Vector2.RIGHT, "Continue starts facing the trail at the authored west arrival.")
+	_expect(player.global_position.is_equal_approx(saved_foot) and player.facing_direction() == saved_facing,
+		"Continue restores the saved place and facing near the pool.")
 	_expect(state.current_day == 35 and absf(state.day_progress - progress) < 0.01
 		and state.current_stamina == stamina and state.health == health
 		and state.last_fishing_day == 35 and state.last_forage_day != 35,
@@ -120,7 +123,7 @@ func _ravine_checkpoint(gamepad: RefCounted) -> bool:
 	_expect(state.fish_count(FISH) == 1 and state.crop_stock.count("rice") == 2
 		and state.market_trip_target == state.MARKET_ORDERS and guide.destination_name == "西门回封地"
 		and "西市 · 收货牌" in ravine.ravine_map.cancel_button.text, "Resume with the catch and the route to the receiving board.")
-	await _snapshot("06c-ravine-west-arrival")
+	await _snapshot("06c-ravine-position-restored")
 	print("FISH_JOURNEY_RAVINE_RESUME day=", state.current_day, " position=", player.position,
 		" route=", state.market_trip_target, " fish=", state.fish_count(FISH))
 	return not failed

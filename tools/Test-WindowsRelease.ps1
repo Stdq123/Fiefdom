@@ -151,6 +151,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/LedgerAudioReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/WinterPondReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldStrokeReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/WalkingCheckpointReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/HarvestScopeReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/PlannedSowingReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldPreparationReplay.gd') -Destination $testDirectory
@@ -222,6 +223,8 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'title-presentation' -Name 'title-presentation' -Replay 'title-presentation' -Resolution $fullResolution
     }
     if ($ProcessRestart) {
+        Start-VerifiedGame -Directory $release -Profile 'walking-checkpoint' -Name 'walking-checkpoint-write' -Replay 'walking-checkpoint-write'
+        Start-VerifiedGame -Directory $release -Profile 'walking-checkpoint' -Name 'walking-checkpoint-restart' -Replay 'walking-checkpoint-restart' -ResumeProfile
         foreach ($route in 'traditional', 'reformed') {
             $profile = "restart-$route"
             Start-VerifiedGame -Directory $release -Profile $profile -Name "ending-write-$route" -Replay "save-ending-$route"

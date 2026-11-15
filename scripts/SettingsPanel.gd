@@ -5,11 +5,6 @@ const SAVE_ARCHIVE := preload("res://scenes/SaveArchive.tscn")
 const BINDINGS_PANEL := preload("res://scripts/KeyboardBindingsPanel.gd")
 
 var session_controls := true
-var save_resume_hint := "":
-	set(value):
-		save_resume_hint = value
-		if is_instance_valid(save_button):
-			save_button.tooltip_text = value
 var save_status: Label
 var save_button: Button
 var preferences_status: Label
@@ -125,7 +120,7 @@ func _add_volume_control(vbox: VBoxContainer, control_name: StringName, text: St
 func _add_session_controls(vbox: VBoxContainer) -> void:
 	save_button = Button.new()
 	save_button.text = "保存游戏"
-	save_button.tooltip_text = save_resume_hint
+	save_button.tooltip_text = "手动档记录当前地点、站位和面向"
 	save_button.pressed.connect(_on_save_pressed)
 	vbox.add_child(save_button)
 
@@ -163,8 +158,6 @@ func _return_to_title() -> void:
 func _on_save_pressed() -> void:
 	var result := Global.save_game()
 	save_status.text = "游戏已保存" if result == OK else "保存失败（%s）" % error_string(result)
-	if result == OK and not save_resume_hint.is_empty():
-		save_status.text += " · " + save_resume_hint
 
 func _on_load_pressed() -> void:
 	if Global.has_saved_game():

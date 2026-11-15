@@ -95,6 +95,8 @@ func _run() -> void:
 			await replay.run_research_rations(tree, false, capture_directory)
 		"duty-rations", "duty-rations-before", "duty-rations-resume", "duty-rations-pad":
 			await load("res://tests/DutyRationsReplay.gd").new().run_duty_rations(tree, capture_directory, arguments[0])
+		"walking-checkpoint", "walking-checkpoint-write", "walking-checkpoint-restart":
+			await load("res://tests/WalkingCheckpointReplay.gd").new().run_walking_checkpoint(tree, capture_directory, arguments[0])
 		"ration-priority", "ration-priority-legacy":
 			var replay = load("res://tests/RationPriorityReplay.gd").new()
 			replay.legacy = arguments[0] == "ration-priority-legacy"
