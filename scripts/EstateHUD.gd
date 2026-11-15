@@ -69,6 +69,7 @@ var seed_buttons: Dictionary = {}
 var save_notice_tween: Tween
 var fields_needing_water := 0
 var pavilion_story_available := false
+var pavilion_story_expected := false
 var reclamation_mode := false
 var indoors := false
 var driving := false
@@ -307,12 +308,17 @@ func refresh_rations() -> void:
 	elif fields_needing_water > 0:
 		rations_button.text = "今夜安排 · %d 格缺水" % fields_needing_water
 		tone = Color("#efbf8a")
+	elif pavilion_story_expected:
+		rations_button.text = "今夜安排 · 亭中有约"
+		tone = Color("#f1d38d")
 	else:
 		rations_button.text = "今夜安排"
 	rations_button.add_theme_color_override("font_color", tone)
 	rations_button.tooltip_text = "查看田务和用粮\n粮仓 %d 份 · 今夜所需 %d 份" % [Global.food_storage, plan.need]
 	if pavilion_story_available:
 		rations_button.tooltip_text += "\n邻居已入席，可指路去听灯下小谈。"
+	elif pavilion_story_expected:
+		rations_button.tooltip_text += "\n%s起有小谈，可先去亭边候席。" % PavilionRest.rest_watch()
 
 func refresh_tribute() -> void:
 	var due := Global.tribute_deadline()

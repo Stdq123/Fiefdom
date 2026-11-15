@@ -1,11 +1,12 @@
 extends Node2D
 class_name PavilionRest
 
-signal story_changed(story_id: String, place: String)
+signal story_changed(story_id: String, appointment_id: String, place: String)
 
 const PLACE := "亭前晚坐"
 const RAIN_PLACE := "亭东雨棚"
 const STORY_LABEL := "灯下小谈"
+const WAIT_LABEL := "亭边候席"
 const START := (17.0 - Global.DAY_START_HOUR) / (Global.DAY_END_HOUR - Global.DAY_START_HOUR)
 const RAIN_START := (15.0 - Global.DAY_START_HOUR) / (Global.DAY_END_HOUR - Global.DAY_START_HOUR)
 const SEATS := [Vector2(-25, 3), Vector2(12, -16), Vector2(-12, -13),
@@ -22,6 +23,7 @@ const APPROACH := Vector2(0, 15)
 @onready var rain_lamps: Node2D = $RainLamps
 var focused := false
 var story_id := ""
+var appointment_id := ""
 
 func _ready() -> void:
 	mats.draw.connect(_draw_mats)
@@ -38,8 +40,6 @@ func _ready() -> void:
 
 func _refresh() -> void:
 	var shelter := is_rain_shelter()
-	visible = Global.day_progress >= rest_start() and Global.raid_day == 0 \
-		and Global.outcome == Global.Outcome.RUNNING
 	var approach := gathering_approach()
 	if position != approach:
 		position = approach
@@ -52,19 +52,28 @@ func _refresh() -> void:
 
 func refresh_table() -> void:
 	var next_story: String = get_parent().pavilion_story_id()
-	var changed := next_story != story_id
+	var next_appointment: String = get_parent().pavilion_appointment() if next_story.is_empty() else ""
+	var changed := next_story != story_id or next_appointment != appointment_id
 	story_id = next_story
+	appointment_id = next_appointment
+	visible = is_evening_open() or not appointment_id.is_empty()
 	mats.queue_redraw()
 	queue_redraw()
 	_refresh_hint()
 	if changed:
-		story_changed.emit(story_id, gathering_name())
+		story_changed.emit(story_id, appointment_id, gathering_name())
 
 func is_rain_shelter() -> bool:
 	return Global.has_rain()
 
 static func rest_start() -> float:
 	return RAIN_START if Global.has_rain() else START
+
+static func rest_watch() -> String:
+	return "申时" if Global.has_rain() else "酉时"
+
+func is_evening_open() -> bool:
+	return Global.day_progress >= rest_start() and Global.raid_day == 0 and Global.outcome == Global.Outcome.RUNNING
 
 func gathering_name() -> String:
 	return RAIN_PLACE if is_rain_shelter() else PLACE
@@ -76,11 +85,14 @@ func gathering_approach() -> Vector2:
 	return (EstateLayout.PAVILION_SHELTER_APPROACH if is_rain_shelter() else EstateLayout.PAVILION_SEATS + APPROACH) \
 		+ Vector2(-10, 0)
 
-func seat_for(data: RetainerData) -> Vector2:
+func has_seat_for(data: RetainerData) -> bool:
 	var index := VisitorData.NEIGHBORS.find(data.name)
-	if visible and data.duty != RetainerData.Duty.GUARD and index >= 0 and index < SEATS.size():
+	return data.duty != RetainerData.Duty.GUARD and index >= 0 and index < SEATS.size()
+
+func seat_for(data: RetainerData) -> Vector2:
+	if is_evening_open() and has_seat_for(data):
 		var seats := RAIN_SEATS if is_rain_shelter() else SEATS
-		return gathering_center() + seats[index]
+		return gathering_center() + seats[VisitorData.NEIGHBORS.find(data.name)]
 	return Vector2.INF
 
 func guest_seat() -> Vector2:
@@ -95,14 +107,18 @@ func set_interaction_focused(focused: bool) -> void:
 
 func _refresh_hint() -> void:
 	var label := STORY_LABEL if not story_id.is_empty() else "今夜安排"
+	if not appointment_id.is_empty():
+		label = WAIT_LABEL
 	hint.text = GamepadInput.interact_hint(label) if focused else label
-	hint.visible = visible and (focused or not story_id.is_empty())
+	hint.visible = visible and (focused or not story_id.is_empty() or not appointment_id.is_empty())
 
 func interact() -> void:
 	GameEvents.pavilion_table_requested.emit()
 
 func _draw_mats() -> void:
 	var seats := (RAIN_SEATS if is_rain_shelter() else SEATS).duplicate()
+	if not appointment_id.is_empty() or not story_id.is_empty():
+		seats.append(gathering_approach() - gathering_center())
 	var guest: Visitor = get_parent().current_visitor_actor()
 	if is_instance_valid(guest) and guest.activity == VisitorData.VisitActivity.PAVILION_REST:
 		seats.append(guest_seat() - gathering_center())

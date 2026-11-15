@@ -325,7 +325,7 @@ func _connect_signals() -> void:
 
 	world.seed_selected.connect(_refresh_seed_belt.unbind(1))
 	world.pavilion_rest.story_changed.connect(_refresh_pavilion_story.unbind(1))
-	_refresh_pavilion_story(world.pavilion_story_id())
+	_refresh_pavilion_story(world.pavilion_rest.story_id, world.pavilion_rest.appointment_id)
 	world.channel_mode_changed.connect(_on_channel_mode_changed)
 	world.channel_feedback.connect(hud.show_channel_help)
 	world.irrigation_overlay.preview_changed.connect(func(message: String): hud.canal_preview.text = message)
@@ -415,19 +415,33 @@ func _on_gathering_book_requested() -> void:
 
 func _on_pavilion_table_requested() -> void:
 	world.set_channel_mode(false)
-	if directions.tracked_place in [world.pavilion_rest.gathering_name(), PavilionRest.STORY_LABEL]:
+	var table: PavilionRest = world.pavilion_rest
+	if directions.tracked_place in [table.gathering_name(), PavilionRest.STORY_LABEL, PavilionRest.WAIT_LABEL]:
 		directions.clear_tracking()
-	var story: String = world.pavilion_story_id()
-	if story.is_empty():
-		_show_night_rations()
+	if not table.story_id.is_empty():
+		dialog_manager.show_pavilion_story(table.story_id, table.gathering_name(), _show_night_rations)
+	elif not table.appointment_id.is_empty():
+		dialog_manager.show_pavilion_appointment(table.appointment_id, table.gathering_name(),
+			_wait_at_pavilion.bind(table.appointment_id), _show_night_rations)
 	else:
-		dialog_manager.show_pavilion_story(story, world.pavilion_rest.gathering_name(), _show_night_rations)
+		_show_night_rations()
 
-func _refresh_pavilion_story(story_id: String) -> void:
+func _wait_at_pavilion(id: String) -> void:
+	var table: PavilionRest = world.pavilion_rest
+	if not _estate_controls_busy() and table.appointment_id == id and table.can_interact_from(world.player.global_position):
+		freight_wait.wait_for_pavilion(world.player, table, id)
+
+func _refresh_pavilion_story(story_id: String, appointment_id: String) -> void:
 	hud.pavilion_story_available = not story_id.is_empty()
+	hud.pavilion_story_expected = not appointment_id.is_empty()
 	hud.refresh_rations()
 	if story_id.is_empty() and directions.tracked_place == PavilionRest.STORY_LABEL:
 		directions.clear_tracking()
+	if appointment_id.is_empty() and directions.tracked_place == PavilionRest.WAIT_LABEL:
+		if story_id.is_empty():
+			directions.clear_tracking()
+		else:
+			directions.follow_place(PavilionRest.STORY_LABEL, world.pavilion_rest.gathering_approach())
 
 func _on_retainer_interacted(data: RetainerData) -> void:
 	directions.arrive_at(data.name)
@@ -824,8 +838,9 @@ func _show_night_rations(show_previous := false, focus_shortage := false) -> voi
 	var player: Player = world.player
 	player.conversation_open = true
 	$Control.add_child(panel)
-	world.pavilion_rest.story_changed.connect(panel.show_pavilion_story)
-	panel.show_pavilion_story(world.pavilion_story_id(), world.pavilion_rest.gathering_name())
+	var table: PavilionRest = world.pavilion_rest
+	table.story_changed.connect(panel.show_pavilion_story)
+	panel.show_pavilion_story(table.story_id, table.appointment_id, table.gathering_name())
 	GameEvents.modal_visibility_changed.emit(true)
 	panel.market_requested.connect(_show_market)
 	panel.silk_requested.connect(_show_silk)
@@ -858,9 +873,11 @@ func _show_night_rations(show_previous := false, focus_shortage := false) -> voi
 	)
 
 func _guide_pavilion_story(panel: Control) -> void:
-	if world.pavilion_story_id().is_empty():
+	var table: PavilionRest = world.pavilion_rest
+	if table.story_id.is_empty() and table.appointment_id.is_empty():
 		return
-	directions.follow_place(PavilionRest.STORY_LABEL, world.pavilion_rest.gathering_approach())
+	var label := PavilionRest.WAIT_LABEL if table.story_id.is_empty() else PavilionRest.STORY_LABEL
+	directions.follow_place(label, table.gathering_approach())
 	panel_manager.hide_management_panel()
 	panel.queue_free()
 	if Global.is_indoors():

@@ -75,6 +75,19 @@ func show_pavilion_story(id: String, place: String, open_rations: Callable) -> v
 			dialog.tree_exited.connect(open_rations, CONNECT_DEFERRED | CONNECT_ONE_SHOT)
 	)
 
+func show_pavilion_appointment(id: String, place: String, wait: Callable, open_rations: Callable) -> void:
+	if parent_node.has_node("DialoguePanel"):
+		return
+	var story: Dictionary = PavilionStories.STORIES[id]
+	var text := "%s起，%s会到这里歇脚。等两人入席，就能听他们说「%s」。" % [
+		PavilionRest.rest_watch(), "和".join(story.speakers), story.title]
+	var dialog := _open("南路亭", place, text, ["坐下候席", "今夜安排", "离开"], [], null)
+	dialog.choices[0].grab_focus()
+	dialog.option_selected.connect(func(index: int):
+		if index in [0, 1]:
+			dialog.tree_exited.connect(wait if index == 0 else open_rations, CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+	)
+
 func _pavilion_story_line(id: String, place: String, day: int, index: int) -> void:
 	if day != Global.current_day or parent_node.has_node("DialoguePanel"):
 		return

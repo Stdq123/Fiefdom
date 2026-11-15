@@ -412,7 +412,7 @@ func _mark_place(title: String, point: Vector2) -> void:
 	_show_road_route(point)
 	var at := world.get_global_transform_with_canvas() * point
 	var readable_hint := false
-	if title == PavilionRest.STORY_LABEL:
+	if title in [PavilionRest.STORY_LABEL, PavilionRest.WAIT_LABEL]:
 		var hint: Label = world.pavilion_rest.hint
 		var hint_bounds := hint.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, hint.size)
 		readable_hint = hint.is_visible_in_tree() and hud.map_space_clear(hint_bounds)

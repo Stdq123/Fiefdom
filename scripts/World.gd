@@ -286,6 +286,7 @@ func _on_retainer_assigned(data: RetainerData, _grid_pos: Vector2i) -> void:
 
 func _on_retainer_duty_changed(data: RetainerData) -> void:
 	_refresh_duty_stations(data)
+	pavilion_rest.refresh_table()
 
 func _on_retainer_recruited(data: RetainerData) -> void:
 	spawn_retainer(data)
@@ -317,6 +318,7 @@ func _on_retainer_departed(data: RetainerData) -> void:
 func _on_road_provisions_delivered() -> void:
 	var cell := tile_map.local_to_map(tile_map.to_local(player.global_position))
 	spawn_floating_text(cell, "路粮已备 · 声望 +%d" % Global.balance.interaction_reputation_gain, Color("#efce80"))
+	pavilion_rest.refresh_table()
 
 func _on_silk_sample_delivered() -> void:
 	var cell := tile_map.local_to_map(tile_map.to_local(player.global_position))
@@ -1383,12 +1385,29 @@ func _pavilion_has_neighbor(speaker: String) -> bool:
 		return person.resting_at_pavilion()
 	return person is Visitor and person.resting_at_pavilion()
 
+func _pavilion_expects_neighbor(speaker: String) -> bool:
+	var person := neighbor_actor(speaker)
+	if person is Retainer:
+		return pavilion_rest.has_seat_for(person.data)
+	if person is Visitor and person.activity == VisitorData.VisitActivity.PAVILION_REST:
+		return true
+	return scheduled_visitor != null and scheduled_visitor.name == speaker and (scheduled_visitor.has_pavilion_rest()
+		or (speaker == VisitorData.SILK_MERCHANT and VisitorData.silk_market_day(Global.current_day)))
+
 func pavilion_story_id() -> String:
-	if pavilion_rest == null or not pavilion_rest.visible:
+	if pavilion_rest == null or not pavilion_rest.is_evening_open():
 		return ""
+	return _unheard_pavilion_story(_pavilion_has_neighbor)
+
+func pavilion_appointment() -> String:
+	if Global.raid_day > 0 or Global.outcome != Global.Outcome.RUNNING or Global.day_progress >= 1.0:
+		return ""
+	return _unheard_pavilion_story(_pavilion_expects_neighbor)
+
+func _unheard_pavilion_story(has_speakers: Callable) -> String:
 	for id: String in PavilionStories.IDS:
 		if not Global.pavilion_stories_heard.has(id) and PavilionStories.available(id) \
-				and PavilionStories.speakers(id).all(_pavilion_has_neighbor):
+				and PavilionStories.speakers(id).all(has_speakers):
 			return id
 	return ""
 

@@ -163,6 +163,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/EndingFilmReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RaidReadinessReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/PavilionVisitReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/PavilionAppointmentReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RecruitmentLedgerReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RavineShortcutReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RotationGuideReplay.gd') -Destination $testDirectory
@@ -342,6 +343,9 @@ try {
     if ($PavilionEvening) {
         Start-VerifiedGame -Directory $release -Profile 'pavilion-evening' -Name 'pavilion-evening' -Replay 'pavilion-evening'
         Start-VerifiedGame -Directory $release -Profile 'pavilion-stories' -Name 'pavilion-stories' -Replay 'pavilion-stories' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'pavilion-appointment' -Name 'pavilion-appointment' -Replay 'pavilion-appointment' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'pavilion-appointment-rain' -Name 'pavilion-appointment-rain' -Replay 'pavilion-appointment-rain'
+        Start-VerifiedGame -Directory $release -Profile 'pavilion-appointment-market' -Name 'pavilion-appointment-market' -Replay 'pavilion-appointment-market'
     }
     if ($WatchRelief) {
         Start-VerifiedGame -Directory $release -Profile 'watch-relief' -Name 'watch-relief' -Replay 'watch-relief'

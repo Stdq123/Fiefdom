@@ -144,6 +144,8 @@ func _collect_places() -> void:
 		var story: String = world.pavilion_story_id()
 		if not story.is_empty():
 			detail = "可在席案听「%s」或查看今夜口粮" % PavilionStories.STORIES[story].title
+		elif not pavilion.appointment_id.is_empty():
+			detail = "%s起听「%s」 · 可提前候席" % [PavilionRest.rest_watch(), PavilionStories.STORIES[pavilion.appointment_id].title]
 		places.append(_entry(Category.PLACES, pavilion.gathering_name(), detail, pavilion.gathering_approach()))
 	_add_built_place("药圃", "采药处", "HerbGarden")
 	var relief := Global.watch_relief_day() > 0

@@ -160,12 +160,16 @@ func _ready() -> void:
 	if focus_shortage:
 		_focus_meal_options.call_deferred()
 
-func show_pavilion_story(story_id: String, place: String) -> void:
-	pavilion_story.visible = not story_id.is_empty()
+func show_pavilion_story(story_id: String, appointment_id: String, place: String) -> void:
+	var ready_to_hear := not story_id.is_empty()
+	var id := story_id if ready_to_hear else appointment_id
+	pavilion_story.visible = not id.is_empty()
 	if pavilion_story.visible:
-		var story: Dictionary = PavilionStories.STORIES[story_id]
-		pavilion_title.text = "%s · %s" % [PavilionRest.STORY_LABEL, story.title]
-		pavilion_people.text = "%s已入席 · %s" % ["、".join(story.speakers), place]
+		var story: Dictionary = PavilionStories.STORIES[id]
+		pavilion_title.text = "%s · %s" % [PavilionRest.STORY_LABEL if ready_to_hear else "今晚小谈", story.title]
+		var people := "、".join(story.speakers)
+		pavilion_people.text = "%s已入席 · %s" % [people, place] if ready_to_hear else "%s起 · %s · %s" % [PavilionRest.rest_watch(), people, place]
+		find_pavilion.text = "指路去席案" if ready_to_hear else "指路去候席"
 
 func _focus_meal_options() -> void:
 	await get_tree().process_frame
