@@ -20,12 +20,20 @@ func _opening() -> void:
 	_gate_passage(terrain, world.get_node("EastGate"))
 	var tiles: TileMapLayer = world.tile_map
 	var public_point := tiles.get_global_transform_with_canvas() * tiles.map_to_local(PUBLIC)
-	for action in 3:
+	if not captures.is_empty() and DisplayServer.get_name() != "headless":
+		_expect(ui.hud.guide.get_line_count() == 3, "The movement, tilling and tribute deadline each fit one line in the journal.")
+	await _snapshot("00a-untilled-field")
+	await _click(public_point)
+	_expect(world.field_action(PUBLIC) == world.FieldAction.SOW and state.is_public_plot(PUBLIC),
+		"A turned public plot stays marked for tribute and ready to sow.")
+	await _snapshot("00b-turned-field")
+	for action in 2:
 		await _click(public_point)
 	var crop: Dictionary = state.active_crops.get(PUBLIC, {})
 	_expect(not crop.is_empty() and crop.get("watered", false), "Sow and water the central field over the new ground.")
 	state.advance_daylight(23.0)
 	await _snapshot("00-first-field")
+	await _walk_into_field(terrain)
 	await _walk(Vector2(-181, 54))
 	await _walk(Vector2(-181, -21))
 	await _walk(Vector2(-270, -21))
@@ -50,6 +58,25 @@ func _opening() -> void:
 	await _key(KEY_ESCAPE)
 	print("TERRAIN_ROUTES baseline=", baseline, " west_continues=", west_visible, " east_continues=", east_visible,
 		" north_foot=", snappedf(north, 0.1), " watered=", state.active_crops[PUBLIC].watered)
+
+func _walk_into_field(terrain: Node2D) -> void:
+	var area := EstateLayout.field_bounds(PUBLIC)
+	var mouth := Vector2(area.get_center().x, area.end.y)
+	await _walk(mouth + Vector2(0, 12.5))
+	await tree.physics_frame
+	await tree.physics_frame
+	var steps: Array[AudioStream] = []
+	var audio: Node = terrain.terrain_audio
+	var record := func(_point: Vector2): steps.append(audio.footsteps.stream)
+	var player: Player = world.player
+	player.footstep.connect(record)
+	await _walk(mouth - Vector2(0, 21))
+	player.footstep.disconnect(record)
+	_expect(area.has_point(player.position) and steps.size() >= 2
+		and steps[0] in audio.STEPS[TerrainAudio.Surface.STONE] and steps[1] in audio.STEPS[TerrainAudio.Surface.TRACK],
+		"Actual walking crosses the stone at the entrance and uses a dirt footstep inside the field.")
+	await _snapshot("00c-walked-into-field")
+	print("TERRAIN_FOOTSTEPS steps=", steps.size(), " inside=", area.has_point(player.position))
 
 func _silk_and_gates() -> void:
 	if title_art or failures > 0:

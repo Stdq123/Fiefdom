@@ -231,8 +231,8 @@ func _opening_field_step(cell: Vector2i, is_public: bool) -> String:
 	match action:
 		ESTATE_WORLD.FieldAction.TILL:
 			if is_public:
-				return ("左摇杆移动，右摇杆对准金边公田。\n按 A 翻地，收成用来纳贡。" if pad
-					else "%s 或方向键移动。\n左键点金边公田翻地，收成用来纳贡。" % _walking_keys())
+				return ("左摇杆移动，右摇杆对准中央公田。\n按 A 翻地，收成用来纳贡。" if pad
+					else "%s 或方向键移动。\n左键翻中央公田，收成用来纳贡。" % _walking_keys())
 			return "%s翻地。\n收成归你，可换口粮或留作时令交货。" % point
 		ESTATE_WORLD.FieldAction.SOW:
 			var seed := ItemManager.get_crop(world.current_seed_id)

@@ -136,12 +136,12 @@ func _check_field_layout() -> void:
 		_expect(Geometry2D.intersect_polygons(track.shoulder, soil).is_empty(), "Road shoulders clear all nine starter plots.")
 		_expect(Geometry2D.intersect_polygons(track.shoulder, ditch).is_empty(), "The road leaves space from water source to field.")
 	var entry := Vector2(field.get_center().x, field.end.y)
-	_expect(landscape._surface_at(entry + Vector2(0, 1)) == Terrain.Surface.TRACK
+	_expect(landscape._surface_at(entry + Vector2(0, 1)) == Terrain.Surface.STONE
 		and landscape._surface_at(entry + Vector2(0, 12)) == Terrain.Surface.TRACK
-		and landscape._surface_at(entry + Vector2(0, -1)) == Terrain.Surface.GRASS
+		and landscape._surface_at(entry + Vector2(0, -1)) == Terrain.Surface.TRACK
 		and landscape._surface_at(entry + Vector2(11, 10)) == Terrain.Surface.GRASS
 		and landscape._surface_at(water + Vector2(16, 0)) == Terrain.Surface.GRASS,
-		"The farm approach meets the opening, with grass on either side and along the canal strip.")
+		"The stone threshold meets the dirt approach and the field soil, with grass beside the water source.")
 	print("DAYLIGHT_FIELD_LAYOUT field=", field, " water=", water, " tracks=", landscape.track_shapes.size())
 
 func _save_dusk() -> Dictionary:

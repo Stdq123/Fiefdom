@@ -1,5 +1,6 @@
 extends RefCounted
 
+const TerrainAudio := preload("res://scripts/TerrainAudio.gd")
 const FIRST_SITE := Vector2i(12, 5)
 const SECOND_SITE := Vector2i(8, 11)
 const OLD_ROAD_SITE := Vector2i(1, 11)
@@ -167,6 +168,9 @@ func _check_completed(field_id: int) -> void:
 	var mouth := center + normal * 24.0
 	_expect(boundary.to_global((boundary.points[0] + boundary.points[-1]) * 0.5) == mouth
 		and boundary.points[0].distance_to(boundary.points[-1]) == 16.0, "The cut in the field edge is one tile wide.")
+	_expect(landscape._surface_at(mouth + normal * 2.0) == TerrainAudio.Surface.STONE
+		and landscape._surface_at(mouth - normal * 2.0) == TerrainAudio.Surface.TRACK,
+		"The stone threshold and tilled ground use their own footsteps on both approaches.")
 	var path: Dictionary = landscape.track_shapes[landscape.ESTATE_TRACKS.size() + field_id]
 	for offset in [-6.0, 6.0]:
 		_expect(Geometry2D.is_point_in_polygon(mouth + normal * 2.0 + normal.orthogonal() * offset, path.surface),

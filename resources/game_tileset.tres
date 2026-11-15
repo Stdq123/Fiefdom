@@ -8,9 +8,13 @@ use_texture_padding = false
 0:0/0 = 0
 1:0/0 = 0
 1:0/0/custom_data_0 = true
+2:0/0 = 0
+3:0/0 = 0
 0:1/0 = 0
 1:1/0 = 0
 1:1/0/custom_data_0 = true
+2:1/0 = 0
+3:1/0 = 0
 
 [resource]
 custom_data_layer_0/name = "is_public_field"

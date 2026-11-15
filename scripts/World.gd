@@ -6,6 +6,7 @@ signal channel_feedback(message: String)
 signal visitor_changed(data: VisitorData)
 
 const SEED_ORDER := CropData.IDS
+const PRIVATE_SOIL_COLUMNS := [0, 2, 3]
 const FIELD_IMPACTS := preload("res://assets/farming/field-impacts.svg")
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
@@ -569,9 +570,10 @@ func _draw_well_field(center: Vector2i) -> void:
 	for x in range(-1, 2):
 		for y in range(-1, 2):
 			var coords := center + Vector2i(x, y)
-			var public_field := coords == center and public_center
+			var texture_variant := posmod(coords.x * 5 + coords.y * 7, PRIVATE_SOIL_COLUMNS.size())
+			var column: int = 1 if coords == center and public_center else PRIVATE_SOIL_COLUMNS[texture_variant]
 			var soil := 1 if Global.tilled_cells.has(coords) else 0
-			tile_map.set_cell(coords, 0, Vector2i(1 if public_field else 0, soil))
+			tile_map.set_cell(coords, 0, Vector2i(column, soil))
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_PAUSED:

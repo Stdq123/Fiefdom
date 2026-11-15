@@ -529,12 +529,15 @@ func _draw_crop_icons() -> void:
 func _draw() -> void:
 	var network := Global.irrigation
 	var rain := Global.has_rain()
+	var bank := BANK.darkened(0.14) if rain else BANK
 	for cell in network.channels:
-		_channel_shape(cell, 11.0, BANK_SHADOW, Vector2.DOWN)
+		_channel_shape(cell, 11.5, BANK_SHADOW, Vector2(0.5, 1.5))
 	for cell in network.channels:
-		_channel_shape(cell, 10.0, BANK)
+		_channel_shape(cell, 11.0, bank)
 	for cell in network.channels:
-		_channel_shape(cell, 7.0, BED)
+		_channel_shape(cell, 8.5, bank.darkened(0.28), Vector2(0.0, 0.5))
+	for cell in network.channels:
+		_channel_shape(cell, 6.5, BED)
 	for cell in network.channels:
 		var center := tile_map.map_to_local(cell)
 		if culverts.has(cell):
@@ -543,6 +546,7 @@ func _draw() -> void:
 			continue
 		var wet := network.is_channel_wet(cell)
 		_channel_shape(cell, 5.0, WATER if wet else DRY)
+		_draw_channel_edges(cell, network, bank)
 		if not wet:
 			draw_rect(Rect2(center + Vector2(-2, -1), Vector2(3, 1)), BED)
 
@@ -552,8 +556,7 @@ func _draw() -> void:
 		var hand_watered: bool = crop.get("watered", false) and not crop.get("requires_channel", false)
 		var rained_on: bool = rain and (crop.is_empty() or not crop["data"].is_water_crop)
 		if supplied or hand_watered or rained_on:
-			var soil := _cell_rect(cell).grow(-1)
-			draw_rect(soil, Color("#23372c7a"))
+			_draw_soil_moisture(cell, rained_on)
 			if supplied:
 				_draw_inlets(cell)
 		if Global.fertile_cells.has(cell):
@@ -563,6 +566,20 @@ func _draw() -> void:
 	for center in network.field_gates:
 		_draw_field_gate(center, network.field_gates[center], network)
 	_draw_footbridges()
+
+func _draw_soil_moisture(cell: Vector2i, rained_on: bool) -> void:
+	var soil := _cell_rect(cell)
+	if rained_on:
+		draw_rect(soil, Color("#283b3066"))
+		return
+	var origin := soil.position
+	var size := soil.size
+	var damp := PackedVector2Array([origin + Vector2(1, 2), origin + Vector2(size.x - 3, 1),
+		origin + Vector2(size.x - 1, 4), origin + size - Vector2(1, 3),
+		origin + size - Vector2(5, 1), origin + Vector2(3, size.y - 1), origin + Vector2(1, size.y - 4)])
+	draw_colored_polygon(damp, Color("#223b3194"))
+	draw_rect(Rect2(origin + Vector2(3, size.y - 5), Vector2(3, 0.6)), Color("#a9bb9d68"))
+	draw_rect(Rect2(origin + Vector2(size.x - 6, 4), Vector2(2, 0.6)), Color("#a9bb9d56"))
 
 func _draw_field_gate(center: Vector2i, inlet: Vector2i, network: Irrigation) -> void:
 	var side := (inlet - center).sign()
@@ -595,6 +612,19 @@ func _channel_shape(cell: Vector2i, width: float, ink: Color, offset := Vector2.
 		var next_cell := cell + direction
 		if next_cell == network.source_cell or network.channels.has(next_cell):
 			draw_line(center, center + Vector2(direction) * tile_size / 2.0, ink, width)
+
+func _draw_channel_edges(cell: Vector2i, network: Irrigation, bank: Color) -> void:
+	var center := tile_map.map_to_local(cell)
+	for direction: Vector2i in Irrigation.NEIGHBORS:
+		var next_cell := cell + direction
+		if next_cell != network.source_cell and not network.channels.has(next_cell):
+			continue
+		var axis := Vector2(direction)
+		var side := -Vector2(absf(axis.y), absf(axis.x))
+		var worn := posmod(cell.x * 7 + cell.y * 13 + direction.x + direction.y, 4)
+		var at := center + axis * (5.5 + worn * 0.5)
+		draw_line(at + side * 4.4, at + side * 4.4 + axis * (1.6 + worn * 0.3), bank.lightened(0.21), 0.8)
+		draw_line(at - side * 5.0, at - side * 5.0 + axis * 1.5, bank.darkened(0.22), 1.25)
 
 func _draw_inlets(cell: Vector2i) -> void:
 	var network := Global.irrigation
@@ -651,14 +681,21 @@ func _draw_flow() -> void:
 
 func _draw_footbridges() -> void:
 	for deck in footbridges:
-		draw_rect(deck.grow(1), Color("#52412e"))
-		draw_rect(deck, Color("#b59460"))
-		var across_x := deck.size.x < deck.size.y
-		for gap in [4, 8, 12]:
-			var offset := Vector2(0, gap) if across_x else Vector2(gap, 0)
-			var seam := Vector2(deck.size.x, 1) if across_x else Vector2(1, deck.size.y)
-			draw_rect(Rect2(deck.position + offset, seam), Color("#7f603e"))
-		draw_rect(Rect2(deck.position + Vector2(1, 1), Vector2(deck.size.x - 2, 1)), Color("#d6b783"))
+		draw_rect(Rect2(deck.position + Vector2(1, 2), deck.size + Vector2(0, 0.5)), Color("#3e362b"))
+		draw_rect(deck, Color("#6a5137"))
+		var step := Vector2.DOWN if deck.size.x < deck.size.y else Vector2.RIGHT
+		var grain := Vector2(step.y, step.x)
+		var length := deck.size.dot(grain)
+		for index in 4:
+			var at := deck.position + step * (index * 4.0)
+			var pine := Color("#b89760").darkened(0.04 * ((index * 3) % 4))
+			draw_rect(Rect2(at, grain * length + step * 3.3), pine)
+			draw_line(at + grain * 0.6 + step * 0.5, at + grain * (length - 1.0) + step * 0.5,
+				pine.lightened(0.22), 0.65)
+			var mark := at + grain * (4.0 + index % 2 * 3.0) + step * 2.1
+			draw_line(mark, mark + grain * (3.0 + index % 3), pine.darkened(0.17), 0.65)
+			for margin in [1.6, length - 2.1]:
+				draw_rect(Rect2(at + grain * margin + step * 1.3, Vector2.ONE * 0.7), Color("#66503a"))
 
 func _cell_rect(cell: Vector2i) -> Rect2:
 	return Rect2(tile_map.map_to_local(cell) - tile_size / 2.0, tile_size)

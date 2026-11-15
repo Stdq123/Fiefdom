@@ -87,7 +87,8 @@ func _run() -> void:
 	var cursor := map.get_node("FieldCursor")
 	var millet := ui.hud.seed_buttons["millet"] as Button
 	var rice := ui.hud.seed_buttons["rice"] as Button
-	_expect("翻地" in guide.text, "The guide starts by pointing to the public field.")
+	_expect(guide.opening_cell == tribute and "中央公田" in guide.text and "翻" in guide.text,
+		"The guide starts by pointing to the public field and telling the player to till it.")
 	_expect(millet.button_pressed and not rice.button_pressed, "The default seed is visible in the tool belt.")
 	await _hover(_point(map, tribute))
 	_expect(cursor.visible and "公田 · 翻地" in cursor.label.text and "−2 体力" in cursor.label.text, "The first field previews the action and its cost.")

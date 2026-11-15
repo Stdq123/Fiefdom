@@ -29,6 +29,7 @@ const RAVINE_WAYPOSTS := preload("res://assets/world/ravine-wayposts.png")
 const WOODLAND := preload("res://assets/world/ravine-woodland.svg")
 const RAVINE_BANKS := preload("res://scripts/RavineBanks.gd")
 const RAVINE_RELIEF := preload("res://scripts/RavineRelief.gd")
+const FIELD_BANK_DEPTH: Array[float] = [2.0, 4.0, 5.0, 2.0]
 const RIVERSIDE_REGIONS := {
 	Prop.WILLOW: Rect2(0, 0, 80, 92),
 	Prop.TALL_BAMBOO: Rect2(88, 0, 40, 48),
@@ -759,8 +760,15 @@ func _surface_at(foot: Vector2) -> TERRAIN_AUDIO.Surface:
 				or get_parent().irrigation_overlay.footbridge_at(to_global(foot)):
 			return TERRAIN_AUDIO.Surface.PLANK
 		for field in Global.well_fields:
-			if _field_bounds(field["center_pos"]).has_point(foot):
-				return TERRAIN_AUDIO.Surface.GRASS
+			var area := _field_bounds(field["center_pos"])
+			if not field["is_unlocked"]:
+				if area.has_point(foot):
+					return TERRAIN_AUDIO.Surface.GRASS
+				continue
+			if _field_step_bounds(area, field_entrance(field["field_id"])).has_point(foot):
+				return TERRAIN_AUDIO.Surface.STONE
+			if area.has_point(foot):
+				return TERRAIN_AUDIO.Surface.TRACK
 		if pond_landing.visible and EstateLayout.POND_DECK.has_point(foot):
 			return TERRAIN_AUDIO.Surface.PLANK
 		if estate_terrain.festival_stone_at(foot):
@@ -1024,53 +1032,101 @@ func _draw_field_verges() -> void:
 	for field in Global.well_fields:
 		var area := _field_bounds(field["center_pos"])
 		var entrance := field_entrance(field["field_id"])
-		_draw_field_edge(area.grow(5.0), verge.lerp(dust, 0.27), entrance, 5.0, true)
+		ESTATE_TERRAIN.draw_loam(self, _field_verge_outline(area.grow(6.0), entrance), verge.lerp(dust, 0.36))
 
 func _draw_field_banks() -> void:
 	var dust := _track_dust()
+	var grass: Color = SEASON_PALETTES[season][0]
+	var frost := season == Global.Season.WINTER
 	for field in Global.well_fields:
 		if not field["is_unlocked"]:
 			continue
 		var area := _field_bounds(field["center_pos"])
 		var entrance := field_entrance(field["field_id"])
-		var bank := area.grow(2.0)
-		var face := bank
-		face.size.y += 3.0
-		_draw_field_edge(face, dust.darkened(0.42), entrance, 5.0)
-		_draw_field_edge(bank, dust.darkened(0.18), entrance, 4.0)
-		var edge := EstateLayout.field_boundary(bank, entrance, EstateLayout.FIELD_ENTRANCE_WIDTH)
+		var edge := EstateLayout.field_boundary(area, entrance, EstateLayout.FIELD_ENTRANCE_WIDTH)
 		for index in range(1, edge.size()):
-			var start := edge[index - 1]
-			var finish := edge[index]
-			var along := start.direction_to(finish)
-			var inset := along.orthogonal() * -1.0
-			var top := dust.lightened(0.11) if along.x > 0.0 or along.y < 0.0 else dust.lightened(0.03)
-			draw_line(start + along * 3.0 + inset, finish - along * 3.0 + inset, top, 1.0)
-			for offset in range(6, floori(start.distance_to(finish)) - 4, 7):
-				var at := start + along * offset + inset * 2.0
-				var ink := Color("#bac1ac") if season == Global.Season.WINTER else dust.darkened(0.30)
-				draw_rect(Rect2(at.round(), Vector2(2, 1)), ink)
+			_draw_field_bank_face(area, edge[index - 1], edge[index], dust, grass, frost)
+		if entrance != Vector2.ZERO:
+			_draw_field_step(area, entrance, dust, frost)
 
-func _draw_field_edge(area: Rect2, color: Color, entrance: Vector2, depth: float, loam := false) -> void:
+func _draw_field_bank_face(area: Rect2, start: Vector2, finish: Vector2, soil: Color, grass: Color, frost: bool) -> void:
+	var along := start.direction_to(finish)
+	var outward := Vector2(along.y, -along.x)
+	var side := EstateLayout.EDGE_NORMALS.find(outward)
+	var depth: float = FIELD_BANK_DEPTH[side]
+	var half_span := along.abs().dot(area.size) * 0.5
+	var corner_a := -along * FIELD_BANK_DEPTH[posmod(side - 1, 4)]
+	var corner_b := along * FIELD_BANK_DEPTH[posmod(side + 1, 4)]
+	var toe_a := start + outward * depth
+	var toe_b := finish + outward * depth
+	if absf((start - area.get_center()).dot(along)) == half_span:
+		toe_a += corner_a
+	if absf((finish - area.get_center()).dot(along)) == half_span:
+		toe_b += corner_b
+	var lit := side == 0 or side == 3
+	var face := soil.darkened(0.25 if lit else 0.43)
+	var shoulder := start.lerp(finish, 0.26) + outward * (depth + 0.8)
+	var hollow := start.lerp(finish, 0.61) + outward * (depth - 0.7)
+	var skirt := start.lerp(finish, 0.80) + outward * (depth + 0.6)
+	draw_colored_polygon(PackedVector2Array([start, finish, toe_b, skirt, hollow, shoulder, toe_a]), face)
+	var crest := soil.lightened(0.13) if lit else soil.darkened(0.13)
+	draw_colored_polygon(PackedVector2Array([start, finish, finish + (toe_b - finish) * 0.32,
+		start.lerp(finish, 0.69) + outward * 1.3, start.lerp(finish, 0.30) + outward * 0.9,
+		start + (toe_a - start) * 0.32]), crest)
+	var roots := grass.lightened(0.11).lerp(crest, 0.20) if not frost else Color("#a3a991").lerp(crest, 0.44)
+	if not lit:
+		roots = roots.darkened(0.15)
+	var accents := PackedVector2Array([shoulder, skirt])
+	for at in accents:
+		var tip := at - outward * 1.5
+		draw_colored_polygon(PackedVector2Array([at - along * 2.8, tip - along * 1.1,
+			tip + along * 0.7 - outward * 0.6, at + along * 2.6]), roots)
+	if not lit:
+		var clay := hollow - outward * 1.5
+		draw_line(clay - along * 2.4, clay + along * 1.7, soil.darkened(0.29), 0.7)
+
+func _field_step_bounds(area: Rect2, entrance: Vector2) -> Rect2:
+	if entrance == Vector2.ZERO:
+		return Rect2()
+	var size := Vector2(13.0, 5.0) if entrance.y != 0.0 else Vector2(5.0, 13.0)
+	var mouth := area.get_center() + entrance * area.size * 0.5
+	return Rect2(mouth + entrance * 2.5 - size * 0.5, size)
+
+func _draw_field_step(area: Rect2, entrance: Vector2, soil: Color, frost: bool) -> void:
+	var landing := _field_step_bounds(area, entrance)
+	var way := landing.get_center()
+	var across := Vector2(entrance.y, -entrance.x)
+	var stone := soil.lerp(Color("#a4a18b"), 0.66)
+	var outline := PackedVector2Array([way - across * 6.5 - entrance * 1.1,
+		way - across * 4.1 - entrance * 2.5, way + across * 5.0 - entrance * 2.5,
+		way + across * 6.5 - entrance * 0.6, way + across * 6.0 + entrance * 1.5,
+		way + across * 2.4 + entrance * 2.5, way - across * 5.8 + entrance * 2.2])
+	draw_colored_polygon(outline, stone.darkened(0.27))
+	var tread := PackedVector2Array([outline[0], outline[1], outline[2], outline[3],
+		outline[4] - entrance * 1.0, outline[5] - entrance * 1.3, outline[6] - entrance * 1.0])
+	draw_colored_polygon(tread, stone)
+	var joint := way + across * 0.9
+	draw_line(joint - entrance * 2.2, joint + entrance * 1.0 + across, stone.darkened(0.28), 0.6)
+	var gleam := stone.lerp(Color("#c0c2a4"), 0.62 if frost else 0.29)
+	draw_line(tread[1] + across * 0.7, joint - entrance * 2.2 - across * 0.7, gleam, 0.65)
+
+func _field_verge_outline(area: Rect2, entrance: Vector2) -> PackedVector2Array:
 	var corners := EstateLayout.corners(area)
 	var outline := PackedVector2Array()
 	for side in 4:
 		var start := corners[side]
 		var finish := corners[(side + 1) % 4]
 		var along := start.direction_to(finish)
-		outline.append(start + along * 3.0)
+		outline.append(start + along * 5.0)
 		if EstateLayout.EDGE_NORMALS[side] == entrance:
 			var middle := start.lerp(finish, 0.5)
 			var half_opening := along * EstateLayout.FIELD_ENTRANCE_WIDTH * 0.5
 			var lip := middle - half_opening
 			var far_lip := middle + half_opening
-			outline.append_array(PackedVector2Array([lip, lip - entrance * depth,
-				far_lip - entrance * depth, far_lip]))
-		outline.append(finish - along * 3.0)
-	if loam:
-		ESTATE_TERRAIN.draw_loam(self, outline, color)
-	else:
-		draw_colored_polygon(outline, color)
+			outline.append_array(PackedVector2Array([lip, lip - entrance * 6.0,
+				far_lip - entrance * 6.0, far_lip]))
+		outline.append(finish - along * 5.0)
+	return outline
 
 func _draw_crossings() -> void:
 	var ford_water: Color = WATER_TINTS[season]

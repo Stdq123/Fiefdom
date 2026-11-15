@@ -35,9 +35,8 @@ func _update_marker(field_id: int) -> void:
 		var line := Line2D.new()
 		line.name = "Boundary"
 		line.points = EstateLayout.field_boundary(Rect2(-half_span, half_span * 2.0), entrance, ENTRANCE_WIDTH)
-		line.width = 1.0
-		line.default_color = Color("#a29467")
-		line.z_index = 50
+		line.width = 0.5
+		line.default_color = Color("#614d37")
 		marker.add_child(line)
 	else:
 		var worksite := WORKSITE.new()
