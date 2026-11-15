@@ -11,6 +11,11 @@ const FIELD_SOUND_PATHS := [
 const FIELD_REPEAT_SECONDS := 0.09
 const CEREMONY_BELL := preload("res://assets/audio/music/bronze-bell.wav")
 const BAMBOO_SLIPS := preload("res://assets/audio/rotation-slip.wav")
+const FIRST_TRIBUTE_CUE := preload("res://assets/audio/ledger/first-tribute.wav")
+const TRADITION_CUE := preload("res://assets/audio/ledger/council-tribute.wav")
+const REFORM_CUE := preload("res://assets/audio/ledger/council-tax.wav")
+const RESEARCH_CUE := preload("res://assets/audio/ledger/council-research.wav")
+const LEDGER_MUSIC_GAIN := 0.70
 const TITLE_SCORE := "res://assets/audio/music/score-title.ogg"
 const RAVINE_SCORE := "res://assets/audio/music/score-ravine.ogg"
 const WEST_MARKET_SCORE := "res://assets/audio/music/score-west-market.ogg"
@@ -171,7 +176,7 @@ func play_field_action(action: int) -> void:
 	sfx_player.stream = sound
 	sfx_player.play()
 
-func play_sfx(stream: AudioStream, volume := 0.0, pitch := 1.0) -> void:
+func play_sfx(stream: AudioStream, volume := 0.0, pitch := 1.0, music_gain := 1.0) -> void:
 	if DisplayServer.get_name() == "headless":
 		return
 	var player := AudioStreamPlayer.new()
@@ -181,6 +186,8 @@ func play_sfx(stream: AudioStream, volume := 0.0, pitch := 1.0) -> void:
 	player.pitch_scale = pitch
 	player.finished.connect(player.queue_free)
 	add_child(player)
+	if music_gain < 1.0:
+		duck_music_for(player, music_gain)
 	player.play()
 
 func play_world_sfx(stream: AudioStream, source: Node2D, volume := 0.0, hearing_range := 450.0) -> void:
@@ -215,7 +222,7 @@ func play_event_sound(event_type: String) -> void:
 			# Pleasant notification
 			_play_tone_sequence([523, 659], 0.15)  # C5, E5
 		"first_tribute":
-			play_sfx(CEREMONY_BELL, -12.0, 1.26)
+			play_sfx(FIRST_TRIBUTE_CUE, -7.0, 1.0, LEDGER_MUSIC_GAIN)
 		"present_ledger":
 			play_sfx(BAMBOO_SLIPS, -10.0)
 		"hurt":
@@ -253,8 +260,14 @@ func _on_rank_changed(new_rank: Global.Rank) -> void:
 func _on_tax_reform_triggered() -> void:
 	play_sfx(CEREMONY_BELL, -12.0, 0.78)
 
-func _on_tax_reform_choice(_choice: Global.TaxReformChoice) -> void:
-	play_sfx(BAMBOO_SLIPS, -8.0)
+func _on_tax_reform_choice(choice: Global.TaxReformChoice) -> void:
+	match choice:
+		Global.TaxReformChoice.TRADITIONAL:
+			play_sfx(TRADITION_CUE, -7.0, 1.0, LEDGER_MUSIC_GAIN)
+		Global.TaxReformChoice.REFORMED:
+			play_sfx(REFORM_CUE, -7.0, 1.0, LEDGER_MUSIC_GAIN)
+		Global.TaxReformChoice.DELAYED:
+			play_sfx(RESEARCH_CUE, -7.0)
 
 func _on_well_field_added(field_id: int) -> void:
 	print("Audio: Playing well field added sound!")

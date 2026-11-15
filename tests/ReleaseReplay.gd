@@ -77,6 +77,8 @@ func _run() -> void:
 			var replay = load("res://tests/CalendarTomorrowReplay.gd").new()
 			replay.capture_dir = capture_directory
 			await replay.run(tree)
+		"ledger-audio":
+			await load("res://tests/LedgerAudioReplay.gd").new().run_ledger_audio(tree, capture_directory)
 		"festival-pantry":
 			var replay = load("res://tests/FestivalPantryReplay.gd").new()
 			replay.capture_dir = capture_directory

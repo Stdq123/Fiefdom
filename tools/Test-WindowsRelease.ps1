@@ -85,7 +85,7 @@ function Start-VerifiedGame {
     $arguments = @('--quit-after', $frameLimit, '--log-file', ('"' + $log + '"'))
     $arguments += if ($Replay -eq 'soak') {
         '--max-fps', '60', '--audio-driver', 'Dummy'
-    } elseif ($Resolution -and $Replay -in 'ambience-travel', 'raid-feedback', 'west-market', 'freight-wait') {
+    } elseif ($Resolution -and $Replay -in 'ambience-travel', 'raid-feedback', 'west-market', 'freight-wait', 'ledger-audio') {
         # Audio playback and recordings follow wall time.
         '--max-fps', '60'
     } else {
@@ -122,7 +122,7 @@ function Start-VerifiedGame {
     }
     $lines = Get-Content -LiteralPath $log -Encoding utf8
     $marker = if ($Replay) { 'SCENARIO_OK' } else { 'Fiefdom title ready' }
-    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|CALENDAR_|RESEARCH_RATIONS_|GAMEPAD_|DRIVING_|BOW_AIM_|WINTER_|AUTUMN_|BINDING_|RAFT_|TITLE_|BACKPACK_|HALL_|DECOR_|ROUTE_|COUNCIL_PREP_|COUNCIL_SILK_|DIRECTION_|PLAN_|TRIBUTE_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|CANAL_DOOR_|SPRING_|ESTATE_PROGRESS_|ESTATE_PROVISIONS|RECRUITMENT_|FIELD_ACCESS_|FIELD_STROKE_|WORKSITE_|FIELD_ROUTE_|FIELD_NIGHT_|FIELD_BEDTIME|MORNING_|PAVILION_EVENING_|FISH_MARKET_|RAVINE_MAP_|SHORTCUT_|TRAP_|MARKET_WAYFINDING_|ORDER_AHEAD_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
+    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|CALENDAR_|LEDGER_AUDIO_|RESEARCH_RATIONS_|GAMEPAD_|DRIVING_|BOW_AIM_|WINTER_|AUTUMN_|BINDING_|RAFT_|TITLE_|BACKPACK_|HALL_|DECOR_|ROUTE_|COUNCIL_PREP_|COUNCIL_SILK_|DIRECTION_|PLAN_|TRIBUTE_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|CANAL_DOOR_|SPRING_|ESTATE_PROGRESS_|ESTATE_PROVISIONS|RECRUITMENT_|FIELD_ACCESS_|FIELD_STROKE_|WORKSITE_|FIELD_ROUTE_|FIELD_NIGHT_|FIELD_BEDTIME|MORNING_|PAVILION_EVENING_|FISH_MARKET_|RAVINE_MAP_|SHORTCUT_|TRAP_|MARKET_WAYFINDING_|ORDER_AHEAD_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
     if ($exitCode -ne 0 -or $lines -cnotcontains $marker -or $lines -cmatch '^\s*(?:SCRIPT ERROR|USER ERROR|ERROR|WARNING):') {
         throw "$Name failed (exit $exitCode). See $log"
     }
@@ -147,6 +147,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/MarketReserveReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldSoilReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FestivalPantryReplay.gd'), (Join-Path $repo 'tests/CalendarTomorrowReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/LedgerAudioReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/WinterPondReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldStrokeReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/PlannedSowingReplay.gd') -Destination $testDirectory
@@ -251,6 +252,7 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'estate-progress' -Name 'estate-progress' -Replay 'estate-progress' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'recruitment-ledger' -Name 'recruitment-ledger' -Replay 'recruitment-ledger' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'opening-order' -Name 'opening-order' -Replay 'opening-order' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'ledger-audio' -Name 'ledger-audio' -Replay 'ledger-audio' -Resolution $fullResolution
     }
     if ($RotationGuide) {
         Start-VerifiedGame -Directory $release -Profile 'rotation-guide' -Name 'rotation-guide' -Replay 'rotation-guide' -Resolution $fullResolution
@@ -457,6 +459,7 @@ try {
             Start-VerifiedGame -Directory $release -Profile 'estate-progress-compact' -Name 'estate-progress-1024x768' -Replay 'estate-progress' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'recruitment-compact' -Name 'recruitment-ledger-1024x768' -Replay 'recruitment-ledger' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'opening-order-compact' -Name 'opening-order-1024x768' -Replay 'opening-order-pad' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'ledger-audio-compact' -Name 'ledger-audio-1024x768' -Replay 'ledger-audio' -Resolution '1024x768'
         }
         if ($RotationGuide) {
             Start-VerifiedGame -Directory $release -Profile 'rotation-guide-compact' -Name 'rotation-guide-1024x768' -Replay 'rotation-guide' -Resolution '1024x768'
