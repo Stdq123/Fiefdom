@@ -55,7 +55,7 @@ func _ready() -> void:
 	notice.offset_right = 265.0
 	notice.offset_top = 112.0
 	notice.offset_bottom = 140.0
-	GameEvents.world_notice.connect(_show_world_notice)
+	GameEvents.world_notice.connect(show_world_notice)
 	GameEvents.management_visibility_changed.connect(func(open: bool):
 		management_open = open
 		_refresh_notice_visibility()
@@ -91,7 +91,7 @@ func add_field_return(walker: Player, choose_trip: Callable) -> void:
 	field_return_button.offset_bottom = 56.0
 	field_return_button.pressed.connect(func():
 		if _can_start_field_return() and not choose_trip.call(Global.FIELD_RETURN):
-			_show_world_notice("这里接不上山路，靠近一条路后再选。")
+			show_world_notice("这里接不上山路，靠近一条路后再选。")
 	)
 	field_return_button.hide()
 	set_process(true)
@@ -284,14 +284,15 @@ func _refresh_ravine() -> void:
 	ravine_label.visible = Global.knows_ravine_journal() and Global.ravine_journal.garden_day == 0
 	ravine_label.text = Global.ravine_status() if ravine_label.visible else ""
 
-func _show_world_notice(message: String) -> void:
+func show_world_notice(message: String, hold_seconds := -1.0) -> void:
 	if notice_tween:
 		notice_tween.kill()
 	notice.text = message
 	notice.modulate.a = 1.0
-	if show_field_status and not message.is_empty():
+	var hold := hold_seconds if hold_seconds >= 0.0 else (2.8 if show_field_status else 0.0)
+	if hold > 0.0 and not message.is_empty():
 		notice_tween = create_tween()
-		notice_tween.tween_interval(2.8)
+		notice_tween.tween_interval(hold)
 		notice_tween.tween_property(notice, "modulate:a", 0.0, 0.45)
 
 func _show_outcome(outcome: Global.Outcome, saved_ending := false) -> void:

@@ -7,6 +7,7 @@ const FISHING_PANEL := preload("res://scripts/FishingPanel.gd")
 
 @onready var world = $"../World"
 @onready var hud = $Control/EstateHUD
+@onready var campaign_hud = $"../CampaignHUD"
 @onready var sleep_button: Button = hud.sleep_button
 @onready var manage_button: Button = hud.manage_button
 @onready var reclaim_button: Button = hud.reclaim_button
@@ -116,16 +117,19 @@ func _ready() -> void:
 		_show_away_field_report.call_deferred()
 
 func _show_away_field_report() -> void:
-	if not Global.acknowledge_away_field_work():
+	var report := Global.take_away_field_receipt()
+	if report.is_empty():
 		return
-	var report := Global.away_field_report
-	var notice := "今日外出田务 · " + Global.away_field_summary(Global.FIELD_WORK_JOBS)
+	var heading := "今日外出田务" if report.whole_day else "本趟外出田务"
+	var lines := PackedStringArray([heading + " · " + Global.field_work_summary(report, Global.FIELD_WORK_JOBS)])
+	var yields := Global.field_work_summary(report, Global.FIELD_WORK_YIELDS)
+	if not yields.is_empty():
+		lines.append(yields)
 	if report.first_tribute:
-		report.first_tribute = false
 		AudioManager.play_event_sound("first_tribute")
 		if Global.rotation_offer_ready() and world.neighbor_actor(VisitorData.FIELD_KEEPER):
-			notice += " · 可找渠伯谈轮作"
-	GameEvents.world_notice.emit(notice)
+			lines.append("可找渠伯谈轮作")
+	campaign_hud.show_world_notice("\n".join(lines), 5.0)
 
 func _process(_delta: float) -> void:
 	world.player.menu_open = _estate_panel_open()
@@ -1199,6 +1203,7 @@ func _on_sleep_pressed() -> void:
 		var previous_rank := Global.current_rank
 		var research_fee := Global.research_fee_due(Global.current_day + 1)
 		var field_work := Global.field_wait_report.duplicate()
+		var away_work := Global.away_field_report.duplicate()
 		Global.begin_next_day()
 		var tribute_penalty := Global.restore_stamina()
 		if Global.outcome != Global.Outcome.RUNNING:
@@ -1211,7 +1216,7 @@ func _on_sleep_pressed() -> void:
 		for field in unfinished:
 			if field["is_unlocked"]:
 				completed.append(field["field_id"] + 1)
-		Global.record_dawn(previous_rank, completed, research_fee, tribute_penalty, field_work)
+		Global.record_dawn(previous_rank, completed, research_fee, tribute_penalty, field_work, away_work)
 		hud.refresh_morning_record()
 		Global.save_automatically("dawn")
 		dawn_caption.text = "第 %d 天 · %s · %s" % [Global.current_day, Global.get_current_solar_term(), Global.day_watch_label()]

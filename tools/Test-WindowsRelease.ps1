@@ -155,7 +155,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/OpeningOrderReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/MarketDyeYardReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/SowingHoldReplay.gd') -Destination $testDirectory
-    foreach ($file in 'MarketOrderReplay.gd', 'AutumnExhibitReplay.gd', 'SheepfoldReplay.gd', 'RavineMapReplay.gd', 'CreekTrapReplay.gd', 'FieldNightReplay.gd', 'FieldWorkWaitReplay.gd', 'CouncilSilkReplay.gd') {
+    foreach ($file in 'MarketOrderReplay.gd', 'AutumnExhibitReplay.gd', 'SheepfoldReplay.gd', 'RavineMapReplay.gd', 'CreekTrapReplay.gd', 'FieldNightReplay.gd', 'FieldWorkWaitReplay.gd', 'AwayFieldWorkReplay.gd', 'CouncilSilkReplay.gd') {
         Copy-Item -LiteralPath (Join-Path $repo "tests/$file") -Destination $testDirectory
     }
     @'
@@ -303,6 +303,7 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'field-nights' -Name 'field-nights' -Replay 'field-nights' -Resolution $fullResolution
     }
     if ($FieldWorkWait) {
+        Start-VerifiedGame -Directory $release -Profile 'away-field-work' -Name 'away-field-work' -Replay 'away-field-work' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'field-work-wait' -Name 'field-work-wait' -Replay 'field-work-wait' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'reformed-field-work-wait' -Name 'reformed-field-work-wait' -Replay 'reformed-field-work-wait'
         Start-VerifiedGame -Directory $release -Profile 'field-bedtime' -Name 'field-bedtime' -Replay 'field-bedtime' -Resolution $fullResolution

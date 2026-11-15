@@ -531,6 +531,14 @@ theme_override_colors/font_color = Color(0.87, 0.91, 0.73, 1)
 theme_override_font_sizes/font_size = 16
 autowrap_mode = 3
 
+[node name="AwayFieldReceipt" type="Label" parent="Center/Window/Content/Scroll/Body/LastCard/Results"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.83, 0.87, 0.67, 1)
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+
 [node name="FieldWaitReceipt" type="Label" parent="Center/Window/Content/Scroll/Body/LastCard/Results"]
 unique_name_in_owner = true
 visible = false

@@ -248,6 +248,11 @@ func _run() -> void:
 		"field-work-wait":
 			var replay = load("res://tests/FieldWorkWaitReplay.gd").new()
 			await replay.run(tree, capture_directory)
+		"away-field-work", "away-field-before", "away-field-previous-return":
+			var replay = load("res://tests/AwayFieldWorkReplay.gd").new()
+			replay.baseline = arguments[0] == "away-field-before"
+			replay.previous_return = arguments[0] == "away-field-previous-return"
+			await replay.run(tree, capture_directory)
 		"pavilion-evening", "pavilion-evening-legacy":
 			var replay = load("res://tests/PavilionEveningReplay.gd").new()
 			replay.legacy = arguments[0] == "pavilion-evening-legacy"

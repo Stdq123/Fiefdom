@@ -628,7 +628,7 @@ func begin_next_day() -> void:
 	GameEvents.daylight_changed.emit()
 
 func record_dawn(previous_rank: Rank, completed_fields: Array[int], research_fee: int, tribute_penalty: int,
-		field_work: Dictionary = {}) -> void:
+		field_work: Dictionary, away_work: Dictionary) -> void:
 	last_dawn = {
 		"day": current_day - 1,
 		"rank_change": int(current_rank) - int(previous_rank),
@@ -639,6 +639,9 @@ func record_dawn(previous_rank: Rank, completed_fields: Array[int], research_fee
 	}
 	if not field_work.is_empty():
 		last_dawn.field_wait = field_work
+	var daytime := _restore_field_work_report(away_work, current_day - 1)
+	if not daytime.is_empty():
+		last_dawn.away_field = daytime
 
 func has_morning_record() -> bool:
 	return not last_dawn.is_empty() or not last_field_night.is_empty() or not night_rations.last.is_empty()
@@ -1171,12 +1174,21 @@ func field_work_summary(report: Dictionary, keys: Array = []) -> String:
 			results.append(FIELD_WORK_TOTALS[key] % count)
 	return " · ".join(results)
 
-func acknowledge_away_field_work() -> bool:
+func take_away_field_receipt() -> Dictionary:
 	_away_work_elapsed.clear()
 	if not away_field_report.get("pending", false):
-		return false
+		return {}
+	var reported: Dictionary = away_field_report.get("reported", {})
+	var receipt := {"whole_day": reported.is_empty(), "first_tribute": away_field_report.first_tribute}
+	var totals := {}
+	for key in FIELD_WORK_TOTALS:
+		var total: int = away_field_report[key]
+		receipt[key] = total - int(reported.get(key, 0))
+		totals[key] = total
+	away_field_report.reported = totals
 	away_field_report.pending = false
-	return true
+	away_field_report.first_tribute = false
+	return receipt if not field_work_summary(receipt, FIELD_WORK_JOBS).is_empty() else {}
 
 func is_public_plot(cell: Vector2i) -> bool:
 	if tax_reform_choice == TaxReformChoice.REFORMED:
@@ -3829,11 +3841,7 @@ func load_game(path := "") -> Error:
 	silk_sample_day = clampi(_read_save_int(data.get("silk_sample_day"), 0), 0, saved_day)
 	food_storage = maxi(0, _read_save_int(data.get("food_storage"), 10))
 	last_field_night = _restore_field_night(data.get("last_field_night"), saved_day)
-	var away: Variant = data.get("away_field_report")
-	away_field_report = _restore_field_work_report(away, saved_day)
-	if not away_field_report.is_empty():
-		away_field_report.pending = away.get("pending") == true
-		away_field_report.first_tribute = away.get("first_tribute") == true
+	away_field_report = _restore_away_field_report(data.get("away_field_report"), saved_day)
 	field_wait_report = _restore_field_wait_report(data.get("field_wait_report"), saved_day)
 	wait_for_fields_before_sleep = data.get("wait_for_fields_before_sleep") == true
 	_away_work_elapsed.clear()
@@ -3993,7 +4001,26 @@ func _restore_dawn(record: Variant, saved_day: int) -> Dictionary:
 	var field_work := _restore_field_wait_report(record.get("field_wait"), saved_day - 1)
 	if not field_work.is_empty():
 		restored.field_wait = field_work
+	var daytime := _restore_field_work_report(record.get("away_field"), saved_day - 1)
+	if not daytime.is_empty():
+		restored.away_field = daytime
 	return restored
+
+func _restore_away_field_report(record: Variant, day: int) -> Dictionary:
+	var report := _restore_field_work_report(record, day)
+	if report.is_empty():
+		return report
+	var pending: bool = record.get("pending") == true
+	report.pending = pending
+	report.first_tribute = pending and record.get("first_tribute") == true
+	var reported: Variant = record.get("reported")
+	# Older reports carry a flag for whether the day's totals were already shown.
+	if not pending or reported is Dictionary:
+		report.reported = {}
+		for key in FIELD_WORK_TOTALS:
+			var total: int = report[key]
+			report.reported[key] = clampi(_read_save_int(reported.get(key), 0), 0, total) if pending else total
+	return report
 
 func _restore_field_wait_report(record: Variant, day: int) -> Dictionary:
 	var report := _restore_field_work_report(record, day)

@@ -61,6 +61,7 @@ const WINDOW_MARGIN := 16.0
 @onready var last_card: PanelContainer = %LastCard
 @onready var receipt: Label = %Receipt
 @onready var field_receipt: Label = %FieldReceipt
+@onready var away_field_receipt: Label = %AwayFieldReceipt
 @onready var field_wait_receipt: Label = %FieldWaitReceipt
 @onready var silk_receipt: Label = %SilkReceipt
 @onready var milestones: Label = %Milestones
@@ -292,7 +293,7 @@ func _refresh() -> void:
 	silk_receipt.text = "昨夜蚕棚 · " + last_silk
 	milestones.text = "\n".join(Global.dawn_milestones())
 	milestones.visible = not milestones.text.is_empty()
-	last_card.visible = (receipt.visible or field_receipt.visible or field_wait_receipt.visible
+	last_card.visible = (receipt.visible or field_receipt.visible or away_field_receipt.visible or field_wait_receipt.visible
 		or silk_receipt.visible or milestones.visible)
 	page_button.visible = last_card.visible
 
@@ -443,7 +444,7 @@ func _refresh_fields() -> void:
 		field_forecast.text += "\n明早新熟 · " + ripe
 	var away_jobs := Global.away_field_summary(Global.FIELD_WORK_JOBS)
 	if not away_jobs.is_empty():
-		field_forecast.text += "\n外出田务 · " + away_jobs
+		field_forecast.text += "\n今日外出田务 · " + away_jobs
 		var away_yields := Global.away_field_summary(Global.FIELD_WORK_YIELDS)
 		if not away_yields.is_empty():
 			field_forecast.text += "\n" + away_yields
@@ -584,6 +585,10 @@ func _refresh_field_receipt() -> void:
 	field_receipt.visible = not details.is_empty()
 	if field_receipt.visible:
 		field_receipt.text = "第 %d 夜田务 · %s" % [report.day, " · ".join(details)]
+	var daytime: Dictionary = Global.last_dawn.get("away_field", {})
+	away_field_receipt.visible = not daytime.is_empty()
+	if away_field_receipt.visible:
+		away_field_receipt.text = _describe_field_work("第 %d 天外出田务" % daytime.day, daytime)
 	var field_work: Dictionary = Global.last_dawn.get("field_wait", {})
 	field_wait_receipt.visible = not field_work.is_empty()
 	if field_wait_receipt.visible:
