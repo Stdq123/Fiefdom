@@ -21,21 +21,26 @@ const FORD_STONES: Array[Vector3] = [Vector3(-26, 1, 5), Vector3(-16, -1, 4), Ve
 	Vector3(3, 0, 5), Vector3(14, 3, 5), Vector3(25, 1, 6)]
 const CASCADE_LIP: Array[Vector2] = [Vector2(116, -69), Vector2(122, -67), Vector2(130, -67),
 	Vector2(137, -64), Vector2(145, -65), Vector2(151, -68)]
+const CASCADE_ROLL: Array[Vector2] = [Vector2(116, -64), Vector2(122, -61), Vector2(129, -59),
+	Vector2(137, -58), Vector2(145, -59), Vector2(152, -63)]
 const CASCADE_BASE: Array[Vector2] = [Vector2(120, -43), Vector2(126, -40), Vector2(134, -35),
 	Vector2(141, -35), Vector2(148, -39), Vector2(153, -44)]
+const CASCADE_LIGHT := [0.06, 0.23, 0.13, 0.02, 0.16]
 const PLUNGE_POOL := [Vector2(119, -43), Vector2(123, -48), Vector2(137, -49), Vector2(150, -45),
 	Vector2(154, -41), Vector2(156, -34), Vector2(155, -19), Vector2(150, -11), Vector2(142, -9),
 	Vector2(132, -14), Vector2(126, -22), Vector2(123, -33)]
-# Tops begin at the water lip. The feet sit against the wet bank below it.
+# The dark lower faces recede under the exposed stone shelves at the water lip.
 const CASCADE_BANKS := [
 	{
 		"top": [Vector2(116, -69), Vector2(110, -69), Vector2(103, -66), Vector2(99, -72),
 			Vector2(96, -87), Vector2(105, -96), Vector2(115, -93), Vector2(118, -84)],
+		"shelf": [Vector2(119, -56), Vector2(114, -58), Vector2(107, -58), Vector2(101, -66)],
 		"foot": [Vector2(120, -49), Vector2(114, -52), Vector2(106, -54), Vector2(100, -64)],
 	},
 	{
 		"top": [Vector2(151, -68), Vector2(161, -70), Vector2(169, -69), Vector2(178, -78),
 			Vector2(193, -87), Vector2(188, -92), Vector2(176, -96), Vector2(163, -94), Vector2(155, -87)],
+		"shelf": [Vector2(152, -56), Vector2(165, -61), Vector2(173, -62), Vector2(181, -74)],
 		"foot": [Vector2(153, -47), Vector2(164, -52), Vector2(175, -57), Vector2(183, -72)],
 	},
 ]
@@ -153,29 +158,36 @@ static func draw_banks(canvas: CanvasItem, season: int, wet: bool) -> void:
 static func _draw_cascade_banks(canvas: CanvasItem, season: int, wet: bool) -> void:
 	var moss: Color = MOSS[season]
 	var rock := Color("#9b9575").lerp(Color("#587267"), 0.44 if wet else 0.0)
-	if season == Global.Season.WINTER:
+	var winter := season == Global.Season.WINTER
+	if winter:
 		rock = rock.lerp(Color("#a5b4aa"), 0.35)
 	for bank_index in CASCADE_BANKS.size():
 		var bank: Dictionary = CASCADE_BANKS[bank_index]
 		var top := PackedVector2Array(bank.top)
+		var shelf := PackedVector2Array(bank.shelf)
 		var foot := PackedVector2Array(bank.foot)
+		var shelf_depth := Vector2(-2 if bank_index == 0 else 2, -3)
 		for index in foot.size() - 1:
 			var a := top[index]
 			var b := top[index + 1]
+			var shelf_a := shelf[index]
+			var shelf_b := shelf[index + 1]
+			var back_a := shelf_a + shelf_depth
+			var back_b := shelf_b + shelf_depth
 			var base_a := foot[index]
 			var base_b := foot[index + 1]
-			var face := rock.darkened(0.13 + (index + bank_index) * 0.051)
-			var seam_a := a.lerp(base_a, 0.46).round()
-			var seam_b := b.lerp(base_b, 0.60).round()
+			var face := rock.darkened(0.12 + (index + bank_index) * 0.058)
 			_gradient_quad(canvas, base_a, base_b, base_b + Vector2(4, 5), base_a + Vector2(4, 5),
-				Color("#183d4794"), Color("#183d4700"))
-			_gradient_quad(canvas, a, b, seam_b, seam_a, face, face.darkened(0.15))
-			_gradient_quad(canvas, seam_a, seam_b, base_b, base_a, face.darkened(0.24), Color("#405852"))
-			var joint := (a.lerp(b, 0.63)).round()
-			var split := seam_a.lerp(seam_b, 0.40).round()
-			var toe := base_a.lerp(base_b, 0.67).round()
-			canvas.draw_polyline(PackedVector2Array([joint, split, toe]), face.darkened(0.28), 1.0)
-			canvas.draw_line(seam_a, split, face.lightened(0.087), 1.0)
+				Color("#183d47ae"), Color("#183d4700"))
+			_gradient_quad(canvas, shelf_a, shelf_b, base_b, base_a, face.darkened(0.35), Color("#405852"))
+			_gradient_quad(canvas, a, b, back_b, back_a, face, face.darkened(0.22))
+			_gradient_quad(canvas, back_a, back_b, shelf_b, shelf_a, face.darkened(0.04), face.lightened(0.19))
+			var joint := a.lerp(b, 0.69).round()
+			var split := back_a.lerp(back_b, 0.48).round()
+			canvas.draw_polyline(PackedVector2Array([joint, joint.lerp(split, 0.42).round() + Vector2(1, 0), split]),
+				face.darkened(0.38), 1.0)
+			canvas.draw_line(shelf_a.lerp(shelf_b, 0.12).round(), shelf_a.lerp(shelf_b, 0.70).round(),
+				face.lightened(0.35 if winter else 0.16), 1.0)
 		canvas.draw_colored_polygon(top, rock.lightened(0.08 - bank_index * 0.04))
 		var cap := top.slice(3)
 		cap.append(top[-1].lerp(top[1], 0.37).round())
@@ -185,9 +197,11 @@ static func _draw_cascade_banks(canvas: CanvasItem, season: int, wet: bool) -> v
 		for index in cap.size():
 			colors.append(Color(turf, 0.36 if index == 0 or index >= cap.size() - 2 else 0.95))
 		canvas.draw_polygon(cap, colors)
-		var ledge := top[0].lerp(top[1], 0.38).round()
-		canvas.draw_polyline(PackedVector2Array([ledge, top[1], top[1].lerp(top[2], 0.72).round()]),
-			rock.lightened(0.17), 1.0)
+		var lip := top[0].lerp(top[1], 0.38).round()
+		var moss_side := -1.0 if bank_index == 0 else 1.0
+		canvas.draw_polyline(PackedVector2Array([lip, top[1], top[1].lerp(top[2], 0.72).round()]),
+			rock.lightened(0.29 if winter else 0.17), 1.0)
+		_draw_moss(canvas, top[2] + Vector2(moss_side, -2), moss_side, turf, winter)
 
 static func draw_fishing_shelves(canvas: CanvasItem, season: int, wet: bool) -> void:
 	_shelf_top(canvas, RavineLayout.WILLOW_BANK, Color("#878471"), season, wet)
@@ -296,49 +310,55 @@ func _draw() -> void:
 	for point in pool:
 		pool_colors.append(Color(water.lerp(Color("#274d59"), 0.72), 0.72 * (1.0 - smoothstep(-38.0, -10.0, point.y))))
 	draw_polygon(pool, pool_colors)
-	# Each tongue has a lit crest, a tinted face and a broken fan at the point of impact.
+	# The water rolls over the lip before the thinner sheets drop into the shaded pool.
 	rng.seed = 78
 	for index in CASCADE_LIP.size() - 1:
 		var lip := CASCADE_LIP[index]
 		var next_lip := CASCADE_LIP[index + 1]
+		var roll := CASCADE_ROLL[index]
+		var next_roll := CASCADE_ROLL[index + 1]
 		var foot := CASCADE_BASE[index]
 		var next_foot := CASCADE_BASE[index + 1]
-		var face := water.lightened(0.07 + 0.045 * (index % 3))
-		var upstream := Vector2(-1, -16 - index % 3)
-		draw_polygon(PackedVector2Array([lip + upstream, next_lip + upstream, next_lip, lip]), PackedColorArray([
-			Color(water, 0.0), Color(water, 0.0), Color(face.lightened(0.1), 0.87), Color(face.lightened(0.1), 0.92)]))
-		draw_polygon(PackedVector2Array([lip, next_lip, next_foot, foot]), PackedColorArray([
-			face.lightened(0.32), face.lightened(0.24), Color(face.darkened(0.06), 0.78), Color(face.darkened(0.20), 0.78)]))
-		var crest := lip.lerp(next_lip, 0.52).round()
-		draw_line(lip, crest, foam, 1.5)
-		draw_line(crest, next_lip, face.lightened(0.29), 1.0)
-		for strip in 3:
-			var across := (float(strip) + rng.randf() * 0.75) / 3.0
-			var start := lip.lerp(next_lip, across)
+		var face := water.lightened(CASCADE_LIGHT[index])
+		var crest := face.lerp(foam, 0.51)
+		var upstream := Vector2(-1, -9 - index % 3)
+		_gradient_quad(self, lip + upstream, next_lip + upstream, next_lip, lip,
+			Color(water, 0.0), Color(crest, 0.83))
+		_gradient_quad(self, lip, next_lip, next_roll, roll, crest, face.lightened(0.12))
+		_gradient_quad(self, roll, next_roll, next_foot, foot, face.lightened(0.12), Color(face.darkened(0.21), 0.82))
+		var white_edge := lip.lerp(next_lip, 0.27).round()
+		draw_line(white_edge, lip.lerp(next_lip, 0.81).round(), Color(foam, 0.81), 1.0)
+		for strip in 2:
+			var across := (float(strip) + 0.15 + rng.randf() * 0.63) / 2.0
+			var start := roll.lerp(next_roll, across)
 			var finish := foot.lerp(next_foot, across)
-			var phase := fposmod(float(frame) / 12.0 + rng.randf(), 1.0)
-			var end := minf(1.0, phase + 0.18 + rng.randf() * 0.30)
+			var phase := fposmod(float(frame) / 9.0 + rng.randf(), 1.0)
+			var end := minf(1.0, phase + 0.27 + rng.randf() * 0.39)
 			draw_line(start.lerp(finish, phase).round(), start.lerp(finish, end).round(),
-				Color(foam, 0.28 + across * 0.52), 1.0)
-		var impact := foot.lerp(next_foot, 0.43).round()
-		var spray := impact + Vector2(float(posmod(frame + index * 5, 5)) - 2.0, -float(posmod(frame + index * 3, 7)))
-		draw_rect(Rect2(spray, Vector2(2, 1)), Color(foam, 0.54))
-		var broken_edge := (impact + Vector2(-2, float(posmod(frame + index * 2, 4)))).round()
-		draw_rect(Rect2(broken_edge, Vector2(4 + index % 2, 2)), Color(foam, 0.75))
-		draw_rect(Rect2(broken_edge + Vector2(2, 3), Vector2(3, 1)), Color(foam, 0.55))
+				Color(foam, lerpf(0.61, 0.16, phase)), 1.0)
+		var impact := foot.lerp(next_foot, 0.48).round()
+		var drift := float(posmod(frame + index * 5, 7)) / 7.0
+		var spray := (impact + Vector2((drift - 0.5) * 6.0, -sin(drift * PI) * 5.0)).round()
+		draw_rect(Rect2(spray, Vector2(1, 1)), Color(foam, 0.59))
+		var white := Color(foam, lerpf(0.91, 0.50, drift))
+		var foam_center := impact + Vector2(0, 2 + index % 2)
+		draw_polyline(PackedVector2Array([foot.lerp(impact, 0.22), foam_center,
+			next_foot.lerp(impact, 0.30) + Vector2(0, 1)]), white, 1.0)
 	_draw_pool_wakes(foam)
 
 func _draw_pool_wakes(foam: Color) -> void:
 	for index in 3:
 		var phase := float(posmod(frame + index * 8, 24)) / 24.0
-		var center := (Vector2(135, -38) + Vector2(5, 24) * phase).round()
-		var span := 5.0 + phase * 8.0
-		var front := (center + Vector2(0, 1.0 + phase * 4.0)).round()
-		var left := (center - Vector2(span, 0)).round()
-		var right := (center + Vector2(span, 0)).round()
-		var white := Color(foam, lerpf(0.73, 0.0, phase))
-		draw_polyline(PackedVector2Array([left, left.lerp(front, 0.48).round(), front + Vector2(-2, 0)]), white, 1.0)
-		draw_polyline(PackedVector2Array([front + Vector2(1, 0), front.lerp(right, 0.55).round(), right]), white, 1.0)
+		var center := (Vector2(135, -37) + Vector2(6, 21) * phase).round()
+		var span := 6.0 + phase * 8.0
+		var rise := 2.0 + phase * 3.0
+		var white := Color(foam, 0.73 * (1.0 - phase))
+		var back := PackedVector2Array([center + Vector2(-span, 0), center + Vector2(-span * 0.50, -rise),
+			center + Vector2(2, -rise - 1), center + Vector2(span * 0.72, -rise + 1)])
+		var front := PackedVector2Array([center + Vector2(-span * 0.82, 2), center + Vector2(-span * 0.39, rise),
+			center + Vector2(span * 0.24, rise + 1), center + Vector2(span, 1)])
+		draw_polyline(back, Color(white, white.a * 0.58), 1.0)
+		draw_polyline(front, white, 1.0)
 
 func _draw_ford_ripples(foam: Color) -> void:
 	for index in FORD_RIPPLES.size():
