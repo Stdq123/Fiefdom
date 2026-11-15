@@ -18,7 +18,7 @@ const DUTY_STATIONS := {
 	RetainerData.Duty.HARVEST: {"anchor": Vector2(147, 113), "place": "田边"},
 	RetainerData.Duty.STEWARD: {"anchor": Vector2(119, 154), "place": "田边"},
 }
-enum FieldAction { NONE, TILL, SOW, WATER, HARVEST, CHANNEL, RAIN, WATERED, DRY_RICE, RICE_SEED }
+enum FieldAction { NONE, TILL, SOW, WATER, HARVEST, CHANNEL, RAIN, WATERED, DRY_RICE, RICE_SEED, NO_SEED_PLAN }
 const FIELD_COSTS := {
 	FieldAction.TILL: 2, FieldAction.SOW: 2, FieldAction.WATER: 1, FieldAction.HARVEST: 3,
 }
@@ -46,6 +46,7 @@ var retainer_instances: Dictionary = {} # RetainerData -> Retainer Node
 var current_seed_id: String:
 	get: return Global.selected_seed_id
 	set(value): Global.selected_seed_id = value
+var sow_from_plan := false
 
 var floating_text_scene = preload("res://scenes/FloatingText.tscn")
 var retainer_scene = preload("res://scenes/Retainer.tscn")
@@ -424,10 +425,11 @@ func rotation_plot_caption(cell: Vector2i) -> String:
 		return prefix + " · 翻地"
 	if not active_crops.has(cell):
 		var seed: String = target.seed
-		var selected := ItemManager.get_crop(current_seed_id)
-		if target.route == Global.RotationRoute.BEANS and current_seed_id != seed:
+		var planted := planting_seed(cell)
+		var selected := ItemManager.get_crop(planted)
+		if target.route == Global.RotationRoute.BEANS and planted != seed:
 			return prefix + " · 换菽种"
-		if target.route == Global.RotationRoute.FOLLOWUP and selected.restores_fertility:
+		if target.route == Global.RotationRoute.FOLLOWUP and (not selected or selected.restores_fertility):
 			return prefix + " · 换种（如黍）"
 		if action == FieldAction.RICE_SEED:
 			return prefix + " · 稻需渠水，可换黍"
@@ -746,14 +748,36 @@ func field_at(viewport_point: Vector2) -> Vector2i:
 	return tile_map.local_to_map(tile_map.make_canvas_position_local(viewport_point))
 
 func select_seed(seed_id: String) -> void:
-	if current_seed_id != seed_id and SEED_ORDER.has(seed_id):
+	if SEED_ORDER.has(seed_id) and (sow_from_plan or current_seed_id != seed_id):
 		_end_sweep()
+		sow_from_plan = false
 		current_seed_id = seed_id
 		seed_selected.emit(seed_id)
 
+func set_sow_from_plan(active: bool) -> void:
+	if active != sow_from_plan and (not active or not Global.field_seed_plans.is_empty()):
+		_end_sweep()
+		sow_from_plan = active
+		seed_selected.emit(current_seed_id)
+
 func _cycle_seed(step: int) -> void:
-	if not channel_mode and not Global.is_indoors():
-		select_seed(SEED_ORDER[posmod(SEED_ORDER.find(current_seed_id) + step, SEED_ORDER.size())])
+	if channel_mode or Global.is_indoors():
+		return
+	var plan_index := SEED_ORDER.size()
+	var count := plan_index + int(sow_from_plan or not Global.field_seed_plans.is_empty())
+	var selected := plan_index if sow_from_plan else SEED_ORDER.find(current_seed_id)
+	var next := posmod(selected + step, count)
+	if next == plan_index:
+		set_sow_from_plan(true)
+	else:
+		select_seed(SEED_ORDER[next])
+
+func planting_seed(cell: Vector2i) -> String:
+	if not sow_from_plan:
+		return current_seed_id
+	if Global.deferred_field_sowing.has(cell):
+		return ""
+	return Global.next_seed_for_plan(cell, Global.field_seed_plans.get(cell, ""))
 
 func set_channel_mode(enabled: bool) -> void:
 	var editing: bool = enabled and not Global.is_indoors() and Global.tech_unlocked["irrigation"]
@@ -815,10 +839,12 @@ func field_action(grid_pos: Vector2i) -> FieldAction:
 	match tile_map.get_cell_atlas_coords(grid_pos).y:
 		0: return FieldAction.TILL
 		1:
-			var seed := ItemManager.get_crop(current_seed_id)
-			if seed and seed.is_water_crop and not Global.irrigation.supplies(grid_pos):
+			var seed := ItemManager.get_crop(planting_seed(grid_pos))
+			if not seed:
+				return FieldAction.NO_SEED_PLAN if sow_from_plan else FieldAction.NONE
+			if seed.is_water_crop and not Global.irrigation.supplies(grid_pos):
 				return FieldAction.RICE_SEED
-			return FieldAction.SOW if seed else FieldAction.NONE
+			return FieldAction.SOW
 	return FieldAction.NONE
 
 func field_cost(action: FieldAction) -> int:
@@ -830,7 +856,7 @@ func field_message(grid_pos: Vector2i, action: FieldAction) -> String:
 	match action:
 		FieldAction.TILL: return "翻地"
 		FieldAction.SOW:
-			var seed := ItemManager.get_crop(current_seed_id)
+			var seed := ItemManager.get_crop(planting_seed(grid_pos))
 			return "播种 · %s · %d 夜" % [seed.crop_name, Global.sowing_nights(seed)]
 		FieldAction.HARVEST:
 			var crop: CropData = active_crops[grid_pos]["data"]
@@ -842,6 +868,8 @@ func field_message(grid_pos: Vector2i, action: FieldAction) -> String:
 		FieldAction.WATERED: return "已浇水"
 		FieldAction.DRY_RICE: return "稻田断水"
 		FieldAction.RICE_SEED: return "稻种需要通水的水渠"
+		FieldAction.NO_SEED_PLAN:
+			return "已暂缓续播 · 可选种手播" if Global.deferred_field_sowing.has(grid_pos) else "这格暂无续播安排 · 可选种手播"
 	return ""
 
 func handle_interaction(grid_pos: Vector2i) -> bool:
@@ -868,7 +896,7 @@ func handle_interaction(grid_pos: Vector2i) -> bool:
 			spawn_floating_text(grid_pos, field_message(grid_pos, action) + " · 过夜后生长", Color.CYAN)
 		FieldAction.DRY_RICE:
 			spawn_floating_text(grid_pos, "稻田断水 · 请接通水源", Color.ORANGE)
-		FieldAction.RICE_SEED:
+		FieldAction.RICE_SEED, FieldAction.NO_SEED_PLAN:
 			spawn_floating_text(grid_pos, field_message(grid_pos, action), Color.ORANGE)
 	return true
 
@@ -910,7 +938,7 @@ func till_plot(grid_pos: Vector2i) -> bool:
 	return true
 
 func _plant_crop(grid_pos: Vector2i) -> void:
-	if not sow_crop(grid_pos, current_seed_id):
+	if not sow_crop(grid_pos, planting_seed(grid_pos)):
 		return
 	Global.current_stamina -= field_cost(FieldAction.SOW)
 	GameEvents.stamina_changed.emit(Global.current_stamina)

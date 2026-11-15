@@ -149,6 +149,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FestivalPantryReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/WinterPondReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldStrokeReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/PlannedSowingReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ManagementNavigationReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/EndingFilmReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RaidReadinessReplay.gd') -Destination $testDirectory
@@ -301,6 +302,7 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'field-stroke' -Name 'field-stroke' -Replay 'field-stroke' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'field-batch' -Name 'field-batch' -Replay 'field-batch' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'field-batch-mixed' -Name 'field-batch-mixed' -Replay 'field-batch-mixed'
+        Start-VerifiedGame -Directory $release -Profile 'planned-sowing' -Name 'planned-sowing' -Replay 'planned-sowing' -Resolution $fullResolution
     }
     if ($FieldRoutes) {
         Start-VerifiedGame -Directory $release -Profile 'field-routes' -Name 'field-routes' -Replay 'field-routes'
@@ -451,6 +453,7 @@ try {
         if ($FieldStroke) {
             Start-VerifiedGame -Directory $release -Profile 'field-stroke-compact' -Name 'field-stroke-1024x768' -Replay 'field-stroke' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'field-batch-compact' -Name 'field-batch-1024x768' -Replay 'field-batch' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'planned-sowing-compact' -Name 'planned-sowing-1024x768' -Replay 'planned-sowing-pad' -Resolution '1024x768'
         }
         if ($FieldWorkWait) {
             Start-VerifiedGame -Directory $release -Profile 'field-soil-plans-compact' -Name 'field-soil-plans-1024x768' -Replay 'field-soil-plans' -Resolution '1024x768'

@@ -11,6 +11,7 @@ var pointer := Vector2.ZERO
 var pointer_seen := false
 var ink := Color("#edce88")
 var preview_plots: Array[Vector2i] = []
+var preview_seeds: Dictionary[Vector2i, String] = {}
 var hud: Control
 
 func _ready() -> void:
@@ -103,20 +104,33 @@ func _show_field_preview(cell: Vector2i, action: int, plots: Array[Vector2i]) ->
 		public_plots += int(Global.is_public_plot(plot))
 	var cost: int = plots.size() * world.field_cost(action)
 	var can_afford := cost <= Global.current_stamina
-	var title: String = world.FIELD_WORK_LABELS[action]
+	var title: String = "整田" + world.FIELD_WORK_LABELS[action]
+	var seeds: Dictionary[Vector2i, String] = {}
+	var varieties := {}
 	if action == world.FieldAction.SOW:
-		title += ItemManager.crop_label(world.current_seed_id)
-	var work := "整田%s · 公田 %d · 私田 %d" % [title, public_plots, plots.size() - public_plots]
+		if world.sow_from_plan:
+			title = "按安排播种"
+			for plot in plots:
+				var seed: String = world.planting_seed(plot)
+				seeds[plot] = seed
+				varieties[seed] = int(varieties.get(seed, 0)) + 1
+		else:
+			title += ItemManager.crop_label(world.current_seed_id)
+	var work := "%s · 公田 %d · 私田 %d" % [title, public_plots, plots.size() - public_plots]
+	if not varieties.is_empty():
+		work += "\n" + ItemManager.describe_crops(varieties)
 	var accept := "A 确认" if GamepadInput.active else "左键确认"
 	var cost_line := ("%d 体力 · %s" % [cost, accept] if can_afford
 		else "需 %d 体力 · 还差 %d" % [cost, cost - Global.current_stamina])
-	_place_caption(cell, work + "\n" + cost_line, Color("#eacb80") if can_afford else Color("#efaa84"), plots)
+	_place_caption(cell, work + "\n" + cost_line, Color("#eacb80") if can_afford else Color("#efaa84"), plots, seeds)
 
-func _place_caption(cell: Vector2i, text: String, tone: Color, plots: Array[Vector2i] = []) -> void:
+func _place_caption(cell: Vector2i, text: String, tone: Color, plots: Array[Vector2i] = [],
+		seeds: Dictionary[Vector2i, String] = {}) -> void:
 	var at_cell := tile_map.map_to_local(cell)
-	if tone != ink or preview_plots != plots or (not plots.is_empty() and position != at_cell):
+	if tone != ink or preview_plots != plots or preview_seeds != seeds or (not plots.is_empty() and position != at_cell):
 		ink = tone
 		preview_plots = plots
+		preview_seeds = seeds
 		queue_redraw()
 	if text != label.text:
 		label.text = text
@@ -157,6 +171,9 @@ func _draw() -> void:
 			var box := Rect2(local_center - half_cell, half_cell * 2)
 			draw_rect(box, Color(ink, 0.15))
 			draw_rect(box, ink, false, 1.15)
+			if preview_seeds.has(plot):
+				var picture := ItemManager.crop_picture(ItemManager.get_crop(preview_seeds[plot]))
+				draw_texture_rect(picture.texture, Rect2(local_center - half_cell + Vector2.ONE, (half_cell - Vector2.ONE) * 2), false)
 		return
 	for corner in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]:
 		var tip: Vector2 = half_cell * corner

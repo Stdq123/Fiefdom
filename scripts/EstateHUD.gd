@@ -41,6 +41,7 @@ const SEED_BUTTON := preload("res://scripts/SeedButton.gd")
 @onready var leave_cart: Button = %LeaveCart
 @onready var help_label: Label = %HelpLabel
 @onready var farm_status: Button = %FarmStatus
+@onready var sow_from_plan: Button = %SowFromPlan
 @onready var pinned_order: Button = %PinnedOrder
 @onready var canal_controls: HBoxContainer = %CanalControls
 @onready var canal_preview: Label = %CanalPreview
@@ -141,6 +142,8 @@ func _ready() -> void:
 	GameEvents.day_advanced.connect(_refresh_pinned_order.unbind(1))
 	GameEvents.inventory_changed.connect(_refresh_pinned_order.unbind(1))
 	GameEvents.management_visibility_changed.connect(_refresh_pinned_order.unbind(1))
+	GameEvents.management_visibility_changed.connect(_refresh_plan_seed_button.unbind(1))
+	GameEvents.farm_state_changed.connect(_refresh_plan_seed_button)
 	GameEvents.crop_harvested.connect(_refresh_pinned_order.unbind(1))
 	GameEvents.farm_state_changed.connect(_refresh_pinned_order)
 	GameEvents.channels_changed.connect(_refresh_pinned_order)
@@ -374,20 +377,31 @@ func _slot_label(slot: Button, text: String, at: Vector2, font_size: int, ink: C
 	slot.add_child(label)
 	return label
 
-func show_seed(seed_id: String) -> void:
+func show_seed(seed_id: String, from_plan := false) -> void:
 	var crop := ItemManager.get_crop(seed_id)
 	if not crop:
 		return
 	seed_slots.show()
 	farm_status.show()
 	canal_controls.hide()
+	sow_from_plan.set_pressed_no_signal(from_plan)
+	_refresh_plan_seed_button()
 	for id in seed_buttons:
-		seed_buttons[id].set_pressed_no_signal(id == seed_id)
+		seed_buttons[id].set_pressed_no_signal(not from_plan and id == seed_id)
+	if from_plan:
+		help_label.text = "空畦按各格安排选种"
+		return
 	var nights := Global.sowing_nights(crop)
 	var seasonal := "当令 " if nights < crop.days_to_grow else ""
 	var water := " · 需通水" if crop.is_water_crop else ""
 	var name_in_belt := SEED_BUTTON.display_name(seed_id, crop.crop_name)
 	help_label.text = "%s · %s%d 夜%s" % [name_in_belt, seasonal, nights, water]
+
+func _refresh_plan_seed_button() -> void:
+	sow_from_plan.visible = not canal_controls.visible and (sow_from_plan.button_pressed or not Global.field_seed_plans.is_empty())
+	if sow_from_plan.visible:
+		var batch_key := "LT" if GamepadInput.active else Preferences.key_label(KeyBindings.FILL)
+		sow_from_plan.tooltip_text = "依各格续播安排选种。按住 %s 预览整田播种。" % batch_key
 
 func refresh_seed_calendar() -> void:
 	var tomorrow := Global.current_day + 1
@@ -425,6 +439,7 @@ func refresh_farm_status() -> void:
 func show_channel_help(message: String) -> void:
 	seed_slots.hide()
 	farm_status.hide()
+	sow_from_plan.hide()
 	canal_controls.show()
 	channel_message = message
 	refresh_channel_help()

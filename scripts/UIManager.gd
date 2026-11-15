@@ -50,7 +50,8 @@ func _ready() -> void:
 	dialog_manager.setup($Control, world.player)
 
 	hud.setup_seeds(world.SEED_ORDER, world.select_seed)
-	hud.show_seed(world.current_seed_id)
+	hud.sow_from_plan.toggled.connect(world.set_sow_from_plan)
+	_refresh_seed_belt()
 	hud.guide.setup(world)
 	GamepadInput.changed.connect(_refresh_control_hints)
 	Preferences.bindings_changed.connect(_refresh_control_hints)
@@ -317,7 +318,7 @@ func _connect_signals() -> void:
 	GameEvents.west_market_directions_requested.connect(_on_west_market_directions_requested)
 	GameEvents.ravine_trip_requested.connect(_on_ravine_trip_requested)
 
-	world.seed_selected.connect(hud.show_seed)
+	world.seed_selected.connect(_refresh_seed_belt.unbind(1))
 	world.channel_mode_changed.connect(_on_channel_mode_changed)
 	world.channel_feedback.connect(hud.show_channel_help)
 	world.irrigation_overlay.preview_changed.connect(func(message: String): hud.canal_preview.text = message)
@@ -361,8 +362,11 @@ func _refresh_season_event() -> void:
 func _refresh_farm_calendar() -> void:
 	hud.refresh_seed_calendar()
 	hud.refresh_farm_status()
+	_refresh_seed_belt()
+
+func _refresh_seed_belt() -> void:
 	if not world.channel_mode:
-		hud.show_seed(world.current_seed_id)
+		hud.show_seed(world.current_seed_id, world.sow_from_plan)
 
 func _refresh_channel_button() -> void:
 	channel_button.disabled = not Global.tech_unlocked["irrigation"]
@@ -377,13 +381,13 @@ func _on_channel_mode_changed(enabled: bool) -> void:
 		if world.irrigation_overlay.rice_plot_highlight.any(
 				func(cell: Vector2i) -> bool: return Global.irrigation.supplies(cell)):
 			world.select_seed("rice")
-		hud.show_seed(world.current_seed_id)
+		_refresh_seed_belt()
 
 func _refresh_control_hints() -> void:
 	if world.channel_mode:
 		hud.refresh_channel_help()
 	else:
-		hud.show_seed(world.current_seed_id)
+		_refresh_seed_belt()
 	_update_visitor_note(world.current_visitor())
 
 func _on_visitor_interacted(data: VisitorData) -> void:

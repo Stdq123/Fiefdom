@@ -610,6 +610,15 @@ theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.99, 0.89, 0.69, 1)
 autowrap_mode = 3
 
+[node name="SowFromPlan" type="Button" parent="SeedBelt/Stack/BeltHeader"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 13
+toggle_mode = true
+text = "按安排播种"
+
 [node name="FarmStatus" type="Button" parent="SeedBelt/Stack/BeltHeader"]
 layout_mode = 2
 unique_name_in_owner = true

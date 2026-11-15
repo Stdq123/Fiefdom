@@ -281,7 +281,7 @@ func _field_plot_label(cell: Vector2i) -> String:
 			Global.OrderWork.SOW:
 				if not Global.tilled_cells.has(cell):
 					return "备货私田 · 翻地种%s" % name
-				return "备货私田 · 播%s" % name if world.current_seed_id == order_work.crop_id else "备货私田 · 换%s种" % name
+				return "备货私田 · 播%s" % name if world.planting_seed(cell) == order_work.crop_id else "备货私田 · 换%s种" % name
 			Global.OrderWork.WATER: return "备货私田 · 给%s浇水" % name
 			Global.OrderWork.HARVEST: return "备货私田 · 收%s" % name
 			Global.OrderWork.WAIT: return "%s · 最早第 %d 天收" % [name, order_work.day]
@@ -292,7 +292,7 @@ func _field_plot_label(cell: Vector2i) -> String:
 	if Global.field_route_status == Global.MulberryRoute.PLANT:
 		if not Global.tilled_cells.has(cell):
 			return "私田 · 翻地种桑"
-		return "私田 · 播桑" if world.current_seed_id == "mulberry" else "私田 · 换桑种"
+		return "私田 · 播桑" if world.planting_seed(cell) == "mulberry" else "私田 · 换桑种"
 	var land := "公田" if Global.is_public_plot(cell) else "私田"
 	var crop: CropData = Global.active_crops[cell].data
 	return "%s · %s%s" % [crop.crop_name, FIELD_ROUTES[Global.field_route_status].plot, land]

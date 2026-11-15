@@ -217,9 +217,11 @@ func _opening_field_step(cell: Vector2i, is_public: bool) -> String:
 		opening_cue = OpeningCue.SLEEP
 		return "体力不足，%s需要 %d 点。点「睡觉」恢复体力。" % [opening_plot_name, cost]
 	var rotation_seed := "millet" if Global.fertile_cells.has(cell) else "beans"
-	var needs_rotation_seed := world.current_seed_id != "beans" if rotation_seed == "beans" else world.current_seed_id == "beans"
+	var selected := world.planting_seed(cell)
+	var needs_rotation_seed := selected != "beans" if rotation_seed == "beans" else selected == "beans"
 	if (not is_public and Global.field_rotation.waiting_for_harvest()
-			and ((action == ESTATE_WORLD.FieldAction.SOW and needs_rotation_seed) or action == ESTATE_WORLD.FieldAction.RICE_SEED)):
+			and ((action == ESTATE_WORLD.FieldAction.SOW and needs_rotation_seed)
+				or action in [ESTATE_WORLD.FieldAction.RICE_SEED, ESTATE_WORLD.FieldAction.NO_SEED_PLAN])):
 		opening_cue = OpeningCue.SEED
 		opening_seed_id = rotation_seed
 		if rotation_seed == "millet":
@@ -236,13 +238,17 @@ func _opening_field_step(cell: Vector2i, is_public: bool) -> String:
 					else "%s 或方向键移动。\n左键翻中央公田，收成用来纳贡。" % _walking_keys())
 			return "%s翻地。\n收成归你，可换口粮或留作时令交货。" % point
 		ESTATE_WORLD.FieldAction.SOW:
-			var seed := ItemManager.get_crop(world.current_seed_id)
+			var seed := ItemManager.get_crop(selected)
 			return "%s播种「%s」。供水 %d 夜可收。\n%s" % [
 				point, seed.crop_name, Global.sowing_nights(seed), "LB/RB 换种。" if pad else "可在下方换种。"]
 		ESTATE_WORLD.FieldAction.RICE_SEED:
 			opening_cue = OpeningCue.SEED
 			opening_seed_id = "millet"
 			return "稻种需要渠水。\n先按 %s 或点「黍」换种。" % _seed_shortcut("millet")
+		ESTATE_WORLD.FieldAction.NO_SEED_PLAN:
+			opening_cue = OpeningCue.SEED
+			opening_seed_id = "millet"
+			return "这格没有可用的续播安排。\n可按 %s 或点「黍」再播。" % _seed_shortcut("millet")
 		ESTATE_WORLD.FieldAction.HARVEST:
 			return ("公田已熟。%s收割，收成入国库。" % act if is_public
 				else "私田成熟了。%s收获，作物收入私仓，也会赚到铜钱。" % act)
