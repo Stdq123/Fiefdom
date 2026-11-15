@@ -220,12 +220,15 @@ func _collect_fields() -> void:
 			var dry := 0
 			var blocked := 0
 			var sowable := 0
+			var untilled := 0
 			for y in range(-1, 2):
 				for x in range(-1, 2):
 					var cell := center + Vector2i(x, y)
 					var task := Global.crop_night_status(cell)
 					if task == -1 and not Global.planned_field_seed(cell).is_empty():
 						task = Global.SowingRoute.READY
+					elif task == -1 and not Global.tilled_cells.has(cell) and not Global.planned_field_seed(cell, true).is_empty():
+						untilled += 1
 					if task in Global.FIELD_ROUTE_STATES:
 						field_tasks[cell] = task
 					match task:
@@ -243,6 +246,8 @@ func _collect_fields() -> void:
 				needs.append("断水 %d" % blocked)
 			if sowable > 0:
 				needs.append("待播 %d" % sowable)
+			if untilled > 0:
+				needs.append("待翻 %d" % untilled)
 			var stewards := PackedStringArray()
 			for worker: RetainerData in Global.retainers:
 				if worker.duty == RetainerData.Duty.STEWARD and Global.stewarded_field(worker).field_id == id:

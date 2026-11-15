@@ -152,6 +152,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldStrokeReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/HarvestScopeReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/PlannedSowingReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldPreparationReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/SowingRouteReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/EstateMapReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ManagementNavigationReplay.gd') -Destination $testDirectory
@@ -309,6 +310,8 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'field-batch' -Name 'field-batch' -Replay 'field-batch' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'field-batch-mixed' -Name 'field-batch-mixed' -Replay 'field-batch-mixed'
         Start-VerifiedGame -Directory $release -Profile 'planned-sowing' -Name 'planned-sowing' -Replay 'planned-sowing' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'field-preparation' -Name 'field-preparation' -Replay 'field-preparation' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'field-preparation-rain' -Name 'field-preparation-rain' -Replay 'field-preparation-rain'
     }
     if ($FieldRoutes) {
         Start-VerifiedGame -Directory $release -Profile 'field-routes' -Name 'field-routes' -Replay 'field-routes'

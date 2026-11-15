@@ -995,14 +995,14 @@ func next_seed_for_plan(cell: Vector2i, plan: String) -> String:
 	var prepared: bool = fertile_cells.has(cell) if crop.is_empty() else crop.data.restores_fertility
 	return FieldSeedPlan.crop_id(plan) if prepared else FieldSeedPlan.BEANS
 
-func planned_field_seed(cell: Vector2i) -> String:
-	if not tilled_cells.has(cell) or active_crops.has(cell) or deferred_field_sowing.has(cell):
+func planned_field_seed(cell: Vector2i, include_untilled := false) -> String:
+	if active_crops.has(cell) or deferred_field_sowing.has(cell):
+		return ""
+	if not tilled_cells.has(cell) and (not include_untilled or not can_plan_field_seed(cell)):
 		return ""
 	var seed_id := next_seed_for_plan(cell, field_seed_plans.get(cell, ""))
-	if seed_id.is_empty():
-		return ""
 	var seed := ItemManager.get_crop(seed_id)
-	return seed_id if not seed.is_water_crop or irrigation.supplies(cell) else ""
+	return seed_id if seed and (not seed.is_water_crop or irrigation.supplies(cell)) else ""
 
 func sow_field_crop(cell: Vector2i, seed_id: String) -> bool:
 	if seed_id.is_empty() or not tilled_cells.has(cell) or active_crops.has(cell):

@@ -258,6 +258,8 @@ func _run() -> void:
 		"planned-sowing", "planned-sowing-before", "planned-sowing-legacy", "planned-sowing-pad":
 			var replay = load("res://tests/PlannedSowingReplay.gd").new()
 			await replay.run_planned_sowing(tree, capture_directory, arguments[0])
+		"field-preparation", "field-preparation-before", "field-preparation-resume", "field-preparation-pad", "field-preparation-rain":
+			await load("res://tests/FieldPreparationReplay.gd").new().run_preparation(tree, capture_directory, arguments[0])
 		"sowing-route", "sowing-route-pad", "sowing-route-before", "sowing-route-legacy":
 			var replay = load("res://tests/SowingRouteReplay.gd").new()
 			await replay.run_guided_sowing(tree, capture_directory, arguments[0])

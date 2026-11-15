@@ -216,7 +216,7 @@ custom_minimum_size = Vector2(0, 35)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_default_cursor_shape = 2
-tooltip_text = "按续播安排选种，先标出近处能播的空畦。播完一块井田后标出下一块。"
+tooltip_text = "标出已翻的待播空畦。计划里还有生地时，可在种子栏用「整备空田」。"
 theme_override_colors/font_color = Color(0.77, 0.87, 0.65, 1)
 theme_override_font_sizes/font_size = 14
 

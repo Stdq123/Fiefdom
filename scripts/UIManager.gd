@@ -51,6 +51,7 @@ func _ready() -> void:
 
 	hud.setup_seeds(world.SEED_ORDER, world.select_seed)
 	hud.sow_from_plan.toggled.connect(world.set_sow_from_plan)
+	hud.prepare_empty_plots.toggled.connect(world.set_prepare_empty_plots)
 	_refresh_seed_belt()
 	hud.guide.setup(world)
 	GamepadInput.changed.connect(_refresh_control_hints)
@@ -371,7 +372,7 @@ func _refresh_farm_calendar() -> void:
 
 func _refresh_seed_belt() -> void:
 	if not world.channel_mode:
-		hud.show_seed(world.current_seed_id, world.sow_from_plan)
+		hud.show_seed(world.current_seed_id, world.sow_from_plan, world.prepare_empty_plots)
 
 func _refresh_channel_button() -> void:
 	channel_button.disabled = not Global.tech_unlocked["irrigation"]

@@ -47,6 +47,7 @@ var current_seed_id: String:
 	get: return Global.selected_seed_id
 	set(value): Global.selected_seed_id = value
 var sow_from_plan := false
+var prepare_empty_plots := false
 
 var floating_text_scene = preload("res://scenes/FloatingText.tscn")
 var retainer_scene = preload("res://scenes/Retainer.tscn")
@@ -694,6 +695,9 @@ func batch_harvest_totals(plots: Array[Vector2i]) -> Dictionary:
 
 func _apply_field_batch(cell: Vector2i) -> void:
 	var action := field_action(cell)
+	if uses_preparation(action):
+		_apply_field_preparation(cell)
+		return
 	var targets := field_batch_targets(cell, action)
 	if targets.is_empty():
 		return
@@ -709,6 +713,52 @@ func _apply_field_batch(cell: Vector2i) -> void:
 	handle_interaction(cell)
 	if action != FieldAction.HARVEST:
 		spawn_floating_text(cell, "%s %d 格 · −%d 体力" % [FIELD_WORK_LABELS[action], targets.size() + 1, cost], Color.WHEAT)
+
+func uses_preparation(action: FieldAction) -> bool:
+	return prepare_empty_plots and action in [FieldAction.TILL, FieldAction.SOW, FieldAction.RICE_SEED, FieldAction.NO_SEED_PLAN]
+
+func field_preparation(cell: Vector2i) -> Dictionary:
+	if Global.outcome != Global.Outcome.RUNNING or Global.planned_field_seed(cell, true).is_empty():
+		return {}
+	var bounds := _working_field_at(cell)
+	if not bounds.has_area():
+		return {}
+	var seeds: Dictionary[Vector2i, String] = {}
+	var to_till := 0
+	var to_water := 0
+	var rain := Global.has_rain()
+	for y in range(bounds.position.y, bounds.end.y):
+		for x in range(bounds.position.x, bounds.end.x):
+			var plot := Vector2i(x, y)
+			var seed := Global.planned_field_seed(plot, true)
+			if seed.is_empty():
+				continue
+			seeds[plot] = seed
+			to_till += int(not Global.tilled_cells.has(plot))
+			to_water += int(not rain and not Global.irrigation.supplies(plot))
+	var cost := to_till * field_cost(FieldAction.TILL) + seeds.size() * field_cost(FieldAction.SOW) + to_water * field_cost(FieldAction.WATER)
+	return {"seeds": seeds, "till": to_till, "water": to_water, "cost": cost}
+
+func _apply_field_preparation(cell: Vector2i) -> void:
+	var work := field_preparation(cell)
+	if work.is_empty():
+		return
+	if work.cost > Global.current_stamina:
+		spawn_floating_text(cell, "体力不足 · 整备需 %d" % work.cost, Color.SALMON)
+		return
+	for plot: Vector2i in work.seeds:
+		if plot != cell:
+			_prepare_plot(plot)
+	_prepare_plot(cell)
+	spawn_floating_text(cell, "整备 %d 格 · −%d 体力" % [work.seeds.size(), work.cost], Color.WHEAT)
+
+func _prepare_plot(cell: Vector2i) -> void:
+	if field_action(cell) == FieldAction.TILL:
+		handle_interaction(cell)
+	if field_action(cell) == FieldAction.SOW:
+		handle_interaction(cell)
+	if field_action(cell) == FieldAction.WATER:
+		handle_interaction(cell)
 
 func _begin_sweep(cell: Vector2i, pointer: Vector2) -> void:
 	var action := field_action(cell)
@@ -778,6 +828,7 @@ func select_seed(seed_id: String) -> void:
 	if SEED_ORDER.has(seed_id) and (sow_from_plan or current_seed_id != seed_id):
 		_end_sweep()
 		sow_from_plan = false
+		prepare_empty_plots = false
 		current_seed_id = seed_id
 		seed_selected.emit(seed_id)
 
@@ -785,6 +836,14 @@ func set_sow_from_plan(active: bool) -> void:
 	if active != sow_from_plan and (not active or not Global.field_seed_plans.is_empty()):
 		_end_sweep()
 		sow_from_plan = active
+		if not active:
+			prepare_empty_plots = false
+		seed_selected.emit(current_seed_id)
+
+func set_prepare_empty_plots(active: bool) -> void:
+	if sow_from_plan and prepare_empty_plots != active:
+		_end_sweep()
+		prepare_empty_plots = active
 		seed_selected.emit(current_seed_id)
 
 func _cycle_seed(step: int) -> void:
