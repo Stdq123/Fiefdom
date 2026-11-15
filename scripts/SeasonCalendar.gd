@@ -1,6 +1,7 @@
 extends "res://scripts/SurveyMap.gd"
 
 signal directions_requested(place: String)
+signal order_requested(upcoming: bool)
 
 const TERMS := SeasonOrders.TERMS_PER_SEASON
 const EVENT_TERMS := [Global.GATHERING_TERM, SummerRaft.TERM, AutumnExhibit.TERM, WinterSupper.TERM]
@@ -8,10 +9,14 @@ const EVENT_TERMS := [Global.GATHERING_TERM, SummerRaft.TERM, AutumnExhibit.TERM
 @onready var seasons: HBoxContainer = %Seasons
 @onready var dates: VBoxContainer = %Dates
 @onready var year_label: Label = %Year
+@onready var previous_year: Button = %PreviousYear
+@onready var next_year: Button = %NextYear
+@onready var today_button: Button = %Today
 @onready var title: Label = %DateTitle
 @onready var forecast: Label = %Forecast
 @onready var planting: Label = %Planting
 @onready var order_note: Label = %Order
+@onready var order_button: Button = %OrderBook
 @onready var event_note: Label = %Event
 @onready var guide: Button = %Guide
 @onready var fish_guide: Button = %FishGuide
@@ -26,10 +31,13 @@ var term_days := 1
 var season := 0
 var focus := 0
 var residents: Array[String] = []
-var event_to_open := 0
+var day_to_open := 0
 
 func _ready() -> void:
 	super._ready()
+	previous_year.pressed.connect(_change_year.bind(-1))
+	next_year.pressed.connect(_change_year.bind(1))
+	today_button.pressed.connect(func(): _show_day(Global.current_day))
 	for button: Button in seasons.get_children():
 		button.pressed.connect(_show_season.bind(button.get_index()))
 	var normal := dates.get_theme_stylebox("normal", "Button")
@@ -49,6 +57,7 @@ func _ready() -> void:
 		dates.add_child(row)
 	guide.pressed.connect(_request_directions)
 	fish_guide.pressed.connect(_request_fishing_directions)
+	order_button.pressed.connect(_request_order)
 	keep_samples.toggled.connect(_set_pantry)
 	keep_porridge.toggled.connect(_set_pantry.bind(WinterSupper.BEAN))
 	keep_soup.toggled.connect(_set_pantry.bind(WinterSupper.FISH))
@@ -57,10 +66,14 @@ func _map_available() -> bool:
 	return not controls_blocked.call()
 
 func open_noticed_event() -> void:
-	event_to_open = _noticed_day()
-	if event_to_open > 0:
-		open_map()
-	event_to_open = 0
+	var event_day := _noticed_day()
+	if event_day > 0:
+		open_day(maxi(event_day, Global.current_day))
+
+func open_day(day: int) -> void:
+	day_to_open = day
+	open_map()
+	day_to_open = 0
 
 func _open_from_shortcut() -> void:
 	if _noticed_day() > 0:
@@ -107,15 +120,32 @@ func _event_length(day: int, term_length: int) -> int:
 
 func _refresh_on_open() -> void:
 	term_days = maxi(1, Global.balance.days_per_solar_term)
-	var day := event_to_open if event_to_open > 0 else Global.current_day
-	year_start = _year_start(day, term_days)
-	year_label.text = "第 %d 年    ·    今天第 %d 天" % [Global.get_current_year(), Global.current_day]
 	residents.clear()
 	for member: RetainerData in Global.retainers:
 		residents.append(member.name)
-	_show_season(Global.season_index(day), Global.solar_term_index(day) % TERMS)
+	_show_day(day_to_open if day_to_open > 0 else Global.current_day)
 
-func _show_season(next: int, first_date := -1) -> void:
+func _show_day(day: int) -> void:
+	year_start = _year_start(day, term_days)
+	var year_days := term_days * Global.SOLAR_TERMS.size()
+	var year := floori(float(year_start - 1) / year_days) + 1
+	var current_start := _year_start(Global.current_day, term_days)
+	year_label.text = "第 %d 年    ·    今天第 %d 天" % [year, Global.current_day]
+	previous_year.disabled = year_start == 1
+	next_year.disabled = year_start >= current_start + year_days
+	_show_season(Global.season_index(day), Global.solar_term_index(day) % TERMS, day)
+
+func _change_year(step: int) -> void:
+	var button := previous_year if step < 0 else next_year
+	if button.disabled:
+		return
+	var had_focus := button.has_focus()
+	_show_day(_day(focus) + step * term_days * Global.SOLAR_TERMS.size())
+	if had_focus and button.disabled:
+		today_button.grab_focus()
+		GamepadInput.snap_pointer_to_focus()
+
+func _show_season(next: int, first_date := -1, detail_day := 0) -> void:
 	season = next
 	for button: Button in seasons.get_children():
 		button.set_pressed_no_signal(button.get_index() == season)
@@ -127,8 +157,9 @@ func _show_season(next: int, first_date := -1) -> void:
 		row.text = "%s     %s%s%s" % [_day_label(day), Global.get_current_solar_term(day),
 			"  ·  " + special if not special.is_empty() else "", today]
 	if first_date < 0:
-		first_date = Global.solar_term_index() % TERMS if season == Global.season_index() else 0
-	_show_date(first_date)
+		var this_season := year_start == _year_start(Global.current_day, term_days) and season == Global.season_index()
+		first_date = Global.solar_term_index() % TERMS if this_season else 0
+	_show_date(first_date, detail_day)
 
 func _day(index: int) -> int:
 	return year_start + (season * TERMS + index) * term_days
@@ -145,21 +176,25 @@ func _event_name(day: int) -> String:
 		return WinterSupper.PLACE
 	return AutumnExhibit.NAME if Global.is_autumn_exhibit_day(day) else ""
 
-func _show_date(index: int) -> void:
+func _show_date(index: int, detail_day := 0) -> void:
 	focus = index
 	for row: Button in dates.get_children():
 		row.set_pressed_no_signal(row.get_index() == focus)
-	var day := _day(focus)
-	var past := day + term_days <= Global.current_day
+	var term_day := _day(focus)
+	var day := detail_day if detail_day > 0 else term_day
+	if detail_day == 0 and Global.current_day >= term_day and Global.current_day < term_day + term_days:
+		day = Global.current_day
 	var upcoming := day > Global.current_day
-	title.text = "%s   ·   %s" % [Global.get_current_solar_term(day), _day_label(day)]
+	var date := _day_label(term_day) if detail_day == 0 else "第 %d 天" % day
+	title.text = "%s   ·   %s" % [Global.get_current_solar_term(day), date]
 	var weather := "雨 · 旱作可得水" if Global.has_rain(day) else "晴"
-	if past:
-		forecast.text = weather + "    ·    节气已过"
+	if day < Global.current_day:
+		forecast.text = weather + "    ·    此日已过"
 	else:
-		var guest := VisitorData.for_day(day, residents) if upcoming else Global.visitor_for_day(Global.current_day)
-		var visit := "首日轮访" if upcoming and term_days > 1 else ("轮访" if upcoming else "今日轮访")
-		forecast.text = "%s    ·    %s" % [weather, "%s %s" % [visit, guest.name] if guest else "轮访歇日"]
+		var guest := VisitorData.for_day(day, residents) if upcoming else Global.visitor_for_day(day)
+		var visit := "预计轮访" if upcoming else "今日轮访"
+		var visit_note := "%s %s" % [visit, guest.name] if guest else ("预计轮访歇日" if upcoming else "轮访歇日")
+		forecast.text = "%s    ·    %s" % [weather, visit_note]
 		if not upcoming and Global.ravine_handoff_visit_today():
 			forecast.text += ("\n蒲宁在南边竹径等手记。" if Global.ravine_handoff_ready() else "\n蒲宁今天在竹径药圃。")
 		if day == Global.current_day + 1 and Global.is_raid_day(day):
@@ -170,13 +205,25 @@ func _show_date(index: int) -> void:
 			planting.text = "当季宜播 %s · %d 夜成熟%s" % [crop.crop_name, Global.sowing_nights(crop, day),
 				" · 需渠水" if crop.is_water_crop else " · 须逐夜供水"]
 			break
+	_show_order(day)
+	_show_event(term_day)
+
+func _show_order(day: int) -> void:
 	var schedule := Global.season_order(day)
 	var delivered := Global.season_order_delivered_at(schedule)
 	var due := "第 %d 天已交齐" % delivered if delivered > 0 else "第 %d 天截止" % schedule.end
-	order_note.text = "本季托付  %s\n%s · %s" % [schedule.order.title, ItemManager.describe_season_order(schedule.order), due]
+	order_note.text = "%s季托付  %s\n%s · %s" % [Global.SEASON_NAMES[season], schedule.order.title,
+		ItemManager.describe_season_order(schedule.order), due]
 	if schedule.start > Global.current_day and Global.is_season_order_pinned(schedule):
 		order_note.text += " · 已跟踪备货"
-	_show_event(day)
+	var current := Global.season_order()
+	order_button.visible = schedule.start == current.start or schedule.start == current.end + 1
+	order_button.text = "下季备货" if schedule.start > current.start else "查看交货簿"
+
+func _request_order() -> void:
+	var upcoming: bool = _day(focus) > Global.season_order().end
+	close_map()
+	order_requested.emit(upcoming)
 
 func _show_event(day: int) -> void:
 	var special := _event_name(day)
@@ -192,15 +239,15 @@ func _show_event(day: int) -> void:
 		if not entry.is_empty():
 			event_note.text = "秋社已入簿 · %s\n谷样%s。" % [AutumnExhibit.names(entry.crops), "已分给乡邻" if entry.shared else "已带回"]
 		else:
-			event_note.text = "秋社 · 今年展台已收。" if past else _autumn_plan(day, last_day)
+			event_note.text = "秋社 · 展台已收。" if past else _autumn_plan(day, last_day)
 	elif Global.is_gathering_day(day):
 		var score: int = Global.gathering_recitals.get(day, 0)
 		event_note.text = "谷雨亭集 · 南路亭东\n" + ("迎客曲 %d/%d · 已入曲簿" % [score, Global.GATHERING_BEATS]
-			if score > 0 else ("今年亭集已散。" if past else "找商音合奏迎客曲。击准 %d 声可得乐经验。" % Global.GATHERING_MIN_HITS))
+			if score > 0 else ("亭集已散。" if past else "找商音合奏迎客曲。击准 %d 声可得乐经验。" % Global.GATHERING_MIN_HITS))
 	elif Global.is_summer_raft_day(day):
 		var best: Dictionary = Global.summer_raft_results.get(day, {})
 		event_note.text = "夏至试筏 · 竹涧西岸\n" + ("本年最好成绩 · " + SummerRaft.score_text(best.gates, best.time_ms)
-			if not best.is_empty() else ("今年试筏已结束。" if past else "沿溪过四道竹标。过三道可得御经验。"))
+			if not best.is_empty() else ("试筏已结束。" if past else "沿溪过四道竹标。过三道可得御经验。"))
 		if not past and term_days > 1:
 			event_note.text += "\n第 %d 天试筏。" % day
 	elif Global.is_winter_supper_day(day):
@@ -208,7 +255,7 @@ func _show_event(day: int) -> void:
 		if not record.is_empty():
 			event_note.text = "冬至已入簿 · %s\n围炉备了 %d 份，先供当晚门客。" % [WinterSupper.RECIPES[record.recipe].name, record.portions]
 		else:
-			event_note.text = "冬至围炉 · 今年这席已散。" if past else _winter_plan(day)
+			event_note.text = "冬至围炉 · 这席已散。" if past else _winter_plan(day)
 	_refresh_festival_pantry(day)
 	guide.get_parent().visible = guide.visible or fish_guide.visible
 

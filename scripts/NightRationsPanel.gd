@@ -10,6 +10,7 @@ signal field_management_requested(field_id: int)
 signal sleep_requested
 signal east_watch_requested
 signal pavilion_story_requested
+signal tomorrow_calendar_requested
 
 const GOOD := Color("#c7dcaf")
 const SHORT := Color("#efbf8a")
@@ -73,6 +74,7 @@ const WINDOW_MARGIN := 16.0
 @onready var plan_field: Button = %PlanField
 @onready var find_harvest: Button = %FindHarvest
 @onready var title: Label = %Title
+@onready var tomorrow_calendar: Button = %TomorrowCalendar
 @onready var page_button: Button = %PageButton
 @onready var plan_body: VBoxContainer = %Plan
 @onready var footer: HBoxContainer = %Footer
@@ -104,6 +106,7 @@ func _ready() -> void:
 	body.minimum_size_changed.connect(_fit_body)
 	get_viewport().size_changed.connect(_fit_body)
 	close_button.pressed.connect(queue_free)
+	tomorrow_calendar.pressed.connect(tomorrow_calendar_requested.emit)
 	find_plot.pressed.connect(dry_plot_requested.emit)
 	find_ready_plot.pressed.connect(harvest_requested.emit)
 	wait_button.pressed.connect(_wait_for_field_work)
@@ -182,6 +185,7 @@ func _show_page(previous: bool) -> void:
 	show_previous = previous
 	title.text = "昨夜结算" if previous else "今夜安排"
 	page_button.text = "今夜安排" if previous else "昨夜结算"
+	tomorrow_calendar.visible = not previous
 	plan_body.visible = not previous
 	footer.visible = not previous
 	_refresh_fields()
@@ -222,6 +226,9 @@ func _release_festival_reserve() -> void:
 func _refresh() -> void:
 	if settling_field_work:
 		return
+	var tomorrow := Global.current_day + 1
+	tomorrow_calendar.text = "明日 · %s · %s  ›" % [Global.get_current_solar_term(tomorrow),
+		"雨" if Global.has_rain(tomorrow) else "晴"]
 	_refresh_raid_plan()
 	_refresh_fields()
 	sheep_note.visible = Global.sheepfold.owned()

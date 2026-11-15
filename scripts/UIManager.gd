@@ -105,6 +105,7 @@ func _ready() -> void:
 	hud.calendar_button.pressed.connect(calendar.open_map)
 	hud.season_event_button.pressed.connect(calendar.open_noticed_event)
 	calendar.directions_requested.connect(_guide_calendar_event)
+	calendar.order_requested.connect(_on_season_board_interacted)
 	hud.pinned_order.pressed.connect(_on_pinned_order_pressed)
 	_connect_signals()
 	_refresh_worksite_button()
@@ -834,6 +835,11 @@ func _show_night_rations(show_previous := false, focus_shortage := false) -> voi
 	panel.tribute_field_requested.connect(_on_tribute_field_requested.bind(panel))
 	panel.pavilion_story_requested.connect(_guide_pavilion_story.bind(panel))
 	panel.east_watch_requested.connect(_guide_east_watch)
+	panel.tomorrow_calendar_requested.connect(func():
+		panel_manager.hide_management_panel()
+		panel.tree_exited.connect(calendar.open_day.bind(Global.current_day + 1), CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+		panel.queue_free()
+	)
 	panel.sleep_requested.connect(func():
 		panel_manager.hide_management_panel()
 		# The night sheet releases the player's conversation lock on exit.
@@ -974,10 +980,10 @@ func _follow_order_work(plan: Dictionary) -> void:
 	if Global.is_indoors():
 		hud.practice_label.text = "已标出备货私田 · 从南门回田边"
 
-func _on_season_board_interacted() -> void:
+func _on_season_board_interacted(upcoming := false) -> void:
 	world.set_channel_mode(false)
 	panel_manager.show_management_panel()
-	panel_manager.management_panel_instance.show_season_orders()
+	panel_manager.management_panel_instance.show_season_orders(upcoming)
 
 func _on_road_rest_interacted() -> void:
 	world.set_channel_mode(false)

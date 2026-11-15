@@ -100,6 +100,15 @@ theme_override_colors/font_color = Color(0.95, 0.82, 0.55, 1)
 theme_override_font_sizes/font_size = 29
 text = "今夜安排"
 
+[node name="TomorrowCalendar" type="Button" parent="Center/Window/Content/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 16
+tooltip_text = "查看明日历书里的轮访、作物和时令单。"
+
 [node name="PageButton" type="Button" parent="Center/Window/Content/Header"]
 unique_name_in_owner = true
 visible = false

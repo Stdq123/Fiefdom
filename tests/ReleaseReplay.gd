@@ -73,6 +73,10 @@ func _run() -> void:
 			var replay = load("res://tests/NightRationsReplay.gd").new()
 			replay.capture_dir = capture_directory
 			await replay.run(tree)
+		"calendar-tomorrow":
+			var replay = load("res://tests/CalendarTomorrowReplay.gd").new()
+			replay.capture_dir = capture_directory
+			await replay.run(tree)
 		"festival-pantry":
 			var replay = load("res://tests/FestivalPantryReplay.gd").new()
 			replay.capture_dir = capture_directory

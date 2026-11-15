@@ -122,7 +122,7 @@ function Start-VerifiedGame {
     }
     $lines = Get-Content -LiteralPath $log -Encoding utf8
     $marker = if ($Replay) { 'SCENARIO_OK' } else { 'Fiefdom title ready' }
-    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|RESEARCH_RATIONS_|GAMEPAD_|DRIVING_|BOW_AIM_|WINTER_|AUTUMN_|BINDING_|RAFT_|TITLE_|BACKPACK_|DECOR_|ROUTE_|COUNCIL_PREP_|COUNCIL_SILK_|DIRECTION_|PLAN_|TRIBUTE_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|CANAL_DOOR_|SPRING_|ESTATE_PROGRESS_|ESTATE_PROVISIONS|RECRUITMENT_|FIELD_ACCESS_|FIELD_STROKE_|WORKSITE_|FIELD_ROUTE_|FIELD_NIGHT_|FIELD_BEDTIME|MORNING_|PAVILION_EVENING_|FISH_MARKET_|RAVINE_MAP_|SHORTCUT_|TRAP_|MARKET_WAYFINDING_|ORDER_AHEAD_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
+    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|CALENDAR_|RESEARCH_RATIONS_|GAMEPAD_|DRIVING_|BOW_AIM_|WINTER_|AUTUMN_|BINDING_|RAFT_|TITLE_|BACKPACK_|DECOR_|ROUTE_|COUNCIL_PREP_|COUNCIL_SILK_|DIRECTION_|PLAN_|TRIBUTE_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|CANAL_DOOR_|SPRING_|ESTATE_PROGRESS_|ESTATE_PROVISIONS|RECRUITMENT_|FIELD_ACCESS_|FIELD_STROKE_|WORKSITE_|FIELD_ROUTE_|FIELD_NIGHT_|FIELD_BEDTIME|MORNING_|PAVILION_EVENING_|FISH_MARKET_|RAVINE_MAP_|SHORTCUT_|TRAP_|MARKET_WAYFINDING_|ORDER_AHEAD_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
     if ($exitCode -ne 0 -or $lines -cnotcontains $marker -or $lines -cmatch '^\s*(?:SCRIPT ERROR|USER ERROR|ERROR|WARNING):') {
         throw "$Name failed (exit $exitCode). See $log"
     }
@@ -146,7 +146,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ResearchRationsReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/MarketReserveReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldSoilReplay.gd') -Destination $testDirectory
-    Copy-Item -LiteralPath (Join-Path $repo 'tests/FestivalPantryReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/FestivalPantryReplay.gd'), (Join-Path $repo 'tests/CalendarTomorrowReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/WinterPondReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldStrokeReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/PlannedSowingReplay.gd') -Destination $testDirectory
@@ -361,6 +361,7 @@ try {
     }
     if ($Rations) {
         Start-VerifiedGame -Directory $release -Profile 'night-rations' -Name 'night-rations' -Replay 'night-rations' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'calendar-tomorrow' -Name 'calendar-tomorrow' -Replay 'calendar-tomorrow' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'festival-pantry' -Name 'festival-pantry' -Replay 'festival-pantry' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'market-reserve' -Name 'market-reserve' -Replay 'market-reserve' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'ration-priority' -Name 'ration-priority' -Replay 'ration-priority' -Resolution $fullResolution
@@ -434,6 +435,7 @@ try {
         }
         if ($Rations) {
             Start-VerifiedGame -Directory $release -Profile 'night-rations-compact' -Name 'night-rations-1024x768' -Replay 'night-rations' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'calendar-tomorrow-compact' -Name 'calendar-tomorrow-1024x768' -Replay 'calendar-tomorrow' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'festival-pantry-compact' -Name 'festival-pantry-1024x768' -Replay 'festival-pantry' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'market-reserve-compact' -Name 'market-reserve-1024x768' -Replay 'market-reserve' -Resolution '1024x768'
         }

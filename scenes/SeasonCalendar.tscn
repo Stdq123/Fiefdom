@@ -36,7 +36,7 @@ theme_override_constants/separation = 15
 
 [node name="Header" type="HBoxContainer" parent="MapModal/Center/Book/Stack"]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 14
 
 [node name="Title" type="Label" parent="MapModal/Center/Book/Stack/Header"]
 layout_mode = 2
@@ -49,6 +49,27 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.72, 0.81, 0.68, 1)
+
+[node name="PreviousYear" type="Button" parent="MapModal/Center/Book/Stack/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "上一年"
+
+[node name="NextYear" type="Button" parent="MapModal/Center/Book/Stack/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "下一年"
+
+[node name="Today" type="Button" parent="MapModal/Center/Book/Stack/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(104, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "回到今日"
 
 [node name="CloseMap" type="Button" parent="MapModal/Center/Book/Stack/Header"]
 unique_name_in_owner = true
@@ -131,10 +152,24 @@ layout_mode = 2
 [node name="Rule" type="HSeparator" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
 layout_mode = 2
 
-[node name="Order" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+[node name="OrderRow" type="HBoxContainer" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Order" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column/OrderRow"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/line_spacing = 5
+autowrap_mode = 3
+
+[node name="OrderBook" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/OrderRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+text = "查看交货簿"
 
 [node name="Event" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
 unique_name_in_owner = true

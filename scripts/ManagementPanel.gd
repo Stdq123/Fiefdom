@@ -197,8 +197,11 @@ func _refresh_input_hints() -> void:
 	section_hint.visible = GamepadInput.active
 	close_button.text = "返回  B" if GamepadInput.active else "返回  Esc"
 
-func show_season_orders() -> void:
+func show_season_orders(upcoming := false) -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(season_order_panel)
+	if upcoming and season_order_panel.next_plan_button.is_visible_in_tree():
+		season_order_panel.next_plan_button.grab_focus()
+		GamepadInput.snap_pointer_to_focus()
 
 func show_market() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(market_panel)
