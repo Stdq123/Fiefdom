@@ -34,6 +34,11 @@ func refresh_plot() -> void:
 	if next_seed:
 		var waiting := next_seed.is_water_crop and not Global.irrigation.supplies(grid_pos)
 		var deferred := Global.deferred_field_sowing.has(grid_pos)
+		if FieldSeedPlan.is_order(plan):
+			var note := " · 暂缓" if deferred else (" · 待渠水" if waiting else "")
+			text += "\n备货 %s%s" % [next_seed.crop_name, note]
+			tooltip_text = "管事为时令单种一茬。可在交货簿撤回未播的田格。"
+			return
 		if FieldSeedPlan.is_rotation(plan):
 			var main_crop := ItemManager.get_crop(FieldSeedPlan.crop_id(plan))
 			var next_label := "暂缓" if deferred else ("待渠水" if waiting else "下茬%s" % next_seed.crop_name)

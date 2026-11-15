@@ -280,6 +280,9 @@ func _run() -> void:
 			replay.start_planting_early = arguments[0] == "order-ahead"
 			replay.capture_path = capture_directory
 			await replay.run(tree)
+		"order-steward", "order-steward-baseline", "order-steward-resume":
+			var replay = load("res://tests/OrderStewardReplay.gd").new()
+			await replay.run_steward(tree, arguments[0], capture_directory)
 		"opening-order", "opening-order-pad", "opening-order-write-old", "opening-order-resume-old":
 			var replay = load("res://tests/OpeningOrderReplay.gd").new()
 			replay.use_gamepad = arguments[0] == "opening-order-pad"

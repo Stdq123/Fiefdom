@@ -646,6 +646,8 @@ func _private_plan_targets(plan: String) -> Array[Vector2i]:
 				if deferred:
 					targets.append(cell)
 			_:
+				if FieldSeedPlan.is_order(Global.field_seed_plans.get(cell, "")):
+					continue
 				if not plan.is_empty() and not include_untilled.button_pressed and not Global.tilled_cells.has(cell):
 					continue
 				if Global.field_seed_plans.get(cell, "") != plan:

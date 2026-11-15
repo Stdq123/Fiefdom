@@ -95,11 +95,20 @@ mouse_default_cursor_shape = 2
 toggle_mode = true
 text = "在田边跟踪此单"
 
-[node name="FieldWork" type="Button" parent="Current/Content"]
+[node name="FieldActions" type="HBoxContainer" parent="Current/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="FieldWork" type="Button" parent="Current/Content/FieldActions"]
 visible = false
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
-size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+
+[node name="StewardWork" type="Button" parent="Current/Content/FieldActions"]
+visible = false
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
 mouse_default_cursor_shape = 2
 
 [node name="FishRoute" type="Button" parent="Current/Content/Actions"]
@@ -182,11 +191,20 @@ tooltip_text = "可留的数量已扣除本季尚未交付的货物。"
 mouse_filter = 1
 autowrap_mode = 3
 
-[node name="FieldWork" type="Button" parent="Next/Content"]
+[node name="FieldActions" type="HBoxContainer" parent="Next/Content"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="FieldWork" type="Button" parent="Next/Content/FieldActions"]
 visible = false
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
-size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+
+[node name="StewardWork" type="Button" parent="Next/Content/FieldActions"]
+visible = false
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
 mouse_default_cursor_shape = 2
 
 [node name="LastReceipt" type="Label" parent="."]

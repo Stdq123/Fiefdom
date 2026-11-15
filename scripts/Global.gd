@@ -615,6 +615,7 @@ func is_indoors() -> bool:
 func begin_next_day() -> void:
 	current_day += 1
 	day_progress = 0.0
+	_prune_order_sowing()
 	last_dawn.clear()
 	if field_route_status not in ROTATION_ROUTES and field_route_status != OrderFieldRoute.PREPARE:
 		field_route_status = -1
@@ -954,6 +955,8 @@ func set_field_seed_plan(cell: Vector2i, plan: String) -> void:
 	if plan.is_empty():
 		_clear_seed_plan(cell)
 	elif FieldSeedPlan.is_valid(plan) and (not FieldSeedPlan.is_rotation(plan) or field_rotation.signed_day > 0):
+		if FieldSeedPlan.is_order(plan) and not _can_seed_order_crop(cell, plan):
+			return
 		field_seed_plans[cell] = plan
 
 func _clear_seed_plan(cell: Vector2i) -> void:
@@ -977,7 +980,7 @@ func next_seed_for_plan(cell: Vector2i, plan: String) -> String:
 	if plan == FieldSeedPlan.SEASONAL:
 		return FieldSeedPlan.seasonal_seed(season_index(), irrigation.supplies(cell))
 	if not FieldSeedPlan.is_rotation(plan):
-		return plan
+		return FieldSeedPlan.crop_id(plan)
 	var crop: Dictionary = active_crops.get(cell, {})
 	# Preview the soil after harvest when a crop is still in the plot.
 	var prepared: bool = fertile_cells.has(cell) if crop.is_empty() else crop.data.restores_fertility
@@ -1000,7 +1003,7 @@ func sow_field_crop(cell: Vector2i, seed_id: String) -> bool:
 		return false
 	active_crops[cell] = {"id": seed_id, "data": seed, "age": 0,
 		"growth_nights": sowing_nights(seed), "watered": false, "requires_channel": seed.is_water_crop}
-	if seed.is_perennial:
+	if seed.is_perennial or FieldSeedPlan.is_order(field_seed_plans.get(cell, "")):
 		_clear_seed_plan(cell)
 	GameEvents.farm_state_changed.emit()
 	return true
@@ -1017,9 +1020,14 @@ func field_job(worker: RetainerData, cell: Vector2i) -> FieldJob:
 	if worker.duty in [RetainerData.Duty.FIELD, RetainerData.Duty.STEWARD]:
 		if field_crop_is_dry(cell):
 			return FieldJob.WATER
+		var plan: String = field_seed_plans.get(cell, "")
+		if FieldSeedPlan.is_order(plan):
+			var seed := ItemManager.get_crop(FieldSeedPlan.crop_id(plan))
+			if worker.duty != RetainerData.Duty.STEWARD or (seed.is_water_crop and not irrigation.supplies(cell)):
+				return FieldJob.NONE
 		if not planned_field_seed(cell).is_empty():
 			return FieldJob.SOW
-		if not tilled_cells.has(cell) and field_seed_plans.has(cell) and not deferred_field_sowing.has(cell):
+		if not tilled_cells.has(cell) and not plan.is_empty() and not deferred_field_sowing.has(cell):
 			return FieldJob.TILL
 	return FieldJob.NONE
 
@@ -2420,28 +2428,145 @@ func is_season_order_harvest(cell: Vector2i, schedule: Dictionary) -> bool:
 		and season_order_crop_gap(schedule, active_crops[cell].id) > 0)
 
 func season_order_work(schedule: Dictionary) -> Dictionary:
-	if schedule.is_empty() or outcome != Outcome.RUNNING or season_order_delivered_at(schedule) > 0:
-		return {}
-	var current := season_order()
-	if schedule.start != current.start and schedule.start != current.end + 1:
+	if not _season_order_open(schedule):
 		return {}
 	var best := {}
-	var upcoming: bool = schedule.start > current_day
-	var current_delivery := {}
-	if upcoming and season_order_delivered_at(current) == 0:
-		current_delivery = current.order.need
+	var managed: Array[Vector2i] = []
+	if field_seed_plans.values().any(FieldSeedPlan.is_order):
+		managed = _stewarded_private_plots()
 	for crop_id: String in schedule.order.need:
-		var missing := season_order_crop_gap(schedule, crop_id)
+		var missing := _order_crop_field_gap(schedule, crop_id)
 		if missing == 0:
 			continue
-		missing += maxi(0, int(current_delivery.get(crop_id, 0)) - crop_stock.count(crop_id))
-		var plan := _order_crop_work(crop_id, missing, schedule.end)
+		var plan := _order_crop_work(crop_id, missing, schedule.end, managed)
 		if not plan.is_empty() and (best.is_empty() or plan.action < best.action
 			or (plan.action == best.action and plan.day < best.day)):
 			best = plan
 	return best
 
-func _order_crop_work(crop_id: String, missing: int, deadline: int) -> Dictionary:
+func _season_order_open(schedule: Dictionary) -> bool:
+	if schedule.is_empty() or outcome != Outcome.RUNNING or season_order_delivered_at(schedule) > 0:
+		return false
+	var current := season_order()
+	return schedule.start in [current.start, current.end + 1]
+
+func _order_crop_field_gap(schedule: Dictionary, crop_id: String) -> int:
+	var missing := season_order_crop_gap(schedule, crop_id)
+	if missing > 0 and schedule.start > current_day:
+		missing += maxi(0, _current_order_claim(crop_id) - crop_stock.count(crop_id))
+	return missing
+
+func steward_order_offer(schedule: Dictionary) -> Dictionary:
+	var plans: Dictionary[Vector2i, String] = {}
+	var offer := {"plans": plans, "queued": 0, "unstaffed": 0, "latest": 0}
+	if not _season_order_open(schedule) or not first_tribute_delivered():
+		return offer
+	var managed := _stewarded_private_plots()
+	for cell: Vector2i in field_seed_plans:
+		if FieldSeedPlan.order_start(field_seed_plans[cell]) == schedule.start:
+			offer.queued += 1
+			offer.unstaffed += int(cell not in managed)
+	if offer.queued > 0 or managed.is_empty():
+		return offer
+	for crop_id: String in schedule.order.need:
+		var needed := _order_crop_field_gap(schedule, crop_id)
+		if needed == 0:
+			continue
+		var crop := ItemManager.get_crop(crop_id)
+		var ripe_day := current_day + sowing_nights(crop)
+		if ripe_day > schedule.end:
+			continue
+		needed -= _order_expected_stock(schedule, crop_id, crop, managed)
+		for cell in managed:
+			if needed <= 0:
+				break
+			if active_crops.has(cell) or field_seed_plans.has(cell) or plans.has(cell):
+				continue
+			if crop.is_water_crop and not irrigation.supplies(cell):
+				continue
+			plans[cell] = crop_id
+			needed -= _order_crop_yield(cell, crop)
+			offer.latest = maxi(offer.latest, ripe_day)
+	return offer
+
+func _stewarded_private_plots() -> Array[Vector2i]:
+	var plots: Array[Vector2i] = []
+	if well_fields.is_empty():
+		return plots
+	for worker in retainers:
+		if worker.duty != RetainerData.Duty.STEWARD:
+			continue
+		var bounds := _well_field_cells(stewarded_field(worker).center_pos)
+		for y in range(bounds.position.y, bounds.end.y):
+			for x in range(bounds.position.x, bounds.end.x):
+				var cell := Vector2i(x, y)
+				if not is_public_plot(cell) and cell not in plots:
+					plots.append(cell)
+	plots.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+		return tilled_cells.has(a) and not tilled_cells.has(b))
+	return plots
+
+func _order_expected_stock(schedule: Dictionary, crop_id: String, crop: CropData, managed: Array[Vector2i]) -> int:
+	var expected := 0
+	for cell: Vector2i in active_crops:
+		var plant: Dictionary = active_crops[cell]
+		if plant.id != crop_id or is_public_plot(cell) or crop_night_status(cell) == NightGrowth.BLOCKED:
+			continue
+		if current_day + maxi(0, int(plant.growth_nights) - int(plant.age)) <= schedule.end:
+			expected += _order_crop_yield(cell, crop)
+	for cell in managed:
+		var plan: String = field_seed_plans.get(cell, "")
+		if (not active_crops.has(cell) and not deferred_field_sowing.has(cell)
+				and next_seed_for_plan(cell, plan) == crop_id
+				and (not crop.is_water_crop or irrigation.supplies(cell))):
+			expected += _order_crop_yield(cell, crop)
+	return expected
+
+func _order_crop_yield(cell: Vector2i, crop: CropData) -> int:
+	return harvest_proceeds(false, crop.sell_price, crop_rotation_bonus(cell, crop), tax_reform_choice, tax_rate).stock
+
+func queue_steward_order_sowing(schedule: Dictionary) -> bool:
+	var plans: Dictionary = steward_order_offer(schedule).plans
+	if plans.is_empty():
+		return false
+	for cell: Vector2i in plans:
+		set_field_seed_plan(cell, FieldSeedPlan.for_order(schedule.start, plans[cell]))
+	if schedule.start > current_day or pinned_season_order().is_empty():
+		pin_season_order(true, schedule.start > current_day)
+	GameEvents.farm_state_changed.emit()
+	return true
+
+func cancel_order_sowing(start_day: int) -> void:
+	if start_day <= 0:
+		return
+	var changed := false
+	for cell: Vector2i in field_seed_plans.keys():
+		if FieldSeedPlan.order_start(field_seed_plans[cell]) == start_day:
+			_clear_seed_plan(cell)
+			changed = true
+	if changed:
+		GameEvents.farm_state_changed.emit()
+
+func _can_seed_order_crop(cell: Vector2i, plan: String) -> bool:
+	var start := FieldSeedPlan.order_start(plan)
+	var crop_id := FieldSeedPlan.crop_id(plan)
+	var crop := ItemManager.get_crop(crop_id)
+	var schedule := season_order(start)
+	return (first_tribute_delivered() and _unlocked_field_contains(cell) and not is_public_plot(cell)
+		and not active_crops.has(cell) and schedule.start == start and _season_order_open(schedule)
+		and crop_id in schedule.order.need and current_day + sowing_nights(crop) <= schedule.end)
+
+func _prune_order_sowing() -> void:
+	var changed := false
+	for cell: Vector2i in field_seed_plans.keys():
+		var plan: String = field_seed_plans[cell]
+		if FieldSeedPlan.is_order(plan) and not _can_seed_order_crop(cell, plan):
+			_clear_seed_plan(cell)
+			changed = true
+	if changed:
+		GameEvents.farm_state_changed.emit()
+
+func _order_crop_work(crop_id: String, missing: int, deadline: int, managed: Array[Vector2i]) -> Dictionary:
 	var crop := ItemManager.get_crop(crop_id)
 	var sow_day := current_day + sowing_nights(crop)
 	var dry := {}
@@ -2461,8 +2586,14 @@ func _order_crop_work(crop_id: String, missing: int, deadline: int) -> Dictionar
 					continue
 				var plant: Dictionary = active_crops.get(cell, {})
 				if plant.is_empty():
+					if sow_day > deadline:
+						continue
 					var priority := _order_sowing_priority(cell, crop_id, crop.is_water_crop)
-					if sow_day <= deadline and priority > sow_priority:
+					if (priority >= 0 and cell in managed and not deferred_field_sowing.has(cell)
+							and FieldSeedPlan.is_order(field_seed_plans.get(cell, ""))):
+						expected += _order_crop_yield(cell, crop)
+						continue
+					if priority > sow_priority:
 						sow = _order_work_at(cell, crop_id, OrderWork.SOW, sow_day)
 						sow_priority = priority
 					continue
@@ -2474,14 +2605,13 @@ func _order_crop_work(crop_id: String, missing: int, deadline: int) -> Dictionar
 				var ready_day := current_day + int(plant.growth_nights) - int(plant.age)
 				if status == NightGrowth.BLOCKED or ready_day > deadline:
 					continue
-				var yield_bonus := crop_rotation_bonus(cell, crop)
-				var amounts := harvest_proceeds(false, crop.sell_price, yield_bonus, tax_reform_choice, tax_rate)
-				expected += int(amounts.stock)
+				var amount := _order_crop_yield(cell, crop)
+				expected += amount
 				if status == NightGrowth.DRY:
 					if dry.is_empty() or ready_day < dry.day:
 						dry = _order_work_at(cell, crop_id, OrderWork.WATER, ready_day)
 				else:
-					watered += int(amounts.stock)
+					watered += amount
 					if growing.is_empty() or ready_day < growing.day:
 						growing = _order_work_at(cell, crop_id, OrderWork.WAIT, ready_day)
 	if watered < missing and not dry.is_empty():
@@ -2575,6 +2705,7 @@ func deliver_season_order(start_day: int, paid_in_food: bool) -> bool:
 		food_storage += rewards.food
 	else:
 		money += rewards.copper
+	cancel_order_sowing(start_day)
 	GameEvents.inventory_changed.emit(player_inventory)
 	if not fish.is_empty():
 		GameEvents.fish_changed.emit()

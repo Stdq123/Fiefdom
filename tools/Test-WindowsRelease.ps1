@@ -139,6 +139,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/BackpackReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/WestRoadReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/OrderPreparationReplay.gd'), (Join-Path $repo 'tests/SecondYearOrdersReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/OrderStewardReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/WatchReliefReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/SeedGardenReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ResearchRationsReplay.gd') -Destination $testDirectory
@@ -262,6 +263,7 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'freight-wait' -Name 'freight-wait' -Replay 'freight-wait' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'reformed-orders' -Name 'reformed-orders' -Replay 'reformed-orders' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'reformed-order-ahead' -Name 'reformed-order-ahead' -Replay 'reformed-order-ahead'
+        Start-VerifiedGame -Directory $release -Profile 'order-steward' -Name 'order-steward' -Replay 'order-steward' -Resolution $fullResolution
     }
     if ($FieldRotationPlans) {
         Start-VerifiedGame -Directory $release -Profile 'field-rotation-plans' -Name 'field-rotation-plans' -Replay 'field-rotation-plans'
@@ -382,6 +384,7 @@ try {
         }
         if ($OrderCampaign) {
             Start-VerifiedGame -Directory $release -Profile 'freight-wait-compact' -Name 'freight-wait-1024x768' -Replay 'freight-wait' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'order-steward-compact' -Name 'order-steward-1024x768' -Replay 'order-steward' -Resolution '1024x768'
         }
         if ($RavineLayout) {
             Start-VerifiedGame -Directory $release -Profile 'ravine-map-compact' -Name 'ravine-map-1024x768' -Replay 'ravine-map' -Resolution '1024x768'
