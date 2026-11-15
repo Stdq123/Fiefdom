@@ -283,6 +283,7 @@ func _sell() -> void:
 	var lots := ItemManager.describe_crops(Global.market_crop_plan(amount, id))
 	if Global.sell_crops(amount, id):
 		receipt.text = "售出 %s · 铜钱 +%d" % [lots, amount * Global.balance.market_crop_price]
+		AudioManager.play_trade_cue(AudioManager.TradeCue.SALE)
 
 func _sell_reform_surplus() -> void:
 	var sale := Global.sell_crops_for_reform(reform_quote)
@@ -293,16 +294,19 @@ func _sell_reform_surplus() -> void:
 	receipt.text = "售出 %s · 现有 %d 铜钱" % [ItemManager.describe_crops(sale.used), sale.balance]
 	if sale.balance >= sale.target:
 		receipt.text += " · 铜钱已达标"
+	AudioManager.play_trade_cue(AudioManager.TradeCue.SALE)
 
 func _convert() -> void:
 	var amount := int(quantity.value)
 	if Global.convert_inventory_to_food(amount, _selected_crop()):
 		receipt.text = "转粮完成 · 粮食 +%d" % amount
+		AudioManager.play_trade_cue(AudioManager.TradeCue.STORE_FOOD)
 
 func _buy() -> void:
 	var amount := int(quantity.value)
 	if Global.buy_market_food(amount):
 		receipt.text = "购粮完成 · 粮食 +%d · 铜钱 −%d" % [amount, amount * Global.balance.market_food_price]
+		AudioManager.play_trade_cue(AudioManager.TradeCue.PURCHASE)
 
 func _reserve() -> void:
 	var quote := reserve_quote
@@ -317,3 +321,4 @@ func _reserve() -> void:
 		return
 	var title := "开垦粮已备齐" if construction else "三夜粮已备好"
 	receipt.text = "%s · 入仓 %d 份 · 实付 %d 铜钱" % [title, quote.food, quote.copper]
+	AudioManager.play_trade_cue(AudioManager.TradeCue.PURCHASE if quote.copper > 0 else AudioManager.TradeCue.STORE_FOOD)

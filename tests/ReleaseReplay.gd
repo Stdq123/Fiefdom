@@ -368,6 +368,11 @@ func _run() -> void:
 			var replay = load("res://tests/WestMarketReplay.gd").new()
 			replay.capture_dir = capture_directory
 			await replay.run(tree)
+		"market-audio", "market-audio-before":
+			var replay = load("res://tests/MarketAudioReplay.gd").new()
+			replay.capture_dir = capture_directory
+			replay.previous_release = arguments[0] == "market-audio-before"
+			await replay.run(tree)
 		"market-dye-yard", "market-dye-old-write", "market-dye-old-resume":
 			var replay = load("res://tests/MarketDyeYardReplay.gd").new()
 			replay.capture_dir = capture_directory

@@ -1,5 +1,7 @@
 extends Node
 
+enum TradeCue { SALE, PURCHASE, STORE_FOOD }
+
 const SFX_SAMPLE_RATE := 22050
 # Indexed by Player.Action from TILL through HARVEST.
 const FIELD_SOUND_PATHS := [
@@ -16,6 +18,11 @@ const TRADITION_CUE := preload("res://assets/audio/ledger/council-tribute.wav")
 const REFORM_CUE := preload("res://assets/audio/ledger/council-tax.wav")
 const RESEARCH_CUE := preload("res://assets/audio/ledger/council-research.wav")
 const LEDGER_MUSIC_GAIN := 0.70
+const TRADE_CUES := [
+	preload("res://assets/audio/market/coins-received.wav"),
+	preload("res://assets/audio/market/purchase.wav"),
+	preload("res://assets/audio/market/grain-stored.wav"),
+]
 const TITLE_SCORE := "res://assets/audio/music/score-title.ogg"
 const RAVINE_SCORE := "res://assets/audio/music/score-ravine.ogg"
 const WEST_MARKET_SCORE := "res://assets/audio/music/score-west-market.ogg"
@@ -175,6 +182,9 @@ func play_field_action(action: int) -> void:
 		return
 	sfx_player.stream = sound
 	sfx_player.play()
+
+func play_trade_cue(cue: TradeCue) -> void:
+	play_sfx(TRADE_CUES[cue], -9.0)
 
 func play_sfx(stream: AudioStream, volume := 0.0, pitch := 1.0, music_gain := 1.0) -> void:
 	if DisplayServer.get_name() == "headless":

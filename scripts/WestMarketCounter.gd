@@ -105,7 +105,7 @@ func _buy_market_produce() -> void:
 		grain.receipt.text = "%s已入私仓 · 铜钱 −%d" % [
 			ItemManager.crop_label(Global.market_produce_crop()), Global.market_produce_price()]
 		close_button.grab_focus()
-		AudioManager.play_ui_sfx(1.12)
+		AudioManager.play_trade_cue(AudioManager.TradeCue.PURCHASE)
 
 func _refresh_order_route() -> void:
 	order_route.visible = grain.visible and Global.can_deliver_season_order(Global.season_order())
@@ -139,4 +139,4 @@ func _refresh_silk() -> void:
 func _sell_silk() -> void:
 	if Global.use_workshop(SilkWorkshop.Action.SELL):
 		silk_receipt.text = "已售一匹丝绸 · 铜钱 +%d" % Global.balance.silk_sell_price
-		AudioManager.play_ui_sfx(1.12)
+		AudioManager.play_trade_cue(AudioManager.TradeCue.SALE)

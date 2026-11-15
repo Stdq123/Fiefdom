@@ -55,4 +55,6 @@ func _trade(action: Sheepfold.Action) -> void:
 			receipt.text = "蔡娘收下了一份羊毛。"
 		Sheepfold.Action.WEAVE_COAT:
 			receipt.text = "到堂屋衣架旁试穿。"
-	AudioManager.play_ui_sfx(1.10)
+			AudioManager.play_ui_sfx(1.10)
+			return
+	AudioManager.play_trade_cue(AudioManager.TradeCue.SALE if action == Sheepfold.Action.SELL_WOOL else AudioManager.TradeCue.PURCHASE)

@@ -83,7 +83,7 @@ function Start-VerifiedGame {
     $log = Join-Path $evidence "$Name.log"
     $frameLimit = if ($Replay -like '*-steward' -or $Replay -in 'reformed-orders', 'reformed-order-ahead', 'reformed-field-work-wait') { '42000' } elseif ($Replay) { '12000' } else { '180' }
     $arguments = @('--quit-after', $frameLimit, '--log-file', ('"' + $log + '"'))
-    $arguments += if ($Replay -eq 'soak') {
+    $arguments += if ($Replay -eq 'soak' -or ($Resolution -and $Replay -eq 'market-audio')) {
         '--max-fps', '60', '--audio-driver', 'Dummy'
     } elseif ($Resolution -and $Replay -in 'ambience-travel', 'raid-feedback', 'west-market', 'freight-wait', 'ledger-audio') {
         # Audio playback and recordings follow wall time.
@@ -149,6 +149,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldSoilReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FestivalPantryReplay.gd'), (Join-Path $repo 'tests/CalendarTomorrowReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/LedgerAudioReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/MarketAudioReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/WinterPondReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldStrokeReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/WalkingCheckpointReplay.gd') -Destination $testDirectory
@@ -360,6 +361,9 @@ try {
     }
     if ($MarketWayfinding) {
         Start-VerifiedGame -Directory $release -Profile 'west-market' -Name 'west-market' -Replay 'west-market' -Resolution $fullResolution
+        if ($Capture) {
+            Start-VerifiedGame -Directory $release -Profile 'market-audio' -Name 'market-audio' -Replay 'market-audio' -Resolution $fullResolution
+        }
         Start-VerifiedGame -Directory $release -Profile 'west-road' -Name 'west-road' -Replay 'west-road' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'west-road-bank-rain' -Name 'west-road-bank-rain' -Replay 'west-road-bank-rain'
         Start-VerifiedGame -Directory $release -Profile 'west-road-bank-winter' -Name 'west-road-bank-winter' -Replay 'west-road-bank-winter'
@@ -421,6 +425,7 @@ try {
         }
         if ($MarketWayfinding) {
             Start-VerifiedGame -Directory $release -Profile 'market-wayfinding-compact' -Name 'market-wayfinding-1024x768' -Replay 'market-wayfinding' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'market-audio-compact' -Name 'market-audio-1024x768' -Replay 'market-audio' -Resolution '1024x768'
         }
         if ($MarketDyeYard) {
             Start-VerifiedGame -Directory $release -Profile 'market-dye-yard-compact' -Name 'market-dye-yard-1024x768' -Replay 'market-dye-yard' -Resolution '1024x768'
