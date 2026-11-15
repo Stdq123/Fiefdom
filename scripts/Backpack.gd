@@ -7,7 +7,7 @@ enum Page { CROPS, FISH, CRAFT }
 const FLEECE := preload("res://assets/world/sheepfold/yard.svg")
 const SACK := preload("res://assets/world/estate-storage.svg")
 const SILK_MATERIALS := preload("res://assets/inventory/silk-materials.svg")
-const HERB_BED := preload("res://assets/world/bamboo-herb-bed.svg")
+const FORAGE_ART := preload("res://assets/world/ravine-forage.svg")
 const POCKET_MINIMUM := Vector2(216, 58)
 const ITEM_NAME_INK := Color("#ffe9bd")
 const QUANTITY_INK := Color("#e7bf96")
@@ -38,7 +38,7 @@ var page := Page.CROPS
 func _ready() -> void:
 	%BagIcon.texture = HUDIcons.icon(HUDIcons.Symbol.BACKPACK)
 	%CoinIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
-	%HerbIcon.texture = _atlas(HERB_BED, Rect2(55, 5, 10, 13))
+	%HerbIcon.texture = _atlas(FORAGE_ART, Rect2(136, 0, 28, 28))
 	for index in CropStock.IDS.size():
 		var pocket := Panel.new()
 		pocket.custom_minimum_size = POCKET_MINIMUM

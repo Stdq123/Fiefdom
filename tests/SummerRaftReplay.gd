@@ -164,6 +164,7 @@ func _walk_to_landing() -> bool:
 	for point: Vector2 in guide.route.duplicate():
 		await Campaign.walk_to(tree, walker, point)
 	await tree.physics_frame
+	await _frame("03a-open-landing" if state.current_day == day else "07a-quiet-landing")
 	return _expect(walker.interaction_target == ravine.raft_landing and guide.destination_name.is_empty(),
 		"Follow the marked path to the actual raft landing.")
 
