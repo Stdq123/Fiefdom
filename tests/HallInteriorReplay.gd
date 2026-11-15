@@ -108,13 +108,24 @@ func _leave() -> bool:
 	return _expect(player.camera.is_current() and player.global_position.distance_to(hall.get_node("Yard").global_position) < 3.0
 		and ui.hud.get_node("SeedBelt").visible, "The exit returns to the path and restores field controls.")
 
-func _read_desk() -> bool:
+func _check_room_layout() -> void:
 	await _walk_in_room(Vector2(0, -50))
+	var by_table := room.to_local(player.global_position)
+	_expect(by_table.y > -6.0 and by_table.y < -4.0 and player.interaction_target == room.get_node("DecorShelf"),
+		"The tabletop stops forward movement at its visible front edge, with the decor action in reach.")
+	await _snapshot("02a-at-the-display-table")
+	await _walk_in_room(Vector2(0, 18))
+	await _walk_in_room(Vector2(29, -50))
 	var floor_position := room.to_local(player.global_position)
 	var terrain := world.get_node("Landscape").terrain_audio as Node
-	_expect(floor_position.y > -23.0 and floor_position.y < -19.0
+	_expect(floor_position.x > 25.0 and floor_position.x < 33.0 and floor_position.y > -23.0 and floor_position.y < -19.0
 		and terrain.footsteps.stream.resource_path.get_file().begins_with("plank-"),
-		"The back wall is solid and indoor movement sounds like wood.")
+		"The aisle between the display table and bed leads to the solid back wall with wood footsteps.")
+	await _snapshot("02b-window-aisle")
+	await _walk_in_room(Vector2(29, 16))
+	print("HALL_FURNITURE table_stop=", by_table, " back_wall=", floor_position)
+
+func _read_desk() -> bool:
 	await _walk_in_room(Vector2(0, 16))
 	await _walk_in_room(Vector2(-54, 12))
 	var before: int = state.player_stats.get_stat(PlayerStats.Art.LITERACY).xp
@@ -159,7 +170,7 @@ func _save_and_restore() -> bool:
 		"The manual save retains the room, practice and both plots.")
 
 func _bed_plan() -> Control:
-	await _walk_in_room(Vector2(55, 35))
+	await Campaign.walk_to(tree, player, room.get_node("Wake").global_position)
 	if not _expect(player.interaction_target == room.get_node("Bed"), "Reach the bed's foot on the floor."):
 		return null
 	await _key(KEY_E)
@@ -319,6 +330,7 @@ func _play() -> void:
 		"The estate chart places the player at the hall.")
 	await _key(KEY_M)
 	await _snapshot("02-room-at-dusk")
+	await _check_room_layout()
 	if not await _read_desk() or not await _save_and_restore():
 		return
 	prefs.map_zoom = 3.0
@@ -327,13 +339,13 @@ func _play() -> void:
 		await _harvest()
 		await _rain()
 
-func run(game_tree: SceneTree) -> void:
+func run(game_tree: SceneTree, capture_dir := "") -> void:
 	tree = game_tree
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated indoor replay profile."):
 		tree.quit(1)
 		return
 	state = tree.root.get_node("Global")
-	captures = OS.get_environment("FIEFDOM_HALL_CAPTURES")
+	captures = OS.get_environment("FIEFDOM_HALL_CAPTURES") if capture_dir.is_empty() else capture_dir
 	tree.root.notify_mouse_entered()
 	seed(1109)
 	await _play()

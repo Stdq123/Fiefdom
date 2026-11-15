@@ -13,13 +13,25 @@
 atlas = ExtResource("2_art")
 region = Rect2(0, 0, 208, 144)
 
+[sub_resource type="AtlasTexture" id="Atlas_front_left"]
+atlas = ExtResource("2_art")
+region = Rect2(13, 122, 77, 12)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Atlas_front_right"]
+atlas = ExtResource("2_art")
+region = Rect2(118, 122, 77, 12)
+filter_clip = true
+
 [sub_resource type="AtlasTexture" id="Atlas_desk"]
 atlas = ExtResource("2_art")
 region = Rect2(0, 144, 48, 32)
+filter_clip = true
 
 [sub_resource type="AtlasTexture" id="Atlas_bed"]
 atlas = ExtResource("2_art")
 region = Rect2(48, 144, 52, 48)
+filter_clip = true
 
 [sub_resource type="AtlasTexture" id="Atlas_shelf"]
 atlas = ExtResource("6_decor_art")
@@ -40,6 +52,9 @@ size = Vector2(18, 6)
 
 [sub_resource type="RectangleShape2D" id="Shape_desk"]
 size = Vector2(38, 14)
+
+[sub_resource type="RectangleShape2D" id="Shape_shelf"]
+size = Vector2(36, 14)
 
 [sub_resource type="RectangleShape2D" id="Shape_bed"]
 size = Vector2(40, 32)
@@ -75,6 +90,18 @@ polygon = PackedVector2Array(-512, -384, 512, -384, 512, 384, -512, 384)
 z_index = -2
 texture = SubResource("Atlas_room")
 
+[node name="FrontLeft" type="Sprite2D" parent="."]
+position = Vector2(-91, 56)
+texture = SubResource("Atlas_front_left")
+centered = false
+offset = Vector2(0, -6)
+
+[node name="FrontRight" type="Sprite2D" parent="."]
+position = Vector2(14, 56)
+texture = SubResource("Atlas_front_right")
+centered = false
+offset = Vector2(0, -6)
+
 [node name="Decor" type="Node2D" parent="."]
 script = ExtResource("7_decor_view")
 atlas = ExtResource("6_decor_art")
@@ -84,21 +111,24 @@ z_index = -1
 position = Vector2(-29, 5)
 centered = false
 
-[node name="Display" type="Sprite2D" parent="Decor"]
-z_index = -1
-position = Vector2(-12, -53)
-centered = false
-
-[node name="DecorShelf" type="Node2D" parent="." groups=["interactable"]]
+[node name="DecorShelf" type="StaticBody2D" parent="." groups=["interactable"]]
 position = Vector2(0, -12)
+collision_mask = 0
 script = ExtResource("3_furniture")
 action = 3
 
 [node name="Sprite" type="Sprite2D" parent="DecorShelf"]
-z_index = -1
 position = Vector2(-21, -17)
 texture = SubResource("Atlas_shelf")
 centered = false
+
+[node name="Display" type="Sprite2D" parent="DecorShelf"]
+position = Vector2(-12, -38)
+centered = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DecorShelf"]
+position = Vector2(-1, -7)
+shape = SubResource("Shape_shelf")
 
 [node name="Hint" type="Label" parent="DecorShelf"]
 texture_filter = 2
@@ -172,7 +202,7 @@ theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
 
 [node name="Bed" type="StaticBody2D" parent="." groups=["interactable"]]
-position = Vector2(55, 14)
+position = Vector2(60, 14)
 collision_mask = 0
 script = ExtResource("3_furniture")
 action = 1
@@ -264,7 +294,7 @@ position = Vector2(0, 38)
 rotation = -1.5707964
 
 [node name="Wake" type="Marker2D" parent="."]
-position = Vector2(55, 35)
+position = Vector2(60, 35)
 rotation = 1.5707964
 
 [node name="RoomCamera" type="Camera2D" parent="."]
@@ -277,7 +307,7 @@ color = Color(1, 0.68, 0.39, 1)
 energy = 0.32
 range_z_min = -2
 texture = SubResource("Texture_glow")
-texture_scale = 1.57
+texture_scale = 1.16
 
 [node name="WindowLight" type="PointLight2D" parent="."]
 position = Vector2(0, -31)

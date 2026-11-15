@@ -122,7 +122,7 @@ function Start-VerifiedGame {
     }
     $lines = Get-Content -LiteralPath $log -Encoding utf8
     $marker = if ($Replay) { 'SCENARIO_OK' } else { 'Fiefdom title ready' }
-    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|CALENDAR_|RESEARCH_RATIONS_|GAMEPAD_|DRIVING_|BOW_AIM_|WINTER_|AUTUMN_|BINDING_|RAFT_|TITLE_|BACKPACK_|DECOR_|ROUTE_|COUNCIL_PREP_|COUNCIL_SILK_|DIRECTION_|PLAN_|TRIBUTE_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|CANAL_DOOR_|SPRING_|ESTATE_PROGRESS_|ESTATE_PROVISIONS|RECRUITMENT_|FIELD_ACCESS_|FIELD_STROKE_|WORKSITE_|FIELD_ROUTE_|FIELD_NIGHT_|FIELD_BEDTIME|MORNING_|PAVILION_EVENING_|FISH_MARKET_|RAVINE_MAP_|SHORTCUT_|TRAP_|MARKET_WAYFINDING_|ORDER_AHEAD_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
+    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|CALENDAR_|RESEARCH_RATIONS_|GAMEPAD_|DRIVING_|BOW_AIM_|WINTER_|AUTUMN_|BINDING_|RAFT_|TITLE_|BACKPACK_|HALL_|DECOR_|ROUTE_|COUNCIL_PREP_|COUNCIL_SILK_|DIRECTION_|PLAN_|TRIBUTE_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|CANAL_DOOR_|SPRING_|ESTATE_PROGRESS_|ESTATE_PROVISIONS|RECRUITMENT_|FIELD_ACCESS_|FIELD_STROKE_|WORKSITE_|FIELD_ROUTE_|FIELD_NIGHT_|FIELD_BEDTIME|MORNING_|PAVILION_EVENING_|FISH_MARKET_|RAVINE_MAP_|SHORTCUT_|TRAP_|MARKET_WAYFINDING_|ORDER_AHEAD_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
     if ($exitCode -ne 0 -or $lines -cnotcontains $marker -or $lines -cmatch '^\s*(?:SCRIPT ERROR|USER ERROR|ERROR|WARNING):') {
         throw "$Name failed (exit $exitCode). See $log"
     }
@@ -228,7 +228,8 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'backpack' -Name 'backpack' -Replay 'backpack'
     }
     if ($HallDecor) {
-        Start-VerifiedGame -Directory $release -Profile 'hall-decor' -Name 'hall-decor' -Replay 'hall-decor'
+        Start-VerifiedGame -Directory $release -Profile 'hall-interior' -Name 'hall-interior' -Replay 'hall-interior' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'hall-decor' -Name 'hall-decor' -Replay 'hall-decor' -Resolution $fullResolution
     }
     if ($RouteGoals) {
         Start-VerifiedGame -Directory $release -Profile 'council-prep' -Name 'council-prep' -Replay 'council-prep' -Resolution $fullResolution
@@ -384,6 +385,10 @@ try {
     if ($Capture) {
         foreach ($size in $fullResolution, '1024x768') {
             Start-VerifiedGame -Directory $release -Profile "render-$size" -Name "render-$size" -Replay 'visual' -Resolution $size
+        }
+        if ($HallDecor) {
+            Start-VerifiedGame -Directory $release -Profile 'hall-interior-compact' -Name 'hall-interior-1024x768' -Replay 'hall-interior' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'hall-decor-compact' -Name 'hall-decor-1024x768' -Replay 'hall-decor' -Resolution '1024x768'
         }
         if ($StewardCampaign) {
             Start-VerifiedGame -Directory $release -Profile 'first-steward-compact' -Name 'reformed-first-steward-1024x768' -Replay 'reformed-first-steward' -Resolution '1024x768'

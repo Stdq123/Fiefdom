@@ -137,10 +137,12 @@ func _run() -> void:
 		"backpack":
 			var replay = load("res://tests/BackpackReplay.gd").new()
 			await replay.run(tree, capture_directory)
+		"hall-interior":
+			await load("res://tests/HallInteriorReplay.gd").new().run(tree, capture_directory)
 		"hall-decor", "hall-decor-legacy":
 			var replay = load("res://tests/HallDecorReplay.gd").new()
 			replay.legacy = arguments[0] == "hall-decor-legacy"
-			await replay.run(tree)
+			await replay.run(tree, capture_directory)
 		"route-goals", "route-goals-legacy":
 			var replay = load("res://tests/RouteGoalsReplay.gd").new()
 			replay.capture_dir = capture_directory

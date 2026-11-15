@@ -4,7 +4,7 @@ extends Node2D
 @export var atlas: Texture2D
 
 @onready var mat_sprite: Sprite2D = $Mat
-@onready var display_sprite: Sprite2D = $Display
+@onready var display_sprite: Sprite2D = $"../DecorShelf/Display"
 
 func _ready() -> void:
 	show_saved()
