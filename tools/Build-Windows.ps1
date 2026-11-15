@@ -24,6 +24,8 @@ if ($LASTEXITCODE -ne 0 -or $actualVersion -notlike "$templateVersion.*") {
 }
 
 $originalAppData = $env:APPDATA
+$originalTemp = $env:TEMP
+$originalTmp = $env:TMP
 if (-not $TemplatesDirectory) {
     $TemplatesDirectory = Join-Path $originalAppData "Godot/export_templates/$templateVersion"
 }
@@ -61,6 +63,10 @@ try {
     }
 
     $env:APPDATA = Join-Path $scratch.FullName 'export-profile'
+    # Godot uses the same temporary ICO filename in every Windows export.
+    $exportTemp = (New-Item -ItemType Directory -Path (Join-Path $scratch.FullName 'export-temp')).FullName
+    $env:TMP = $exportTemp
+    $env:TEMP = $exportTemp
     $templates = (New-Item -ItemType Directory -Path (Join-Path $env:APPDATA "Godot/export_templates/$templateVersion")).FullName
     foreach ($file in $templateFiles) {
         Copy-Item -LiteralPath (Join-Path $TemplatesDirectory $file) -Destination $templates
@@ -121,6 +127,8 @@ try {
     Get-Item -LiteralPath $zipPath
 } finally {
     $env:APPDATA = $originalAppData
+    $env:TMP = $originalTmp
+    $env:TEMP = $originalTemp
     if (Test-Path -LiteralPath $pendingZip -PathType Leaf) {
         Remove-Item -LiteralPath $pendingZip
     }
