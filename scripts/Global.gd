@@ -998,9 +998,20 @@ func next_seed_for_plan(cell: Vector2i, plan: String) -> String:
 	return FieldSeedPlan.crop_id(plan) if prepared else FieldSeedPlan.BEANS
 
 func planned_field_seed(cell: Vector2i, include_untilled := false) -> String:
-	if active_crops.has(cell) or deferred_field_sowing.has(cell):
+	if active_crops.has(cell):
 		return ""
 	if not tilled_cells.has(cell) and (not include_untilled or not can_plan_field_seed(cell)):
+		return ""
+	return _usable_seed_plan(cell)
+
+func planned_seed_after_harvest(cell: Vector2i) -> String:
+	if not tilled_cells.has(cell) or not field_crop_is_ripe(cell):
+		return ""
+	var crop: CropData = active_crops[cell].data
+	return "" if crop.is_perennial else _usable_seed_plan(cell)
+
+func _usable_seed_plan(cell: Vector2i) -> String:
+	if deferred_field_sowing.has(cell):
 		return ""
 	var seed_id := next_seed_for_plan(cell, field_seed_plans.get(cell, ""))
 	var seed := ItemManager.get_crop(seed_id)

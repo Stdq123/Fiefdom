@@ -619,21 +619,38 @@ theme_override_font_sizes/font_size = 13
 toggle_mode = true
 text = "按安排播种"
 
-[node name="PrepareEmptyPlots" type="Button" parent="SeedBelt/Stack/BeltHeader"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-mouse_default_cursor_shape = 2
-theme_override_font_sizes/font_size = 13
-toggle_mode = true
-text = "整备空田"
-
 [node name="FarmStatus" type="Button" parent="SeedBelt/Stack/BeltHeader"]
 layout_mode = 2
 unique_name_in_owner = true
 mouse_default_cursor_shape = 2
 tooltip_text = "打开舆图查看田务并指路"
 theme_override_font_sizes/font_size = 13
+
+[node name="PlanActions" type="HBoxContainer" parent="SeedBelt/Stack"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="PrepareEmptyPlots" type="Button" parent="SeedBelt/Stack/PlanActions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(105, 0)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 13
+toggle_mode = true
+text = "整备空田"
+
+[node name="ReplantAfterHarvest" type="Button" parent="SeedBelt/Stack/PlanActions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(105, 0)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 13
+toggle_mode = true
+text = "收后续播"
 
 [node name="SeedSlots" type="HBoxContainer" parent="SeedBelt/Stack"]
 layout_mode = 2

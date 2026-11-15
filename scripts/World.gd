@@ -48,6 +48,7 @@ var current_seed_id: String:
 	set(value): Global.selected_seed_id = value
 var sow_from_plan := false
 var prepare_empty_plots := false
+var replant_after_harvest := false
 
 var floating_text_scene = preload("res://scenes/FloatingText.tscn")
 var retainer_scene = preload("res://scenes/Retainer.tscn")
@@ -695,6 +696,20 @@ func batch_harvest_totals(plots: Array[Vector2i]) -> Dictionary:
 			totals.leaves += proceeds.stock * Global.balance.mulberry_leaves_per_harvest
 	return totals
 
+func harvest_replanting(plots: Array[Vector2i]) -> Dictionary:
+	if not replant_after_harvest:
+		return {}
+	var seeds: Dictionary[Vector2i, String] = {}
+	for plot in plots:
+		var seed := Global.planned_seed_after_harvest(plot)
+		if not seed.is_empty():
+			seeds[plot] = seed
+	if seeds.is_empty():
+		return {}
+	var work := _planting_work(seeds)
+	work.cost += plots.size() * field_cost(FieldAction.HARVEST)
+	return work
+
 func _apply_field_batch(cell: Vector2i) -> void:
 	var action := field_action(cell)
 	if uses_preparation(action):
@@ -703,18 +718,28 @@ func _apply_field_batch(cell: Vector2i) -> void:
 	var targets := field_batch_targets(cell, action)
 	if targets.is_empty():
 		return
-	var cost := field_cost(action) * targets.size()
+	var replanting := harvest_replanting(targets) if action == FieldAction.HARVEST else {}
+	var cost: int = replanting.get("cost", field_cost(action) * targets.size())
 	if cost > Global.current_stamina:
-		spawn_floating_text(cell, "体力不足 · 整田需 %d" % cost, Color.SALMON)
+		var job := "整田" if replanting.is_empty() else "收后续播"
+		spawn_floating_text(cell, "体力不足 · %s需 %d" % [job, cost], Color.SALMON)
 		return
 	# Use the ordinary per-plot settlement so public yield, rotation and harvest receipts stay in sync.
 	# Apply the aimed plot last so the character finishes the action facing the cursor.
+	var seeds: Dictionary[Vector2i, String] = {}
+	if not replanting.is_empty():
+		seeds = replanting.seeds
 	targets.erase(cell)
+	targets.append(cell)
 	for plot in targets:
 		handle_interaction(plot)
-	handle_interaction(cell)
-	if action != FieldAction.HARVEST:
-		spawn_floating_text(cell, "%s %d 格 · −%d 体力" % [FIELD_WORK_LABELS[action], targets.size() + 1, cost], Color.WHEAT)
+		if seeds.has(plot):
+			_prepare_plot(plot)
+	if not replanting.is_empty():
+		player.show_action(Player.Action.HARVEST, to_global(get_crop_world_pos(cell)))
+		spawn_floating_text(cell, "批收 %d 格 · 续播 %d 格" % [targets.size(), seeds.size()], Color.WHEAT)
+	elif action != FieldAction.HARVEST:
+		spawn_floating_text(cell, "%s %d 格 · −%d 体力" % [FIELD_WORK_LABELS[action], targets.size(), cost], Color.WHEAT)
 
 func uses_preparation(action: FieldAction) -> bool:
 	return prepare_empty_plots and action in [FieldAction.TILL, FieldAction.SOW, FieldAction.RICE_SEED, FieldAction.NO_SEED_PLAN]
@@ -726,18 +751,21 @@ func field_preparation(cell: Vector2i) -> Dictionary:
 	if not bounds.has_area():
 		return {}
 	var seeds: Dictionary[Vector2i, String] = {}
-	var to_till := 0
-	var to_water := 0
-	var rain := Global.has_rain()
 	for y in range(bounds.position.y, bounds.end.y):
 		for x in range(bounds.position.x, bounds.end.x):
 			var plot := Vector2i(x, y)
 			var seed := Global.planned_field_seed(plot, true)
-			if seed.is_empty():
-				continue
-			seeds[plot] = seed
-			to_till += int(not Global.tilled_cells.has(plot))
-			to_water += int(not rain and not Global.irrigation.supplies(plot))
+			if not seed.is_empty():
+				seeds[plot] = seed
+	return _planting_work(seeds)
+
+func _planting_work(seeds: Dictionary[Vector2i, String]) -> Dictionary:
+	var to_till := 0
+	var to_water := 0
+	var rain := Global.has_rain()
+	for plot in seeds:
+		to_till += int(not Global.tilled_cells.has(plot))
+		to_water += int(not rain and not Global.irrigation.supplies(plot))
 	var cost := to_till * field_cost(FieldAction.TILL) + seeds.size() * field_cost(FieldAction.SOW) + to_water * field_cost(FieldAction.WATER)
 	return {"seeds": seeds, "till": to_till, "water": to_water, "cost": cost}
 
@@ -831,6 +859,7 @@ func select_seed(seed_id: String) -> void:
 		_end_sweep()
 		sow_from_plan = false
 		prepare_empty_plots = false
+		replant_after_harvest = false
 		current_seed_id = seed_id
 		seed_selected.emit(seed_id)
 
@@ -840,12 +869,19 @@ func set_sow_from_plan(active: bool) -> void:
 		sow_from_plan = active
 		if not active:
 			prepare_empty_plots = false
+			replant_after_harvest = false
 		seed_selected.emit(current_seed_id)
 
 func set_prepare_empty_plots(active: bool) -> void:
 	if sow_from_plan and prepare_empty_plots != active:
 		_end_sweep()
 		prepare_empty_plots = active
+		seed_selected.emit(current_seed_id)
+
+func set_replant_after_harvest(active: bool) -> void:
+	if sow_from_plan and replant_after_harvest != active:
+		_end_sweep()
+		replant_after_harvest = active
 		seed_selected.emit(current_seed_id)
 
 func _cycle_seed(step: int) -> void:

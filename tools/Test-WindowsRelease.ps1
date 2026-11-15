@@ -156,6 +156,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/HarvestScopeReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/PlannedSowingReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldPreparationReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/HarvestReplantReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/SowingRouteReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/EstateMapReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ManagementNavigationReplay.gd') -Destination $testDirectory
@@ -321,6 +322,9 @@ try {
     if ($FieldRoutes) {
         Start-VerifiedGame -Directory $release -Profile 'field-routes' -Name 'field-routes' -Replay 'field-routes'
         Start-VerifiedGame -Directory $release -Profile 'harvest-scope' -Name 'harvest-scope' -Replay 'harvest-scope' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'harvest-replant' -Name 'harvest-replant' -Replay 'harvest-replant' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'harvest-replant-rain' -Name 'harvest-replant-rain' -Replay 'harvest-replant-rain'
+        Start-VerifiedGame -Directory $release -Profile 'harvest-replant-reform' -Name 'harvest-replant-reform' -Replay 'harvest-replant-reform'
         Start-VerifiedGame -Directory $release -Profile 'sowing-route' -Name 'sowing-route' -Replay 'sowing-route' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'estate-map' -Name 'estate-map' -Replay 'estate-map' -Resolution $fullResolution
     }

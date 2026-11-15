@@ -110,8 +110,12 @@ func _process(_delta: float) -> void:
 		if world.uses_preparation(action):
 			if not Global.planned_field_seed(cell, true).is_empty():
 				text += "\n按住 %s 预览整备" % modifier
-		elif world.field_batch_targets(cell, action).size() > 1:
-			text += "\n按住 %s 预览整田%s" % [modifier, world.FIELD_WORK_LABELS[action]]
+		else:
+			var plots: Array[Vector2i] = world.field_batch_targets(cell, action)
+			if action == world.FieldAction.HARVEST and not world.harvest_replanting(plots).is_empty():
+				text += "\n按住 %s 预览收后续播" % modifier
+			elif plots.size() > 1:
+				text += "\n按住 %s 预览整田%s" % [modifier, world.FIELD_WORK_LABELS[action]]
 	_place_caption(cell, text, tone)
 
 func _show_field_preview(cell: Vector2i, action: int, plots: Array[Vector2i]) -> void:
@@ -137,6 +141,13 @@ func _show_field_preview(cell: Vector2i, action: int, plots: Array[Vector2i]) ->
 			harvest_note += " · 扣税 %d" % totals.levy
 		if not harvest_note.is_empty():
 			details.append(harvest_note)
+		var replanting: Dictionary = world.harvest_replanting(plots)
+		if not replanting.is_empty():
+			title = "收后续播"
+			seeds = replanting.seeds
+			cost = replanting.cost
+			details.append("下茬 %s" % _seed_varieties(seeds))
+			details.append("续播 %d 格 · 浇水 %d 格" % [seeds.size(), replanting.water])
 	_show_batch_caption(cell, title, details, cost, plots, seeds)
 
 func _show_preparation_preview(cell: Vector2i, preparation: Dictionary) -> void:
