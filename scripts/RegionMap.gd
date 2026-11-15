@@ -154,7 +154,11 @@ func _refresh_selection() -> void:
 		Region.ESTATE:
 			if region != Region.ESTATE:
 				_add_destination(Global.MARKET_RETURN, "回封地")
-			_add_destination(Global.FIELD_RETURN, Global.FIELD_RETURN, "沿路走到第一块井田的田口")
+			var work := Global.field_return_caption()
+			if work.is_empty():
+				_add_destination(Global.FIELD_RETURN, Global.FIELD_RETURN, "沿路走到第一块井田的田口")
+			else:
+				_add_destination(Global.FIELD_RETURN, "接着田务", work)
 			_add_destination(Global.WATER_SOURCE, "水源", "到泉边查看引水与水利研习")
 			if not Global.pending_freight_receipt().is_empty() or Global.market_trip_target == Global.FREIGHT_YARD:
 				_add_destination(Global.FREIGHT_YARD, Global.FREIGHT_YARD, "货到后可和申禾交谈")
@@ -193,7 +197,9 @@ func _refresh_route() -> void:
 	if selected_place == Global.MARKET_RETURN:
 		route_button.text = "指路回封地"
 	elif selected_place == Global.FIELD_RETURN:
-		route_button.text = "指路回井田"
+		var work := Global.field_return_caption()
+		route_button.text = "指路回井田" if work.is_empty() else "接着田务"
+		place_detail.text = work
 	if not selected_place.is_empty() and selected_place == active:
 		route_button.text = "正在指路"
 	if selected_place.is_empty():
@@ -211,12 +217,13 @@ func _refresh_route() -> void:
 			route_label.text += " · 经" + (EstateLayout.RAVINE_TRAIL_NAME if south else "东关")
 		elif region == Region.RAVINE and _region_for(selected_place) != Region.RAVINE:
 			route_label.text += " · 经南路小径" if south else " · 经西门"
+		var place := Global.field_return_place_name() if selected_place == Global.FIELD_RETURN else selected_place
 		if names.size() == 1:
-			route_label.text = "在%s内前往%s" % [names[0], selected_place]
+			route_label.text = "在%s内前往%s" % [names[0], place]
 		elif selected_place == Sheepfold.MEADOW:
 			route_label.text += " → " + Sheepfold.MEADOW
 		elif selected_place in Global.ESTATE_REGIONAL_STOPS:
-			route_label.text += " → " + selected_place
+			route_label.text += " → " + place
 		if selected_place == active:
 			route_label.text += " · 正在指路"
 	paper.queue_redraw()

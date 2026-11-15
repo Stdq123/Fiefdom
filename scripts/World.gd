@@ -448,7 +448,7 @@ func rotation_plot_caption(cell: Vector2i) -> String:
 		Global.NightGrowth.RIPEN: return prefix + " · 明早可收"
 	return prefix + " · 供水后过夜"
 
-func find_field_task(status: int, scope := Global.FieldScope.ALL, previous: Variant = null) -> Variant:
+func find_field_task(status: int, scope := Global.FieldScope.ALL, previous: Variant = null, returning := false) -> Variant:
 	if status == Global.MulberryRoute.PLANT:
 		return _find_mulberry_planting_site()
 	if status == Global.TributeRoute.TEND:
@@ -459,15 +459,16 @@ func find_field_task(status: int, scope := Global.FieldScope.ALL, previous: Vari
 	var nearest: Variant = null
 	var distance := INF
 	var preferred_selected := false
-	var start := estate_player_point()
+	var start := get_crop_world_pos(previous) if returning and previous != null else estate_player_point()
 	var planned_sowing := status == Global.SowingRoute.READY
+	var prefer_same_field := planned_sowing or returning
 	var candidates: Dictionary = Global.field_seed_plans if planned_sowing else active_crops
-	var current_field := _working_field_at(previous) if planned_sowing and previous != null else Rect2i()
+	var current_field := _working_field_at(previous) if prefer_same_field and previous != null else Rect2i()
 	for cell: Vector2i in candidates:
 		if not Global.field_scope_matches(cell, scope) or not matches_field_route(cell, status):
 			continue
 		var is_public := Global.is_public_plot(cell)
-		var preferred := current_field.has_point(cell) if planned_sowing else is_public
+		var preferred := current_field.has_point(cell) if prefer_same_field else is_public
 		if preferred_selected and not preferred:
 			continue
 		var distance_to_plot := start.distance_squared_to(get_crop_world_pos(cell))
@@ -476,6 +477,26 @@ func find_field_task(status: int, scope := Global.FieldScope.ALL, previous: Vari
 			distance = distance_to_plot
 			preferred_selected = preferred
 	return nearest
+
+func resumed_field_job(work: Dictionary) -> Dictionary:
+	if work.is_empty():
+		return {}
+	var status: int = work.status
+	var scope: Global.FieldScope = work.scope
+	var previous: Vector2i = work.cell
+	if status == Global.OrderFieldRoute.PREPARE:
+		var order := Global.season_order_work(Global.pinned_season_order())
+		return {} if order.is_empty() else {"status": status, "scope": scope, "cell": order.cell, "order": order}
+	if status in Global.ROTATION_ROUTES:
+		var plot := rotation_plot(previous)
+		if plot.is_empty():
+			return {}
+		var seed: String = plot.seed if plot.route != status and not plot.seed.is_empty() else work.seed
+		return {"status": plot.route, "scope": scope, "cell": previous, "seed": seed}
+	var cell: Variant = previous
+	if status == Global.TributeRoute.TEND or not Global.field_scope_matches(previous, scope) or not matches_field_route(previous, status):
+		cell = find_field_task(status, scope, previous, true)
+	return {} if cell == null else {"status": status, "scope": scope, "cell": cell}
 
 func matches_field_route(cell: Vector2i, status: int) -> bool:
 	if status == Global.SowingRoute.READY:

@@ -77,8 +77,9 @@ func add_field_return(walker: Player, choose_trip: Callable) -> void:
 	_return_player = walker
 	field_return_button = Button.new()
 	field_return_button.name = "FieldReturn"
-	field_return_button.text = "回井田"
-	field_return_button.tooltip_text = "沿路指引回第一块井田的田口"
+	var work := Global.field_return_caption()
+	field_return_button.text = "回井田" if work.is_empty() else "接着田务"
+	field_return_button.tooltip_text = "沿路指引回第一块井田的田口" if work.is_empty() else "回封地后查看先前的田务 · " + work
 	field_return_button.theme = HUD_THEME
 	field_return_button.theme_type_variation = &"HudButton"
 	field_return_button.focus_mode = Control.FOCUS_NONE

@@ -445,12 +445,12 @@ func _select(entry: Dictionary) -> void:
 		_show_category(entry.kind)
 
 func _clear_directions() -> void:
-	directions.clear_tracking()
+	directions.cancel_tracking()
 	_refresh_destination()
 
 func follow_region_destination(place: String) -> bool:
 	if place == Global.FIELD_RETURN:
-		directions.follow_first_field()
+		directions.follow_field_return()
 	elif place == Global.WATER_SOURCE:
 		directions.follow_water_source()
 	elif place == Global.FREIGHT_YARD:

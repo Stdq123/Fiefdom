@@ -65,7 +65,7 @@ func _ready() -> void:
 	elif Global.market_trip_target == Global.MARKET_RETURN:
 		Global.market_trip_target = ""
 	elif Global.market_trip_target == Global.FIELD_RETURN:
-		directions.follow_first_field()
+		directions.follow_field_return()
 	elif Global.market_trip_target == Global.WATER_SOURCE:
 		directions.follow_water_source()
 	elif Global.market_trip_target == Global.FREIGHT_YARD:
@@ -80,6 +80,8 @@ func _ready() -> void:
 			Global.market_trip_target = ""
 	elif not Global.market_trip_target.is_empty():
 		directions.follow_market(Global.market_trip_target)
+	elif Global.field_route_status >= 0 and not Global.field_return_work.is_empty():
+		directions.resume_field_work()
 	estate_map.setup(world, directions, _map_controls_blocked)
 	estate_map.field_management_requested.connect(_show_estate_management)
 	hud.map_button.pressed.connect(estate_map.open_map)

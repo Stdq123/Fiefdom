@@ -8,15 +8,8 @@ const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 const GOLD := Color("#f1d38b")
 const SHADOW := Color("#382519")
 const FIELD_ROUTES := {
-	Global.NightGrowth.READY: {"task": "收获", "plot": "可收"},
-	Global.NightGrowth.DRY: {"task": "浇水", "plot": "待浇"},
-	Global.NightGrowth.BLOCKED: {"task": "断水", "plot": "断水"},
-	Global.MulberryRoute.PLANT: {"task": "种桑"},
-	Global.MulberryRoute.WATER: {"task": "浇桑", "plot": "待浇"},
-	Global.MulberryRoute.HARVEST: {"task": "采桑叶", "plot": "可收"},
-	Global.TributeRoute.TEND: {"task": "照料公田"},
-	Global.OrderFieldRoute.HARVEST: {"task": "收交货作物", "plot": "备货"},
-	Global.SowingRoute.READY: {"task": "按安排播种"},
+	Global.NightGrowth.READY: "可收", Global.NightGrowth.DRY: "待浇", Global.NightGrowth.BLOCKED: "断水",
+	Global.MulberryRoute.WATER: "待浇", Global.MulberryRoute.HARVEST: "可收", Global.OrderFieldRoute.HARVEST: "备货",
 }
 
 var world: Node2D
@@ -28,6 +21,7 @@ var _order_work_dirty := true
 var tracked_site := -1
 var tracked_place := ""
 var tracked_place_point := Vector2.ZERO
+var return_field_title := ""
 var following_raid := false
 var caption: Label
 var plate := HUD_THEME.get_stylebox(&"panel", &"HudRail")
@@ -45,10 +39,12 @@ var freight_receipt := {}
 func setup(estate_world: Node2D, estate_hud: Control) -> void:
 	world = estate_world
 	hud = estate_hud
-	hud.cancel_directions.pressed.connect(clear_tracking)
+	hud.cancel_directions.pressed.connect(cancel_tracking)
+	GameEvents.map_departing.connect(_remember_field_work)
 	_refresh_road_network()
 	GameEvents.seed_garden_arrived.connect(_refresh_road_network)
 	GameEvents.pond_landing_opened.connect(_refresh_road_network)
+	GameEvents.well_field_reclaimed.connect(_refresh_road_network.unbind(2))
 	GameEvents.day_advanced.connect(_expire_winter_supper_route.unbind(1))
 	GameEvents.day_advanced.connect(_dirty_order_work.unbind(1))
 	GameEvents.season_order_pin_changed.connect(_dirty_order_work)
@@ -76,9 +72,14 @@ func setup(estate_world: Node2D, estate_hud: Control) -> void:
 func _refresh_road_network() -> void:
 	var tracks := [EstateLayout.ROADS[0], EstateLayout.SOUTH_LANE, EstateLayout.EAST_LANE] \
 		+ EstateLayout.WEST_ROADS + EstateLayout.SOUTH_ROADS + EstateLayout.DRIVING_ROADS
-	var approach := _first_field_approach()
-	if not approach.is_empty():
-		tracks.append(Array(approach))
+	tracks = tracks.duplicate(true)
+	var approaches: Dictionary = world.get_node("Landscape").field_approaches
+	for field_id: int in approaches:
+		var approach: PackedVector2Array = approaches[field_id]
+		if field_id == 0:
+			tracks.append(Array(approach))
+		else:
+			_link_field_approach(tracks, approach)
 	if Global.seed_garden_day() > 0:
 		tracks.append(EstateLayout.SEED_GARDEN_TRACK)
 	if Global.pond_landing_day() > 0:
@@ -86,9 +87,35 @@ func _refresh_road_network() -> void:
 	road_network = ROAD_NETWORK.new(tracks, world, world.player)
 	road_target = Vector2.INF
 
+func _link_field_approach(tracks: Array, approach: PackedVector2Array) -> void:
+	var join := approach[0]
+	var junction := Vector2.ZERO
+	var distance := INF
+	var road: Array
+	var segment := 0
+	# The drawn path meets a curved road. The routing graph needs a shared vertex.
+	for track: Array in tracks:
+		for end in range(1, track.size()):
+			var point := Geometry2D.get_closest_point_to_segment(join, track[end - 1], track[end])
+			var length := join.distance_squared_to(point)
+			if length < distance:
+				distance = length
+				junction = point
+				road = track
+				segment = end
+	if junction != road[segment - 1] and junction != road[segment]:
+		road.insert(segment, junction)
+	var spur := Array(approach)
+	if junction != join:
+		spur.push_front(junction)
+	tracks.append(spur)
+
 func follow_neighbor(speaker: String) -> bool:
-	if not is_instance_valid(world.neighbor_actor(speaker)) and _neighbor_trip_stop(speaker).is_empty():
+	var trip := _neighbor_trip_stop(speaker)
+	if not is_instance_valid(world.neighbor_actor(speaker)) and trip.is_empty():
 		return false
+	if not trip.is_empty():
+		_remember_field_work()
 	clear_tracking()
 	tracked_neighbor = speaker
 	if speaker == VisitorData.SILK_MERCHANT:
@@ -101,6 +128,7 @@ func follow_field_route(status: int, scope := Global.FieldScope.ALL) -> bool:
 	var cell: Variant = world.find_field_task(status, scope)
 	if cell == null:
 		return false
+	Global.field_return_work.clear()
 	clear_tracking()
 	Global.field_route_status = status
 	Global.field_route_scope = scope
@@ -110,6 +138,7 @@ func follow_field_route(status: int, scope := Global.FieldScope.ALL) -> bool:
 func follow_rotation_plot(cell: Vector2i, status: int) -> bool:
 	if not world.matches_field_route(cell, status):
 		return false
+	Global.field_return_work.clear()
 	clear_tracking()
 	Global.field_route_status = status
 	Global.rotation_route_cell = cell
@@ -117,6 +146,7 @@ func follow_rotation_plot(cell: Vector2i, status: int) -> bool:
 	return true
 
 func follow_order_work(plan: Dictionary) -> void:
+	Global.field_return_work.clear()
 	clear_tracking()
 	Global.field_route_status = Global.OrderFieldRoute.PREPARE
 	_order_work_dirty = false
@@ -151,8 +181,7 @@ func _track_field_plot(cell: Vector2i) -> void:
 	if status == Global.SowingRoute.READY and tracked_plot == null:
 		world.set_sow_from_plan(true)
 	tracked_plot = cell
-	var task: String = "轮作私田" if status in Global.ROTATION_ROUTES else FIELD_ROUTES[status].task
-	hud.cancel_directions.text = task + str(Global.FIELD_SCOPE_NAMES.get(Global.field_route_scope, "")) + " · 取消指路"
+	hud.cancel_directions.text = Global.field_route_name(status, Global.field_route_scope) + " · 取消指路"
 	hud.cancel_directions.show()
 
 func _refresh_field_route() -> void:
@@ -188,6 +217,8 @@ func follow_worksite(field_id: int) -> void:
 	hud.cancel_directions.show()
 
 func follow_place(title: String, point: Vector2) -> void:
+	if title in ["西市", "东关", EstateLayout.RAVINE_TRAIL_NAME]:
+		_remember_field_work()
 	clear_tracking()
 	tracked_place = title
 	tracked_place_point = point
@@ -211,6 +242,7 @@ func _expire_winter_supper_route() -> void:
 		clear_tracking()
 
 func follow_ravine(place: String) -> void:
+	_remember_field_work()
 	follow_place("竹涧 · " + place, ravine_gate_point(place))
 	Global.ravine_trip_target = place
 
@@ -218,14 +250,48 @@ func follow_water_source() -> void:
 	follow_place(Global.WATER_SOURCE, _cell_position(Global.irrigation.source_cell))
 	Global.market_trip_target = Global.WATER_SOURCE
 
-func follow_first_field() -> void:
-	var approach := _first_field_approach()
-	var foot := _cell_position(Global.FIRST_FIELD_CENTER) if approach.is_empty() else approach[-1]
+func follow_field_return() -> void:
+	var work := Global.field_return_work
+	var job: Dictionary = world.resumed_field_job(work)
+	var cell: Vector2i = job.get("cell", work.get("cell", Global.FIRST_FIELD_CENTER))
+	var field := Global.unlocked_field_at(cell)
+	var field_id: int = field.get("field_id", 0)
+	var approach: PackedVector2Array = world.get_node("Landscape").field_approaches.get(field_id, PackedVector2Array())
+	var foot := _cell_position(cell) if approach.is_empty() else approach[-1]
 	follow_place(Global.FIELD_RETURN, foot)
+	return_field_title = "井田 %d" % (field_id + 1)
+	if not job.is_empty():
+		return_field_title += " · " + Global.field_route_name(job.status, job.scope)
+	hud.cancel_directions.text = return_field_title + " · 取消指路"
 	Global.market_trip_target = Global.FIELD_RETURN
 
-func _first_field_approach() -> PackedVector2Array:
-	return world.get_node("Landscape").field_approaches.get(0, PackedVector2Array())
+func _remember_field_work() -> void:
+	if tracked_plot == null or Global.field_route_status not in Global.FIELD_ROUTE_STATES:
+		return
+	Global.field_return_work = {"cell": tracked_plot, "status": Global.field_route_status, "scope": Global.field_route_scope,
+		"seed": world.current_seed_id, "plan": world.sow_from_plan, "prepare": world.prepare_empty_plots,
+		"replant": world.replant_after_harvest}
+
+func resume_field_work() -> bool:
+	var work := Global.field_return_work.duplicate()
+	var job: Dictionary = world.resumed_field_job(work)
+	Global.field_return_work.clear()
+	clear_tracking()
+	if job.is_empty():
+		return false
+	if job.status == Global.OrderFieldRoute.PREPARE:
+		follow_order_work(job.order)
+		return true
+	world.select_seed(job.get("seed", work.seed))
+	world.set_sow_from_plan(work.plan)
+	world.set_prepare_empty_plots(work.prepare)
+	world.set_replant_after_harvest(work.replant)
+	Global.field_route_status = job.status
+	Global.field_route_scope = job.scope
+	if job.status in Global.ROTATION_ROUTES:
+		Global.rotation_route_cell = job.cell
+	_track_field_plot(job.cell)
+	return true
 
 func ravine_gate_point(place: String) -> Vector2:
 	var south: bool = (Global.ravine_shortcut_open() and world.estate_player_point().y >= EstateLayout.BAMBOO_BEND.y
@@ -234,6 +300,7 @@ func ravine_gate_point(place: String) -> Vector2:
 	return world.to_local(gate.global_position)
 
 func follow_market(place: String) -> void:
+	_remember_field_work()
 	var gate := world.get_node("WestMarketGate") as Node2D
 	follow_place(place if place == Sheepfold.MEADOW else "西市 · " + place, world.to_local(gate.global_position))
 	Global.market_trip_target = place
@@ -266,7 +333,7 @@ func destination() -> Dictionary:
 			return {"title": tracked_neighbor, "point": world.to_local(actor.global_position)}
 		return _neighbor_trip_stop(tracked_neighbor)
 	if not tracked_place.is_empty():
-		return {"title": tracked_place, "point": tracked_place_point}
+		return {"title": return_field_title if tracked_place == Global.FIELD_RETURN else tracked_place, "point": tracked_place_point}
 	return {}
 
 func _neighbor_trip_stop(speaker: String) -> Dictionary:
@@ -304,11 +371,16 @@ func _field_plot_label(cell: Vector2i) -> String:
 	if Global.field_route_status == Global.SowingRoute.READY:
 		return "%s · 按安排播%s" % [land, ItemManager.crop_label(Global.planned_field_seed(cell))]
 	var crop: CropData = Global.active_crops[cell].data
-	return "%s · %s%s" % [crop.crop_name, FIELD_ROUTES[Global.field_route_status].plot, land]
+	return "%s · %s%s" % [crop.crop_name, FIELD_ROUTES[Global.field_route_status], land]
 
 func arrive_at(speaker: String) -> void:
 	if tracked_neighbor == speaker:
 		clear_tracking()
+
+func cancel_tracking() -> void:
+	if tracked_place == Global.FIELD_RETURN or tracked_plot != null:
+		Global.field_return_work.clear()
+	clear_tracking()
 
 func clear_tracking() -> void:
 	tracked_neighbor = ""
@@ -320,6 +392,7 @@ func clear_tracking() -> void:
 	Global.rotation_route_cell = null
 	tracked_site = -1
 	tracked_place = ""
+	return_field_title = ""
 	freight_receipt = {}
 	Global.ravine_trip_target = ""
 	Global.market_trip_target = ""
@@ -380,7 +453,11 @@ func update_marker(blocked: bool) -> void:
 			return
 		var foot := world.to_local(world.player.global_position)
 		if foot.distance_to(tracked_place_point) > 12.0:
-			_mark_place(tracked_place, tracked_place_point)
+			_mark_place(return_field_title if tracked_place == Global.FIELD_RETURN else tracked_place, tracked_place_point)
+			return
+		if tracked_place == Global.FIELD_RETURN and not Global.field_return_work.is_empty():
+			if not resume_field_work():
+				GameEvents.world_notice.emit("已到田口 · 可在田务页查看接下来的活")
 			return
 		if tracked_place == Global.FREIGHT_YARD:
 			road_guide.hide()

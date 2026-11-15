@@ -303,6 +303,10 @@ func _next_reputation_step(spawn: Vector2) -> void:
 		" reputation=", before, "->", state.reputation, " next_field=", directions.tracked_plot)
 
 func _forage_and_return() -> void:
+	if ui.hud.cancel_directions.visible:
+		await _click(ui.hud.cancel_directions.get_global_rect().get_center())
+	if not _expect(state.field_route_status == -1, "Cancel the earlier field guide before checking the default return."):
+		return
 	await _key(KEY_M)
 	var chart: Control = ui.estate_map
 	await _click(chart.tabs.get_node("Ravine").get_global_rect().get_center())

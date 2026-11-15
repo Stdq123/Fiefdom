@@ -152,6 +152,7 @@ var tilled_cells: Dictionary = {}
 var field_route_status := -1
 var field_route_scope := FieldScope.ALL
 var rotation_route_cell: Variant = null
+var field_return_work: Dictionary = {}
 var field_seed_plans: Dictionary[Vector2i, String] = {}
 var deferred_field_sowing: Dictionary[Vector2i, bool] = {}
 var fertile_cells: Dictionary[Vector2i, bool] = {}
@@ -344,6 +345,7 @@ func _reset_campaign() -> void:
 	field_route_status = -1
 	field_route_scope = FieldScope.ALL
 	rotation_route_cell = null
+	field_return_work.clear()
 	field_seed_plans.clear()
 	deferred_field_sowing.clear()
 	fertile_cells.clear()
@@ -632,6 +634,8 @@ func begin_next_day() -> void:
 		field_route_status = -1
 		rotation_route_cell = null
 	field_route_scope = FieldScope.ALL
+	if field_return_work.get("status", -1) not in ROTATION_ROUTES + [OrderFieldRoute.PREPARE]:
+		field_return_work.clear()
 	away_field_report.clear()
 	field_wait_report.clear()
 	_away_work_elapsed.clear()
@@ -955,10 +959,58 @@ func till_field_plot(cell: Vector2i) -> bool:
 	return true
 
 func _unlocked_field_contains(cell: Vector2i) -> bool:
+	return not unlocked_field_at(cell).is_empty()
+
+func unlocked_field_at(cell: Vector2i) -> Dictionary:
 	for field in well_fields:
 		if field.is_unlocked and _well_field_cells(field.center_pos).has_point(cell):
-			return true
-	return false
+			return field
+	return {}
+
+func field_route_name(status: int, scope: FieldScope) -> String:
+	if status in ROTATION_ROUTES:
+		return "轮作私田"
+	var names := {
+		NightGrowth.READY: "收获", NightGrowth.DRY: "浇水", NightGrowth.BLOCKED: "断水",
+		MulberryRoute.PLANT: "种桑", MulberryRoute.WATER: "浇桑", MulberryRoute.HARVEST: "采桑叶",
+		TributeRoute.TEND: "照料公田", OrderFieldRoute.HARVEST: "收交货作物",
+		OrderFieldRoute.PREPARE: "备货私田", SowingRoute.READY: "按安排播种",
+	}
+	return String(names.get(status, "田务")) + FIELD_SCOPE_NAMES.get(scope, "")
+
+func field_return_caption() -> String:
+	if field_return_work.is_empty():
+		return ""
+	var field := unlocked_field_at(field_return_work.cell)
+	if field.is_empty():
+		return ""
+	return "井田 %d · %s" % [field.field_id + 1, field_route_name(field_return_work.status, field_return_work.scope)]
+
+func field_return_place_name() -> String:
+	return FIELD_RETURN if field_return_work.is_empty() else "田口"
+
+func _field_scope_for_route(status: int, scope: int) -> FieldScope:
+	if scope == FieldScope.PUBLIC and status in [NightGrowth.READY, NightGrowth.DRY, NightGrowth.BLOCKED]:
+		return FieldScope.PUBLIC
+	if scope == FieldScope.PRIVATE and status == NightGrowth.READY:
+		return FieldScope.PRIVATE
+	return FieldScope.ALL
+
+func _saved_field_return_work() -> Dictionary:
+	return {} if field_return_work.is_empty() else field_return_work.merged({"cell": _cell_key(field_return_work.cell)}, true)
+
+func _restore_field_return_work(saved: Variant) -> Dictionary:
+	if not saved is Dictionary:
+		return {}
+	var status := _read_save_int(saved.get("status"), -1)
+	var cell: Variant = _read_save_cell(saved.get("cell"))
+	if status not in FIELD_ROUTE_STATES or cell == null or unlocked_field_at(cell).is_empty():
+		return {}
+	var plan: bool = saved.get("plan", false) == true
+	var seed: Variant = saved.get("seed", "")
+	return {"status": status, "scope": _field_scope_for_route(status, _read_save_int(saved.get("scope"), FieldScope.ALL)),
+		"cell": cell, "seed": seed if seed is String else "", "plan": plan, "prepare": plan and saved.get("prepare", false) == true,
+		"replant": plan and saved.get("replant", false) == true}
 
 func set_field_seed_plan(cell: Vector2i, plan: String) -> void:
 	if not can_plan_field_seed(cell):
@@ -3573,6 +3625,7 @@ func _save_snapshot(origin: String) -> Error:
 		"field_route_scope": field_route_scope,
 		"field_route_public_only": field_route_scope == FieldScope.PUBLIC,
 		"rotation_route_cell": _cell_key(rotation_route_cell) if field_route_status in ROTATION_ROUTES and rotation_route_cell != null else "",
+		"field_return_work": _saved_field_return_work(),
 		"current_stamina": current_stamina,
 		"health": health,
 		"outcome": outcome,
@@ -4111,11 +4164,7 @@ func load_game(path := "") -> Error:
 	field_route_status = saved_route if saved_route in FIELD_ROUTE_STATES else -1
 	var legacy_scope := FieldScope.PUBLIC if data.get("field_route_public_only", false) == true else FieldScope.ALL
 	var saved_scope := _read_save_int(data.get("field_route_scope"), legacy_scope)
-	field_route_scope = FieldScope.ALL
-	if saved_scope == FieldScope.PUBLIC and field_route_status in [NightGrowth.READY, NightGrowth.DRY, NightGrowth.BLOCKED]:
-		field_route_scope = FieldScope.PUBLIC
-	elif saved_scope == FieldScope.PRIVATE and field_route_status == NightGrowth.READY:
-		field_route_scope = FieldScope.PRIVATE
+	field_route_scope = _field_scope_for_route(field_route_status, saved_scope)
 	rotation_route_cell = _read_save_cell(data.get("rotation_route_cell")) if field_route_status in ROTATION_ROUTES else null
 	if field_route_status in ROTATION_ROUTES and (rotation_route_cell == null or not _is_well_field_cell(rotation_route_cell, restored_fields)):
 		field_route_status = -1
@@ -4153,6 +4202,7 @@ func load_game(path := "") -> Error:
 	tilled_cells = restored_soil
 	fertile_cells = restored_fertility
 	well_fields = restored_fields
+	field_return_work = _restore_field_return_work(data.get("field_return_work"))
 	last_dawn = _restore_dawn(data.get("last_dawn"), saved_day)
 	irrigation.restore(water_source, restored_channels, _restore_field_gates(data.get("irrigation_field_gates")))
 	first_channel_growth_day = clampi(_read_save_int(data.get("first_channel_growth_day"), 0), 0, saved_day)

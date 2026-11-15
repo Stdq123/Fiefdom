@@ -177,6 +177,8 @@ func _destination_label(place: String) -> String:
 		return "竹涧 · " + Global.ravine_trip_target
 	if place == Global.MARKET_RETURN and Global.market_trip_target == Sheepfold.MEADOW:
 		return Sheepfold.MEADOW
+	if place == Global.MARKET_RETURN and Global.market_trip_target == Global.FIELD_RETURN:
+		return "封地 · " + Global.field_return_place_name()
 	if place == Global.MARKET_RETURN and Global.market_trip_target in Global.ESTATE_REGIONAL_STOPS:
 		return "封地 · " + Global.market_trip_target
 	return place

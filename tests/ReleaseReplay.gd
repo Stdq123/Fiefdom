@@ -61,6 +61,8 @@ func _run() -> void:
 			await replay.run(tree, "reformed", true, capture_directory, true, false, false, true)
 		"field-bedtime":
 			await load("res://tests/FieldWorkWaitReplay.gd").new().run_bedtime(tree, capture_directory)
+		"field-journey", "field-journey-before", "field-journey-previous", "field-journey-pad", "field-journey-rotation", "field-journey-worker":
+			await load("res://tests/FieldJourneyReplay.gd").new().run_journey(tree, capture_directory, arguments[0])
 		"sowing-hold", "sowing-previous-write", "sowing-previous-resume":
 			var replay = load("res://tests/SowingHoldReplay.gd").new()
 			replay.capture_dir = capture_directory

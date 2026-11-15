@@ -155,7 +155,7 @@ func _refresh_route() -> void:
 		%Route.text = "回封地 →"
 		route_direction = Vector2.RIGHT
 	elif tracking_field:
-		%Route.text = "封地 · %s →" % target
+		%Route.text = "封地 · %s →" % Global.field_return_place_name()
 		route_direction = Vector2.RIGHT
 		_route_to(LAYOUT.ESTATE_GATE, 8.0)
 	elif target in Global.ESTATE_REGIONAL_STOPS:

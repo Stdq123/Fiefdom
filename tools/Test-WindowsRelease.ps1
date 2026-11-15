@@ -157,6 +157,7 @@ function Install-Replay([string]$Directory) {
     Copy-Item -LiteralPath (Join-Path $repo 'tests/PlannedSowingReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldPreparationReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/HarvestReplantReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldJourneyReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/SowingRouteReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/EstateMapReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ManagementNavigationReplay.gd') -Destination $testDirectory
@@ -322,6 +323,9 @@ try {
     }
     if ($FieldRoutes) {
         Start-VerifiedGame -Directory $release -Profile 'field-routes' -Name 'field-routes' -Replay 'field-routes'
+        Start-VerifiedGame -Directory $release -Profile 'field-journey' -Name 'field-journey' -Replay 'field-journey' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'field-journey-worker' -Name 'field-journey-worker' -Replay 'field-journey-worker'
+        Start-VerifiedGame -Directory $release -Profile 'field-journey-rotation' -Name 'field-journey-rotation' -Replay 'field-journey-rotation' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'harvest-scope' -Name 'harvest-scope' -Replay 'harvest-scope' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'harvest-replant' -Name 'harvest-replant' -Replay 'harvest-replant' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'harvest-replant-rain' -Name 'harvest-replant-rain' -Replay 'harvest-replant-rain'
@@ -413,6 +417,7 @@ try {
         }
         if ($FieldRoutes) {
             Start-VerifiedGame -Directory $release -Profile 'harvest-scope-compact' -Name 'harvest-scope-1024x768' -Replay 'harvest-scope-pad' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'field-journey-compact' -Name 'field-journey-1024x768' -Replay 'field-journey-pad' -Resolution '1024x768'
         }
         if ($HallDecor) {
             Start-VerifiedGame -Directory $release -Profile 'hall-interior-compact' -Name 'hall-interior-1024x768' -Replay 'hall-interior' -Resolution '1024x768'
