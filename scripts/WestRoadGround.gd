@@ -1,16 +1,22 @@
 extends Node2D
 
 const LAYOUT := preload("res://scripts/WestRoadLayout.gd")
+const MARKET_LAYOUT := preload("res://scripts/WestMarketLayout.gd")
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const TERRAIN := preload("res://scripts/EstateTerrain.gd")
 const STONE_PAVING := preload("res://scripts/StonePaving.gd")
 const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
 const ROAD_WEATHER := preload("res://scripts/RoadWeather.gd")
 const RAVINE_RELIEF := preload("res://scripts/RavineRelief.gd")
+const RAVINE_BANKS := preload("res://scripts/RavineBanks.gd")
 const BACKDROP := Rect2(-800, -460, 1600, 960)
 const ROAD_HALF_WIDTH := 20.0
 const WATER_HALF_WIDTH := 23.0
 const MEADOW_HALF_WIDTH := 7.0
+const MARKET_SIGN := LAYOUT.MARKET_GATE + Vector2(16, -24)
+const ESTATE_SIGN := LAYOUT.ESTATE_GATE + Vector2(-17, -25)
+const MEADOW_SIGN := LAYOUT.MEADOW_JUNCTION + Vector2(33, 32)
+const WILLOWS := [Vector3(36, -55, 0.72), Vector3(-73, 111, 0.81)]
 const GROVES := [
 	Rect2(-440, -174, 299, 130), Rect2(-394, 111, 277, 146),
 	Rect2(47, -174, 392, 130), Rect2(76, 96, 370, 157),
@@ -29,14 +35,18 @@ const TREES := [
 	Vector2(231, 111), Vector2(269, 144), Vector2(320, 119),
 ]
 const BANK_PROPS := [
-	Vector3i(-62, -86, LANDSCAPE.Prop.ROCK), Vector3i(-43, -46, LANDSCAPE.Prop.REEDS),
-	Vector3i(17, -58, LANDSCAPE.Prop.REEDS), Vector3i(29, 5, LANDSCAPE.Prop.ROCK),
+	Vector3i(-62, -86, LANDSCAPE.Prop.MOSS_STONE), Vector3i(-43, -46, LANDSCAPE.Prop.REEDS),
+	Vector3i(17, -58, LANDSCAPE.Prop.REEDS), Vector3i(29, 5, LANDSCAPE.Prop.BOULDER),
 	Vector3i(16, 83, LANDSCAPE.Prop.REEDS), Vector3i(-44, 95, LANDSCAPE.Prop.REEDS),
-	Vector3i(-66, 137, LANDSCAPE.Prop.ROCK), Vector3i(-14, 142, LANDSCAPE.Prop.REEDS),
+	Vector3i(-66, 137, LANDSCAPE.Prop.MOSS_STONE), Vector3i(-14, 142, LANDSCAPE.Prop.REEDS),
 	Vector3i(-155, 84, LANDSCAPE.Prop.SHRUB), Vector3i(-108, -47, LANDSCAPE.Prop.FLOWERS),
 	Vector3i(173, 90, LANDSCAPE.Prop.FLOWERS), Vector3i(176, -24, LANDSCAPE.Prop.SHRUB),
 	Vector3i(-290, -17, LANDSCAPE.Prop.FENCE), Vector3i(-316, -17, LANDSCAPE.Prop.FENCE),
 	Vector3i(-298, 87, LANDSCAPE.Prop.FENCE), Vector3i(-324, 87, LANDSCAPE.Prop.FENCE),
+	Vector3i(-78, -67, LANDSCAPE.Prop.FERN), Vector3i(42, -30, LANDSCAPE.Prop.FERN),
+	Vector3i(-78, 93, LANDSCAPE.Prop.BANK_GRASS), Vector3i(36, 111, LANDSCAPE.Prop.PEBBLES),
+	Vector3i(207, -12, LANDSCAPE.Prop.MOSS_STONE), Vector3i(244, 78, LANDSCAPE.Prop.PEBBLES),
+	Vector3i(-214, 68, LANDSCAPE.Prop.PEBBLES),
 ]
 const PAVING_LIMIT := [
 	Vector2(-520, -20), Vector2(-146, -20), Vector2(-146, 23), Vector2(-153, 23),
@@ -44,6 +54,8 @@ const PAVING_LIMIT := [
 	Vector2(-161, 47), Vector2(-153, 47), Vector2(-153, 54), Vector2(-169, 54),
 	Vector2(-169, 92), Vector2(-520, 92),
 ]
+const LOOSE_STONES := [Vector3(-152, 27, 5), Vector3(-144, 29, 4), Vector3(-153, 39, 7),
+	Vector3(-137, 42, 4), Vector3(-147, 49, 5), Vector3(-157, 53, 6), Vector3(-142, 55, 3)]
 const RAIN_PUDDLES: Array[Rect2] = [
 	Rect2(68, 27, 36, 15), Rect2(-112, 36, 40, 14), Rect2(-218, 32, 31, 13),
 	Rect2(118, 63, 24, 9),
@@ -57,21 +69,25 @@ const SNOW_DRIFTS: Array[Rect2] = [
 var road := EstateLayout.sample_road(PackedVector2Array(LAYOUT.ROAD))
 var creek := EstateLayout.sample_road(PackedVector2Array(LAYOUT.CREEK))
 var track := _ribbon(road, ROAD_HALF_WIDTH)
-var shoulder := _ribbon(road, ROAD_HALF_WIDTH + 3.0)
+var traveled_track := _material_outline(0.0)
+var shoulder := _material_outline(3.0)
 var meadow_lane := EstateLayout.sample_road(PackedVector2Array(LAYOUT.MEADOW_TRACK))
 var meadow_track := _ribbon(meadow_lane, MEADOW_HALF_WIDTH)
 var meadow_shoulder := _ribbon(meadow_lane, MEADOW_HALF_WIDTH + 2.0)
-var bank_grass := _riverbed(WATER_HALF_WIDTH + 8.0)
-var bank_rim := _riverbed(WATER_HALF_WIDTH + 3.5)
+var bank_grass := _riverbed(WATER_HALF_WIDTH + 9.0, 2.8)
+var bank_rim := _riverbed(WATER_HALF_WIDTH + 3.8, 1.5)
 var water := _riverbed(WATER_HALF_WIDTH)
 var shelf_edges: Array[PackedVector2Array] = []
 var shelf_toes: Array[PackedVector2Array] = []
+var shoal_edges: Array[PackedVector2Array] = []
 var exposed_water := PackedVector2Array()
 var deep_water := PackedVector2Array()
 var apron_poses: Array[Transform2D] = []
 var bridge_aprons: Array[PackedVector2Array] = []
 var pavement := Geometry2D.intersect_polygons(track, PackedVector2Array(PAVING_LIMIT))[0]
-var pavement_art := STONE_PAVING.new(pavement, LAYOUT.MARKET_GATE.x)
+var pavement_art := STONE_PAVING.new(
+	Geometry2D.intersect_polygons(_material_outline(0.0, true), PackedVector2Array(PAVING_LIMIT))[0],
+	LAYOUT.MARKET_GATE.x)
 var meadow := TERRAIN.new(LAYOUT.BOUNDS.position.y)
 var weather := ROAD_WEATHER.new(RAIN_PUDDLES, SNOW_DRIFTS)
 
@@ -94,7 +110,7 @@ func _ready() -> void:
 		rail.polygon = EstateLayout.corners(Rect2(LAYOUT.BRIDGE.position.x, y, LAYOUT.BRIDGE.size.x, 2.0))
 		channel.add_child(rail)
 	add_child(channel)
-	var surface := WATER_SURFACE.new(exposed_water, 12.0, [LAYOUT.BRIDGE.grow(4.0)])
+	var surface := WATER_SURFACE.new(exposed_water, 12.0, [LAYOUT.BRIDGE.grow(4.0)], true)
 	surface.name = "WaterSurface"
 	add_child(surface)
 	surface.set_weather(LANDSCAPE.WATER_TINTS[Global.season_index()], Global.has_rain())
@@ -104,13 +120,34 @@ func _ready() -> void:
 func _ribbon(path: PackedVector2Array, width: float) -> PackedVector2Array:
 	return Geometry2D.offset_polyline(path, width, Geometry2D.JOIN_ROUND, Geometry2D.END_ROUND)[0]
 
-func _riverbed(width: float) -> PackedVector2Array:
+func _material_outline(margin: float, paving_lane := false) -> PackedVector2Array:
+	var far := PackedVector2Array()
+	var near := PackedVector2Array()
+	var market_width: float = MARKET_LAYOUT.PAVING_HALF_WIDTH if paving_lane else MARKET_LAYOUT.STREET_HALF_WIDTH
+	for index in road.size():
+		var point := road[index]
+		var before := road[maxi(0, index - 1)]
+		var after := road[mini(road.size() - 1, index + 1)]
+		var normal := before.direction_to(after).orthogonal()
+		var market_blend := 1.0 - smoothstep(LAYOUT.MARKET_GATE.x + 19.0, LAYOUT.MARKET_GATE.x + 106.0, point.x)
+		var estate_blend := smoothstep(LAYOUT.ESTATE_GATE.x - 94.0, LAYOUT.ESTATE_GATE.x - 16.0, point.x)
+		var width := lerpf(ROAD_HALF_WIDTH, market_width, market_blend)
+		width = lerpf(width, EstateLayout.ROAD_WIDTHS[0] * 0.5, estate_blend) + margin
+		var wear := 1.0 - maxf(market_blend, estate_blend)
+		far.append(point - normal * (width + sin(index * 0.56) * 0.95 * wear))
+		near.append(point + normal * (width + cos(index * 0.41 + 0.8) * 1.22 * wear))
+	near.reverse()
+	return far + near
+
+func _riverbed(width: float, roughness := 0.0) -> PackedVector2Array:
 	var left := PackedVector2Array()
 	var right := PackedVector2Array()
 	for point: Vector2 in creek:
 		var bank := sin(point.y * 0.042) * 2.7 + cos(point.y * 0.078) * 1.2
-		left.append(point - Vector2(width + bank, 0.0))
-		right.append(point + Vector2(width - bank * 0.66, 0.0))
+		var west := width + bank + sin(point.y * 0.088) * roughness
+		var east := width - bank * 0.66 + cos(point.y * 0.103) * roughness
+		left.append(point - Vector2(west, 0.0))
+		right.append(point + Vector2(east, 0.0))
 	right.reverse()
 	return left + right
 
@@ -139,8 +176,10 @@ func _build_creek_banks() -> void:
 		var drift := sin(left.y * 0.032) * 0.066
 		west_deep.append(left.lerp(right, 0.22 + drift))
 		east_deep.append(left.lerp(right, 0.78 + drift))
-	east_deep.reverse()
-	deep_water = west_deep + east_deep
+	shoal_edges = [west_deep, east_deep]
+	var deep_return := east_deep.duplicate()
+	deep_return.reverse()
+	deep_water = west_deep + deep_return
 
 func bridge_apron_at(foot: Vector2) -> bool:
 	return bridge_aprons.any(func(apron: PackedVector2Array) -> bool: return Geometry2D.is_point_in_polygon(foot, apron))
@@ -155,8 +194,10 @@ func _draw_creek_bank(edge: PackedVector2Array, toes: PackedVector2Array, stone:
 	lower.reverse()
 	var upper_return := upper.duplicate()
 	upper_return.reverse()
-	draw_colored_polygon(edge + lower, stone.lerp(Color("#253d39"), 0.49))
-	draw_colored_polygon(edge + upper_return, stone)
+	var strata := RAVINE_BANKS.ROCK_STRATA
+	TERRAIN.draw_loam(self, edge + lower, stone.lerp(Color("#253d39"), 0.55), strata)
+	TERRAIN.draw_loam(self, edge + upper_return, stone, strata)
+	draw_polyline(toes, Color("#273e38b0"), 1.0)
 	for index in range(2, edge.size() - 5, 4):
 		var high := index + posmod(floori(index * 0.25), 3)
 		var low := high + 2
@@ -166,10 +207,38 @@ func _draw_creek_bank(edge: PackedVector2Array, toes: PackedVector2Array, stone:
 			edge[low].lerp(upper[low], 0.55), upper[low].lerp(toes[low], 0.35),
 			toes[high + 1].lerp(upper[high + 1], 0.22), upper[high]])
 		if not Geometry2D.triangulate_polygon(face).is_empty():
-			draw_colored_polygon(face, stone.lightened(0.10 + 0.02 * posmod(index, 7)))
-		draw_line(edge[high], edge[high].lerp(edge[high + 1], 0.8), moss, 1.25)
+			TERRAIN.draw_loam(self, face, stone.lightened(0.10 + 0.02 * posmod(index, 7)), strata)
+		var seam := edge[high].lerp(edge[high + 1], 0.84)
+		var cap := edge[high]
+		var outside := Vector2(signf(cap.x - toes[high].x), 0)
+		var growth := PackedVector2Array([cap + Vector2(0, -2), cap + outside * (3 + index % 4),
+			seam + outside * 2.0, seam, cap.lerp(upper[high], 0.23)])
+		if not Geometry2D.triangulate_polygon(growth).is_empty():
+			TERRAIN.draw_loam(self, growth, moss.darkened(0.14), strata)
+		draw_line(cap, cap.lerp(seam, 0.58), moss.lightened(0.07), 1.0)
+		draw_line(edge[high].lerp(upper[high], 0.4), seam.lerp(upper[high + 1], 0.23), stone.lightened(0.16), 1.0)
 		draw_polyline(PackedVector2Array([edge[low], upper[low].lerp(upper[low + 1], 0.22),
 			toes[low]]), stone.darkened(0.23), 1.0)
+
+func _draw_creek_water(season: int, rain: bool) -> void:
+	var stream: Color = LANDSCAPE.WATER_TINTS[season]
+	var deep := stream.lerp(Color("#254e58"), 0.55).darkened(0.13)
+	var shallow := stream.lerp(Color("#8eac8a"), 0.54 if not rain else 0.36)
+	var gravel := RAVINE_BANKS.STREAMBED
+	TERRAIN.draw_loam(self, water, shallow, gravel)
+	draw_colored_polygon(deep_water, deep)
+	for side in shelf_toes.size():
+		var margin := shelf_toes[side]
+		var deep_edge := shoal_edges[side]
+		var lit := shallow.darkened(0.10 * side)
+		TERRAIN.draw_tiled_band(self, margin, deep_edge, lit, deep.lightened(0.05), gravel)
+		for index in range(1 + side, margin.size() - 1, 3):
+			var near := margin[index].lerp(deep_edge[index], 0.40)
+			if LAYOUT.BRIDGE.grow(6.0).has_point(near):
+				continue
+			var along := margin[index + 1].lerp(deep_edge[index + 1], 0.43)
+			var tint := Color(lit.lightened(0.33), 0.34 if rain else 0.50)
+			draw_line(near.round(), near.lerp(along, 0.64).round(), tint, 1.0)
 
 func creek_distance(foot: Vector2) -> float:
 	var nearest := INF
@@ -187,38 +256,56 @@ func _draw() -> void:
 	var rain := Global.has_rain()
 	if rain:
 		grass = grass.lerp(Color("#304b46"), 0.28)
-		loam = loam.darkened(0.15)
+		loam = loam.darkened(0.17)
 	draw_rect(BACKDROP, grass)
 	for grove: Rect2 in GROVES:
 		var edge := PackedVector2Array()
 		for point: Vector2 in GROVE_EDGE:
 			edge.append((grove.position + grove.size * point).round())
-		draw_colored_polygon(edge, grass.lerp(palette[1], 0.67))
+		draw_colored_polygon(edge, grass.lerp(palette[1], 0.43))
+	draw_colored_polygon(bank_grass, grass.lerp(palette[1], 0.49))
+	draw_colored_polygon(bank_rim, grass.lerp(Color("#8a9268"), 0.24))
+	var grain: Color = LANDSCAPE.LEAF_TINTS[season]
+	if rain:
+		grain *= Color(0.88, 0.94, 0.99)
+	grain.a = 0.32 if winter else 0.83
+	draw_texture_rect(LANDSCAPE.ESTATE_MEADOW, BACKDROP, true, grain)
+	var litter := LANDSCAPE.ESTATE_LEAF_LITTER
+	for tree: Vector2 in TREES:
+		draw_texture_rect_region(LANDSCAPE.ESTATE_ART, Rect2(tree - Vector2(30, 20), litter.size), litter, grain)
 	meadow.draw_meadow(self, grass, winter)
-	draw_texture_rect(LANDSCAPE.GRAIN, BACKDROP, true, Color(1.0, 1.0, 1.0, 0.62))
-	draw_colored_polygon(bank_grass, grass.lerp(palette[1], 0.54))
-	draw_colored_polygon(bank_rim, grass.lerp(Color("#8a9268"), 0.40))
 	_draw_meadow(grass, loam, season)
 	meadow.draw_verge(self, road, ROAD_HALF_WIDTH * 2.0, grass, winter)
-	draw_colored_polygon(shoulder, loam.lerp(grass, 0.54))
-	TERRAIN.draw_loam(self, track, loam)
-	pavement_art.draw(self, loam, winter, rain)
-	var stream_color: Color = LANDSCAPE.WATER_TINTS[season]
-	var silt := grass.lerp(Color("#a5a085"), 0.53)
-	draw_colored_polygon(water, stream_color.lerp(Color("#89a58b"), 0.48))
-	draw_colored_polygon(deep_water, stream_color.darkened(0.16))
-	WATER_SURFACE.draw_shore(self, exposed_water, silt, stream_color, winter, [LAYOUT.BRIDGE.grow(8.0)])
+	TERRAIN.draw_loam(self, shoulder, loam.lerp(grass, 0.56), TERRAIN.TRACK_GRAIN)
+	TERRAIN.draw_loam(self, traveled_track, loam, TERRAIN.TRACK_GRAIN)
+	pavement_art.draw(self, loam, winter, rain, MARKET_LAYOUT.STREET_STONE, TERRAIN.STONE_GRAIN)
+	_draw_loose_stones(loam, winter, rain)
+	_draw_creek_water(season, rain)
 	var moss := Color("#a7bbb0") if winter else grass.lerp(Color("#9a9e58"), 0.67)
 	var rock := Color("#908977").lerp(Color("#4c635e"), 0.37 if rain else 0.0)
 	for index in shelf_edges.size():
 		_draw_creek_bank(shelf_edges[index], shelf_toes[index], rock.darkened(0.13 if index == 0 else 0.0), moss)
 	for index in bridge_aprons.size():
-		RAVINE_RELIEF.draw_bridge_apron(self, bridge_aprons[index], apron_poses[index], season, rain)
+		RAVINE_RELIEF.draw_bridge_apron(self, bridge_aprons[index], apron_poses[index], season, rain, RAVINE_BANKS.ROCK_STRATA)
 	var contact_shade := LANDSCAPE.scenery_shade(rain)
 	for index in TREES.size():
-		LANDSCAPE.draw_scenery_shadow(self, TREES[index], _tree_variety(index), contact_shade)
+		LANDSCAPE.draw_sorted_prop_shadow(self, TREES[index], _tree_variety(index), contact_shade, rain)
+	for willow: Vector3 in WILLOWS:
+		LANDSCAPE.draw_sorted_prop_shadow(self, Vector2(willow.x, willow.y), LANDSCAPE.Prop.WILLOW, contact_shade, rain)
 	for prop: Vector3i in BANK_PROPS:
-		LANDSCAPE.draw_scenery_shadow(self, Vector2(prop.x, prop.y), prop.z, contact_shade)
+		LANDSCAPE.draw_sorted_prop_shadow(self, Vector2(prop.x, prop.y), prop.z, contact_shade, rain)
+	for foot: Vector2 in [MARKET_SIGN, ESTATE_SIGN, MEADOW_SIGN]:
+		draw_colored_polygon(PackedVector2Array([foot + Vector2(-7, 1), foot + Vector2(-3, -2),
+			foot + Vector2(7, -1), foot + Vector2(14, 2), foot + Vector2(8, 4), foot + Vector2(-5, 3)]), contact_shade)
+
+func _draw_loose_stones(loam: Color, winter: bool, rain: bool) -> void:
+	var stone := loam.lerp(MARKET_LAYOUT.STREET_STONE, 0.53)
+	if winter or rain:
+		stone = stone.lerp(Color("#8d9a8e"), 0.38)
+	for chip: Vector3 in LOOSE_STONES:
+		var at := Vector2(chip.x, chip.y)
+		draw_rect(Rect2(at + Vector2(1, 1), Vector2(chip.z, 2)), stone.darkened(0.30))
+		draw_line(at, at + Vector2(chip.z - 1, 0), stone.lightened(0.14), 1.0)
 
 func _tree_variety(index: int) -> int:
 	if index % 4 == 2:
@@ -229,42 +316,44 @@ func _draw_meadow(grass: Color, loam: Color, season: int) -> void:
 	var shade: Color = [Color("#6c784e"), Color("#7c8b50"), Color("#958353"), Color("#89998b")][season]
 	var edge := PackedVector2Array(LAYOUT.MEADOW_EDGE)
 	var winter := season == Global.Season.WINTER
-	TERRAIN.draw_loam(self, edge, grass.lerp(shade, 0.35))
+	TERRAIN.draw_loam(self, edge, grass.lerp(shade, 0.35), TERRAIN.TRACK_GRAIN)
 	meadow.draw_verge(self, edge, 1.5, grass.lerp(shade, 0.28), winter)
 	meadow.draw_verge(self, meadow_lane, MEADOW_HALF_WIDTH * 2.0, grass, winter)
-	draw_colored_polygon(meadow_shoulder, loam.lerp(grass, 0.52))
-	TERRAIN.draw_loam(self, meadow_track, loam)
+	TERRAIN.draw_loam(self, meadow_shoulder, loam.lerp(grass, 0.52), TERRAIN.TRACK_GRAIN)
+	TERRAIN.draw_loam(self, meadow_track, loam, TERRAIN.TRACK_GRAIN)
 
 func place_scenery(layer: Node2D) -> void:
 	var season := Global.season_index()
 	var winter := season == Global.Season.WINTER
 	var tree_art := {}
 	for variety in [LANDSCAPE.Prop.OAK, LANDSCAPE.Prop.BLOSSOM_TREE, LANDSCAPE.Prop.PINE]:
-		tree_art[variety] = LANDSCAPE.tree_texture(variety, season)
+		tree_art[variety] = LANDSCAPE.painted_tree_texture(variety, season)
+	var forked_oak := LANDSCAPE.painted_tree_texture(LANDSCAPE.Prop.OAK, season, true)
 	var wet_tint := Color(0.88, 0.94, 0.99) if Global.has_rain() else Color.WHITE
 	for index in TREES.size():
-		_prop(layer, TREES[index], tree_art[_tree_variety(index)]).self_modulate = wet_tint
-	var willow := LANDSCAPE.riverside_texture(LANDSCAPE.Prop.WILLOW, season)
-	var reedbed := LANDSCAPE.riverside_texture(LANDSCAPE.Prop.REEDS, season)
+		var variety := _tree_variety(index)
+		var texture: AtlasTexture = forked_oak if variety == LANDSCAPE.Prop.OAK and index % 2 == 1 else tree_art[variety]
+		_prop(layer, TREES[index], texture).self_modulate = wet_tint
+	var willow := LANDSCAPE.painted_riverside_texture(LANDSCAPE.Prop.WILLOW, season)
 	var plant_tint := LANDSCAPE.riverside_tint(season, Global.has_rain())
-	var willow_at_water := _prop(layer, Vector2(36, -55), willow)
-	willow_at_water.scale = Vector2.ONE * 0.72
-	willow_at_water.self_modulate = plant_tint
-	var willow_at_road := _prop(layer, Vector2(-73, 111), willow)
-	willow_at_road.scale = Vector2.ONE * 0.81
-	willow_at_road.self_modulate = plant_tint
+	for placement: Vector3 in WILLOWS:
+		var tree := _prop(layer, Vector2(placement.x, placement.y), willow)
+		tree.scale = Vector2.ONE * placement.z
+		tree.self_modulate = plant_tint
 	for mark: Vector3i in BANK_PROPS:
 		if winter and mark.z == LANDSCAPE.Prop.FLOWERS:
 			continue
-		var frame := Vector2(mark.z % 8, floori(mark.z / 8.0))
-		var texture := reedbed if mark.z == LANDSCAPE.Prop.REEDS \
-			else LANDSCAPE.atlas_texture(LANDSCAPE.SCENERY, Rect2(frame * 48.0, Vector2(48, 48)))
+		var riverside := LANDSCAPE.ESTATE_RIVER_REGIONS.has(mark.z)
+		var texture := LANDSCAPE.painted_riverside_texture(mark.z, season) if riverside \
+			else LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, LANDSCAPE.ESTATE_SITE_REGIONS[mark.z])
 		var sprite := _prop(layer, Vector2(mark.x, mark.y), texture)
-		sprite.self_modulate = plant_tint if mark.z == LANDSCAPE.Prop.REEDS else wet_tint
-	LANDSCAPE.place_waypost(layer, LAYOUT.MARKET_GATE + Vector2(16, -24), Vector2.LEFT, "西市").self_modulate = wet_tint
-	LANDSCAPE.place_waypost(layer, LAYOUT.ESTATE_GATE + Vector2(-17, -25), Vector2.RIGHT, "封地").self_modulate = wet_tint
+		sprite.self_modulate = plant_tint if riverside else wet_tint
+		if winter and mark.z in LANDSCAPE.ROCK_PROPS:
+			sprite.self_modulate *= LANDSCAPE.WINTER_ROCK_TINT
+	LANDSCAPE.place_waypost(layer, MARKET_SIGN, Vector2.LEFT, "西市", true).self_modulate = wet_tint
+	LANDSCAPE.place_waypost(layer, ESTATE_SIGN, Vector2.RIGHT, "封地", true).self_modulate = wet_tint
 	var meadow_heading: Vector2 = LAYOUT.MEADOW_TRACK[1] - LAYOUT.MEADOW_JUNCTION
-	LANDSCAPE.place_waypost(layer, LAYOUT.MEADOW_JUNCTION + Vector2(33, 32), meadow_heading, Sheepfold.MEADOW).self_modulate = wet_tint
+	LANDSCAPE.place_waypost(layer, MEADOW_SIGN, meadow_heading, Sheepfold.MEADOW, true).self_modulate = wet_tint
 
 func _prop(layer: Node2D, foot: Vector2, texture: AtlasTexture) -> Sprite2D:
 	var sprite := Sprite2D.new()

@@ -1377,19 +1377,28 @@ func _update_prop_textures() -> void:
 	for prop: int in ESTATE_SITE_REGIONS:
 		painted_textures[prop] = atlas_texture(ESTATE_ART, ESTATE_SITE_REGIONS[prop])
 	for prop: int in ESTATE_RIVER_REGIONS:
-		var region: Rect2 = ESTATE_RIVER_REGIONS[prop]
-		if season == Global.Season.WINTER:
-			region.position.y += 96.0
-		painted_textures[prop] = atlas_texture(ESTATE_ART, region)
+		painted_textures[prop] = painted_riverside_texture(prop, season)
 	for prop: int in STORAGE_TINTS:
 		painted_textures[prop] = atlas_texture(ESTATE_VESSELS, EXTERNAL_REGIONS[prop])
 	if wilderness:
-		painted_textures[Prop.PINE] = ravine_pine_texture(season)
+		painted_textures[Prop.PINE] = painted_tree_texture(Prop.PINE, season)
 		painted_textures[Prop.RAVINE_SHOOT] = atlas_texture(RAVINE_ART, Rect2(146, 50, 14, 18))
 		painted_textures[Prop.STUMP] = atlas_texture(RAVINE_ART, Rect2(164, 50, 16, 16))
 
-static func ravine_pine_texture(season_index: int) -> AtlasTexture:
-	return atlas_texture(RAVINE_ART, Rect2(248 if season_index == Global.Season.WINTER else 200, 0, 48, 48))
+static func painted_tree_texture(prop: int, season_index: int, forked := false) -> AtlasTexture:
+	if prop == Prop.PINE:
+		return atlas_texture(RAVINE_ART, Rect2(248 if season_index == Global.Season.WINTER else 200, 0, 48, 48))
+	if prop == Prop.OAK and forked:
+		return atlas_texture(ESTATE_ART, Rect2(48 * season_index, 152, 48, 48))
+	var region: Rect2 = HALL_YARD_REGIONS[prop]
+	region.position.x += season_index * region.size.x
+	return atlas_texture(ESTATE_TERRAIN.HALL_YARD_ART, region)
+
+static func painted_riverside_texture(prop: int, season_index: int) -> AtlasTexture:
+	var region: Rect2 = ESTATE_RIVER_REGIONS[prop]
+	if season_index == Global.Season.WINTER:
+		region.position.y += RIVERSIDE_WINTER_ROW
+	return atlas_texture(ESTATE_ART, region)
 
 static func riverside_texture(prop: int, season_index: int) -> AtlasTexture:
 	return atlas_texture(RIVERSIDE_PLANTS, riverside_region(prop, season_index))

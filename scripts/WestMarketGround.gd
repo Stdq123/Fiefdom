@@ -15,7 +15,6 @@ const BASIN_BACK := Rect2(196, 0, 70, 46)
 const BASIN_FRONT := Rect2(196, 48, 70, 14)
 const CRATES := Rect2(32, 64, 30, 28)
 const CRATE_FEET := [Vector2(-306, 99), Vector2(343, -3)]
-const STREET_STONE := Color("#c0ae90")
 const GRAIN_YARD := [
 	Vector2(-395, 116), Vector2(-364, 103), Vector2(-309, 108), Vector2(-260, 121),
 	Vector2(-205, 117), Vector2(-196, 153), Vector2(-207, 188), Vector2(-248, 200),
@@ -127,8 +126,8 @@ var fish_swim := 0.0
 func _ready() -> void:
 	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	main_path = EstateLayout.sample_road(PackedVector2Array(LAYOUT.MAIN_ROAD + [LAYOUT.EAST_OUTSIDE]))
-	paving = _road_outline(main_path, 12.0)
-	street.append(_road_outline(main_path, 22.0))
+	paving = _road_outline(main_path, LAYOUT.PAVING_HALF_WIDTH)
+	street.append(_road_outline(main_path, LAYOUT.STREET_HALF_WIDTH))
 	var dye_path := EstateLayout.sample_road(PackedVector2Array(LAYOUT.DYE_LANE))
 	dye_paving = Geometry2D.merge_polygons(_road_outline(dye_path, 6.0), PackedVector2Array(DYE_APRON))[0]
 	_lane_surfaces.append(_road_outline(dye_path, 11.0))
@@ -273,7 +272,7 @@ func _draw() -> void:
 		TERRAIN.draw_loam(self, surface, dirt, TERRAIN.TRACK_GRAIN)
 	_draw_cart_ruts(dirt)
 	_dye_paving_art.draw(self, dirt, winter, raining, Color("#a3ada4"), TERRAIN.STONE_GRAIN)
-	_paving_art.draw(self, dirt, winter, raining, STREET_STONE, TERRAIN.STONE_GRAIN)
+	_paving_art.draw(self, dirt, winter, raining, LAYOUT.STREET_STONE, TERRAIN.STONE_GRAIN)
 	for kind: int in stall_paving:
 		stall_paving[kind].draw(self, dirt, winter, raining, STALL_STONE[kind], TERRAIN.STONE_GRAIN)
 	_draw_scene_shadows(raining)
@@ -340,10 +339,10 @@ func place_scenery(layer: Node2D) -> void:
 	layer.add_child(rim)
 	var season := Global.season_index()
 	var tree_art: Array[AtlasTexture] = [
-		LANDSCAPE.atlas_texture(TERRAIN.HALL_YARD_ART, Rect2(48 * season, 96, 48, 48)),
-		LANDSCAPE.atlas_texture(TERRAIN.HALL_YARD_ART, Rect2(48 * season, 144, 48, 48)),
-		LANDSCAPE.ravine_pine_texture(season),
-		LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, Rect2(48 * season, 152, 48, 48)),
+		LANDSCAPE.painted_tree_texture(LANDSCAPE.Prop.OAK, season),
+		LANDSCAPE.painted_tree_texture(LANDSCAPE.Prop.BLOSSOM_TREE, season),
+		LANDSCAPE.painted_tree_texture(LANDSCAPE.Prop.PINE, season),
+		LANDSCAPE.painted_tree_texture(LANDSCAPE.Prop.OAK, season, true),
 	]
 	var wet_tint := Color(0.88, 0.94, 0.99) if Global.has_rain() else Color.WHITE
 	for index in TREE_FEET.size():
@@ -351,10 +350,7 @@ func place_scenery(layer: Node2D) -> void:
 	var fence := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, LANDSCAPE.ESTATE_SITE_REGIONS[LANDSCAPE.Prop.FENCE])
 	for foot: Vector2 in FENCE_FEET:
 		_prop(layer, foot, fence, 45.0, wet_tint)
-	var reeds: Rect2 = LANDSCAPE.ESTATE_RIVER_REGIONS[LANDSCAPE.Prop.REEDS]
-	if season == Global.Season.WINTER:
-		reeds.position.y += LANDSCAPE.RIVERSIDE_WINTER_ROW
-	var reedbed := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, reeds)
+	var reedbed := LANDSCAPE.painted_riverside_texture(LANDSCAPE.Prop.REEDS, season)
 	var plant_tint := LANDSCAPE.riverside_tint(season, Global.has_rain())
 	for detail: Vector3i in PROP_DETAILS:
 		var foot := Vector2(detail.x, detail.y)

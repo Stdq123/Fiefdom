@@ -1,5 +1,8 @@
 extends RefCounted
 
+const STREET_HALF_WIDTH := 22.0
+const PAVING_HALF_WIDTH := 12.0
+const STREET_STONE := Color("#c0ae90")
 const BOUNDS := Rect2(-435, -200, 870, 426)
 const BASIN := Rect2(-250, -145, 60, 38)
 const FISH_PICKUP := Vector2(-198, -91)

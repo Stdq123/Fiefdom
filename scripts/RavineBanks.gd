@@ -102,8 +102,8 @@ class Channel:
 		var silt := Color("#6d8178") if winter else Color("#747959")
 		silt = silt.lerp(Color("#4c655a"), 0.26 if wet else 0.0)
 		for side in sides.size():
-			_draw_band(canvas, sides[side], bed[side], Color(silt, 0.88), dark, STREAMBED)
-			_draw_band(canvas, bed[side], shoulders[side], dark, Color(outer, 0.0))
+			TERRAIN.draw_tiled_band(canvas, sides[side], bed[side], Color(silt, 0.88), dark, STREAMBED)
+			TERRAIN.draw_tiled_band(canvas, bed[side], shoulders[side], dark, Color(outer, 0.0))
 		for stone in pebbles:
 			var at := Vector2(stone.x, stone.y)
 			var tone := silt.lightened(0.14 + stone.z * 0.013)
@@ -117,9 +117,9 @@ class Channel:
 		var deep := water.lerp(Color("#264c59"), 0.50).darkened(0.10)
 		var shallows := water.lerp(Color("#8eac8a"), 0.52 if not wet else 0.33)
 		var lee := deep.darkened(0.08)
-		_draw_band(canvas, shoals[0], shoals[1], deep, lee)
-		_draw_band(canvas, sides[0], shoals[0], shallows, deep.lightened(0.06), STREAMBED)
-		_draw_band(canvas, sides[1], shoals[1], shallows.darkened(0.12), lee.lightened(0.06), STREAMBED)
+		TERRAIN.draw_tiled_band(canvas, shoals[0], shoals[1], deep, lee)
+		TERRAIN.draw_tiled_band(canvas, sides[0], shoals[0], shallows, deep.lightened(0.06), STREAMBED)
+		TERRAIN.draw_tiled_band(canvas, sides[1], shoals[1], shallows.darkened(0.12), lee.lightened(0.06), STREAMBED)
 		var stone_tint := shallows.lerp(Color("#a9b8a0"), 0.45)
 		var ripple := Color("#b5c9bc") if winter else shallows.lightened(0.30)
 		# Follow the bank's bend with short reflections over the pale bed.
@@ -136,12 +136,6 @@ class Channel:
 			canvas.draw_line(at + Vector2(1, 2), edge + Vector2(0, 1), Color(deep, 0.51), 1.0)
 			if stone.z > 3.0:
 				canvas.draw_line(at + Vector2(-1, -1), at + Vector2(stone.z - 2, -1), Color(ripple, 0.55), 1.0)
-
-	func _draw_band(canvas: CanvasItem, a: PackedVector2Array, b: PackedVector2Array, near: Color, far: Color,
-			texture: Texture2D = null) -> void:
-		for index in a.size() - 1:
-			TERRAIN.draw_tiled_surface(canvas, PackedVector2Array([a[index], a[index + 1], b[index + 1], b[index]]),
-				PackedColorArray([near, near, far, far]), texture)
 
 var water_time := 0.0
 var frame := 0

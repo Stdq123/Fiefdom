@@ -136,6 +136,13 @@ static func draw_tiled_surface(canvas: CanvasItem, polygon: PackedVector2Array,
 		uvs.append(point / size)
 	canvas.draw_polygon(polygon, colors, uvs, texture)
 
+static func draw_tiled_band(canvas: CanvasItem, a: PackedVector2Array, b: PackedVector2Array,
+		near: Color, far: Color, texture: Texture2D = null) -> void:
+	var colors := PackedColorArray([near, near, far, far])
+	for index in a.size() - 1:
+		draw_tiled_surface(canvas, PackedVector2Array([a[index], a[index + 1], b[index + 1], b[index]]),
+			colors, texture)
+
 func draw_meadow(canvas: CanvasItem, grass: Color, winter: bool) -> void:
 	for index in meadow_sprigs.size():
 		if winter and index % 3 != 0:

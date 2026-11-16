@@ -1,5 +1,7 @@
 extends Node2D
 
+const LANDSCAPE := preload("res://scripts/Landscape.gd")
+const TOOL_STONE_ART := LANDSCAPE.ESTATE_SITE_REGIONS[LANDSCAPE.Prop.MOSS_STONE]
 const TUFTS := [
 	Vector2(-34, -15), Vector2(-21, -23), Vector2(-6, -17), Vector2(10, -24),
 	Vector2(29, -18), Vector2(38, -4), Vector2(25, 14), Vector2(41, 13),
@@ -93,11 +95,11 @@ func _draw_tuft(tuft: Node2D, index: int) -> void:
 func _draw_tool_stone(stone: Node2D) -> void:
 	stone.draw_colored_polygon(PackedVector2Array([Vector2(-12, 0), Vector2(-5, -5), Vector2(12, -3),
 		Vector2(16, 1), Vector2(11, 5), Vector2(-6, 4)]), Color("#273b2f80"))
-	stone.draw_colored_polygon(PackedVector2Array([Vector2(-12, -7), Vector2(11, -7), Vector2(10, 0),
-		Vector2(4, 3), Vector2(-8, 2), Vector2(-13, -1)]), Color("#6e6651"))
-	stone.draw_colored_polygon(PackedVector2Array([Vector2(-13, -7), Vector2(-8, -12), Vector2(6, -13),
-		Vector2(12, -8), Vector2(6, -4), Vector2(-7, -4)]), Color("#a89d79"))
-	stone.draw_line(Vector2(-8, -11), Vector2(5, -12), Color("#c5b991"), 1.0)
+	var tint := Color("#c1cfcc") if Global.has_rain() else Color.WHITE
+	if Global.season_index() == Global.Season.WINTER:
+		tint *= LANDSCAPE.WINTER_ROCK_TINT
+	stone.draw_texture_rect_region(LANDSCAPE.ESTATE_ART, Rect2(Vector2(-16, -28), TOOL_STONE_ART.size),
+		TOOL_STONE_ART, tint)
 	stone.draw_line(Vector2(5, -4), Vector2(-4, -11), Color("#6f4c31"), 3.0)
 	stone.draw_line(Vector2(4, -5), Vector2(-4, -11), Color("#bf915b"), 1.0)
 	stone.draw_colored_polygon(PackedVector2Array([Vector2(-5, -10), Vector2(-8, -13), Vector2(-3, -17),
