@@ -8,7 +8,7 @@ var _stones: Array[Dictionary] = []
 var _curb: Array[Dictionary] = []
 
 func _init(surface: PackedVector2Array, joint_origin: float, joins: Array[PackedVector2Array] = [],
-		block_width := 17.0) -> void:
+		block_width := 17.0, curb_drop := LIP) -> void:
 	outline = surface
 	var area := Rect2(outline[0], Vector2.ZERO)
 	for point in outline:
@@ -37,12 +37,12 @@ func _init(surface: PackedVector2Array, joint_origin: float, joins: Array[Packed
 				for fragment in Geometry2D.intersect_polygons(shape, outline):
 					if not Geometry2D.triangulate_polygon(fragment).is_empty():
 						_stones.append({"shape": fragment, "grain": grain, "full": false})
-	_build_curb(joins)
+	_build_curb(joins, curb_drop)
 
 func _joint(column: int, row: int, offset: float, width: float) -> Vector2:
 	return Vector2(offset + column * width + posmod(column * 11 + row * 13, 7) - 3, row * COURSE)
 
-func _build_curb(joins: Array[PackedVector2Array]) -> void:
+func _build_curb(joins: Array[PackedVector2Array], drop: Vector2) -> void:
 	for index in outline.size():
 		var a := outline[index]
 		var b := outline[(index + 1) % outline.size()]
@@ -59,7 +59,7 @@ func _build_curb(joins: Array[PackedVector2Array]) -> void:
 			var end := a.lerp(b, float(span + 1) / spans)
 			var foot := start.lerp(end, 0.5) + side * 1.5
 			var flush := joins.any(func(path: PackedVector2Array) -> bool: return Geometry2D.is_point_in_polygon(foot, path))
-			_curb.append({"start": start, "end": end, "drop": LIP * (0.28 if flush else 1.0)})
+			_curb.append({"start": start, "end": end, "drop": drop * (0.28 if flush else 1.0)})
 
 func draw(canvas: CanvasItem, loam: Color, winter: bool, wet: bool, stone_color := Color("#b6ad90")) -> void:
 	var grout := loam.lerp(Color("#626658"), 0.78)

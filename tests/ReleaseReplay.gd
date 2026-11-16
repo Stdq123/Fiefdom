@@ -386,11 +386,12 @@ func _run() -> void:
 			replay.capture_dir = capture_directory
 			replay.previous_release = arguments[0] == "market-audio-before"
 			await replay.run(tree)
-		"market-dye-yard", "market-dye-old-write", "market-dye-old-resume":
+		"market-dye-yard", "market-dye-old-write", "market-dye-old-resume", "market-dye-vat-write", "market-dye-vat-resume":
 			var replay = load("res://tests/MarketDyeYardReplay.gd").new()
 			replay.capture_dir = capture_directory
-			replay.write_previous = arguments[0] == "market-dye-old-write"
-			replay.resume_previous = arguments[0] == "market-dye-old-resume"
+			replay.write_previous = arguments[0] in ["market-dye-old-write", "market-dye-vat-write"]
+			replay.resume_previous = arguments[0] in ["market-dye-old-resume", "market-dye-vat-resume"]
+			replay.vat_checkpoint = String(arguments[0]).begins_with("market-dye-vat-")
 			await replay.run(tree)
 		"west-road", "west-road-baseline", "west-road-older-save", "west-road-bank-rain", "west-road-bank-winter", "west-road-bank-resume":
 			var replay = load("res://tests/WestRoadReplay.gd").new()

@@ -55,7 +55,7 @@ func _ready() -> void:
 		lighting.place_lamp($Scenery, foot, 0.82)
 	lighting.place_lamp($Scenery, LAYOUT.DYE_EAVE + Vector2(-18, 4), 0.64, 0.08)
 	player.arrive_at($EstateRoadArrival)
-	player.restore_walking_checkpoint(LAYOUT.BOUNDS, ground.stall_display_footprints())
+	player.restore_walking_checkpoint(LAYOUT.BOUNDS, ground.walking_fixture_footprints())
 	player.footstep.connect(_step)
 	market_map.setup(self, destinations, $MarketWaypoint)
 	market_map.open_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
@@ -163,7 +163,9 @@ func _refresh_held_fish() -> void:
 	ground.show_held_fish(Global.fish_order_receipt.fish if waiting else "")
 
 func _refresh_drying_rack() -> void:
-	$DryingRack/ClothLine.frame = int(Global.has_rain() or Global.day_progress >= DYER.CLOSE_YARD.x)
+	var covered := Global.has_rain() or Global.day_progress >= DYER.CLOSE_YARD.x
+	$DryingRack/ClothLine.frame = int(covered)
+	ground.cover_dye_vats(covered)
 
 func _talk_to_dyer() -> void:
 	dyer.face_customer(player.global_position)

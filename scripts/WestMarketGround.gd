@@ -5,6 +5,7 @@ const LAYOUT := preload("res://scripts/WestMarketLayout.gd")
 const TERRAIN := preload("res://scripts/EstateTerrain.gd")
 const STONE_PAVING := preload("res://scripts/StonePaving.gd")
 const YARD_DISPLAY := preload("res://scripts/MarketYardDisplay.gd")
+const DYE_VAT := preload("res://scripts/MarketDyeVat.gd")
 const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
 const ROAD_WEATHER := preload("res://scripts/RoadWeather.gd")
 const BACKDROP := Rect2(-1600, -1300, 3200, 2600)
@@ -25,9 +26,14 @@ const SILK_YARD := [
 	Vector2(245, 194), Vector2(180, 200), Vector2(140, 190),
 ]
 const DYE_YARD := [
-	Vector2(220, -19), Vector2(253, -25), Vector2(299, -24), Vector2(338, -15),
-	Vector2(354, -2), Vector2(344, 18), Vector2(315, 22), Vector2(277, 24),
-	Vector2(242, 13), Vector2(219, 0),
+	Vector2(213, -22), Vector2(253, -27), Vector2(301, -26), Vector2(340, -16),
+	Vector2(355, -3), Vector2(351, 13), Vector2(324, 23), Vector2(284, 27),
+	Vector2(249, 21), Vector2(223, 17), Vector2(210, 4),
+]
+const DYE_APRON := [
+	Vector2(218, -21), Vector2(241, -24), Vector2(284, -24), Vector2(315, -17),
+	Vector2(340, -13), Vector2(349, -5), Vector2(349, 6), Vector2(337, 17), Vector2(310, 22),
+	Vector2(286, 23), Vector2(255, 17), Vector2(231, 16), Vector2(216, 7), Vector2(214, -6),
 ]
 const STALL_PAVING := [
 	[Vector2(-43, -26), Vector2(31, -26), Vector2(37, -18), Vector2(37, 2),
@@ -69,7 +75,6 @@ const TREE_FEET := [
 const STORAGE := [
 	Vector3i(-381, 97, 0), Vector3i(-370, 103, 1), Vector3i(-218, 194, 3),
 	Vector3i(-178, -101, 2), Vector3i(-267, -112, 2),
-	Vector3i(223, -7, 2), Vector3i(217, -12, 3),
 	Vector3i(256, 175, 3),
 ]
 const STORAGE_PROPS := [LANDSCAPE.Prop.GRAIN_SACK, LANDSCAPE.Prop.OPEN_SACK, LANDSCAPE.Prop.JAR, LANDSCAPE.Prop.LIDDED_JAR]
@@ -106,6 +111,7 @@ var _paving_art: STONE_PAVING
 var _dye_paving_art: STONE_PAVING
 var _lane_surfaces: Array[PackedVector2Array] = []
 var _displays: Array[YARD_DISPLAY] = []
+var _dye_vats: Array[DYE_VAT] = []
 var main_path: PackedVector2Array
 var verge_art := TERRAIN.new(LAYOUT.BOUNDS.position.y)
 var weather := ROAD_WEATHER.new(RAIN_PUDDLES, SNOW_DRIFTS)
@@ -118,7 +124,7 @@ func _ready() -> void:
 	paving = _road_outline(main_path, 12.0)
 	street.append(_road_outline(main_path, 22.0))
 	var dye_path := EstateLayout.sample_road(PackedVector2Array(LAYOUT.DYE_LANE))
-	dye_paving = _road_outline(dye_path, 6.0)
+	dye_paving = Geometry2D.merge_polygons(_road_outline(dye_path, 6.0), PackedVector2Array(DYE_APRON))[0]
 	_lane_surfaces.append(_road_outline(dye_path, 11.0))
 	for lane: Array in [LAYOUT.FISH_LANE, LAYOUT.SILK_LANE, LAYOUT.CART_DRIVE]:
 		_lane_surfaces.append(_road_outline(EstateLayout.sample_road(PackedVector2Array(lane)), 14.0))
@@ -128,7 +134,7 @@ func _ready() -> void:
 	for surface in street:
 		street_shoulders.append(Geometry2D.offset_polygon(surface, 2.0)[0])
 	_paving_art = STONE_PAVING.new(paving, LAYOUT.EAST_GATE.x, _lane_surfaces)
-	_dye_paving_art = STONE_PAVING.new(dye_paving, LAYOUT.DYE_JUNCTION.x, [paving])
+	_dye_paving_art = STONE_PAVING.new(dye_paving, LAYOUT.DYE_JUNCTION.x, [paving], 13.0, Vector2(0.8, 4.0))
 
 	var basin := StaticBody2D.new()
 	basin.name = "BasinBody"
@@ -207,11 +213,17 @@ func add_stall_yard(kind: MarketStall.Kind, approach: Vector2, layer: Node2D) ->
 	_displays.append(display)
 	queue_redraw()
 
-func stall_display_footprints() -> Array[Rect2]:
+func walking_fixture_footprints() -> Array[Rect2]:
 	var footprints: Array[Rect2] = []
 	for display in _displays:
 		footprints.append(display.global_transform * YARD_DISPLAY.FOOTPRINT)
+	for vat in _dye_vats:
+		footprints.append(vat.global_transform * DYE_VAT.FOOTPRINT)
 	return footprints
+
+func cover_dye_vats(covered: bool) -> void:
+	for vat in _dye_vats:
+		vat.set_covered(covered)
 
 func distance_to_trees(foot: Vector2) -> float:
 	var at := to_local(foot)
@@ -242,7 +254,7 @@ func _draw() -> void:
 		draw_colored_polygon(shoulder, dirt.lerp(meadow, 0.52))
 	for surface in street:
 		TERRAIN.draw_loam(self, surface, dirt)
-	_dye_paving_art.draw(self, dirt, winter, raining)
+	_dye_paving_art.draw(self, dirt, winter, raining, Color("#a3ada4"))
 	_paving_art.draw(self, dirt, winter, raining)
 	for kind: int in stall_paving:
 		stall_paving[kind].draw(self, dirt, winter, raining, STALL_STONE[kind])
@@ -250,6 +262,8 @@ func _draw() -> void:
 	var contact_shade := LANDSCAPE.scenery_shade(raining)
 	for display in _displays:
 		YARD_DISPLAY.draw_shadow(self, to_local(display.global_position), contact_shade)
+	for vat in _dye_vats:
+		DYE_VAT.draw_shadow(self, to_local(vat.global_position), vat.scale.x, contact_shade)
 	var house_shadow := PackedVector2Array([
 		Vector2(-46, -8), Vector2(36, -8), Vector2(61, -18), Vector2(73, -9),
 		Vector2(56, 5), Vector2(24, 11), Vector2(-36, 7), Vector2(-50, 1),
@@ -342,10 +356,20 @@ func place_scenery(layer: Node2D) -> void:
 		var tint: Color = LANDSCAPE.STORAGE_TINTS[STORAGE_PROPS[jar.z]]
 		var texture := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_STORAGE, Rect2(jar.z * 16, 0, 16, 16))
 		_prop(layer, Vector2(jar.x, jar.y), texture, 14.0, tint * wet_tint)
+	_place_dye_vat(layer, &"MadderVat", Vector2(226, -7), 0.80, Color("#a57855"), Color("#a16755"))
+	_place_dye_vat(layer, &"IndigoVat", LAYOUT.DYE_INDIGO_VAT, 1.0, Color("#96634a"), Color("#4c7589"))
 	var north_gate := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_BUILDINGS, LANDSCAPE.BUILDING_REGIONS[LANDSCAPE.Prop.GATE_FAR])
 	var south_gate := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_BUILDINGS, LANDSCAPE.BUILDING_REGIONS[LANDSCAPE.Prop.GATE])
 	_prop(layer, LAYOUT.EAST_GATE + Vector2(9, -23), north_gate, 44.0, wet_tint)
 	_prop(layer, LAYOUT.EAST_GATE + Vector2(-14, 23), south_gate, 44.0, wet_tint)
+
+func _place_dye_vat(layer: Node2D, vat_name: StringName, foot: Vector2, vat_scale: float, glaze: Color, dye: Color) -> void:
+	var vat := DYE_VAT.new(glaze, dye)
+	vat.name = vat_name
+	vat.position = foot
+	vat.scale = Vector2.ONE * vat_scale
+	layer.add_child(vat)
+	_dye_vats.append(vat)
 
 func _prop(layer: Node2D, foot: Vector2, texture: AtlasTexture, baseline: float, tint: Color) -> void:
 	var sprite := Sprite2D.new()

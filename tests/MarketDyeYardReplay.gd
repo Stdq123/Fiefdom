@@ -1,7 +1,11 @@
 extends "res://tests/WestMarketReplay.gd"
 
+const VAT_CHECKPOINT := Vector2(232, 4)
+const INDIGO_VAT := NodePath("Scenery/IndigoVat")
+
 var write_previous := false
 var resume_previous := false
+var vat_checkpoint := false
 
 func _play() -> void:
 	if resume_previous:
@@ -17,11 +21,18 @@ func _play() -> void:
 	var market := tree.current_scene as Node2D
 	await _snapshot("01-east-entrance")
 	if write_previous:
+		if vat_checkpoint:
+			await _walk(market.player, [Vector2(273, 36), Vector2(264, 24), Vector2(VAT_CHECKPOINT.x, 24), VAT_CHECKPOINT])
+			if not _expect(market.player.global_position.distance_to(VAT_CHECKPOINT) < 2.0
+					and market.player.facing_direction() == Vector2.UP,
+					"Stand where the new vat will be placed. Foot %s, facing %s." % [market.player.position, market.player.facing_direction()]):
+				return
+			await _snapshot("01a-older-vat-position")
 		await _time_at(0.224)
 		await _button(market.get_node("%SettingsButton"))
 		await _button(market.settings.save_button)
 		_expect(FileAccess.file_exists(state.manual_save_path()), "Write the old market save from its settings.")
-		print("MARKET_DYE_OLD_SAVED day=", state.current_day, " clock=", state.day_progress)
+		print("MARKET_DYE_OLD_SAVED day=", state.current_day, " clock=", state.day_progress, " foot=", market.player.position)
 		return
 	if not await _first_visit(market):
 		return
@@ -66,8 +77,32 @@ func _first_visit(market: Node2D) -> bool:
 	_expect(actor.position.y > layout.DYE_HOUSE.y and actor.position.y < layout.DYE_EAVE.y,
 		"The visible workshop foundation stops a walk through the front wall.")
 	await _snapshot("04-workshop-step")
+	await _check_vats(market)
 	print("MARKET_DYE_FIRST_VISIT day=", state.current_day, " foot=", actor.position, " stock=", state.food_storage)
 	return not failed
+
+func _check_vats(market: Node2D) -> void:
+	var vat := market.get_node_or_null(INDIGO_VAT) as StaticBody2D
+	if not _expect(vat != null and not vat.covered and market.get_node("Scenery").y_sort_enabled,
+			"Morning light shows the open vat in the depth-sorted scenery."):
+		return
+	var actor: Player = market.player
+	await _walk(actor, [Vector2(264, 4), Vector2(264, 26), Vector2(vat.position.x, 27)])
+	var steps: Array[String] = []
+	var record := func(_foot: Vector2): steps.append(market.audio.footsteps.stream.resource_path.get_file())
+	actor.footstep.connect(record)
+	await Campaign.walk_straight(tree, actor, vat.position)
+	actor.footstep.disconnect(record)
+	_expect(actor.position.y > vat.position.y + 5.0 and actor.position.y < vat.position.y + 16.0
+		and market.ground.is_on_paving(actor.global_position)
+		and steps.any(func(sound: String) -> bool: return sound.begins_with("stone-")),
+		"The paved yard leads to the vat's solid foot and plays a stone step. Foot %s, steps %s." % [actor.position, steps])
+	await _snapshot("04a-indigo-vat")
+	await _walk(actor, [Vector2(260, actor.position.y), Vector2(260, -7)])
+	_expect(actor.position.y < vat.position.y - 9.0 and market.ground.is_on_paving(actor.global_position),
+		"The aisle next to the vats still reaches the eaves behind them.")
+	await _snapshot("04b-clear-workshop-aisle")
+	print("MARKET_DYE_VAT_WALK behind=", actor.position, " stone_steps=", steps)
 
 func _save_while_walking(market: Node2D) -> void:
 	await _time_at(0.218)
@@ -101,7 +136,11 @@ func _save_while_walking(market: Node2D) -> void:
 	_expect(dyer.position.y < returning.y - 2.0 and not dyer.bundle.visible, "She returns to the workshop in the afternoon.")
 	await _time_at(0.79)
 	var shade := market.get_node("DryingRack/ClothLine") as Sprite2D
-	_expect(dyer.position == market.ground.LAYOUT.DYE_EAVE and shade.frame == 1, "At dusk the rack is empty.")
+	_expect(dyer.position == market.ground.LAYOUT.DYE_EAVE and shade.frame == 1
+		and market.get_node(INDIGO_VAT).covered, "At dusk the rack is empty and the vats are covered.")
+	await Campaign.walk_market_to(tree, market, Vector2(279, 36))
+	await _walk(market.player, [Vector2(269, 18)])
+	await _snapshot("06a-yard-closed")
 	print("MARKET_DYE_CONTINUE clock=", saved_clock, " foot=", saved_spot, " dusk=", dyer.position)
 
 func _weather_and_sample() -> void:
@@ -112,7 +151,8 @@ func _weather_and_sample() -> void:
 	var layout = market.ground.LAYOUT
 	var rack := market.get_node("DryingRack/ClothLine") as Sprite2D
 	_expect(state.has_rain() and dyer.position == layout.DYE_EAVE and rack.frame == 1
-		and not dyer.bundle.visible, "In rain the cloth is under cover and the delivery route is idle.")
+		and not dyer.bundle.visible and market.get_node(INDIGO_VAT).covered,
+		"In rain the cloth is under cover and the dye is protected.")
 	await _walk(market.player, [Vector2(273, 36), Vector2(271, 17), Vector2(259, 0)])
 	await _key(KEY_E)
 	var talk: Control = market.get_node_or_null("UI/Control/DialoguePanel")
@@ -154,6 +194,9 @@ func _continue_market() -> Node2D:
 	return market
 
 func _resume_previous() -> void:
+	var checkpoint: Dictionary = state.latest_saved_game()
+	var path: String = checkpoint.get("path", "")
+	var original := FileAccess.get_sha256(path)
 	var market := await _continue_market()
 	if market == null:
 		return
@@ -162,4 +205,18 @@ func _resume_previous() -> void:
 		and dyer.bundle.visible and not dyer.position.is_equal_approx(market.ground.LAYOUT.DYE_RACK_STOP),
 		"An older save acquires the dye worker's correct route position from its existing day and watch.")
 	await _snapshot("10-older-save-continued")
+	if vat_checkpoint:
+		var actor: Player = market.player
+		var feet := actor.get_node("CollisionShape2D") as CollisionShape2D
+		var footprint: Rect2 = feet.global_transform * feet.shape.get_rect()
+		var solid: Array[Rect2] = market.ground.walking_fixture_footprints()
+		var foot := actor.global_position
+		_expect(not original.is_empty() and FileAccess.get_sha256(path) == original
+			and foot.distance_to(VAT_CHECKPOINT) < 17.0 and actor.facing_direction() == Vector2.UP
+			and not solid.any(func(shape: Rect2) -> bool: return shape.intersects(footprint)),
+			"The original save opens beside the new vat with its saved direction. Foot %s." % foot)
+		await _walk(actor, [Vector2(264, foot.y), Vector2(272, 34)])
+		_expect(actor.global_position.distance_to(Vector2(272, 34)) < 3.0,
+			"Walk out of the restored yard to the main street.")
+		print("MARKET_DYE_VAT_RESUMED original=", original, " landing=", foot, " exit=", actor.global_position)
 	print("MARKET_DYE_OLD_CONTINUE day=", state.current_day, " clock=", state.day_progress, " foot=", dyer.position)

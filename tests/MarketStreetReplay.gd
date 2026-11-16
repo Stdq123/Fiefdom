@@ -107,7 +107,7 @@ func _continue_under_new_layout() -> void:
 	var foot: Vector2 = market.player.global_position
 	var feet := market.player.get_node("CollisionShape2D") as CollisionShape2D
 	var footprint: Rect2 = feet.global_transform * feet.shape.get_rect()
-	var blocked: Array[Rect2] = market.ground.stall_display_footprints()
+	var blocked: Array[Rect2] = market.ground.walking_fixture_footprints()
 	if not _expect(foot.distance_to(SILK_TABLE_CENTER) < 16.0
 		and not blocked.any(func(fixture: Rect2) -> bool: return fixture.intersects(footprint.grow(0.4)))
 		and market.player.facing_direction() == Vector2.UP,
