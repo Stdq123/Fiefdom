@@ -561,12 +561,14 @@ func _refresh_tribute() -> void:
 	var field := Global.tribute_field_plan()
 	var tonight := due == Global.current_day
 	var late_crop: bool = not field.is_empty() and field.ready_day > due
-	tribute_deadline.text = "公田纳贡 · 今夜到期" if tonight else "公田纳贡 · 第 %d 天过夜前" % due
+	var deadline := "今夜到期" if tonight else "第 %d 天过夜前" % due
 	if Global.tribute_overdue():
-		tribute_deadline.text = "公田纳贡 · 已逾期"
+		deadline = "已逾期"
+	var due_share := "本期纳贡 1 份" if Global.first_tribute_delivered() else "首贡 1 份"
+	tribute_deadline.text = due_share + " · " + deadline
 	tribute_deadline.add_theme_color_override("font_color", SHORT if tonight or late_crop else GOOD)
 	tribute_goal.visible = not Global.quest_completed
-	tribute_goal.text = "累计纳贡 %d/%d · 达标得 %d 声望" % [
+	tribute_goal.text = "长期奖励 · 累计纳贡 %d/%d 份，达标得 %d 声望" % [
 		Global.quest_progress, Global.quest_target, Global.TRIBUTE_QUEST_REPUTATION]
 	find_tribute.visible = not field.is_empty()
 	tribute_details.text = "收割公田后，作物入国库，期限重新计算。"

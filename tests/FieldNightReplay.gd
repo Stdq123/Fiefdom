@@ -284,7 +284,8 @@ func _first_deadline() -> void:
 		return
 	var penalty: int = state.tribute_penalty_tonight()
 	var reputation: int = state.reputation
-	_expect("首贡期限" in ui.hud.guide.text, "The opening journal gives the first deadline before planting.")
+	_expect("首贡 1 份 · 第 5 天过夜前" in ui.hud.guide.text,
+		"The opening journal gives the first quantity and deadline before planting.")
 	await _button(ui.sleep_button)
 	var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
 	if not _expect(warning != null and "还没播种" in warning.text_label.text and penalty > 0

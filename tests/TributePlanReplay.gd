@@ -42,6 +42,16 @@ func _first_harvest() -> void:
 	for cell in [PUBLIC, PRIVATE]:
 		for action in 3:
 			await _click(_point(cell))
+	if not baseline:
+		var sheet := await _open_plan(ui.hud.rations_button)
+		if sheet == null:
+			return
+		_expect(sheet.tribute_deadline.text == "首贡 1 份 · 第 5 天过夜前"
+			and sheet.tribute_goal.text == "长期奖励 · 累计纳贡 0/10 份，达标得 50 声望"
+			and "最早第 3 天可收" in sheet.tribute_details.text,
+			"The first harvest deadline, expected ripeness and long-term reward are distinct.")
+		await _capture("00-opening-tribute-plan")
+		await _button(sheet.close_button)
 	await _sleep()
 	for cell in [PUBLIC, PRIVATE]:
 		await _click(_point(cell))
@@ -76,11 +86,12 @@ func _read_first_tribute_ledger(known: bool) -> Control:
 		"The ledger reads the current treasury and offers the actual public-field route.")
 	if known:
 		_expect(note == "第 3 天 · 你从井田 1 收下 1 份黍，入国库。"
-			and note in ledger.text_label.text and "第 7 天过夜前收割公田" in ledger.text_label.text,
-			"The first public harvest supplies the exact crop, field, day and amount in the ledger.")
+			and note in ledger.text_label.text and "第 7 天过夜前收下 1 份公田作物" in ledger.text_label.text,
+			"The ledger records the first harvest and gives the next deadline and quantity.")
 	else:
-		_expect(note.is_empty() and "首份纳贡 ·" not in ledger.text_label.text,
-			"The previous save's treasury can be read without inventing an earlier dated entry.")
+		_expect(note.is_empty() and "首份纳贡 ·" not in ledger.text_label.text
+			and "本期纳贡 1 份 · 今夜到期" in ledger.text_label.text,
+			"The previous save's ledger uses the restored treasury and the deadline due tonight.")
 	await _capture("00a-first-tribute-ledger" if known else "00a-previous-tribute-ledger")
 	print("FIRST_TRIBUTE_COURT day=", state.current_day, " known=", known, " totals=", state.king_storage, " note=", note)
 	return ledger
@@ -113,9 +124,10 @@ func _plant_again() -> void:
 		var panel := await _open_plan(ui.hud.tribute_button)
 		if panel == null:
 			return
-		_expect("第 7 天过夜前" in panel.tribute_deadline.text and "累计纳贡 1/10" in panel.tribute_goal.text
+		_expect(panel.tribute_deadline.text == "本期纳贡 1 份 · 第 7 天过夜前"
+			and panel.tribute_goal.text.begins_with("长期奖励 · 累计纳贡 1/10 份")
 			and "最早第 5 天" in panel.tribute_details.text and panel.find_tribute.text == "选黍并指路",
-			"The first harvest resets the rolling deadline and keeps the cumulative goal visible.")
+			"The next deadline still needs one share and only the long-term reward increments.")
 		await _capture("01-next-tribute")
 		await _button(panel.find_tribute)
 		_expect(ui.directions.tracked_plot == PUBLIC and state.field_route_status == state.TributeRoute.TEND
@@ -155,7 +167,7 @@ func _open_due_plan(overdue := false) -> Control:
 		"The live HUD and sleep control warn about the real deadline.")
 	var panel := await _open_plan(ui.hud.tribute_button)
 	if panel != null:
-		_expect(sheet_title in panel.tribute_deadline.text and "声望 −8" in panel.tribute_details.text
+		_expect(panel.tribute_deadline.text == "本期纳贡 1 份 · " + sheet_title and "声望 −8" in panel.tribute_details.text
 			and panel.find_tribute.text == "找熟公田", "The evening sheet explains both the risk and the available harvest.")
 	return panel
 
@@ -189,7 +201,8 @@ func _deliver(panel: Control) -> void:
 		"A later harvest keeps any recorded first delivery and does not backfill an older save.")
 	var sheet := await _open_plan(ui.hud.tribute_button)
 	if sheet != null:
-		_expect("第 %d 天过夜前" % (day + 4) in sheet.tribute_deadline.text and "累计纳贡 2/10" in sheet.tribute_goal.text,
+		_expect(sheet.tribute_deadline.text == "本期纳贡 1 份 · 第 %d 天过夜前" % (day + 4)
+			and sheet.tribute_goal.text.begins_with("长期奖励 · 累计纳贡 2/10 份"),
 			"Both the renewed deadline and the cumulative count are shown.")
 		await _capture("06-renewed-deadline")
 		await _button(sheet.close_button)

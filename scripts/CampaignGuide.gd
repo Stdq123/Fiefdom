@@ -128,7 +128,7 @@ func _show_first_tribute() -> void:
 	var public_step := _opening_field_step(public_cell, true)
 	var due := Global.tribute_deadline()
 	if due > 0 and not Global.active_crops.has(public_cell):
-		public_step += "\n首贡期限 · 第 %d 天过夜前" % due
+		public_step += "\n首贡 1 份 · 第 %d 天过夜前" % due
 	_describe("第一次纳贡", public_step)
 	if not waiting_for_tribute_crop or Global.private_harvest_total > 0:
 		return

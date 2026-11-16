@@ -111,11 +111,11 @@ func show_first_tribute_ledger(follow_field: Callable) -> void:
 	var due := Global.tribute_deadline()
 	if due > 0:
 		if Global.tribute_overdue():
-			lines.append("这次纳贡已逾期。")
+			lines.append("本期纳贡 1 份 · 已逾期。")
 		elif due == Global.current_day:
-			lines.append("这次纳贡今夜到期。")
+			lines.append("本期纳贡 1 份 · 今夜到期。")
 		else:
-			lines.append("下次纳贡 · 第 %d 天过夜前收割公田。" % due)
+			lines.append("下次纳贡 · 第 %d 天过夜前收下 1 份公田作物。" % due)
 	var options: Array[String] = ["合上账册"]
 	var can_follow := due > 0 and not Global.tribute_field_plan().is_empty()
 	if can_follow:
