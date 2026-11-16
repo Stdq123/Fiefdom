@@ -1,5 +1,8 @@
 extends RefCounted
 
+const TERRAIN := preload("res://scripts/EstateTerrain.gd")
+const ROCK_STRATA := preload("res://assets/world/ravine-rock-strata.png")
+
 # Profiles store the bottom of the rock face and its height relative to a landmark.
 const ESTATE_BANK: Array[Vector3] = [
 	Vector3(27, -28, 3), Vector3(43, -32, 12), Vector3(55, -29, 19), Vector3(68, -25, 24),
@@ -248,17 +251,17 @@ static func _draw_verge_details(canvas: CanvasItem, rock: Color, turf: Color, ti
 func draw_bridge_aprons(canvas: CanvasItem, season: int, wet: bool) -> void:
 	for index in bridge_aprons.size():
 		var pose := _bridge_apron_transform(-1.0 if index == 0 else 1.0)
-		draw_bridge_apron(canvas, bridge_aprons[index], pose, season, wet)
+		draw_bridge_apron(canvas, bridge_aprons[index], pose, season, wet, ROCK_STRATA)
 
 static func draw_bridge_apron(canvas: CanvasItem, outline: PackedVector2Array, pose: Transform2D,
-		season: int, wet: bool) -> void:
+		season: int, wet: bool, texture: Texture2D = null) -> void:
 	var stone := Color("#938975").lerp(Color("#52675f"), 0.42 if wet else 0.0)
 	if season == Global.Season.WINTER:
 		stone = stone.lerp(Color("#929e9a"), 0.30)
-	_draw_apron(canvas, outline, pose, BRIDGE_APRON_SLABS, stone, MOSS[season])
+	_draw_apron(canvas, outline, pose, BRIDGE_APRON_SLABS, stone, MOSS[season], texture)
 
 static func _draw_apron(canvas: CanvasItem, outline: PackedVector2Array, pose: Transform2D,
-		slabs: Array, stone: Color, moss: Color) -> void:
+		slabs: Array, stone: Color, moss: Color, texture: Texture2D) -> void:
 	var shade := stone.lerp(Color("#3b493e"), 0.58)
 	var side_shift := Vector2(1, 2)
 	var bottom := Transform2D(0.0, side_shift)
@@ -267,7 +270,7 @@ static func _draw_apron(canvas: CanvasItem, outline: PackedVector2Array, pose: T
 	for index in slabs.size():
 		var slab := pose * PackedVector2Array(slabs[index])
 		var tone := stone.lightened(0.055 + (index % 3) * 0.052)
-		canvas.draw_colored_polygon(slab, tone)
+		TERRAIN.draw_loam(canvas, slab, tone, texture)
 		canvas.draw_line(slab[0], slab[0].lerp(slab[1], 0.85), tone.lightened(0.18), 1.0)
 		var nick := slab[0].lerp(slab[2], 0.49).round()
 		canvas.draw_line(nick + Vector2(-2, 1), nick + Vector2(2, 0), tone.lightened(0.11), 1.0)
@@ -294,22 +297,24 @@ static func draw_gate(canvas: CanvasItem, gate: Vector2, wilderness: bool, seaso
 			canvas.draw_rect(Rect2(tile + Vector2(2, 3), Vector2(2, 1)), rock.darkened(0.11))
 			start = end
 	if wilderness:
-		_draw_bluff(canvas, gate, GATE_NORTH, rock, moss)
-		_draw_bluff(canvas, gate, GATE_SOUTH, rock.darkened(0.09), moss.darkened(0.1))
+		var stone_cut := Rect2(108 if season == Global.Season.WINTER else 68, 252, 37, 22)
+		canvas.draw_texture_rect_region(TERRAIN.SITE_ART, paving, stone_cut, TERRAIN.WET_PAVING_TINT if wet else Color.WHITE)
+		_draw_bluff(canvas, gate, GATE_NORTH, rock, moss, ROCK_STRATA)
+		_draw_bluff(canvas, gate, GATE_SOUTH, rock.darkened(0.09), moss.darkened(0.1), ROCK_STRATA)
 	else:
 		_draw_bluff(canvas, gate, ESTATE_BANK, rock, moss)
 
 func draw_lookout(canvas: CanvasItem, season: int, wet: bool) -> void:
-	var rock := Color("#a1987d").lerp(Color("#617368"), 0.48 if wet else 0.0)
+	var rock := Color("#a59f89").lerp(Color("#60736d"), 0.50 if wet else 0.0)
 	if season == Global.Season.WINTER:
 		rock = rock.lerp(Color("#929e9a"), 0.43)
 	var moss: Color = MOSS[season]
 	_draw_lookout_slopes(canvas, rock, moss, season == Global.Season.WINTER, wet)
-	_draw_bluff(canvas, RavineLayout.LOOKOUT, LOOKOUT_WEST, rock, moss)
-	_draw_bluff(canvas, RavineLayout.LOOKOUT, LOOKOUT_EAST, rock.darkened(0.10), moss.darkened(0.09))
+	_draw_bluff(canvas, RavineLayout.LOOKOUT, LOOKOUT_WEST, rock, moss, ROCK_STRATA)
+	_draw_bluff(canvas, RavineLayout.LOOKOUT, LOOKOUT_EAST, rock.darkened(0.10), moss.darkened(0.09), ROCK_STRATA)
 	_draw_terrace_faces(canvas, rock, moss)
 	_draw_apron(canvas, stair_apron, Transform2D(0.0, RavineLayout.RIDGE_LANE[1]),
-		STAIR_APRON_SLABS, rock.darkened(0.095), moss)
+		STAIR_APRON_SLABS, rock.darkened(0.095), moss, ROCK_STRATA)
 	_draw_steps(canvas, rock, moss)
 	_draw_terrace(canvas, rock, moss)
 
@@ -326,7 +331,7 @@ func _draw_lookout_slopes(canvas: CanvasItem, rock: Color, moss: Color, frost: b
 			bottom = maxf(bottom, point.y)
 		for point in outline:
 			colors.append(light.lerp(dark, inverse_lerp(top, bottom, point.y)))
-		canvas.draw_polygon(outline, colors)
+		TERRAIN.draw_tiled_surface(canvas, outline, colors, ROCK_STRATA)
 	for marks: Array in SLOPE_MARKS:
 		for index in marks.size() - 1:
 			var a: Vector2 = marks[index]
@@ -361,10 +366,11 @@ func _draw_steps(canvas: CanvasItem, rock: Color, moss: Color) -> void:
 		var shadow_drift := Vector2(6, 5)
 		canvas.draw_polygon(PackedVector2Array([toe_back, toe_front, toe_front + shadow_drift, toe_back + shadow_drift]),
 			PackedColorArray([shadow, shadow, Color(shadow, 0.0), Color(shadow, 0.0)]))
-		canvas.draw_polygon(PackedVector2Array([edge_back, edge_front, toe_front, toe_back]), PackedColorArray([
-			footing.lightened(0.06), footing.lightened(0.05), footing.darkened(0.16), footing.darkened(0.16)]))
+		TERRAIN.draw_tiled_surface(canvas, PackedVector2Array([edge_back, edge_front, toe_front, toe_back]),
+			PackedColorArray([footing.lightened(0.06), footing.lightened(0.05),
+				footing.darkened(0.16), footing.darkened(0.16)]), ROCK_STRATA)
 		var side := side_tone.lightened(0.03 * (index % 3))
-		canvas.draw_colored_polygon(PackedVector2Array([back, front, edge_front, edge_back]), side)
+		TERRAIN.draw_loam(canvas, PackedVector2Array([back, front, edge_front, edge_back]), side, ROCK_STRATA)
 		var fissure := edge_front.lerp(edge_back, 0.45).round()
 		canvas.draw_line(fissure, fissure.lerp(toe_front, 0.72).round(), footing.darkened(0.24), 1.0)
 		if index % 3 == 2:
@@ -380,10 +386,11 @@ func _draw_steps(canvas: CanvasItem, rock: Color, moss: Color) -> void:
 		var joint_back := slab[0].lerp(slab[1], joint_ratio + 0.07).round()
 		var joint_kink := (joint.lerp(joint_back, 0.58) + Vector2(-2, 0)).round()
 		var riser_joint := slab[3].lerp(slab[2], joint_ratio).round()
-		canvas.draw_colored_polygon(PackedVector2Array([slab[0], joint_back, joint_kink, joint, tread_west]), shade)
-		canvas.draw_colored_polygon(PackedVector2Array([joint_back, slab[1], tread_east, joint, joint_kink]), shade.darkened(0.07))
-		canvas.draw_colored_polygon(PackedVector2Array([tread_west, joint, riser_joint, slab[3]]), shade.darkened(0.31))
-		canvas.draw_colored_polygon(PackedVector2Array([joint, tread_east, slab[2], riser_joint]), side_tone)
+		TERRAIN.draw_loam(canvas, PackedVector2Array([slab[0], joint_back, joint_kink, joint, tread_west]), shade, ROCK_STRATA)
+		TERRAIN.draw_loam(canvas, PackedVector2Array([joint_back, slab[1], tread_east, joint, joint_kink]),
+			shade.darkened(0.07), ROCK_STRATA)
+		TERRAIN.draw_loam(canvas, PackedVector2Array([tread_west, joint, riser_joint, slab[3]]), shade.darkened(0.31), ROCK_STRATA)
+		TERRAIN.draw_loam(canvas, PackedVector2Array([joint, tread_east, slab[2], riser_joint]), side_tone, ROCK_STRATA)
 		canvas.draw_line(tread_west + Vector2(1, 0), joint - Vector2(2, 0), shade.lightened(0.26), 1.0)
 		canvas.draw_line(joint + Vector2(1, 0), tread_east - Vector2(2, 0), shade.lightened(0.19), 1.0)
 		canvas.draw_polyline(PackedVector2Array([joint, joint_kink, joint_back]), shade.darkened(0.20), 1.0)
@@ -409,9 +416,9 @@ func _draw_terrace_faces(canvas: CanvasItem, rock: Color, moss: Color) -> void:
 		var drift := Vector2(9, 6)
 		canvas.draw_polygon(PackedVector2Array([foot_a, foot_b, foot_b + drift, foot_a + drift]),
 			PackedColorArray([contact, contact, shadow, shadow]))
-		canvas.draw_polygon(PackedVector2Array([seam_a, seam_b, foot_b, foot_a]),
-			PackedColorArray([shade.darkened(0.14), shade.darkened(0.14), base, base]))
-		canvas.draw_colored_polygon(PackedVector2Array([a, b, seam_b, seam_a]), shade)
+		TERRAIN.draw_tiled_surface(canvas, PackedVector2Array([seam_a, seam_b, foot_b, foot_a]),
+			PackedColorArray([shade.darkened(0.14), shade.darkened(0.14), base, base]), ROCK_STRATA)
+		TERRAIN.draw_loam(canvas, PackedVector2Array([a, b, seam_b, seam_a]), shade, ROCK_STRATA)
 		var split := 0.35 + (index % 3) * 0.09
 		var crest := a.lerp(b, split).round()
 		var cut := seam_a.lerp(seam_b, split + 0.14).round()
@@ -427,10 +434,10 @@ func _draw_terrace_faces(canvas: CanvasItem, rock: Color, moss: Color) -> void:
 
 func _draw_terrace(canvas: CanvasItem, rock: Color, moss: Color) -> void:
 	var walking_stone := rock.lightened(0.12)
-	canvas.draw_colored_polygon(terrace_surface, walking_stone)
-	canvas.draw_colored_polygon(PackedVector2Array(TERRACE_LIGHT), rock.lightened(0.24))
+	TERRAIN.draw_loam(canvas, terrace_surface, walking_stone, ROCK_STRATA)
+	TERRAIN.draw_loam(canvas, PackedVector2Array(TERRACE_LIGHT), rock.lightened(0.24), ROCK_STRATA)
 	for face in TERRACE_PLANES:
-		canvas.draw_colored_polygon(PackedVector2Array(face), rock.lightened(0.058))
+		TERRAIN.draw_loam(canvas, PackedVector2Array(face), rock.lightened(0.058), ROCK_STRATA)
 	for index in TERRACE_FRONT.size() - 1:
 		var a: Vector2 = TERRACE_FRONT[index]
 		var b: Vector2 = TERRACE_FRONT[index + 1]
@@ -473,7 +480,8 @@ static func _install_edge(terrain: StaticBody2D, edge_name: StringName, outline:
 	edge.polygon = outline
 	terrain.add_child(edge)
 
-static func _draw_bluff(canvas: CanvasItem, origin: Vector2, profile: Array[Vector3], rock: Color, moss: Color) -> void:
+static func _draw_bluff(canvas: CanvasItem, origin: Vector2, profile: Array[Vector3], rock: Color, moss: Color,
+		texture: Texture2D = null) -> void:
 	for index in profile.size() - 1:
 		var a := profile[index]
 		var b := profile[index + 1]
@@ -490,8 +498,8 @@ static func _draw_bluff(canvas: CanvasItem, origin: Vector2, profile: Array[Vect
 		canvas.draw_colored_polygon(PackedVector2Array([foot_a, foot_b, foot_b + shadow, foot_a + shadow]), Color("#283c3288"))
 		canvas.draw_polygon(PackedVector2Array([rim_a, rim_b, turf_b, turf_a]), PackedColorArray([
 			moss.darkened(0.25), moss.darkened(0.25), Color(moss, 0.09), Color(moss, 0.09)]))
-		canvas.draw_colored_polygon(PackedVector2Array([rim_a, rim_b, seam_b, seam_a]), shade.lightened(0.13))
-		canvas.draw_colored_polygon(PackedVector2Array([seam_a, seam_b, foot_b, foot_a]), shade.darkened(0.27))
+		TERRAIN.draw_loam(canvas, PackedVector2Array([rim_a, rim_b, seam_b, seam_a]), shade.lightened(0.13), texture)
+		TERRAIN.draw_loam(canvas, PackedVector2Array([seam_a, seam_b, foot_b, foot_a]), shade.darkened(0.27), texture)
 		var cut := 0.29 + (index % 5) * 0.11
 		var crest := rim_a.lerp(rim_b, cut)
 		var split := seam_a.lerp(seam_b, cut + 0.08)

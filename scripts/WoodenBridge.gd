@@ -4,16 +4,21 @@ const PLANKS := Color("#b78c55")
 const GRAIN := Color("#694b36")
 const PLANK_WIDTH := 6.0
 const MAX_POST_SPAN := 28.0
+const RAVINE_ART := preload("res://assets/world/ravine-art.png")
+const RAVINE_DECK := Rect2(0, 0, 70, 66)
+const RAVINE_RAIL := Rect2(0, 68, 70, 18)
 
 var deck: Rect2
+var ravine_finish: bool
 var season := -1
 var wet := false
 var _posts := PackedFloat32Array()
 var deck_art := Node2D.new()
 var near_rail := Node2D.new()
 
-func _init(footprint: Rect2) -> void:
+func _init(footprint: Rect2, use_ravine_finish := false) -> void:
 	name = "CreekBridge"
+	ravine_finish = use_ravine_finish
 	position = footprint.get_center()
 	deck = Rect2(footprint.position - position, footprint.size)
 	y_sort_enabled = true
@@ -48,6 +53,9 @@ func _wood(color: Color) -> Color:
 	return color.lerp(Color("#5c5a48"), 0.25) if wet else color
 
 func _draw_deck() -> void:
+	if ravine_finish:
+		_draw_ravine_section(deck_art, Vector2(-35, -26), RAVINE_DECK)
+		return
 	var west := deck.position.x
 	var east := deck.end.x
 	var back := deck.position.y
@@ -101,7 +109,17 @@ func _draw_supports(west: float, east: float, front: float) -> void:
 		deck_art.draw_rect(Rect2(x, front + 7, 7, 2), _wood(Color("#75624d")))
 
 func _draw_near_rail() -> void:
+	if ravine_finish:
+		_draw_ravine_section(near_rail, Vector2(-35, -13), RAVINE_RAIL)
+		return
 	_draw_rail(near_rail, 0.0)
+
+func _draw_ravine_section(layer: Node2D, at: Vector2, region: Rect2) -> void:
+	# Snow is painted on a second column. The near railing keeps its own sort point.
+	if season == Global.Season.WINTER:
+		region.position.x += 72.0
+	var tint := Color("#bdc9c2") if wet else Color.WHITE
+	layer.draw_texture_rect_region(RAVINE_ART, Rect2(at, region.size), region, tint)
 
 func _draw_rail(layer: Node2D, y: float) -> void:
 	var dark := _wood(Color("#5c4232"))

@@ -1,5 +1,13 @@
 extends Node2D
 
+const TERRAIN := preload("res://scripts/EstateTerrain.gd")
+const ROCK_STRATA := preload("res://assets/world/ravine-rock-strata.png")
+const STREAMBED := preload("res://assets/world/ravine-streambed.png")
+const FALL_ART := preload("res://assets/world/ravine-art.png")
+const FALL_SIZE := Vector2(52, 62)
+const FALL_AT := Vector2(108, -82)
+const FALL_FRAMES := 8
+
 # Creek-bed positions and the height of the bank above them.
 const WEST_UPPER: Array[Vector3] = [Vector3(114, -98, 2), Vector3(114, -86, 10), Vector3(116, -76, 24),
 	Vector3(115, -63, 35), Vector3(116, -50, 34), Vector3(120, -39, 27), Vector3(119, -25, 24),
@@ -19,13 +27,6 @@ const WILLOW_LEDGE := [1.0, 5.0, 11.0, 12.0, 9.0, 7.0, 5.0, 1.0]
 const GRAVEL_LEDGE := [1.0, 3.0, 6.0, 6.0, 7.0, 5.0, 1.0]
 const FORD_STONES: Array[Vector3] = [Vector3(-26, 1, 5), Vector3(-16, -1, 4), Vector3(-7, 2, 4),
 	Vector3(3, 0, 5), Vector3(14, 3, 5), Vector3(25, 1, 6)]
-const CASCADE_LIP: Array[Vector2] = [Vector2(116, -69), Vector2(122, -67), Vector2(130, -67),
-	Vector2(137, -64), Vector2(145, -65), Vector2(151, -68)]
-const CASCADE_ROLL: Array[Vector2] = [Vector2(116, -64), Vector2(122, -61), Vector2(129, -59),
-	Vector2(137, -58), Vector2(145, -59), Vector2(152, -63)]
-const CASCADE_BASE: Array[Vector2] = [Vector2(120, -43), Vector2(126, -40), Vector2(134, -35),
-	Vector2(141, -35), Vector2(148, -39), Vector2(153, -44)]
-const CASCADE_LIGHT := [0.06, 0.23, 0.13, 0.02, 0.16]
 const PLUNGE_POOL := [Vector2(119, -43), Vector2(123, -48), Vector2(137, -49), Vector2(150, -45),
 	Vector2(154, -41), Vector2(156, -34), Vector2(155, -19), Vector2(150, -11), Vector2(142, -9),
 	Vector2(132, -14), Vector2(126, -22), Vector2(123, -33)]
@@ -101,7 +102,7 @@ class Channel:
 		var silt := Color("#6d8178") if winter else Color("#747959")
 		silt = silt.lerp(Color("#4c655a"), 0.26 if wet else 0.0)
 		for side in sides.size():
-			_draw_band(canvas, sides[side], bed[side], Color(silt, 0.88), dark)
+			_draw_band(canvas, sides[side], bed[side], Color(silt, 0.88), dark, STREAMBED)
 			_draw_band(canvas, bed[side], shoulders[side], dark, Color(outer, 0.0))
 		for stone in pebbles:
 			var at := Vector2(stone.x, stone.y)
@@ -113,29 +114,38 @@ class Channel:
 
 	func draw_water(canvas: CanvasItem, water: Color, season: int, wet: bool) -> void:
 		var winter := season == Global.Season.WINTER
-		var deep := water.darkened(0.16)
-		var shallows := water.lerp(Color("#8eaf87"), 0.40 if not wet else 0.24)
-		_draw_band(canvas, shoals[0], shoals[1], deep, deep.lightened(0.045))
-		_draw_band(canvas, sides[0], shoals[0], shallows, deep)
-		_draw_band(canvas, sides[1], shoals[1], shallows.darkened(0.09), deep.lightened(0.045))
-		var stone_tint := shallows.lerp(Color("#a2b39e"), 0.38)
-		var ripple := Color("#b5c9bc") if winter else shallows.lightened(0.29)
+		var deep := water.lerp(Color("#264c59"), 0.50).darkened(0.10)
+		var shallows := water.lerp(Color("#8eac8a"), 0.52 if not wet else 0.33)
+		var lee := deep.darkened(0.08)
+		_draw_band(canvas, shoals[0], shoals[1], deep, lee)
+		_draw_band(canvas, sides[0], shoals[0], shallows, deep.lightened(0.06), STREAMBED)
+		_draw_band(canvas, sides[1], shoals[1], shallows.darkened(0.12), lee.lightened(0.06), STREAMBED)
+		var stone_tint := shallows.lerp(Color("#a9b8a0"), 0.45)
+		var ripple := Color("#b5c9bc") if winter else shallows.lightened(0.30)
+		# Follow the bank's bend with short reflections over the pale bed.
+		for side in sides.size():
+			for index in range(2 + side, sides[side].size() - 1, 4):
+				var first := sides[side][index].lerp(shoals[side][index], 0.24)
+				var next := sides[side][index + 1].lerp(shoals[side][index + 1], 0.29)
+				canvas.draw_line(first.round(), first.lerp(next, 0.65).round(), Color(ripple, 0.30 if wet else 0.44), 1.0)
 		for stone in wet_stones:
 			var at := Vector2(stone.x, stone.y)
-			canvas.draw_rect(Rect2(at, Vector2(stone.z, 2.0)), Color(stone_tint, 0.43))
-			canvas.draw_rect(Rect2(at + Vector2(1, 2), Vector2(stone.z - 1.0, 1.0)), Color(deep, 0.39))
+			var edge := at + Vector2(stone.z, 1)
+			canvas.draw_colored_polygon(PackedVector2Array([at, at + Vector2(2, -1), edge - Vector2(0, 1),
+				edge, at + Vector2(1, 2)]), Color(stone_tint, 0.57))
+			canvas.draw_line(at + Vector2(1, 2), edge + Vector2(0, 1), Color(deep, 0.51), 1.0)
 			if stone.z > 3.0:
 				canvas.draw_line(at + Vector2(-1, -1), at + Vector2(stone.z - 2, -1), Color(ripple, 0.55), 1.0)
 
-	func _draw_band(canvas: CanvasItem, a: PackedVector2Array, b: PackedVector2Array, near: Color, far: Color) -> void:
+	func _draw_band(canvas: CanvasItem, a: PackedVector2Array, b: PackedVector2Array, near: Color, far: Color,
+			texture: Texture2D = null) -> void:
 		for index in a.size() - 1:
-			canvas.draw_polygon(PackedVector2Array([a[index], a[index + 1], b[index + 1], b[index]]),
-				PackedColorArray([near, near, far, far]))
+			TERRAIN.draw_tiled_surface(canvas, PackedVector2Array([a[index], a[index + 1], b[index + 1], b[index]]),
+				PackedColorArray([near, near, far, far]), texture)
 
 var water_time := 0.0
 var frame := 0
 var water_effect_bounds := FALL_BOUNDS.merge(FORD_BOUNDS)
-var rng := RandomNumberGenerator.new()
 
 func _process(delta: float) -> void:
 	water_time = fposmod(water_time + delta, 12.0)
@@ -157,7 +167,7 @@ static func draw_banks(canvas: CanvasItem, season: int, wet: bool) -> void:
 
 static func _draw_cascade_banks(canvas: CanvasItem, season: int, wet: bool) -> void:
 	var moss: Color = MOSS[season]
-	var rock := Color("#9b9575").lerp(Color("#587267"), 0.44 if wet else 0.0)
+	var rock := Color("#9f9e8a").lerp(Color("#577370"), 0.47 if wet else 0.0)
 	var winter := season == Global.Season.WINTER
 	if winter:
 		rock = rock.lerp(Color("#a5b4aa"), 0.35)
@@ -179,16 +189,16 @@ static func _draw_cascade_banks(canvas: CanvasItem, season: int, wet: bool) -> v
 			var face := rock.darkened(0.12 + (index + bank_index) * 0.058)
 			_gradient_quad(canvas, base_a, base_b, base_b + Vector2(4, 5), base_a + Vector2(4, 5),
 				Color("#183d47ae"), Color("#183d4700"))
-			_gradient_quad(canvas, shelf_a, shelf_b, base_b, base_a, face.darkened(0.35), Color("#405852"))
-			_gradient_quad(canvas, a, b, back_b, back_a, face, face.darkened(0.22))
-			_gradient_quad(canvas, back_a, back_b, shelf_b, shelf_a, face.darkened(0.04), face.lightened(0.19))
+			_gradient_quad(canvas, shelf_a, shelf_b, base_b, base_a, face.darkened(0.35), Color("#3e5653"), ROCK_STRATA)
+			_gradient_quad(canvas, a, b, back_b, back_a, face, face.darkened(0.22), ROCK_STRATA)
+			_gradient_quad(canvas, back_a, back_b, shelf_b, shelf_a, face.darkened(0.04), face.lightened(0.19), ROCK_STRATA)
 			var joint := a.lerp(b, 0.69).round()
 			var split := back_a.lerp(back_b, 0.48).round()
 			canvas.draw_polyline(PackedVector2Array([joint, joint.lerp(split, 0.42).round() + Vector2(1, 0), split]),
 				face.darkened(0.38), 1.0)
 			canvas.draw_line(shelf_a.lerp(shelf_b, 0.12).round(), shelf_a.lerp(shelf_b, 0.70).round(),
 				face.lightened(0.35 if winter else 0.16), 1.0)
-		canvas.draw_colored_polygon(top, rock.lightened(0.08 - bank_index * 0.04))
+		TERRAIN.draw_loam(canvas, top, rock.lightened(0.08 - bank_index * 0.04), ROCK_STRATA)
 		var cap := top.slice(3)
 		cap.append(top[-1].lerp(top[1], 0.37).round())
 		cap.append(top[3].lerp(top[1], 0.45).round())
@@ -196,7 +206,7 @@ static func _draw_cascade_banks(canvas: CanvasItem, season: int, wet: bool) -> v
 		var colors := PackedColorArray()
 		for index in cap.size():
 			colors.append(Color(turf, 0.36 if index == 0 or index >= cap.size() - 2 else 0.95))
-		canvas.draw_polygon(cap, colors)
+		TERRAIN.draw_tiled_surface(canvas, cap, colors, ROCK_STRATA)
 		var lip := top[0].lerp(top[1], 0.38).round()
 		var moss_side := -1.0 if bank_index == 0 else 1.0
 		canvas.draw_polyline(PackedVector2Array([lip, top[1], top[1].lerp(top[2], 0.72).round()]),
@@ -224,7 +234,7 @@ static func _shelf_top(canvas: CanvasItem, outline: Array, stone: Color, season:
 		var a_out := a + center.direction_to(a) * 5.0
 		var b_out := b + center.direction_to(b) * 5.0
 		_gradient_quad(canvas, a, b, b_out, a_out, Color(rim.darkened(0.18), 0.71), Color(rim, 0.0))
-	canvas.draw_colored_polygon(shelf, surface)
+	TERRAIN.draw_loam(canvas, shelf, surface, ROCK_STRATA)
 	for index in shelf.size():
 		var a := shelf[index]
 		var b := shelf[(index + 1) % shelf.size()]
@@ -279,7 +289,7 @@ static func draw_ford(canvas: CanvasItem, shoal: PackedVector2Array, water: Colo
 	for vertex in shoal:
 		var fade := 1.0 - 0.50 * smoothstep(4.0, 17.0, absf(vertex.y - center.y))
 		shoal_colors.append(Color(shallow, fade))
-	canvas.draw_polygon(shoal, shoal_colors)
+	TERRAIN.draw_tiled_surface(canvas, shoal, shoal_colors, STREAMBED)
 	var stone := Color("#96917a").lerp(Color("#668179"), 0.40 if wet else 0.0)
 	var lit := Color("#bcba9e") if season == Global.Season.WINTER else stone.lightened(0.23)
 	for index in FORD_STONES.size():
@@ -296,7 +306,7 @@ static func draw_ford(canvas: CanvasItem, shoal: PackedVector2Array, water: Colo
 		_quad(canvas, top[3], top[4], top[4] + drop, top[3] + drop, stone.darkened(0.40))
 		_quad(canvas, top[4], top[5], top[5] + drop, top[4] + drop, stone.darkened(0.23))
 		_quad(canvas, top[5], top[6], top[6] + drop, top[5] + drop, stone.darkened(0.16))
-		canvas.draw_colored_polygon(top, stone.lightened(0.04 * (index % 3)))
+		TERRAIN.draw_loam(canvas, top, stone.lightened(0.04 * (index % 3)), ROCK_STRATA)
 		canvas.draw_polyline(PackedVector2Array([top[0], top[1], top[1].lerp(top[2], 0.72)]), lit, 1.0)
 		canvas.draw_rect(Rect2(at + Vector2(0, -2), Vector2(2 + index % 3, 1)), stone.darkened(0.14))
 
@@ -308,42 +318,11 @@ func _draw() -> void:
 	var pool := PackedVector2Array(PLUNGE_POOL)
 	var pool_colors := PackedColorArray()
 	for point in pool:
-		pool_colors.append(Color(water.lerp(Color("#274d59"), 0.72), 0.72 * (1.0 - smoothstep(-38.0, -10.0, point.y))))
+		pool_colors.append(Color(water.lerp(Color("#224652"), 0.79), 0.82 * (1.0 - smoothstep(-38.0, -10.0, point.y))))
 	draw_polygon(pool, pool_colors)
-	# The water rolls over the lip before the thinner sheets drop into the shaded pool.
-	rng.seed = 78
-	for index in CASCADE_LIP.size() - 1:
-		var lip := CASCADE_LIP[index]
-		var next_lip := CASCADE_LIP[index + 1]
-		var roll := CASCADE_ROLL[index]
-		var next_roll := CASCADE_ROLL[index + 1]
-		var foot := CASCADE_BASE[index]
-		var next_foot := CASCADE_BASE[index + 1]
-		var face := water.lightened(CASCADE_LIGHT[index])
-		var crest := face.lerp(foam, 0.51)
-		var upstream := Vector2(-1, -9 - index % 3)
-		_gradient_quad(self, lip + upstream, next_lip + upstream, next_lip, lip,
-			Color(water, 0.0), Color(crest, 0.83))
-		_gradient_quad(self, lip, next_lip, next_roll, roll, crest, face.lightened(0.12))
-		_gradient_quad(self, roll, next_roll, next_foot, foot, face.lightened(0.12), Color(face.darkened(0.21), 0.82))
-		var white_edge := lip.lerp(next_lip, 0.27).round()
-		draw_line(white_edge, lip.lerp(next_lip, 0.81).round(), Color(foam, 0.81), 1.0)
-		for strip in 2:
-			var across := (float(strip) + 0.15 + rng.randf() * 0.63) / 2.0
-			var start := roll.lerp(next_roll, across)
-			var finish := foot.lerp(next_foot, across)
-			var phase := fposmod(float(frame) / 9.0 + rng.randf(), 1.0)
-			var end := minf(1.0, phase + 0.27 + rng.randf() * 0.39)
-			draw_line(start.lerp(finish, phase).round(), start.lerp(finish, end).round(),
-				Color(foam, lerpf(0.61, 0.16, phase)), 1.0)
-		var impact := foot.lerp(next_foot, 0.48).round()
-		var drift := float(posmod(frame + index * 5, 7)) / 7.0
-		var spray := (impact + Vector2((drift - 0.5) * 6.0, -sin(drift * PI) * 5.0)).round()
-		draw_rect(Rect2(spray, Vector2(1, 1)), Color(foam, 0.59))
-		var white := Color(foam, lerpf(0.91, 0.50, drift))
-		var foam_center := impact + Vector2(0, 2 + index % 2)
-		draw_polyline(PackedVector2Array([foot.lerp(impact, 0.22), foam_center,
-			next_foot.lerp(impact, 0.30) + Vector2(0, 1)]), white, 1.0)
+	var region := Rect2(Vector2(posmod(frame, FALL_FRAMES) * FALL_SIZE.x, 92), FALL_SIZE)
+	var tint := Color("#c7d6d1") if wet else Color.WHITE
+	draw_texture_rect_region(FALL_ART, Rect2(FALL_AT, FALL_SIZE), region, tint)
 	_draw_pool_wakes(foam)
 
 func _draw_pool_wakes(foam: Color) -> void:
@@ -353,10 +332,11 @@ func _draw_pool_wakes(foam: Color) -> void:
 		var span := 6.0 + phase * 8.0
 		var rise := 2.0 + phase * 3.0
 		var white := Color(foam, 0.73 * (1.0 - phase))
-		var back := PackedVector2Array([center + Vector2(-span, 0), center + Vector2(-span * 0.50, -rise),
-			center + Vector2(2, -rise - 1), center + Vector2(span * 0.72, -rise + 1)])
-		var front := PackedVector2Array([center + Vector2(-span * 0.82, 2), center + Vector2(-span * 0.39, rise),
-			center + Vector2(span * 0.24, rise + 1), center + Vector2(span, 1)])
+		var back := PackedVector2Array([center + Vector2(-span, 0), center + Vector2(-span * 0.80, -rise * 0.7),
+			center + Vector2(-span * 0.42, -rise), center + Vector2(2, -rise - 1), center + Vector2(span * 0.72, -rise + 1)])
+		var front := PackedVector2Array([center + Vector2(-span * 0.82, 2), center + Vector2(-span * 0.58, rise * 0.8),
+			center + Vector2(-span * 0.19, rise + 1), center + Vector2(span * 0.28, rise + 1),
+			center + Vector2(span * 0.70, rise - 1), center + Vector2(span, 1)])
 		draw_polyline(back, Color(white, white.a * 0.58), 1.0)
 		draw_polyline(front, white, 1.0)
 
@@ -373,7 +353,7 @@ static func _ledge(canvas: CanvasItem, profile: Array[Vector3], side: float, sea
 	var winter := season == Global.Season.WINTER
 	var moss: Color = MOSS[season]
 	var turf := moss.lerp(Color("#486543"), 0.28 if not winter else 0.14).darkened(0.10 if wet else 0.0)
-	var stone := Color("#918975") if side > 0.0 else Color("#7b7969")
+	var stone := Color("#969781") if side > 0.0 else Color("#7c8877")
 	if wet:
 		stone = stone.lerp(Color("#4b625f"), 0.36)
 	for index in profile.size() - 1:
@@ -390,7 +370,7 @@ static func _ledge(canvas: CanvasItem, profile: Array[Vector3], side: float, sea
 		var seam_a := rim_a.lerp(toe_a, 0.47 + (index % 3) * 0.08).round()
 		var seam_b := rim_b.lerp(toe_b, 0.47 + ((index + 1) % 3) * 0.08).round()
 		var face := stone.lightened(0.03 * posmod(index * 3, 5))
-		var undercut := face.lerp(Color("#263d38"), 0.44)
+		var undercut := face.lerp(Color("#29434a"), 0.51)
 		var shadow_a := toe_a + Vector2(-side * a.z * 0.24, a.z * 0.14).round()
 		var shadow_b := toe_b + Vector2(-side * b.z * 0.24, b.z * 0.14).round()
 		_gradient_quad(canvas, toe_a, toe_b, shadow_b, shadow_a, Color("#183d47b5"), Color("#183d4730"))
@@ -421,17 +401,18 @@ static func _ledge(canvas: CanvasItem, profile: Array[Vector3], side: float, sea
 static func _draw_moss(canvas: CanvasItem, root: Vector2, side: float, moss: Color, winter: bool) -> void:
 	var growth := PackedVector2Array([root + Vector2(-3 * side, 0), root + Vector2(-2 * side, -3),
 		root + Vector2(3 * side, -5), root + Vector2(5 * side, -2), root + Vector2(4 * side, 1), root + Vector2(0, 2)])
-	canvas.draw_colored_polygon(growth, moss.darkened(0.06))
+	TERRAIN.draw_loam(canvas, growth, moss.darkened(0.06), ROCK_STRATA)
 	canvas.draw_line(root + Vector2(side * 2, -3), root + Vector2(side * 4, -4), moss.lightened(0.16), 1.0)
 	if not winter:
 		canvas.draw_line(root + Vector2(side * 4, -2), root + Vector2(side * 6, -6), moss.lightened(0.08), 1.0)
 
 static func _quad(canvas: CanvasItem, a: Vector2, b: Vector2, c: Vector2, d: Vector2, color: Color) -> void:
-	_gradient_quad(canvas, a, b, c, d, color, color)
+	_gradient_quad(canvas, a, b, c, d, color, color, ROCK_STRATA)
 
-static func _gradient_quad(canvas: CanvasItem, a: Vector2, b: Vector2, c: Vector2, d: Vector2, near: Color, far: Color) -> void:
+static func _gradient_quad(canvas: CanvasItem, a: Vector2, b: Vector2, c: Vector2, d: Vector2, near: Color, far: Color,
+		texture: Texture2D = null) -> void:
 	# Some bank faces pinch to a point at a bend.
 	if absf((b - a).cross(c - a)) > 0.01:
-		canvas.draw_polygon(PackedVector2Array([a, b, c]), PackedColorArray([near, near, far]))
+		TERRAIN.draw_tiled_surface(canvas, PackedVector2Array([a, b, c]), PackedColorArray([near, near, far]), texture)
 	if absf((c - a).cross(d - a)) > 0.01:
-		canvas.draw_polygon(PackedVector2Array([a, c, d]), PackedColorArray([near, far, far]))
+		TERRAIN.draw_tiled_surface(canvas, PackedVector2Array([a, c, d]), PackedColorArray([near, far, far]), texture)

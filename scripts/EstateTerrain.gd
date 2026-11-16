@@ -123,11 +123,18 @@ func _quad(canvas: CanvasItem, a: Vector2, b: Vector2, c: Vector2, d: Vector2, c
 		canvas.draw_colored_polygon(face, color)
 
 static func draw_loam(canvas: CanvasItem, polygon: PackedVector2Array, soil: Color, texture: Texture2D = LOAM) -> void:
+	draw_tiled_surface(canvas, polygon, PackedColorArray([soil]), texture)
+
+static func draw_tiled_surface(canvas: CanvasItem, polygon: PackedVector2Array,
+		colors: PackedColorArray, texture: Texture2D) -> void:
+	if texture == null:
+		canvas.draw_polygon(polygon, colors)
+		return
 	var uvs := PackedVector2Array()
 	var size := texture.get_size()
 	for point in polygon:
 		uvs.append(point / size)
-	canvas.draw_polygon(polygon, PackedColorArray([soil]), uvs, texture)
+	canvas.draw_polygon(polygon, colors, uvs, texture)
 
 func draw_meadow(canvas: CanvasItem, grass: Color, winter: bool) -> void:
 	for index in meadow_sprigs.size():

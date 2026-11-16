@@ -7,7 +7,7 @@ var glint := Color.WHITE
 var clock := 0.0
 var surface := ShaderMaterial.new()
 
-func _init(outline: PackedVector2Array, speed: float, crossings: Array[Rect2] = []) -> void:
+func _init(outline: PackedVector2Array, speed: float, crossings: Array[Rect2] = [], ravine_flow := false) -> void:
 	patches.append(outline)
 	for crossing in crossings:
 		var visible_water: Array[PackedVector2Array] = []
@@ -16,6 +16,7 @@ func _init(outline: PackedVector2Array, speed: float, crossings: Array[Rect2] = 
 		patches = visible_water
 	surface.shader = SHADER
 	surface.set_shader_parameter("current_speed", speed)
+	surface.set_shader_parameter("ravine_flow", ravine_flow)
 	material = surface
 
 func set_weather(water: Color, wet: bool) -> void:

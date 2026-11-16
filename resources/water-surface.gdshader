@@ -3,6 +3,7 @@ shader_type canvas_item;
 uniform float water_clock = 0.0;
 uniform float current_speed = 0.0;
 uniform bool raining = false;
+uniform bool ravine_flow = false;
 
 varying vec2 ground_position;
 
@@ -44,6 +45,15 @@ void fragment() {
 	float shadow = smoothstep(0.25, 1.9, -swell) * 0.18;
 	float glint = ripple(flow, vec2(23.0, 18.0)) * 0.36;
 	glint += ripple(flow + vec2(12.0, 7.0), vec2(31.0, 25.0)) * 0.17;
+	if (ravine_flow) {
+		// Breaking crests intersect narrow reflected runs down the creek.
+		vec2 woven = flow + vec2(floor(sin(flow.y * 0.07) * 3.0), 0.0);
+		vec2 streak = vec2(woven.y, woven.x);
+		float current = ripple(streak + vec2(3.0, 8.0), vec2(28.0, 13.0));
+		float broken = ripple(woven + vec2(7.0, 11.0), vec2(29.0, 23.0));
+		glint = glint * 0.48 + current * 0.28 + broken * 0.16;
+		shadow *= 0.80;
+	}
 	if (raining) {
 		glint *= 0.56;
 		glint += rain_ring(pixel) * 0.4;
