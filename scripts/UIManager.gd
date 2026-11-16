@@ -1030,6 +1030,8 @@ func _wait_for_freight() -> void:
 
 func _on_freight_arrival_interacted(speech: String, portrait: Texture2D, order_id: String) -> void:
 	world.set_channel_mode(false)
+	if campaign_hud.notice.text.begins_with(freight_wait.ARRIVAL_NOTICE):
+		campaign_hud.show_world_notice("")
 	if Global.market_trip_target == Global.FREIGHT_YARD and Global.season_order_receipts.get(order_id) == directions.freight_receipt:
 		directions.clear_tracking()
 	var destination := ""

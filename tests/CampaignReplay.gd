@@ -551,6 +551,8 @@ func _meet_freight_driver() -> void:
 	if not _expect(dialog != null and dialog.name_label.text == "申禾" and state.market_trip_target.is_empty(),
 		"Speaking to the arriving driver completes the tracked shipment."):
 		return
+	_expect(not tree.current_scene.get_node("CampaignHUD").notice.text.begins_with("货车已到 · "),
+		"Meeting the driver removes the bench's prompt to talk to him.")
 	if not order_capture_directory.is_empty():
 		await _capture_ending(order_capture_directory, "orders-meet-the-driver")
 	print("CAMPAIGN_FREIGHT day=", state.current_day, " watch=", state.day_watch_label(),

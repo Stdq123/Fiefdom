@@ -2,10 +2,10 @@ extends Node2D
 
 const PLACE := "亭西种圃"
 const HOST := "林蓼"
+const DELIVERY_NOTE := "林蓼送种途中"
 const CAST := preload("res://assets/characters/autumn-guests.svg")
 const STORAGE := preload("res://assets/world/estate-storage.svg")
 const SHARING := preload("res://assets/world/autumn-sharing.svg")
-const BED_WIDTH := 25
 const SHARE_START := 3.0 / 16.0
 const SHARE_END := 11.0 / 16.0
 const WALK_TIME := 0.048
@@ -201,36 +201,73 @@ func interact() -> void:
 	GameEvents.seed_garden_requested.emit()
 
 func _draw() -> void:
-	if planted_day == 0:
-		return
 	var winter := Global.season_index() == Global.Season.WINTER
-	var growing := stage in [1, 2] and not winter
+	var stones := Color("#b5ad94" if winter else "#9f906e")
+	draw_colored_polygon(PackedVector2Array([Vector2(-16, 9), Vector2(-12, 6), Vector2(-4, 7),
+		Vector2(-3, 12), Vector2(-14, 13)]), stones.darkened(0.29))
+	draw_colored_polygon(PackedVector2Array([Vector2(-16, 9), Vector2(-12, 6), Vector2(-4, 7),
+		Vector2(-3, 10), Vector2(-14, 11)]), stones)
+	draw_colored_polygon(PackedVector2Array([Vector2(4, 8), Vector2(11, 6), Vector2(17, 8),
+		Vector2(14, 12), Vector2(4, 12)]), stones.darkened(0.25))
+	draw_colored_polygon(PackedVector2Array([Vector2(4, 8), Vector2(11, 6), Vector2(17, 8),
+		Vector2(14, 10), Vector2(5, 10)]), stones.lightened(0.08))
 	for index in SeasonOrders.SEED_CROPS.size():
-		var corner := Vector2(-29 + index * 33, -23)
-		var bed := Rect2(corner, Vector2(BED_WIDTH, 25))
-		draw_rect(Rect2(corner + Vector2(-3, 1), Vector2(BED_WIDTH + 6, 27)), Color("#3d4733"))
-		draw_rect(bed.grow(2), Color("#8f7956" if not winter else "#b1b4a6"))
-		draw_rect(bed, Color("#65503a" if not winter else "#7b7f70"))
-		for row in [8, 19]:
-			draw_line(corner + Vector2(2, row), corner + Vector2(BED_WIDTH - 3, row), Color("#a38356" if not winter else "#b9bcad"))
-			if growing:
-				_draw_row(SeasonOrders.SEED_CROPS[index], corner + Vector2(7 + (row % 3), row))
-			elif stage == 3 and not winter:
-				for stubble in [5, 11, 18]:
-					draw_rect(Rect2(corner + Vector2(stubble, row - 2), Vector2(2, 2)), Color("#b09552"))
-		draw_rect(Rect2(corner + Vector2(10, -8), Vector2(2, 9)), Color("#705437"))
-		draw_rect(Rect2(corner + Vector2(7, -9), Vector2(8, 4)), Color("#cbad73"))
-	draw_texture_rect_region(STORAGE, Rect2(-34, -10, 12, 12), Rect2(0, 0, 16, 16), Color("#cdb58c"))
+		_draw_bed(Vector2(-31 + index * 34, -23 - index * 2), SeasonOrders.SEED_CROPS[index], winter)
+	if planted_day > 0:
+		draw_texture_rect_region(STORAGE, Rect2(-38, -8, 12, 12), Rect2(0, 0, 16, 16), Color("#cdb58c"))
 	if sharing_table:
-		draw_rect(Rect2(42, -4, 22, 11), Color("#4e4232"))
-		draw_rect(Rect2(43, -7, 20, 9), Color("#a78454"))
-		draw_rect(Rect2(44, -7, 18, 1), Color("#cead71"))
-		draw_rect(Rect2(44, 2, 2, 5), Color("#654d3a"))
-		draw_rect(Rect2(60, 2, 2, 5), Color("#654d3a"))
-		for index in packets_left:
-			draw_texture_rect_region(SHARING, Rect2(44 + 9 * index, -9, 9, 6), Rect2(1, 34, 19, 12))
+		_draw_sharing_table()
 	if stage >= 2 and Global.seed_garden_gift.is_empty():
-		draw_texture_rect_region(SHARING, Rect2(-37, -4, 11, 7), Rect2(1, 34, 19, 12))
+		draw_texture_rect_region(SHARING, Rect2(-38, -2, 11, 7), Rect2(1, 34, 19, 12))
+
+func _draw_bed(at: Vector2, crop_id: String, winter: bool) -> void:
+	var rim := Color("#b6b9aa" if winter else "#ae8d62")
+	var soil := Color("#7d8272" if winter else "#735336")
+	draw_set_transform(at)
+	draw_colored_polygon(PackedVector2Array([Vector2(-2, 14), Vector2(29, 12), Vector2(32, 21),
+		Vector2(27, 26), Vector2(4, 28), Vector2(-3, 24)]), Color("#28302370"))
+	# The near wall reaches the foot of the bed. The right return is darker.
+	draw_colored_polygon(PackedVector2Array([Vector2(-2, 14), Vector2(2, 18), Vector2(24, 17), Vector2(29, 14),
+		Vector2(28, 20), Vector2(24, 24), Vector2(2, 25), Vector2(-2, 21)]), rim.darkened(0.35))
+	draw_colored_polygon(PackedVector2Array([Vector2(24, 17), Vector2(30, 4), Vector2(29, 12),
+		Vector2(28, 20), Vector2(24, 24)]), rim.darkened(0.47))
+	for seam in [7, 16, 22]:
+		draw_line(Vector2(seam, 21), Vector2(seam - 1, 24), rim.darkened(0.52))
+	# The low rim and its inner shadow leave the rows visible from the path.
+	draw_colored_polygon(PackedVector2Array([Vector2(2, 3), Vector2(25, 0), Vector2(30, 4),
+		Vector2(28, 14), Vector2(24, 20), Vector2(2, 21), Vector2(-2, 17)]), rim)
+	draw_colored_polygon(PackedVector2Array([Vector2(5, 5), Vector2(24, 3), Vector2(27, 6),
+		Vector2(24, 15), Vector2(21, 17), Vector2(2, 18), Vector2(1, 15)]), soil)
+	draw_polyline(PackedVector2Array([Vector2(1, 15), Vector2(5, 5), Vector2(24, 3), Vector2(27, 6)]), soil.darkened(0.28))
+	draw_line(Vector2(3, 20), Vector2(22, 19), rim.lightened(0.15))
+	for row in [8, 16]:
+		draw_line(Vector2(5, row + 1), Vector2(23, row - 1), soil.darkened(0.23))
+		draw_line(Vector2(6, row), Vector2(21, row - 1), soil.lightened(0.20))
+		if not winter and stage in [1, 2]:
+			_draw_row(crop_id, Vector2(8, row))
+		elif not winter and stage == 3:
+			for stubble in [6, 12, 19]:
+				draw_rect(Rect2(stubble, row - 2, 2, 2), Color("#b09552"))
+	draw_rect(Rect2(11, -6, 2, 11), Color("#624c30"))
+	draw_rect(Rect2(12, -3, 1, 7), Color("#956d43"))
+	draw_colored_polygon(PackedVector2Array([Vector2(7, -6), Vector2(9, -9), Vector2(19, -10),
+		Vector2(19, -4), Vector2(7, -2)]), Color("#785538"))
+	draw_colored_polygon(PackedVector2Array([Vector2(7, -6), Vector2(9, -9), Vector2(19, -10),
+		Vector2(17, -7)]), Color("#d0ae75"))
+	draw_line(Vector2(9, -4), Vector2(15, -5), Color("#b4905a"))
+	draw_set_transform(Vector2.ZERO)
+
+func _draw_sharing_table() -> void:
+	draw_rect(Rect2(44, -1, 2, 9), Color("#755437"))
+	draw_rect(Rect2(61, -2, 2, 7), Color("#573e2c"))
+	draw_colored_polygon(PackedVector2Array([Vector2(41, -3), Vector2(63, -5), Vector2(63, -1),
+		Vector2(41, 1)]), Color("#785335"))
+	draw_colored_polygon(PackedVector2Array([Vector2(41, -3), Vector2(46, -9), Vector2(67, -10),
+		Vector2(63, -5)]), Color("#b7955c"))
+	draw_colored_polygon(PackedVector2Array([Vector2(63, -5), Vector2(67, -10), Vector2(67, -6),
+		Vector2(63, -1)]), Color("#5e4834"))
+	for index in packets_left:
+		draw_texture_rect_region(SHARING, Rect2(44 + 9 * index, -10, 9, 6), Rect2(1, 34, 19, 12))
 
 func _draw_row(crop_id: String, at: Vector2) -> void:
 	var crop := ItemManager.get_crop(crop_id)

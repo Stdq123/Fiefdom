@@ -184,7 +184,6 @@ const ESTATE_TRACK_WIDTHS: Array[float] = EstateLayout.ROAD_WIDTHS + [
 	18.0, 13.0, 17.0, 14.0, 17.0, 15.0, 13.0, 16.0, 14.0, 41.0, 30.0, 19.0, 34.0,
 ]
 const GARDEN_TRACK := [EstateLayout.PAVILION_TURN, Vector2(39, 396), Vector2(58, 402), Vector2(78, 407), Vector2(101, 408)]
-const ROAD_REST_TRACK := [EstateLayout.PAVILION_JUNCTION, Vector2(9, 432), Vector2(-7, 442)]
 const ROTATION_BOOK_TRACK := [EstateLayout.FIELD_LANE_TURN, Vector2(22, 236), Vector2(0, 233), Vector2(-21, 234), Vector2(-43, 238)]
 const WILD_TRACK_WIDTHS := RavineLayout.TRACK_WIDTHS
 const CREEK := RavineLayout.CREEK
@@ -435,7 +434,6 @@ func _ready() -> void:
 		GameEvents.silk_sample_delivered.connect(queue_redraw)
 		GameEvents.ravine_journal_changed.connect(_refresh_estate_tracks)
 		GameEvents.field_rotation_changed.connect(_refresh_estate_tracks)
-		GameEvents.seed_garden_arrived.connect(_refresh_estate_tracks)
 		GameEvents.pond_landing_opened.connect(_refresh_estate_tracks)
 		_layout_field_approaches()
 	else:
@@ -497,12 +495,6 @@ func _refresh_estate_tracks() -> void:
 	if Global.ravine_journal.garden_day > 0:
 		estate_tracks.append(GARDEN_TRACK)
 		estate_track_widths.append(11.0)
-	if Global.seed_garden_day() > 0:
-		estate_tracks.append(EstateLayout.SEED_GARDEN_TRACK)
-		estate_track_widths.append(11.0)
-	elif Global.road_rest_built():
-		estate_tracks.append(ROAD_REST_TRACK)
-		estate_track_widths.append(12.0)
 	if Global.pond_landing_day() > 0:
 		estate_tracks.append(EstateLayout.POND_TRACK)
 		estate_track_widths.append(10.0)

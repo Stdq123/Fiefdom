@@ -155,8 +155,8 @@ func _collect_places() -> void:
 	if Global.road_rest_built():
 		_add_built_place("亭西歇脚处", "在长凳旁休息", "RoadRest")
 	var garden_day := Global.seed_garden_day()
-	if garden_day > 0:
-		var detail := SEED_GARDEN.visit_note(garden_day)
+	if garden_day > 0 or Global.seed_garden_delivery_progress() >= 0.0:
+		var detail := SEED_GARDEN.DELIVERY_NOTE if garden_day == 0 else SEED_GARDEN.visit_note(garden_day)
 		places.append(_entry(Category.PLACES, SEED_GARDEN.PLACE, detail, EstateLayout.SEED_GARDEN_APPROACH, true))
 	if Global.pond_landing_day() > 0:
 		var detail := Global.fishing_block_reason(false, CreekFish.Site.POND)

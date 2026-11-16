@@ -53,16 +53,33 @@ func _follow_seeds() -> bool:
 	garden = world.get_node("Scenery/SeedGarden")
 	_expect(garden.courier.visible and garden.courier.position.distance_to(foot) < 12.0,
 		"Reload puts Lin Liao back on the same road.")
+	await _key(KEY_M)
+	var chart: Control = ui.estate_map
+	var pending: Rect2 = chart.captions.get(GARDEN.PLACE, Rect2())
+	if not _expect(pending.has_area() and chart.places.any(func(entry: Dictionary) -> bool:
+		return entry.title == GARDEN.PLACE and entry.detail == GARDEN.DELIVERY_NOTE),
+		"The map can find the garden during the relay, including after reloading."):
+		return false
+	await _click(chart.chart.get_global_transform_with_canvas() * pending.get_center())
+	await _key(KEY_ESCAPE)
 	await Campaign.walk_estate_road_to(tree, world, EstateLayout.SEED_GARDEN_APPROACH)
+	if not _expect(garden.planted_day == 0 and garden.in_transit and not garden.is_in_group("interactable")
+		and ui.directions.tracked_place == GARDEN.PLACE and ui.directions.caption.visible
+		and ui.directions.caption.text == GARDEN.DELIVERY_NOTE and not ui.directions.road_guide.visible,
+		"Reaching the prepared beds before Lin Liao keeps an on-site delivery cue."):
+		return false
+	await _capture("01a-waiting-at-the-beds")
 	await _advance_clock(0.34)
-	if not _expect(garden.planted_day == ARRIVAL_DAY and garden.stage == 0 and garden.courier.visible,
-		"The two seedbeds open only once the seed reaches the pavilion."):
+	if not _expect(garden.planted_day == ARRIVAL_DAY and garden.stage == 0 and garden.courier.visible
+		and ui.directions.tracked_place == GARDEN.PLACE and world.player.interaction_target == garden,
+		"The route reaches the interactable garden once the seed is planted."):
 		return false
 	await _capture("02-seedbeds")
 	await _key(KEY_E)
 	dialog = ui.get_node("Control/DialoguePanel")
 	_expect(dialog.name_label.text == GARDEN.HOST and "菽和黍" in dialog.text_label.text
-		and "第 10 天巳时" in dialog.text_label.text, "Lin Liao explains what she planted and when she will return.")
+		and "第 10 天巳时" in dialog.text_label.text and ui.directions.tracked_place.is_empty(),
+		"Speaking to Lin Liao completes the route and gives the next appointment.")
 	await _capture("03-lin-liao")
 	await _button(dialog.options_container.get_child(0))
 	await _key(KEY_M)

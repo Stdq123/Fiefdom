@@ -4,6 +4,7 @@ enum Mark { PLOT, BUTTON, NEIGHBOR, EDGE, WORKSITE, PLACE }
 
 const CAMPAIGN_GUIDE := preload("res://scripts/CampaignGuide.gd")
 const ROAD_NETWORK := preload("res://scripts/RoadNetwork.gd")
+const SEED_GARDEN := preload("res://scripts/SeedGarden.gd")
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 const GOLD := Color("#f1d38b")
 const SHADOW := Color("#382519")
@@ -42,7 +43,6 @@ func setup(estate_world: Node2D, estate_hud: Control) -> void:
 	hud.cancel_directions.pressed.connect(cancel_tracking)
 	GameEvents.map_departing.connect(_remember_field_work)
 	_refresh_road_network()
-	GameEvents.seed_garden_arrived.connect(_refresh_road_network)
 	GameEvents.pond_landing_opened.connect(_refresh_road_network)
 	GameEvents.well_field_reclaimed.connect(_refresh_road_network.unbind(2))
 	GameEvents.day_advanced.connect(_expire_winter_supper_route.unbind(1))
@@ -70,7 +70,7 @@ func setup(estate_world: Node2D, estate_hud: Control) -> void:
 	hide()
 
 func _refresh_road_network() -> void:
-	var tracks := [EstateLayout.ROADS[0], EstateLayout.SOUTH_LANE, EstateLayout.EAST_LANE] \
+	var tracks := [EstateLayout.ROADS[0], EstateLayout.SOUTH_LANE, EstateLayout.EAST_LANE, EstateLayout.SEED_GARDEN_TRACK] \
 		+ EstateLayout.WEST_ROADS + EstateLayout.SOUTH_ROADS + EstateLayout.DRIVING_ROADS
 	tracks = tracks.duplicate(true)
 	var approaches: Dictionary = world.get_node("Landscape").field_approaches
@@ -80,8 +80,6 @@ func _refresh_road_network() -> void:
 			tracks.append(Array(approach))
 		else:
 			_link_field_approach(tracks, approach)
-	if Global.seed_garden_day() > 0:
-		tracks.append(EstateLayout.SEED_GARDEN_TRACK)
 	if Global.pond_landing_day() > 0:
 		tracks.append(EstateLayout.POND_TRACK)
 	road_network = ROAD_NETWORK.new(tracks, world, world.player)
@@ -466,6 +464,12 @@ func update_marker(blocked: bool) -> void:
 			var title := "申禾 · " + GamepadInput.interact_key() if arrived else SeasonOrders.arrival_caption(freight_receipt)
 			_mark_map(Rect2(at - Vector2(8, 8), Vector2(16, 16)), title, Mark.PLACE, false)
 			return
+		if tracked_place == SEED_GARDEN.PLACE:
+			var garden := world.get_node("Scenery/SeedGarden") as SEED_GARDEN
+			var title := GamepadInput.interact_hint(tracked_place) if garden.planted_day > 0 else SEED_GARDEN.DELIVERY_NOTE
+			_mark_place(title, tracked_place_point, garden.hint)
+			road_guide.hide()
+			return
 		if tracked_place == Global.POND_LANDING and not EstateLayout.POND_DECK.has_point(foot):
 			_mark_place(tracked_place, tracked_place_point)
 			return
@@ -485,14 +489,15 @@ func update_marker(blocked: bool) -> void:
 		_:
 			hide()
 
-func _mark_place(title: String, point: Vector2) -> void:
+func _mark_place(title: String, point: Vector2, hint: Label = null) -> void:
 	_show_road_route(point)
 	var at := world.get_global_transform_with_canvas() * point
 	var readable_hint := false
 	if title in [PavilionRest.STORY_LABEL, PavilionRest.WAIT_LABEL]:
-		var hint: Label = world.pavilion_rest.hint
+		hint = world.pavilion_rest.hint
+	if hint and hint.is_visible_in_tree():
 		var hint_bounds := hint.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, hint.size)
-		readable_hint = hint.is_visible_in_tree() and hud.map_space_clear(hint_bounds)
+		readable_hint = hud.map_space_clear(hint_bounds)
 	_mark_map(Rect2(at - Vector2(8, 8), Vector2(16, 16)), title, Mark.PLACE, readable_hint)
 
 func _show_road_route(point: Vector2) -> void:

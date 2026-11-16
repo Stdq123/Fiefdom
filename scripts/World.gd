@@ -1389,8 +1389,8 @@ func _path_to_pavilion(visitor: Visitor) -> PackedVector2Array:
 		path = _follow_lane(LANDSCAPE.ESTATE_TRACKS[0], start, LANDSCAPE.ESTATE_SOUTH_LANE[0])
 	elif visitor.data.name == VisitorData.EAST_WATCHER:
 		path = _follow_lane(LANDSCAPE.ESTATE_EAST_LANE, start, LANDSCAPE.EAST_LANE_JUNCTION)
-	elif visitor.activity == VisitorData.VisitActivity.ROAD_REST and start.x < LANDSCAPE.ROAD_REST_TRACK[0].x:
-		path = _follow_lane(LANDSCAPE.ROAD_REST_TRACK, start, LANDSCAPE.ROAD_REST_TRACK[0])
+	elif visitor.activity == VisitorData.VisitActivity.ROAD_REST and start.x < EstateLayout.PAVILION_JUNCTION.x:
+		path = _follow_lane(EstateLayout.ROAD_REST_TRACK, start, EstateLayout.PAVILION_JUNCTION)
 	elif visitor.activity == VisitorData.VisitActivity.HERBS and start.x > LANDSCAPE.GARDEN_TRACK[1].x:
 		path = _follow_lane(LANDSCAPE.GARDEN_TRACK, start, LANDSCAPE.GARDEN_TRACK[0])
 	if not path.is_empty():
@@ -1465,7 +1465,7 @@ func _apply_visitor_activity(visitor: Visitor, walk_in: bool) -> bool:
 		VisitorData.VisitActivity.ROAD_REST:
 			focus = $RoadRest.position
 			path = _follow_lane(LANDSCAPE.ESTATE_SOUTH_LANE, visitor.position, EstateLayout.PAVILION_JUNCTION)
-			path.append_array(PackedVector2Array(LANDSCAPE.ROAD_REST_TRACK.slice(1)))
+			path.append_array(PackedVector2Array(EstateLayout.ROAD_REST_TRACK.slice(1)))
 			path.append(focus + Vector2(20, 11))
 		VisitorData.VisitActivity.MEASURE:
 			focus = get_crop_world_pos(Global.irrigation.source_cell)

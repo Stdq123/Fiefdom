@@ -350,7 +350,7 @@ func _check_scheduled_guests() -> void:
 func _check_visits_from_facilities() -> void:
 	var completed := [
 		[{"current_day": 22, "road_rest_paid_day": 12, "road_provisions_delivered": true},
-			VisitorData.VisitActivity.ROAD_REST, Landscape.ROAD_REST_TRACK[0]],
+			VisitorData.VisitActivity.ROAD_REST, EstateLayout.PAVILION_JUNCTION],
 		[{"current_day": 15, "ravine_journal": {"recorded_days": [5, 6, 7], "garden_day": 11}},
 			VisitorData.VisitActivity.HERBS, Landscape.GARDEN_TRACK[0]],
 	]

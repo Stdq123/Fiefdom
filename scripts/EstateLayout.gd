@@ -55,8 +55,9 @@ const PAVILION_TURN := Vector2(44, 385)
 const PAVILION_JUNCTION := Vector2(23, 432)
 const SEED_GARDEN := Vector2(-91, 443)
 const SEED_GARDEN_APPROACH := SEED_GARDEN + Vector2(0, 17)
-const SEED_GARDEN_TRACK := [PAVILION_JUNCTION, Vector2(9, 432), Vector2(-7, 442),
-	Vector2(-9, 464), Vector2(-36, 467), Vector2(-63, 468), SEED_GARDEN_APPROACH]
+const ROAD_REST_TRACK := [PAVILION_JUNCTION, Vector2(9, 432), Vector2(-7, 442)]
+const SEED_GARDEN_TRACK := ROAD_REST_TRACK + [Vector2(-9, 464), Vector2(-36, 467),
+	Vector2(-63, 468), SEED_GARDEN_APPROACH]
 const SOUTH_FORK := Vector2(29, 536)
 const FREIGHT_STOP := Vector2(-94, 574)
 const FREIGHT_JUNCTION := Vector2(-41, 574)
@@ -126,8 +127,8 @@ const ROADS := [
 	SOUTH_LANE,
 	EAST_LANE,
 	[Vector2(HALL_FOOT) + Vector2(0, 17), Vector2(HALL_FOOT) + Vector2(0, 9)],
-] + WEST_ROADS
-const ROAD_WIDTHS := [32.0, 22.0, 18.0, 30.0, 13.0, 21.0]
+] + WEST_ROADS + [SEED_GARDEN_TRACK]
+const ROAD_WIDTHS := [32.0, 22.0, 18.0, 30.0, 13.0, 21.0, 11.0]
 const ROAD_SHOULDER := 2.5
 const PAVILION_APPROACH := [
 	PAVILION_JUNCTION, Vector2(48, 430), Vector2(68, 426), Vector2(77, 411), SOUTH_PAVILION + Vector2(0, 6),

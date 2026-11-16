@@ -2,6 +2,7 @@ extends Control
 
 const WAIT_SECONDS := 2.8
 const FINAL_APPROACH := SeasonOrders.TRAVEL_FRACTION * 0.09
+const ARRIVAL_NOTICE := "货车已到 · "
 
 @onready var progress: ProgressBar = %Progress
 @onready var stand: Button = %Stand
@@ -101,4 +102,4 @@ func _finish(arrived: bool) -> void:
 			GameEvents.world_notice.emit("两位已入席 · 按 %s 听小谈" % GamepadInput.interact_key())
 	elif arrived:
 		player.arrive_at_position(handoff_position, Vector2.UP)
-		GameEvents.world_notice.emit("货车已到 · 按 %s 找申禾" % GamepadInput.interact_key())
+		GameEvents.world_notice.emit(ARRIVAL_NOTICE + "按 %s 找申禾" % GamepadInput.interact_key())
