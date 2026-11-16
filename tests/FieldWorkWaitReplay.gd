@@ -197,14 +197,28 @@ func _late_day_limit() -> void:
 	var panel := await _open_plan()
 	if not _expect(panel != null and panel.wait_button.is_visible_in_tree(), "One short job fits before the day ends."):
 		return
+	Global.set_wait_for_fields_before_sleep(true)
+	var earlier := Global.day_progress
+	_expect("收工预计纳贡" in panel.tribute_details.text and "收割 1 格" in panel.field_wait_note.text,
+		"The plan predicts only the public harvest that fits before dark.")
+	Global.day_progress = 1.0 - (Global.balance.away_field_work_seconds * 0.5) / Global.balance.daylight_seconds
+	await tree.process_frame
+	await tree.process_frame
+	_expect(Global.bedtime_field_forecast().is_empty() and not panel.wait_button.visible
+		and "时辰已晚" in panel.field_wait_note.text and "收工预计纳贡" not in panel.tribute_details.text,
+		"A plan expires when the job no longer fits, even within the same watch.")
+	Global.day_progress = earlier
+	GameEvents.daylight_changed.emit()
 	Global.raid_day = Global.current_day
 	GameEvents.raid_started.emit()
 	_expect(not panel.wait_button.is_visible_in_tree() and "来敌" in panel.field_wait_note.text
-		and Global.wait_for_field_work().is_empty(), "An active raid prevents the skip in both the plan and the model.")
+		and Global.bedtime_field_forecast().is_empty() and Global.wait_for_field_work().is_empty(),
+		"An active raid prevents the skip in both the plan and the model.")
 	Global.raid_day = 0
 	GameEvents.raid_defeated.emit()
 	Global.tax_council_invited = true
-	_expect(Global.wait_for_field_work().is_empty(), "A waiting council prevents the skip as well.")
+	_expect(Global.wait_for_field_work().is_empty() and Global.bedtime_field_forecast().is_empty(),
+		"A waiting council prevents the skip as well.")
 	Global.tax_council_invited = false
 	await _pad_wait(panel)
 	_expect(Global.current_day == 9 and Global.day_progress < 1.0 and not Global.active_crops.has(PUBLIC)
@@ -225,9 +239,21 @@ func _settle_at_bedtime() -> void:
 	panel.scroll.ensure_control_visible(panel.wait_before_sleep)
 	await tree.process_frame
 	var time := Global.day_progress
+	var crops := Global.active_crops.duplicate(true)
+	var seeds := Global.field_seed_plans.duplicate()
+	var fertility := Global.fertile_cells.duplicate()
+	var stock := Global.crop_stock.lots.duplicate()
+	var coins := Global.money
 	await _click(panel.wait_before_sleep)
 	_expect(Global.wait_for_fields_before_sleep and Global.field_wait_report.is_empty() and Global.day_progress == time,
 		"Opting in schedules later work and leaves the estate as it is.")
+	_expect(Global.active_crops == crops and Global.field_seed_plans == seeds and Global.fertile_cells == fertility
+		and Global.crop_stock.lots == stock and Global.money == coins and Global.king_storage == 1,
+		"Preparing a forecast leaves plots, tribute, stock and coins untouched.")
+	_expect("收工后预计 3 格生长" in panel.field_forecast.text and "收工预计纳贡 2 份" in panel.tribute_details.text
+		and "这格预计由门客在过夜前浇好" not in panel.tribute_details.text
+		and "断水" in panel.field_warning.text and panel.find_ready_plot.visible,
+		"The sheet forecasts the work and keeps the shortcuts for existing harvests.")
 	await _frame("05-sleep-field-policy")
 	await _click(panel.close_button)
 	if not await _reload():
@@ -240,6 +266,9 @@ func _settle_at_bedtime() -> void:
 	Global.food_storage = need - 1
 	Global.retainers[1].loyalty = 0.0
 	_expect("季青" in Global.night_rations_plan().departing, "Before the work, the last specialist would leave.")
+	var expected := Global.bedtime_field_forecast()
+	if not _expect(not expected.is_empty(), "The reloaded policy projects bedtime work."):
+		return
 	var start := Global.day_progress
 	await _click(ui.sleep_button)
 	_expect(Global.current_day == 8 and Global.king_storage == 3 and Global.day_progress > start
@@ -247,6 +276,9 @@ func _settle_at_bedtime() -> void:
 		"One sleep command advances normal work before checking meals and avoids the now unnecessary warning.")
 	await tree.create_timer(1.12).timeout
 	var report: Dictionary = Global.last_dawn.get("field_wait", {})
+	_expect(Global.last_field_night == expected.growth and report.get("harvested") == expected.work.harvested
+		and report.get("sown") == expected.work.sown and report.get("watered") == expected.work.watered,
+		"Dawn matches the projected growth and the shared schedule's jobs.")
 	print("FIELD_BEDTIME day=", Global.current_day, " work=", report, " growth=", Global.last_field_night,
 		" served=", Global.night_rations.last.get("served", 0), "/", need)
 	if not _expect(Global.current_day == 9 and Global.field_wait_report.is_empty() and report.get("harvested") == 3

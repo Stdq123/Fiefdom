@@ -88,6 +88,7 @@ var focus_shortage := false
 var completed_field_id := -1
 var wait_for_retainers: Callable
 var settling_field_work := false
+var field_forecast_deadline := 1.0
 
 func _ready() -> void:
 	budget.max_value = NightRations.MAX_COPPER_LIMIT
@@ -135,7 +136,7 @@ func _ready() -> void:
 		sleep_requested.emit()
 	)
 	GameEvents.night_rations_changed.connect(_refresh)
-	GameEvents.field_wait_policy_changed.connect(_refresh_field_wait)
+	GameEvents.field_wait_policy_changed.connect(_refresh_fields)
 	GameEvents.season_order_pin_changed.connect(_refresh)
 	GameEvents.sheepfold_changed.connect(_refresh)
 	GameEvents.silk_changed.connect(_refresh)
@@ -146,16 +147,17 @@ func _ready() -> void:
 	GameEvents.retainer_recruited.connect(_refresh.unbind(1))
 	GameEvents.retainer_departed.connect(_refresh.unbind(1))
 	GameEvents.retainer_duty_changed.connect(_refresh.unbind(1))
+	GameEvents.retainer_assigned.connect(_refresh_fields.unbind(2))
 	GameEvents.farm_state_changed.connect(_refresh_fields)
 	GameEvents.crop_harvested.connect(_refresh_fields.unbind(1))
 	GameEvents.channels_changed.connect(_refresh_fields)
-	GameEvents.daylight_changed.connect(_refresh_field_wait)
+	GameEvents.daylight_changed.connect(_refresh_fields)
 	GameEvents.day_advanced.connect(_refresh.unbind(1))
 	GameEvents.raid_started.connect(_refresh_raid_plan)
 	GameEvents.raid_defeated.connect(_refresh_raid_plan)
 	GamepadInput.changed.connect(_refresh_raid_plan)
-	GameEvents.raid_started.connect(_refresh_field_wait)
-	GameEvents.raid_defeated.connect(_refresh_field_wait)
+	GameEvents.raid_started.connect(_refresh_fields)
+	GameEvents.raid_defeated.connect(_refresh_fields)
 	GameEvents.watch_snare_changed.connect(_refresh_raid_plan)
 	_refresh()
 	_show_page(show_previous)
@@ -462,10 +464,17 @@ func _refresh_raid_plan() -> void:
 func _refresh_fields() -> void:
 	if settling_field_work:
 		return
-	_refresh_tribute()
-	var report := Global.field_night_forecast()
-	field_forecast.text = "已有 %d 格可收 · 今夜预计 %d 格生长" % [
-		report.ready, report.growing + report.public_ripe + report.private_ripe]
+	var current := Global.field_night_forecast()
+	var preview := Global.bedtime_field_forecast() if not show_previous and wait_for_retainers.is_valid() else {}
+	var after_work := not preview.is_empty()
+	var report: Dictionary = preview.get("growth", current)
+	if after_work:
+		field_forecast_deadline = 1.0 - float(preview.seconds) / maxf(1.0, Global.balance.daylight_seconds)
+	set_process(after_work)
+	_refresh_tribute(preview)
+	var estimate := "收工后预计" if after_work else "今夜预计"
+	field_forecast.text = "已有 %d 格可收 · %s %d 格生长" % [
+		current.ready, estimate, report.growing + report.public_ripe + report.private_ripe]
 	var ripe := _describe_ripe(report)
 	if not ripe.is_empty():
 		field_forecast.text += "\n明早新熟 · " + ripe
@@ -477,18 +486,24 @@ func _refresh_fields() -> void:
 			field_forecast.text += "\n" + away_yields
 	var warnings := PackedStringArray()
 	if report.dry > 0:
-		warnings.append("%d 格待浇，缺水会停长" % report.dry)
+		var dry := "收工后仍有 %d 格待浇，缺水会停长" if after_work else "%d 格待浇，缺水会停长"
+		warnings.append(dry % report.dry)
 	if report.blocked > 0:
 		warnings.append("%d 格稻田断水，需接通水渠" % report.blocked)
 	field_warning.text = " · ".join(warnings)
 	field_warning.visible = not warnings.is_empty()
-	find_plot.visible = report.dry > 0
-	find_ready_plot.visible = report.ready > 0
-	find_harvest.visible = show_previous and report.ready > 0
-	_refresh_field_wait()
+	find_plot.visible = current.dry > 0
+	find_plot.text = "找当前待浇田" if after_work else "找待浇田"
+	find_ready_plot.visible = current.ready > 0
+	find_harvest.visible = show_previous and current.ready > 0
+	_refresh_field_wait(preview)
 
-func _refresh_field_wait() -> void:
-	if settling_field_work or show_previous or not wait_for_retainers.is_valid():
+func _process(_delta: float) -> void:
+	if Global.day_progress > field_forecast_deadline:
+		_refresh_fields()
+
+func _refresh_field_wait(preview: Dictionary) -> void:
+	if show_previous or not wait_for_retainers.is_valid():
 		return
 	wait_before_sleep.visible = Global.first_tribute_delivered() and (Global.wait_for_fields_before_sleep
 		or Global.retainers.any(func(worker: RetainerData) -> bool: return worker.works_fields()))
@@ -507,6 +522,8 @@ func _refresh_field_wait() -> void:
 			notes.append("先到堂前议税。")
 		elif not offer.available:
 			notes.append("今日时辰已晚。剩下的田务可亲手做。")
+		elif not preview.is_empty():
+			notes.append("睡前预计 · " + Global.field_work_summary(preview.work, Global.FIELD_WORK_JOBS))
 		else:
 			notes.append("门客可接手 %d 格。做完即停，最晚到亥时。" % offer.plots)
 	var focus_lost: bool = ((wait_button.has_focus() and not offer.available)
@@ -554,7 +571,7 @@ func _open_field_management() -> void:
 	queue_free()
 	field_management_requested.emit(completed_field_id)
 
-func _refresh_tribute() -> void:
+func _refresh_tribute(preview: Dictionary) -> void:
 	var due := Global.tribute_deadline()
 	tribute_plan.visible = due > 0
 	if not tribute_plan.visible:
@@ -575,8 +592,13 @@ func _refresh_tribute() -> void:
 	tribute_details.text = "收割公田后，作物入国库，期限重新计算。"
 	if not field.is_empty():
 		_describe_tribute_field(field)
+		if field.status == Global.NightGrowth.DRY and field.cell in preview.get("watered_cells", []):
+			tribute_details.text += "\n这格预计由门客在过夜前浇好。"
 	var penalty := Global.tribute_penalty_tonight()
-	if penalty > 0:
+	var expected_tribute: int = preview.get("work", {}).get("tribute", 0)
+	if expected_tribute > 0:
+		tribute_details.text += "\n收工预计纳贡 %d 份。" % expected_tribute
+	elif penalty > 0:
 		tribute_details.text += "\n若今夜仍无纳贡，声望 −%d。" % penalty
 		if Global.reputation - penalty <= Global.balance.rank_strip_threshold:
 			tribute_details.text += "将失去封地。" if Global.current_rank == Global.Rank.XIA_SHI else "将被削爵。"

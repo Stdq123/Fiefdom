@@ -933,19 +933,21 @@ func crop_water(cell: Vector2i, crop: Dictionary, day := 0) -> CropWater:
 		return CropWater.RAIN
 	return CropWater.HAND if crop["watered"] else CropWater.DRY
 
-func field_crop_is_dry(cell: Vector2i) -> bool:
-	var crop: Dictionary = active_crops.get(cell, {})
+func field_crop_is_dry(cell: Vector2i, preview: FieldWorkPreview = null) -> bool:
+	var crop: Dictionary = (preview.crops if preview else active_crops).get(cell, {})
 	return not crop.is_empty() and crop.age < crop.growth_nights and crop_water(cell, crop) == CropWater.DRY
 
-func field_crop_is_ripe(cell: Vector2i) -> bool:
-	var crop: Dictionary = active_crops.get(cell, {})
+func field_crop_is_ripe(cell: Vector2i, preview: FieldWorkPreview = null) -> bool:
+	var crop: Dictionary = (preview.crops if preview else active_crops).get(cell, {})
 	return not crop.is_empty() and crop.age >= crop.growth_nights
 
-func water_field_crop(cell: Vector2i) -> bool:
-	if not field_crop_is_dry(cell):
+func water_field_crop(cell: Vector2i, preview: FieldWorkPreview = null) -> bool:
+	if not field_crop_is_dry(cell, preview):
 		return false
-	active_crops[cell].watered = true
-	GameEvents.farm_state_changed.emit()
+	var crops := preview.crops if preview else active_crops
+	crops[cell].watered = true
+	if not preview:
+		GameEvents.farm_state_changed.emit()
 	return true
 
 func can_plan_field_seed(cell: Vector2i) -> bool:
@@ -954,10 +956,11 @@ func can_plan_field_seed(cell: Vector2i) -> bool:
 	var crop: Dictionary = active_crops.get(cell, {})
 	return crop.is_empty() or not crop.data.is_perennial
 
-func till_field_plot(cell: Vector2i) -> bool:
-	if outcome != Outcome.RUNNING or tilled_cells.has(cell) or not _unlocked_field_contains(cell):
+func till_field_plot(cell: Vector2i, preview: FieldWorkPreview = null) -> bool:
+	var tilled := preview.tilled if preview else tilled_cells
+	if outcome != Outcome.RUNNING or tilled.has(cell) or not _unlocked_field_contains(cell):
 		return false
-	tilled_cells[cell] = true
+	tilled[cell] = true
 	return true
 
 func _unlocked_field_contains(cell: Vector2i) -> bool:
@@ -1024,9 +1027,9 @@ func set_field_seed_plan(cell: Vector2i, plan: String) -> void:
 			return
 		field_seed_plans[cell] = plan
 
-func _clear_seed_plan(cell: Vector2i) -> void:
-	field_seed_plans.erase(cell)
-	deferred_field_sowing.erase(cell)
+func _clear_seed_plan(cell: Vector2i, preview: FieldWorkPreview = null) -> void:
+	(preview.plans if preview else field_seed_plans).erase(cell)
+	(preview.deferred if preview else deferred_field_sowing).erase(cell)
 
 func can_defer_field_sowing(cell: Vector2i) -> bool:
 	return (field_sowing_can_defer() and not is_public_plot(cell)
@@ -1041,22 +1044,24 @@ func set_field_sowing_deferred(cell: Vector2i, deferred: bool) -> void:
 	elif can_defer_field_sowing(cell):
 		deferred_field_sowing[cell] = true
 
-func next_seed_for_plan(cell: Vector2i, plan: String) -> String:
+func next_seed_for_plan(cell: Vector2i, plan: String, preview: FieldWorkPreview = null) -> String:
 	if plan == FieldSeedPlan.SEASONAL:
 		return FieldSeedPlan.seasonal_seed(season_index(), irrigation.supplies(cell))
 	if not FieldSeedPlan.is_rotation(plan):
 		return FieldSeedPlan.crop_id(plan)
-	var crop: Dictionary = active_crops.get(cell, {})
+	var crop: Dictionary = (preview.crops if preview else active_crops).get(cell, {})
 	# Preview the soil after harvest when a crop is still in the plot.
-	var prepared: bool = fertile_cells.has(cell) if crop.is_empty() else crop.data.restores_fertility
+	var soil := preview.fertile if preview else fertile_cells
+	var prepared: bool = soil.has(cell) if crop.is_empty() else crop.data.restores_fertility
 	return FieldSeedPlan.crop_id(plan) if prepared else FieldSeedPlan.BEANS
 
-func planned_field_seed(cell: Vector2i, include_untilled := false) -> String:
-	if active_crops.has(cell):
+func planned_field_seed(cell: Vector2i, include_untilled := false, preview: FieldWorkPreview = null) -> String:
+	if (preview.crops if preview else active_crops).has(cell):
 		return ""
-	if not tilled_cells.has(cell) and (not include_untilled or not can_plan_field_seed(cell)):
+	var tilled := preview.tilled if preview else tilled_cells
+	if not tilled.has(cell) and (not include_untilled or not first_tribute_delivered() or not _unlocked_field_contains(cell)):
 		return ""
-	return _usable_seed_plan(cell)
+	return _usable_seed_plan(cell, preview)
 
 func planned_seed_after_harvest(cell: Vector2i) -> String:
 	if not tilled_cells.has(cell) or not field_crop_is_ripe(cell):
@@ -1064,27 +1069,40 @@ func planned_seed_after_harvest(cell: Vector2i) -> String:
 	var crop: CropData = active_crops[cell].data
 	return "" if crop.is_perennial else _usable_seed_plan(cell)
 
-func _usable_seed_plan(cell: Vector2i) -> String:
-	if deferred_field_sowing.has(cell):
+func _usable_seed_plan(cell: Vector2i, preview: FieldWorkPreview = null) -> String:
+	if (preview.deferred if preview else deferred_field_sowing).has(cell):
 		return ""
-	var seed_id := next_seed_for_plan(cell, field_seed_plans.get(cell, ""))
+	var plan: String = (preview.plans if preview else field_seed_plans).get(cell, "")
+	var seed_id := next_seed_for_plan(cell, plan, preview)
 	var seed := ItemManager.get_crop(seed_id)
 	return seed_id if seed and (not seed.is_water_crop or irrigation.supplies(cell)) else ""
 
-func sow_field_crop(cell: Vector2i, seed_id: String) -> bool:
-	if seed_id.is_empty() or not tilled_cells.has(cell) or active_crops.has(cell):
+func sow_field_crop(cell: Vector2i, seed_id: String, preview: FieldWorkPreview = null) -> bool:
+	var crops := preview.crops if preview else active_crops
+	var tilled := preview.tilled if preview else tilled_cells
+	if seed_id.is_empty() or not tilled.has(cell) or crops.has(cell):
 		return false
 	var seed := ItemManager.get_crop(seed_id)
 	if seed == null or (seed.is_water_crop and not irrigation.supplies(cell)):
 		return false
-	active_crops[cell] = {"id": seed_id, "data": seed, "age": 0,
+	crops[cell] = {"id": seed_id, "data": seed, "age": 0,
 		"growth_nights": sowing_nights(seed), "watered": false, "requires_channel": seed.is_water_crop}
-	if seed.is_perennial or FieldSeedPlan.is_order(field_seed_plans.get(cell, "")):
-		_clear_seed_plan(cell)
-	GameEvents.farm_state_changed.emit()
+	var plans := preview.plans if preview else field_seed_plans
+	if seed.is_perennial or FieldSeedPlan.is_order(plans.get(cell, "")):
+		_clear_seed_plan(cell, preview)
+	if not preview:
+		GameEvents.farm_state_changed.emit()
 	return true
 
 enum FieldJob { NONE, WATER, SOW, HARVEST, TILL }
+
+class FieldWorkPreview:
+	var crops: Dictionary
+	var tilled: Dictionary
+	var plans: Dictionary[Vector2i, String]
+	var deferred: Dictionary[Vector2i, bool]
+	var fertile: Dictionary[Vector2i, bool]
+	var watered_cells: Array[Vector2i] = []
 
 func can_hold_private_harvest() -> bool:
 	return (outcome == Outcome.RUNNING and first_tribute_delivered()
@@ -1099,58 +1117,68 @@ func set_private_harvest_hold(enabled: bool) -> void:
 func private_harvest_is_held(cell: Vector2i) -> bool:
 	return hold_private_harvest and not is_public_plot(cell)
 
-func field_job(worker: RetainerData, cell: Vector2i) -> FieldJob:
+func field_job(worker: RetainerData, cell: Vector2i, preview: FieldWorkPreview = null) -> FieldJob:
 	if worker.duty == RetainerData.Duty.STEWARD:
 		var center: Vector2i = stewarded_field(worker).center_pos
 		if not _well_field_cells(center).has_point(cell):
 			return FieldJob.NONE
 	if (worker.duty in [RetainerData.Duty.HARVEST, RetainerData.Duty.STEWARD]
-			and field_crop_is_ripe(cell) and not private_harvest_is_held(cell)):
+			and field_crop_is_ripe(cell, preview) and not private_harvest_is_held(cell)):
 		return FieldJob.HARVEST
 	if worker.duty in [RetainerData.Duty.FIELD, RetainerData.Duty.STEWARD]:
-		if field_crop_is_dry(cell):
+		if field_crop_is_dry(cell, preview):
 			return FieldJob.WATER
-		var plan: String = field_seed_plans.get(cell, "")
+		var plan: String = (preview.plans if preview else field_seed_plans).get(cell, "")
 		if FieldSeedPlan.is_order(plan):
 			var seed := ItemManager.get_crop(FieldSeedPlan.crop_id(plan))
 			if worker.duty != RetainerData.Duty.STEWARD or (seed.is_water_crop and not irrigation.supplies(cell)):
 				return FieldJob.NONE
-		if not planned_field_seed(cell).is_empty():
+		if not planned_field_seed(cell, false, preview).is_empty():
 			return FieldJob.SOW
-		if not tilled_cells.has(cell) and not plan.is_empty() and not deferred_field_sowing.has(cell):
+		var tilled := preview.tilled if preview else tilled_cells
+		var deferred := preview.deferred if preview else deferred_field_sowing
+		if not tilled.has(cell) and not plan.is_empty() and not deferred.has(cell):
 			return FieldJob.TILL
 	return FieldJob.NONE
 
-func field_work_cells() -> Array[Vector2i]:
+func field_work_cells(preview: FieldWorkPreview = null) -> Array[Vector2i]:
+	var tilled := preview.tilled if preview else tilled_cells
+	var plans := preview.plans if preview else field_seed_plans
 	var cells: Array[Vector2i] = []
-	cells.assign(tilled_cells.keys())
-	for cell: Vector2i in field_seed_plans:
-		if not tilled_cells.has(cell):
+	cells.assign(tilled.keys())
+	for cell: Vector2i in plans:
+		if not tilled.has(cell):
 			cells.append(cell)
 	return cells
 
-func crop_rotation_bonus(cell: Vector2i, crop: CropData) -> int:
-	return int(not crop.restores_fertility and fertile_cells.has(cell))
+func crop_rotation_bonus(cell: Vector2i, crop: CropData, preview: FieldWorkPreview = null) -> int:
+	var soil := preview.fertile if preview else fertile_cells
+	return int(not crop.restores_fertility and soil.has(cell))
 
-func harvest_field_crop(cell: Vector2i, worker: RetainerData = null) -> Dictionary:
-	if outcome != Outcome.RUNNING or not field_crop_is_ripe(cell) or (worker != null and private_harvest_is_held(cell)):
+func harvest_field_crop(cell: Vector2i, worker: RetainerData = null, preview: FieldWorkPreview = null) -> Dictionary:
+	if (outcome != Outcome.RUNNING or not field_crop_is_ripe(cell, preview)
+			or (worker != null and private_harvest_is_held(cell))):
 		return {}
-	var crop: Dictionary = active_crops[cell]
+	var crops := preview.crops if preview else active_crops
+	var soil := preview.fertile if preview else fertile_cells
+	var crop: Dictionary = crops[cell]
 	var data: CropData = crop.data
 	var crop_id: String = crop.id
 	var public_plot := is_public_plot(cell)
-	var rotation := crop_rotation_bonus(cell, data)
+	var rotation := crop_rotation_bonus(cell, data, preview)
 	if rotation > 0:
-		fertile_cells.erase(cell)
+		soil.erase(cell)
 	if data.restores_fertility:
-		fertile_cells[cell] = true
+		soil[cell] = true
 	if data.is_perennial:
 		crop.age = mini(1, data.days_to_grow - 1)
 		crop.growth_nights = data.days_to_grow
 		crop.watered = false
 	else:
-		active_crops.erase(cell)
+		crops.erase(cell)
 	var proceeds := harvest_proceeds(public_plot, data.sell_price, rotation, tax_reform_choice, tax_rate)
+	if preview:
+		return proceeds
 	var first_tribute: bool = proceeds.tribute > 0 and not first_tribute_delivered()
 	if first_tribute:
 		first_tribute_entry = _harvest_entry(cell, crop_id, proceeds.tribute, worker)
@@ -1208,7 +1236,28 @@ func set_wait_for_fields_before_sleep(enabled: bool) -> void:
 func wait_for_field_work() -> Dictionary:
 	if not field_wait_offer().available:
 		return {}
-	var limit := _daylight_left()
+	var result := _run_timed_field_work(_daylight_left(), field_wait_report)
+	var elapsed: float = result.seconds
+	if elapsed > 0.0 and not field_wait_report.is_empty():
+		field_wait_report.minutes = mini(DAY_MINUTES, int(field_wait_report.get("minutes", 0)) + _field_wait_minutes(elapsed))
+	return result
+
+func bedtime_field_forecast() -> Dictionary:
+	if not wait_for_fields_before_sleep or not first_tribute_delivered() or not field_wait_offer().available:
+		return {}
+	# Copy the rows as well as the crop list. A preview can water a crop or leave its perennial roots.
+	var preview := FieldWorkPreview.new()
+	preview.crops = active_crops.duplicate(true)
+	preview.tilled = tilled_cells.duplicate()
+	preview.plans = field_seed_plans.duplicate()
+	preview.deferred = deferred_field_sowing.duplicate()
+	preview.fertile = fertile_cells.duplicate()
+	var work := {}
+	var result := _run_timed_field_work(_daylight_left(), work, preview)
+	return {"growth": field_night_forecast(0, preview), "work": work, "seconds": result.seconds,
+		"watered_cells": preview.watered_cells}
+
+func _run_timed_field_work(limit: float, report: Dictionary, preview: FieldWorkPreview = null) -> Dictionary:
 	var elapsed := 0.0
 	# Workers share the remaining daylight. A plot stays reserved until its job finishes.
 	var booked: Dictionary[RetainerData, Dictionary] = {}
@@ -1222,10 +1271,10 @@ func wait_for_field_work() -> Dictionary:
 				var finish := elapsed + _field_work_seconds(worker)
 				if finish > limit:
 					continue
-				var cell := _timed_work_plot(worker, reserved)
+				var cell := _timed_work_plot(worker, reserved, preview)
 				if cell == RetainerData.NO_ASSIGNMENT:
 					continue
-				booked[worker] = {"cell": cell, "job": field_job(worker, cell), "finish": finish}
+				booked[worker] = {"cell": cell, "job": field_job(worker, cell, preview), "finish": finish}
 				reserved.append(cell)
 			if next == null or booked[worker].finish < booked[next].finish:
 				next = worker
@@ -1237,12 +1286,11 @@ func wait_for_field_work() -> Dictionary:
 		# Publish a new watch after the job reaching it has settled.
 		var seconds: float = task.finish - elapsed
 		elapsed = task.finish
-		if retainers.has(next) and field_job(next, task.cell) == task.job:
-			var delivered := _finish_timed_field_work(task.job, task.cell, field_wait_report, next)
+		if retainers.has(next) and field_job(next, task.cell, preview) == task.job:
+			var delivered := _finish_timed_field_work(task.job, task.cell, report, next, preview)
 			first_tribute = first_tribute or delivered
-		advance_daylight(seconds)
-	if elapsed > 0.0 and not field_wait_report.is_empty():
-		field_wait_report.minutes = mini(DAY_MINUTES, int(field_wait_report.get("minutes", 0)) + _field_wait_minutes(elapsed))
+		if not preview:
+			advance_daylight(seconds)
 	return {"seconds": elapsed, "first_tribute": first_tribute}
 
 func _field_wait_minutes(seconds: float) -> int:
@@ -1254,43 +1302,48 @@ func _daylight_left() -> float:
 func _field_work_seconds(worker: RetainerData) -> float:
 	return balance.away_field_work_seconds / maxf(0.1, worker.get_work_efficiency())
 
-func _timed_work_plot(worker: RetainerData, reserved: Array[Vector2i] = []) -> Vector2i:
+func _timed_work_plot(worker: RetainerData, reserved: Array[Vector2i] = [], preview: FieldWorkPreview = null) -> Vector2i:
 	var anchor := worker.assigned_area if worker.assigned_area != RetainerData.NO_ASSIGNMENT else FIRST_FIELD_CENTER
 	var nearest := RetainerData.NO_ASSIGNMENT
 	var distance := INF
-	for cell: Vector2i in field_work_cells():
+	var tilled := preview.tilled if preview else tilled_cells
+	for cell: Vector2i in field_work_cells(preview):
 		# Work already in cultivation takes priority over opening new soil.
-		if tilled_cells.has(nearest) and not tilled_cells.has(cell):
+		if tilled.has(nearest) and not tilled.has(cell):
 			break
 		var distance_to_anchor := cell.distance_squared_to(anchor)
-		if distance_to_anchor < distance and cell not in reserved and field_job(worker, cell) != FieldJob.NONE:
+		if distance_to_anchor < distance and cell not in reserved and field_job(worker, cell, preview) != FieldJob.NONE:
 			nearest = cell
 			distance = distance_to_anchor
 	return nearest
 
-func _finish_timed_field_work(job: FieldJob, cell: Vector2i, report: Dictionary, worker: RetainerData) -> bool:
+func _finish_timed_field_work(job: FieldJob, cell: Vector2i, report: Dictionary, worker: RetainerData,
+		preview: FieldWorkPreview = null) -> bool:
 	if report.is_empty():
 		report.day = current_day
 		for key in FIELD_WORK_TOTALS:
 			report[key] = 0
 	match job:
 		FieldJob.TILL:
-			if till_field_plot(cell):
+			if till_field_plot(cell, preview):
 				report.tilled += 1
-				GameEvents.farm_state_changed.emit()
+				if not preview:
+					GameEvents.farm_state_changed.emit()
 		FieldJob.WATER:
-			if water_field_crop(cell):
+			if water_field_crop(cell, preview):
 				report.watered += 1
+				if preview:
+					preview.watered_cells.append(cell)
 		FieldJob.SOW:
-			if sow_field_crop(cell, planned_field_seed(cell)):
+			if sow_field_crop(cell, planned_field_seed(cell, false, preview), preview):
 				report.sown += 1
 		FieldJob.HARVEST:
-			var harvest := harvest_field_crop(cell, worker)
+			var harvest := harvest_field_crop(cell, worker, preview)
 			if not harvest.is_empty():
 				report.harvested += 1
 				for key in FIELD_WORK_YIELDS:
-					report[key] += harvest[key]
-				return harvest.first_tribute
+					report[key] += harvest.get(key, 0)
+				return harvest.get("first_tribute", false)
 	return false
 
 func away_field_summary(keys: Array = []) -> String:
@@ -1345,12 +1398,16 @@ func crop_night_status(cell: Vector2i, day := 0) -> int:
 	var crop: Dictionary = active_crops.get(cell, {})
 	return -1 if crop.is_empty() else night_growth(crop, crop_water(cell, crop, day))
 
-func field_night_forecast(day := 0) -> Dictionary:
+func field_night_forecast(day := 0, preview: FieldWorkPreview = null) -> Dictionary:
 	var report := {"day": current_day if day <= 0 else day}
 	for key in FIELD_NIGHT_COUNTS:
 		report[key] = 0
-	for cell: Vector2i in active_crops:
-		match crop_night_status(cell, report.day):
+	var crops := preview.crops if preview else active_crops
+	for cell: Vector2i in crops:
+		var crop: Dictionary = crops[cell]
+		if crop.is_empty():
+			continue
+		match night_growth(crop, crop_water(cell, crop, report.day)):
 			NightGrowth.READY: report.ready += 1
 			NightGrowth.DRY: report.dry += 1
 			NightGrowth.BLOCKED: report.blocked += 1
