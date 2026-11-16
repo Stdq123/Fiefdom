@@ -1,7 +1,8 @@
 extends Node2D
 
-const BOARD := preload("res://assets/world/east-watch.svg")
-const STORAGE := preload("res://assets/world/estate-storage.svg")
+const BOARD := preload("res://assets/world/estate-site-art.png")
+const BOARD_REGION := Rect2(280, 0, 32, 36)
+const STORAGE := preload("res://assets/world/estate-vessels.png")
 const POLE := EstateLayout.WATCH_RELIEF_POST - EstateLayout.EAST_WATCH
 const SNARE := EstateLayout.EAST_RAID_SNARE - EstateLayout.EAST_WATCH
 const SNARE_NORTH := Vector2(-1, -16)
@@ -70,7 +71,7 @@ func interact() -> void:
 
 func _draw() -> void:
 	if Global.east_watch_day > 0:
-		draw_texture(BOARD, Vector2(-16, -32))
+		draw_texture_rect_region(BOARD, Rect2(Vector2(-16, -32), BOARD_REGION.size), BOARD_REGION)
 	if Global.east_watch_day > 0 and Global.raid_day > 0:
 		draw_colored_polygon(PackedVector2Array([Vector2(10, -28), Vector2(-7, -26),
 			Vector2(-3, -23), Vector2(-7, -20), Vector2(10, -21)]), Color("#b65a48"))

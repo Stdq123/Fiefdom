@@ -4,7 +4,8 @@ const PLACE := "亭西种圃"
 const HOST := "林蓼"
 const DELIVERY_NOTE := "林蓼送种途中"
 const CAST := preload("res://assets/characters/autumn-guests.svg")
-const STORAGE := preload("res://assets/world/estate-storage.svg")
+const STORAGE := preload("res://assets/world/estate-vessels.png")
+const TERRAIN := preload("res://scripts/EstateTerrain.gd")
 const SHARING := preload("res://assets/world/autumn-sharing.svg")
 const SHARE_START := 3.0 / 16.0
 const SHARE_END := 11.0 / 16.0
@@ -221,23 +222,23 @@ func _draw() -> void:
 		draw_texture_rect_region(SHARING, Rect2(-38, -2, 11, 7), Rect2(1, 34, 19, 12))
 
 func _draw_bed(at: Vector2, crop_id: String, winter: bool) -> void:
-	var rim := Color("#b6b9aa" if winter else "#ae8d62")
+	var rim := Color("#b6b9aa" if winter else "#ab9474")
 	var soil := Color("#7d8272" if winter else "#735336")
 	draw_set_transform(at)
 	draw_colored_polygon(PackedVector2Array([Vector2(-2, 14), Vector2(29, 12), Vector2(32, 21),
 		Vector2(27, 26), Vector2(4, 28), Vector2(-3, 24)]), Color("#28302370"))
 	# The near wall reaches the foot of the bed. The right return is darker.
-	draw_colored_polygon(PackedVector2Array([Vector2(-2, 14), Vector2(2, 18), Vector2(24, 17), Vector2(29, 14),
-		Vector2(28, 20), Vector2(24, 24), Vector2(2, 25), Vector2(-2, 21)]), rim.darkened(0.35))
+	TERRAIN.draw_loam(self, PackedVector2Array([Vector2(-2, 14), Vector2(2, 18), Vector2(24, 17), Vector2(29, 14),
+		Vector2(28, 20), Vector2(24, 24), Vector2(2, 25), Vector2(-2, 21)]), rim.darkened(0.30), TERRAIN.STONE_GRAIN)
 	draw_colored_polygon(PackedVector2Array([Vector2(24, 17), Vector2(30, 4), Vector2(29, 12),
 		Vector2(28, 20), Vector2(24, 24)]), rim.darkened(0.47))
 	for seam in [7, 16, 22]:
 		draw_line(Vector2(seam, 21), Vector2(seam - 1, 24), rim.darkened(0.52))
 	# The low rim and its inner shadow leave the rows visible from the path.
-	draw_colored_polygon(PackedVector2Array([Vector2(2, 3), Vector2(25, 0), Vector2(30, 4),
-		Vector2(28, 14), Vector2(24, 20), Vector2(2, 21), Vector2(-2, 17)]), rim)
-	draw_colored_polygon(PackedVector2Array([Vector2(5, 5), Vector2(24, 3), Vector2(27, 6),
-		Vector2(24, 15), Vector2(21, 17), Vector2(2, 18), Vector2(1, 15)]), soil)
+	TERRAIN.draw_loam(self, PackedVector2Array([Vector2(2, 3), Vector2(25, 0), Vector2(30, 4),
+		Vector2(28, 14), Vector2(24, 20), Vector2(2, 21), Vector2(-2, 17)]), rim, TERRAIN.STONE_GRAIN)
+	TERRAIN.draw_loam(self, PackedVector2Array([Vector2(5, 5), Vector2(24, 3), Vector2(27, 6),
+		Vector2(24, 15), Vector2(21, 17), Vector2(2, 18), Vector2(1, 15)]), soil, TERRAIN.TRACK_GRAIN)
 	draw_polyline(PackedVector2Array([Vector2(1, 15), Vector2(5, 5), Vector2(24, 3), Vector2(27, 6)]), soil.darkened(0.28))
 	draw_line(Vector2(3, 20), Vector2(22, 19), rim.lightened(0.15))
 	for row in [8, 16]:

@@ -21,7 +21,7 @@
 [ext_resource type="Texture2D" path="res://assets/world/gathering-bell-rack.svg" id="17_bell_rack"]
 [ext_resource type="Script" path="res://scripts/RoadRest.gd" id="18_road_rest"]
 [ext_resource type="Script" path="res://scripts/PavilionRest.gd" id="41_pavilion_rest"]
-[ext_resource type="Texture2D" uid="uid://bmdm6ik4ep8rr" path="res://assets/world/pavilion-rain-shelter.svg" id="pavilion_rain_shelter"]
+[ext_resource type="Texture2D" path="res://assets/world/estate-site-art.png" id="pavilion_rain_shelter"]
 [ext_resource type="Script" path="res://scripts/FieldRotationBook.gd" id="19_rotation_book"]
 [ext_resource type="Script" path="res://scripts/MeadowButterfly.gd" id="20_butterfly"]
 [ext_resource type="Script" path="res://scripts/EstateDirections.gd" id="21_directions"]
@@ -61,12 +61,12 @@
 
 [sub_resource type="AtlasTexture" id="Texture_rain_shelter_back"]
 atlas = ExtResource("pavilion_rain_shelter")
-region = Rect2(0, 0, 92, 64)
+region = Rect2(392, 0, 92, 64)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="Texture_rain_shelter_posts"]
 atlas = ExtResource("pavilion_rain_shelter")
-region = Rect2(0, 64, 92, 64)
+region = Rect2(484, 0, 92, 64)
 filter_clip = true
 
 [sub_resource type="RectangleShape2D" id="Shape_east_gate"]

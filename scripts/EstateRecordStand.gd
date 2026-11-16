@@ -3,7 +3,7 @@ extends Sprite2D
 signal readiness_changed(ready: bool)
 
 const PROPS := preload("res://assets/world/ending-ceremonies.svg")
-const SACKS := preload("res://assets/world/estate-storage.svg")
+const SACKS := preload("res://assets/world/estate-vessels.png")
 const TRIBUTE_POINT := Vector2(-120, 76)
 const TAX_POINT := EstateLayout.SOUTH_PAVILION + Vector2(67, 22)
 

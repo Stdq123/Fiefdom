@@ -1,5 +1,8 @@
 extends Node2D
 
+const ART := preload("res://assets/world/estate-site-art.png")
+const BOARD := Rect2(158, 252, 32, 28)
+
 @onready var hint: Label = $Hint
 
 var focused := false
@@ -28,11 +31,7 @@ func interact() -> void:
 	GameEvents.season_board_interacted.emit()
 
 func _draw() -> void:
-	draw_rect(Rect2(-13, 0, 28, 3), Color("#23382b80"))
-	draw_rect(Rect2(-11, -18, 4, 20), Color("#574532"))
-	draw_rect(Rect2(7, -18, 4, 20), Color("#574532"))
-	draw_rect(Rect2(-13, -20, 26, 15), Color("#6b5036"))
-	draw_rect(Rect2(-11, -18, 22, 11), Color("#97744b"))
+	draw_texture_rect_region(ART, Rect2(Vector2(-16, -23), BOARD.size), BOARD)
 	draw_rect(Rect2(-9, -17, 13, 9), Color("#e5cc90") if focused else Color("#c8ad76"))
 	draw_rect(Rect2(-7, -15, 8, 1), Color("#87623d"))
 	draw_rect(Rect2(-7, -12, 7, 1), Color("#87623d"))

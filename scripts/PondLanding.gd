@@ -1,7 +1,7 @@
 extends "res://scripts/FishingSpot.gd"
 
-const BOARD := Color("#ab875d")
-const TIMBER := Color("#604c38")
+const BOARD := Color("#a0825a")
+const TIMBER := Color("#594837")
 const RAILS := [Rect2(166, 701, 34, 3), Rect2(197, 704, 3, 20), Rect2(167, 724, 33, 3)]
 var railing: StaticBody2D
 
@@ -76,6 +76,8 @@ func _draw_deck(deck: Node2D) -> void:
 		deck.draw_rect(Rect2(x, bounds.position.y + 1, width, bounds.size.y - 2), plank)
 		deck.draw_rect(Rect2(x, bounds.position.y + 3, 1, 8 + offset % 4), plank.lightened(0.21))
 		deck.draw_rect(Rect2(x + 2, near - 6 - offset % 4, 1, 5), TIMBER.lightened(0.12))
+		deck.draw_rect(Rect2(x + 1, bounds.position.y + 9 + offset % 7, 1, 3), plank.darkened(0.14))
+		deck.draw_rect(Rect2(x + 2, near - 3, 1, 1), TIMBER)
 	deck.draw_rect(Rect2(bounds.position.x, near - 1, bounds.size.x, 1), BOARD.lightened(0.26))
 	deck.draw_rect(Rect2(bounds.position.x + 2, near + 2, bounds.size.x - 4, 2), BOARD.darkened(0.28))
 

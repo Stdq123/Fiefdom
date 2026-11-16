@@ -1,6 +1,6 @@
 extends Node2D
 
-const STORAGE := preload("res://assets/world/estate-storage.svg")
+const STORAGE := preload("res://assets/world/estate-vessels.png")
 
 @onready var hint: Label = $Hint
 

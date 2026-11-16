@@ -1,7 +1,7 @@
 extends Node2D
 
 const PLACE := "亭前路粮案"
-const STORAGE := preload("res://assets/world/estate-storage.svg")
+const STORAGE := preload("res://assets/world/estate-vessels.png")
 const STAY_AT_TABLE := 1.55
 const VISIT_START := 0.085
 const VISIT_LEAVE := 0.220

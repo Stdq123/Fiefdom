@@ -1,8 +1,8 @@
 extends Node2D
 class_name FreightBench
 
-const ART := preload("res://assets/world/road-rest.svg")
-const BENCH_ART := Rect2(76, 22, 32, 14)
+const ART := preload("res://assets/world/estate-site-art.png")
+const BENCH_ART := Rect2(320, 224, 32, 14)
 const SEAT_OFFSET := Vector2(-14, 3)
 const HANDOFF_OFFSET := Vector2(12, -15)
 

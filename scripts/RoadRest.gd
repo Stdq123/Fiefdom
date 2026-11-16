@@ -1,6 +1,7 @@
 extends Node2D
 
-const ART := preload("res://assets/world/road-rest.svg")
+const ART := preload("res://assets/world/estate-site-art.png")
+const ART_AT := Vector2(192, 152)
 const FRAME := Vector2(64, 38)
 
 @onready var hint: Label = $Hint
@@ -10,7 +11,7 @@ var focused := false
 static func portrait() -> AtlasTexture:
 	var texture := AtlasTexture.new()
 	texture.atlas = ART
-	texture.region = Rect2(Vector2(FRAME.x, 0), FRAME)
+	texture.region = Rect2(ART_AT + Vector2(FRAME.x, 0), FRAME)
 	texture.filter_clip = true
 	return texture
 
@@ -41,6 +42,6 @@ func interact() -> void:
 		GameEvents.road_rest_interacted.emit()
 
 func _draw() -> void:
-	var region := Rect2(Vector2(FRAME.x if Global.road_rest_built() else 0.0, 0), FRAME)
+	var region := Rect2(ART_AT + Vector2(FRAME.x if Global.road_rest_built() else 0.0, 0), FRAME)
 	var tint := Color(0.88, 0.94, 0.99) if Global.has_rain() else Color.WHITE
 	draw_texture_rect_region(ART, Rect2(Vector2(-FRAME.x / 2, -FRAME.y + 2), FRAME), region, tint)

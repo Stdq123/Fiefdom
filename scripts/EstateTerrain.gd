@@ -3,6 +3,9 @@ extends RefCounted
 const LOAM := preload("res://assets/world/ninja-adventure/estate-loam.png")
 const VERGE := preload("res://assets/world/ninja-adventure/estate-verge.png")
 const HALL_YARD_ART := preload("res://assets/world/estate-hall-yard.png")
+const SITE_ART := preload("res://assets/world/estate-site-art.png")
+const TRACK_GRAIN := preload("res://assets/world/estate-track-loam.png")
+const STONE_GRAIN := preload("res://assets/world/estate-stone-grain.png")
 const HALL_PAVING_AT := Vector2(-68, 17)
 const SPRING_PAVING_AT := Vector2(-41, -15)
 const WET_PAVING_TINT := Color(0.83, 0.90, 0.91)
@@ -64,7 +67,6 @@ var _pond_basin := PackedVector2Array()
 var pond_paving := PackedVector2Array(EstateLayout.FESTIVAL_PAVING)
 var _paving_margin := Geometry2D.offset_polygon(pond_paving, 5.0)[0]
 var _paving_entrance := EstateLayout.FESTIVAL_LANE[-4]
-var _paving_flagstones: Array[Dictionary] = []
 var _hall_paving := PackedVector2Array(HALL_COURT)
 var _spring_paving := PackedVector2Array(SPRING_APRON)
 
@@ -82,27 +84,6 @@ func _init(north: float) -> void:
 		pond_waterline[index].y += POND_FAR_BANK[index]
 	_pond_shelf = _inset_pool(pond_waterline, Vector2(0.89, 0.85), Vector2(0, 0))
 	_pond_basin = _inset_pool(pond_waterline, Vector2(0.74, 0.72), Vector2(9, 3))
-	_paving_flagstones = _bake_flagstones(pond_paving)
-
-static func _bake_flagstones(outline: PackedVector2Array) -> Array[Dictionary]:
-	var flagstones: Array[Dictionary] = []
-	var bounds := Rect2(outline[0], Vector2.ZERO)
-	for point in outline:
-		bounds = bounds.expand(point)
-	for row in range(floori(bounds.position.y / 14.0), ceili(bounds.end.y / 14.0)):
-		for column in range(floori(bounds.position.x / 23.0) - 1, ceili(bounds.end.x / 23.0)):
-			var grain := posmod(column * 7 + row * 17, 13)
-			var x := column * 23.0 + posmod(row, 2) * 12.0 + grain % 3 - 1
-			var y := row * 14.0 + grain % 2
-			var west := float(grain % 4)
-			var east := float(20 + grain % 3)
-			var stone := PackedVector2Array([Vector2(x, y + 3), Vector2(x + west + 1, y + 1),
-				Vector2(x + east - 3, y), Vector2(x + east, y + 3 + grain % 2), Vector2(x + east - 1, y + 10),
-				Vector2(x + east - 4, y + 11 + grain % 2), Vector2(x + west, y + 12)])
-			for piece in Geometry2D.intersect_polygons(stone, outline):
-				if not Geometry2D.triangulate_polygon(piece).is_empty():
-					flagstones.append({"points": piece, "shade": grain, "grain": Vector2(x + 5, y + 4)})
-	return flagstones
 
 func draw_north_bank(canvas: CanvasItem, background_top: float, shade: Color, sun: Color, winter: bool) -> void:
 	var slope := crest.duplicate()
@@ -121,11 +102,11 @@ func draw_north_bank(canvas: CanvasItem, background_top: float, shade: Color, su
 		var seam_left := left.lerp(base_left, 0.45 + float(index % 4) * 0.04).round()
 		var seam_right := right.lerp(base_right, 0.45 + float((index + 1) % 4) * 0.04).round()
 		var facet := stone.lightened(0.07) if index % 3 == 0 else stone
-		_quad(canvas, left, right, seam_right, seam_left, facet)
-		_quad(canvas, seam_left, seam_right, base_right, base_left, facet.darkened(0.18))
+		_quad(canvas, left, right, seam_right, seam_left, facet, STONE_GRAIN)
+		_quad(canvas, seam_left, seam_right, base_right, base_left, facet.darkened(0.18), STONE_GRAIN)
 		var seam_break := seam_left.lerp(seam_right, 0.43).round()
 		var lower_break := base_left.lerp(base_right, 0.31).round()
-		_quad(canvas, seam_break, seam_right, base_right, lower_break, facet.darkened(0.26))
+		_quad(canvas, seam_break, seam_right, base_right, lower_break, facet.darkened(0.26), STONE_GRAIN)
 		canvas.draw_line(seam_break, lower_break, facet.darkened(0.34), 1.0)
 		var chip := seam_left.lerp(seam_right, 0.27).round()
 		canvas.draw_rect(Rect2(chip - Vector2(2, 3), Vector2(4 + index % 5, 2)), facet.lightened(0.09))
@@ -133,15 +114,20 @@ func draw_north_bank(canvas: CanvasItem, background_top: float, shade: Color, su
 		var moss_edge := Vector2(0, 2 + index % 4)
 		_quad(canvas, left, right, right + moss_edge, left + moss_edge, lip.lerp(shade, 0.22 + (index % 3) * 0.17))
 
-func _quad(canvas: CanvasItem, a: Vector2, b: Vector2, c: Vector2, d: Vector2, color: Color) -> void:
-	canvas.draw_colored_polygon(PackedVector2Array([a, b, c, d]), color)
+func _quad(canvas: CanvasItem, a: Vector2, b: Vector2, c: Vector2, d: Vector2, color: Color,
+		texture: Texture2D = null) -> void:
+	var face := PackedVector2Array([a, b, c, d])
+	if texture != null:
+		draw_loam(canvas, face, color, texture)
+	else:
+		canvas.draw_colored_polygon(face, color)
 
-static func draw_loam(canvas: CanvasItem, polygon: PackedVector2Array, soil: Color) -> void:
+static func draw_loam(canvas: CanvasItem, polygon: PackedVector2Array, soil: Color, texture: Texture2D = LOAM) -> void:
 	var uvs := PackedVector2Array()
-	var size := LOAM.get_size()
+	var size := texture.get_size()
 	for point in polygon:
 		uvs.append(point / size)
-	canvas.draw_polygon(polygon, PackedColorArray([soil]), uvs, LOAM)
+	canvas.draw_polygon(polygon, PackedColorArray([soil]), uvs, texture)
 
 func draw_meadow(canvas: CanvasItem, grass: Color, winter: bool) -> void:
 	for index in meadow_sprigs.size():
@@ -205,6 +191,11 @@ func draw_spring_apron(canvas: CanvasItem, at: Vector2, winter: bool, wet: bool)
 	var paving := Rect2(460 if winter else 392, 276, 64, 38)
 	var tint := WET_PAVING_TINT if wet else Color.WHITE
 	canvas.draw_texture_rect_region(HALL_YARD_ART, Rect2(at + SPRING_PAVING_AT, paving.size), paving, tint)
+
+func draw_gate_paving(canvas: CanvasItem, at: Vector2, winter: bool, wet: bool) -> void:
+	var paving := Rect2(108 if winter else 68, 252, 37, 22)
+	canvas.draw_texture_rect_region(SITE_ART, Rect2(at, paving.size), paving,
+		WET_PAVING_TINT if wet else Color.WHITE)
 
 static func _draw_stone_curb(canvas: CanvasItem, rim: PackedVector2Array, depths: Array[float],
 		stone: Color, winter: bool) -> void:
@@ -280,10 +271,10 @@ func _draw_pond_faces(canvas: CanvasItem, lip: PackedVector2Array, feet: PackedV
 		var foot_a := feet[index]
 		var foot_b := feet[index + 1]
 		var tone := rock.lightened(0.045 * (index % 4))
-		_quad(canvas, a, b, foot_b, foot_a, tone)
+		_quad(canvas, a, b, foot_b, foot_a, tone, STONE_GRAIN)
 		var split_a := a.lerp(foot_a, 0.56).round()
 		var split_b := b.lerp(foot_b, 0.49 + (index % 3) * 0.10).round()
-		_quad(canvas, split_a, split_b, foot_b, foot_a, tone.darkened(0.24))
+		_quad(canvas, split_a, split_b, foot_b, foot_a, tone.darkened(0.24), STONE_GRAIN)
 		var crack := a.lerp(b, 0.48 + (index % 3) * 0.09).round()
 		var crack_foot := foot_a.lerp(foot_b, 0.38 + (index % 3) * 0.08).round()
 		canvas.draw_line(crack, crack_foot, tone.darkened(0.25), 1.0)
@@ -343,9 +334,10 @@ func draw_festival_paving(canvas: CanvasItem, grass: Color, winter: bool, rainin
 		if b.x > a.x or a.distance_to(_paving_entrance) < 26.0 or b.distance_to(_paving_entrance) < 26.0:
 			continue
 		var edge := Vector2(0, 4 if index % 2 == 0 else 5)
-		_quad(canvas, a, b, b + edge, a + edge, grout.darkened(0.21 + (index % 3) * 0.06))
-	canvas.draw_colored_polygon(pond_paving, grout)
-	_draw_flagstones(canvas, _paving_flagstones, grout, stone, winter)
+		_quad(canvas, a, b, b + edge, a + edge, grout.darkened(0.21 + (index % 3) * 0.06), STONE_GRAIN)
+	var slabs := Rect2(560 if winter else 368, 288, 190, 113)
+	canvas.draw_texture_rect_region(SITE_ART, Rect2(Vector2(270, 852), slabs.size), slabs,
+		WET_PAVING_TINT if raining else Color.WHITE)
 	for index in pond_paving.size():
 		var a := pond_paving[index]
 		var b := pond_paving[(index + 1) % pond_paving.size()]
@@ -353,20 +345,6 @@ func draw_festival_paving(canvas: CanvasItem, grass: Color, winter: bool, rainin
 			continue
 		var edge := (frost if winter else stone).lerp(grout, 0.47 + (index % 4) * 0.11)
 		canvas.draw_line(a.lerp(b, 0.08), a.lerp(b, 0.65), edge, 1.0)
-
-static func _draw_flagstones(canvas: CanvasItem, stones: Array[Dictionary], grout: Color, stone: Color, winter: bool) -> void:
-	var frost := Color("#b9c3af")
-	for slab in stones:
-		var shade: int = slab.shade
-		var tint := grout.lerp(stone, 0.46 + (shade % 6) * 0.052)
-		if winter:
-			tint = tint.lerp(frost, 0.11 + shade * 0.007)
-		var slabs: PackedVector2Array = slab.points
-		canvas.draw_colored_polygon(slabs, tint)
-		var grain: Vector2 = slab.grain
-		if Geometry2D.is_point_in_polygon(grain, slabs) and Geometry2D.is_point_in_polygon(grain + Vector2(5, 1), slabs):
-			canvas.draw_rect(Rect2(grain, Vector2(3 + shade % 4, 1)), tint.lightened(0.12))
-			canvas.draw_rect(Rect2(grain + Vector2(2, 2), Vector2(3, 1)), tint.darkened(0.11))
 
 func draw_verge(canvas: CanvasItem, points: PackedVector2Array, width: float, grass: Color, winter: bool) -> void:
 	for index in range(3, points.size() - 2, 5):
