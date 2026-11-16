@@ -30,6 +30,7 @@ const SEED_BUTTON := preload("res://scripts/SeedButton.gd")
 @onready var council_prep_button: Button = %CouncilPrepButton
 @onready var neighbors_button: Button = %NeighborsButton
 @onready var raid_alert: Button = %RaidAlert
+@onready var defense_report: Button = %DefenseReport
 @onready var stamina_label: Label = %StaminaLabel
 @onready var stamina_bar: ProgressBar = %StaminaBar
 @onready var health_label: Label = %HealthLabel
@@ -189,12 +190,14 @@ func _show_arrival() -> void:
 
 func _refresh_raid_alert() -> void:
 	var tomorrow := Global.current_day + 1
-	raid_alert.visible = Global.outcome == Global.Outcome.RUNNING and (Global.raid_day > 0 or Global.is_raid_day(tomorrow))
+	var running := Global.outcome == Global.Outcome.RUNNING
+	defense_report.visible = running and Global.defense_review_ready()
+	raid_alert.visible = running and (Global.raid_day > 0 or Global.is_raid_day(tomorrow))
 	if not raid_alert.visible:
 		return
 	if Global.raid_day > 0:
 		raid_alert.text = "%s来袭 · 标出位置" % Global.raid_name(Global.raid_kind)
-		raid_alert.tooltip_text = "右键朝来敌射箭，侧走避开地面标记。"
+		raid_alert.tooltip_text = GamepadInput.bow_instruction() + "。侧走避开地面标记。"
 	else:
 		var threat := "明日有敌袭"
 		if Global.east_watch_day > 0:
@@ -254,6 +257,7 @@ func _refresh_shortcuts() -> void:
 		var shortcut := seed_buttons[id].get_node("Shortcut") as Label
 		shortcut.text = Preferences.seed_label(id)
 		shortcut.visible = not pad
+	_refresh_raid_alert()
 	refresh_seed_calendar()
 
 func _refresh_watch() -> void:

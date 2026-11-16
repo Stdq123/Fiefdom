@@ -147,6 +147,7 @@ func _verify_preparation(alert: Button) -> bool:
 	await tree.process_frame
 	_expect(panel.raid_plan.is_visible_in_tree() and panel.raid_heading.text == "明日有敌袭"
 		and "右键朝来敌射箭" in panel.raid_instructions.text and "过夜前可先收成熟作物" in panel.raid_instructions.text
+		and "朝空地试射" in panel.raid_instructions.text
 		and "明早新熟" in panel.field_forecast.text and tree.root.get_visible_rect().encloses(window.get_global_rect()),
 		"Preparation gives both farming and combat information in the visible night ledger.")
 	await _capture("02-preparation")
@@ -197,11 +198,56 @@ func _defend() -> void:
 	_expect(state.raids_defeated == 1 and state.raid_day == 0 and state.last_defense.get("losses") == 0
 		and state.king_storage == 3 and state.player_inventory == 3 and world.is_crop_ripe(PUBLIC) and world.is_crop_ripe(PRIVATE),
 		"Aiming at the moving dog's ear with right-click protects both harvests and records the defense.")
-	_expect(not ui.hud.raid_alert.visible and not ui.hud.cancel_directions.visible and ui.directions.destination().is_empty(),
-		"The alert and live marker clear after the fight.")
+	_expect(not ui.hud.raid_alert.visible and not ui.hud.cancel_directions.visible and ui.directions.destination().is_empty()
+		and ui.hud.defense_report.visible, "The fight ends with a report in place of the live alert and marker.")
 	await _capture("04-defense-result")
 	print("RAID_READY_DEFENSE day=", state.current_day, " defeated=", state.raids_defeated, " losses=", state.last_defense.get("losses"),
 		" tribute=", state.king_storage, " private=", state.player_inventory)
+
+func _review_first_defense() -> void:
+	await _button(ui.hud.defense_report)
+	var dialog := ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(dialog != null and dialog.name_label.text == "守备战报" and "作物全保住了" in dialog.text_label.text
+		and "第 11 天他会到东路岗" in dialog.text_label.text and dialog.choices.size() == 1,
+		"The report names the next real visit for a player who has not met Yi Rong."):
+		return
+	await _capture("04a-next-watch-visit")
+	await _button(dialog.choices.back())
+	await _sleep()
+	_expect(state.current_day == 10 and world.neighbor_actor(VisitorData.EAST_WATCHER) == null and ui.hud.defense_report.visible,
+		"The report stays in the journal during an intervening day without Yi Rong.")
+	await _sleep()
+	var watcher: Node2D = world.neighbor_actor(VisitorData.EAST_WATCHER)
+	if not _expect(state.current_day == 11 and watcher != null and ui.hud.defense_report.visible,
+		"The visitor appears on the reported day without rescheduling the rotation."):
+		return
+	await _button(ui.hud.defense_report)
+	dialog = ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(dialog != null and dialog.choices[0].text == "指路找弋戎" and "东路岗" in dialog.text_label.text,
+		"Once he arrives, the report offers a route to Yi Rong."):
+		return
+	await _capture("04b-find-the-reviewer")
+	await _button(dialog.choices[0])
+	if not _expect(ui.directions.tracked_neighbor == VisitorData.EAST_WATCHER, "The report follows the ordinary live visitor marker."):
+		return
+	await Campaign.walk_estate_road_to(tree, world, watcher.global_position + Vector2(0, 13))
+	await _key(KEY_E)
+	dialog = ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(dialog != null and dialog.name_label.text == "弋戎", "Find the reviewer through the actual route and interaction."):
+		return
+	for choice: Button in dialog.choices:
+		if choice.text == "复盘守备":
+			await _button(choice)
+			break
+	var board: Node2D = world.get_node("Scenery/EastWatch")
+	_expect(state.east_watch_day == state.current_day and board.visible and not ui.hud.defense_report.visible,
+		"Debriefing opens the physical watch board and finishes the journal action.")
+	await Campaign.walk_estate_road_to(tree, world, board.global_position + Vector2(0, 14))
+	await _key(KEY_E)
+	dialog = ui.get_node_or_null("Control/DialoguePanel") as Control
+	_expect(dialog != null and dialog.name_label.text == "东岗守备牌" and "作物全保住了" in dialog.text_label.text
+		and state.last_defense.day == 9, "The board records the original fight and its preserved crops.")
+	await _capture("04c-watch-board")
 
 func _second_raid() -> void:
 	# Stage the next raid on its usual schedule, with the player at the field's south approach.
@@ -366,8 +412,11 @@ func run(game_tree: SceneTree, capture := "", include_scout := false) -> void:
 			await _verify_baseline()
 		elif await _verify_preparation(alert) and await _continue_at_raid():
 			await _defend()
-			if include_scout and not failed:
-				await _second_raid()
+			if not failed:
+				if include_scout:
+					await _second_raid()
+				else:
+					await _review_first_defense()
 	if not failed:
 		print("SCENARIO_OK")
 	tree.quit(1 if failed else 0)

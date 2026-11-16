@@ -157,6 +157,7 @@ func _process(_delta: float) -> void:
 	hud.rotation_guide_button.disabled = hud.map_button.disabled
 	hud.tribute_button.disabled = hud.map_button.disabled
 	hud.raid_alert.disabled = blocked
+	hud.defense_report.disabled = hud.map_button.disabled
 	var following_canal := (Global.field_route_status == Global.NightGrowth.BLOCKED
 		or ((Global.field_route_status == Global.TributeRoute.TEND or Global.field_route_status in Global.ROTATION_ROUTES)
 			and directions.tracked_plot != null
@@ -346,6 +347,7 @@ func _connect_signals() -> void:
 	hud.tribute_button.pressed.connect(_show_night_rations)
 	hud.morning_button.pressed.connect(_show_night_rations.bind(true))
 	hud.raid_alert.pressed.connect(_on_raid_alert_pressed)
+	hud.defense_report.pressed.connect(_on_defense_report_pressed)
 	manage_button.pressed.connect(_on_manage_pressed)
 	hud.neighbors_button.pressed.connect(_on_neighbors_pressed)
 	reclaim_button.pressed.connect(_on_reclaim_pressed)
@@ -826,6 +828,19 @@ func _on_raid_alert_pressed() -> void:
 		directions.follow_raid()
 	else:
 		_show_night_rations()
+
+func _on_defense_report_pressed() -> void:
+	if _estate_controls_blocked() or not Global.defense_review_ready():
+		return
+	var watcher: Node2D = world.neighbor_actor(VisitorData.EAST_WATCHER)
+	var visit := ""
+	if watcher is Visitor:
+		visit = _visitor_line(watcher)
+	elif watcher is Retainer:
+		var rest: String = watcher.pavilion_note()
+		visit = "弋戎在%s。" % world.duty_place(watcher.data) if rest.is_empty() else "弋戎 · %s。" % rest
+	var next_day := Global.next_visitor_day(VisitorData.EAST_WATCHER) if visit.is_empty() else 0
+	dialog_manager.show_defense_report(visit, next_day, directions.follow_neighbor.bind(VisitorData.EAST_WATCHER))
 
 func _show_night_rations(show_previous := false, focus_shortage := false) -> void:
 	if Global.outcome != Global.Outcome.RUNNING or world.player.conversation_open or (sleep_tween and sleep_tween.is_running()):

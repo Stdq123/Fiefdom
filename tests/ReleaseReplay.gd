@@ -122,9 +122,9 @@ func _run() -> void:
 		"bow-aim":
 			var replay = load("res://tests/BowAimReplay.gd").new()
 			await replay.run(tree, capture_directory)
-		"raid-feedback":
+		"raid-feedback", "raid-readiness":
 			var replay = load("res://tests/RaidReadinessReplay.gd").new()
-			await replay.run(tree, capture_directory, true)
+			await replay.run(tree, capture_directory, arguments[0] == "raid-feedback")
 		"winter-supper":
 			var replay = load("res://tests/WinterSupperReplay.gd").new()
 			await replay.run(tree, capture_directory)

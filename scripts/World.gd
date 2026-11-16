@@ -74,7 +74,6 @@ func _ready() -> void:
 	GameEvents.road_provisions_delivered.connect(_on_road_provisions_delivered)
 	GameEvents.silk_sample_delivered.connect(_on_silk_sample_delivered)
 	GameEvents.herb_garden_feedback.connect(_on_herb_garden_feedback)
-	GameEvents.east_watch_built.connect(_refresh_defense_notice)
 	GameEvents.channel_survey_learned.connect(_on_channel_survey_learned)
 	for milestone in [GameEvents.road_rest_changed, GameEvents.channel_survey_learned, GameEvents.silk_sample_delivered,
 			GameEvents.ravine_journal_changed, GameEvents.east_watch_built]:
@@ -117,7 +116,6 @@ func _ready() -> void:
 
 	if Global.raid_day > 0:
 		_spawn_raider()
-	_refresh_defense_notice.call_deferred()
 
 func _process(_delta: float) -> void:
 	if scheduled_visitor and scheduled_visitor.silk_trip() == VisitorData.SilkTrip.WEST_ROAD:
@@ -132,12 +130,6 @@ func _spawn_raider() -> void:
 		enemy.position = EstateLayout.EAST_RAID_SNARE
 	add_child(enemy)
 	print("Raid on day ", Global.raid_day, " enemy ", enemy.type)
-
-func _refresh_defense_notice() -> void:
-	if Global.defense_review_ready() and not Global.is_raid_day(Global.current_day + 1):
-		GameEvents.world_notice.emit("东路已守住 · 可找弋戎复盘")
-	else:
-		GameEvents.world_notice.emit("")
 
 func get_random_crop_pos() -> Vector2i:
 	if active_crops.is_empty():
@@ -1171,7 +1163,7 @@ func _on_day_advanced(new_day: int) -> void:
 	_refresh_field_keeper_visit()
 	if Global.begin_raid(new_day):
 		_spawn_raider()
-	_refresh_defense_notice()
+	GameEvents.world_notice.emit("")
 
 func current_visitor() -> VisitorData:
 	var actor := current_visitor_actor()

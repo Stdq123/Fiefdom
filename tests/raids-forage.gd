@@ -100,6 +100,16 @@ func _run() -> void:
 		"The actual guard shot preserves the crop and records the defender.")
 	world = current_scene.get_node("World")
 	var resident: Node2D = world.retainer_instances[state.retainers.back()]
+	_expect(ui.hud.defense_report.visible, "A guard's victory also opens the journal report.")
+	ui.hud.defense_report.pressed.emit()
+	await process_frame
+	dialog = ui.get_node_or_null("Control/DialoguePanel")
+	_expect(dialog != null and "弋戎放了末一箭" in dialog.text_label.text and "弋戎在东路。" in dialog.text_label.text,
+		"The report names the resident who fired and where to find him.")
+	if dialog == null or not await _choose(dialog, "指路找弋戎"):
+		quit(1)
+		return
+	_expect(ui.directions.tracked_neighbor == "弋戎", "The report can guide the player to the assigned guard.")
 	await Campaign.walk_to(self, world.player, resident.global_position)
 	await _interact()
 	dialog = ui.get_node_or_null("Control/DialoguePanel")

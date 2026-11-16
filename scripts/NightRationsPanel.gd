@@ -153,6 +153,7 @@ func _ready() -> void:
 	GameEvents.day_advanced.connect(_refresh.unbind(1))
 	GameEvents.raid_started.connect(_refresh_raid_plan)
 	GameEvents.raid_defeated.connect(_refresh_raid_plan)
+	GamepadInput.changed.connect(_refresh_raid_plan)
 	GameEvents.raid_started.connect(_refresh_field_wait)
 	GameEvents.raid_defeated.connect(_refresh_field_wait)
 	GameEvents.watch_snare_changed.connect(_refresh_raid_plan)
@@ -448,9 +449,9 @@ func _refresh_raid_plan() -> void:
 	raid_heading.text = "东路来敌 · " + Global.raid_name(Global.raid_kind) if active else "明日有敌袭"
 	if not active and Global.east_watch_day > 0:
 		raid_heading.text += " · " + Global.raid_name(Global.raid_kind_on(tomorrow))
-	var instructions := "右键朝来敌射箭，侧走避开地面标记。"
+	var instructions := GamepadInput.bow_instruction() + "。见地面红边就往侧边走。"
 	if not active:
-		instructions = "过夜前可先收成熟作物。" + instructions
+		instructions = "过夜前可先收成熟作物。合上账册后，可在屋外朝空地试射。\n" + instructions
 	if Global.retainers.any(func(worker: RetainerData) -> bool: return worker.can_take_duty(RetainerData.Duty.GUARD)):
 		instructions += "\n可在「管理」中安排兵家门客守卫。"
 	if Global.watch_snare_armed or Global.raid_snare_left >= 0.0 or (not active and Global.can_prepare_watch_snare()):

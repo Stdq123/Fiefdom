@@ -172,12 +172,14 @@ func _build_rest_stop() -> bool:
 		"Deliver the road provisions and fund the bench while Ji Qing stays a visitor.")
 
 func _select_moving_visitor(actor: Visitor) -> bool:
+	var posted_notice := "季青正往亭西歇脚处"
+	GameEvents.world_notice.emit(posted_notice)
 	await _key(KEY_M)
 	var map: Control = ui.estate_map
 	var campaign := tree.current_scene.get_node("CampaignHUD")
 	if not _expect(map.modal.visible and tree.paused, "Open the chart while the visitor is on the road."):
 		return false
-	_expect(not campaign.notice.text.is_empty() and not campaign.notice.visible, "The current world notice stays behind the chart.")
+	_expect(campaign.notice.text == posted_notice and not campaign.notice.visible, "The current world notice stays behind the chart.")
 	await _button(map.tabs.get_node("People"))
 	for button: Button in map.row_buttons:
 		var entry: Dictionary = map.row_buttons[button]
@@ -189,7 +191,7 @@ func _select_moving_visitor(actor: Visitor) -> bool:
 				"Set directions to the walking person.")
 			await _capture("02-person-on-the-map")
 			await _key(KEY_ESCAPE)
-			_expect(campaign.notice.visible, "World notices return when the chart closes.")
+			_expect(campaign.notice.visible and campaign.notice.text == posted_notice, "World notices return when the chart closes.")
 			return true
 	return _expect(false, "The chart must list the walking visitor.")
 

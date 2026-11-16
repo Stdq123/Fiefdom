@@ -663,6 +663,37 @@ func show_water_source(starter_tiles: int, rice_plots: int, open_study: Callable
 			action.call()
 	)
 
+func show_defense_report(visit: String, next_day: int, guide: Callable) -> void:
+	if parent_node.has_node("DialoguePanel"):
+		return
+	var day: int = Global.last_defense.day
+	var context := "第 %d 天 · %s" % [day, Global.get_current_solar_term(day)]
+	var lines := _defense_result_lines()
+	var options: Array[String] = ["合上"]
+	if not visit.is_empty():
+		lines.append(visit + "可和他复盘守备。")
+		options.push_front("指路找弋戎")
+	elif next_day > 0:
+		lines.append("弋戎今天在外。第 %d 天他会到东路岗，届时可找他复盘守备。" % next_day)
+	else:
+		lines.append("弋戎今天在外。等他再来，可找他复盘守备。")
+	var dialog := _open("守备战报", context, "\n\n".join(lines), options, [], null)
+	if options.size() > 1:
+		dialog.option_selected.connect(func(index: int):
+			if index == 0:
+				guide.call()
+		)
+
+func _defense_result_lines() -> PackedStringArray:
+	var note := Global.last_defense
+	var guard: String = note["guard"]
+	var defender := "你放了末一箭" if guard.is_empty() else "%s放了末一箭" % guard
+	var lines := PackedStringArray(["击退%s，%s。%s。\n封地至今击退 %d 次敌袭。" % [
+		Global.raid_name(note["kind"]), defender, Global.defense_loss_note(), Global.raids_defeated]])
+	if note.get("snare", false):
+		lines.append("东路拦索绊住了来敌，给守田的人留出了放箭的工夫。")
+	return lines
+
 func show_east_watch() -> void:
 	if parent_node.has_node("DialoguePanel"):
 		return
@@ -670,15 +701,10 @@ func show_east_watch() -> void:
 	var context := "南路来货"
 	var lines := PackedStringArray()
 	if Global.east_watch_day > 0:
-		var note := Global.last_defense
-		var guard: String = note["guard"]
-		var defender := "你放了末一箭" if guard.is_empty() else "%s放了末一箭" % guard
+		var day: int = Global.last_defense.day
 		title = "东岗守备牌"
-		context = "第 %d 天 · %s" % [note["day"], Global.get_current_solar_term(note["day"])]
-		lines.append("击退%s，%s。%s。\n封地至今击退 %d 次敌袭。" % [
-			Global.raid_name(note["kind"]), defender, Global.defense_loss_note(), Global.raids_defeated])
-		if note.get("snare", false):
-			lines.append("东路拦索绊住了来敌，给守田的人留出了放箭的工夫。")
+		context = "第 %d 天 · %s" % [day, Global.get_current_solar_term(day)]
+		lines = _defense_result_lines()
 	var relief := Global.watch_relief_day()
 	if relief > 0:
 		lines.append("第 %d 天，南路送到两份稷、一份菽和一束麻。巡粮已分袋，新麻绳系上了岗旗。" % relief)

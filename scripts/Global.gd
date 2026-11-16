@@ -1861,7 +1861,7 @@ func defeat_raid(guard_name := "") -> void:
 	raid_crop_losses = 0
 	raids_defeated += 1
 	GameEvents.raid_defeated.emit()
-	var follow_up := " · 可找弋戎复盘" if defense_review_ready() else ""
+	var follow_up := " · 可查守备战报" if defense_review_ready() else ""
 	GameEvents.world_notice.emit("击退%s · %s%s" % [raid_name(raid_kind), defense_loss_note(), follow_up])
 
 func defense_review_ready() -> bool:
@@ -1872,8 +1872,8 @@ func review_defense() -> bool:
 		return false
 	east_watch_day = current_day
 	GameEvents.east_watch_built.emit()
-	if not is_raid_day(current_day + 1):
-		GameEvents.world_notice.emit("东路岗立了守备牌 · 靠近按 %s 查看" % GamepadInput.interact_key())
+	var notice := "" if is_raid_day(current_day + 1) else "东路岗立了守备牌 · 靠近按 %s 查看" % GamepadInput.interact_key()
+	GameEvents.world_notice.emit(notice)
 	return true
 
 func defense_loss_note() -> String:
