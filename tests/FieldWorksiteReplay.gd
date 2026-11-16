@@ -88,6 +88,10 @@ func _book(center: Vector2i) -> bool:
 	var panel: Control = ui.get_node_or_null("Control/ReclamationPanel")
 	if not _expect(panel != null, "Open the ordinary reclamation panel."):
 		return false
+	await _pointer(_point(center))
+	_expect(not panel.has_selection and panel.preview_center == center
+		and panel.preview_site == Global.ReclamationSite.OPEN and "可接现有渠水" in panel.validity_label.text,
+		"The nine-cell survey previews the site under the pointer before selecting it.")
 	await _click(_point(center))
 	if not _expect(panel.has_selection and panel.selected_cell == center and not panel.reclaim_button.disabled,
 		"Select the intended field with the mouse."):
@@ -103,10 +107,23 @@ func _check_obstructed_sites() -> void:
 	var south_lane := Vector2i(1, 8)
 	await _button(ui.reclaim_button)
 	var panel: Control = ui.get_node("Control/ReclamationPanel")
-	await _click(_point(south_lane))
+	await _pointer(_point(south_lane))
+	_expect(not panel.has_selection and panel.preview_center == south_lane
+		and panel.preview_site == Global.ReclamationSite.ROAD and "路肩" in panel.validity_label.text,
+		"A hover over the south lane reports the same road conflict as a click.")
+	await _pointer(panel.get_node("Panel/CloseButton").get_global_rect().get_center())
+	await tree.process_frame
+	_expect(panel.preview_center == null, "Moving onto the ledger clears an unselected preview.")
+	var controller := preload("res://tests/GamepadReplay.gd").new()
+	controller.tree = tree
+	controller.pad = tree.root.get_node("GamepadInput")
+	await controller._aim(_point(south_lane))
+	_expect(controller.failures == 0 and not panel.has_selection and panel.preview_center == south_lane
+		and panel.preview_site == Global.ReclamationSite.ROAD, "The gamepad cursor shows the same site preview.")
+	await controller._tap(JOY_BUTTON_A)
 	_expect(panel.selected_cell == south_lane and panel.reclaim_button.disabled
 		and panel.preview_site == Global.ReclamationSite.ROAD and "路肩" in panel.validity_label.text,
-		"Selecting a field across the south lane shows the road conflict.")
+		"Selecting the gamepad preview keeps the road conflict.")
 	await _capture("00-road-conflict")
 	_expect(state.reclaim_well_field(south_lane).is_empty() and state.reclaim_well_field(OLD_ROAD_SITE).is_empty()
 		and state.well_fields.size() == 1

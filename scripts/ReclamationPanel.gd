@@ -58,24 +58,22 @@ func setup(estate_world: Node2D, previous_site: Variant = null) -> void:
 		_select_site(previous_site)
 
 func _process(_delta: float) -> void:
-	if not tile_map or not plan.has_space or has_selection or commissioned_site >= 0:
-		return
-	if get_viewport().gui_get_hovered_control() != self:
-		if preview_center != null:
-			_clear_preview()
-		return
-	var cell := tile_map.local_to_map(tile_map.get_local_mouse_position())
-	if preview_center == null or cell != preview_center:
-		_show_preview(cell)
+	if preview_center != null and not has_selection and get_viewport().gui_get_hovered_control() != self:
+		_clear_preview()
 
 func _gui_input(event: InputEvent) -> void:
 	if not tile_map or not plan.has_space:
 		return
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		var viewport_pos: Vector2 = get_global_transform_with_canvas() * event.position
-		var tile_pos: Vector2 = tile_map.get_global_transform_with_canvas().affine_inverse() * viewport_pos
-		_select_site(tile_map.local_to_map(tile_pos))
+	if event is InputEventMouseMotion and not has_selection and commissioned_site < 0:
+		var cell := _pointer_cell(event.position)
+		if cell != preview_center:
+			_show_preview(cell)
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		_select_site(_pointer_cell(event.position))
 		accept_event()
+
+func _pointer_cell(panel_position: Vector2) -> Vector2i:
+	return world.field_at(get_global_transform_with_canvas() * panel_position)
 
 func _select_site(cell: Vector2i) -> void:
 	selected_cell = cell
@@ -145,7 +143,7 @@ func _instructions(candidate: Dictionary) -> String:
 			return "现有井田已用尽爵位可管的田额。"
 		return Global.promotion_summary() + "\n过夜时核定爵位。"
 	if plan.ready:
-		var instruction := "" if has_selection else "左键点选田址。"
+		var instruction := "" if has_selection else "点选田址。"
 		return instruction + "立桩后余粮 %d 份，%d 夜口粮需 %d 份。" % [
 			Global.food_storage - plan.grain, Global.RECLAMATION_NIGHTS, plan.crew_food]
 	if plan.workers_needed > 0:
@@ -203,7 +201,7 @@ func _update_validity() -> void:
 		validity_label.text = ""
 		return
 	if preview_center == null:
-		validity_label.text = "移动鼠标查看九格田界与渠水。"
+		validity_label.text = "移动光标查看九格田界与渠水。"
 		return
 	validity_label.modulate = READY_INK if preview_site == Global.ReclamationSite.OPEN else SHORT_INK
 	match preview_site:
