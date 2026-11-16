@@ -12,6 +12,11 @@ var world: Node
 var ui: Node
 var captures := ""
 var failed := false
+var serving_sounds := 0
+
+func _track_serving_sound(node: Node) -> void:
+	if node is AudioStreamPlayer2D and node.stream != null and node.stream.resource_path.get_file() == "supper-served.wav":
+		serving_sounds += 1
 
 func _expect(ok: bool, detail: String) -> bool:
 	if not ok:
@@ -284,7 +289,9 @@ func _show_scene() -> bool:
 	await _button(ui.calendar.guide)
 	_expect(ui.directions.tracked_place == WinterSupper.PLACE, "The almanac points to the festival table.")
 	await _walk_to_table()
-	_expect(not table.heated, "The table is unlit before supper or the evening watch.")
+	var fire: AudioStreamPlayer2D = table.fire_sound
+	_expect(not table.heated and not table.hearth_glow.enabled and not fire.playing and not table.steam_layer.visible,
+		"During the day the empty hearth is silent, cold, and dry.")
 	var guests := table.get_node("Guests")
 	var first: Node2D = guests.get_child(0)
 	state.advance_daylight(maxf(0.0, 0.57 - state.day_progress) * state.balance.daylight_seconds)
@@ -297,6 +304,10 @@ func _show_scene() -> bool:
 	_expect(state.day_watch_label() == "酉时" and guests.get_child(1).visible and table.heated
 		and table.get_node("Lanterns").get_child(0).glow.enabled and table.get_node("Lanterns").get_child(1).glow.enabled,
 		"At the announced evening watch both lamps are lit and the neighbors have arrived.")
+	_expect(table.hearth_glow.enabled and not table.steam_layer.visible and state.winter_supper_record().is_empty()
+		and fire.bus == &"Ambience" and fire.max_distance == 144.0 and fire.stream.loop_mode == AudioStreamWAV.LOOP_FORWARD
+		and fire.playing == (DisplayServer.get_name() != "headless"),
+		"An empty evening hearth has warm light and local looping fire, while the pot is still empty.")
 	await _frame("03-lanterns")
 	return not failed
 
@@ -313,6 +324,7 @@ func _choose(recipe: String, expected_servings: int) -> bool:
 	var tribute: int = state.king_storage
 	var rites: int = state.player_stats.stats["RITES"]["xp"]
 	var has_fish := recipe == WinterSupper.FISH
+	var sounds_before := serving_sounds
 	if has_fish:
 		await _frame("04-supper-choice")
 	await _button(dialog.options_container.get_child(1 if has_fish else 0))
@@ -323,6 +335,9 @@ func _choose(recipe: String, expected_servings: int) -> bool:
 		and state.fish_count(fish) == (0 if has_fish else 1) and state.king_storage == tribute
 		and state.player_stats.stats["RITES"]["xp"] == rites + state.balance.winter_supper_rites,
 		"The chosen dish charges only its private ingredients and earns rites once.")
+	var table := world.get_node("WinterSupper")
+	_expect(table.heated and table.steam_layer.visible and serving_sounds == sounds_before + int(DisplayServer.get_name() != "headless"),
+		"Only cooking fills the bowls, shows steam, and plays one serving cue.")
 	if has_fish:
 		await _frame("04b-served-at-the-table")
 	dialog = await _open_supper()
@@ -349,6 +364,9 @@ func _serve(expected_servings: int, prefix: String) -> void:
 		and state.food_storage == grain + planned.converted + planned.bought - remainder
 		and last.used == planned.used and last.bought == planned.bought and not world.get_node("WinterSupper").visible
 		and state.night_rations_plan().supper == 0, "Only the confirmed night receives the supper, then the stage closes.")
+	var table := world.get_node("WinterSupper")
+	_expect(not table.hearth_glow.enabled and not table.steam_layer.visible and not table.fire_sound.playing,
+		"Leaving the solstice stops the fire and clears the stage.")
 	await _button(ui.hud.rations_button)
 	panel = ui.get_node("Control/NightRationsPanel")
 	_expect(("围炉 %d 份" % expected_servings) in panel.receipt.text, "The night ledger records the portions actually served.")
@@ -373,6 +391,7 @@ func _finish_supper() -> void:
 	await _to_evening()
 	if not await _choose(WinterSupper.FISH, 4):
 		return
+	var sounds_before := serving_sounds
 	_expect(state.save_game() == OK, "Save the prepared feast before sleeping.")
 	tree.change_scene_to_file(state.TITLE_SCENE)
 	await tree.scene_changed
@@ -380,6 +399,11 @@ func _finish_supper() -> void:
 	_estate()
 	_expect(state.winter_supper_record().get("recipe") == WinterSupper.FISH and state.night_rations_plan().supper == 4
 		and state.fish_for_travel_meal().is_empty(), "Continue restores the spent fish and the full evening forecast.")
+	var table := world.get_node("WinterSupper")
+	_expect(table.heated and table.steam_layer.visible and table.hearth_glow.enabled
+		and table.fire_sound.playing == (DisplayServer.get_name() != "headless") and serving_sounds == sounds_before,
+		"Reload restores the simmering pot and fire without serving another bowl.")
+	print("WINTER_HEARTH_AUDIO reloaded=", table.fire_sound.playing, " servings=", serving_sounds)
 	await _serve(4, "fish")
 	var morning: String = state.latest_saved_game()["path"]
 	await _load(morning)
@@ -408,12 +432,14 @@ func run(host: SceneTree, capture := "") -> void:
 	tree = host
 	captures = capture
 	state = tree.root.get_node("Global")
+	tree.node_added.connect(_track_serving_sound)
 	tree.root.notify_mouse_entered()
 	seed(325)
 	if await _first_year():
 		await _finish_supper()
 	if not failed and DisplayServer.get_name() == "headless":
 		await _next_winter()
+	tree.node_added.disconnect(_track_serving_sound)
 	tree.unload_current_scene()
 	for node in tree.root.get_node("AudioManager").get_children():
 		if node is AudioStreamPlayer:

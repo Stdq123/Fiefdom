@@ -1,6 +1,6 @@
 extends Node2D
 
-const SERVING_SOUND := preload("res://assets/audio/water-2.wav")
+const SERVING_SOUND := preload("res://assets/audio/festival/supper-served.wav")
 const ARRIVALS := [
 	{"start": 0.50, "end": 0.67, "path": [Vector2(-38, 34), Vector2(-40, -8), Vector2(-30, -20)]},
 	{"start": 0.55, "end": 0.71, "path": [Vector2(25, 48), Vector2(42, 30), Vector2(48, 9)]},
@@ -9,6 +9,8 @@ const FEET := [Vector2(-30, -20), Vector2(48, 9), Vector2(22, -17)]
 
 @onready var guests: Node2D = $Guests
 @onready var hint: Label = $Hint
+@onready var hearth_glow: PointLight2D = $HearthGlow
+@onready var fire_sound: AudioStreamPlayer2D = $FireSound
 
 var actors: Array[Node2D] = []
 var motions: Array[NeighborMotion] = []
@@ -62,13 +64,12 @@ func _refresh() -> void:
 	set_process(visible)
 	for motion in motions:
 		motion.set_process(visible)
+	recipe = Global.winter_supper_record().get("recipe", "") if visible else ""
+	_set_hearth_active(visible and _hearth_lit())
 	if visible:
-		recipe = Global.winter_supper_record().get("recipe", "")
 		_sync_guests(true)
 		_refresh_hint()
-		heated = _hearth_lit()
 		ember_frame = 0 if heated else -1
-		steam_layer.visible = heated
 		table.queue_redraw()
 		steam_layer.queue_redraw()
 
@@ -89,20 +90,32 @@ func _refresh_hint() -> void:
 
 func _on_prepared() -> void:
 	_refresh()
-	AudioManager.play_world_sfx(SERVING_SOUND, self, -12.0, 110.0)
+	AudioManager.play_world_sfx(SERVING_SOUND, self, -10.0, 120.0)
 
 func _process(delta: float) -> void:
 	steam = fposmod(steam + delta, 2.8)
 	_sync_guests()
 	var lit := _hearth_lit()
+	if lit != heated:
+		_set_hearth_active(lit)
 	var embers := int(steam * 4.0) % 4 if lit else -1
-	if lit != heated or embers != ember_frame:
-		heated = lit
+	if embers != ember_frame:
 		ember_frame = embers
+		hearth_glow.energy = 0.40 + 0.025 * float(ember_frame)
 		table.queue_redraw()
-	steam_layer.visible = lit
-	if lit:
+	if steam_layer.visible:
 		steam_layer.queue_redraw()
+
+func _set_hearth_active(lit: bool) -> void:
+	heated = lit
+	hearth_glow.enabled = lit
+	steam_layer.visible = lit and not recipe.is_empty()
+	if DisplayServer.get_name() == "headless":
+		return
+	if lit and not fire_sound.playing:
+		fire_sound.play()
+	elif not lit and fire_sound.playing:
+		fire_sound.stop()
 
 func _sync_guests(snap := false) -> void:
 	for index in ARRIVALS.size():
@@ -158,12 +171,12 @@ func _draw_table() -> void:
 		table.draw_colored_polygon(PackedVector2Array([Vector2(x - 6, -9), Vector2(x - 3, -12),
 			Vector2(x + 4, -12), Vector2(x + 6, -10), Vector2(x + 3, -7), Vector2(x - 3, -7)]), Color("#c2b298"))
 		var topping := Color("#8c7760")
-		if heated:
+		if not recipe.is_empty():
 			topping = Color("#e9ae72") if recipe == WinterSupper.FISH else Color("#e4c998")
 		table.draw_rect(Rect2(x - 3, -10, 6, 2), topping)
 
 func _draw_steam() -> void:
-	if not heated:
+	if recipe.is_empty():
 		return
 	for index in 3:
 		var rise := fposmod(steam + index * 0.90, 2.8) / 2.8

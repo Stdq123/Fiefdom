@@ -16,6 +16,11 @@ var world: Node2D
 var ui: CanvasLayer
 var capture_dir := ""
 var failed := false
+var parcel_sounds := 0
+
+func _track_parcel_sound(node: Node) -> void:
+	if node is AudioStreamPlayer2D and node.stream != null and node.stream.resource_path.get_file() == "grain-parcel.wav":
+		parcel_sounds += 1
 
 func _expect(ok: bool, message: String) -> bool:
 	if not ok:
@@ -379,7 +384,8 @@ func _festival() -> void:
 		"Taking samples home keeps the crops and grants rites experience without promising a winter gift.")
 	_expect(_samples_visible(stand) == 3, "Taking crops home still shows the three samples.")
 	await tree.create_timer(AutumnExhibit.DISPLAY_SECONDS + 0.12).timeout
-	_expect(_samples_visible(stand) == 0 and _parcel_count(stand) == 0, "Only the shared crops go to neighbors.")
+	_expect(_samples_visible(stand) == 0 and _parcel_count(stand) == 0 and parcel_sounds == 0,
+		"Taking the display home has no neighbor pickup or pickup sound.")
 	print("AUTUMN_TAKE day=", state.current_day, " crops=", state.player_inventory, " rites=", state.player_stats.stats["RITES"]["xp"])
 	await _continue()
 	await _walk_to_exhibit()
@@ -396,7 +402,7 @@ func _festival() -> void:
 	for sample: Sprite2D in stand.get_node("Samples").get_children():
 		_expect(sample.visible and sample.texture != null, "The chosen crop art appears on each tray.")
 	await tree.create_timer(0.35).timeout
-	_expect(stand.display_time == 0.0 and _samples_visible(stand) == 3 and _parcel_count(stand) == 0,
+	_expect(stand.display_time == 0.0 and _samples_visible(stand) == 3 and _parcel_count(stand) == 0 and parcel_sounds == 0,
 		"Samples wait on the table when the player shares them before all neighbors arrive.")
 	_set_clock(0.30)
 	await tree.create_timer(0.1).timeout
@@ -404,12 +410,14 @@ func _festival() -> void:
 	var spot := first_guest.position
 	await _snapshot("03-autumn-exhibit")
 	await tree.create_timer(1.68 - stand.display_time).timeout
-	_expect(first_guest.position.x > spot.x + 10.0 and _parcel_count(stand) == 1 and _samples_visible(stand) == 2,
-		"The first neighbor approaches and removes one sample before the other two.")
+	var audible := int(DisplayServer.get_name() != "headless")
+	_expect(first_guest.position.x > spot.x + 10.0 and _parcel_count(stand) == 1 and _samples_visible(stand) == 2
+		and parcel_sounds == audible, "The first neighbor approaches and takes a sample with one audible pickup.")
 	_expect(stand.hint.visible, "At the table's approach the exhibit remains in focus during handoff.")
 	await _snapshot("05-first-handoff")
 	await tree.create_timer(AutumnExhibit.HANDOFF_SECONDS - stand.display_time + 0.12).timeout
-	_expect(_samples_visible(stand) == 0 and _parcel_count(stand) == 3, "All three shared crops leave the trays.")
+	_expect(_samples_visible(stand) == 0 and _parcel_count(stand) == 3 and parcel_sounds == 3 * audible,
+		"The three parcels leave the trays with one cue per recipient.")
 	print("AUTUMN_SHARE day=", state.current_day, " crops=", state.player_inventory, " reputation=", state.reputation - reputation,
 		" tribute=", state.king_storage)
 	await _key(KEY_E)
@@ -431,8 +439,9 @@ func _festival() -> void:
 	stand = world.get_node("AutumnExhibit")
 	_expect(state.autumn_exhibit_record(state.current_day) == receipt and state.player_inventory == stock - 3,
 		"Continue restores the ledger and settled stock.")
-	_expect(_samples_visible(stand) == 0 and _parcel_count(stand) == 3 and state.day_progress >= 0.88,
-		"Continue shows the settled handoff at the saved time.")
+	_expect(_samples_visible(stand) == 0 and _parcel_count(stand) == 3 and state.day_progress >= 0.88 and parcel_sounds == 3 * audible,
+		"Continue restores the finished ceremony without replaying the pickups.")
+	print("AUTUMN_PARCEL_AUDIO recipients=3 cues=", parcel_sounds)
 	print("AUTUMN_GATHERING attendees=", stand.guests.get_child_count(), " parcels=", _parcel_count(stand), " dusk=", state.day_progress)
 	await _night()
 	_expect(not world.get_node("AutumnExhibit").visible and not ui.hud.season_event_button.visible,
@@ -569,6 +578,7 @@ func run(game_tree: SceneTree, captures := "") -> void:
 		return
 	state = tree.root.get_node("Global")
 	capture_dir = captures if not captures.is_empty() else OS.get_environment("FIEFDOM_AUTUMN_CAPTURES")
+	tree.node_added.connect(_track_parcel_sound)
 	tree.root.notify_mouse_entered()
 	seed(325)
 	tree.change_scene_to_file(state.TITLE_SCENE)
@@ -578,6 +588,7 @@ func run(game_tree: SceneTree, captures := "") -> void:
 		await _winter_return()
 	if not failed and DisplayServer.get_name() == "headless":
 		await _second_year()
+	tree.node_added.disconnect(_track_parcel_sound)
 	if not failed:
 		print("SCENARIO_OK")
 	tree.quit(1 if failed else 0)

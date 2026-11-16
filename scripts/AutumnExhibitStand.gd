@@ -1,6 +1,7 @@
 extends Node2D
 
 const BELL := preload("res://assets/audio/music/bronze-bell.wav")
+const PARCEL_SOUND := preload("res://assets/audio/festival/grain-parcel.wav")
 const SHARING := "res://assets/world/autumn-sharing.svg"
 
 @onready var samples: Node2D = $Samples
@@ -60,7 +61,11 @@ func _process(delta: float) -> void:
 func _sync_display(snap := false) -> void:
 	var shared: bool = record.get("shared", false)
 	for index in samples.get_child_count():
-		samples.get_child(index).visible = display_time >= 0.0 and (not shared or AutumnExhibit.handoff(index, display_time) < 0.5)
+		var sample := samples.get_child(index) as Sprite2D
+		var on_table := display_time >= 0.0 and (not shared or AutumnExhibit.handoff(index, display_time) < 0.5)
+		if shared and not snap and display_time >= 0.0 and sample.visible and not on_table:
+			AudioManager.play_world_sfx(PARCEL_SOUND, self, -11.0, 130.0)
+		sample.visible = on_table
 	for guest in guests.get_children():
 		guest.update_pose(Global.day_progress, display_time, shared, snap)
 
