@@ -1,6 +1,7 @@
 extends Node2D
 
-const ART := preload("res://assets/world/field-spring.svg")
+const ART := preload("res://assets/world/estate-hall-yard.png")
+const BASIN_REGION := Rect2(528, 276, 32, 26)
 const WATER := Color("#568e87")
 const WATER_LIGHT := Color("#a5d4bc")
 const REACH := 18.0
@@ -72,7 +73,7 @@ func _refresh_hint() -> void:
 func _draw_basin() -> void:
 	var wall := -basin.position
 	var stone_tint := Color("#cbd5cb") if Global.has_rain() else Color.WHITE
-	basin.draw_texture(ART, wall + Vector2(-16, -12), stone_tint)
+	basin.draw_texture_rect_region(ART, Rect2(wall + Vector2(-16, -12), BASIN_REGION.size), BASIN_REGION, stone_tint)
 	for direction: Vector2i in outlets:
 		var axis := Vector2(direction)
 		var edge := axis * (13.0 if direction.x != 0 else (8.0 if direction.y < 0 else 12.0))

@@ -2,6 +2,10 @@ extends RefCounted
 
 const LOAM := preload("res://assets/world/ninja-adventure/estate-loam.png")
 const VERGE := preload("res://assets/world/ninja-adventure/estate-verge.png")
+const HALL_YARD_ART := preload("res://assets/world/estate-hall-yard.png")
+const HALL_PAVING_AT := Vector2(-68, 17)
+const SPRING_PAVING_AT := Vector2(-41, -15)
+const WET_PAVING_TINT := Color(0.83, 0.90, 0.91)
 const TUFT_SIZE := Vector2(16, 16)
 const POND_CENTER := Vector2(258, 705)
 const POND_FAR_BANK := [4, 9, 13, 9, 15, 12, 6, 3]
@@ -49,18 +53,6 @@ const SPRING_APRON := [
 	Vector2(-35, 8), Vector2(-40, 5),
 ]
 const SPRING_CURB: Array[float] = [0, 0, 0, 0, 0, 0, 0, 1.5, 2, 3.5, 4, 4, 3.5, 3, 2, 0.5, 0, 0]
-const SPRING_FLAGSTONES := [
-	[Vector2(-30, 5), Vector2(-25, -3), Vector2(-18, -5), Vector2(-11, -1), Vector2(-10, 5),
-		Vector2(-17, 8), Vector2(-25, 8)],
-	[Vector2(-16, -8), Vector2(-8, -12), Vector2(0, -13), Vector2(3, -6), Vector2(-4, -4), Vector2(-11, -5)],
-	[Vector2(2, -13), Vector2(8, -13), Vector2(16, -10), Vector2(14, -5), Vector2(6, -4)],
-	[Vector2(17, -9), Vector2(20, -5), Vector2(18, 1), Vector2(20, 5), Vector2(13, 5), Vector2(12, 0)],
-	[Vector2(-24, 10), Vector2(-14, 9), Vector2(-5, 10), Vector2(-6, 16), Vector2(-15, 14), Vector2(-22, 12)],
-	[Vector2(-3, 10), Vector2(4, 9), Vector2(10, 12), Vector2(10, 16), Vector2(0, 17), Vector2(-4, 14)],
-	[Vector2(5, 7), Vector2(13, 8), Vector2(19, 8), Vector2(16, 11), Vector2(11, 14), Vector2(10, 10)],
-	[Vector2(-38, 1), Vector2(-34, -3), Vector2(-28, -3), Vector2(-27, -1), Vector2(-32, 4), Vector2(-39, 4)],
-	[Vector2(-33, 6), Vector2(-28, 5), Vector2(-26, 8), Vector2(-31, 8)],
-]
 var crest := PackedVector2Array()
 var north_edge: float
 var meadow_sprigs := PackedVector2Array()
@@ -74,7 +66,6 @@ var _paving_margin := Geometry2D.offset_polygon(pond_paving, 5.0)[0]
 var _paving_entrance := EstateLayout.FESTIVAL_LANE[-4]
 var _paving_flagstones: Array[Dictionary] = []
 var _hall_paving := PackedVector2Array(HALL_COURT)
-var _hall_flagstones: Array[Dictionary] = []
 var _spring_paving := PackedVector2Array(SPRING_APRON)
 
 func _init(north: float) -> void:
@@ -92,7 +83,6 @@ func _init(north: float) -> void:
 	_pond_shelf = _inset_pool(pond_waterline, Vector2(0.89, 0.85), Vector2(0, 0))
 	_pond_basin = _inset_pool(pond_waterline, Vector2(0.74, 0.72), Vector2(9, 3))
 	_paving_flagstones = _bake_flagstones(pond_paving)
-	_hall_flagstones = _bake_flagstones(_hall_paving)
 
 static func _bake_flagstones(outline: PackedVector2Array) -> Array[Dictionary]:
 	var flagstones: Array[Dictionary] = []
@@ -178,10 +168,10 @@ func spring_stone_at(foot_from_source: Vector2) -> bool:
 
 func draw_hall_court(canvas: CanvasItem, dirt: Color, winter: bool, wet: bool) -> void:
 	var stone := Color("#aaa58f").lerp(Color("#657770"), 0.42 if wet else 0.0)
-	var grout := dirt.lerp(stone.darkened(0.25), 0.84)
 	_draw_stone_curb(canvas, _hall_paving, HALL_CURB, stone, winter)
-	canvas.draw_colored_polygon(_hall_paving, grout)
-	_draw_flagstones(canvas, _hall_flagstones, grout, stone.lightened(0.055), winter)
+	var paving := Rect2(128 if winter else 0, 276, 126, 48)
+	var tint := WET_PAVING_TINT if wet else Color.WHITE
+	canvas.draw_texture_rect_region(HALL_YARD_ART, Rect2(HALL_PAVING_AT, paving.size), paving, tint)
 	_draw_hall_steps(canvas, stone.lightened(0.08), winter)
 	for at: Vector2 in [Vector2(-55, 49), Vector2(-43, 55), Vector2(-32, 55), Vector2(-8, 59),
 		Vector2(8, 59), Vector2(21, 53), Vector2(41, 44), Vector2(52, 38)]:
@@ -208,26 +198,13 @@ static func _draw_hall_steps(canvas: CanvasItem, stone: Color, winter: bool) -> 
 		canvas.draw_rect(Rect2(at + Vector2(1, 11), Vector2(7, 1)), Color("#c4cdba"))
 		canvas.draw_rect(Rect2(at + Vector2(37, 10), Vector2(5, 1)), Color("#c4cdba"))
 
-func draw_spring_apron(canvas: CanvasItem, at: Vector2, dirt: Color, winter: bool, wet: bool) -> void:
-	var pose := Transform2D(0.0, at)
+func draw_spring_apron(canvas: CanvasItem, at: Vector2, winter: bool, wet: bool) -> void:
 	var stone := Color("#999888").lerp(Color("#637a6e"), 0.42 if wet else 0.12)
-	var grout := dirt.lerp(stone.darkened(0.24), 0.78)
-	var top := pose * _spring_paving
+	var top := Transform2D(0.0, at) * _spring_paving
 	_draw_stone_curb(canvas, top, SPRING_CURB, stone, winter)
-	var mortar := PackedColorArray()
-	for point in _spring_paving:
-		var wear := clampf((-point.x - 24.0) / 15.0, 0.0, 1.0)
-		mortar.append(Color(grout, 1.0 - 0.72 * wear))
-	canvas.draw_polygon(top, mortar)
-	for index in SPRING_FLAGSTONES.size():
-		var slab := pose * PackedVector2Array(SPRING_FLAGSTONES[index])
-		var lane_mix := clampf((slab[0].x - at.x + 39.0) / 14.0, 0.0, 1.0)
-		var tone := dirt.lerp(stone.lightened(0.04 + index % 3 * 0.07), 0.48 + lane_mix * 0.52)
-		canvas.draw_colored_polygon(slab, tone)
-		var edge := tone.lerp(Color("#c0c9b4"), (0.68 if winter else 0.45) * (0.55 + lane_mix * 0.45))
-		canvas.draw_line(slab[0].lerp(slab[1], 0.18), slab[0].lerp(slab[1], 0.81), edge, 1.0)
-		var worn := slab[0].lerp(slab[3], 0.53).round()
-		canvas.draw_line(worn, worn + Vector2(3, 1), tone.darkened(0.16), 1.0)
+	var paving := Rect2(460 if winter else 392, 276, 64, 38)
+	var tint := WET_PAVING_TINT if wet else Color.WHITE
+	canvas.draw_texture_rect_region(HALL_YARD_ART, Rect2(at + SPRING_PAVING_AT, paving.size), paving, tint)
 
 static func _draw_stone_curb(canvas: CanvasItem, rim: PackedVector2Array, depths: Array[float],
 		stone: Color, winter: bool) -> void:

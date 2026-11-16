@@ -107,6 +107,20 @@ const BUILDING_FOOTPRINTS := {
 	Prop.GATE: Rect2(-12, -5, 24, 7),
 	Prop.GATE_FAR: Rect2(-12, -5, 24, 7),
 }
+# The hall yard uses the regular sprite sizes and foot anchors. Seasonal tiles run across each tree row.
+const HALL_YARD_AREA := Rect2(-145, -67, 369, 247)
+const HALL_YARD_REGIONS := {
+	Prop.HALL: Rect2(0, 0, 128, 88),
+	Prop.ROCK: Rect2(128, 0, 48, 48),
+	Prop.OAK: Rect2(0, 96, 48, 48),
+	Prop.BLOSSOM_TREE: Rect2(0, 144, 48, 48),
+	Prop.PINE: Rect2(0, 192, 48, 48),
+	Prop.GROVE_TREE: Rect2(0, 240, 32, 32),
+}
+const HALL_YARD_GROUND := Rect2(224, 0, 432, 272)
+const HALL_YARD_GROUND_AT := Vector2(-177, -94)
+const HALL_YARD_CANOPY_SHADOW := Rect2(288, 276, 64, 31)
+const HALL_YARD_STONE_SHADOW := Rect2(352, 276, 36, 16)
 const ORCHARD_FRAMES := [Vector2(0, 1), Vector2(1, 0), Vector2(1, 1), Vector2(3, 1)]
 const MAP_BACKDROP := Rect2(-1650, -1400, 3350, 2800)
 const ESTATE_BOUNDS := EstateLayout.BOUNDS
@@ -386,6 +400,8 @@ var scenery: Dictionary[Sprite2D, int] = {}
 var shortcut_waypost: Sprite2D
 var gate_bases: Dictionary[Sprite2D, CollisionShape2D] = {}
 var seasonal_textures: Dictionary[int, AtlasTexture] = {}
+var hall_yard_textures: Dictionary[int, AtlasTexture] = {}
+var hall_yard_low_stone: AtlasTexture
 var ground_cover: SEASONAL_GROUND
 var estate_terrain: ESTATE_TERRAIN
 var ravine_relief: RAVINE_RELIEF
@@ -511,8 +527,9 @@ func _prepare_map() -> void:
 	for placement in props:
 		if placement.z not in SORTED_PROPS:
 			continue
-		var sprite := _place_sprite(props_layer, Vector2(placement.x, placement.y),
-			_prop_bounds(Vector2.ZERO, placement.z).position, _prop_texture(placement.z))
+		var foot := Vector2(placement.x, placement.y)
+		var sprite := _place_sprite(props_layer, foot,
+			_prop_bounds(Vector2.ZERO, placement.z).position, _prop_texture(placement.z, foot))
 		scenery[sprite] = placement.z
 	if wilderness:
 		scenery[_place_sprite(props_layer, RavineLayout.LOOKOUT, Vector2(-24, -38), LOOKOUT)] = SCENE_LANDMARK
@@ -524,7 +541,7 @@ func _prepare_map() -> void:
 		var shelter := atlas_texture(ROAD_PAVILION, Rect2(0, 0, 48, 40))
 		scenery[_place_sprite(props_layer, EstateLayout.WEST_COURT_SHELTER, Vector2(-24, -38), shelter)] = SCENE_WEST_COURT
 		var workshop := _place_sprite(props_layer, SILK_SHED_FOOT,
-			_prop_bounds(Vector2.ZERO, Prop.SILK_SHED).position, _prop_texture(Prop.SILK_SHED))
+			_prop_bounds(Vector2.ZERO, Prop.SILK_SHED).position, _prop_texture(Prop.SILK_SHED, SILK_SHED_FOOT))
 		scenery[workshop] = Prop.SILK_SHED
 	_place_lanterns(props_layer)
 
@@ -638,7 +655,7 @@ func _refresh_scenery() -> void:
 	for sprite in scenery:
 		var prop: int = scenery[sprite]
 		if seasonal_textures.has(prop):
-			sprite.texture = seasonal_textures[prop]
+			sprite.texture = _prop_texture(prop, sprite.position)
 		match prop:
 			Prop.HALL:
 				sprite.visible = _fields_clear(_ground_bounds(sprite.position, prop))
@@ -712,7 +729,7 @@ func _draw() -> void:
 		_draw_building_shadows()
 		if _hall_landing_visible():
 			estate_terrain.draw_hall_court(self, dirt, winter, raining)
-		estate_terrain.draw_spring_apron(self, _tile_point(Global.irrigation.source_cell), dirt, winter, raining)
+		estate_terrain.draw_spring_apron(self, _tile_point(Global.irrigation.source_cell), winter, raining)
 		_draw_field_banks()
 		if Global.road_provisions_delivered:
 			var provisions := Rect2(SOUTH_PAVILION + Vector2(31, 0), Vector2(14, 10))
@@ -722,7 +739,7 @@ func _draw() -> void:
 	var shade := scenery_shade(raining)
 	for sprite: Sprite2D in scenery:
 		if sprite.visible:
-			draw_scenery_shadow(self, sprite.position, scenery[sprite], shade)
+			_draw_sorted_prop_shadow(sprite.position, scenery[sprite], shade)
 	for prop in props:
 		if prop.z in SORTED_PROPS:
 			continue
@@ -838,6 +855,13 @@ func _draw_ground() -> void:
 	if estate_terrain:
 		estate_terrain.draw_meadow(self, meadow, winter)
 		estate_terrain.draw_farm_yard(self, meadow, winter, raining)
+		var yard_tint: Color = LEAF_TINTS[season]
+		if raining:
+			yard_tint *= Color(0.88, 0.94, 0.99)
+		if winter:
+			yard_tint.a = 0.31
+		draw_texture_rect_region(ESTATE_TERRAIN.HALL_YARD_ART, Rect2(HALL_YARD_GROUND_AT, HALL_YARD_GROUND.size),
+			HALL_YARD_GROUND, yard_tint)
 		estate_terrain.draw_north_bank(self, MAP_BACKDROP.position.y, shade, sun, winter)
 		var pond_water: Color = WATER_TINTS[season]
 		estate_terrain.draw_pond(self, meadow, pond_water, winter, raining, pond_landing.visible)
@@ -966,6 +990,19 @@ static func draw_scenery_shadow(canvas: CanvasItem, foot: Vector2, prop: int, sh
 	for point: Vector2 in SCENERY_SHADOW_PROFILE:
 		outline.append((foot + point * half_size).snapped(Vector2(0.5, 0.5)))
 	canvas.draw_colored_polygon(outline, shade)
+
+func _draw_sorted_prop_shadow(foot: Vector2, prop: int, shade: Color) -> void:
+	if not wilderness and HALL_YARD_AREA.has_point(foot):
+		var tint := Color(1.0, 1.0, 1.0, 0.55) if raining else Color.WHITE
+		if prop == Prop.ROCK:
+			draw_texture_rect_region(ESTATE_TERRAIN.HALL_YARD_ART,
+				Rect2(foot - Vector2(15, 5), HALL_YARD_STONE_SHADOW.size), HALL_YARD_STONE_SHADOW, tint)
+			return
+		if prop == Prop.OAK or prop == Prop.BLOSSOM_TREE:
+			draw_texture_rect_region(ESTATE_TERRAIN.HALL_YARD_ART,
+				Rect2(foot - Vector2(16, 8), HALL_YARD_CANOPY_SHADOW.size), HALL_YARD_CANOPY_SHADOW, tint)
+			return
+	draw_scenery_shadow(self, foot, prop, shade)
 
 func _draw_building_shadows() -> void:
 	var ground_shadow := Color("#26352c")
@@ -1248,7 +1285,11 @@ func _prop_sheet(index: int) -> Texture2D:
 		return MEADOW_FLOWERS[index]
 	return NINJA_SCENERY if EXTERNAL_REGIONS.has(index) else SCENERY
 
-func _prop_texture(index: int) -> AtlasTexture:
+func _prop_texture(index: int, foot: Vector2) -> AtlasTexture:
+	if HALL_YARD_AREA.has_point(foot) and hall_yard_textures.has(index):
+		if index == Prop.ROCK and foot.y > HALL_FOOT.y:
+			return hall_yard_low_stone
+		return hall_yard_textures[index]
 	if seasonal_textures.has(index):
 		return seasonal_textures[index]
 	return atlas_texture(_prop_sheet(index), _scenery_region(index))
@@ -1258,6 +1299,14 @@ func _update_tree_textures() -> void:
 		seasonal_textures[prop] = tree_texture(prop, season)
 	for prop: int in RIVERSIDE_REGIONS:
 		seasonal_textures[prop] = riverside_texture(prop, season)
+	if wilderness:
+		return
+	for prop: int in HALL_YARD_REGIONS:
+		var region: Rect2 = HALL_YARD_REGIONS[prop]
+		if seasonal_textures.has(prop):
+			region.position.x += season * region.size.x
+		hall_yard_textures[prop] = atlas_texture(ESTATE_TERRAIN.HALL_YARD_ART, region)
+	hall_yard_low_stone = atlas_texture(ESTATE_TERRAIN.HALL_YARD_ART, Rect2(176, 0, 48, 48))
 
 static func riverside_texture(prop: int, season_index: int) -> AtlasTexture:
 	return atlas_texture(RIVERSIDE_PLANTS, riverside_region(prop, season_index))
