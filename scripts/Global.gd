@@ -155,6 +155,7 @@ var rotation_route_cell: Variant = null
 var field_return_work: Dictionary = {}
 var field_seed_plans: Dictionary[Vector2i, String] = {}
 var deferred_field_sowing: Dictionary[Vector2i, bool] = {}
+var hold_private_harvest := false
 var fertile_cells: Dictionary[Vector2i, bool] = {}
 var irrigation: Irrigation
 var first_channel_growth_day := 0
@@ -348,6 +349,7 @@ func _reset_campaign() -> void:
 	field_return_work.clear()
 	field_seed_plans.clear()
 	deferred_field_sowing.clear()
+	hold_private_harvest = false
 	fertile_cells.clear()
 	irrigation = Irrigation.new()
 	first_channel_growth_day = 0
@@ -1084,12 +1086,26 @@ func sow_field_crop(cell: Vector2i, seed_id: String) -> bool:
 
 enum FieldJob { NONE, WATER, SOW, HARVEST, TILL }
 
+func can_hold_private_harvest() -> bool:
+	return (outcome == Outcome.RUNNING and first_tribute_delivered()
+		and tax_reform_choice in [TaxReformChoice.NONE, TaxReformChoice.DELAYED])
+
+func set_private_harvest_hold(enabled: bool) -> void:
+	if enabled == hold_private_harvest or (enabled and not can_hold_private_harvest()):
+		return
+	hold_private_harvest = enabled
+	GameEvents.farm_state_changed.emit()
+
+func private_harvest_is_held(cell: Vector2i) -> bool:
+	return hold_private_harvest and not is_public_plot(cell)
+
 func field_job(worker: RetainerData, cell: Vector2i) -> FieldJob:
 	if worker.duty == RetainerData.Duty.STEWARD:
 		var center: Vector2i = stewarded_field(worker).center_pos
 		if not _well_field_cells(center).has_point(cell):
 			return FieldJob.NONE
-	if worker.duty in [RetainerData.Duty.HARVEST, RetainerData.Duty.STEWARD] and field_crop_is_ripe(cell):
+	if (worker.duty in [RetainerData.Duty.HARVEST, RetainerData.Duty.STEWARD]
+			and field_crop_is_ripe(cell) and not private_harvest_is_held(cell)):
 		return FieldJob.HARVEST
 	if worker.duty in [RetainerData.Duty.FIELD, RetainerData.Duty.STEWARD]:
 		if field_crop_is_dry(cell):
@@ -1117,7 +1133,7 @@ func crop_rotation_bonus(cell: Vector2i, crop: CropData) -> int:
 	return int(not crop.restores_fertility and fertile_cells.has(cell))
 
 func harvest_field_crop(cell: Vector2i, worker: RetainerData = null) -> Dictionary:
-	if outcome != Outcome.RUNNING or not field_crop_is_ripe(cell):
+	if outcome != Outcome.RUNNING or not field_crop_is_ripe(cell) or (worker != null and private_harvest_is_held(cell)):
 		return {}
 	var crop: Dictionary = active_crops[cell]
 	var data: CropData = crop.data
@@ -3690,6 +3706,7 @@ func _save_snapshot(origin: String) -> Error:
 		"tilled_cells": saved_soil,
 		"field_seed_plans": saved_seed_plans,
 		"deferred_field_sowing": saved_deferred_sowing,
+		"hold_private_harvest": hold_private_harvest,
 		"fertile_cells": saved_fertility,
 		"irrigation_channels": saved_channels,
 		"irrigation_field_gates": saved_field_gates,
@@ -4268,6 +4285,7 @@ func load_game(path := "") -> Error:
 	zhou_li_score = str(data.get("zhou_li_score", "中"))
 	quest_progress = clampi(_read_save_int(data.get("quest_progress"), king_storage), 0, quest_target)
 	quest_completed = data.get("quest_completed", quest_progress == quest_target) == true
+	hold_private_harvest = data.get("hold_private_harvest", false) == true and can_hold_private_harvest()
 	first_tribute_entry = _read_harvest_entry(data.get("first_tribute_entry"), 1)
 	if first_tribute_entry.get("amount", 0) > king_storage:
 		first_tribute_entry.clear()

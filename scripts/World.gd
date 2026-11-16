@@ -1111,6 +1111,8 @@ func harvest_crop(grid_pos: Vector2i, worker: Retainer = null) -> bool:
 		GameEvents.stamina_changed.emit(Global.current_stamina)
 
 	var harvest := Global.harvest_field_crop(grid_pos, worker.data if worker else null)
+	if harvest.is_empty():
+		return false
 	if active_crops.has(grid_pos):
 		_draw_crop(grid_pos)
 	else:

@@ -166,6 +166,11 @@ func _run() -> void:
 			replay.petition = arguments[0] == "council-petition"
 			replay.single_field = arguments[0] == "council-one-field"
 			await replay.run(tree)
+		"council-harvest-research", "council-harvest-traditional", "council-harvest-before", "council-harvest-write":
+			var replay = load("res://tests/CouncilHarvestHoldReplay.gd").new()
+			replay.capture_dir = capture_directory
+			replay.harvest_mode = arguments[0].trim_prefix("council-harvest-")
+			await replay.run(tree)
 		"council-silk":
 			var replay = load("res://tests/CouncilSilkReplay.gd").new()
 			replay.capture_dir = capture_directory

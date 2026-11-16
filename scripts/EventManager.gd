@@ -107,8 +107,13 @@ func _event_data(world: Node, final_choice: bool) -> Dictionary:
 			greeting = "一年研究期满。请卿定下采邑今后的田赋。"
 	elif Global.current_day < Global.tax_council_start_day():
 		greeting = "西市呈上了卿的交货回执。君上准卿提前议定田赋，请先看这份账。"
+	var resumed_work := PackedStringArray()
 	if not Global.deferred_field_sowing.is_empty():
-		greeting += "\n定下田制后，暂缓的 %d 格私田会恢复续播。" % Global.deferred_field_sowing.size()
+		resumed_work.append("暂缓的 %d 格私田会恢复续播" % Global.deferred_field_sowing.size())
+	if Global.hold_private_harvest:
+		resumed_work.append("熟私田恢复代收")
+	if not resumed_work.is_empty():
+		greeting += "\n定下田制后，%s。" % "，".join(resumed_work)
 	return {
 		"title": "国君密诏 · 初税亩",
 		"speaker": "国君使者 · 召简",
@@ -202,6 +207,8 @@ func _on_tax_reform_choice(choice: Global.TaxReformChoice) -> void:
 			for retainer in Global.retainers:
 				if retainer.school in [RetainerData.School.CONFUCIAN, RetainerData.School.MOHIST]:
 					retainer.loyalty = _loyalty_after_choice(retainer, choice)
+	if choice != Global.TaxReformChoice.DELAYED:
+		Global.set_private_harvest_hold(false)
 	GameEvents.tax_reform_choice_made.emit(choice)
 	Global.save_automatically("council")
 	get_tree().paused = false

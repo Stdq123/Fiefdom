@@ -40,6 +40,7 @@ const WINDOW_MARGIN := 16.0
 @onready var field_wait_note: Label = %FieldWaitNote
 @onready var wait_button: Button = %WaitForFieldWork
 @onready var wait_before_sleep: CheckButton = %WaitBeforeSleep
+@onready var release_private_harvest: Button = %ReleasePrivateHarvest
 @onready var sheep_note: Label = %SheepNote
 @onready var silk_note: Label = %SilkNote
 @onready var find_plot: Button = %FindPlot
@@ -111,6 +112,7 @@ func _ready() -> void:
 	find_ready_plot.pressed.connect(harvest_requested.emit)
 	wait_button.pressed.connect(_wait_for_field_work)
 	wait_before_sleep.toggled.connect(Global.set_wait_for_fields_before_sleep)
+	release_private_harvest.pressed.connect(Global.set_private_harvest_hold.bind(false))
 	find_harvest.pressed.connect(harvest_requested.emit)
 	find_tribute.pressed.connect(tribute_field_requested.emit)
 	find_pavilion.pressed.connect(pavilion_story_requested.emit)
@@ -493,6 +495,8 @@ func _refresh_field_wait() -> void:
 	var report := Global.field_wait_report
 	var offer := Global.field_wait_offer()
 	var notes := PackedStringArray()
+	if Global.hold_private_harvest:
+		notes.append("熟私田暂留，可亲手收。")
 	if not report.is_empty():
 		notes.append(_describe_field_work("等待结果", report))
 	if offer.plots > 0:
@@ -504,12 +508,15 @@ func _refresh_field_wait() -> void:
 			notes.append("今日时辰已晚。剩下的田务可亲手做。")
 		else:
 			notes.append("门客可接手 %d 格。做完即停，最晚到亥时。" % offer.plots)
-	var had_focus := wait_button.has_focus()
+	var focus_lost: bool = ((wait_button.has_focus() and not offer.available)
+		or (release_private_harvest.has_focus() and not Global.hold_private_harvest))
 	wait_button.visible = offer.available
+	release_private_harvest.visible = Global.hold_private_harvest
 	field_wait_note.text = "\n".join(notes)
 	field_wait_note.visible = not notes.is_empty()
-	if had_focus and not wait_button.visible:
-		%Sleep.grab_focus()
+	if focus_lost:
+		var next_button: Button = wait_button if offer.available else %Sleep
+		next_button.grab_focus()
 		GamepadInput.snap_pointer_to_focus.call_deferred()
 
 func _work_duration(minutes: int) -> String:

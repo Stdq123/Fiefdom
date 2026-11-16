@@ -30,6 +30,9 @@ const PENDING := Color("#f2bc85")
 @onready var mixed_title: Label = %MixedTitle
 @onready var mixed_preview: Label = %MixedPreview
 @onready var mixed_result: Label = %MixedResult
+@onready var harvest_policy: HBoxContainer = %HarvestPolicy
+@onready var harvest_policy_note: Label = %HarvestPolicyNote
+@onready var harvest_policy_button: Button = %HarvestPolicyButton
 @onready var public_plan_card: PanelContainer = %PublicPlanCard
 @onready var public_plan_title: Label = %PublicPlanTitle
 @onready var public_plan_detail: Label = %PublicPlanDetail
@@ -55,6 +58,9 @@ func _ready() -> void:
 	sowing_button.pressed.connect(func():
 		close_map()
 		sowing_plans_requested.emit(sowing_field_id))
+	harvest_policy_button.pressed.connect(func():
+		Global.set_private_harvest_hold(not Global.hold_private_harvest)
+		_refresh_harvest_policy())
 	arts_button.pressed.connect(func():
 		close_map()
 		six_arts_requested.emit())
@@ -120,12 +126,23 @@ func _refresh_on_open() -> void:
 	_refresh_public_plan(gap > 0 and tribute == 0)
 	if public_plan_card.visible:
 		preview_heading.text = "筹备下次纳贡" if totals.plots == 0 else "筹备纳贡与收成"
+	_refresh_harvest_policy()
 
 	var bolts := Global.silk_workshop.bolts
 	var silk_target := Global.balance.ending_silk_target
 	silk_stock.text = "备绸 · %d / %d 匹" % [bolts, silk_target]
 	silk_stock.modulate = READY if bolts >= silk_target else PENDING
 	silk_button.text = "查看蚕桑" if bolts >= silk_target else "准备丝绸"
+
+func _refresh_harvest_policy() -> void:
+	var held := Global.hold_private_harvest
+	harvest_policy.visible = held or (Global.can_hold_private_harvest()
+		and Global.retainers.any(func(worker: RetainerData) -> bool:
+			return worker.duty in [RetainerData.Duty.STEWARD, RetainerData.Duty.HARVEST]))
+	harvest_policy_button.text = "恢复门客收私田" if held else "暂留熟私田"
+	harvest_policy_note.modulate = READY if held else Color.WHITE
+	harvest_policy_note.text = ("门客暂留熟私田，仍可亲手收。定案后恢复代收。" if held else
+		"想先收公田时，可请门客把熟私田留给你。")
 
 func _refresh_public_plan(needs_crop: bool) -> void:
 	var plan := Global.tribute_field_plan() if needs_crop else {}
