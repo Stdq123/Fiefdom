@@ -782,7 +782,7 @@ func _draw() -> void:
 	var shade := scenery_shade(raining)
 	for sprite: Sprite2D in scenery:
 		if sprite.visible:
-			_draw_sorted_prop_shadow(sprite.position, scenery[sprite], shade)
+			draw_sorted_prop_shadow(self, sprite.position, scenery[sprite], shade, raining)
 	for prop in props:
 		if prop.z in SORTED_PROPS:
 			continue
@@ -1049,18 +1049,18 @@ static func draw_scenery_shadow(canvas: CanvasItem, foot: Vector2, prop: int, sh
 		outline.append((foot + point * half_size).snapped(Vector2(0.5, 0.5)))
 	canvas.draw_colored_polygon(outline, shade)
 
-func _draw_sorted_prop_shadow(foot: Vector2, prop: int, shade: Color) -> void:
-	var tint := Color(1.0, 1.0, 1.0, 0.55) if raining else Color.WHITE
+static func draw_sorted_prop_shadow(canvas: CanvasItem, foot: Vector2, prop: int, shade: Color, wet: bool) -> void:
+	var tint := Color(1.0, 1.0, 1.0, 0.55) if wet else Color.WHITE
 	if prop in ROCK_PROPS:
-		draw_texture_rect_region(ESTATE_TERRAIN.HALL_YARD_ART,
+		canvas.draw_texture_rect_region(ESTATE_TERRAIN.HALL_YARD_ART,
 			Rect2(foot - Vector2(15, 5), HALL_YARD_STONE_SHADOW.size), HALL_YARD_STONE_SHADOW, tint)
 		return
 	if CANOPY_SHADOW_SCALE.has(prop):
 		var scale: float = CANOPY_SHADOW_SCALE[prop]
-		draw_texture_rect_region(ESTATE_TERRAIN.HALL_YARD_ART,
+		canvas.draw_texture_rect_region(ESTATE_TERRAIN.HALL_YARD_ART,
 			Rect2(foot - Vector2(16, 8) * scale, HALL_YARD_CANOPY_SHADOW.size * scale), HALL_YARD_CANOPY_SHADOW, tint)
 		return
-	draw_scenery_shadow(self, foot, prop, shade)
+	draw_scenery_shadow(canvas, foot, prop, shade)
 
 func _draw_building_shadows() -> void:
 	var ground_shadow := Color("#26352c")
@@ -1384,10 +1384,12 @@ func _update_prop_textures() -> void:
 	for prop: int in STORAGE_TINTS:
 		painted_textures[prop] = atlas_texture(ESTATE_VESSELS, EXTERNAL_REGIONS[prop])
 	if wilderness:
-		painted_textures[Prop.PINE] = atlas_texture(RAVINE_ART,
-			Rect2(248 if season == Global.Season.WINTER else 200, 0, 48, 48))
+		painted_textures[Prop.PINE] = ravine_pine_texture(season)
 		painted_textures[Prop.RAVINE_SHOOT] = atlas_texture(RAVINE_ART, Rect2(146, 50, 14, 18))
 		painted_textures[Prop.STUMP] = atlas_texture(RAVINE_ART, Rect2(164, 50, 16, 16))
+
+static func ravine_pine_texture(season_index: int) -> AtlasTexture:
+	return atlas_texture(RAVINE_ART, Rect2(248 if season_index == Global.Season.WINTER else 200, 0, 48, 48))
 
 static func riverside_texture(prop: int, season_index: int) -> AtlasTexture:
 	return atlas_texture(RIVERSIDE_PLANTS, riverside_region(prop, season_index))

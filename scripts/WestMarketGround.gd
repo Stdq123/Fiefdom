@@ -8,10 +8,14 @@ const YARD_DISPLAY := preload("res://scripts/MarketYardDisplay.gd")
 const DYE_VAT := preload("res://scripts/MarketDyeVat.gd")
 const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
 const ROAD_WEATHER := preload("res://scripts/RoadWeather.gd")
+const FIXTURE_ART := preload("res://assets/world/west-market-fixtures.png")
 const BACKDROP := Rect2(-1600, -1300, 3200, 2600)
 const BASIN_INNER := Rect2(LAYOUT.BASIN.position + Vector2(6, 6), LAYOUT.BASIN.size - Vector2(12, 12))
-const BASIN_STONE := Color("#a4a08a")
-const WET_BASIN_STONE := Color("#8b8c7b")
+const BASIN_BACK := Rect2(196, 0, 70, 46)
+const BASIN_FRONT := Rect2(196, 48, 70, 14)
+const CRATES := Rect2(32, 64, 30, 28)
+const CRATE_FEET := [Vector2(-306, 99), Vector2(343, -3)]
+const STREET_STONE := Color("#c0ae90")
 const GRAIN_YARD := [
 	Vector2(-395, 116), Vector2(-364, 103), Vector2(-309, 108), Vector2(-260, 121),
 	Vector2(-205, 117), Vector2(-196, 153), Vector2(-207, 188), Vector2(-248, 200),
@@ -44,7 +48,7 @@ const STALL_PAVING := [
 	[Vector2(-45, -25), Vector2(39, -25), Vector2(48, -11), Vector2(46, 2),
 		Vector2(29, 9), Vector2(-9, 15), Vector2(-39, 14), Vector2(-50, 7), Vector2(-54, -10)],
 ]
-const STALL_STONE := [Color("#ac9875"), Color("#9ca79a"), Color("#bfb19b")]
+const STALL_STONE := [Color("#b3a07d"), Color("#96a89d"), Color("#b5a498")]
 const DISPLAY_OFFSETS := [Vector2(-42, 9), Vector2(-103, 22), Vector2(-39, 9)]
 const DISPLAY_NAMES := [&"GrainBaskets", &"FishTray", &"SilkTable"]
 const GROVES := [
@@ -109,8 +113,10 @@ var dye_paving: PackedVector2Array
 var stall_paving: Dictionary[int, STONE_PAVING] = {}
 var _paving_art: STONE_PAVING
 var _dye_paving_art: STONE_PAVING
+var _cart_path: PackedVector2Array
 var _lane_surfaces: Array[PackedVector2Array] = []
 var _displays: Array[YARD_DISPLAY] = []
+var _stall_feet: Array[Vector2] = []
 var _dye_vats: Array[DYE_VAT] = []
 var main_path: PackedVector2Array
 var verge_art := TERRAIN.new(LAYOUT.BOUNDS.position.y)
@@ -126,8 +132,10 @@ func _ready() -> void:
 	var dye_path := EstateLayout.sample_road(PackedVector2Array(LAYOUT.DYE_LANE))
 	dye_paving = Geometry2D.merge_polygons(_road_outline(dye_path, 6.0), PackedVector2Array(DYE_APRON))[0]
 	_lane_surfaces.append(_road_outline(dye_path, 11.0))
-	for lane: Array in [LAYOUT.FISH_LANE, LAYOUT.SILK_LANE, LAYOUT.CART_DRIVE]:
+	for lane: Array in [LAYOUT.FISH_LANE, LAYOUT.SILK_LANE]:
 		_lane_surfaces.append(_road_outline(EstateLayout.sample_road(PackedVector2Array(lane)), 14.0))
+	_cart_path = EstateLayout.sample_road(PackedVector2Array(LAYOUT.CART_DRIVE))
+	_lane_surfaces.append(_road_outline(_cart_path, 14.0))
 	street.append_array(_lane_surfaces)
 	for yard: Array in [GRAIN_YARD, FISH_YARD, SILK_YARD, DYE_YARD]:
 		street.append(PackedVector2Array(yard))
@@ -149,7 +157,7 @@ func _ready() -> void:
 	var surface := WATER_SURFACE.new(EstateLayout.corners(BASIN_INNER), 0.0)
 	surface.name = "BasinWater"
 	add_child(surface)
-	surface.set_weather(Color("#456f70"), Global.has_rain())
+	surface.set_weather(Color("#4b7772"), Global.has_rain())
 	held_fish.name = "HeldFish"
 	held_fish.texture_filter = TEXTURE_FILTER_NEAREST
 	held_fish.self_modulate = Color("#cee0d8eb")
@@ -211,6 +219,7 @@ func add_stall_yard(kind: MarketStall.Kind, approach: Vector2, layer: Node2D) ->
 	display.position = foot
 	layer.add_child(display)
 	_displays.append(display)
+	_stall_feet.append(approach - MarketStall.APPROACH)
 	queue_redraw()
 
 func walking_fixture_footprints() -> Array[Rect2]:
@@ -233,12 +242,13 @@ func distance_to_trees(foot: Vector2) -> float:
 	return sqrt(nearest)
 
 func _draw() -> void:
-	var palette: Array = LANDSCAPE.SEASON_PALETTES[Global.season_index()]
+	var season := Global.season_index()
+	var palette: Array = LANDSCAPE.SEASON_PALETTES[season]
 	var meadow: Color = palette[0]
 	var shade: Color = palette[1]
 	var dirt: Color = palette[3]
 	var raining := Global.has_rain()
-	var winter := Global.season_index() == Global.Season.WINTER
+	var winter := season == Global.Season.WINTER
 	if raining:
 		meadow = meadow.lerp(Color("#344c4c"), 0.30)
 		dirt = dirt.darkened(0.16)
@@ -247,84 +257,80 @@ func _draw() -> void:
 		var edge := PackedVector2Array()
 		for point: Vector2 in GROVE_EDGE:
 			edge.append((grove.position + grove.size * point).round())
-		draw_colored_polygon(edge, meadow.lerp(shade, 0.48))
-	draw_texture_rect(LANDSCAPE.GRAIN, BACKDROP, true, Color(1.0, 1.0, 1.0, 0.75))
+		draw_colored_polygon(edge, meadow.lerp(shade, 0.37))
+	var leaf_tint: Color = LANDSCAPE.LEAF_TINTS[season]
+	if raining:
+		leaf_tint *= Color(0.88, 0.94, 0.99)
+	leaf_tint.a = 0.32 if winter else 0.82
+	draw_texture_rect(LANDSCAPE.ESTATE_MEADOW, BACKDROP, true, leaf_tint)
+	var litter := LANDSCAPE.ESTATE_LEAF_LITTER
+	for foot: Vector2 in TREE_FEET:
+		draw_texture_rect_region(LANDSCAPE.ESTATE_ART, Rect2(foot - Vector2(30, 20), litter.size), litter, leaf_tint)
 	verge_art.draw_verge(self, main_path, 44.0, meadow, winter)
 	for shoulder in street_shoulders:
-		draw_colored_polygon(shoulder, dirt.lerp(meadow, 0.52))
+		TERRAIN.draw_loam(self, shoulder, dirt.lerp(meadow, 0.57), TERRAIN.TRACK_GRAIN)
 	for surface in street:
-		TERRAIN.draw_loam(self, surface, dirt)
-	_dye_paving_art.draw(self, dirt, winter, raining, Color("#a3ada4"))
-	_paving_art.draw(self, dirt, winter, raining)
+		TERRAIN.draw_loam(self, surface, dirt, TERRAIN.TRACK_GRAIN)
+	_draw_cart_ruts(dirt)
+	_dye_paving_art.draw(self, dirt, winter, raining, Color("#a3ada4"), TERRAIN.STONE_GRAIN)
+	_paving_art.draw(self, dirt, winter, raining, STREET_STONE, TERRAIN.STONE_GRAIN)
 	for kind: int in stall_paving:
-		stall_paving[kind].draw(self, dirt, winter, raining, STALL_STONE[kind])
-	_draw_basin()
+		stall_paving[kind].draw(self, dirt, winter, raining, STALL_STONE[kind], TERRAIN.STONE_GRAIN)
+	_draw_scene_shadows(raining)
+	var wash := LAYOUT.BASIN.position - Vector2(5, 4)
+	_draw_basin_piece(self, wash, BASIN_BACK)
+
+func _draw_cart_ruts(dirt: Color) -> void:
+	for offset: float in [-4.0, 5.0]:
+		var groove := PackedVector2Array()
+		for index in _cart_path.size():
+			var previous := _cart_path[maxi(index - 1, 0)]
+			var next := _cart_path[mini(index + 1, _cart_path.size() - 1)]
+			var normal := previous.direction_to(next).orthogonal()
+			groove.append((_cart_path[index] + normal * offset).snapped(Vector2(0.5, 0.5)))
+		draw_polyline(groove, Color(dirt.darkened(0.30), 0.52), 0.8)
+		draw_set_transform(Vector2(0, 1))
+		draw_polyline(groove, Color(dirt.lightened(0.25), 0.42), 0.7)
+		draw_set_transform(Vector2.ZERO)
+
+func _draw_scene_shadows(raining: bool) -> void:
 	var contact_shade := LANDSCAPE.scenery_shade(raining)
+	for foot in _stall_feet:
+		_draw_shadow(foot, [Vector2(-41, -7), Vector2(31, -9), Vector2(48, -15), Vector2(64, -9),
+			Vector2(55, 2), Vector2(29, 8), Vector2(-36, 5)], contact_shade)
 	for display in _displays:
 		YARD_DISPLAY.draw_shadow(self, to_local(display.global_position), contact_shade)
 	for vat in _dye_vats:
 		DYE_VAT.draw_shadow(self, to_local(vat.global_position), vat.scale.x, contact_shade)
-	var house_shadow := PackedVector2Array([
-		Vector2(-46, -8), Vector2(36, -8), Vector2(61, -18), Vector2(73, -9),
-		Vector2(56, 5), Vector2(24, 11), Vector2(-36, 7), Vector2(-50, 1),
-	])
-	for index in house_shadow.size():
-		house_shadow[index] += LAYOUT.DYE_HOUSE
-	draw_colored_polygon(house_shadow, contact_shade)
+	_draw_shadow(LAYOUT.DYE_HOUSE, [
+		Vector2(-46, -8), Vector2(36, -8), Vector2(61, -18), Vector2(73, -9), Vector2(56, 5),
+		Vector2(24, 11), Vector2(-36, 7), Vector2(-50, 1)], contact_shade)
+	_draw_shadow(LAYOUT.BASIN.end, [Vector2(-61, -2), Vector2(1, -3), Vector2(9, -9),
+		Vector2(13, -4), Vector2(8, 4), Vector2(-54, 6), Vector2(-63, 4)], contact_shade)
+	for foot: Vector2 in CRATE_FEET:
+		_draw_shadow(foot, [Vector2(-13, -5), Vector2(11, -7), Vector2(20, -2),
+			Vector2(16, 4), Vector2(-10, 3)], contact_shade)
 	for index in TREE_FEET.size():
-		LANDSCAPE.draw_scenery_shadow(self, TREE_FEET[index], TREE_PATTERN[index % TREE_PATTERN.size()], contact_shade)
+		LANDSCAPE.draw_sorted_prop_shadow(self, TREE_FEET[index], TREE_PATTERN[index % TREE_PATTERN.size()], contact_shade, raining)
 	for detail: Vector3i in PROP_DETAILS:
-		LANDSCAPE.draw_scenery_shadow(self, Vector2(detail.x, detail.y), detail.z, contact_shade)
+		LANDSCAPE.draw_sorted_prop_shadow(self, Vector2(detail.x, detail.y), detail.z, contact_shade, raining)
 	for jar: Vector3i in STORAGE:
 		LANDSCAPE.draw_scenery_shadow(self, Vector2(jar.x, jar.y), STORAGE_PROPS[jar.z], contact_shade)
 
-func _draw_basin() -> void:
-	var rim := LAYOUT.BASIN
-	var stone := WET_BASIN_STONE if Global.has_rain() else BASIN_STONE
-	var front := Vector2(rim.position.x, rim.end.y)
-	var back := rim.position
-	draw_colored_polygon(PackedVector2Array([front + Vector2(-4, -3), front + Vector2(rim.size.x + 6, -3),
-		front + Vector2(rim.size.x + 11, 6), front + Vector2(5, 8), front + Vector2(-5, 5)]), Color("#323f32a0"))
-	draw_colored_polygon(PackedVector2Array([back + Vector2(rim.size.x - 2, 2), back + Vector2(rim.size.x + 4, 6),
-		front + Vector2(rim.size.x + 4, 3), front + Vector2(rim.size.x - 2, 5)]), stone.darkened(0.51))
-	draw_colored_polygon(PackedVector2Array([back + Vector2(3, 0), back + Vector2(rim.size.x - 3, 0),
-		back + Vector2(rim.size.x, 3), front + Vector2(rim.size.x, -3), front + Vector2(rim.size.x - 3, 0),
-		front + Vector2(3, 0), front + Vector2(0, -3), back + Vector2(0, 3)]), stone.darkened(0.18))
-	draw_rect(rim.grow(-4.0), Color("#48584e"))
-	draw_rect(BASIN_INNER, Color("#487371"))
-	draw_rect(Rect2(BASIN_INNER.position, Vector2(BASIN_INNER.size.x, 4)), Color("#345e59"))
-	for index in 6:
-		var x := 2.0 + float(index) * 9.5
-		var top := back + Vector2(x, 1)
-		draw_rect(Rect2(top, Vector2(8.5, 3)), stone.lightened(0.16 + (index % 3) * 0.055))
-		draw_rect(Rect2(top + Vector2(0, 3), Vector2(8.5, 1)), stone.darkened(0.38))
-		draw_rect(Rect2(top + Vector2(index % 3, 0), Vector2(4, 1)), stone.lightened(0.38))
-	for y in [8.0, 18.0, 27.0]:
-		draw_rect(Rect2(back + Vector2(1, y), Vector2(3, 8)), stone.lightened(0.16))
-		draw_rect(Rect2(back + Vector2(rim.size.x - 5, y), Vector2(3, 8)), stone.lightened(0.04))
-		draw_rect(Rect2(back + Vector2(4, y + 1), Vector2(1, 6)), stone.darkened(0.30))
-		if y != 18.0:
-			draw_rect(Rect2(back + Vector2(3, y + 4), Vector2(3, 2)), Color("#778263"))
-	if Global.season_index() == Global.Season.WINTER:
-		var frost := Color("#c1c9b8")
-		draw_rect(Rect2(back + Vector2(3, 1), Vector2(17, 1)), frost)
-		draw_rect(Rect2(back + Vector2(rim.size.x - 18, 1), Vector2(10, 1)), frost)
-		draw_rect(Rect2(back + Vector2(1, 8), Vector2(2, 7)), frost.darkened(0.10))
+func _draw_shadow(foot: Vector2, profile: Array[Vector2], shade: Color) -> void:
+	var outline := PackedVector2Array()
+	for point in profile:
+		outline.append(foot + point)
+	draw_colored_polygon(outline, shade)
 
 func _draw_basin_front(rim: Node2D) -> void:
-	var stone := WET_BASIN_STONE if Global.has_rain() else BASIN_STONE
-	var width := LAYOUT.BASIN.size.x
-	rim.draw_colored_polygon(PackedVector2Array([Vector2(0, -6), Vector2(width, -6),
-		Vector2(width - 2, 0), Vector2(width - 4, 4), Vector2(4, 4), Vector2(1, 2)]), stone.darkened(0.36))
-	for index in 6:
-		var x := 2.0 + float(index) * 9.5
-		rim.draw_rect(Rect2(x, -6, 8.5, 3), stone.lightened(0.23 + float(index % 3) * 0.04))
-		rim.draw_rect(Rect2(x, -5, 8.5, 1), stone.lightened(0.38))
-		rim.draw_rect(Rect2(x + 1, -2, 8, 3), stone.darkened(0.23 + float(index % 2) * 0.07))
-		rim.draw_rect(Rect2(x + float(index % 3), 2, 7, 1), stone.darkened(0.46))
+	_draw_basin_piece(rim, Vector2(-5, -8), BASIN_FRONT)
+
+func _draw_basin_piece(canvas: CanvasItem, at: Vector2, region: Rect2) -> void:
 	if Global.season_index() == Global.Season.WINTER:
-		rim.draw_rect(Rect2(4, -6, 12, 1), Color("#c1c9b8"))
-		rim.draw_rect(Rect2(width - 12, -6, 8, 1), Color("#c1c9b8"))
+		region.position.x += region.size.x
+	var tint := Color("#c2cfd1") if Global.has_rain() else Color.WHITE
+	canvas.draw_texture_rect_region(FIXTURE_ART, Rect2(at, region.size), region, tint)
 
 func place_scenery(layer: Node2D) -> void:
 	var rim := Node2D.new()
@@ -333,38 +339,46 @@ func place_scenery(layer: Node2D) -> void:
 	rim.draw.connect(_draw_basin_front.bind(rim))
 	layer.add_child(rim)
 	var season := Global.season_index()
-	var tree_art := {}
-	for variety in [LANDSCAPE.Prop.OAK, LANDSCAPE.Prop.BLOSSOM_TREE, LANDSCAPE.Prop.PINE]:
-		tree_art[variety] = LANDSCAPE.tree_texture(variety, season)
+	var tree_art: Array[AtlasTexture] = [
+		LANDSCAPE.atlas_texture(TERRAIN.HALL_YARD_ART, Rect2(48 * season, 96, 48, 48)),
+		LANDSCAPE.atlas_texture(TERRAIN.HALL_YARD_ART, Rect2(48 * season, 144, 48, 48)),
+		LANDSCAPE.ravine_pine_texture(season),
+		LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, Rect2(48 * season, 152, 48, 48)),
+	]
 	var wet_tint := Color(0.88, 0.94, 0.99) if Global.has_rain() else Color.WHITE
 	for index in TREE_FEET.size():
-		_prop(layer, TREE_FEET[index], tree_art[TREE_PATTERN[index % TREE_PATTERN.size()]], 45.0, wet_tint)
-	var fence := LANDSCAPE.atlas_texture(LANDSCAPE.SCENERY, Rect2(336, 48, 48, 48))
+		_prop(layer, TREE_FEET[index], tree_art[index % tree_art.size()], 45.0, wet_tint)
+	var fence := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, LANDSCAPE.ESTATE_SITE_REGIONS[LANDSCAPE.Prop.FENCE])
 	for foot: Vector2 in FENCE_FEET:
 		_prop(layer, foot, fence, 45.0, wet_tint)
-	var reedbed := LANDSCAPE.riverside_texture(LANDSCAPE.Prop.REEDS, season)
+	var reeds: Rect2 = LANDSCAPE.ESTATE_RIVER_REGIONS[LANDSCAPE.Prop.REEDS]
+	if season == Global.Season.WINTER:
+		reeds.position.y += LANDSCAPE.RIVERSIDE_WINTER_ROW
+	var reedbed := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, reeds)
 	var plant_tint := LANDSCAPE.riverside_tint(season, Global.has_rain())
 	for detail: Vector3i in PROP_DETAILS:
 		var foot := Vector2(detail.x, detail.y)
 		if detail.z == LANDSCAPE.Prop.REEDS:
 			_prop(layer, foot, reedbed, 26.0, plant_tint)
 		else:
-			var frame := Vector2i(detail.z % 8, floori(float(detail.z) / 8.0))
-			var texture := LANDSCAPE.atlas_texture(LANDSCAPE.SCENERY, Rect2(Vector2(frame * 48), Vector2(48, 48)))
+			var prop := LANDSCAPE.Prop.BOULDER if detail.z == LANDSCAPE.Prop.ROCK else detail.z
+			var texture := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, LANDSCAPE.ESTATE_SITE_REGIONS[prop])
 			_prop(layer, foot, texture, 45.0, wet_tint)
 	for jar: Vector3i in STORAGE:
-		var tint: Color = LANDSCAPE.STORAGE_TINTS[STORAGE_PROPS[jar.z]]
-		var texture := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_STORAGE, Rect2(jar.z * 16, 0, 16, 16))
-		_prop(layer, Vector2(jar.x, jar.y), texture, 14.0, tint * wet_tint)
-	_place_dye_vat(layer, &"MadderVat", Vector2(226, -7), 0.80, Color("#a57855"), Color("#a16755"))
-	_place_dye_vat(layer, &"IndigoVat", LAYOUT.DYE_INDIGO_VAT, 1.0, Color("#96634a"), Color("#4c7589"))
-	var north_gate := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_BUILDINGS, LANDSCAPE.BUILDING_REGIONS[LANDSCAPE.Prop.GATE_FAR])
-	var south_gate := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_BUILDINGS, LANDSCAPE.BUILDING_REGIONS[LANDSCAPE.Prop.GATE])
+		var texture := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_VESSELS, LANDSCAPE.EXTERNAL_REGIONS[STORAGE_PROPS[jar.z]])
+		_prop(layer, Vector2(jar.x, jar.y), texture, 14.0, wet_tint)
+	var cargo := LANDSCAPE.atlas_texture(FIXTURE_ART, CRATES)
+	for foot: Vector2 in CRATE_FEET:
+		_prop(layer, foot, cargo, 26.0, wet_tint)
+	_place_dye_vat(layer, &"MadderVat", Vector2(226, -7), 0.80, DYE_VAT.Dye.MADDER)
+	_place_dye_vat(layer, &"IndigoVat", LAYOUT.DYE_INDIGO_VAT, 1.0, DYE_VAT.Dye.INDIGO)
+	var north_gate := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, LANDSCAPE.ESTATE_SITE_REGIONS[LANDSCAPE.Prop.GATE_FAR])
+	var south_gate := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, LANDSCAPE.ESTATE_SITE_REGIONS[LANDSCAPE.Prop.GATE])
 	_prop(layer, LAYOUT.EAST_GATE + Vector2(9, -23), north_gate, 44.0, wet_tint)
 	_prop(layer, LAYOUT.EAST_GATE + Vector2(-14, 23), south_gate, 44.0, wet_tint)
 
-func _place_dye_vat(layer: Node2D, vat_name: StringName, foot: Vector2, vat_scale: float, glaze: Color, dye: Color) -> void:
-	var vat := DYE_VAT.new(glaze, dye)
+func _place_dye_vat(layer: Node2D, vat_name: StringName, foot: Vector2, vat_scale: float, dye: DYE_VAT.Dye) -> void:
+	var vat := DYE_VAT.new(dye)
 	vat.name = vat_name
 	vat.position = foot
 	vat.scale = Vector2.ONE * vat_scale

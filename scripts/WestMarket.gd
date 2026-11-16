@@ -7,6 +7,8 @@ const GROUND := preload("res://scripts/WestMarketGround.gd")
 const ORDER_CART := preload("res://scripts/SeasonOrderCart.gd")
 const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
 const DYER := preload("res://scripts/MarketDyer.gd")
+const FIXTURE_ART := preload("res://assets/world/west-market-fixtures.png")
+const FISH_BOARD := Rect2(64, 64, 24, 18)
 
 @onready var player: Player = $Player
 @onready var ground: GROUND = $Ground
@@ -173,11 +175,8 @@ func _talk_to_dyer() -> void:
 		_follow_trip.bind(MarketStall.TITLES[MarketStall.Kind.SILK]))
 
 func _draw_fish_sign() -> void:
-	fish_sign.draw_rect(Rect2(-11, -7, 22, 15), Color("#49382c"))
-	var board := Color("#d1a668") if fish_reserved else Color("#a88d65")
-	fish_sign.draw_rect(Rect2(-10, -6, 20, 12), board)
-	fish_sign.draw_rect(Rect2(-9, -5, 1, 2), Color("#5c523f"))
-	fish_sign.draw_rect(Rect2(8, -5, 1, 2), Color("#5c523f"))
+	var tint := Color.WHITE if fish_reserved else Color("#d8cfbc")
+	fish_sign.draw_texture_rect_region(FIXTURE_ART, Rect2(Vector2(-12, -9), FISH_BOARD.size), FISH_BOARD, tint)
 
 func _refresh_silk_guest() -> void:
 	if not sample.visible:

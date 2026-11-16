@@ -1,5 +1,6 @@
 extends RefCounted
 
+const TERRAIN := preload("res://scripts/EstateTerrain.gd")
 const COURSE := 7.0
 const LIP := Vector2(0.45, 2.8)
 
@@ -61,12 +62,13 @@ func _build_curb(joins: Array[PackedVector2Array], drop: Vector2) -> void:
 			var flush := joins.any(func(path: PackedVector2Array) -> bool: return Geometry2D.is_point_in_polygon(foot, path))
 			_curb.append({"start": start, "end": end, "drop": drop * (0.28 if flush else 1.0)})
 
-func draw(canvas: CanvasItem, loam: Color, winter: bool, wet: bool, stone_color := Color("#b6ad90")) -> void:
+func draw(canvas: CanvasItem, loam: Color, winter: bool, wet: bool,
+		stone_color := Color("#b6ad90"), stone_grain: Texture2D = null) -> void:
 	var grout := loam.lerp(Color("#626658"), 0.78)
 	var stone := stone_color.lerp(Color("#798782"), 0.36) if wet else stone_color
 	if winter:
 		stone = stone.lerp(Color("#b8c2b4"), 0.29)
-	_draw_curb(canvas, stone, winter)
+	_draw_curb(canvas, stone, winter, stone_grain)
 	canvas.draw_colored_polygon(outline, grout)
 	for slab in _stones:
 		var face: PackedVector2Array = slab.shape
@@ -80,7 +82,7 @@ func draw(canvas: CanvasItem, loam: Color, winter: bool, wet: bool, stone_color 
 		var bevel := PackedVector2Array()
 		for point in face:
 			bevel.append(point.lerp(center, 0.15) - Vector2(0.2, 0.27))
-		canvas.draw_colored_polygon(bevel, top)
+		TERRAIN.draw_loam(canvas, bevel, top, stone_grain)
 		if slab.full:
 			var edge := bevel[0].lerp(bevel[1], 0.14)
 			var shine := bevel[0].lerp(bevel[1], 0.46 + (grain % 5) * 0.07)
@@ -88,7 +90,7 @@ func draw(canvas: CanvasItem, loam: Color, winter: bool, wet: bool, stone_color 
 			if grain % 4 == 0:
 				canvas.draw_line(center + Vector2(-2.0, 0.5), center + Vector2(2.0, 0.5), top.darkened(0.12), 0.65)
 
-func _draw_curb(canvas: CanvasItem, stone: Color, winter: bool) -> void:
+func _draw_curb(canvas: CanvasItem, stone: Color, winter: bool, stone_grain: Texture2D) -> void:
 	for index in _curb.size():
 		var section := _curb[index]
 		var a: Vector2 = section.start
@@ -97,6 +99,6 @@ func _draw_curb(canvas: CanvasItem, stone: Color, winter: bool) -> void:
 		var foot := ledge + Vector2(0.0, 1.0)
 		canvas.draw_colored_polygon(PackedVector2Array([a, b, b + foot, a + foot]), Color("#3b3e3335"))
 		var riser := stone.darkened(0.46 + (index % 3) * 0.028)
-		canvas.draw_colored_polygon(PackedVector2Array([a, b, b + ledge, a + ledge]), riser)
+		TERRAIN.draw_loam(canvas, PackedVector2Array([a, b, b + ledge, a + ledge]), riser, stone_grain)
 		var lip_color := stone.lightened(0.18) if winter and index % 3 == 0 else stone.darkened(0.12)
 		canvas.draw_line(a, b, lip_color, 0.95)
