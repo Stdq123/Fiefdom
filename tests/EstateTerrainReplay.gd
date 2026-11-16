@@ -98,6 +98,22 @@ func _walk_onto_spring_apron(terrain: Node2D) -> void:
 		"The player can walk around the basin onto its apron and hear a stone footstep.")
 	print("SPRING_APRON_WALK at=", world.player.position, " steps=", steps.size())
 	await _snapshot("00d-spring-apron")
+	var lane := source + Vector2(-43, 3)
+	var threshold := source + Vector2(-33, 3)
+	_expect(terrain._surface_at(lane) == TerrainAudio.Surface.TRACK
+		and terrain._surface_at(threshold) == TerrainAudio.Surface.STONE,
+		"The inset stepping stones start inside the south lane without moving its dirt center.")
+	await _walk(source + Vector2(-43, 24))
+	await _walk(lane)
+	steps.clear()
+	world.player.footstep.connect(record)
+	await _walk(source + Vector2(-18, 3))
+	world.player.footstep.disconnect(record)
+	_expect(world.player.position.distance_to(source + Vector2(-18, 3)) < 3.0
+		and steps.any(func(step: AudioStream) -> bool: return step in audio.STEPS[TerrainAudio.Surface.STONE]),
+		"Walk from the dirt lane across the recessed stones onto the apron.")
+	await _snapshot("00e-spring-from-lane")
+	print("SPRING_LANE_JOIN at=", world.player.position, " steps=", steps.size())
 	await _walk(tread + Vector2(0, 9))
 
 func _silk_and_gates() -> void:

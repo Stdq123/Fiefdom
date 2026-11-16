@@ -81,8 +81,8 @@ func _draw_basin() -> void:
 		basin.draw_line(wall + edge - axis * 3.0, wall + edge - axis, Color("#77ada0"), 1.0)
 	if Global.season_index() == Global.Season.WINTER:
 		var frost := Color("#c4d0bf")
-		basin.draw_rect(Rect2(wall + Vector2(-8, -7), Vector2(5, 1)), frost)
-		basin.draw_rect(Rect2(wall + Vector2(5, -7), Vector2(4, 1)), frost)
+		basin.draw_rect(Rect2(wall + Vector2(-8, -9), Vector2(5, 1)), frost)
+		basin.draw_rect(Rect2(wall + Vector2(2, -9), Vector2(4, 1)), frost)
 		basin.draw_rect(Rect2(wall + Vector2(-10, 3), Vector2(3, 1)), frost.darkened(0.12))
 	if Global.channel_survey_day > 0:
 		basin.draw_rect(Rect2(wall + Vector2(8, -17), Vector2(4, 15)), Color("#44392e"))
@@ -97,10 +97,11 @@ func _draw_glints() -> void:
 	glints.draw_rect(Rect2(water + Vector2(5 - drift, -1), Vector2(2, 1)), Color("#81b4a0"))
 
 func _draw_runoff() -> void:
-	var shadow := Color("#273e358c")
+	var shadow := Color("#2a3a32")
+	shadow.a = 0.35 if Global.has_rain() else 0.54
 	var fade := Color(shadow, 0.0)
-	runoff.draw_polygon(PackedVector2Array([Vector2(-13, 4), Vector2(12, 4), Vector2(17, 9),
-		Vector2(13, 14), Vector2(5, 16), Vector2(-10, 14), Vector2(-16, 10)]),
+	runoff.draw_polygon(PackedVector2Array([Vector2(-11, 4), Vector2(12, 4), Vector2(20, 8),
+		Vector2(20, 13), Vector2(9, 16), Vector2(-7, 14), Vector2(-13, 10)]),
 		PackedColorArray([shadow, shadow, fade, fade, fade, fade, fade]))
 	for direction: Vector2i in outlets:
 		var axis := Vector2(direction)

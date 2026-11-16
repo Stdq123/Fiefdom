@@ -41,11 +41,14 @@ const HALL_COURT := [
 	Vector2(10, 55), Vector2(-8, 57), Vector2(-26, 55), Vector2(-44, 52), Vector2(-57, 46),
 	Vector2(-65, 41), Vector2(-68, 32),
 ]
+const HALL_CURB: Array[float] = [0, 0, 0, 0, 0, 2, 4, 5, 5, 3, 0, 0, 3, 5, 4, 3, 0]
 const SPRING_APRON := [
-	Vector2(-28, -2), Vector2(-24, -7), Vector2(-17, -8), Vector2(-8, -14), Vector2(6, -15),
-	Vector2(17, -11), Vector2(21, -6), Vector2(19, 1), Vector2(22, 7), Vector2(15, 13),
-	Vector2(9, 17), Vector2(-2, 18), Vector2(-14, 16), Vector2(-24, 13), Vector2(-27, 9), Vector2(-32, 6),
+	Vector2(-38, -1), Vector2(-33, -5), Vector2(-23, -5), Vector2(-17, -8), Vector2(-8, -14),
+	Vector2(6, -15), Vector2(17, -11), Vector2(21, -6), Vector2(19, 1), Vector2(22, 7), Vector2(15, 13),
+	Vector2(9, 17), Vector2(-2, 18), Vector2(-14, 16), Vector2(-24, 13), Vector2(-28, 9),
+	Vector2(-35, 8), Vector2(-40, 5),
 ]
+const SPRING_CURB: Array[float] = [0, 0, 0, 0, 0, 0, 0, 1.5, 2, 3.5, 4, 4, 3.5, 3, 2, 0.5, 0, 0]
 const SPRING_FLAGSTONES := [
 	[Vector2(-30, 5), Vector2(-25, -3), Vector2(-18, -5), Vector2(-11, -1), Vector2(-10, 5),
 		Vector2(-17, 8), Vector2(-25, 8)],
@@ -55,6 +58,8 @@ const SPRING_FLAGSTONES := [
 	[Vector2(-24, 10), Vector2(-14, 9), Vector2(-5, 10), Vector2(-6, 16), Vector2(-15, 14), Vector2(-22, 12)],
 	[Vector2(-3, 10), Vector2(4, 9), Vector2(10, 12), Vector2(10, 16), Vector2(0, 17), Vector2(-4, 14)],
 	[Vector2(5, 7), Vector2(13, 8), Vector2(19, 8), Vector2(16, 11), Vector2(11, 14), Vector2(10, 10)],
+	[Vector2(-38, 1), Vector2(-34, -3), Vector2(-28, -3), Vector2(-27, -1), Vector2(-32, 4), Vector2(-39, 4)],
+	[Vector2(-33, 6), Vector2(-28, 5), Vector2(-26, 8), Vector2(-31, 8)],
 ]
 var crest := PackedVector2Array()
 var north_edge: float
@@ -172,18 +177,9 @@ func spring_stone_at(foot_from_source: Vector2) -> bool:
 	return Geometry2D.is_point_in_polygon(foot_from_source, _spring_paving)
 
 func draw_hall_court(canvas: CanvasItem, dirt: Color, winter: bool, wet: bool) -> void:
-	var stone := Color("#a69d81").lerp(Color("#6e7970"), 0.41 if wet else 0.0)
-	var grout := dirt.lerp(stone.darkened(0.23), 0.76)
-	var frost := Color("#c0c9b4")
-	var fall := Vector2(2, 3)
-	# The curbs end on either side of the worn opening into the south road.
-	for index: int in [5, 6, 7, 8, 12, 13, 14, 15]:
-		var a := _hall_paving[index]
-		var b := _hall_paving[index + 1]
-		var edge_a := a.lerp(b, 0.05).round()
-		var edge_b := a.lerp(b, 0.87).round()
-		_quad(canvas, edge_a, edge_b, edge_b + fall, edge_a + fall, grout.darkened(0.22))
-		canvas.draw_line(edge_a, edge_a.lerp(edge_b, 0.72), (frost if winter else stone).darkened(0.11), 1.0)
+	var stone := Color("#aaa58f").lerp(Color("#657770"), 0.42 if wet else 0.0)
+	var grout := dirt.lerp(stone.darkened(0.25), 0.84)
+	_draw_stone_curb(canvas, _hall_paving, HALL_CURB, stone, winter)
 	canvas.draw_colored_polygon(_hall_paving, grout)
 	_draw_flagstones(canvas, _hall_flagstones, grout, stone.lightened(0.055), winter)
 	_draw_hall_steps(canvas, stone.lightened(0.08), winter)
@@ -217,20 +213,54 @@ func draw_spring_apron(canvas: CanvasItem, at: Vector2, dirt: Color, winter: boo
 	var stone := Color("#999888").lerp(Color("#637a6e"), 0.42 if wet else 0.12)
 	var grout := dirt.lerp(stone.darkened(0.24), 0.78)
 	var top := pose * _spring_paving
-	var face := Transform2D(0.0, Vector2(2, 2)) * top
-	canvas.draw_colored_polygon(face, grout.darkened(0.22))
-	canvas.draw_colored_polygon(top, grout)
+	_draw_stone_curb(canvas, top, SPRING_CURB, stone, winter)
+	var mortar := PackedColorArray()
+	for point in _spring_paving:
+		var wear := clampf((-point.x - 24.0) / 15.0, 0.0, 1.0)
+		mortar.append(Color(grout, 1.0 - 0.72 * wear))
+	canvas.draw_polygon(top, mortar)
 	for index in SPRING_FLAGSTONES.size():
 		var slab := pose * PackedVector2Array(SPRING_FLAGSTONES[index])
-		var tone := stone.lightened(0.04 + index % 3 * 0.07)
+		var lane_mix := clampf((slab[0].x - at.x + 39.0) / 14.0, 0.0, 1.0)
+		var tone := dirt.lerp(stone.lightened(0.04 + index % 3 * 0.07), 0.48 + lane_mix * 0.52)
 		canvas.draw_colored_polygon(slab, tone)
-		var edge := tone.lerp(Color("#c0c9b4"), 0.68 if winter else 0.45)
+		var edge := tone.lerp(Color("#c0c9b4"), (0.68 if winter else 0.45) * (0.55 + lane_mix * 0.45))
 		canvas.draw_line(slab[0].lerp(slab[1], 0.18), slab[0].lerp(slab[1], 0.81), edge, 1.0)
 		var worn := slab[0].lerp(slab[3], 0.53).round()
 		canvas.draw_line(worn, worn + Vector2(3, 1), tone.darkened(0.16), 1.0)
-	# The two low approach chips sit flush in the lane edge.
-	canvas.draw_rect(Rect2(at + Vector2(-32, 2), Vector2(3, 1)), dirt.lerp(stone, 0.50))
-	canvas.draw_rect(Rect2(at + Vector2(-34, 8), Vector2(4, 2)), dirt.lerp(stone, 0.64))
+
+static func _draw_stone_curb(canvas: CanvasItem, rim: PackedVector2Array, depths: Array[float],
+		stone: Color, winter: bool) -> void:
+	# A zero depth marks a tread that meets the adjacent dirt at grade.
+	var fall := Vector2(0.29, 1.0)
+	var shade := Color(stone.darkened(0.65), 0.45)
+	var shadow_end := Color(shade, 0.0)
+	for index in rim.size():
+		var next := (index + 1) % rim.size()
+		if depths[index] == 0.0 and depths[next] == 0.0:
+			continue
+		var a := rim[index]
+		var b := rim[next]
+		var foot_a := a + fall * depths[index]
+		var foot_b := b + fall * depths[next]
+		var shadow_offset := Vector2(1.35, 1.75) * minf(1.0, (depths[index] + depths[next]) * 0.20)
+		canvas.draw_polygon(PackedVector2Array([foot_a, foot_b, foot_b + shadow_offset, foot_a + shadow_offset]),
+			PackedColorArray([shade, shade, shadow_end, shadow_end]))
+		var face := PackedVector2Array([a, b])
+		if depths[next] > 0.0:
+			face.append(foot_b)
+		if depths[index] > 0.0:
+			face.append(foot_a)
+		var riser := stone.darkened(0.39 + posmod(index, 3) * 0.042)
+		canvas.draw_colored_polygon(face, riser)
+		var blocks := ceili(a.distance_to(b) / 10.0)
+		for joint in range(1, blocks):
+			var at := float(joint) / blocks
+			var edge := a.lerp(b, at)
+			var foot := foot_a.lerp(foot_b, at)
+			canvas.draw_line(edge.lerp(foot, 0.20), foot, riser.darkened(0.21), 0.75)
+		var lip := stone.lerp(Color("#c0c9b4"), 0.54 if winter else 0.10)
+		canvas.draw_line(a.lerp(b, 0.12), a.lerp(b, 0.72), lip, 0.7)
 
 func draw_pond(canvas: CanvasItem, grass: Color, water: Color, winter: bool, raining: bool, has_dock: bool) -> void:
 	var silt := grass.lerp(Color("#9f9371"), 0.46)

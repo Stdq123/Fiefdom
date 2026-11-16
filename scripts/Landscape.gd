@@ -29,7 +29,7 @@ const RAVINE_WAYPOSTS := preload("res://assets/world/ravine-wayposts.png")
 const WOODLAND := preload("res://assets/world/ravine-woodland.svg")
 const RAVINE_BANKS := preload("res://scripts/RavineBanks.gd")
 const RAVINE_RELIEF := preload("res://scripts/RavineRelief.gd")
-const FIELD_BANK_DEPTH: Array[float] = [2.0, 4.0, 5.0, 2.0]
+const FIELD_BANK_DEPTH: Array[float] = [2.0, 4.5, 6.0, 2.0]
 const RIVERSIDE_REGIONS := {
 	Prop.WILLOW: Rect2(0, 0, 80, 92),
 	Prop.TALL_BAMBOO: Rect2(88, 0, 40, 48),
@@ -1050,7 +1050,7 @@ func _draw_field_bank_face(area: Rect2, start: Vector2, finish: Vector2, soil: C
 	var hollow := start.lerp(finish, 0.61) + outward * (depth - 0.7)
 	var skirt := start.lerp(finish, 0.80) + outward * (depth + 0.6)
 	draw_colored_polygon(PackedVector2Array([start, finish, toe_b, skirt, hollow, shoulder, toe_a]), face)
-	var crest := soil.lightened(0.13) if lit else soil.darkened(0.13)
+	var crest := soil.lightened(0.13) if lit else soil.darkened(0.08)
 	draw_colored_polygon(PackedVector2Array([start, finish, finish + (toe_b - finish) * 0.32,
 		start.lerp(finish, 0.69) + outward * 1.3, start.lerp(finish, 0.30) + outward * 0.9,
 		start + (toe_a - start) * 0.32]), crest)
@@ -1063,33 +1063,40 @@ func _draw_field_bank_face(area: Rect2, start: Vector2, finish: Vector2, soil: C
 		draw_colored_polygon(PackedVector2Array([at - along * 2.8, tip - along * 1.1,
 			tip + along * 0.7 - outward * 0.6, at + along * 2.6]), roots)
 	if not lit:
-		var clay := hollow - outward * 1.5
-		draw_line(clay - along * 2.4, clay + along * 1.7, soil.darkened(0.29), 0.7)
+		for section: float in [0.18, 0.62]:
+			var clay := start.lerp(finish, section) + outward * (depth * 0.52)
+			var run := along * minf(7.0, start.distance_to(finish) * 0.27)
+			draw_line(clay, clay + run + outward * 0.65, soil.darkened(0.24), 0.85)
+			var shard := clay + run * 0.52 + outward * 0.9
+			draw_colored_polygon(PackedVector2Array([shard - along * 1.55,
+				shard - outward * 0.75, shard + along * 1.35, shard + outward * 0.5]), soil.lerp(Color("#aca38c"), 0.40))
 
 func _field_step_bounds(area: Rect2, entrance: Vector2) -> Rect2:
 	if entrance == Vector2.ZERO:
 		return Rect2()
-	var size := Vector2(13.0, 5.0) if entrance.y != 0.0 else Vector2(5.0, 13.0)
+	var size := Vector2(14.0, 8.0) if entrance.y != 0.0 else Vector2(8.0, 14.0)
 	var mouth := area.get_center() + entrance * area.size * 0.5
-	return Rect2(mouth + entrance * 2.5 - size * 0.5, size)
+	return Rect2(mouth + entrance * 4.0 - size * 0.5, size)
 
 func _draw_field_step(area: Rect2, entrance: Vector2, soil: Color, frost: bool) -> void:
 	var landing := _field_step_bounds(area, entrance)
 	var way := landing.get_center()
 	var across := Vector2(entrance.y, -entrance.x)
 	var stone := soil.lerp(Color("#a4a18b"), 0.66)
-	var outline := PackedVector2Array([way - across * 6.5 - entrance * 1.1,
-		way - across * 4.1 - entrance * 2.5, way + across * 5.0 - entrance * 2.5,
-		way + across * 6.5 - entrance * 0.6, way + across * 6.0 + entrance * 1.5,
-		way + across * 2.4 + entrance * 2.5, way - across * 5.8 + entrance * 2.2])
-	draw_colored_polygon(outline, stone.darkened(0.27))
-	var tread := PackedVector2Array([outline[0], outline[1], outline[2], outline[3],
-		outline[4] - entrance * 1.0, outline[5] - entrance * 1.3, outline[6] - entrance * 1.0])
-	draw_colored_polygon(tread, stone)
-	var joint := way + across * 0.9
-	draw_line(joint - entrance * 2.2, joint + entrance * 1.0 + across, stone.darkened(0.28), 0.6)
-	var gleam := stone.lerp(Color("#c0c2a4"), 0.62 if frost else 0.29)
-	draw_line(tread[1] + across * 0.7, joint - entrance * 2.2 - across * 0.7, gleam, 0.65)
+	var lower := PackedVector2Array([way - across * 6.4 - entrance * 0.8, way + across * 5.9 - entrance * 0.8,
+		way + across * 7.0 + entrance * 1.8, way + across * 5.0 + entrance * 3.7,
+		way - across * 4.6 + entrance * 3.9, way - across * 6.7 + entrance * 2.6])
+	draw_colored_polygon(lower, stone.darkened(0.12))
+	var upper := PackedVector2Array([way - across * 5.2 - entrance * 4.0, way + across * 4.7 - entrance * 4.0,
+		way + across * 6.5 - entrance * 2.1, way + across * 5.4 + entrance * 0.1,
+		way - across * 5.4 + entrance * 0.4, way - across * 6.9 - entrance * 1.5])
+	draw_colored_polygon(PackedVector2Array([upper[3], upper[4], upper[4] + entrance * 1.2,
+		upper[3] + entrance * 1.6]), stone.darkened(0.32))
+	draw_colored_polygon(upper, stone)
+	draw_line(way + across * 1.1 - entrance * 3.5, way + across * 0.5 + entrance * 0.3, stone.darkened(0.24), 0.65)
+	var gleam := stone.lerp(Color("#c0c2a4"), 0.68 if frost else 0.35)
+	draw_line(upper[4].lerp(upper[3], 0.10), upper[4].lerp(upper[3], 0.68), gleam, 0.75)
+	draw_line(lower[4].lerp(lower[3], 0.19), lower[4].lerp(lower[3], 0.79), stone.darkened(0.24), 0.65)
 
 func _field_verge_outline(area: Rect2, entrance: Vector2) -> PackedVector2Array:
 	var corners := EstateLayout.corners(area)
