@@ -127,11 +127,16 @@ func _ready() -> void:
 	journal_details.toggled.connect(_toggle_journal_details)
 	ledger_toggle.pressed.connect(_toggle_ledger_details)
 	%CoinIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
+	%GrainIcon.texture = HUDIcons.icon(HUDIcons.Symbol.GRAIN)
 	%HealthIcon.texture = HUDIcons.icon(HUDIcons.Symbol.HEALTH)
 	%StaminaIcon.texture = HUDIcons.icon(HUDIcons.Symbol.STAMINA)
 	calendar_button.icon = HUDIcons.icon(HUDIcons.Symbol.CALENDAR)
+	reclaim_button.icon = HUDIcons.icon(HUDIcons.Symbol.HOE)
+	channel_button.icon = HUDIcons.icon(HUDIcons.Symbol.WATER)
 	map_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
 	settings_button.icon = HUDIcons.icon(HUDIcons.Symbol.SETTINGS)
+	manage_button.icon = HUDIcons.icon(HUDIcons.Symbol.LEDGER)
+	rations_button.icon = HUDIcons.icon(HUDIcons.Symbol.RATIONS)
 	sleep_button.icon = HUDIcons.icon(HUDIcons.Symbol.MOON)
 	GameEvents.estate_arrived.connect(_show_arrival)
 	GameEvents.day_advanced.connect(arrival.hide.unbind(1))
@@ -369,6 +374,9 @@ func setup_seeds(ids: Array, select_seed: Callable) -> void:
 		var icon := TextureRect.new()
 		icon.texture = picture.texture
 		icon.self_modulate = picture.tint
+		if HUDIcons.CROPS.has(id):
+			icon.texture = HUDIcons.icon(HUDIcons.CROPS[id])
+			icon.self_modulate = Color.WHITE
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -503,6 +511,9 @@ func show_field_gate_mode(active: bool) -> void:
 
 func _update_health(health: int) -> void:
 	health_label.text = "气血 %d / %d" % [health, Global.balance.player_max_health]
-	health_label.add_theme_color_override("font_color", Color("#8d3529") if health * 3 < Global.balance.player_max_health else Color("#37291c"))
+	if health * 3 < Global.balance.player_max_health:
+		health_label.add_theme_color_override("font_color", Color("#ffc1a4"))
+	else:
+		health_label.remove_theme_color_override("font_color")
 	health_bar.max_value = Global.balance.player_max_health
 	health_bar.value = health

@@ -273,6 +273,7 @@ offset_left = -258.0
 offset_top = 16.0
 offset_right = -16.0
 offset_bottom = 16.0
+grow_horizontal = 0
 theme_type_variation = &"HudCalendar"
 
 [node name="Stack" type="VBoxContainer" parent="Calendar"]
@@ -285,18 +286,9 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="DayLabel" type="Label" parent="Calendar/Stack/Date"]
-layout_mode = 2
-mouse_filter = 2
-unique_name_in_owner = true
-theme_override_font_sizes/font_size = 22
-theme_type_variation = &"HudBronzeInk"
-size_flags_horizontal = 3
-text = "第 1 天"
-
 [node name="WatchDial" type="Control" parent="Calendar/Stack/Date"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(44, 44)
+custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
@@ -313,6 +305,15 @@ theme_override_font_sizes/font_size = 13
 theme_override_colors/font_color = Color(0.99, 0.89, 0.69, 1)
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="DayLabel" type="Label" parent="Calendar/Stack/Date"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 22
+theme_type_variation = &"HudBronzeInk"
+size_flags_horizontal = 3
+text = "第 1 天"
 
 [node name="WeatherSeal" type="PanelContainer" parent="Calendar/Stack/Date"]
 custom_minimum_size = Vector2(29, 29)
@@ -416,7 +417,7 @@ horizontal_alignment = 2
 [node name="Treasury" type="HBoxContainer" parent="Calendar/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
 [node name="CoinIcon" type="TextureRect" parent="Calendar/Stack/Treasury"]
 unique_name_in_owner = true
@@ -432,14 +433,24 @@ stretch_mode = 5
 layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
+size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 16
 theme_type_variation = &"HudBronzeInk"
+
+[node name="GrainIcon" type="TextureRect" parent="Calendar/Stack/Treasury"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture_filter = 1
+expand_mode = 1
+stretch_mode = 5
 
 [node name="InventoryLabel" type="Label" parent="Calendar/Stack/Treasury"]
 layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
-size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 16
 theme_type_variation = &"HudBronzeInk"
 horizontal_alignment = 2
@@ -503,7 +514,7 @@ offset_top = -16.0
 offset_right = 196.0
 offset_bottom = -16.0
 grow_vertical = 0
-theme_type_variation = &"HudPanel"
+theme_type_variation = &"HudRail"
 
 [node name="Stack" type="VBoxContainer" parent="Vitals"]
 layout_mode = 2
@@ -529,6 +540,7 @@ layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
 theme_override_font_sizes/font_size = 14
+theme_type_variation = &"HudBronzeInk"
 
 [node name="HealthBar" type="ProgressBar" parent="Vitals/Stack"]
 layout_mode = 2
@@ -557,6 +569,7 @@ layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
 theme_override_font_sizes/font_size = 14
+theme_type_variation = &"HudBronzeInk"
 
 [node name="StaminaBar" type="ProgressBar" parent="Vitals/Stack"]
 layout_mode = 2
@@ -828,6 +841,7 @@ offset_left = -224.0
 offset_top = -93.0
 offset_right = -16.0
 offset_bottom = -62.0
+grow_horizontal = 0
 mouse_default_cursor_shape = 2
 theme_type_variation = &"HudButton"
 theme_override_font_sizes/font_size = 16
