@@ -1,13 +1,15 @@
 extends RefCounted
 class_name PlayerAttire
 
-const ORIGINAL_PATH := "res://assets/characters/player.svg"
-const VARIANTS_PATH := "res://assets/characters/player-attire.svg"
+const ORIGINAL_PATH := "res://assets/characters/player.png"
+const VARIANTS_PATH := "res://assets/characters/player-attire.png"
 const DEFAULT := "cloth"
 const SAMPLE := "dyed"
 const WOOL := "wool"
 const SHEET_SIZE := 96
 const FRAME_SIZE := 32
+const WORK_COLUMN := 3
+const SHEET_WIDTH := FRAME_SIZE * (WORK_COLUMN + 2)
 
 const CATALOG := {
 	"cloth": {"name": "黛布短衣", "detail": "深色布衣 · 木簪", "sheet": -1, "rank": 0, "sleeve": Color("#7d8e83")},
@@ -27,15 +29,16 @@ static func can_wear(id: String, rank: int, sample_delivered: bool, wool_coat: b
 static func texture(id: String) -> Texture2D:
 	if id == DEFAULT:
 		return load(ORIGINAL_PATH)
-	return _region(id, 0, SHEET_SIZE)
+	return _region(id, Rect2(0, 0, SHEET_WIDTH, SHEET_SIZE))
 
 static func preview(id: String, direction: int) -> AtlasTexture:
-	return _region(id, direction * FRAME_SIZE, FRAME_SIZE)
+	return _region(id, Rect2(0, direction * FRAME_SIZE, FRAME_SIZE, FRAME_SIZE))
 
-static func _region(id: String, top: int, size: int) -> AtlasTexture:
+static func _region(id: String, bounds: Rect2) -> AtlasTexture:
 	var sheet: int = CATALOG[id].sheet
 	var artwork := AtlasTexture.new()
 	artwork.atlas = load(ORIGINAL_PATH if sheet < 0 else VARIANTS_PATH)
-	artwork.region = Rect2(0, maxi(0, sheet) * SHEET_SIZE + top, size, size)
+	bounds.position.y += maxi(0, sheet) * SHEET_SIZE
+	artwork.region = bounds
 	artwork.filter_clip = true
 	return artwork

@@ -3,7 +3,7 @@ class_name ToolGesture
 
 enum Action { TILL, SOW, WATER, HARVEST, BOW }
 
-const HAND_TOOLS := "res://assets/characters/hand-tools.svg"
+const HAND_TOOLS := "res://assets/characters/hand-tools.png"
 const RECOVERY := 0.18
 const REPLAY_INTERVAL := 0.10
 const WINDUP_ANGLES := [-0.96, -0.20, -0.08, -0.70, -0.12]
@@ -52,6 +52,11 @@ func clear() -> void:
 	hide()
 	set_process(false)
 
+func work_pose() -> int:
+	if not visible or carrying or frame == Action.BOW or elapsed >= contact_time + RECOVERY * 0.72:
+		return -1
+	return int(elapsed >= contact_time - 0.018)
+
 func _process(delta: float) -> void:
 	elapsed += delta
 	if elapsed >= contact_time + RECOVERY:
@@ -64,6 +69,7 @@ func _face(toward: Vector2) -> void:
 		aim = toward.normalized()
 	if absf(aim.x) > 0.20:
 		flip_h = aim.x < 0.0
+	show_behind_parent = aim.y < 0.0 and absf(aim.y) >= absf(aim.x)
 
 func _apply_pose() -> void:
 	var side := -1.0 if flip_h else 1.0
@@ -71,7 +77,8 @@ func _apply_pose() -> void:
 	var release := smoothstep(contact_time, contact_time + RECOVERY, elapsed)
 	var reach := swing * (1.0 - release)
 	var rise := sin(PI * swing) * 4.0
-	position = (Vector2(8.0 * side, -6.0 - rise) + aim * (2.0 + 5.0 * reach)).round()
+	var shoulder_width := 10.0 if show_behind_parent else 8.0
+	position = (Vector2(shoulder_width * side, -6.0 - rise) + aim * (2.0 + 5.0 * reach)).round()
 	rotation = lerpf(WINDUP_ANGLES[frame], CONTACT_ANGLES[frame], reach) * side
 	if frame == Action.BOW:
 		rotation += Vector2(side, 0).angle_to(aim)
@@ -83,10 +90,17 @@ func _draw() -> void:
 		return
 	var side := -1.0 if flip_h else 1.0
 	var local_from_actor := transform.affine_inverse()
-	var shoulder := local_from_actor * (Vector2(5 * side, -8) + body_lean)
-	var elbow := local_from_actor * (Vector2(8 * side, -5) + body_lean)
+	var shift := body_lean
+	var pose := work_pose()
+	if pose >= 0:
+		var profile := absf(aim.x) > absf(aim.y)
+		shift = Vector2(side * (1.0 + pose) if profile else 0.0, pose * 2.0)
+	var shoulder := local_from_actor * (Vector2(5 * side, -8) + shift)
+	var elbow := local_from_actor * (Vector2(8 * side, -5) + shift)
 	var grip: Vector2 = GRIPS[frame] * Vector2(side, 1)
 	var arm := PackedVector2Array([shoulder, elbow, grip])
-	draw_polyline(arm, Color("#252d2a"), 4.0)
-	draw_polyline(arm, sleeve, 2.0)
-	draw_rect(Rect2(grip - Vector2(1, 1), Vector2(3, 2)), Color("#dfac81"))
+	draw_polyline(arm, Color("#322e28"), 3.4)
+	draw_polyline(arm, sleeve.darkened(0.23), 2.2)
+	draw_polyline(PackedVector2Array([shoulder + Vector2.UP, elbow + Vector2.UP, grip]), sleeve, 1.0)
+	draw_rect(Rect2(grip - Vector2(1, 1), Vector2(3, 2)), Color("#be8e66"))
+	draw_rect(Rect2(grip - Vector2(1, 1), Vector2(1, 1)), Color("#dfac81"))

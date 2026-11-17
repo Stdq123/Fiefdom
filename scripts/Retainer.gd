@@ -37,8 +37,10 @@ var evening_path: Array[Vector2] = []
 func _ready() -> void:
 	if data == null:
 		data = RetainerData.new()
-	sprite.set_art(data.name, data.get_appearance_texture())
-	tool_gesture.sleeve = CharacterArt.neighbor_sleeve(data.name)
+	sprite.set_motion_sheet(CharacterArt.retainer_motion(data.name, data.school, data.visitor_appearance),
+		CharacterArt.WORKER_COLUMNS)
+	sprite.idle_time = maxi(0, VisitorData.NEIGHBORS.find(data.name)) * 0.37
+	tool_gesture.sleeve = CharacterArt.retainer_sleeve(data.name, data.school, data.visitor_appearance)
 	home_position = global_position
 
 func set_interaction_focused(focused: bool) -> void:
@@ -82,7 +84,10 @@ func _stand_at_stop() -> void:
 	elif resting_at_pavilion():
 		var pavilion: PavilionRest = get_parent().pavilion_rest
 		sprite.face(pavilion.gathering_center() - position)
-	sprite.stand(Vector2(0, 2) if resting_at_pavilion() else tool_gesture.body_lean)
+	if resting_at_pavilion():
+		sprite.stand(Vector2(0, 2))
+	else:
+		sprite.stand(tool_gesture.body_lean, tool_gesture.work_pose())
 
 func resting_at_pavilion() -> bool:
 	return evening_seat.is_finite() and current_state == State.IDLE
@@ -141,7 +146,7 @@ func set_state(next: State) -> void:
 		if tool_gesture.carrying or work_left > 0.0:
 			tool_gesture.clear()
 		work_left = 0.0
-		sprite.stand(tool_gesture.body_lean)
+		sprite.stand(tool_gesture.body_lean, tool_gesture.work_pose())
 		find_work()
 	elif next == State.WORK:
 		velocity = Vector2.ZERO

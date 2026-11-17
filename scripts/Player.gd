@@ -158,8 +158,13 @@ func show_action(action: ToolGesture.Action, target: Vector2) -> void:
 func _update_walk_sprite(direction: Vector2, delta: float) -> void:
 	if direction.is_zero_approx():
 		walk_phase = 0.0
-		sprite.offset = Vector2(0, 3) if seated else tool_gesture.body_lean
-		sprite.frame_coords = Vector2i(0, facing_row)
+		var work := -1 if seated else tool_gesture.work_pose()
+		if work >= 0:
+			sprite.offset = Vector2.ZERO
+			sprite.frame_coords = Vector2i(PlayerAttire.WORK_COLUMN + work, facing_row)
+		else:
+			sprite.offset = Vector2(0, 3) if seated else tool_gesture.body_lean
+			sprite.frame_coords = Vector2i(0, facing_row)
 		return
 	sprite.offset = Vector2.ZERO
 	_face(direction)

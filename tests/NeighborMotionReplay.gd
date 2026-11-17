@@ -193,14 +193,15 @@ func run(game_tree: SceneTree) -> void:
 		var actor: Resource = visitor_data.new()
 		actor.name = name
 		var icon := actor.get_appearance_texture() as AtlasTexture
-		_expect(icon != null and icon.atlas.resource_path.ends_with("neighbor-motion.svg") and icon.region.size == Vector2(32, 32),
+		_expect(icon != null and icon.atlas.resource_path == CharacterArt.RETAINER_MOTION and icon.region.size == Vector2(32, 32),
 			"Each named neighbor has a 32-pixel identity on the map and list.")
 		regions[icon.region] = true
 	var unnamed: Resource = visitor_data.new()
 	_expect(regions.size() == 7 and unnamed.get_appearance_texture().atlas.resource_path.ends_with("cast.svg"),
 		"The seven identities use distinct artwork and ordinary travelers have a fallback.")
 	var keeper: Node2D = world.retainer_instances[state.retainers.front()]
-	_expect(keeper.sprite.directional and keeper.sprite.hframes == 4 and keeper.sprite.vframes == 3,
+	_expect(keeper.sprite.directional and keeper.sprite.hframes == CharacterArt.WORKER_COLUMNS
+		and keeper.sprite.vframes == CharacterArt.MOTION_ROWS,
 		"The resident has a directional atlas before the first sowing.")
 	await _click_cell(PUBLIC)
 	await _click_cell(PUBLIC)
@@ -242,7 +243,7 @@ func run(game_tree: SceneTree) -> void:
 	await _click(ui.manage_button.get_global_rect().get_center())
 	var panel: Control = ui.panel_manager.management_panel_instance
 	var icon := panel.retainer_list_container.get_child(1).icon.texture as AtlasTexture
-	_expect(icon.atlas.resource_path.ends_with("neighbor-motion.svg") and icon.region.position.y == before.position.y,
+	_expect(icon.atlas.resource_path == CharacterArt.RETAINER_MOTION and icon.region.position.y == before.position.y,
 		"The retainer list uses the front-facing icon for the same person.")
 	await _capture("05-recruited-list")
 	await _click(panel.get_node("CloseButton").get_global_rect().get_center())

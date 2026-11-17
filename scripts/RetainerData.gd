@@ -108,9 +108,7 @@ func get_appearance_texture() -> Texture2D:
 	var named := CharacterArt.neighbor_icon(name)
 	if named:
 		return named
-	if visitor_appearance >= 0:
-		return CharacterArt.visitor(visitor_appearance)
-	return CharacterArt.retainer(school)
+	return CharacterArt.retainer(school, visitor_appearance)
 
 func duty_name() -> String:
 	return duty_label(duty)
