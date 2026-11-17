@@ -353,7 +353,7 @@ static func _return_line(speaker: String) -> String:
 
 func get_appearance_texture() -> Texture2D:
 	var named := CharacterArt.neighbor_icon(name)
-	return named if named else CharacterArt.visitor(school)
+	return named if named else CharacterArt.visitor(school, name)
 
 func get_school_name() -> String:
 	match school:

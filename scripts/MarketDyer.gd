@@ -13,15 +13,13 @@ const SPEAKER := "阿苓"
 @onready var bundle: Sprite2D = $Bundle
 @onready var hint: Label = $Hint
 
-var portrait := AtlasTexture.new()
+var portrait: Texture2D
 var route := Curve2D.new()
 
 func _ready() -> void:
 	body.set_motion_sheet(ART)
 	bundle.texture = ItemManager.season_item_picture(SeasonOrders.SILK_ITEM).texture
-	portrait.atlas = ART
-	portrait.region = Rect2(0, 0, 32, 32)
-	portrait.filter_clip = true
+	portrait = CharacterArt.dialogue_portrait(SPEAKER, null, false)
 	for foot: Vector2 in [LAYOUT.DYE_RACK_STOP, Vector2(296, 15), LAYOUT.DYE_JUNCTION,
 			LAYOUT.SILK_JUNCTION, LAYOUT.SILK_LANE[1], LAYOUT.SILK_LANE[2], LAYOUT.DYE_DELIVERY]:
 		route.add_point(foot)

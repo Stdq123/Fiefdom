@@ -1,6 +1,6 @@
 extends Node2D
 
-const ART := preload("res://assets/characters/market-porter.svg")
+const ART := preload("res://assets/characters/market-porter.png")
 const LAYOUT := preload("res://scripts/WestMarketLayout.gd")
 const GRAIN_STOP := Vector2(-355, 134)
 const FISH_STOP := Vector2(-129, -90)

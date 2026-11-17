@@ -1,8 +1,7 @@
 extends Node2D
 
-const WINGS := preload("res://assets/world/ivan-voirol/butterfly-wings.png")
+const WINGS := preload("res://assets/characters/meadow-butterflies.png")
 const WING_FRAMES := [0, 1, 2, 1]
-const TINTS := [Color("#c7b784"), Color("#b5c9af")]
 const FLIGHT_SECONDS := 8.0
 
 @export_enum("Swallowtail", "Glider") var variety := 0
@@ -18,7 +17,6 @@ func _ready() -> void:
 	wings.hframes = 3
 	wings.vframes = 2
 	wings.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	wings.self_modulate = TINTS[variety]
 	wings.scale = Vector2(0.81, 0.81)
 	add_child(wings)
 	GameEvents.day_advanced.connect(_update_weather.unbind(1))

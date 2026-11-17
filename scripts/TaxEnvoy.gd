@@ -1,6 +1,6 @@
 extends Node2D
 
-const MOTION_SHEET := preload("res://assets/characters/envoy-motion.svg")
+const MOTION_SHEET := preload("res://assets/characters/envoy-motion.png")
 const ROAD_OFFSET := Vector2(74, -16)
 const WALK_SPEED := 52.0
 

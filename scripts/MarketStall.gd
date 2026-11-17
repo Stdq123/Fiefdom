@@ -5,7 +5,7 @@ enum Kind { GRAIN, FISH, SILK }
 signal opened(kind: Kind)
 
 const ART := preload("res://assets/world/west-market-stalls.png")
-const KEEPER_ART := preload("res://assets/characters/market-keepers.svg")
+const KEEPER_ART := preload("res://assets/characters/market-keepers.png")
 const TITLES := ["粮摊", "鱼摊", "绸摊"]
 const KEEPERS := ["谷伯", "渔生", "蔡娘"]
 const APPROACH := Vector2(0, 24)

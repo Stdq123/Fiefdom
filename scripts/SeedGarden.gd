@@ -3,7 +3,6 @@ extends Node2D
 const PLACE := "亭西种圃"
 const HOST := "林蓼"
 const DELIVERY_NOTE := "林蓼送种途中"
-const CAST := preload("res://assets/characters/autumn-guests.svg")
 const STORAGE := preload("res://assets/world/estate-vessels.png")
 const TERRAIN := preload("res://scripts/EstateTerrain.gd")
 const SHARING := preload("res://assets/world/autumn-sharing.svg")
@@ -44,7 +43,7 @@ static func visit_note(planted: int) -> String:
 	return "分种已过 · 田边有木签"
 
 static func portrait() -> Texture2D:
-	return _frame(CAST, Rect2(0, 96, 32, 32))
+	return CharacterArt.dialogue_portrait(HOST, null, false)
 
 static func _frame(atlas: Texture2D, area: Rect2) -> AtlasTexture:
 	var frame := AtlasTexture.new()
@@ -56,7 +55,7 @@ static func _frame(atlas: Texture2D, area: Rect2) -> AtlasTexture:
 func _ready() -> void:
 	for point: Vector2 in EstateLayout.seed_garden_route():
 		road.add_point(point)
-	motion.set_motion_sheet(_frame(CAST, Rect2(0, 96, 128, 96)))
+	motion.set_motion_sheet(CharacterArt.festival_guest_motion(AutumnExhibit.GUESTS.find(HOST)))
 	pouch.texture = _frame(STORAGE, Rect2(0, 0, 16, 16))
 	pouch.scale = Vector2(0.65, 0.65)
 	for index in RECIPIENTS.size():
@@ -67,7 +66,7 @@ func _ready() -> void:
 		body.texture_filter = TEXTURE_FILTER_NEAREST
 		body.position.y = -11.0
 		actor.add_child(body)
-		body.set_motion_sheet(_frame(CAST, Rect2(0, RECIPIENTS[index].sheet * 96, 128, 96)))
+		body.set_motion_sheet(CharacterArt.festival_guest_motion(RECIPIENTS[index].sheet))
 		var bag := Sprite2D.new()
 		bag.name = "Packet"
 		bag.texture_filter = TEXTURE_FILTER_NEAREST

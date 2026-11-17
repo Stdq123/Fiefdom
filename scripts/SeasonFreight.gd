@@ -6,7 +6,7 @@ enum CartView { SIDE, AWAY_CORNER, NEAR_CORNER, AWAY, NEAR }
 
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const CART_ART := preload("res://assets/world/season-order-cart.svg")
-const DRIVER_ART := preload("res://assets/characters/freight-driver.svg")
+const DRIVER_ART := preload("res://assets/characters/freight-driver.png")
 const WHEEL_SOUNDS := [preload("res://assets/audio/freight/wheel-1.wav"), preload("res://assets/audio/freight/wheel-2.wav")]
 const ARRIVAL_SOUND := preload("res://assets/audio/freight/wagon-stop.wav")
 const WHEEL_SPACING := 46.0

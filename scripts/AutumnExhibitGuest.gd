@@ -1,6 +1,5 @@
 extends Node2D
 
-const CAST := "res://assets/characters/autumn-guests.svg"
 const SHARING := "res://assets/world/autumn-sharing.svg"
 const HOST := 3
 const LANTERN_WATCH := 0.69
@@ -44,10 +43,9 @@ func _ready() -> void:
 		route.add_point(point)
 	if role == HOST:
 		motion.set_art(speaker, null)
-		icon = CharacterArt.dialogue_portrait(speaker, null, false)
 	else:
-		motion.set_motion_sheet(_art(CAST, Rect2(0, role * 96, 128, 96)))
-		icon = _art(CAST, Rect2(0, role * 96, 32, 32))
+		motion.set_motion_sheet(CharacterArt.festival_guest_motion(role))
+	icon = CharacterArt.dialogue_portrait(speaker, null, false)
 	parcel.texture = _art(SHARING, Rect2(0, 32, 22, 16))
 
 func _art(path: String, area: Rect2) -> AtlasTexture:

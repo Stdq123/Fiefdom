@@ -1,23 +1,26 @@
 extends RefCounted
 class_name CharacterArt
 
-const CAST_PATH := "res://assets/characters/cast.svg"
-const NEIGHBOR_PORTRAITS := "res://assets/characters/neighbor-portraits.svg"
+const NEIGHBOR_PORTRAITS := "res://assets/characters/neighbor-portraits.png"
 const RETAINER_MOTION := "res://assets/characters/retainer-motion.png"
-const TOWN_PORTRAITS := "res://assets/characters/town-portraits.svg"
+const TOWN_PORTRAITS := "res://assets/characters/town-portraits.png"
+const FESTIVAL_MOTION := "res://assets/characters/autumn-guests.png"
+const PORTRAIT_SIZE := 48
 const TOWN_REGIONS := {
 	"谷伯": Rect2(0, 0, 48, 48),
 	"渔生": Rect2(48, 0, 48, 48),
 	"蔡娘": Rect2(0, 48, 48, 48),
 	"禾伯": Rect2(48, 48, 48, 48),
+	"阿苓": Rect2(96, 0, 48, 48),
+	"召简": Rect2(144, 0, 48, 48),
+	"阿绥": Rect2(96, 48, 48, 48),
+	"林蓼": Rect2(144, 48, 48, 48),
 }
 const CELL_SIZE := 32
 const MOTION_COLUMNS := 4
 const WORKER_COLUMNS := MOTION_COLUMNS + 2
 const MOTION_ROWS := 3
-const VISITOR_FIRST_ROW := 6
-const WILD_DOG_ROW := 10
-const SCOUT_ROW := 11
+const RETAINER_SCHOOLS := 6
 const WORKER_SLEEVES := [
 	Color("#64777a"), Color("#638499"), Color("#617660"), Color("#a06951"), Color("#587963"),
 	Color("#795a4d"), Color("#916675"),
@@ -35,19 +38,21 @@ static func retainer_motion(speaker: String, school: int, former_visitor: int) -
 static func retainer_sleeve(speaker: String, school: int, former_visitor: int) -> Color:
 	return WORKER_SLEEVES[_worker_index(speaker, school, former_visitor)]
 
-static func visitor(school: int) -> AtlasTexture:
-	if school == 4:
-		return _frame(5) # The visiting soldier uses the military outfit.
-	return _frame(VISITOR_FIRST_ROW + clampi(school, 0, WILD_DOG_ROW - VISITOR_FIRST_ROW - 1))
+static func visitor(school: int, speaker := "") -> AtlasTexture:
+	var guest := AutumnExhibit.GUESTS.find(speaker)
+	if guest >= 0:
+		return _region(FESTIVAL_MOTION, Rect2(0, guest * CELL_SIZE * MOTION_ROWS, CELL_SIZE, CELL_SIZE))
+	return retainer(0, maxi(school, 0))
 
-static func wild_dog() -> AtlasTexture:
-	return _frame(WILD_DOG_ROW)
+static func visitor_motion(school: int) -> AtlasTexture:
+	return retainer_motion("", 0, maxi(school, 0))
 
-static func scout() -> AtlasTexture:
-	return _frame(SCOUT_ROW)
+static func festival_guest_motion(guest: int) -> AtlasTexture:
+	return _region(FESTIVAL_MOTION, Rect2(0, guest * CELL_SIZE * MOTION_ROWS,
+		CELL_SIZE * MOTION_COLUMNS, CELL_SIZE * MOTION_ROWS))
 
 static func tax_envoy_icon() -> AtlasTexture:
-	return _region("res://assets/characters/envoy-motion.svg", Rect2(0, 0, CELL_SIZE, CELL_SIZE))
+	return _region("res://assets/characters/envoy-motion.png", Rect2(0, 0, CELL_SIZE, CELL_SIZE))
 
 static func neighbor_icon(speaker: String) -> AtlasTexture:
 	return _neighbor_art(speaker, Vector2(CELL_SIZE, CELL_SIZE))
@@ -70,8 +75,20 @@ static func _worker_index(speaker: String, school: int, former_visitor: int) -> 
 		return named
 	var generic := VisitorData.NEIGHBORS.size()
 	if former_visitor >= 0:
-		return generic + VISITOR_FIRST_ROW + clampi(former_visitor, 0, VisitorData.School.size() - 1)
-	return generic + clampi(school, 0, VISITOR_FIRST_ROW - 1)
+		return generic + RETAINER_SCHOOLS + clampi(former_visitor, 0, VisitorData.School.size() - 1)
+	return generic + clampi(school, 0, RETAINER_SCHOOLS - 1)
+
+static func visitor_portrait(school: int) -> AtlasTexture:
+	var index := clampi(school, 0, VisitorData.School.size() - 1)
+	return _region(TOWN_PORTRAITS, Rect2(index * PORTRAIT_SIZE, 2 * PORTRAIT_SIZE,
+		PORTRAIT_SIZE, PORTRAIT_SIZE))
+
+static func retainer_portrait(school: int, former_visitor: int) -> AtlasTexture:
+	if former_visitor >= 0:
+		return visitor_portrait(former_visitor)
+	var index := clampi(school, 0, RETAINER_SCHOOLS - 1)
+	return _region(TOWN_PORTRAITS, Rect2(index * PORTRAIT_SIZE, 3 * PORTRAIT_SIZE,
+		PORTRAIT_SIZE, PORTRAIT_SIZE))
 
 static func dialogue_portrait(speaker: String, fallback: Texture2D, favor_done: bool) -> Texture2D:
 	if TOWN_REGIONS.has(speaker):
@@ -86,10 +103,7 @@ static func dialogue_portrait(speaker: String, fallback: Texture2D, favor_done: 
 		"石墨": frame = 10 if favor_done else 9
 		"商音": frame = 11
 		_: return fallback
-	return _region(NEIGHBOR_PORTRAITS, Rect2(frame * 48, 0, 48, 48))
-
-static func _frame(row: int) -> AtlasTexture:
-	return _region(CAST_PATH, Rect2(0, row * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+	return _region(NEIGHBOR_PORTRAITS, Rect2(frame * PORTRAIT_SIZE, 0, PORTRAIT_SIZE, PORTRAIT_SIZE))
 
 static func _region(path: String, bounds: Rect2) -> AtlasTexture:
 	var texture := AtlasTexture.new()

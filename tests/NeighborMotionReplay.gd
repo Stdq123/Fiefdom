@@ -197,8 +197,10 @@ func run(game_tree: SceneTree) -> void:
 			"Each named neighbor has a 32-pixel identity on the map and list.")
 		regions[icon.region] = true
 	var unnamed: Resource = visitor_data.new()
-	_expect(regions.size() == 7 and unnamed.get_appearance_texture().atlas.resource_path.ends_with("cast.svg"),
-		"The seven identities use distinct artwork and ordinary travelers have a fallback.")
+	var traveler: AtlasTexture = unnamed.get_appearance_texture()
+	_expect(regions.size() == 7 and traveler.atlas.resource_path == CharacterArt.RETAINER_MOTION
+		and not regions.has(traveler.region),
+		"Neighbors and ordinary travelers have distinct regions of the directional artwork.")
 	var keeper: Node2D = world.retainer_instances[state.retainers.front()]
 	_expect(keeper.sprite.directional and keeper.sprite.hframes == CharacterArt.WORKER_COLUMNS
 		and keeper.sprite.vframes == CharacterArt.MOTION_ROWS,

@@ -24,8 +24,15 @@ var walking_to_stop: bool:
 @onready var hint: Label = $InteractionHint
 
 func _ready() -> void:
-	var fallback := data.get_appearance_texture() if data else CharacterArt.visitor(VisitorData.School.CONFUCIAN)
-	sprite.set_art(data.name if data else "", fallback)
+	var speaker := data.name if data else ""
+	var school := data.school if data else VisitorData.School.CONFUCIAN
+	var guest := AutumnExhibit.GUESTS.find(speaker)
+	if VisitorData.NEIGHBORS.has(speaker):
+		sprite.set_art(speaker, null)
+	elif guest >= 0:
+		sprite.set_motion_sheet(CharacterArt.festival_guest_motion(guest))
+	else:
+		sprite.set_motion_sheet(CharacterArt.visitor_motion(school), CharacterArt.WORKER_COLUMNS)
 	hint.visible = data != null
 	set_interaction_focused(false)
 
@@ -138,7 +145,10 @@ func _idle_at_stop(delta: float) -> void:
 	task_time = fposmod(task_time + delta, TASK_INTERVAL)
 	var bend := sin(PI * clampf(task_time / TASK_DURATION, 0.0, 1.0)) * 2.0
 	var look := position.direction_to(activity_focus)
-	sprite.stand((Vector2(look.x, 0.6) * bend).round())
+	var work_pose := -1
+	if bend >= 0.5:
+		work_pose = 1 if bend >= 1.5 else 0
+	sprite.stand((Vector2(look.x, 0.6) * bend).round(), work_pose)
 
 func _walk_to_stop(delta: float) -> void:
 	var offset := visit_path[next_stop] - position

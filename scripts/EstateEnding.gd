@@ -6,7 +6,7 @@ signal restore_requested()
 
 enum Shot { FIELD, CEREMONY, FAREWELL, RECORD }
 
-const ENVOY := preload("res://assets/characters/envoy-motion.svg")
+const ENVOY := preload("res://assets/characters/envoy-motion.png")
 const PROPS := preload("res://assets/world/ending-ceremonies.svg")
 const RECORD_STAND := preload("res://scripts/EstateRecordStand.gd")
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")

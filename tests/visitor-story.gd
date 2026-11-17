@@ -105,7 +105,7 @@ func _run() -> void:
 		and "季青" in ui.hud.visitor_label.text and "国库" in dialog.text_label.text,
 		"The first guest and the journal agree on the pavilion.")
 	var first_portrait: Rect2 = dialog.portrait.texture.region
-	_expect(dialog.portrait.texture.atlas.resource_path.ends_with("neighbor-portraits.svg")
+	_expect(dialog.portrait.texture.atlas.resource_path == CharacterArt.NEIGHBOR_PORTRAITS
 		and _option(dialog, "送路粮") == null, "Ji Qing has a portrait and the errand waits for tribute.")
 	await _choose(dialog, "交谈")
 	var before: int = state.reputation

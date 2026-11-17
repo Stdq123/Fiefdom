@@ -1,6 +1,6 @@
 extends Node2D
 
-const PORTER := preload("res://assets/characters/market-porter.svg")
+const PORTER := preload("res://assets/characters/market-porter.png")
 const STORAGE := preload("res://assets/world/estate-vessels.png")
 
 @onready var body: NeighborMotion = $Body

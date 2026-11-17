@@ -8,7 +8,7 @@ enum Pose { IDLE, STRIDE_A, GATHER, STRIDE_B, BRACE, READY, RELEASE, HIT, FALL }
 const ARROW_SCENE := preload("res://scenes/Arrow.tscn")
 const ARROW := preload("res://scripts/Arrow.gd")
 const FLOATING_TEXT := preload("res://scenes/FloatingText.tscn")
-const ENEMY_MOTION := preload("res://assets/characters/enemy-motion.svg")
+const ENEMY_MOTION := preload("res://assets/characters/enemy-motion.png")
 const BOW_DRAW := preload("res://assets/audio/combat/scout-draw.wav")
 const ARROW_HIT := preload("res://assets/audio/combat/arrow-hit.wav")
 const GROWL := preload("res://assets/audio/combat/dog-windup.wav")

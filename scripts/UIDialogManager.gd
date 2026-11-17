@@ -417,7 +417,7 @@ func show_visitor_dialog(data: VisitorData, place: String, at_pavilion := false)
 		speech = _council_reaction(data.name, speech)
 	var context := _recruitment_context(data.get_school_name() + " · " + place, block)
 	var dialog = _open(data.name, context,
-		speech, options, disabled, data.get_appearance_texture())
+		speech, options, disabled, CharacterArt.visitor_portrait(data.school))
 	dialog.option_selected.connect(_on_visitor_choice.bind(data, favor_index, favor))
 
 func _on_visitor_choice(index: int, data: VisitorData, favor_index: int, favor: Callable) -> void:
@@ -494,7 +494,7 @@ func show_retainer_dialog(data: RetainerData, pavilion_note: String) -> void:
 		var has_follow_up := favor.is_valid() or speech != usual
 		speech = evening + "\n" + speech if has_follow_up else evening
 	var dialog = _open(data.name, context, speech,
-		options, disabled, data.get_appearance_texture())
+		options, disabled, CharacterArt.retainer_portrait(data.school, data.visitor_appearance))
 	if favor.is_valid():
 		dialog.option_selected.connect(func(index: int):
 			if index == 0 and Global.retainers.has(data):
@@ -751,7 +751,7 @@ func show_gathering_guest(data: VisitorData) -> void:
 		_:
 			speech = "我沿竹径过来的。打这儿经过的人说，亭边那本曲簿可以翻到往年的迎客曲。"
 	var context := "乐师 · 谷雨亭集" if speaker == SPRING_GATHERING.HOST else "亭东来客 · 谷雨亭集"
-	var dialog := _open(speaker, context, speech, options, [], data.get_appearance_texture())
+	var dialog := _open(speaker, context, speech, options, [], CharacterArt.visitor_portrait(data.school))
 	if options.size() > 1:
 		dialog.option_selected.connect(_on_gathering_choice.bind(Global.current_day))
 
