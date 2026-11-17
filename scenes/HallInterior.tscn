@@ -1,26 +1,26 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/EstateInterior.gd" id="1_room"]
-[ext_resource type="Texture2D" path="res://assets/world/hall-interior.svg" id="2_art"]
+[ext_resource type="Texture2D" path="res://assets/world/hall-interior.png" id="2_art"]
 [ext_resource type="Script" path="res://scripts/HallFurnishing.gd" id="3_furniture"]
 [ext_resource type="Material" path="res://resources/world_hint_material.tres" id="4_unshaded"]
 [ext_resource type="SystemFont" path="res://resources/room_hint_font.tres" id="8_hint_font"]
-[ext_resource type="Texture2D" path="res://assets/world/hall-clothes-rack.svg" id="5_clothes"]
-[ext_resource type="Texture2D" path="res://assets/world/hall-decor.svg" id="6_decor_art"]
+[ext_resource type="Texture2D" path="res://assets/world/hall-decor.png" id="6_decor_art"]
 [ext_resource type="Script" path="res://scripts/HallDecorView.gd" id="7_decor_view"]
 
 [sub_resource type="AtlasTexture" id="Atlas_room"]
 atlas = ExtResource("2_art")
 region = Rect2(0, 0, 208, 144)
+filter_clip = true
 
 [sub_resource type="AtlasTexture" id="Atlas_front_left"]
 atlas = ExtResource("2_art")
-region = Rect2(13, 122, 77, 12)
+region = Rect2(0, 194, 77, 12)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="Atlas_front_right"]
 atlas = ExtResource("2_art")
-region = Rect2(118, 122, 77, 12)
+region = Rect2(80, 194, 77, 12)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="Atlas_desk"]
@@ -34,8 +34,13 @@ region = Rect2(48, 144, 52, 48)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="Atlas_shelf"]
-atlas = ExtResource("6_decor_art")
-region = Rect2(150, 40, 42, 16)
+atlas = ExtResource("2_art")
+region = Rect2(102, 144, 42, 16)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Atlas_clothes"]
+atlas = ExtResource("2_art")
+region = Rect2(146, 144, 40, 32)
 filter_clip = true
 
 [sub_resource type="RectangleShape2D" id="Shape_back"]
@@ -241,7 +246,7 @@ action = 2
 
 [node name="Sprite" type="Sprite2D" parent="ClothesRack"]
 position = Vector2(-20, -30)
-texture = ExtResource("5_clothes")
+texture = SubResource("Atlas_clothes")
 centered = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ClothesRack"]
