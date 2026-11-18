@@ -17,8 +17,7 @@ var portrait: Texture2D
 var route := Curve2D.new()
 
 func _ready() -> void:
-	body.set_motion_sheet(ART)
-	bundle.texture = ItemManager.season_item_picture(SeasonOrders.SILK_ITEM).texture
+	body.set_motion_sheet(ART, CharacterArt.STREET_COLUMNS, SPEAKER)
 	portrait = CharacterArt.dialogue_portrait(SPEAKER, null, false)
 	for foot: Vector2 in [LAYOUT.DYE_RACK_STOP, Vector2(296, 15), LAYOUT.DYE_JUNCTION,
 			LAYOUT.SILK_JUNCTION, LAYOUT.SILK_LANE[1], LAYOUT.SILK_LANE[2], LAYOUT.DYE_DELIVERY]:
@@ -49,7 +48,7 @@ func _follow_clock(animate: bool) -> void:
 			body.face(direction if leaving else -direction)
 		else:
 			body.face(Vector2.LEFT if trip >= 1.0 else Vector2.DOWN)
-	bundle.position.x = -8.0 if body.flip_h else 8.0
+	body.carry_at(bundle, 0.0)
 
 func remark() -> String:
 	if VisitorData.silk_sample_on_display(Global.current_day):
@@ -67,6 +66,7 @@ func remark() -> String:
 func face_customer(foot: Vector2) -> void:
 	body.stand()
 	body.face(foot - global_position)
+	body.carry_at(bundle, 0.0)
 
 func can_interact_from(foot: Vector2) -> bool:
 	return global_position.distance_squared_to(foot) <= 22.0 * 22.0

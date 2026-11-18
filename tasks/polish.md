@@ -15,6 +15,14 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 西市的掌柜和送货人
+
+20 秒实景短片收录封地、竹涧、溪桥道、西市、堂屋和蚕棚。田间能看到主角与门客落脚、挥锄、撒种、浇水和收镰，进西市能看到送布的阿苓与提鱼篓的伙计。 [1080p 实景短片](../docs/previews/fiefdom-art-tour.mp4) · [六处场景全图](../docs/previews/six-locations.png) · [西市绸摊原尺寸](../docs/previews/west-market.png)
+
+谷伯从粮堆舀起一斗，渔生端起盛鱼的竹盘，蔡娘伸手把绸面展平。有人来到柜前，三人便收手招呼。三座棚各有后壁、檐布、柜面和冬霜，手上的货物留在看得见的位置。阿苓的布匹露出扎绳，伙计的编篓随脚步起落，转背时货物被衣身遮住一部分。柜台和对白沿用每个人的巾帽、衣色与手中器物。 [掌柜理货](../docs/previews/market-stalls.gif) · [街上的行人](../docs/previews/market-delivery.gif) · [柜台和对白肖像](../docs/previews/market-portraits.png)
+
+在隔离桌面用 1920×1080 和 1024×768 两种窗口取景。两种尺寸各取 174 张西市画面，开发版、导出资源包与 Windows 程序逐张相同，包括晴雨、冬霜、区域舆图和人物对白。两次独立导出的 SHA-256 均为 `abfb8c2dbabc51ec5a915be525acbe5d88bccef57937dbd66d74f1ca97ee72d6`。本包已解压启动，完整新档至双结局与初次玩家试玩待验收。 [Windows 美术候选包](../build/polish-market-people/source-final/build/Fiefdom-1.0.0-Windows-x64.zip) · [实景与导出记录](../build/polish-market-people/release-proof.txt) · [图稿来源](../build/polish-market-people/asset-manifest.json)
+
 ## 路上认得出的人
 
 主角八套衣装、七位具名邻里、六类普通门客和五类来客都换上了新的正面、背面和侧身。渠伯的肩窄、背略弓，迈步时先挪脚再收步。季青转过身能看见斜挎包，蒲宁的宽草帽和商音的横簪从侧面也看得清。每套步态有两个落脚姿势和两个提脚姿势，停下来时双脚站稳。图集每格 64 × 64 纹素，落在原来的 32 × 32 逻辑图框内。 [主角与七位邻里的田间步态](../docs/previews/estate-walk.gif) · [六处实机场景](../docs/previews/six-locations.png)

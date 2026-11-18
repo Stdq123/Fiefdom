@@ -20,11 +20,12 @@
 [ext_resource type="Script" path="res://scripts/UIDialogManager.gd" id="19_dialog"]
 [ext_resource type="PackedScene" path="res://scenes/WestMarketMap.tscn" id="20_map"]
 [ext_resource type="Texture2D" path="res://assets/world/estate-vessels.png" id="21_storage"]
-[ext_resource type="Texture2D" path="res://assets/world/creek-trap.svg" id="22_creel"]
+[ext_resource type="Texture2D" path="res://assets/world/fishing-tackle.png" id="22_creel"]
 [ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="23_hud"]
 [ext_resource type="Texture2D" path="res://assets/world/market-dye-house.png" id="24_dye_house"]
 [ext_resource type="Texture2D" path="res://assets/world/market-drying-rack.png" id="25_dye_rack"]
 [ext_resource type="Script" path="res://scripts/MarketDyer.gd" id="26_dyer"]
+[ext_resource type="Texture2D" path="res://assets/characters/dyer-cloth.png" id="27_bundle"]
 
 [sub_resource type="RectangleShape2D" id="GateMouth"]
 size = Vector2(8, 20)
@@ -96,7 +97,7 @@ script = ExtResource("17_motion")
 [node name="Bundle" type="Sprite2D" parent="Dyer"]
 visible = false
 position = Vector2(8, -9)
-scale = Vector2(0.72, 0.72)
+texture = ExtResource("27_bundle")
 
 [node name="Hint" type="Label" parent="Dyer"]
 visible = false
@@ -169,17 +170,18 @@ route_section = 0
 script = ExtResource("16_porter")
 
 [node name="Body" type="Sprite2D" parent="Porter"]
-offset = Vector2(0, -13)
+position = Vector2(0, -13)
+texture_filter = 1
 script = ExtResource("17_motion")
 
 [node name="Creel" type="Sprite2D" parent="Porter"]
 visible = false
 texture_filter = 1
 position = Vector2(8, -7)
-scale = Vector2(0.65, 0.65)
+scale = Vector2(0.36, 0.36)
 texture = ExtResource("22_creel")
 region_enabled = true
-region_rect = Rect2(20, 0, 28, 20)
+region_rect = Rect2(56, 18, 37, 34)
 region_filter_clip_enabled = true
 
 [node name="EstateRoad" type="Area2D" parent="."]

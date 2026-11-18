@@ -5,6 +5,7 @@ enum Facing { FRONT, BACK, PROFILE }
 
 const STEP_LENGTH := 10.0
 const NEIGHBOR_STEP_LENGTH := {
+	"阿苓": 8.5,
 	VisitorData.FIELD_KEEPER: 7.5, VisitorData.ROAD_KEEPER: 9.5, VisitorData.WATER_GUIDE: 9.0,
 	VisitorData.SILK_MERCHANT: 8.7, VisitorData.RAVINE_GUIDE: 10.2,
 	VisitorData.EAST_WATCHER: 11.0, VisitorData.MUSIC_HOST: 9.5,
@@ -66,6 +67,8 @@ func walk(movement: Vector2) -> float:
 	_work_column = -1
 	walk_distance += travelled
 	var passing_column := CharacterArt.PASS_COLUMN if hframes == CharacterArt.WORKER_COLUMNS else 0
+	if hframes == CharacterArt.STREET_COLUMNS:
+		passing_column = CharacterArt.MOTION_COLUMNS
 	var phase := walk_column(walk_distance, passing_column, step_length)
 	var step_height := -1.0 if phase == 1 or phase == 2 else 0.0
 	if directional:
@@ -74,6 +77,13 @@ func walk(movement: Vector2) -> float:
 	else:
 		offset = Vector2(0.0, step_height)
 	return step_height
+
+func carry_at(bundle: Sprite2D, hang: float) -> void:
+	var bob := -0.75 if walking and frame_coords.x in [1, 2] else 0.0
+	var side := -1.0 if flip_h else 1.0
+	var across := 6.5 if facing == Facing.PROFILE else 8.0
+	bundle.position = (position + Vector2(side * across, 5.0 + bob + hang)).snappedf(0.5)
+	bundle.show_behind_parent = facing == Facing.BACK
 
 func stand(lean := Vector2.ZERO, work_pose := -1, errand := false) -> void:
 	walking = false

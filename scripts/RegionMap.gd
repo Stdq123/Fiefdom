@@ -42,6 +42,7 @@ const HERE_RADIUS := 23.0
 @onready var route_button: Button = %Follow
 @onready var clear_button: Button = %ClearDirections
 @onready var region_buttons: HBoxContainer = %Regions
+@onready var stall_art: Texture2D = load(MarketStall.ART_PATH)
 
 var region := Region.ESTATE
 var selected := Region.ESTATE
@@ -355,8 +356,8 @@ func _draw_bridge() -> void:
 
 func _draw_landmarks() -> void:
 	var stall := Rect2(59, 102, 76, 54)
-	paper.draw_texture_rect_region(MarketStall.ART, stall, Rect2(Vector2.ZERO, MarketStall.FRAME))
-	paper.draw_texture_rect_region(MarketStall.ART, stall, Rect2(Vector2(0, MarketStall.FRAME.y), MarketStall.FRAME))
+	paper.draw_texture_rect_region(stall_art, stall, Rect2(Vector2.ZERO, MarketStall.FRAME))
+	paper.draw_texture_rect_region(stall_art, stall, Rect2(Vector2(0, MarketStall.FRAME.y), MarketStall.FRAME))
 	paper.draw_texture_rect_region(BUILDINGS, Rect2(406, 91, 86, 59), Rect2(0, 0, 128, 88))
 	paper.draw_texture_rect(LOOKOUT, Rect2(602, 97, 47, 42), false)
 	for at: Vector2 in [Vector2(170, 119), Vector2(204, 110), Vector2(309, 153), Vector2(346, 147),
