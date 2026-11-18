@@ -1,6 +1,7 @@
 extends Control
 
 const SEED_BUTTON := preload("res://scripts/SeedButton.gd")
+const VISITOR_NOTES_MAX_HEIGHT := 116.0
 
 @onready var day_label: Label = %DayLabel
 @onready var watch_label: Label = %WatchLabel
@@ -20,6 +21,7 @@ const SEED_BUTTON := preload("res://scripts/SeedButton.gd")
 @onready var inventory_label: Label = %InventoryLabel
 @onready var well_field_label: Label = %WellFieldLabel
 @onready var tribute_button: Button = %TributeButton
+@onready var visitor_notes: ScrollContainer = %VisitorNotes
 @onready var visitor_label: Label = %VisitorLabel
 @onready var opening_action: Button = %OpeningAction
 @onready var rotation_guide_button: Button = %RotationGuideButton
@@ -125,6 +127,11 @@ func _ready() -> void:
 		card.minimum_size_changed.connect(_fit_top_card.bind(card), CONNECT_DEFERRED)
 		_fit_top_card.call_deferred(card)
 	journal_details.toggled.connect(_toggle_journal_details)
+	var notes_bar := visitor_notes.get_v_scroll_bar()
+	notes_bar.theme_type_variation = &"HudJournalBar"
+	notes_bar.focus_mode = Control.FOCUS_ALL
+	visitor_label.minimum_size_changed.connect(_fit_visitor_notes, CONNECT_DEFERRED)
+	_toggle_journal_details(journal_details.button_pressed)
 	ledger_toggle.pressed.connect(_toggle_ledger_details)
 	%CoinIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
 	%GrainIcon.texture = HUDIcons.icon(HUDIcons.Symbol.GRAIN)
@@ -176,8 +183,15 @@ func _ready() -> void:
 	refresh_morning_record()
 
 func _toggle_journal_details(expanded: bool) -> void:
-	visitor_label.visible = expanded
+	visitor_notes.visible = expanded
+	if expanded:
+		visitor_notes.scroll_vertical = 0
+		_fit_visitor_notes()
 	journal_details.text = "收起来客" if expanded else "封地手记"
+	journal_details.icon = journal_details.get_theme_icon(&"arrow" if expanded else &"arrow_collapsed", &"Tree")
+
+func _fit_visitor_notes() -> void:
+	visitor_notes.custom_minimum_size.y = minf(visitor_label.get_combined_minimum_size().y, VISITOR_NOTES_MAX_HEIGHT)
 
 func _toggle_ledger_details() -> void:
 	ledger_details.visible = not ledger_details.visible
