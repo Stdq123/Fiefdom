@@ -1,5 +1,8 @@
 extends Node2D
 
+const OAK_BOARD := preload("res://assets/world/estate-site-art.png")
+const BOARD_REGION := Rect2(158, 252, 32, 28)
+
 var site := -1
 var hint: Label
 var focused := false
@@ -7,7 +10,7 @@ var focused := false
 func _ready() -> void:
 	hint = Label.new()
 	hint.material = preload("res://resources/world_hint_material.tres")
-	hint.position = Vector2(-72, -34)
+	hint.position = Vector2(-72, -38)
 	hint.size.x = 144
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -40,10 +43,13 @@ func interact() -> void:
 	Global.record_ravine_site(site)
 
 func _draw() -> void:
-	draw_rect(Rect2(-8, 0, 16, 3), Color("#334a39"))
-	draw_rect(Rect2(-3, -12, 5, 14), Color("#624833"))
-	draw_rect(Rect2(-2, -11, 2, 11), Color("#a88655"))
-	draw_rect(Rect2(-7, -16, 14, 9), Color("#6f5238"))
-	draw_rect(Rect2(-6, -15, 12, 7), Color("#e6cb8d") if focused else Color("#c5a66e"))
-	draw_rect(Rect2(-4, -13, 8, 1), Color("#896540"))
-	draw_rect(Rect2(-3, -10, 6, 1), Color("#896540"))
+	draw_texture_rect_region(OAK_BOARD, Rect2(-12, -18, 24, 21), BOARD_REGION)
+	var bamboo := Color("#e5ca89") if focused else Color("#c3a473")
+	for i in 5:
+		var x := -6.5 + i * 2.5
+		var top := -12.5 + (i % 2) * 0.5
+		draw_rect(Rect2(x, top, 2.5, 8), Color("#886945"))
+		draw_rect(Rect2(x, top, 1.8, 7), bamboo)
+		draw_rect(Rect2(x, top + 3.0 + (i % 3) * 0.5, 1.5, 0.8), Color("#466862"))
+	for y: float in [-11.5, -6.0]:
+		draw_line(Vector2(-7, y), Vector2(6, y + 0.5), Color("#70513b"), 0.9)

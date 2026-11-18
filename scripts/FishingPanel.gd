@@ -2,13 +2,15 @@ extends PanelContainer
 
 enum Phase { WAITING, BITE, REELING, DONE }
 
-const GAME_THEME := preload("res://resources/game_theme.tres")
+const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
+const FRAME := preload("res://resources/estate_archive_frame.tres")
 const SPLASH := "res://assets/audio/fishing/float-splash.wav"
 const SAFE_LOW := 0.27
 const SAFE_HIGH := 0.79
 
 var spot: Node2D
-var angler: Node2D
+var angler: Player
+var rod: FishingRod
 var route_to: Callable
 var phase := Phase.WAITING
 var phase_time := 0.0
@@ -54,10 +56,29 @@ func _ready() -> void:
 		sound.stream = load(SPLASH)
 		add_child(sound)
 		_splash(-17.0, 1.10)
-	spot.show_line(angler.global_position, float_time, false)
+	rod = FishingRod.new()
+	rod.name = "FishingRod"
+	angler.add_child(rod)
+	_present_cast()
+
+func _present_cast() -> void:
+	var pose := FishingRod.Pose.WAIT
+	if phase == Phase.BITE:
+		pose = FishingRod.Pose.BITE
+	elif phase == Phase.REELING:
+		pose = FishingRod.Pose.PULL if holding else FishingRod.Pose.EASE
+	rod.present(spot.to_global(spot.water), pose, float_time, tension)
+	spot.show_line(rod.to_global(rod.tip), float_time, phase != Phase.WAITING, tension if phase == Phase.REELING else 0.0)
+
+func _put_away() -> void:
+	if is_instance_valid(rod):
+		rod.free()
+	if is_instance_valid(spot):
+		spot.clear_line()
 
 func _build_layout() -> void:
-	theme = GAME_THEME
+	theme = HUD_THEME
+	add_theme_stylebox_override("panel", FRAME)
 	set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	grow_vertical = Control.GROW_DIRECTION_BEGIN
 	offset_left = -255.0
@@ -69,6 +90,7 @@ func _build_layout() -> void:
 	add_child(layout)
 	var title := Label.new()
 	title.text = "%s · 垂钓" % CreekFish.PLACES[spot.site]
+	title.add_theme_color_override("font_color", Color("#f3dfae"))
 	title.add_theme_font_size_override("font_size", 22)
 	layout.add_child(title)
 	var row := HBoxContainer.new()
@@ -90,6 +112,7 @@ func _build_layout() -> void:
 	row.add_child(status)
 	detail = Label.new()
 	detail.text = "浮标轻晃时先等一等。"
+	detail.add_theme_color_override("font_color", Color("#d0d2bc"))
 	detail.add_theme_font_size_override("font_size", 15)
 	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	layout.add_child(detail)
@@ -99,19 +122,22 @@ func _build_layout() -> void:
 	line_meter.custom_minimum_size.y = 17
 	layout.add_child(line_meter)
 	tension_band = ColorRect.new()
-	tension_band.color = Color("#57976b8c")
+	tension_band.color = Color("#547c5dd4")
 	tension_band.anchor_left = SAFE_LOW
 	tension_band.anchor_right = SAFE_HIGH
 	tension_band.anchor_bottom = 1.0
 	tension_band.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tension_band.hide()
 	line_meter.add_child(tension_band)
+	tension_band.draw.connect(_draw_tension_marks)
+	line_meter.value_changed.connect(func(_value: float): tension_band.queue_redraw())
 	actions = HBoxContainer.new()
 	route_actions = HFlowContainer.new()
 	route_actions.hide()
 	layout.add_child(route_actions)
 	layout.add_child(actions)
 	pull_button = Button.new()
+	pull_button.theme_type_variation = &"HudPrimary"
 	pull_button.focus_mode = Control.FOCUS_NONE
 	pull_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	pull_button.custom_minimum_size.y = 36
@@ -119,11 +145,20 @@ func _build_layout() -> void:
 	pull_button.button_up.connect(_release_line)
 	actions.add_child(pull_button)
 	var close := Button.new()
+	close.theme_type_variation = &"HudButton"
 	close.text = "收竿 · B / Esc"
 	close.custom_minimum_size = Vector2(116, 36)
 	close.focus_mode = Control.FOCUS_NONE
 	close.pressed.connect(queue_free)
 	actions.add_child(close)
+
+func _draw_tension_marks() -> void:
+	var height := tension_band.size.y
+	for edge: float in [0.0, tension_band.size.x - 1.0]:
+		tension_band.draw_line(Vector2(edge, 1), Vector2(edge, height - 1), Color("#c3d1ac"), 1.0)
+	var at := roundf(line_meter.value * line_meter.size.x - tension_band.position.x)
+	tension_band.draw_rect(Rect2(at - 2, 1, 5, height - 2), Color("#483f32"))
+	tension_band.draw_rect(Rect2(at - 1, 2, 3, height - 4), Color("#ffdda0"))
 
 func _process(delta: float) -> void:
 	# Keep reaction and tension readable during long render frames.
@@ -147,19 +182,17 @@ func _process(delta: float) -> void:
 		Phase.REELING:
 			_reel(step)
 	if phase != Phase.DONE:
-		spot.show_line(angler.global_position, float_time, phase in [Phase.BITE, Phase.REELING])
+		_present_cast()
 
 func _reel(step: float) -> void:
 	var rate: float = fish.pull if holding else -0.43
 	tension = clampf(tension + rate * step, 0.0, 1.0)
-	line_meter.value = tension
 	if tension <= 0.02 or tension >= 0.98:
 		_finish("线松了，鱼钻回水里。" if tension <= 0.02 else "线绷得太紧，鱼挣脱了。")
 		return
 	if tension >= SAFE_LOW and tension <= SAFE_HIGH:
 		reeled += step
-	status.text = "松开一点，让钓线缓下来。" if tension >= 0.67 else "按住收线，保持在绿段。"
-	detail.text = "张力 %d%%   ·   收线 %d%%" % [roundi(tension * 100), mini(100, roundi(reeled / fish.reel * 100))]
+	_refresh_tension()
 	if reeled >= fish.reel:
 		var id := Global.land_creek_fish(spot.site, cast_day)
 		if id.is_empty():
@@ -167,6 +200,11 @@ func _reel(step: float) -> void:
 		else:
 			_splash(-10.0, 0.93)
 			_finish("钓到%s · 已收入鱼篓" % fish.name, id)
+
+func _refresh_tension() -> void:
+	line_meter.value = tension
+	status.text = "松开一点，让钓线缓下来。" if tension >= 0.67 else "按住收线，保持在绿段。"
+	detail.text = "张力 %d%%   ·   收线 %d%%" % [roundi(tension * 100), mini(100, roundi(reeled / fish.reel * 100))]
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
@@ -192,7 +230,7 @@ func _press_line() -> void:
 		Phase.BITE:
 			phase = Phase.REELING
 			holding = true
-			line_meter.value = tension
+			_refresh_tension()
 			tension_band.show()
 			_refresh_shortcut()
 		Phase.REELING:
@@ -204,7 +242,7 @@ func _release_line() -> void:
 func _finish(message: String, caught := "") -> void:
 	phase = Phase.DONE
 	set_process(false)
-	spot.clear_line()
+	_put_away()
 	pull_button.disabled = true
 	pull_button.hide()
 	actions.alignment = BoxContainer.ALIGNMENT_END
@@ -252,6 +290,7 @@ func _focus_return_route(button: Button) -> void:
 
 func _add_route_button(button_name: String, caption: String, place: String) -> Button:
 	var button := Button.new()
+	button.theme_type_variation = &"HudButton"
 	button.name = button_name
 	button.text = caption
 	button.custom_minimum_size.y = 36
@@ -275,8 +314,7 @@ func _splash(volume_db: float, pitch: float) -> void:
 		sound.play()
 
 func _exit_tree() -> void:
-	if is_instance_valid(spot):
-		spot.clear_line()
+	_put_away()
 	if owns_pause:
 		get_tree().paused = false
 	GameEvents.modal_visibility_changed.emit(false)

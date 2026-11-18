@@ -15,6 +15,12 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 溪岸持竿与南池钓台
+
+- 柳湾朝东持竿，砾滩朝西持竿，南池钓台上也能看见双手托住竹竿。红顶浮标落水后起一圈扁水纹，咬钩时没入水下。手抬起时竹竿弯曲，松线时竿尖回落。绿段的两道浅刻线和浅金游标可直接读出张力。垂钓期间由底部面板显示地名，岸边让出看竿梢的位置。 [柳湾四秒动图](../docs/previews/willow-fishing.gif) · [默认镜头](../build/polish-angler/packed-1920x1080/frames/pool-normal.png) · [张力游标](../build/polish-angler/packed-1920x1080/frames/pool-meter.png)
+- 两处溪岸放上嵌石脚的鱼纹木牌和有背带的篾篓。水迹另记在木架上悬着的五片竹简上。南池的篓子靠后栏，前栏按柱脚遮住人物。钓台铺板、栏柱顶面和托住台面的桩石取自溪桥道木桥。雨天木色压暗，冬天栏上留霜。 [砾滩与冬日南池](../docs/previews/fishing-banks.png) · [砾滩的水迹简](../build/polish-angler/packed-1920x1080/frames/shoal-journal.png) · [雨天钓台原图](../build/polish-angler/packed-1920x1080/frames/pond-rain.png)
+- 在隔离桌面用两种窗口取景，核对了竿梢与钓线的接点、人物的落脚位置和收起钓竿后的站姿。八套衣装、四个朝向都经过了画面状态检查。取景固定了库存、体力和时辰。两次干净导出的 Windows x64 包 SHA-256 同为 `2443da9130b3d700f89545cf6b34e004180ba51dcebd9334dc0de66d6af98ef7`。本次只验画面、界面和启动，当前包的新档到双结局仍待验收。 [本次候选包](../build/polish-angler/source-final/build/Fiefdom-1.0.0-Windows-x64.zip) · [实机取景与导出记录](../build/polish-angler/release-proof.txt) · [鱼纹牌与鱼篓的生成提示](../build/polish-angler/prompt.txt)
+
 ## 标题里的堂前与封地存档
 
 - 从封地用同一机位重拍堂屋、石砌泉眼和九格井田。清晨能看到瓦当、渠伯的水桶和垂下的黍穗，薄暮时门前两盏灯照亮台阶。两帧光线在标题渐变时，屋脊、人物和农具都在原位。 [清晨标题](../docs/previews/title-estate.png) · [薄暮标题](../docs/previews/title-lanterns.png)
