@@ -389,7 +389,7 @@ func show_visitor_dialog(data: VisitorData, place: String, at_pavilion := false)
 		return
 	if data.name == VisitorData.FIELD_KEEPER:
 		if Global.field_keeper_visiting():
-			_show_field_keeper("回访 · " + data.meeting_place, data.get_appearance_texture(),
+			_show_field_keeper("回访 · " + data.meeting_place, data.get_portrait(),
 				"我从南边回来看看这片地。记得先收井田中央那格，那一份要送进国库。", "", data)
 		return
 	var balance := Global.balance
@@ -420,8 +420,7 @@ func show_visitor_dialog(data: VisitorData, place: String, at_pavilion := false)
 	elif not favor.is_valid() and place not in [VisitorData.SILK_MARKET_PLACE, VisitorData.SILK_BRIDGE_PLACE]:
 		speech = _council_reaction(data.name, speech)
 	var context := _recruitment_context(data.get_school_name() + " · " + place, block)
-	var dialog = _open(data.name, context,
-		speech, options, disabled, CharacterArt.visitor_portrait(data.school))
+	var dialog = _present(data.name, context, speech, options, disabled, data.get_portrait())
 	dialog.option_selected.connect(_on_visitor_choice.bind(data, favor_index, favor))
 
 func _on_visitor_choice(index: int, data: VisitorData, favor_index: int, favor: Callable) -> void:
@@ -482,7 +481,7 @@ func show_retainer_dialog(data: RetainerData, pavilion_note: String) -> void:
 	var context := pavilion_note if at_pavilion else "门客 · " + data.duty_name()
 	var evening := data.evening_line(Global.has_rain()) if at_pavilion else ""
 	if data.name == VisitorData.FIELD_KEEPER:
-		_show_field_keeper(context, data.get_appearance_texture(), data.resident_line(), evening)
+		_show_field_keeper(context, data.get_portrait(), data.resident_line(), evening)
 		return
 	var options: Array[String] = []
 	var disabled: Array[int] = []
@@ -497,8 +496,7 @@ func show_retainer_dialog(data: RetainerData, pavilion_note: String) -> void:
 	if at_pavilion:
 		var has_follow_up := favor.is_valid() or speech != usual
 		speech = evening + "\n" + speech if has_follow_up else evening
-	var dialog = _open(data.name, context, speech,
-		options, disabled, CharacterArt.retainer_portrait(data.school, data.visitor_appearance))
+	var dialog = _present(data.name, context, speech, options, disabled, data.get_portrait())
 	if favor.is_valid():
 		dialog.option_selected.connect(func(index: int):
 			if index == 0 and Global.retainers.has(data):
@@ -547,7 +545,7 @@ func _show_field_keeper(context: String, appearance: Texture2D, usual_line: Stri
 			disabled.append(return_index)
 		context = _recruitment_context(context, block)
 		text = _return_speech(guest.name, text if text != usual_line else "")
-	var dialog := _open(VisitorData.FIELD_KEEPER, context, text, options, disabled, appearance)
+	var dialog := _present(VisitorData.FIELD_KEEPER, context, text, options, disabled, appearance)
 	if follow_up.is_valid() or guest:
 		var day := Global.current_day
 		dialog.option_selected.connect(func(index: int):
@@ -755,7 +753,7 @@ func show_gathering_guest(data: VisitorData) -> void:
 		_:
 			speech = "我沿竹径过来的。打这儿经过的人说，亭边那本曲簿可以翻到往年的迎客曲。"
 	var context := "乐师 · 谷雨亭集" if speaker == SPRING_GATHERING.HOST else "亭东来客 · 谷雨亭集"
-	var dialog := _open(speaker, context, speech, options, [], CharacterArt.visitor_portrait(data.school))
+	var dialog := _present(speaker, context, speech, options, [], data.get_portrait())
 	if options.size() > 1:
 		dialog.option_selected.connect(_on_gathering_choice.bind(Global.current_day))
 
@@ -833,11 +831,14 @@ func _add_favor_option(speaker: String, options: Array[String], disabled: Array[
 	return Callable()
 
 func _open(speaker: String, context: String, speech: String, options: Array[String], disabled: Array[int], portrait: Texture2D) -> Control:
+	return _present(speaker, context, speech, options, disabled,
+		CharacterArt.dialogue_portrait(speaker, portrait, VisitorData.favor_completed(speaker)))
+
+func _present(speaker: String, context: String, speech: String, options: Array[String], disabled: Array[int], portrait: Texture2D) -> Control:
 	Global.meet_neighbor(speaker)
 	var dialog := DIALOGUE.instantiate()
 	parent_node.add_child(dialog)
-	dialog.setup(speaker, context, speech, options, disabled,
-		CharacterArt.dialogue_portrait(speaker, portrait, VisitorData.favor_completed(speaker)))
+	dialog.setup(speaker, context, speech, options, disabled, portrait)
 	player.conversation_open = true
 	dialog.tree_exited.connect(func():
 		if is_instance_valid(player):

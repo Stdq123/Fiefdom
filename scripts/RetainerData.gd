@@ -110,6 +110,12 @@ func get_appearance_texture() -> Texture2D:
 		return named
 	return CharacterArt.retainer(school, visitor_appearance)
 
+func get_portrait() -> Texture2D:
+	if portrait:
+		return portrait
+	var named := CharacterArt.dialogue_portrait(name, null, VisitorData.favor_completed(name))
+	return named if named else CharacterArt.retainer_portrait(school, visitor_appearance)
+
 func duty_name() -> String:
 	return duty_label(duty)
 

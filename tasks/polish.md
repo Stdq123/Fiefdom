@@ -15,6 +15,12 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 田边、名册和手记里的七位邻里
+
+- 渠伯的短灰须、蒲宁的宽草帽和商音的横簪从地图小人延续到交谈与名册。七人各有初识和记事后的半身像。签好轮作簿后，渠伯把竹简托在手边。谷雨合奏后，商音手里的曲簿露出红色书带。 [七位邻里的手记近景](../docs/previews/neighbor-faces.png) · [井田边与渠伯交谈](../docs/previews/qu-bo-field-talk.png)
+- 名册里的普通来客留任后沿用来访时的肖像。翻邻里手记时，左列只标出正在读的那一位，头像和名字在点选前后对齐。两种窗口尺寸各核对了 30 张静态画面，包括七人的交谈、手记及两个阶段的门客名册。解压的 Windows 程序在隔离桌面的画面与开发版逐张相同，六处地图也与上一版同机位一致。
+- 两次干净导出的 SHA-256 均为 `afa4216f21912749a6683a18b85867e3c1e6c8d410719d779c8b08c021b7594b`。本轮固定时辰和田况取景，最新候选包的新档至双结局试玩待续。 [Windows 候选包](../build/polish-neighbor-faces/source-final/build/Fiefdom-1.0.0-Windows-x64.zip) · [画面与导出记录](../build/polish-neighbor-faces/release-proof.txt) · [肖像生成提示](../build/polish-neighbor-faces/portrait-prompt.txt) · [纪念物生成提示](../build/polish-neighbor-faces/keepsake-prompt.txt)
+
 ## 田边的握锄、撒种、倾桶与收镰
 
 - 木锄由前后两只手分握，转身后锄刃仍落向面前的地。石墨将种袋靠在胯旁，从另一只手向田里撒种。渠伯提桶赶路时桶身直立，浇水才托底倾桶。蒲宁收割时一手拢穗，弯镰从穗下横过。主角和七位具名门客沿用自己的衣色和朝向。 [四种农事的实机动作近景](../docs/previews/farm-hands.gif)

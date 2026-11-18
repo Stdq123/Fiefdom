@@ -355,6 +355,10 @@ func get_appearance_texture() -> Texture2D:
 	var named := CharacterArt.neighbor_icon(name)
 	return named if named else CharacterArt.visitor(school, name)
 
+func get_portrait() -> Texture2D:
+	var named := CharacterArt.dialogue_portrait(name, null, favor_completed(name))
+	return named if named else CharacterArt.visitor_portrait(school)
+
 func get_school_name() -> String:
 	match school:
 		School.CONFUCIAN: return "儒者"

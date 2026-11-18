@@ -101,7 +101,7 @@ static func dialogue_portrait(speaker: String, fallback: Texture2D, favor_done: 
 		"蒲宁": frame = 6 if favor_done else 5
 		"弋戎": frame = 8 if favor_done else 7
 		"石墨": frame = 10 if favor_done else 9
-		"商音": frame = 11
+		"商音": frame = 13 if favor_done else 11
 		_: return fallback
 	return _region(NEIGHBOR_PORTRAITS, Rect2(frame * PORTRAIT_SIZE, 0, PORTRAIT_SIZE, PORTRAIT_SIZE))
 

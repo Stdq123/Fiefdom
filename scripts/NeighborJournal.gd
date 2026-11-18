@@ -25,14 +25,19 @@ var selected := ""
 
 func _ready() -> void:
 	var group := ButtonGroup.new()
+	var normal := get_theme_stylebox("normal", "Button")
+	var chosen := get_theme_stylebox("pressed", "Button").duplicate() as StyleBox
+	for side: Side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+		chosen.set_content_margin(side, normal.get_content_margin(side))
 	for speaker: String in VisitorData.NEIGHBORS:
 		var button := Button.new()
 		button.name = speaker
 		button.text = speaker
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.custom_minimum_size.y = 41
-		button.expand_icon = true
-		button.add_theme_constant_override("icon_max_width", 35)
+		button.add_theme_stylebox_override("pressed", chosen)
+		button.add_theme_stylebox_override("hover_pressed", chosen)
+		button.add_theme_constant_override("icon_max_width", 32)
 		button.add_theme_constant_override("h_separation", 10)
 		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		button.toggle_mode = true
@@ -75,7 +80,8 @@ func refresh() -> void:
 
 func _show_neighbor(speaker: String) -> void:
 	selected = speaker
-	roster.get_node(speaker).set_pressed_no_signal(true)
+	var button := roster.get_node(speaker) as Button
+	button.button_pressed = true
 	portrait.texture = CharacterArt.dialogue_portrait(speaker, null, VisitorData.favor_completed(speaker))
 	person_name.text = speaker
 	var day: int = Global.neighbor_met_days.get(speaker, 0)

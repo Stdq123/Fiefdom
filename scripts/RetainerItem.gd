@@ -30,7 +30,7 @@ func setup(p_data: RetainerData) -> void:
 	name_label.text = data.name
 	job_label.text = "%s · %s · 效率 %.2f" % [data.profession, data.get_school_name(), data.get_work_efficiency()]
 	tooltip_text = "%s\n%s\n%s\n忠诚度 %.0f" % [data.name, job_label.text, data.get_school_ability(), data.loyalty]
-	icon.texture = data.portrait if data.portrait else data.get_appearance_texture()
+	icon.texture = data.get_portrait()
 	_refresh_duty()
 
 func _refresh_duty() -> void:
