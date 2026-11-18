@@ -1,5 +1,6 @@
 extends RefCounted
 
+const TERRAIN := preload("res://scripts/EstateTerrain.gd")
 const ESTATE_GROVES := [
 	Rect2(-388, -154, 288, 152), Rect2(-168, -119, 285, 127), Rect2(129, -133, 256, 131),
 	Rect2(330, -117, 201, 180), Rect2(-291, 97, 219, 168), Rect2(230, 182, 288, 136),
@@ -51,6 +52,7 @@ var shade: Array[PackedVector2Array] = []
 var sun: Array[PackedVector2Array] = []
 var drifts: Array[PackedVector2Array] = []
 var drift_edges: Array[PackedVector2Array] = []
+var drift_areas: Array[Rect2] = []
 var ground_marks: PackedVector2Array
 var frost_marks: PackedVector2Array
 var snow_flecks: PackedVector2Array
@@ -69,6 +71,7 @@ func _init(wilderness: bool) -> void:
 		var outline := _outline(patch, rng)
 		drifts.append(outline)
 		drift_edges.append(_outline(patch.grow(4), rng))
+		drift_areas.append(patch)
 		_scatter(frost_marks, patch, outline, rng, 25)
 		for index in range(0, outline.size(), 2):
 			var edge := patch.get_center().lerp(outline[index], rng.randf_range(0.89, 1.13))
@@ -99,15 +102,17 @@ func draw_cover(canvas: CanvasItem, shade_color: Color, sun_color: Color, winter
 	for patch in sun:
 		canvas.draw_colored_polygon(patch, Color(sun_color, 0.40))
 	if winter:
-		for patch in drift_edges:
-			canvas.draw_colored_polygon(patch, Color("#8faaa075"))
-		for patch in drifts:
-			canvas.draw_colored_polygon(patch, Color("#b2c3b8"))
+		for index in drift_areas.size():
+			canvas.draw_colored_polygon(drift_edges[index], Color("#bccdc115"))
+			TERRAIN.draw_snow(canvas, drift_areas[index], index)
 
 func draw_marks(canvas: CanvasItem, season: int, raining: bool) -> void:
 	if season == Global.Season.WINTER:
 		for index in frost_marks.size():
 			var point := frost_marks[index]
+			if index % 12 == 0:
+				TERRAIN.draw_sprig(canvas, point, floori(index / 12.0), season, raining)
+				continue
 			var tone := Color("#c9d5c9") if index % 3 == 0 else Color("#9bafa6")
 			canvas.draw_rect(Rect2(point, Vector2(3 + index % 5, 1)), tone)
 		for index in snow_flecks.size():
@@ -119,6 +124,9 @@ func draw_marks(canvas: CanvasItem, season: int, raining: bool) -> void:
 		return
 	for index in ground_marks.size():
 		var point := ground_marks[index]
+		if index % 8 == 0:
+			TERRAIN.draw_sprig(canvas, point, floori(index / 8.0), season, raining)
+			continue
 		match season:
 			Global.Season.SPRING:
 				if index % 3 == 0:

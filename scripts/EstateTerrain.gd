@@ -1,7 +1,14 @@
 extends RefCounted
 
 const LOAM := preload("res://assets/world/ninja-adventure/estate-loam.png")
-const VERGE := preload("res://assets/world/ninja-adventure/estate-verge.png")
+const MEADOWS := [
+	"res://assets/world/estate-meadow-grain.png", "res://assets/world/summer-meadow-grain.png",
+	"res://assets/world/autumn-meadow-grain.png", "res://assets/world/winter-meadow-grain.png",
+]
+const VERGE := "res://assets/world/seasonal-roadside.png"
+const TRAIL := "res://assets/world/ravine-trail-loam.png"
+const SNOWDRIFTS := "res://assets/world/winter-snowdrifts.png"
+const DRIFT_CELL := Vector2(128, 64)
 const HALL_YARD_ART := preload("res://assets/world/estate-hall-yard.png")
 const SITE_ART := preload("res://assets/world/estate-site-art.png")
 const TRACK_GRAIN := preload("res://assets/world/estate-track-loam.png")
@@ -9,7 +16,11 @@ const STONE_GRAIN := preload("res://assets/world/estate-stone-grain.png")
 const HALL_PAVING_AT := Vector2(-68, 17)
 const SPRING_PAVING_AT := Vector2(-41, -15)
 const WET_PAVING_TINT := Color(0.83, 0.90, 0.91)
-const TUFT_SIZE := Vector2(16, 16)
+const SPRIG_CELL := Vector2(32, 20)
+static var _meadow_textures: Dictionary[int, Texture2D] = {}
+static var _verge_texture: Texture2D
+static var _trail_texture: Texture2D
+static var _snow_texture: Texture2D
 const POND_CENTER := Vector2(258, 705)
 const POND_FAR_BANK := [4, 9, 13, 9, 15, 12, 6, 3]
 const POND_WEST_FACE := [Vector2(1, -2), Vector2(3, -3), Vector2(5, -2), Vector2(6, 2), Vector2(5, 2)]
@@ -125,6 +136,29 @@ func _quad(canvas: CanvasItem, a: Vector2, b: Vector2, c: Vector2, d: Vector2, c
 static func draw_loam(canvas: CanvasItem, polygon: PackedVector2Array, soil: Color, texture: Texture2D = LOAM) -> void:
 	draw_tiled_surface(canvas, polygon, PackedColorArray([soil]), texture)
 
+static func meadow_texture(season: int) -> Texture2D:
+	if not _meadow_textures.has(season):
+		_meadow_textures[season] = load(MEADOWS[season])
+	return _meadow_textures[season]
+
+static func trail_texture() -> Texture2D:
+	if not _trail_texture:
+		_trail_texture = load(TRAIL)
+	return _trail_texture
+
+static func draw_grass(canvas: CanvasItem, area: Rect2, season: int, wet: bool, wooded := false) -> void:
+	var light := Color("#bccdc7") if wet else Color.WHITE
+	if wooded:
+		light *= Color("#dde8df")
+	draw_loam(canvas, EstateLayout.corners(area), light, meadow_texture(season))
+
+static func draw_snow(canvas: CanvasItem, area: Rect2, variation: int) -> void:
+	if not _snow_texture:
+		_snow_texture = load(SNOWDRIFTS)
+	var cell := Vector2(variation % 2, floori(variation / 2.0) % 2)
+	canvas.draw_texture_rect_region(_snow_texture, area, Rect2(cell * DRIFT_CELL, DRIFT_CELL),
+		Color("#c6d2c8"))
+
 static func draw_tiled_surface(canvas: CanvasItem, polygon: PackedVector2Array,
 		colors: PackedColorArray, texture: Texture2D) -> void:
 	if texture == null:
@@ -143,22 +177,21 @@ static func draw_tiled_band(canvas: CanvasItem, a: PackedVector2Array, b: Packed
 		draw_tiled_surface(canvas, PackedVector2Array([a[index], a[index + 1], b[index + 1], b[index]]),
 			colors, texture)
 
-func draw_meadow(canvas: CanvasItem, grass: Color, winter: bool) -> void:
+func draw_meadow(canvas: CanvasItem, season: int, wet: bool) -> void:
 	for index in meadow_sprigs.size():
-		if winter and index % 3 != 0:
+		if index % 2 != 0 or (season == Global.Season.WINTER and index % 3 != 0):
 			continue
-		var ink := grass.lightened(0.17) if index % 3 == 0 else grass.darkened(0.12)
-		_stamp(canvas, meadow_sprigs[index], index, Color(ink, 0.59 if winter else 0.76))
+		draw_sprig(canvas, meadow_sprigs[index], index, season, wet)
 
-func draw_farm_yard(canvas: CanvasItem, grass: Color, winter: bool, wet: bool) -> void:
+func draw_farm_yard(canvas: CanvasItem, grass: Color, season: int, wet: bool) -> void:
 	var center := Vector2(84, 109)
-	var tint := grass.lerp(Color("#738354") if not winter else Color("#a3b0a1"), 0.48)
+	var tint := grass.lerp(Color("#a3b0a1") if season == Global.Season.WINTER else Color("#738354"), 0.48)
 	var colors := PackedColorArray([Color(tint, 0.56 if not wet else 0.31), Color(tint, 0.0), Color(tint, 0.0)])
 	for index in FARM_YARD.size():
 		canvas.draw_polygon(PackedVector2Array([center, FARM_YARD[index], FARM_YARD[(index + 1) % FARM_YARD.size()]]), colors)
 	for index: int in [1, 3, 8, 11, 13]:
 		var at: Vector2 = FARM_YARD[index].lerp(center, 0.20).round()
-		_stamp(canvas, at, index, Color(tint.lightened(0.18), 0.65))
+		draw_sprig(canvas, at, index, season, wet)
 
 func hall_stone_at(foot: Vector2) -> bool:
 	return EstateLayout.HALL_LANDING.has_point(foot) or Geometry2D.is_point_in_polygon(foot, _hall_paving)
@@ -360,15 +393,28 @@ func draw_festival_paving(canvas: CanvasItem, grass: Color, winter: bool, rainin
 		var edge := (frost if winter else stone).lerp(grout, 0.47 + (index % 4) * 0.11)
 		canvas.draw_line(a.lerp(b, 0.08), a.lerp(b, 0.65), edge, 1.0)
 
-func draw_verge(canvas: CanvasItem, points: PackedVector2Array, width: float, grass: Color, winter: bool) -> void:
-	for index in range(3, points.size() - 2, 5):
-		if winter and index % 3 != 0:
-			continue
-		var normal := points[index - 1].direction_to(points[index + 1]).orthogonal()
-		var side := 1.0 if index % 2 == 0 else -1.0
-		var at := points[index] + normal * side * (width * 0.5 + 5.0 + float(index % 4))
-		_stamp(canvas, at.round(), index, Color(grass.lerp(Color("#89965f"), 0.42), 0.74))
+static func draw_verge(canvas: CanvasItem, points: PackedVector2Array, width: float, season: int, wet: bool) -> void:
+	# Measure along the actual road. Narrow field entrances and long creek segments have different sampling densities.
+	var next := 12.0
+	for index in range(1, points.size()):
+		var start := points[index - 1]
+		var direction := start.direction_to(points[index])
+		var length := start.distance_to(points[index])
+		while next < length:
+			var foot := start + direction * next
+			var variation := posmod(roundi(foot.x * 5.0 + foot.y * 11.0), 73)
+			var side := 1.0 if variation % 2 == 0 else -1.0
+			var gap := width * 0.5 + 3.0 + float(variation % 6)
+			draw_sprig(canvas, (foot + direction.orthogonal() * side * gap).round(), variation, season, wet)
+			next += 26.0 + float(variation % 24)
+		next -= length
 
-func _stamp(canvas: CanvasItem, at: Vector2, index: int, color: Color) -> void:
-	var source := Rect2(Vector2((index % 4) * 16, 0), TUFT_SIZE)
-	canvas.draw_texture_rect_region(VERGE, Rect2(at - TUFT_SIZE * 0.5, TUFT_SIZE), source, color)
+static func draw_sprig(canvas: CanvasItem, foot: Vector2, variation: int, season: int, wet: bool) -> void:
+	if not _verge_texture:
+		_verge_texture = load(VERGE)
+	var source := Rect2(Vector2(variation % 3, season) * SPRIG_CELL, SPRIG_CELL)
+	var span := 15.0 + float(variation % 8)
+	var size := Vector2(span, span * SPRIG_CELL.y / SPRIG_CELL.x)
+	var ground := Rect2((foot - size * Vector2(0.5, 0.85)).round(), size)
+	var tint := Color("#b5c4b6") if wet else Color.WHITE
+	canvas.draw_texture_rect_region(_verge_texture, ground, source, tint)

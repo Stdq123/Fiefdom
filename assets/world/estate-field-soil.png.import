@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://c1ngsy6vnbtbh"
+path="res://.godot/imported/estate-field-soil.png-83f960f972094248a92be4bdec1e8ce4.res"
+
+[deps]
+
+source_file="res://assets/world/estate-field-soil.png"
+dest_files=["res://.godot/imported/estate-field-soil.png-83f960f972094248a92be4bdec1e8ce4.res"]
+
+[params]
+
+authored_at_2x=true

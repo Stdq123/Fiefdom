@@ -9,13 +9,11 @@ enum Prop {
 
 const SCENERY := preload("res://assets/world/scenery.svg")
 const ESTATE_BUILDINGS := preload("res://assets/world/estate-buildings.svg")
-const GRAIN := preload("res://assets/world/ground-grain.svg")
 const SEASONAL_TREES := preload("res://assets/world/seasonal-trees.svg")
 const SEASONAL_GROUND := preload("res://scripts/SeasonalGround.gd")
 const ESTATE_TERRAIN := preload("res://scripts/EstateTerrain.gd")
 const ESTATE_ART := ESTATE_TERRAIN.SITE_ART
 const ESTATE_VESSELS := preload("res://assets/world/estate-vessels.png")
-const ESTATE_MEADOW := preload("res://assets/world/estate-meadow-grain.png")
 const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
 const SNOW_FOOTPRINTS := preload("res://scripts/SnowFootprints.gd")
 const SILK_SAMPLE := preload("res://assets/world/west-court-sample.svg")
@@ -892,16 +890,14 @@ func _draw_ground() -> void:
 		meadow = meadow.lerp(Color("#344c4c"), 0.34)
 		shade = shade.lerp(Color("#314344"), 0.25)
 		sun = sun.lerp(Color("#3f5750"), 0.28)
-	draw_rect(MAP_BACKDROP, meadow)
+	ESTATE_TERRAIN.draw_grass(self, MAP_BACKDROP, season, raining, wilderness)
 	var winter := season == Global.Season.WINTER
 	var ground_shade := shade if wilderness else shade.lerp(meadow, 0.26)
 	ground_cover.draw_cover(self, ground_shade, sun, winter)
-	var grain_strength := 0.46 if winter or wilderness else 0.57
-	draw_texture_rect(GRAIN, MAP_BACKDROP, true, Color(Color.WHITE, grain_strength))
 	ground_cover.draw_marks(self, season, raining)
 	if estate_terrain:
-		estate_terrain.draw_meadow(self, meadow, winter)
-		estate_terrain.draw_farm_yard(self, meadow, winter, raining)
+		estate_terrain.draw_meadow(self, season, raining)
+		estate_terrain.draw_farm_yard(self, meadow, season, raining)
 	var ground_tint: Color = LEAF_TINTS[season]
 	if wilderness:
 		ground_tint *= Color(0.87, 0.96, 0.95)
@@ -909,7 +905,6 @@ func _draw_ground() -> void:
 		ground_tint *= Color(0.88, 0.94, 0.99)
 	if winter:
 		ground_tint.a = 0.31
-	draw_texture_rect(ESTATE_MEADOW, MAP_BACKDROP, true, ground_tint)
 	_draw_prop_litter(ground_tint)
 	if estate_terrain:
 		draw_texture_rect_region(ESTATE_TERRAIN.HALL_YARD_ART, Rect2(HALL_YARD_GROUND_AT, HALL_YARD_GROUND.size),
@@ -1027,15 +1022,15 @@ func _draw_tracks() -> void:
 	var verge: Color = SEASON_PALETTES[season][0]
 	if raining:
 		verge = verge.darkened(0.15)
-	if estate_terrain:
-		for track in track_shapes:
-			estate_terrain.draw_verge(self, track.gravel_path, track.width, verge, season == Global.Season.WINTER)
+	var grain := ESTATE_TERRAIN.trail_texture() if wilderness else ESTATE_TERRAIN.TRACK_GRAIN
 	for track in track_shapes:
-		draw_colored_polygon(track.shoulder, dust.lerp(verge, 0.69))
+		ESTATE_TERRAIN.draw_loam(self, track.shoulder, dust.lerp(verge, 0.69), grain)
 	for track in track_shapes:
-		draw_colored_polygon(track.edge, dust.lerp(verge, 0.41))
+		ESTATE_TERRAIN.draw_verge(self, track.gravel_path, track.width, season, raining)
 	for track in track_shapes:
-		ESTATE_TERRAIN.draw_loam(self, track.surface, dust, ESTATE_TERRAIN.TRACK_GRAIN)
+		ESTATE_TERRAIN.draw_loam(self, track.edge, dust.lerp(verge, 0.41), grain)
+	for track in track_shapes:
+		ESTATE_TERRAIN.draw_loam(self, track.surface, dust, grain)
 	for track in track_shapes:
 		_track_gravel(track.gravel_path, track.width, dust)
 

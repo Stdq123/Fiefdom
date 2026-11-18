@@ -45,14 +45,21 @@ static func draw_paddy(ink: CanvasItem, soil: Rect2, rain: bool) -> void:
 	ink.draw_rect(Rect2(origin + Vector2(size.x - 5, 4), Vector2(2.5, 0.5)), PADDY_REFLECTION.darkened(0.25))
 
 static func draw_soil_moisture(ink: CanvasItem, soil: Rect2, rained_on: bool) -> void:
-	if rained_on:
-		ink.draw_rect(soil, Color("#283b3066"))
-		return
 	var origin := soil.position
 	var size := soil.size
-	var damp := PackedVector2Array([origin + Vector2(1, 2), origin + Vector2(size.x - 3, 1),
-		origin + Vector2(size.x - 1, 4), origin + size - Vector2(1, 3),
-		origin + size - Vector2(5, 1), origin + Vector2(3, size.y - 1), origin + Vector2(1, size.y - 4)])
-	ink.draw_colored_polygon(damp, Color("#223b3194"))
-	ink.draw_rect(Rect2(origin + Vector2(3, size.y - 5), Vector2(3, 0.6)), Color("#a9bb9d68"))
-	ink.draw_rect(Rect2(origin + Vector2(size.x - 6, 4), Vector2(2, 0.6)), Color("#a9bb9d56"))
+	if rained_on:
+		ink.draw_rect(soil, Color("#332f285c"))
+		return
+	var damp := soil.grow(-0.5)
+	ink.draw_rect(damp, Color("#382d235c"))
+	# Water settles into the open furrows, leaving the raised corner marks legible.
+	for row in 3:
+		var y := origin.y + 3.5 + row * 4
+		var left := origin.x + (1.5 if row == 1 else 3.0)
+		var right := origin.x + size.x - (3.0 if row == 2 else 1.5)
+		var furrow := PackedVector2Array([Vector2(left, y + 0.5), Vector2(left + 2, y),
+			Vector2(right - 2, y + 0.5), Vector2(right, y), Vector2(right - 1, y + 1),
+			Vector2(left + 2, y + 1)])
+		ink.draw_colored_polygon(furrow, Color("#2c302959"))
+	ink.draw_rect(Rect2(origin + Vector2(3, size.y - 4.5), Vector2(2.5, 0.5)), Color("#b1b8a566"))
+	ink.draw_rect(Rect2(origin + Vector2(size.x - 6, 4), Vector2(1.5, 0.5)), Color("#b1b8a558"))

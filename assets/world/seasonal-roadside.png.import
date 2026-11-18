@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://bpun4xngneyh7"
+path="res://.godot/imported/seasonal-roadside.png-542f13f46b2c2b3367a007a40b96a2dd.res"
+
+[deps]
+
+source_file="res://assets/world/seasonal-roadside.png"
+dest_files=["res://.godot/imported/seasonal-roadside.png-542f13f46b2c2b3367a007a40b96a2dd.res"]
+
+[params]
+
+authored_at_2x=true

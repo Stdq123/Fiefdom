@@ -1,5 +1,6 @@
 extends Node2D
 
+const GROUND := preload("res://scripts/EstateTerrain.gd")
 const TERRAIN_AUDIO := preload("res://scripts/TerrainAudio.gd")
 const SNOW_FOOTPRINTS := preload("res://scripts/SnowFootprints.gd")
 const SPLASH_SECONDS := 0.56
@@ -76,7 +77,8 @@ func _draw() -> void:
 		if cover == TERRAIN_AUDIO.Surface.SHALLOWS:
 			_draw_puddle(patches[index], bounds[index])
 		else:
-			_draw_drift(patches[index], bounds[index].get_center())
+			draw_colored_polygon(patches[index], Color("#bccdc115"))
+			GROUND.draw_snow(self, bounds[index], index)
 	for ripple in ripples:
 		var age := ripple.age / SPLASH_SECONDS
 		draw_set_transform(ripple.position, 0.0, Vector2(1.0, 0.57))
@@ -92,15 +94,3 @@ func _draw_puddle(outline: PackedVector2Array, area: Rect2) -> void:
 	draw_rect(Rect2(top, Vector2(roundf(area.size.x * 0.38), 1)), Color("#8da69a"))
 	var lower := area.position + (area.size * Vector2(0.54, 0.69)).round()
 	draw_rect(Rect2(lower, Vector2(roundf(area.size.x * 0.21), 1)), Color("#6d8b80"))
-
-func _draw_drift(outline: PackedVector2Array, center: Vector2) -> void:
-	draw_set_transform(Vector2(1, 3))
-	draw_colored_polygon(outline, Color("#90a59ba6"))
-	draw_set_transform(Vector2.ZERO)
-	draw_colored_polygon(outline, Color("#b5c5b8"))
-	for index in range(0, outline.size(), 3):
-		var edge := outline[index]
-		var flake := edge.lerp(center, 0.35).round()
-		draw_rect(Rect2(flake, Vector2(3 + index % 4, 1)), Color("#c9d6c8"))
-		var scatter := edge.lerp(center, -0.13).round()
-		draw_rect(Rect2(scatter, Vector2(2 + index % 3, 1)), Color("#a8bcb0"))

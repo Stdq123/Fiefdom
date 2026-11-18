@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://bbnpkpqywyk6r"
+path="res://.godot/imported/winter-meadow-grain.png-a7c64b084be5d92d24c43923e3030e9a.res"
+
+[deps]
+
+source_file="res://assets/world/winter-meadow-grain.png"
+dest_files=["res://.godot/imported/winter-meadow-grain.png-a7c64b084be5d92d24c43923e3030e9a.res"]
+
+[params]
+
+authored_at_2x=true

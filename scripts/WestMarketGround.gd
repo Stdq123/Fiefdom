@@ -114,11 +114,11 @@ var _paving_art: STONE_PAVING
 var _dye_paving_art: STONE_PAVING
 var _cart_path: PackedVector2Array
 var _lane_surfaces: Array[PackedVector2Array] = []
+var _stall_lanes: Array[PackedVector2Array] = []
 var _displays: Array[YARD_DISPLAY] = []
 var _stall_feet: Array[Vector2] = []
 var _dye_vats: Array[DYE_VAT] = []
 var main_path: PackedVector2Array
-var verge_art := TERRAIN.new(LAYOUT.BOUNDS.position.y)
 var weather := ROAD_WEATHER.new(RAIN_PUDDLES, SNOW_DRIFTS)
 var held_fish := Sprite2D.new()
 var fish_swim := 0.0
@@ -132,7 +132,9 @@ func _ready() -> void:
 	dye_paving = Geometry2D.merge_polygons(_road_outline(dye_path, 6.0), PackedVector2Array(DYE_APRON))[0]
 	_lane_surfaces.append(_road_outline(dye_path, 11.0))
 	for lane: Array in [LAYOUT.FISH_LANE, LAYOUT.SILK_LANE]:
-		_lane_surfaces.append(_road_outline(EstateLayout.sample_road(PackedVector2Array(lane)), 14.0))
+		var centerline := EstateLayout.sample_road(PackedVector2Array(lane))
+		_stall_lanes.append(centerline)
+		_lane_surfaces.append(_road_outline(centerline, 14.0))
 	_cart_path = EstateLayout.sample_road(PackedVector2Array(LAYOUT.CART_DRIVE))
 	_lane_surfaces.append(_road_outline(_cart_path, 14.0))
 	street.append_array(_lane_surfaces)
@@ -251,23 +253,27 @@ func _draw() -> void:
 	if raining:
 		meadow = meadow.lerp(Color("#344c4c"), 0.30)
 		dirt = dirt.darkened(0.16)
-	draw_rect(BACKDROP, meadow)
+	TERRAIN.draw_grass(self, BACKDROP, season, raining)
 	for grove: Rect2 in GROVES:
 		var edge := PackedVector2Array()
 		for point: Vector2 in GROVE_EDGE:
 			edge.append((grove.position + grove.size * point).round())
-		draw_colored_polygon(edge, meadow.lerp(shade, 0.37))
+		draw_colored_polygon(edge, Color(shade, 0.36))
 	var leaf_tint: Color = LANDSCAPE.LEAF_TINTS[season]
 	if raining:
 		leaf_tint *= Color(0.88, 0.94, 0.99)
 	leaf_tint.a = 0.32 if winter else 0.82
-	draw_texture_rect(LANDSCAPE.ESTATE_MEADOW, BACKDROP, true, leaf_tint)
 	var litter := LANDSCAPE.ESTATE_LEAF_LITTER
-	for foot: Vector2 in TREE_FEET:
+	for index in TREE_FEET.size():
+		var foot: Vector2 = TREE_FEET[index]
 		draw_texture_rect_region(LANDSCAPE.ESTATE_ART, Rect2(foot - Vector2(30, 20), litter.size), litter, leaf_tint)
-	verge_art.draw_verge(self, main_path, 44.0, meadow, winter)
+		if index % 3 != 0:
+			TERRAIN.draw_sprig(self, foot + Vector2(-13 + index % 26, 2 + index % 9), index, season, raining)
 	for shoulder in street_shoulders:
 		TERRAIN.draw_loam(self, shoulder, dirt.lerp(meadow, 0.57), TERRAIN.TRACK_GRAIN)
+	TERRAIN.draw_verge(self, main_path, LAYOUT.STREET_HALF_WIDTH * 2.0, season, raining)
+	for lane in _stall_lanes:
+		TERRAIN.draw_verge(self, lane, 28.0, season, raining)
 	for surface in street:
 		TERRAIN.draw_loam(self, surface, dirt, TERRAIN.TRACK_GRAIN)
 	_draw_cart_ruts(dirt)

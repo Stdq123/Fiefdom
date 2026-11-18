@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://bd8kuf1arcpgd"
+path="res://.godot/imported/summer-meadow-grain.png-678b4c4597b799e6101f1dd7e3de5933.res"
+
+[deps]
+
+source_file="res://assets/world/summer-meadow-grain.png"
+dest_files=["res://.godot/imported/summer-meadow-grain.png-678b4c4597b799e6101f1dd7e3de5933.res"]
+
+[params]
+
+authored_at_2x=true

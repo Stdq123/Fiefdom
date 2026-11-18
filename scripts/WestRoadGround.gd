@@ -88,7 +88,6 @@ var pavement := Geometry2D.intersect_polygons(track, PackedVector2Array(PAVING_L
 var pavement_art := STONE_PAVING.new(
 	Geometry2D.intersect_polygons(_material_outline(0.0, true), PackedVector2Array(PAVING_LIMIT))[0],
 	LAYOUT.MARKET_GATE.x)
-var meadow := TERRAIN.new(LAYOUT.BOUNDS.position.y)
 var weather := ROAD_WEATHER.new(RAIN_PUDDLES, SNOW_DRIFTS)
 
 func _ready() -> void:
@@ -257,26 +256,27 @@ func _draw() -> void:
 	if rain:
 		grass = grass.lerp(Color("#304b46"), 0.28)
 		loam = loam.darkened(0.17)
-	draw_rect(BACKDROP, grass)
+	TERRAIN.draw_grass(self, BACKDROP, season, rain)
 	for grove: Rect2 in GROVES:
 		var edge := PackedVector2Array()
 		for point: Vector2 in GROVE_EDGE:
 			edge.append((grove.position + grove.size * point).round())
-		draw_colored_polygon(edge, grass.lerp(palette[1], 0.43))
-	draw_colored_polygon(bank_grass, grass.lerp(palette[1], 0.49))
-	draw_colored_polygon(bank_rim, grass.lerp(Color("#8a9268"), 0.24))
+		draw_colored_polygon(edge, Color(palette[1], 0.40))
+	draw_colored_polygon(bank_grass, Color(palette[1], 0.38))
+	draw_colored_polygon(bank_rim, Color(grass.lerp(Color("#8a9268"), 0.24), 0.54))
 	var grain: Color = LANDSCAPE.LEAF_TINTS[season]
 	if rain:
 		grain *= Color(0.88, 0.94, 0.99)
 	grain.a = 0.32 if winter else 0.83
-	draw_texture_rect(LANDSCAPE.ESTATE_MEADOW, BACKDROP, true, grain)
 	var litter := LANDSCAPE.ESTATE_LEAF_LITTER
-	for tree: Vector2 in TREES:
+	for index in TREES.size():
+		var tree: Vector2 = TREES[index]
 		draw_texture_rect_region(LANDSCAPE.ESTATE_ART, Rect2(tree - Vector2(30, 20), litter.size), litter, grain)
-	meadow.draw_meadow(self, grass, winter)
+		if index % 3 != 0:
+			TERRAIN.draw_sprig(self, tree + Vector2(-12 + index % 23, 3 + index % 9), index, season, rain)
 	_draw_meadow(grass, loam, season)
-	meadow.draw_verge(self, road, ROAD_HALF_WIDTH * 2.0, grass, winter)
 	TERRAIN.draw_loam(self, shoulder, loam.lerp(grass, 0.56), TERRAIN.TRACK_GRAIN)
+	TERRAIN.draw_verge(self, road, ROAD_HALF_WIDTH * 2.0, season, rain)
 	TERRAIN.draw_loam(self, traveled_track, loam, TERRAIN.TRACK_GRAIN)
 	pavement_art.draw(self, loam, winter, rain, MARKET_LAYOUT.STREET_STONE, TERRAIN.STONE_GRAIN)
 	_draw_loose_stones(loam, winter, rain)
@@ -315,12 +315,13 @@ func _tree_variety(index: int) -> int:
 func _draw_meadow(grass: Color, loam: Color, season: int) -> void:
 	var shade: Color = [Color("#6c784e"), Color("#7c8b50"), Color("#958353"), Color("#89998b")][season]
 	var edge := PackedVector2Array(LAYOUT.MEADOW_EDGE)
-	var winter := season == Global.Season.WINTER
-	TERRAIN.draw_loam(self, edge, grass.lerp(shade, 0.35), TERRAIN.TRACK_GRAIN)
-	meadow.draw_verge(self, edge, 1.5, grass.lerp(shade, 0.28), winter)
-	meadow.draw_verge(self, meadow_lane, MEADOW_HALF_WIDTH * 2.0, grass, winter)
+	var rain := Global.has_rain()
+	# Let the meadow's grass show through the cut edge of the hay plot.
+	draw_colored_polygon(edge, Color(grass.lerp(shade, 0.35), 0.35))
+	TERRAIN.draw_verge(self, edge, 1.5, season, rain)
 	TERRAIN.draw_loam(self, meadow_shoulder, loam.lerp(grass, 0.52), TERRAIN.TRACK_GRAIN)
-	TERRAIN.draw_loam(self, meadow_track, loam, TERRAIN.TRACK_GRAIN)
+	TERRAIN.draw_verge(self, meadow_lane, MEADOW_HALF_WIDTH * 2.0, season, rain)
+	TERRAIN.draw_loam(self, meadow_track, loam, TERRAIN.trail_texture())
 
 func place_scenery(layer: Node2D) -> void:
 	var season := Global.season_index()
