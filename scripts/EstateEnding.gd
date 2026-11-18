@@ -7,7 +7,7 @@ signal restore_requested()
 enum Shot { FIELD, CEREMONY, FAREWELL, RECORD }
 
 const ENVOY := preload("res://assets/characters/envoy-motion.png")
-const PROPS := preload("res://assets/world/ending-ceremonies.svg")
+const LEDGER_DESK := preload("res://scripts/RouteLedgerDesk.gd")
 const RECORD_STAND := preload("res://scripts/EstateRecordStand.gd")
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 const TRADITIONAL_SCORE := preload("res://assets/audio/music/ending-traditional.ogg")
@@ -17,6 +17,9 @@ const UNITS := {"新增公田纳贡": "份", "进献丝绸": "匹", "新增计�
 const FIELD_HOLD := 2.15
 const PAN_SECONDS := 1.35
 const WALK_SECONDS := 1.65
+const RECEIPT_SECONDS := 0.56
+const ENVOY_SLEEVE := Rect2(11, 80, 5, 4)
+const ENVOY_PALM := Rect2(6, 18, 4, 3)
 const CEREMONY_HOLD := 2.30
 const FAREWELL_WALK := 1.15
 const FAREWELL_HOLD := 4.25
@@ -31,6 +34,7 @@ const SCORE_DB := -6.0
 @onready var shade: ColorRect = %ReportShade
 @onready var date: Label = %EndingDate
 @onready var heading: Label = %EndingHeading
+@onready var volume_icon: TextureRect = %EndingVolume
 @onready var epilogue: Label = %Epilogue
 @onready var results: VBoxContainer = %Results
 @onready var memories: VBoxContainer = %Memories
@@ -53,9 +57,12 @@ const SCORE_DB := -6.0
 var estate: Node2D
 var traditional := false
 var stage: Node2D
+var desk: LEDGER_DESK
 var camera: Camera2D
 var envoy: Node2D
 var walk_sprite: NeighborMotion
+var sleeve: Sprite2D
+var palm: Sprite2D
 var motion: Tween
 var score_fade: Tween
 var field_focus: Vector2
@@ -182,7 +189,7 @@ func _build_stage() -> void:
 	var stage_at := RECORD_STAND.TRIBUTE_POINT if traditional else RECORD_STAND.TAX_POINT
 	ceremony_focus = estate.to_global(stage_at + Vector2(0, -17))
 	walk_start = Vector2(78, -6) if traditional else Vector2(-78, 9)
-	walk_end = Vector2(24, 0) if traditional else Vector2(-29, 0)
+	walk_end = Vector2(21, 0) if traditional else Vector2(-23, 0)
 
 	stage = Node2D.new()
 	stage.name = "EndingCeremony"
@@ -190,15 +197,9 @@ func _build_stage() -> void:
 	stage.process_mode = Node.PROCESS_MODE_ALWAYS
 	stage.position = stage_at
 	estate.get_node("Scenery").add_child(stage)
-	var artwork := Sprite2D.new()
-	artwork.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	var props := AtlasTexture.new()
-	props.atlas = PROPS
-	props.region = Rect2(0 if traditional else 64, 0, 64, 44)
-	props.filter_clip = true
-	artwork.texture = props
-	artwork.position = Vector2(12 if traditional else -1, -18)
-	stage.add_child(artwork)
+	desk = LEDGER_DESK.new()
+	stage.add_child(desk)
+	desk.arrange(traditional)
 	var player_sprite: Sprite2D = estate.player.get_node("Sprite2D")
 	presenter = player_sprite.duplicate(0) as Sprite2D
 	presenter.offset = player_sprite.position
@@ -215,6 +216,11 @@ func _build_stage() -> void:
 	walk_sprite.position.y = -10.0
 	envoy.add_child(walk_sprite)
 	walk_sprite.set_motion_sheet(ENVOY)
+	sleeve = _envoy_detail(ENVOY_SLEEVE)
+	sleeve.centered = false
+	sleeve.offset.y = -2
+	palm = _envoy_detail(ENVOY_PALM)
+	palm.flip_h = traditional
 	if not farewell.is_empty():
 		_build_farewell_guest()
 
@@ -225,6 +231,16 @@ func _build_stage() -> void:
 	estate.add_child(camera)
 	camera.make_current()
 	score.stream = TRADITIONAL_SCORE if traditional else REFORMED_SCORE
+
+func _envoy_detail(region: Rect2) -> Sprite2D:
+	var detail := Sprite2D.new()
+	detail.texture = ENVOY
+	detail.region_enabled = true
+	detail.region_rect = region
+	detail.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	detail.hide()
+	envoy.add_child(detail)
+	return detail
 
 func _build_farewell_guest() -> void:
 	guest_start = Vector2(-78, 22) if traditional else Vector2(84, 28)
@@ -243,13 +259,18 @@ func _build_farewell_guest() -> void:
 		resident.hide()
 
 func _play(from_handoff := false) -> void:
-	if motion and motion.is_running():
+	if motion:
 		motion.kill()
-	if score_fade and score_fade.is_running():
+	if score_fade:
 		score_fade.kill()
 	report.hide()
 	shade.hide()
 	film.show()
+	if desk.volume.get_parent() != desk:
+		desk.volume.reparent(desk, false)
+	desk.volume.position = desk.volume_home()
+	sleeve.hide()
+	palm.hide()
 	envoy.position = walk_start
 	walk_sprite.stand()
 	walk_sprite.face(walk_end - walk_start)
@@ -280,15 +301,16 @@ func _play(from_handoff := false) -> void:
 		motion.parallel().tween_property(camera, "zoom", Vector2.ONE * 3.05, PAN_SECONDS).set_trans(Tween.TRANS_SINE)
 		motion.tween_callback(_show_ceremony)
 	motion.tween_method(_walk_to_table, 0.0, 1.0, WALK_SECONDS)
+	motion.tween_method(_receive_volume, 0.0, 1.0, RECEIPT_SECONDS).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	motion.tween_callback(_finish_handoff)
 	if guest:
-		motion.tween_interval(CEREMONY_HOLD - FAREWELL_WALK)
+		motion.tween_interval(CEREMONY_HOLD - RECEIPT_SECONDS - FAREWELL_WALK)
 		motion.tween_callback(guest.show)
 		motion.tween_method(_walk_guest, 0.0, 1.0, FAREWELL_WALK)
 		motion.tween_callback(_show_farewell)
 		motion.tween_interval(FAREWELL_HOLD)
 	else:
-		motion.tween_interval(CEREMONY_HOLD)
+		motion.tween_interval(CEREMONY_HOLD - RECEIPT_SECONDS)
 	if from_handoff:
 		motion.tween_callback(_show_fields)
 		motion.tween_interval(FIELD_HOLD)
@@ -326,6 +348,29 @@ func _walk_to_table(progress: float) -> void:
 	walk_sprite.walk(next - envoy.position)
 	envoy.position = next
 
+func _receive_volume(progress: float) -> void:
+	if desk.volume.get_parent() != envoy:
+		desk.volume.reparent(envoy, false)
+		palm.move_to_front()
+	var side := -1.0 if traditional else 1.0
+	var grasp := smoothstep(0.0, 0.28, progress)
+	var lift := smoothstep(0.2, 1.0, progress)
+	var lean := Vector2(side * 3, -1) * (grasp - lift)
+	walk_sprite.stand(lean)
+	var hand := Vector2(side * 4, -7)
+	var from_desk := desk.volume_home() - envoy.position
+	desk.volume.position = Vector2(lerpf(from_desk.x, hand.x, lift * lift),
+		lerpf(from_desk.y, hand.y, lift) - 2.5 * sin(PI * lift))
+	# The hand reaches the near binding before the volume starts to rise.
+	palm.position = Vector2(-side, -6).lerp(desk.volume.position + Vector2(-side * 3.5, 1.5), grasp)
+	sleeve.position = Vector2(side * 3, -10) + lean
+	var forearm := palm.position - sleeve.position
+	sleeve.rotation = forearm.angle()
+	sleeve.scale.x = forearm.length() / ENVOY_SLEEVE.size.x
+	sleeve.flip_v = forearm.x < 0
+	sleeve.visible = progress > 0
+	palm.visible = sleeve.visible
+
 func _finish_handoff() -> void:
 	walk_sprite.stand()
 	walk_sprite.face(presenter.position - envoy.position)
@@ -351,9 +396,9 @@ func _face_farewell_guest() -> void:
 	presenter.flip_h = guest.position.x < presenter.position.x
 
 func _show_record() -> void:
-	if motion and motion.is_running():
+	if motion:
 		motion.kill()
-	if score_fade and score_fade.is_running():
+	if score_fade:
 		score_fade.kill()
 	score.stop()
 	if camera:
@@ -361,7 +406,7 @@ func _show_record() -> void:
 		camera.zoom = Vector2.ONE * 2.5
 		camera.force_update_scroll()
 		envoy.position = walk_end
-		walk_sprite.stand()
+		_receive_volume(1.0)
 		walk_sprite.face(walk_end - walk_start)
 	if guest:
 		guest.show()
@@ -380,7 +425,8 @@ func _populate_record() -> void:
 	accounts = record["accounts"]
 	has_route_totals = accounts.front().has("target")
 	heading.text = "守礼安邦" if traditional else "税亩富民"
-	var accent := Color("#edca83") if traditional else Color("#efb889")
+	volume_icon.texture = LEDGER_DESK.volume_texture(traditional)
+	var accent := Color("#edca83") if traditional else Color("#b4d7c5")
 	heading.add_theme_color_override("font_color", accent)
 	date.text = record["date"]
 	epilogue.text = ("公田与私田的旧约仍在。王庭收下贡簿，准这片封地继续行井田之制。" if traditional else

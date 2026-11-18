@@ -15,6 +15,12 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 堂前与南路亭的交册
+
+- 守礼时，召简从朱漆匣上接走朱绳贡簿。改税时，他在南路亭的布棚下接过摊开的青绳税册。握册和收手接在走路动作之后，简册离开案面。结算页和通关后翻账时沿用本局的册形。 [两处交册动图](../docs/previews/ending-handoff.gif) · [改税结算原画面](../docs/previews/ending-tax-record.png)
+- 用已有普通档第 65 天的守礼记录、第 59 天的改税记录固定取景。在隔离桌面检查了案边的首笔收成谷袋、交接时的位置、跳过与重看时竹册的归位，以及缺少门客送别字段的旧账页。1920×1080 与 1024×768 窗口均容纳完整的题头、正文和按钮。重拍六处地图和田间动作，6 张地图原图和 96 帧人物动作与已收录的画面逐张一致。 [六处场景](../docs/previews/six-locations.png) · [田间人物](../docs/previews/field-work.gif)
+- 两次干净导出的 Windows x64 候选包 SHA-256 同为 `4ee1fe6be8dfc31219b1d2c79a1604d1a866b96563e5da84404e6c1d348c2998`。本轮只核对美术和启动。当前包从新档到两条结局的玩法回归与首次玩家试玩待验。 [本次候选包](../build/polish-ledger-art/source-final/build/Fiefdom-1.0.0-Windows-x64.zip) · [本机导出与取景记录](../build/polish-ledger-art/release-proof.txt) · [器物素材生成提示](../build/polish-ledger-art/prompt.txt)
+
 ## 封地手记与堂前路牌
 
 - 当前目标放在竹简首行，见渠伯和照料私田的木牌并排。键鼠或手柄进场时，移动、翻中央公田和首贡期限各占一行。点目标旁的「封地手记」可展开来客近况，短留言随内容收放，长留言可在简内滚动。 [默认窗口实机画面](../docs/previews/estate-journal.png) · [开局、来客与首贡到期](../docs/previews/journal-states.png)

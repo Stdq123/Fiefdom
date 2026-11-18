@@ -179,16 +179,32 @@ theme_override_constants/separation = 13
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="EndingDate" type="Label" parent="Report/Panel/Stack/HeadingStack"]
+[node name="Masthead" type="HBoxContainer" parent="Report/Panel/Stack/HeadingStack"]
+layout_mode = 2
+
+[node name="Title" type="VBoxContainer" parent="Report/Panel/Stack/HeadingStack/Masthead"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="EndingDate" type="Label" parent="Report/Panel/Stack/HeadingStack/Masthead/Title"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.754, 0.805, 0.673, 1)
 theme_override_font_sizes/font_size = 15
 
-[node name="EndingHeading" type="Label" parent="Report/Panel/Stack/HeadingStack"]
+[node name="EndingHeading" type="Label" parent="Report/Panel/Stack/HeadingStack/Masthead/Title"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 46
+
+[node name="EndingVolume" type="TextureRect" parent="Report/Panel/Stack/HeadingStack/Masthead"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 64)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Epilogue" type="Label" parent="Report/Panel/Stack/HeadingStack"]
 unique_name_in_owner = true

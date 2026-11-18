@@ -2,7 +2,7 @@ extends Sprite2D
 
 signal readiness_changed(ready: bool)
 
-const PROPS := preload("res://assets/world/ending-ceremonies.svg")
+const LEDGER_DESK := preload("res://scripts/RouteLedgerDesk.gd")
 const SACKS := preload("res://assets/world/estate-vessels.png")
 const TRIBUTE_POINT := Vector2(-120, 76)
 const TAX_POINT := EstateLayout.SOUTH_PAVILION + Vector2(67, 22)
@@ -17,6 +17,8 @@ var harvest_mark := false
 var focused := false
 
 func _ready() -> void:
+	scale = Vector2.ONE * 0.5
+	hint.scale = Vector2.ONE * 2
 	GameEvents.tax_reform_choice_made.connect(_refresh.unbind(1))
 	GameEvents.crop_harvested.connect(_refresh.unbind(1))
 	GameEvents.money_changed.connect(_refresh.unbind(1))
@@ -56,17 +58,15 @@ func _set_desk(traditional: bool, title: String) -> void:
 	record_name = title
 	place_name = "堂前" if traditional else "南路亭"
 	position = TRIBUTE_POINT if traditional else TAX_POINT
-	var artwork := AtlasTexture.new()
-	artwork.atlas = PROPS
-	artwork.region = Rect2(3, 18, 35, 23) if traditional else Rect2(75, 21, 45, 18)
-	artwork.filter_clip = true
-	texture = artwork
-	offset.y = -artwork.region.size.y * 0.5
+	texture = LEDGER_DESK.stand_texture(traditional)
+	offset.y = -28
+	hint.position = Vector2(-84, -84 if traditional else -98)
 	add_to_group("interactable")
 	show()
 
 func _draw() -> void:
 	if harvest_mark:
+		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE * 2)
 		var x := 15.0 if record_name == "贡簿" else 18.0
 		var bag := Rect2(x, -12, 15, 15)
 		draw_rect(Rect2(x + 2, 0, 13, 3), Color("#28332880"))
