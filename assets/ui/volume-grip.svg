@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="20" viewBox="0 0 32 20" shape-rendering="crispEdges">
+  <defs>
+    <g id="grip">
+      <path fill="#362e26" d="M4 2h8v2h2v12h-2v2H4v-2H2V4h2z"/>
+      <path fill="#9b7650" d="M5 3h6v2h2v9h-2v2H5v-1H3V5h2z"/>
+      <path fill="#d1af76" d="M5 4h6v2H5zM4 6h2v8H4z"/>
+      <path fill="#5c4936" d="M7 8h4v1H7zm0 3h4v1H7z"/>
+      <path fill="#debd86" d="M7 9h4v1H7zm0 3h4v1H7z"/>
+    </g>
+  </defs>
+  <use href="#grip"/>
+  <g transform="translate(16)">
+    <path fill="#f0d497" d="M3 0h10v2h2v2h1v12h-1v2h-2v2H3v-2H1v-2H0V4h1V2h2z"/>
+    <use href="#grip"/>
+    <path fill="#f3daa7" d="M5 4h6v2H5z"/>
+  </g>
+</svg>

@@ -15,6 +15,13 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 标题里的堂前与封地存档
+
+- 从封地用同一机位重拍堂屋、石砌泉眼和九格井田。清晨能看到瓦当、渠伯的水桶和垂下的黍穗，薄暮时门前两盏灯照亮台阶。两帧光线在标题渐变时，屋脊、人物和农具都在原位。 [清晨标题](../docs/previews/title-estate.png) · [薄暮标题](../docs/previews/title-lanterns.png)
+- 选档页在每份记录上写明日期、爵位和已定路线。守礼通关配朱绳贡簿，改税通关配摊开的青绳税册。示意图把两份已有的结局记录排在同一个演示封地下。命名、选档和设置沿用封地的漆木框，三个音量滑杆直接显示百分比。 [选档实机画面](../docs/previews/save-shelf.png) · [设置实机画面](../build/polish-title-estate/candidate-1920x1080/frames/settings.png)
+- 在 1920×1080、1024×768 两种窗口中逐行核对满 16 字的封地名、两条结局和损坏的存档。选档页连续按 17 次 Tab，焦点越出面板的次数从 9 次降至 0 次。打开设置时焦点落在主音量，离开键位页回到「键盘键位」，关掉设置回到标题。十份取景用的记录逐份校验一致。 [逐行文案](../build/polish-title-estate/candidate-1920x1080/frames/readability.json)
+- 两次干净导出的 Windows x64 候选包 SHA-256 同为 `ee217aa00be2f0475b138772510d54b5c1eb6b6f1f836672733b7a78ba1f7079`。用解压包重拍六张地图与 96 帧田间动作，与已收录的画面逐帧一致。本轮验证限于启动、菜单和画面，当前包的新档到结局仍待验收。 [本次 Windows 包](../build/polish-title-estate/source-final/build/Fiefdom-1.0.0-Windows-x64.zip) · [导出与取景记录](../build/polish-title-estate/release-proof.txt)
+
 ## 堂前与南路亭的交册
 
 - 守礼时，召简从朱漆匣上接走朱绳贡簿。改税时，他在南路亭的布棚下接过摊开的青绳税册。握册和收手接在走路动作之后，简册离开案面。结算页和通关后翻账时沿用本局的册形。 [两处交册动图](../docs/previews/ending-handoff.gif) · [改税结算原画面](../docs/previews/ending-tax-record.png)
