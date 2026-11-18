@@ -68,6 +68,7 @@ func _place_hint() -> void:
 func _refresh_hint() -> void:
 	var caption := "水源 · 量水尺" if Global.channel_survey_day > 0 else "水源"
 	hint.text = GamepadInput.interact_hint(caption) if focused else caption
+	hint.z_index = 1 if focused else -1
 	hint.modulate = Color("#ffdfa0") if focused else Color("#c4e2ce")
 
 func _draw_basin() -> void:

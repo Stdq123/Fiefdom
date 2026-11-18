@@ -52,13 +52,15 @@ func _update_marker(field_id: int) -> void:
 	label.material = preload("res://resources/world_hint_material.tres")
 	label.name = "Status"
 	label.text = title
-	label.position = -half_span + Vector2(0, -15)
-	if entrance == Vector2.UP:
-		label.position.y = half_span.y + 2.0
-	label.add_theme_font_size_override("font_size", 11)
+	label.add_theme_font_size_override("font_size", 10)
 	label.add_theme_color_override("font_color", Color("#e1ddbb"))
 	label.add_theme_color_override("font_outline_color", Color("#263d2e"))
 	label.add_theme_constant_override("outline_size", 2)
-	label.z_index = 51
+	# The field name belongs to the bank, beneath passing workers and their tools.
+	label.z_as_relative = false
+	label.z_index = -1
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	marker.add_child(label)
+	var caption_size := label.get_combined_minimum_size()
+	label.position.x = half_span.x - caption_size.x
+	label.position.y = half_span.y + 6.0 if entrance == Vector2.UP else -half_span.y - caption_size.y - 4.0

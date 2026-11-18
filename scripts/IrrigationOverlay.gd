@@ -18,6 +18,12 @@ const RIPPLE_SPACING := 23.0
 const RIPPLE_SPEED := 11.0
 const FERTILITY_HIGHLIGHT_SECONDS := 12.0
 const RICE_MARK := Color("#abdcc8")
+const RIPE_BADGE: Array[Vector2] = [Vector2(0, -3), Vector2(3, 0), Vector2(0, 3), Vector2(-3, 0)]
+const RIPE_GRAIN: Array[Vector2] = [Vector2(0, -1.8), Vector2(1.8, 0), Vector2(0, 1.8), Vector2(-1.8, 0)]
+const DROP_BADGE: Array[Vector2] = [Vector2(0, -3), Vector2(2.5, 0.5), Vector2(2.5, 1.5),
+	Vector2(1, 2.5), Vector2(-1, 2.5), Vector2(-2.5, 1.5), Vector2(-2.5, 0.5)]
+const DROP_FILL: Array[Vector2] = [Vector2(0, -1.6), Vector2(1.5, 0.7), Vector2(1, 1.6),
+	Vector2(-1, 1.6), Vector2(-1.5, 0.7)]
 
 @onready var tile_map: TileMapLayer = get_parent()
 @onready var tile_size := Vector2(tile_map.tile_set.tile_size)
@@ -519,21 +525,21 @@ func _draw_crop_icons() -> void:
 			crop_icons.draw_rect(_cell_rect(cell).grow(-1.5), RICE_MARK, false, 1.25)
 	for cell in Global.active_crops:
 		var crop: Dictionary = Global.active_crops[cell]
-		var at := tile_map.map_to_local(cell) + Vector2(5, 5)
+		var at := tile_map.map_to_local(cell) + tile_size * 0.5 - Vector2(3.5, 3.5)
+		crop_icons.draw_set_transform(at)
 		if crop["age"] >= crop["growth_nights"]:
-			crop_icons.draw_circle(at, 3.8, Color("#332f24e8"))
-			crop_icons.draw_colored_polygon(PackedVector2Array([at + Vector2(0, -3), at + Vector2(2.5, 0),
-				at + Vector2(0, 2.5), at + Vector2(-2.5, 0)]), Color("#f4ce76"))
+			crop_icons.draw_colored_polygon(RIPE_BADGE, Color("#543a29"))
+			crop_icons.draw_colored_polygon(RIPE_GRAIN, Color("#f4ce76"))
 			continue
 		match Global.crop_water(cell, crop):
 			Global.CropWater.DRY:
-				crop_icons.draw_circle(at, 3.8, Color("#283730e8"))
-				crop_icons.draw_colored_polygon(PackedVector2Array([at + Vector2(0, -3), at + Vector2(2, 0),
-					at + Vector2(2, 1), at + Vector2(0, 2.5), at + Vector2(-2, 1), at + Vector2(-2, 0)]), Color("#a4d4d0"))
+				crop_icons.draw_colored_polygon(DROP_BADGE, Color("#253e39"))
+				crop_icons.draw_colored_polygon(DROP_FILL, Color("#a4d4d0"))
 			Global.CropWater.BLOCKED:
-				crop_icons.draw_circle(at, 3.8, Color("#3c3027e8"))
-				crop_icons.draw_line(at - Vector2(2, 2), at + Vector2(2, 2), Color("#efa07b"), 1.4)
-				crop_icons.draw_line(at + Vector2(-2, 2), at + Vector2(2, -2), Color("#efa07b"), 1.4)
+				crop_icons.draw_rect(Rect2(-2.5, -2.5, 5, 5), Color("#49362c"))
+				crop_icons.draw_line(Vector2(-1.6, -1.6), Vector2(1.6, 1.6), Color("#efa07b"), 1.3)
+				crop_icons.draw_line(Vector2(-1.6, 1.6), Vector2(1.6, -1.6), Color("#efa07b"), 1.3)
+	crop_icons.draw_set_transform(Vector2.ZERO)
 
 func _draw() -> void:
 	var network := Global.irrigation

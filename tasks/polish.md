@@ -15,11 +15,18 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 井田作物与田边标识
+
+- 黍的金穗弯垂，稷的红穗直立，稻叶间垂着浅色细穗，菽的两枚黄荚露在叶丛下。七种作物都能从田里认到种子说明和背包，选种栏各有一枚 16×16 图标。 [三阶段与选种栏](../docs/previews/field-crops.png)
+- 成熟、待浇、断水的符号收在每格右下角，田号靠田埂外侧。把人物放在田号前逐像素核对，1920×1080 和 1024×768 两种窗口中，田号都没有覆盖人物上身。小窗口内的游戏画面为 1024×576。 [田边实机近景](../docs/previews/field-bank.png) · [默认镜头与 HUD](../build/polish-field-art/candidate-1920x1080/frames/hud.png) · [本机像素核对](../build/polish-field-art/art-checks.json)
+- 用同一候选包重拍六处场景。六秒田间动图中，主角在空格前挥锄，渠伯提水，石墨在田东播种。镜头内保留长苗和成熟株，能同时看清农具与田埂上的字。 [六处场景](../docs/previews/six-locations.png) · [田间动图](../docs/previews/field-work.gif) · [1920×1080 原画面视频](../build/polish-field-art/field-work-1080p.mp4)
+- 两次干净导出的 Windows x64 美术候选包 SHA-256 均为 `eee86e7bbf01f4161c711277d66a1e9ff1e7f0588741853779af7269fb8f792b`，解压启动均抵达标题。田间预览使用隔离桌面和固定时钟。当前候选包的新档、双结局与首次玩家体验仍待验收。 [Windows 候选包](../build/Fiefdom-1.0.0-Windows-x64.zip) · [导出与画面核对记录](../build/polish-field-art/release-proof.txt)
+
 ## 人物动作与六处场景的美术预览
 
 - 林蓼在南池畔戴靛青扎巾、穿赭衣，腰边挎着竹种篮。背面能看到巾结和斜背带。秋社、亭西种圃、谷雨亭集的替补来客和冬至围炉沿用同一造型。正面和侧面的站姿保留眨眼。 [秋社近景](../docs/previews/autumn-festival.png) · [对话肖像](../docs/previews/linliao-dialogue.png)
 - 从同一个 Windows 资源包在隔离桌面按默认 1920×1080 渲染。六处场景并排看路面、建筑和器具的斜俯视。六秒动作样片取自主角、渠伯和石墨的站立、行走及农具动作，采样期间固定时钟和田格。 [六处场景](../docs/previews/six-locations.png) · [井田边的动作](../docs/previews/field-work.gif)
-- Windows x64 美术候选包经两次干净导出，SHA-256 均为 `058a6afecf4bd6e89858403885feae8ab5862f1bd6ab177899c7937b6d565dad`。两次解压启动均抵达标题画面。本版的玩法与结局尚待复验。 [Windows 包](../build/Fiefdom-1.0.0-Windows-x64.zip) · [本机导出与资源包校验](../build/polish-seed-courier/package-proof.txt)
+- Windows x64 美术候选包经两次干净导出，SHA-256 均为 `058a6afecf4bd6e89858403885feae8ab5862f1bd6ab177899c7937b6d565dad`。两次解压启动均抵达标题画面。本版的玩法与结局尚待复验。 [本段对应的 Windows 包](../build/polish-seed-courier/tree/build/Fiefdom-1.0.0-Windows-x64.zip) · [本机导出与资源包校验](../build/polish-seed-courier/package-proof.txt)
 
 ## Windows 1.0 人工试玩
 
