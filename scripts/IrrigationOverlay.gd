@@ -9,22 +9,12 @@ const BANK := Color("#9c8259")
 const BED := Color("#584e39")
 const WATER := Color("#568e87")
 const WATER_LIGHT := Color("#a5d4bc")
-const PADDY_WATER := Color("#4e796e")
-const PADDY_RIM := Color("#584d37")
-const PADDY_REFLECTION := Color("#92b8a2")
 const DRY := Color("#8b6949")
 const CULVERT_STONE := Color("#898475")
 const RIPPLE_SPACING := 23.0
 const RIPPLE_SPEED := 11.0
 const FERTILITY_HIGHLIGHT_SECONDS := 12.0
 const RICE_MARK := Color("#abdcc8")
-const RIPE_BADGE: Array[Vector2] = [Vector2(0, -3), Vector2(3, 0), Vector2(0, 3), Vector2(-3, 0)]
-const RIPE_GRAIN: Array[Vector2] = [Vector2(0, -1.8), Vector2(1.8, 0), Vector2(0, 1.8), Vector2(-1.8, 0)]
-const DROP_BADGE: Array[Vector2] = [Vector2(0, -3), Vector2(2.5, 0.5), Vector2(2.5, 1.5),
-	Vector2(1, 2.5), Vector2(-1, 2.5), Vector2(-2.5, 1.5), Vector2(-2.5, 0.5)]
-const DROP_FILL: Array[Vector2] = [Vector2(0, -1.6), Vector2(1.5, 0.7), Vector2(1, 1.6),
-	Vector2(-1, 1.6), Vector2(-1.5, 0.7)]
-
 @onready var tile_map: TileMapLayer = get_parent()
 @onready var tile_size := Vector2(tile_map.tile_set.tile_size)
 @onready var water_source = tile_map.get_parent().get_node("WaterSource")
@@ -524,21 +514,9 @@ func _draw_crop_icons() -> void:
 		if not Global.active_crops.has(cell) and Global.irrigation.supplies(cell):
 			crop_icons.draw_rect(_cell_rect(cell).grow(-1.5), RICE_MARK, false, 1.25)
 	for cell in Global.active_crops:
-		var crop: Dictionary = Global.active_crops[cell]
 		var at := tile_map.map_to_local(cell) + tile_size * 0.5 - Vector2(3.5, 3.5)
 		crop_icons.draw_set_transform(at)
-		if crop["age"] >= crop["growth_nights"]:
-			crop_icons.draw_colored_polygon(RIPE_BADGE, Color("#543a29"))
-			crop_icons.draw_colored_polygon(RIPE_GRAIN, Color("#f4ce76"))
-			continue
-		match Global.crop_water(cell, crop):
-			Global.CropWater.DRY:
-				crop_icons.draw_colored_polygon(DROP_BADGE, Color("#253e39"))
-				crop_icons.draw_colored_polygon(DROP_FILL, Color("#a4d4d0"))
-			Global.CropWater.BLOCKED:
-				crop_icons.draw_rect(Rect2(-2.5, -2.5, 5, 5), Color("#49362c"))
-				crop_icons.draw_line(Vector2(-1.6, -1.6), Vector2(1.6, 1.6), Color("#efa07b"), 1.3)
-				crop_icons.draw_line(Vector2(-1.6, 1.6), Vector2(1.6, -1.6), Color("#efa07b"), 1.3)
+		FieldPlotArt.draw_crop_mark(crop_icons, Global.crop_night_status(cell))
 	crop_icons.draw_set_transform(Vector2.ZERO)
 
 func _draw() -> void:
@@ -573,54 +551,20 @@ func _draw() -> void:
 		var hand_watered: bool = crop.get("watered", false) and not crop.get("requires_channel", false)
 		var rained_on: bool = rain and (crop.is_empty() or not crop["data"].is_water_crop)
 		if supplied or hand_watered or rained_on:
-			_draw_soil_moisture(cell, rained_on)
+			FieldPlotArt.draw_soil_moisture(self, _cell_rect(cell), rained_on)
 		if supplied:
 			_draw_inlets(cell)
 
 	for center in network.field_gates:
 		_draw_field_gate(center, network.field_gates[center], network)
 	for cell in flooded_rice:
-		_draw_paddy(cell, rain)
+		FieldPlotArt.draw_paddy(self, _cell_rect(cell), rain)
 		_draw_inlets(cell)
 	for cell in Global.fertile_cells:
 		if tile_map.get_cell_source_id(cell) != -1:
 			var corner := _cell_rect(cell).position + Vector2(2, 12)
 			draw_rect(Rect2(corner, Vector2(4, 2)), Color("#dbb773"))
 	_draw_footbridges()
-
-func _draw_paddy(cell: Vector2i, rain: bool) -> void:
-	var inset := _cell_rect(cell).grow(-1.0)
-	var origin := inset.position
-	var size := inset.size
-	var water := PADDY_WATER.darkened(0.12) if rain else PADDY_WATER
-	draw_colored_polygon(PackedVector2Array([
-		origin + Vector2(2, 0), origin + Vector2(size.x - 2, 0), origin + Vector2(size.x, 2),
-		origin + size - Vector2(0, 2), origin + size - Vector2(2, 0), origin + Vector2(2, size.y),
-		origin + Vector2(0, size.y - 2), origin + Vector2(0, 2),
-	]), PADDY_RIM)
-	draw_colored_polygon(PackedVector2Array([
-		origin + Vector2(2, 1.5), origin + Vector2(size.x - 2, 1.5), origin + Vector2(size.x - 1, 3),
-		origin + size - Vector2(1, 3), origin + size - Vector2(3, 1.5), origin + Vector2(2, size.y - 1.5),
-		origin + Vector2(1, size.y - 3), origin + Vector2(1, 3),
-	]), water)
-	draw_rect(Rect2(origin + Vector2(3, 1.5), Vector2(size.x - 6, 1)), water.darkened(0.24))
-	draw_rect(Rect2(origin + Vector2(1.5, 4), Vector2(1, size.y - 7)), water.darkened(0.16))
-	draw_rect(Rect2(origin + Vector2(4, size.y - 2.0), Vector2(size.x - 7, 0.5)), water.lightened(0.17))
-	draw_rect(Rect2(origin + Vector2(size.x - 5, 4), Vector2(2.5, 0.5)), PADDY_REFLECTION.darkened(0.25))
-
-func _draw_soil_moisture(cell: Vector2i, rained_on: bool) -> void:
-	var soil := _cell_rect(cell)
-	if rained_on:
-		draw_rect(soil, Color("#283b3066"))
-		return
-	var origin := soil.position
-	var size := soil.size
-	var damp := PackedVector2Array([origin + Vector2(1, 2), origin + Vector2(size.x - 3, 1),
-		origin + Vector2(size.x - 1, 4), origin + size - Vector2(1, 3),
-		origin + size - Vector2(5, 1), origin + Vector2(3, size.y - 1), origin + Vector2(1, size.y - 4)])
-	draw_colored_polygon(damp, Color("#223b3194"))
-	draw_rect(Rect2(origin + Vector2(3, size.y - 5), Vector2(3, 0.6)), Color("#a9bb9d68"))
-	draw_rect(Rect2(origin + Vector2(size.x - 6, 4), Vector2(2, 0.6)), Color("#a9bb9d56"))
 
 func _draw_field_gate(center: Vector2i, inlet: Vector2i, network: Irrigation) -> void:
 	var side := (inlet - center).sign()
@@ -719,7 +663,7 @@ func _draw_flow() -> void:
 		if phase < 9:
 			var at := _cell_rect(cell).position + Vector2(3 + phase * 0.5, 11)
 			var opacity := 0.22 + 0.36 * sin(phase * PI / 8.0)
-			flow_ink.draw_rect(Rect2(at, Vector2(3, 0.5)), Color(PADDY_REFLECTION, opacity))
+			flow_ink.draw_rect(Rect2(at, Vector2(3, 0.5)), Color(FieldPlotArt.PADDY_REFLECTION, opacity))
 	if editing and not preview_fill and not survey_mode:
 		for cell in starter_canal:
 			var bed := _cell_rect(cell).grow(-2)

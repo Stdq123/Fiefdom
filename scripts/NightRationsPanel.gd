@@ -27,6 +27,7 @@ const WINDOW_MARGIN := 16.0
 @onready var raid_instructions: Label = %RaidInstructions
 @onready var find_watch: Button = %FindWatch
 @onready var tribute_plan: PanelContainer = %TributePlan
+@onready var tribute_plot: TributePlotPicture = %TributePlot
 @onready var tribute_deadline: Label = %TributeDeadline
 @onready var tribute_details: Label = %TributeDetails
 @onready var tribute_goal: Label = %TributeGoal
@@ -75,6 +76,9 @@ const WINDOW_MARGIN := 16.0
 @onready var plan_field: Button = %PlanField
 @onready var find_harvest: Button = %FindHarvest
 @onready var title: Label = %Title
+@onready var page_date: Label = %PageDate
+@onready var page_art := %PagePicture.texture as AtlasTexture
+@onready var record_heading: Label = %RecordHeading
 @onready var tomorrow_calendar: Button = %TomorrowCalendar
 @onready var page_button: Button = %PageButton
 @onready var plan_body: VBoxContainer = %Plan
@@ -91,6 +95,13 @@ var settling_field_work := false
 var field_forecast_deadline := 1.0
 
 func _ready() -> void:
+	%GrainIcon.texture = HUDIcons.icon(HUDIcons.Symbol.GRAIN)
+	%NeedIcon.texture = HUDIcons.icon(HUDIcons.Symbol.RATIONS)
+	%MoneyIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
+	%FieldMark.texture = HUDIcons.icon(HUDIcons.Symbol.HOE)
+	%MealMark.texture = HUDIcons.icon(HUDIcons.Symbol.RATIONS)
+	%Sleep.icon = HUDIcons.icon(HUDIcons.Symbol.MOON)
+	scroll.get_v_scroll_bar().theme_type_variation = &"HudJournalBar"
 	budget.max_value = NightRations.MAX_COPPER_LIMIT
 	budget.get_line_edit().max_length = 10
 	delegate.toggled.connect(_change_policy.unbind(1))
@@ -191,16 +202,26 @@ func _focus_meal_options() -> void:
 			return
 
 func _show_page(previous: bool) -> void:
-	show_previous = previous
-	title.text = "昨夜结算" if previous else "今夜安排"
-	page_button.text = "今夜安排" if previous else "昨夜结算"
-	tomorrow_calendar.visible = not previous
-	plan_body.visible = not previous
-	footer.visible = not previous
+	show_previous = previous and last_card.visible
+	title.text = "昨夜结算" if show_previous else "今夜安排"
+	page_button.text = "今夜安排" if show_previous else "昨夜结算"
+	page_art.region.position.x = page_art.region.size.x if show_previous else 0.0
+	tomorrow_calendar.visible = not show_previous
+	plan_body.visible = not show_previous
+	footer.visible = not show_previous
+	record_heading.visible = not show_previous
+	_refresh_date()
 	_refresh_fields()
 	_refresh_field_management()
 	scroll.set_deferred("scroll_vertical", 0)
 	_fit_body.call_deferred()
+
+func _refresh_date() -> void:
+	var recorded_day: int = Global.last_dawn.get("day", Global.last_field_night.get("day",
+		Global.night_rations.last.get("day", maxi(1, Global.current_day - 1))))
+	var day := recorded_day if show_previous else Global.current_day
+	page_date.text = "第 %d 夜 · %s" % [day, Global.get_current_solar_term(day)]
+	record_heading.text = "昨夜结算 · 第 %d 夜" % recorded_day
 
 func _fit_body() -> void:
 	var separation := content.get_theme_constant("separation")
@@ -252,6 +273,9 @@ func _refresh() -> void:
 	var policy := Global.night_rations
 	grain.text = "粮仓\n%d 份" % Global.food_storage
 	need.text = "今夜所需\n%d 份" % plan.need
+	need.add_theme_color_override("font_color", SHORT if plan.uncovered > 0 else Color("#fce8b8"))
+	if plan.uncovered > 0:
+		need.text += " · 缺 %d" % plan.uncovered
 	money.text = "铜钱\n%d 枚" % Global.money
 	delegate.set_pressed_no_signal(policy.enabled)
 	budget.set_value_no_signal(policy.copper_limit)
@@ -322,9 +346,16 @@ func _refresh() -> void:
 	silk_receipt.text = "昨夜蚕棚 · " + last_silk
 	milestones.text = "\n".join(Global.dawn_milestones())
 	milestones.visible = not milestones.text.is_empty()
-	last_card.visible = (receipt.visible or field_receipt.visible or away_field_receipt.visible or field_wait_receipt.visible
-		or silk_receipt.visible or milestones.visible)
+	var has_field_notes := field_receipt.visible or away_field_receipt.visible or field_wait_receipt.visible
+	%RecordedFields.visible = has_field_notes
+	%RecordedMeal.visible = receipt.visible
+	%ReceiptDivider.visible = has_field_notes and receipt.visible
+	%Entries.visible = has_field_notes or receipt.visible
+	var has_entries: bool = %Entries.visible or silk_receipt.visible or milestones.visible
+	last_card.visible = has_entries or Global.has_morning_record()
+	%EmptyRecord.visible = not has_entries
 	page_button.visible = last_card.visible
+	_refresh_date()
 
 func _refresh_night_offer(plan: Dictionary) -> void:
 	night_offer.hide()
@@ -577,6 +608,7 @@ func _refresh_tribute(preview: Dictionary) -> void:
 	if not tribute_plan.visible:
 		return
 	var field := Global.tribute_field_plan()
+	tribute_plot.show_plot(field)
 	var tonight := due == Global.current_day
 	var late_crop: bool = not field.is_empty() and field.ready_day > due
 	var deadline := "今夜到期" if tonight else "第 %d 天过夜前" % due
@@ -584,7 +616,8 @@ func _refresh_tribute(preview: Dictionary) -> void:
 		deadline = "已逾期"
 	var due_share := "本期纳贡 1 份" if Global.first_tribute_delivered() else "首贡 1 份"
 	tribute_deadline.text = due_share + " · " + deadline
-	tribute_deadline.add_theme_color_override("font_color", SHORT if tonight or late_crop else GOOD)
+	var urgent := tonight or late_crop or Global.tribute_overdue()
+	tribute_deadline.add_theme_color_override("font_color", Color("#7b3522") if urgent else Color("#33432d"))
 	tribute_goal.visible = not Global.quest_completed
 	tribute_goal.text = "长期奖励 · 累计纳贡 %d/%d 份，达标得 %d 声望" % [
 		Global.quest_progress, Global.quest_target, Global.TRIBUTE_QUEST_REPUTATION]

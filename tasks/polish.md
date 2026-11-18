@@ -15,6 +15,12 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 睡前看公田，次晨翻账
+
+- 今夜安排用铜灯和展开的竹册标出当前夜次。首贡提醒画出所指公田的土色、苗或穗，待浇的黍带蓝滴，断水的稻带红叉，成熟的稷带金菱。粮仓旁同时显示口粮缺口和预计离任的门客。第 5 夜的示例里，打开账就能看到渠伯将缺餐。 [今夜安排](../docs/previews/night-plan.png) · [三种公田提醒](../docs/previews/tribute-field-notes.png)
+- 昨夜结算用系朱绳的卷简和量斗作页首，左栏记田务，右栏记用粮。打开此前一份普通档，第 15 天白露仍可查第 14 夜处暑的原账。该夜公田 1 格、私田 8 格新熟，收工时浇了 8 格，用粮 1/1。只有用粮记录的旧档用一栏显示。 [第 14 夜原账](../docs/previews/night-receipt.png)
+- 在隔离桌面按 1920×1080、1024×768 两种窗口核对九种公田画面、四种过夜提醒和旧账换页。取景固定时辰、粮仓和体力。解压包重拍的六处地图与 96 帧田间人物动作逐帧吻合。两次独立导出的 Windows 包 SHA-256 均为 `04800a91a308749d8474a4a8eb02207a7c478c056411e0c70498a06919c5779c`。本轮核对画面、界面和解压启动，当前包从新档到双结局的玩法验收待续。 [本次候选包](../build/polish-night-book/source-final/build/Fiefdom-1.0.0-Windows-x64.zip) · [导出与实机记录](../build/polish-night-book/release-proof.txt) · [铜灯、简册和量斗的生成提示](../build/polish-night-book/prompt.txt)
+
 ## 溪岸持竿与南池钓台
 
 - 柳湾朝东持竿，砾滩朝西持竿，南池钓台上也能看见双手托住竹竿。红顶浮标落水后起一圈扁水纹，咬钩时没入水下。手抬起时竹竿弯曲，松线时竿尖回落。绿段的两道浅刻线和浅金游标可直接读出张力。垂钓期间由底部面板显示地名，岸边让出看竿梢的位置。 [柳湾四秒动图](../docs/previews/willow-fishing.gif) · [默认镜头](../build/polish-angler/packed-1920x1080/frames/pool-normal.png) · [张力游标](../build/polish-angler/packed-1920x1080/frames/pool-meter.png)

@@ -1265,7 +1265,7 @@ func _warn_before_first_tribute(ration_warning: String) -> bool:
 		message += "\n\n" + ration_warning
 		alternatives["查看今夜安排"] = _show_night_rations.bind(false, true)
 	world.set_channel_mode(false)
-	dialog_manager.show_bedtime_warning("第一次纳贡", message, alternatives, _on_sleep_pressed)
+	dialog_manager.show_bedtime_warning("第一次纳贡", message, alternatives, _on_sleep_pressed, plan)
 	return true
 
 func _on_sleep_pressed() -> void:

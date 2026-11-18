@@ -48,11 +48,15 @@ func setup(host: Control, estate_player: Player) -> void:
 	parent_node = host
 	player = estate_player
 
-func show_bedtime_warning(context: String, message: String, alternatives: Dictionary[String, Callable], sleep: Callable) -> void:
+func show_bedtime_warning(context: String, message: String, alternatives: Dictionary[String, Callable],
+		sleep: Callable, field: Dictionary = {}) -> void:
 	var options: Array[String] = []
 	options.assign(alternatives.keys())
 	options.append("仍然过夜")
-	var dialog := _open("过夜前", context, message, options, [], null)
+	var portrait := HUDIcons.icon(HUDIcons.Symbol.RATIONS) if field.is_empty() else null
+	var dialog := _open("过夜前", context, message, options, [], portrait)
+	if not field.is_empty():
+		dialog.show_tribute_plot(field)
 	dialog.choices[0].grab_focus()
 	dialog.option_selected.connect(func(index: int):
 		if index == options.size() - 1:
