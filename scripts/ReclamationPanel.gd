@@ -4,6 +4,7 @@ signal market_requested(site: Variant)
 signal visitor_requested(speaker: String)
 signal worksite_requested(field_id: int)
 
+const WORKSITE := preload("res://scripts/FieldWorksite.gd")
 const READY_INK := Color("#c6dba5")
 const SHORT_INK := Color("#efbf8b")
 const HELP_INK := Color("#e5d6ac")
@@ -36,6 +37,7 @@ var paid := Vector2i.ZERO
 func setup(estate_world: Node2D, previous_site: Variant = null) -> void:
 	world = estate_world
 	tile_map = world.tile_map
+	$Panel/SurveyKit.texture = WORKSITE.tool_texture(0)
 	highlight = Node2D.new()
 	highlight.z_index = 100
 	highlight.draw.connect(_draw_preview)
@@ -233,8 +235,12 @@ func _draw_preview() -> void:
 		highlight.draw_line(Vector2(area.position.x, y), Vector2(area.end.x, y), Color(edge, 0.75))
 	highlight.draw_rect(area, edge, false, 1.8 if has_selection else 1.2)
 	if has_selection:
-		for corner in [area.position, Vector2(area.end.x, area.position.y), area.end, Vector2(area.position.x, area.end.y)]:
-			highlight.draw_rect(Rect2(corner - Vector2(1.5, 1.5), Vector2(3, 3)), edge)
+		for corner in EstateLayout.corners(area):
+			if preview_site == Global.ReclamationSite.OPEN:
+				var stake := Rect2(corner - Vector2(4.5, 8), Vector2(9, 9))
+				highlight.draw_texture_rect(WORKSITE.tool_texture(WORKSITE.PEG), stake, false)
+			else:
+				highlight.draw_rect(Rect2(corner - Vector2(1.5, 1.5), Vector2(3, 3)), edge)
 
 func _reclaim_selected() -> void:
 	if not has_selection:

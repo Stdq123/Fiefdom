@@ -15,6 +15,13 @@ const RIPPLE_SPACING := 23.0
 const RIPPLE_SPEED := 11.0
 const FERTILITY_HIGHLIGHT_SECONDS := 12.0
 const RICE_MARK := Color("#abdcc8")
+const WATERWORKS := "res://assets/world/field-waterworks.png"
+# Tight atlas regions preserve the fixed light direction on both canal axes.
+const GATE_NS := Rect2(1, 4, 30, 24)
+const GATE_EW := Rect2(39, 1, 18, 30)
+const DECK_EW := Rect2(65, 4, 30, 24)
+const DECK_NS := Rect2(100, 1, 24, 30)
+@onready var waterworks: Texture2D = load(WATERWORKS)
 @onready var tile_map: TileMapLayer = get_parent()
 @onready var tile_size := Vector2(tile_map.tile_set.tile_size)
 @onready var water_source = tile_map.get_parent().get_node("WaterSource")
@@ -539,7 +546,7 @@ func _draw() -> void:
 			continue
 		var wet := network.is_channel_wet(cell)
 		_channel_shape(cell, 5.0, WATER if wet else DRY)
-		_draw_channel_edges(cell, network, bank)
+		_draw_channel_edges(cell, network, bank, wet)
 		if not wet:
 			draw_rect(Rect2(center + Vector2(-2, -1), Vector2(3, 1)), BED)
 
@@ -569,7 +576,6 @@ func _draw() -> void:
 func _draw_field_gate(center: Vector2i, inlet: Vector2i, network: Irrigation) -> void:
 	var side := (inlet - center).sign()
 	var axis := Vector2(side)
-	var across := Vector2(-axis.y, axis.x)
 	var middle := tile_map.map_to_local(center)
 	var half_span := tile_size.dot(axis.abs()) * 1.5
 	var mouth := (middle + axis * half_span).round()
@@ -581,24 +587,28 @@ func _draw_field_gate(center: Vector2i, inlet: Vector2i, network: Irrigation) ->
 	var start := mouth + axis * from_outside
 	draw_line(start, end, BED, 4.0)
 	draw_line(start, end, WATER if wet else DRY, 2.0)
-	draw_line(mouth - across * 5.0, mouth + across * 5.0, Color("#44372a"), 5.0)
-	draw_line(mouth - across * 5.0, mouth + across * 5.0, Color("#a9814e"), 3.0)
-	for direction: float in [-1.0, 1.0]:
-		var post := mouth + across * 4.5 * direction
-		draw_rect(Rect2(post - Vector2(1, 3), Vector2(3, 6)), Color("#665038"))
-		draw_rect(Rect2(post - Vector2(0, 3), Vector2(2, 3)), Color("#d1ac73"))
-	draw_rect(Rect2(mouth - Vector2(1, 2), Vector2(3, 2)), WATER_LIGHT if wet else Color("#b68c57"))
+	var throat := (mouth - axis * 5.0).round()
+	draw_line(throat, throat - axis * 2.0, WATER_LIGHT if wet else Color("#ac8a5e"), 0.9)
+	var across_y := side.y != 0
+	var gate := Rect2(mouth - Vector2(8, 9), Vector2(16, 12)) if across_y else Rect2(mouth - Vector2(5, 10), Vector2(10, 16))
+	draw_texture_rect_region(waterworks, gate, GATE_NS if across_y else GATE_EW, _timber_light())
 
 func _channel_shape(cell: Vector2i, width: float, ink: Color, offset := Vector2.ZERO) -> void:
 	var network := Global.irrigation
 	var center := tile_map.map_to_local(cell) + offset
-	draw_rect(Rect2(center - Vector2.ONE * width / 2.0, Vector2.ONE * width), ink)
+	var radius := width * 0.5
+	var bevel := radius * 0.64
+	draw_colored_polygon(PackedVector2Array([
+		center + Vector2(-bevel, -radius), center + Vector2(bevel, -radius),
+		center + Vector2(radius, -bevel), center + Vector2(radius, bevel),
+		center + Vector2(bevel, radius), center + Vector2(-bevel, radius),
+		center + Vector2(-radius, bevel), center + Vector2(-radius, -bevel)]), ink)
 	for direction: Vector2i in Irrigation.NEIGHBORS:
 		var next_cell := cell + direction
 		if next_cell == network.source_cell or network.channels.has(next_cell):
 			draw_line(center, center + Vector2(direction) * tile_size / 2.0, ink, width)
 
-func _draw_channel_edges(cell: Vector2i, network: Irrigation, bank: Color) -> void:
+func _draw_channel_edges(cell: Vector2i, network: Irrigation, bank: Color, wet: bool) -> void:
 	var center := tile_map.map_to_local(cell)
 	for direction: Vector2i in Irrigation.NEIGHBORS:
 		var next_cell := cell + direction
@@ -607,9 +617,17 @@ func _draw_channel_edges(cell: Vector2i, network: Irrigation, bank: Color) -> vo
 		var axis := Vector2(direction)
 		var side := -Vector2(absf(axis.y), absf(axis.x))
 		var worn := posmod(cell.x * 7 + cell.y * 13 + direction.x + direction.y, 4)
-		var at := center + axis * (5.5 + worn * 0.5)
-		draw_line(at + side * 4.4, at + side * 4.4 + axis * (1.6 + worn * 0.3), bank.lightened(0.21), 0.8)
-		draw_line(at - side * 5.0, at - side * 5.0 + axis * 1.5, bank.darkened(0.22), 1.25)
+		var at := center + axis * (4.0 + worn * 0.6)
+		var rim := at + side * 4.4
+		draw_colored_polygon(PackedVector2Array([rim - axis, rim + side * (0.8 + worn * 0.25),
+			rim + axis * 2.8, rim + axis * 1.2 - side * 0.8]), bank.lightened(0.19))
+		draw_line(at - side * 4.8, at - side * 4.8 + axis * 2.1, bank.darkened(0.22), 1.1)
+		var toe := at - side * 2.6
+		draw_line(toe - axis, toe + axis * 2.5, Color("#7da79a") if wet else Color("#b3956f"), 0.6)
+		if worn == 0:
+			var tufts := at - side * 5.6
+			draw_line(tufts, tufts + Vector2(-0.7, -2.0), Color("#768052"), 0.7)
+			draw_line(tufts, tufts + Vector2(1.0, -1.3), Color("#a5a16c"), 0.65)
 
 func _draw_inlets(cell: Vector2i) -> void:
 	var network := Global.irrigation
@@ -674,21 +692,15 @@ func _draw_flow() -> void:
 
 func _draw_footbridges() -> void:
 	for deck in footbridges:
-		draw_rect(Rect2(deck.position + Vector2(1, 2), deck.size + Vector2(0, 0.5)), Color("#3e362b"))
-		draw_rect(deck, Color("#6a5137"))
-		var step := Vector2.DOWN if deck.size.x < deck.size.y else Vector2.RIGHT
-		var grain := Vector2(step.y, step.x)
-		var length := deck.size.dot(grain)
-		for index in 4:
-			var at := deck.position + step * (index * 4.0)
-			var pine := Color("#b89760").darkened(0.04 * ((index * 3) % 4))
-			draw_rect(Rect2(at, grain * length + step * 3.3), pine)
-			draw_line(at + grain * 0.6 + step * 0.5, at + grain * (length - 1.0) + step * 0.5,
-				pine.lightened(0.22), 0.65)
-			var mark := at + grain * (4.0 + index % 2 * 3.0) + step * 2.1
-			draw_line(mark, mark + grain * (3.0 + index % 3), pine.darkened(0.17), 0.65)
-			for margin in [1.6, length - 2.1]:
-				draw_rect(Rect2(at + grain * margin + step * 1.3, Vector2.ONE * 0.7), Color("#66503a"))
+		var boards := DECK_NS if deck.size.x > deck.size.y else DECK_EW
+		var shadow := Rect2(deck.position + Vector2(0.7, 1.3), deck.size)
+		draw_texture_rect_region(waterworks, shadow, boards, Color("#3b302583"))
+		draw_texture_rect_region(waterworks, deck, boards, _timber_light())
+
+func _timber_light() -> Color:
+	if Global.has_rain():
+		return Color("#b6b3a7")
+	return Color("#dfded1") if Global.season_index() == Global.Season.WINTER else Color.WHITE
 
 func _cell_rect(cell: Vector2i) -> Rect2:
 	return Rect2(tile_map.map_to_local(cell) - tile_size / 2.0, tile_size)

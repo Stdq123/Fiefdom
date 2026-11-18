@@ -15,6 +15,14 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 田边的测绳、木夯和水闸
+
+第二块井田立桩时，卷绳和木槌放在草地上，工人出入的一侧留着开口。清草后能看见翻起的草皮和装根茎的竹筐。整地时夯板落在平土上，划畦时才拉出九格测绳。完工后木桩收起，原处的田口用踏石接上土路。筹备簿上的木槌和舆图里的农具与工地共用图稿，两处工地可以各自显示不同的进度。[五个状态的同机位近景](../docs/previews/fieldwork-stages.png) · [两处工地的舆图](../docs/previews/survey-map.png)
+
+渠水从闸板下面进入田沟，断水后同一个闸座下会露出泥底。东西向和南北向的便桥分别画了木板、搭头和贴着渠沿的阴影。23.5 秒的 Windows 实景短片还收录主角与渠伯的田间动作、溪桥道、竹涧、西市、堂屋和蚕棚。[水闸与便桥近景](../docs/previews/field-waterworks.png) · [六处地图的 1080p 实景](../docs/previews/estate-fieldwork-tour.mp4)
+
+在隔离桌面用默认 1920×1080 和 1024×768 窗口各取 23 张固定状态画面，开发版、导出资源包与 Windows 程序逐张一致。两次干净导出的 SHA-256 均为 `71f970bdac182497a19ef1f4448912d7648ebd3d9d3592290309ea64d138c87b`。本候选包的新档至结局试玩仍待验收。[Windows x64 美术候选包](../build/polish-fieldcraft/source-final/build/Fiefdom-1.0.0-Windows-x64.zip)
+
 ## 从首贡到议税的案头器物
 
 堂前的贡粮袋束着朱绳，木筹挂在封口。私仓用开口的竹筐盛放收成，篮里留着木勺。议税时，召简面前的三项分别用青绳税册和量尺、朱绳贡簿和谷帛、铜灯和笔砚来辨认。结算或回封地重读旧账，都能认出当时选中的册子。 [两张收成回执](../docs/previews/harvest-receipts.png) · [堂前议税原图](../docs/previews/council-table.png) · [税亩富民结算](../docs/previews/ending-tax-record.png)

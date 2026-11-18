@@ -42,17 +42,20 @@ func _update_marker(field_id: int) -> void:
 		var worksite := WORKSITE.new()
 		worksite.name = "Worksite"
 		worksite.stage = field["reclamation_progress"]
+		worksite.entrance = entrance
 		worksite.scale = cell_size / 16.0
 		worksite.z_index = 1
 		marker.add_child(worksite)
-		title = "%s · 余 %d 夜" % [
-			Global.reclamation_stage(worksite.stage), Global.RECLAMATION_NIGHTS - worksite.stage]
+		title = "井田 %d · %s\n余 %d 夜" % [
+			field_id + 1, Global.reclamation_stage(worksite.stage), Global.RECLAMATION_NIGHTS - worksite.stage]
 
 	var label := Label.new()
 	label.material = preload("res://resources/world_hint_material.tres")
 	label.name = "Status"
 	label.text = title
-	label.add_theme_font_size_override("font_size", 10)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 10 if field["is_unlocked"] else 9)
+	label.add_theme_constant_override("line_spacing", -2)
 	label.add_theme_color_override("font_color", Color("#e1ddbb"))
 	label.add_theme_color_override("font_outline_color", Color("#263d2e"))
 	label.add_theme_constant_override("outline_size", 2)
@@ -62,5 +65,7 @@ func _update_marker(field_id: int) -> void:
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	marker.add_child(label)
 	var caption_size := label.get_combined_minimum_size()
-	label.position.x = half_span.x - caption_size.x
-	label.position.y = half_span.y + 6.0 if entrance == Vector2.UP else -half_span.y - caption_size.y - 4.0
+	label.position.x = half_span.x - caption_size.x if field["is_unlocked"] else -caption_size.x * 0.5
+	# Keep both the raised sluice and the top of the survey stakes clear of the caption.
+	var margin := 11.0 if field["is_unlocked"] else 8.0
+	label.position.y = half_span.y + margin if entrance == Vector2.UP else -half_span.y - caption_size.y - margin

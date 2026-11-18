@@ -1,60 +1,77 @@
 extends Node2D
 
-const STORE := preload("res://assets/world/estate-vessels.png")
-const NINJA := preload("res://assets/world/ninja-adventure/tileset_village_abandoned.png")
-const PEBBLES := Rect2(160, 64, 16, 16)
-const SACK := Rect2(0, 0, 16, 16)
-const STAKES := [Vector2(-20, -17), Vector2(20, -17), Vector2(20, 21), Vector2(-20, 21)]
-const UNEVEN := [Vector2(-18, -10), Vector2(-9, -14), Vector2(4, -12), Vector2(15, -15),
-	Vector2(20, -4), Vector2(18, 11), Vector2(10, 17), Vector2(-2, 19), Vector2(-16, 14), Vector2(-21, 2)]
-const LEVELED := [Vector2(-19, -19), Vector2(18, -19), Vector2(22, -13), Vector2(22, 16),
-	Vector2(17, 22), Vector2(-16, 22), Vector2(-22, 17), Vector2(-22, -13)]
+const TOOLS := "res://assets/world/fieldwork-tools.png"
+const SOIL := "res://assets/world/fieldwork-soil.png"
+const TOOL_CELL := 48.0
+const SOIL_CELL := 52.0
+const PEG := 4
+const SOD := 5
+const RIM := Rect2(-22, -21, 44, 42)
+const KIT_AT := [Vector2(-6, 4), Vector2(7, 3), Vector2(1, 0), Vector2(13, 13)]
+const KIT_SIZE := [24.0, 22.0, 25.0, 17.0]
 
+static var _tools: Texture2D
+static var _pieces: Dictionary[int, AtlasTexture] = {}
+
+@onready var soil: Texture2D = load(SOIL)
+var entrance := Vector2.DOWN
 var stage := 0
 
+static func tool_texture(index: int) -> AtlasTexture:
+	if not _pieces.has(index):
+		if not _tools:
+			_tools = load(TOOLS)
+		var piece := AtlasTexture.new()
+		piece.atlas = _tools
+		piece.region = Rect2(index * TOOL_CELL, 0, TOOL_CELL, TOOL_CELL)
+		piece.filter_clip = true
+		_pieces[index] = piece
+	return _pieces[index]
+
 func _draw() -> void:
-	var rain := Global.has_rain()
-	var soil := Color("#866443") if rain else Color("#a08155")
-	var cord := Color("#c8a779") if rain else Color("#dfc08a")
+	var wet := Global.has_rain()
+	var frost := Global.season_index() == Global.Season.WINTER
+	var light := Color("#b2afa3") if wet else Color.WHITE
+	var cord := Color("#c3ae85") if wet else Color("#dfc38a")
 	if stage > 0:
-		var edge := PackedVector2Array(UNEVEN if stage == 1 else LEVELED)
-		draw_colored_polygon(edge, soil.darkened(0.38))
-		draw_set_transform(Vector2(0, -1), 0.0, Vector2(0.9, 0.88))
-		draw_colored_polygon(edge, soil)
-		draw_set_transform(Vector2.ZERO)
-		_draw_loose_soil(soil)
+		var earth_light := Color("#a49a8c") if wet else (Color("#d2c8b5") if frost else Color.WHITE)
+		var ground := Rect2(Vector2.ONE * (-SOIL_CELL * 0.5), Vector2.ONE * SOIL_CELL)
+		var source := Rect2(0.0 if stage == 1 else SOIL_CELL, 0, SOIL_CELL, SOIL_CELL)
+		draw_texture_rect_region(soil, ground, source, earth_light)
 	if stage == 1:
-		draw_texture_rect_region(NINJA, Rect2(-13, -7, 12, 12), PEBBLES, Color("#b9ae99"))
-	elif stage == 2:
-		for y in range(-12, 16, 6):
-			draw_line(Vector2(-15, y + 1), Vector2(15, y + 1), soil.darkened(0.28))
-			draw_line(Vector2(-13, y), Vector2(15, y), soil.lightened(0.12))
+		_piece(SOD, Vector2(-12, -5), 11.0, light)
+		_piece(SOD, Vector2(-16, 5), 7.0, light)
 	elif stage == 3:
-		for offset in [-8, 8]:
-			_draw_cord(Vector2(offset, -17), Vector2(offset, 19), cord)
-			_draw_cord(Vector2(-19, offset), Vector2(19, offset), cord)
-		_draw_stake(Vector2(0, 2), cord)
+		for offset: float in [-8.0, 8.0]:
+			_cord(Vector2(offset, -21), Vector2(offset, 21), 1.0, cord)
+			_cord(Vector2(-22, offset), Vector2(22, offset), 1.0, cord)
 
-	_draw_cord(STAKES[0] + Vector2(0, -3), STAKES[1] + Vector2(0, -3), cord)
-	_draw_cord(STAKES[0] + Vector2(0, -3), STAKES[3] + Vector2(0, -3), cord)
-	_draw_cord(STAKES[1] + Vector2(0, -3), STAKES[2] + Vector2(0, -3), cord)
-	for point: Vector2 in STAKES:
-		_draw_stake(point, cord)
-	if stage < 3:
-		draw_texture_rect_region(STORE, Rect2(9, 5, 10, 10), SACK, Color("#cdbb8b"))
+	_piece(stage, KIT_AT[stage], KIT_SIZE[stage], light)
+	var outline := EstateLayout.field_boundary(RIM, entrance, EstateLayout.FIELD_ENTRANCE_WIDTH)
+	for i in range(1, outline.size()):
+		_cord(outline[i - 1], outline[i], 5.0, cord)
+	for point in EstateLayout.corners(RIM):
+		_peg(point, 10.0, light, frost)
+	if entrance != Vector2.ZERO:
+		_peg(outline[0], 8.0, light, frost)
+		_peg(outline[-1], 8.0, light, frost)
 
-func _draw_loose_soil(soil: Color) -> void:
-	for point: Vector2 in [Vector2(-15, -5), Vector2(-10, 11), Vector2(-4, -8), Vector2(-1, 6),
-			Vector2(5, 13), Vector2(10, -7), Vector2(14, -2), Vector2(15, 10)]:
-		draw_rect(Rect2(point, Vector2(3, 1)), soil.darkened(0.24))
-		draw_rect(Rect2(point - Vector2(1, 1), Vector2(2, 1)), soil.lightened(0.16))
+func _cord(start: Vector2, end: Vector2, height: float, cord: Color) -> void:
+	draw_line(start + Vector2.ONE, end + Vector2.ONE, Color("#453a2e61"), 0.7)
+	var top := Vector2.UP * height
+	var sag := Vector2.DOWN * minf(0.85, start.distance_to(end) * 0.025)
+	var path := PackedVector2Array([start + top, start.lerp(end, 0.5) + top + sag, end + top])
+	draw_polyline(path, Color("#554531"), 1.2)
+	for i in path.size():
+		path[i].y -= 0.5
+	draw_polyline(path, cord, 0.7)
 
-func _draw_cord(from: Vector2, to: Vector2, cord: Color) -> void:
-	draw_line(from + Vector2.DOWN, to + Vector2.DOWN, Color("#3b3325"), 1.0)
-	draw_line(from, to, cord, 1.0)
+func _peg(foot: Vector2, height: float, light: Color, frost: bool) -> void:
+	draw_rect(Rect2(foot + Vector2(-0.75, 0), Vector2(3.5, 1.0)), Color("#3e382a79"))
+	_piece(PEG, foot + Vector2.UP * (height * 0.46), height, light)
+	if frost:
+		draw_line(foot + Vector2(-0.65, -height * 0.88), foot + Vector2(0.65, -height * 0.93), Color("#d7d7c1"), 0.7)
 
-func _draw_stake(point: Vector2, cord: Color) -> void:
-	draw_rect(Rect2(point + Vector2(-2, 0), Vector2(5, 2)), Color("#302f249a"))
-	draw_rect(Rect2(point + Vector2(-1, -7), Vector2(3, 8)), Color("#563e2b"))
-	draw_rect(Rect2(point + Vector2(-1, -7), Vector2(1, 7)), Color("#a47b4e"))
-	draw_rect(Rect2(point + Vector2(-1, -5), Vector2(3, 1)), cord)
+func _piece(index: int, at: Vector2, span: float, light: Color) -> void:
+	var size := Vector2.ONE * span
+	draw_texture_rect(tool_texture(index), Rect2(at - size * 0.5, size), false, light)

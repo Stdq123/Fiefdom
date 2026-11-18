@@ -278,11 +278,24 @@ theme_override_colors/font_color = Color(0.88, 0.72, 0.57, 1)
 theme_override_font_sizes/font_size = 15
 text = "━ 未通水"
 
-[node name="SiteLegend" type="Label" parent="MapModal/Center/Panel/Layout/Footer"]
+[node name="SiteLegend" type="HBoxContainer" parent="MapModal/Center/Panel/Layout/Footer"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="SurveyKey" type="TextureRect" parent="MapModal/Center/Panel/Layout/Footer/SiteLegend"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Caption" type="Label" parent="MapModal/Center/Panel/Layout/Footer/SiteLegend"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.88, 0.72, 0.57, 1)
 theme_override_font_sizes/font_size = 15
-text = "▧ 工地"
+text = "工地"
 
 [node name="EntranceLegend" type="Label" parent="MapModal/Center/Panel/Layout/Footer"]
 unique_name_in_owner = true

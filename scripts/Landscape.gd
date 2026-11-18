@@ -453,6 +453,7 @@ var estate_tracks := ESTATE_TRACKS.duplicate()
 var estate_track_widths: Array[float] = []
 var track_shapes: Array[Dictionary] = []
 var field_approaches: Dictionary[int, PackedVector2Array] = {}
+var worksite_mouths: Dictionary[int, Vector2] = {}
 
 func _ready() -> void:
 	ground_cover = SEASONAL_GROUND.new(wilderness)
@@ -496,6 +497,7 @@ func _ready() -> void:
 
 func _layout_field_approaches() -> void:
 	field_approaches.clear()
+	worksite_mouths.clear()
 	var fields: Array[Rect2] = []
 	for field in Global.well_fields:
 		fields.append(_field_bounds(field["center_pos"]))
@@ -503,11 +505,9 @@ func _layout_field_approaches() -> void:
 	if fields.is_empty():
 		field_approaches[0] = _starter_approach(_field_bounds(Global.FIRST_FIELD_CENTER))
 	for field in Global.well_fields:
-		if not field["is_unlocked"]:
-			continue
 		var id: int = field["field_id"]
 		var area := fields[id]
-		if field["center_pos"] == Global.FIRST_FIELD_CENTER:
+		if field["center_pos"] == Global.FIRST_FIELD_CENTER and field["is_unlocked"]:
 			field_approaches[id] = _starter_approach(area)
 			continue
 		var occupied: Array[Rect2] = []
@@ -516,7 +516,11 @@ func _layout_field_approaches() -> void:
 		occupied.erase(area)
 		var approach := EstateLayout.field_approach(area, occupied)
 		if not approach.is_empty():
-			field_approaches[id] = approach
+			if field["is_unlocked"]:
+				field_approaches[id] = approach
+			else:
+				# Leave a gap in the survey cord facing the future lane.
+				worksite_mouths[id] = approach[-1].direction_to(approach[-2])
 
 func _starter_approach(area: Rect2) -> PackedVector2Array:
 	var entry := Vector2(area.get_center().x, area.end.y)
@@ -530,7 +534,7 @@ func _refresh_field_layout() -> void:
 
 func field_entrance(field_id: int) -> Vector2:
 	if not field_approaches.has(field_id):
-		return Vector2.ZERO
+		return worksite_mouths.get(field_id, Vector2.ZERO)
 	var approach := field_approaches[field_id]
 	return approach[-1].direction_to(approach[-2])
 

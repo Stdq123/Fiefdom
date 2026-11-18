@@ -5,6 +5,7 @@ signal field_management_requested(field_id: int)
 enum Category { PLACES, FIELDS, PEOPLE, RAVINE }
 
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
+const WORKSITE := preload("res://scripts/FieldWorksite.gd")
 const SEED_GARDEN := preload("res://scripts/SeedGarden.gd")
 const WINTER_RATIONS := preload("res://scripts/WinterRoadRations.gd")
 const PAPER := Color("#ded2ac")
@@ -64,6 +65,7 @@ func setup(estate_world: Node2D, guide: Control, blocked: Callable) -> void:
 	tiles = world.tile_map
 	directions = guide
 	controls_blocked = blocked
+	%SurveyKey.texture = WORKSITE.tool_texture(0)
 	if not Global.ravine_trip_target.is_empty():
 		category = Category.RAVINE
 	for tab: Button in tabs.get_children():
@@ -256,7 +258,8 @@ func _collect_fields() -> void:
 					stewards.append(worker.name)
 			if not stewards.is_empty():
 				needs.append("管事 " + "、".join(stewards))
-		var entry := _entry(Category.FIELDS, title, detail, _cell_point(center))
+		var kit := WORKSITE.tool_texture(progress) if working else null
+		var entry := _entry(Category.FIELDS, title, detail, _cell_point(center), false, kit)
 		entry.merge({"field_id": id, "cell": center, "public": Global.is_public_plot(center),
 			"worksite": working, "watered": watered, "needs": " · ".join(needs)})
 		fields.append(entry)
@@ -383,7 +386,7 @@ func _add_row(entry: Dictionary) -> void:
 	row_buttons[row] = entry
 
 	var text_left := 14.0
-	if entry.kind == Category.PEOPLE and entry.icon:
+	if entry.icon and entry.kind in [Category.PEOPLE, Category.FIELDS]:
 		var portrait := TextureRect.new()
 		portrait.texture = entry.icon
 		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -751,13 +754,9 @@ func _draw_field(field: Dictionary) -> void:
 	var cell := area.size / 3.0
 	var entrance: Vector2 = landscape.field_entrance(field.field_id)
 	if field.worksite:
-		chart.draw_rect(area, Color("#c2a574"))
-		for index in range(1, 6):
-			var ratio := float(index) / 3.0
-			var start := area.position + Vector2(maxf(0.0, ratio - 1.0), minf(1.0, ratio)) * area.size
-			var end := area.position + Vector2(minf(1.0, ratio), maxf(0.0, ratio - 1.0)) * area.size
-			chart.draw_line(start, end, Color("#a38259"), 1.0, true)
-		chart.draw_rect(area, DRY, false, 2.0)
+		chart.draw_rect(area, Color("#c6b28a"))
+		chart.draw_texture_rect(field.icon, area.grow(-1.0), false)
+		chart.draw_polyline(EstateLayout.field_boundary(area, entrance, cell.x), DRY, 2.0, true)
 	else:
 		chart.draw_rect(area, Color("#a2a87a"))
 		if _can_draw_plots():
@@ -784,7 +783,7 @@ func _draw_field(field: Dictionary) -> void:
 		if _can_draw_plots() and entrance != Vector2.ZERO:
 			_draw_field_entrance(at + entrance * area.size * 0.5, entrance, cell.x)
 	var number_y := area.end.y + 8.0 if entrance == Vector2.UP else area.position.y - 8.0
-	var number_at := Vector2(at.x, number_y) if category == Category.FIELDS else at
+	var number_at := Vector2(at.x, number_y) if category == Category.FIELDS or field.worksite else at
 	var safe := Rect2(Vector2.ZERO, chart.size).grow(-9.0)
 	if category == Category.FIELDS and not safe.encloses(area.grow_side(SIDE_TOP, 14).grow_side(SIDE_BOTTOM, 14)):
 		return
