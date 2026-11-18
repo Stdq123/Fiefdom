@@ -15,6 +15,12 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 人物动作与六处场景的美术预览
+
+- 林蓼在南池畔戴靛青扎巾、穿赭衣，腰边挎着竹种篮。背面能看到巾结和斜背带。秋社、亭西种圃、谷雨亭集的替补来客和冬至围炉沿用同一造型。正面和侧面的站姿保留眨眼。 [秋社近景](../docs/previews/autumn-festival.png) · [对话肖像](../docs/previews/linliao-dialogue.png)
+- 从同一个 Windows 资源包在隔离桌面按默认 1920×1080 渲染。六处场景并排看路面、建筑和器具的斜俯视。六秒动作样片取自主角、渠伯和石墨的站立、行走及农具动作，采样期间固定时钟和田格。 [六处场景](../docs/previews/six-locations.png) · [井田边的动作](../docs/previews/field-work.gif)
+- Windows x64 美术候选包经两次干净导出，SHA-256 均为 `058a6afecf4bd6e89858403885feae8ab5862f1bd6ab177899c7937b6d565dad`。两次解压启动均抵达标题画面。本版的玩法与结局尚待复验。 [Windows 包](../build/Fiefdom-1.0.0-Windows-x64.zip) · [本机导出与资源包校验](../build/polish-seed-courier/package-proof.txt)
+
 ## Windows 1.0 人工试玩
 
 把 [Windows 1.0 x64](../build/Fiefdom-1.0.0-Windows-x64.zip) 交给第一次玩的玩家。解压后运行 `Fiefdom.exe`，选「新建游戏」，用默认 1920×1080。请先按游戏内提示游玩，遇到卡点时记下当时想做的事和看到的提示，再翻包内的 `README.txt` 查操作。
