@@ -22,7 +22,6 @@ var silk_guest: Visitor
 var network: TRACK_DIRECTION
 var route := PackedVector2Array()
 var route_origin := Vector2.INF
-var sky_icons := HUDIcons.SKY.map(HUDIcons.icon)
 
 func _ready() -> void:
 	$MarketGate.position = LAYOUT.MARKET_GATE
@@ -105,7 +104,6 @@ func resume_from_market() -> bool:
 	return player.position.distance_squared_to(LAYOUT.MARKET_GATE) < player.position.distance_squared_to(LAYOUT.ESTATE_GATE)
 
 func _refresh_clock() -> void:
-	%WeatherIcon.texture = sky_icons[HUDIcons.sky_index()]
 	%Date.text = "第 %d 天 · %s · %s%s" % [Global.current_day, Global.day_watch_label(), Global.get_current_solar_term(),
 		" · 雨" if Global.has_rain() else ""]
 

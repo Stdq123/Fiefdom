@@ -15,6 +15,14 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 时辰铜盘、种槽和背包
+
+田边铜盘的铜尖指在当前时辰旁，中央留给时辰名。出门到西市、溪桥道和竹涧，地名旁的长针按相同的十二刻转动。气血与体力在封地和竹涧共用一块深色木牌，低于三分之一有「偏低」提示，归零显示「已尽」。选中的种槽在下缘露出浅色尖签，黍、稷、稻、麦从穗形就能分开。 [封地完整 HUD](../docs/previews/estate-hud.png) · [历书、种槽和体力近景](../docs/previews/hud-instruments.png)
+
+私仓沿用种槽的七种作物图，旧档的混存作物有自己的敞口谷袋。鱼篓以鱼身长短、背鳍、鳞色区分四种溪鱼。蚕茧、生丝、成匹丝绸和羊毛各有独立的形状。随身的菽黍饭、稻鱼羹和麦饼也能在背包和路餐快捷键上认出来。 [背包里的作物、溪鱼、工艺材料与路餐](../docs/previews/backpack-contents.png)
+
+取景时固定日期、库存和体力，在隔离桌面分别用 1920×1080、1024×768 核过封地、三张外出地图、堂屋、蚕棚和背包。每种尺寸的 42 张画面在开发版、导出资源包与 Windows 程序间逐张相同。两次干净导出的 SHA-256 均为 `53c5d33c8a851a74bcd72c367d3bfb058e0dfb5904886abb96f6487ef3864d5b`。本轮候选包的新档至双结局仍待试玩。 [Windows 美术候选包](../build/polish-hud-instruments/source-final/build/Fiefdom-1.0.0-Windows-x64.zip) · [取景及导出记录](../build/polish-hud-instruments/release-proof.txt)
+
 ## 秋社领谷、冬至围炉与溪桥运种
 
 阿绥、林蓼和禾伯在秋社展台前各自拿走一份谷样。转身时，布包从身前挪到髋侧，能看见人物迈出去的那只脚。到了冬至，禾伯穿着同一条围裙在铜釜边舀粥，阿绥和林蓼在不同的时候举碗。桌上摆的是当天的饭，炉膛里能看见明灭的炭火。 [15 秒 Windows 实景短片](../docs/previews/season-cast.mp4) · [冬至炉边近景](../docs/previews/winter-hearth.gif)

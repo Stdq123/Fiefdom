@@ -32,7 +32,6 @@ const FISH_BOARD := Rect2(64, 64, 24, 18)
 var silk_guest: Visitor
 var silk_trip := VisitorData.SilkTrip.NONE
 var fish_reserved := false
-var sky_icons := HUDIcons.SKY.map(HUDIcons.icon)
 
 func _ready() -> void:
 	ground.place_scenery($Scenery)
@@ -137,7 +136,6 @@ func _update_modal() -> void:
 	player.conversation_open = settings.visible or counter.visible
 
 func _refresh_date() -> void:
-	%WeatherIcon.texture = sky_icons[HUDIcons.sky_index()]
 	date.text = "第 %d 天 · %s · %s%s" % [Global.current_day, Global.day_watch_label(), Global.get_current_solar_term(),
 		" · 雨" if Global.has_rain() else ""]
 

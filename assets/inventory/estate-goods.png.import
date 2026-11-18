@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://dmg1q0u84iwxj"
+path="res://.godot/imported/estate-goods.png-2e0999c11cd2162bfe7385740223d1bb.res"
+
+[deps]
+
+source_file="res://assets/inventory/estate-goods.png"
+dest_files=["res://.godot/imported/estate-goods.png-2e0999c11cd2162bfe7385740223d1bb.res"]
+
+[params]
+
+authored_at_2x=true

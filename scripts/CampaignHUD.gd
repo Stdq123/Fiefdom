@@ -3,16 +3,14 @@ extends CanvasLayer
 const GAME_THEME := preload("res://resources/game_theme.tres")
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 const ESTATE_ENDING := preload("res://scenes/EstateEnding.tscn")
+const VITALS := preload("res://scenes/HUDVitals.tscn")
+const TRAVEL_HEADING := preload("res://scenes/TravelHeading.tscn")
 const BACKPACK := preload("res://scenes/Backpack.tscn")
 
 @export var show_field_status := true
 @export var backpack_trigger: NodePath
 
 var view: Control
-var health_label: Label
-var health_bar: ProgressBar
-var trail_stamina: Label
-var trail_stamina_bar: ProgressBar
 var trail_vitals: PanelContainer
 var trail_date: Label
 var outing_label: Label
@@ -28,8 +26,6 @@ var backpack: Control
 var backpack_button: Button
 var field_return_button: Button
 var _return_player: Player
-var trail_weather: TextureRect
-var sky_icons := HUDIcons.SKY.map(HUDIcons.icon)
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -182,25 +178,9 @@ func _build_status() -> void:
 	var trail_text := VBoxContainer.new()
 	trail_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	trail_note.add_child(trail_text)
-	var trail_title := Label.new()
-	trail_title.text = "竹涧"
-	trail_title.theme_type_variation = &"HudBronzeInk"
-	trail_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	trail_title.add_theme_font_size_override("font_size", 22)
-	var title_row := HBoxContainer.new()
-	trail_text.add_child(title_row)
-	title_row.add_child(trail_title)
-	var weather_seal := PanelContainer.new()
-	weather_seal.theme_type_variation = &"HudWell"
-	weather_seal.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	title_row.add_child(weather_seal)
-	trail_weather = TextureRect.new()
-	trail_weather.custom_minimum_size = Vector2(18, 18)
-	trail_weather.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	trail_weather.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	trail_weather.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	trail_weather.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	weather_seal.add_child(trail_weather)
+	var heading := TRAVEL_HEADING.instantiate() as TravelHeading
+	heading.place_name = "竹涧"
+	trail_text.add_child(heading)
 	trail_date = Label.new()
 	trail_date.theme_type_variation = &"HudBronzeInk"
 	trail_date.add_theme_font_size_override("font_size", 14)
@@ -221,58 +201,22 @@ func _build_status() -> void:
 	GameEvents.ravine_journal_changed.connect(_refresh_ravine)
 	_refresh_ravine()
 
-	trail_vitals = PanelContainer.new()
-	trail_vitals.theme = HUD_THEME
-	trail_vitals.theme_type_variation = &"HudPanel"
+	trail_vitals = VITALS.instantiate()
 	view.add_child(trail_vitals)
 	trail_vitals.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
 	trail_vitals.offset_left = 16.0
-	trail_vitals.offset_top = -96.0
+	trail_vitals.offset_top = -16.0
 	trail_vitals.offset_right = 202.0
 	trail_vitals.offset_bottom = -16.0
+	trail_vitals.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	GamepadInput.changed.connect(_refresh_camera_hint)
 	_refresh_camera_hint()
-	var health_stack := VBoxContainer.new()
-	health_stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	trail_vitals.add_child(health_stack)
-	health_label = Label.new()
-	health_label.add_theme_font_size_override("font_size", 14)
-	health_stack.add_child(health_label)
-	health_bar = ProgressBar.new()
-	health_bar.custom_minimum_size.y = 5.0
-	health_bar.show_percentage = false
-	health_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	health_bar.theme_type_variation = &"HudHealth"
-	health_stack.add_child(health_bar)
-	health_bar.max_value = Global.balance.player_max_health
-	trail_stamina = Label.new()
-	trail_stamina.add_theme_font_size_override("font_size", 14)
-	health_stack.add_child(trail_stamina)
-	trail_stamina_bar = ProgressBar.new()
-	trail_stamina_bar.custom_minimum_size.y = 5.0
-	trail_stamina_bar.show_percentage = false
-	trail_stamina_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	health_stack.add_child(trail_stamina_bar)
-	GameEvents.stamina_changed.connect(_update_trail_stamina)
-	GameEvents.health_changed.connect(_update_health)
-	_update_health(Global.health)
-	_update_trail_stamina(Global.current_stamina)
-
-func _refresh_trail_date() -> void:
-	trail_weather.texture = sky_icons[HUDIcons.sky_index()]
-	trail_date.text = "第 %d 天 · %s · %s · %s" % [Global.current_day, Global.get_current_solar_term(),
-		Global.day_watch_label(), "雨" if Global.has_rain() else "晴"]
-
-func _update_trail_stamina(amount: int) -> void:
-	trail_stamina.text = "体力 %d/%d" % [amount, Global.max_stamina]
-	trail_stamina_bar.max_value = Global.max_stamina
-	trail_stamina_bar.value = amount
+	GameEvents.stamina_changed.connect(_refresh_outing.unbind(1))
 	_refresh_outing()
 
-func _update_health(health: int) -> void:
-	health_label.text = "气血 %d/%d" % [health, Global.balance.player_max_health]
-	health_label.add_theme_color_override("font_color", Color("#8d3529") if health * 3 < Global.balance.player_max_health else Color("#37291c"))
-	health_bar.value = health
+func _refresh_trail_date() -> void:
+	trail_date.text = "第 %d 天 · %s · %s · %s" % [Global.current_day, Global.get_current_solar_term(),
+		Global.day_watch_label(), "雨" if Global.has_rain() else "晴"]
 
 func _refresh_outing() -> void:
 	outing_label.text = Global.ravine_outing_status()

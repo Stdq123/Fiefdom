@@ -33,10 +33,6 @@ const VISITOR_NOTES_MAX_HEIGHT := 116.0
 @onready var neighbors_button: Button = %NeighborsButton
 @onready var raid_alert: Button = %RaidAlert
 @onready var defense_report: Button = %DefenseReport
-@onready var stamina_label: Label = %StaminaLabel
-@onready var stamina_bar: ProgressBar = %StaminaBar
-@onready var health_label: Label = %HealthLabel
-@onready var health_bar: ProgressBar = %HealthBar
 @onready var practice_label: Label = %PracticeLabel
 @onready var driving_panel: PanelContainer = %DrivingPanel
 @onready var driving_status: Label = %DrivingStatus
@@ -135,8 +131,6 @@ func _ready() -> void:
 	ledger_toggle.pressed.connect(_toggle_ledger_details)
 	%CoinIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
 	%GrainIcon.texture = HUDIcons.icon(HUDIcons.Symbol.GRAIN)
-	%HealthIcon.texture = HUDIcons.icon(HUDIcons.Symbol.HEALTH)
-	%StaminaIcon.texture = HUDIcons.icon(HUDIcons.Symbol.STAMINA)
 	calendar_button.icon = HUDIcons.icon(HUDIcons.Symbol.CALENDAR)
 	reclaim_button.icon = HUDIcons.icon(HUDIcons.Symbol.HOE)
 	channel_button.icon = HUDIcons.icon(HUDIcons.Symbol.WATER)
@@ -155,7 +149,6 @@ func _ready() -> void:
 	GameEvents.daylight_changed.connect(_refresh_watch)
 	GameEvents.field_wait_policy_changed.connect(_refresh_sleep_tooltip)
 	_refresh_watch()
-	GameEvents.health_changed.connect(_update_health)
 	GameEvents.season_order_pin_changed.connect(_refresh_pinned_order)
 	GameEvents.day_advanced.connect(_refresh_pinned_order.unbind(1))
 	GameEvents.inventory_changed.connect(_refresh_pinned_order.unbind(1))
@@ -177,7 +170,6 @@ func _ready() -> void:
 	GameEvents.raid_defeated.connect(_refresh_raid_alert)
 	GameEvents.east_watch_built.connect(_refresh_raid_alert)
 	GameEvents.campaign_ended.connect(_refresh_raid_alert.unbind(1))
-	_update_health(Global.health)
 	_refresh_pinned_order()
 	_refresh_raid_alert()
 	refresh_morning_record()
@@ -522,12 +514,3 @@ func show_survey_mode(active: bool) -> void:
 func show_field_gate_mode(active: bool) -> void:
 	field_gate_button.text = "取消装闸" if active else "装田口闸"
 	show_channel_help("选通水一侧的田边中格 · 每块井田一闸" if active else "把水渠接到水源")
-
-func _update_health(health: int) -> void:
-	health_label.text = "气血 %d / %d" % [health, Global.balance.player_max_health]
-	if health * 3 < Global.balance.player_max_health:
-		health_label.add_theme_color_override("font_color", Color("#ffc1a4"))
-	else:
-		health_label.remove_theme_color_override("font_color")
-	health_bar.max_value = Global.balance.player_max_health
-	health_bar.value = health

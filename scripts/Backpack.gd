@@ -4,10 +4,9 @@ signal close_requested
 
 enum Page { CROPS, FISH, CRAFT }
 
-const FLEECE := preload("res://assets/world/sheepfold/yard.svg")
-const SACK := preload("res://assets/world/estate-storage.svg")
-const SILK_MATERIALS := preload("res://assets/inventory/silk-materials.svg")
-const FORAGE_ART := preload("res://assets/world/ravine-forage.svg")
+enum Goods { MIXED_GRAIN, LEAVES, COCOONS, RAW_SILK, SILK_BOLT, WOOL, HERBS }
+
+const GOODS_PATH := "res://assets/inventory/estate-goods.png"
 const POCKET_MINIMUM := Vector2(216, 58)
 const ITEM_NAME_INK := Color("#ffe9bd")
 const QUANTITY_INK := Color("#e7bf96")
@@ -15,6 +14,7 @@ const QUANTITY_INK := Color("#e7bf96")
 @export var item_style: StyleBox
 @export var empty_pocket_style: StyleBox
 
+@onready var goods_art: Texture2D = load(GOODS_PATH)
 @onready var close_button: Button = %Close
 @onready var crop_tab: Button = %CropTab
 @onready var fish_tab: Button = %FishTab
@@ -38,7 +38,7 @@ var page := Page.CROPS
 func _ready() -> void:
 	%BagIcon.texture = HUDIcons.icon(HUDIcons.Symbol.BACKPACK)
 	%CoinIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
-	%HerbIcon.texture = _atlas(FORAGE_ART, Rect2(136, 0, 28, 28))
+	%HerbIcon.texture = _goods_icon(Goods.HERBS)
 	for index in CropStock.IDS.size():
 		var pocket := Panel.new()
 		pocket.custom_minimum_size = POCKET_MINIMUM
@@ -83,9 +83,7 @@ func _refresh_items() -> void:
 				var count := Global.crop_stock.count(id)
 				if count == 0:
 					continue
-				var icon: Texture2D = (_atlas(SACK, Rect2(16, 0, 16, 16)) if id == CropStock.MIXED
-					else ItemManager.crop_picture(ItemManager.get_crop(id)).texture)
-				_add_item(id, ItemManager.crop_label(id), "%d 份" % count, icon)
+				_add_item(id, ItemManager.crop_label(id), "%d 份" % count, _stored_crop_icon(id))
 			empty_caption = "私仓暂无作物"
 		Page.FISH:
 			for id: String in CreekFish.IDS:
@@ -101,15 +99,22 @@ func _refresh_items() -> void:
 func _add_craft_items() -> void:
 	var workshop := Global.silk_workshop
 	if workshop.leaves > 0:
-		_add_item("mulberry_leaves", "桑叶", "%d 片" % workshop.leaves, _atlas(SILK_MATERIALS, Rect2(0, 0, 16, 16)))
+		_add_item("mulberry_leaves", "桑叶", "%d 片" % workshop.leaves, _goods_icon(Goods.LEAVES))
 	if workshop.cocoons > 0:
-		_add_item("cocoons", "蚕茧", "%d 只" % workshop.cocoons, _atlas(SILK_MATERIALS, Rect2(16, 0, 16, 16)))
+		_add_item("cocoons", "蚕茧", "%d 只" % workshop.cocoons, _goods_icon(Goods.COCOONS))
 	if workshop.raw_silk > 0:
-		_add_item("raw_silk", "生丝", "%d 份" % workshop.raw_silk, _atlas(SILK_MATERIALS, Rect2(32, 0, 16, 16)))
+		_add_item("raw_silk", "生丝", "%d 份" % workshop.raw_silk, _goods_icon(Goods.RAW_SILK))
 	if workshop.bolts > 0:
-		_add_item("silk", "丝绸", "%d 匹" % workshop.bolts, ItemManager.season_item_picture(SeasonOrders.SILK_ITEM).texture)
+		_add_item("silk", "丝绸", "%d 匹" % workshop.bolts, _goods_icon(Goods.SILK_BOLT))
 	if Global.sheepfold.wool > 0:
-		_add_item("wool", "羊毛", "%d 份" % Global.sheepfold.wool, _atlas(FLEECE, Rect2(102, 18, 18, 16)))
+		_add_item("wool", "羊毛", "%d 份" % Global.sheepfold.wool, _goods_icon(Goods.WOOL))
+
+func _stored_crop_icon(id: String) -> Texture2D:
+	if id == CropStock.MIXED:
+		return _goods_icon(Goods.MIXED_GRAIN)
+	if HUDIcons.CROPS.has(id):
+		return HUDIcons.icon(HUDIcons.CROPS[id])
+	return ItemManager.crop_picture(ItemManager.get_crop(id)).texture
 
 func _add_item(id: String, label: String, quantity: String, texture: Texture2D) -> void:
 	var slot := PanelContainer.new()
@@ -149,10 +154,10 @@ func _add_item(id: String, label: String, quantity: String, texture: Texture2D) 
 	count_label.text = quantity
 	text.add_child(count_label)
 
-func _atlas(texture: Texture2D, region: Rect2) -> AtlasTexture:
+func _goods_icon(kind: Goods) -> AtlasTexture:
 	var icon := AtlasTexture.new()
-	icon.atlas = texture
-	icon.region = region
+	icon.atlas = goods_art
+	icon.region = Rect2(kind * 32, 0, 32, 32)
 	icon.filter_clip = true
 	return icon
 

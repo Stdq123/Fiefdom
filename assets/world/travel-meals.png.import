@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://434lvf8jrcu"
+path="res://.godot/imported/travel-meals.png-42969d5298a95bd54be7320d7f9a1cd3.res"
+
+[deps]
+
+source_file="res://assets/world/travel-meals.png"
+dest_files=["res://.godot/imported/travel-meals.png-42969d5298a95bd54be7320d7f9a1cd3.res"]
+
+[params]
+
+authored_at_2x=true

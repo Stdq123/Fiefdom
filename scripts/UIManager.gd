@@ -36,8 +36,8 @@ var opening_action: Callable
 func _ready() -> void:
 	state_manager = UIStateManager.new()
 	add_child(state_manager)
-	state_manager.setup(hud.day_label, hud.inventory_label, hud.king_label, hud.stamina_label,
-		hud.rank_label, hud.money_label, hud.well_field_label, hud.stamina_bar)
+	state_manager.setup(hud.day_label, hud.inventory_label, hud.king_label,
+		hud.rank_label, hud.money_label, hud.well_field_label)
 
 	panel_manager = UIPanelManager.new()
 	add_child(panel_manager)
