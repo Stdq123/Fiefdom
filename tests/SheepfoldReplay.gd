@@ -289,7 +289,8 @@ func _wear_coat() -> void:
 	await _button(wardrobe.rows[PlayerAttire.WOOL])
 	await _snapshot("08-wardrobe")
 	await _button(wardrobe.apply_button)
-	_expect(state.attire_id == PlayerAttire.WOOL and world.player.sprite.texture.region == Rect2(0, 576, 96, 96),
+	_expect(state.attire_id == PlayerAttire.WOOL
+		and world.player.sprite.texture.region == Rect2(0, 576, PlayerAttire.SHEET_WIDTH, PlayerAttire.SHEET_SIZE),
 		"The player wears the commissioned coat.")
 	await _snapshot("09-wearing-wool")
 	_expect(state.save_game() == OK, "Save while wearing the coat.")

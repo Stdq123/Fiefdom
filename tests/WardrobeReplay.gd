@@ -20,7 +20,8 @@ func _check_outfit(id: String) -> bool:
 	var data: Dictionary = PlayerAttire.CATALOG[id]
 	var atlas := player.sprite.texture as AtlasTexture
 	var sheet_matches := player.sprite.texture.resource_path == PlayerAttire.ORIGINAL_PATH if id == PlayerAttire.DEFAULT else (
-		atlas != null and atlas.region == Rect2(0, data.sheet * 96, 96, 96))
+		atlas != null and atlas.region == Rect2(0, data.sheet * PlayerAttire.SHEET_SIZE,
+			PlayerAttire.SHEET_WIDTH, PlayerAttire.SHEET_SIZE))
 	return _expect(state.attire_id == id and sheet_matches and player.tool_gesture.sleeve == data.sleeve,
 		"The actor and its tool sleeve wear " + id)
 
@@ -77,8 +78,9 @@ func _play() -> void:
 	if panel == null:
 		return
 	await _press(panel.rows["brocade"])
-	var west_view: TextureRect = panel.views.get_node("Side/Sprite")
-	_expect(panel.apply_button.disabled and panel.apply_button.text.contains("大夫") and west_view.texture.region.position.y == 448,
+	var side_view: WardrobeFigure = panel.views.get_node("Side/Sprite")
+	_expect(panel.apply_button.disabled and panel.apply_button.text.contains("大夫")
+		and side_view.body.texture.region.position.y == 384 and side_view.body.frame_coords == Vector2i(0, Player.Facing.PROFILE),
 		"The locked court outfit can be inspected from the side without equipping it.")
 	await _snapshot("01-brocade-preview")
 	await _key(KEY_ESCAPE)

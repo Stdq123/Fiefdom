@@ -15,6 +15,9 @@ var walking := false
 var idle_time := 0.0
 var _work_pose := -1
 
+static func walk_column(distance: float) -> int:
+	return WALK_FRAMES[floori(distance / STEP_LENGTH) % WALK_FRAMES.size()]
+
 func set_art(speaker: String, fallback: Texture2D) -> void:
 	var sheet := CharacterArt.neighbor_motion(speaker)
 	idle_time = VisitorData.NEIGHBORS.find(speaker) * 0.37 if sheet else 0.0
@@ -52,8 +55,8 @@ func walk(movement: Vector2) -> float:
 	face(movement)
 	walking = true
 	_work_pose = -1
-	walk_distance = fposmod(walk_distance + travelled, STEP_LENGTH * WALK_FRAMES.size())
-	var phase: int = WALK_FRAMES[floori(walk_distance / STEP_LENGTH)]
+	walk_distance += travelled
+	var phase := walk_column(walk_distance)
 	var step_height := -1.0 if phase > 0 else 0.0
 	if directional:
 		frame_coords = Vector2i(phase, facing)

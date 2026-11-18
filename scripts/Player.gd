@@ -9,8 +9,6 @@ const CART_SPEED := 145.0
 const CART_ACCELERATION := 295.0
 const CART_BRAKING := 390.0
 const STEP_DISTANCE := 20.0
-const WALK_FRAMES := [1, 0, 2, 0]
-const WALK_FPS := 10.0
 const CAMERA_ZOOMS := [1.5, 2.0, 3.0]
 
 # Simple FSM
@@ -29,7 +27,7 @@ var current_state = State.IDLE
 var shake_strength: float = 0.0
 var shake_decay: float = 5.0
 var facing_row := Facing.FRONT
-var walk_phase := 0.0
+var walk_distance := 0.0
 var step_distance_left := STEP_DISTANCE * 0.5
 var hurt_tween: Tween
 var interaction_target: Node2D
@@ -110,7 +108,7 @@ func _physics_process(delta: float) -> void:
 	if training_cart.visible:
 		_update_driver(distance)
 	else:
-		_update_walk_sprite(direction, delta)
+		_update_walk_sprite(direction, distance)
 	var next_target := _nearest_interactable()
 	if next_target != interaction_target:
 		if is_instance_valid(interaction_target) and interaction_target.has_method("set_interaction_focused"):
@@ -155,9 +153,11 @@ func show_action(action: ToolGesture.Action, target: Vector2) -> void:
 	tool_gesture.perform(action, toward)
 	AudioManager.play_field_action(action)
 
-func _update_walk_sprite(direction: Vector2, delta: float) -> void:
-	if direction.is_zero_approx():
-		walk_phase = 0.0
+func _update_walk_sprite(direction: Vector2, travelled: float) -> void:
+	if not direction.is_zero_approx():
+		_face(direction)
+	if direction.is_zero_approx() or travelled < 0.04:
+		walk_distance = 0.0
 		var work := -1 if seated else tool_gesture.work_pose()
 		if work >= 0:
 			sprite.offset = Vector2.ZERO
@@ -167,9 +167,8 @@ func _update_walk_sprite(direction: Vector2, delta: float) -> void:
 			sprite.frame_coords = Vector2i(0, facing_row)
 		return
 	sprite.offset = Vector2.ZERO
-	_face(direction)
-	walk_phase = fposmod(walk_phase + delta * WALK_FPS, WALK_FRAMES.size())
-	sprite.frame_coords = Vector2i(WALK_FRAMES[int(walk_phase)], facing_row)
+	walk_distance += travelled
+	sprite.frame_coords = Vector2i(NeighborMotion.walk_column(walk_distance), facing_row)
 
 func _update_footsteps(travelled: float) -> void:
 	if training_cart.visible or travelled < 0.05:

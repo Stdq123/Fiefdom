@@ -15,6 +15,12 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 田边的握锄、撒种、倾桶与收镰
+
+- 木锄由前后两只手分握，转身后锄刃仍落向面前的地。石墨将种袋靠在胯旁，从另一只手向田里撒种。渠伯提桶赶路时桶身直立，浇水才托底倾桶。蒲宁收割时一手拢穗，弯镰从穗下横过。主角和七位具名门客沿用自己的衣色和朝向。 [四种农事的实机动作近景](../docs/previews/farm-hands.gif)
+- 堂屋书案南侧的衣架可选站姿、走路和四种农事，三个方向同时预览。八套衣装使用与田里相同的帧和农具握点，选中衣物与动作各有一块浅色木牌。试穿西廊纹衣时能看见绛色衣袖托住桶底。Tab 与 Shift+Tab 可以在衣架内穿过衣服、动作与可用按钮。 [衣架上的倾桶动作](../docs/previews/wardrobe-work.png)
+- 两次干净导出的 Windows 包 SHA-256 均为 `69fa3e72f9ff9105853610aeb4b0e9f9481fbe332d9585f83665192f103b9bd3`。1920×1080 和 1024×768 均用隔离桌面取景，田况、存粮、衣装归属与时辰固定。本轮验收限于动作、界面和启动，新档到结局的玩法试玩待续。 [本次候选包](../build/polish-footwork/source-final/build/Fiefdom-1.0.0-Windows-x64.zip) · [动作与导出记录](../build/polish-footwork/release-proof.txt) · [四件农具的生成提示](../build/polish-footwork/prompt.txt)
+
 ## 睡前看公田，次晨翻账
 
 - 今夜安排用铜灯和展开的竹册标出当前夜次。首贡提醒画出所指公田的土色、苗或穗，待浇的黍带蓝滴，断水的稻带红叉，成熟的稷带金菱。粮仓旁同时显示口粮缺口和预计离任的门客。第 5 夜的示例里，打开账就能看到渠伯将缺餐。 [今夜安排](../docs/previews/night-plan.png) · [三种公田提醒](../docs/previews/tribute-field-notes.png)
