@@ -168,7 +168,7 @@ func _update_walk_sprite(direction: Vector2, travelled: float) -> void:
 		return
 	sprite.offset = Vector2.ZERO
 	walk_distance += travelled
-	sprite.frame_coords = Vector2i(NeighborMotion.walk_column(walk_distance), facing_row)
+	sprite.frame_coords = Vector2i(NeighborMotion.walk_column(walk_distance, PlayerAttire.PASS_COLUMN), facing_row)
 
 func _update_footsteps(travelled: float) -> void:
 	if training_cart.visible or travelled < 0.05:

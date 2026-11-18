@@ -13,7 +13,7 @@ const PAIL_BASE := Vector2(4, 6)
 const PAIL_LIP := Vector2(5, -1)
 
 var carrying := false
-var sleeve := Color("#7d8e83")
+var sleeve := Color("#82766d")
 var body_lean := Vector2.ZERO
 var aim := Vector2.DOWN
 var elapsed := 0.0
@@ -67,9 +67,9 @@ func clear() -> void:
 	set_process(false)
 
 func work_pose() -> int:
-	if not visible or carrying or frame == Action.BOW or elapsed >= contact_time + RECOVERY * 0.72:
+	if not visible or carrying or frame == Action.BOW:
 		return -1
-	return int(elapsed >= contact_time - 0.018)
+	return int(elapsed >= contact_time - 0.018 and elapsed < contact_time + RECOVERY * 0.72)
 
 func _process(delta: float) -> void:
 	elapsed += delta
@@ -126,8 +126,8 @@ func _draw() -> void:
 	var profile := absf(aim.x) > absf(aim.y)
 	if pose >= 0:
 		shift = Vector2(side * (1.0 + pose) if profile else 0.0, pose * 2.0)
-	var near_shoulder := Vector2(5 * side, -6) + shift
-	var far_shoulder := Vector2((1 if profile else -4) * side, -6) + shift
+	var near_shoulder := Vector2((-0.5 if profile else 4.0) * side, -6.0) + shift
+	var far_shoulder := Vector2((1.0 if profile else -4.0) * side, -6.5) + shift
 	var mirror := Vector2(side, 1.0)
 	var grip: Vector2 = transform * (GRIPS[frame] * mirror)
 	# Hands, grains and water are drawn in actor space so gravity stays vertical as the tool turns.
@@ -161,14 +161,24 @@ func _draw() -> void:
 	draw_set_transform_matrix(Transform2D.IDENTITY)
 
 func _draw_arm(shoulder: Vector2, hand: Vector2, outward: float, far: bool) -> void:
-	var elbow := (shoulder.lerp(hand, 0.46) + Vector2(1.0 * outward, 2.0)).round()
-	var wrist := hand.move_toward(elbow, 1.4)
-	var arm := PackedVector2Array([shoulder, elbow, wrist])
-	var cloth := sleeve.darkened(0.18) if far else sleeve
-	draw_polyline(arm, Color("#39372e"), 3.3)
-	draw_line(shoulder, elbow, cloth, 2.7)
-	draw_line(elbow, wrist, cloth.darkened(0.10), 2.0)
-	draw_rect(Rect2(elbow.round() + Vector2(-0.5, -1), Vector2(2, 1)), cloth.lightened(0.12))
-	var fingers := hand.round() - Vector2(1, 1)
-	draw_rect(Rect2(fingers, Vector2(3, 2)), Color("#b17e59") if far else Color("#c69469"))
-	draw_rect(Rect2(fingers, Vector2(1, 1)), Color("#d7a37b") if far else Color("#e4b58b"))
+	var elbow := (shoulder.lerp(hand, 0.47) + Vector2(1.25 * outward, 2.25)).snappedf(0.5)
+	draw_sleeve(self, shoulder, elbow, hand, sleeve, far)
+
+# The rod and farm implements share the same cloth, cuff and grip at the actor's scale.
+static func draw_sleeve(canvas: CanvasItem, shoulder: Vector2, elbow: Vector2, hand: Vector2, dye: Color, far: bool) -> void:
+	var cloth := dye.darkened(0.23 if far else 0.06)
+	var seam := cloth.darkened(0.40)
+	var upper := shoulder.direction_to(elbow).orthogonal()
+	var lower := elbow.direction_to(hand).orthogonal()
+	var wrist := hand.move_toward(elbow, 1.15)
+	if upper != Vector2.ZERO:
+		canvas.draw_colored_polygon(PackedVector2Array([shoulder + upper * 1.8, elbow + upper * 1.5,
+			elbow - upper * 1.5, shoulder - upper * 1.8]), cloth)
+		canvas.draw_line(shoulder + Vector2(-0.5, -1.0), elbow + Vector2(-0.5, -0.5), cloth.lightened(0.18), 0.65)
+	if lower != Vector2.ZERO and elbow.distance_to(wrist) > 0.15:
+		canvas.draw_colored_polygon(PackedVector2Array([elbow + lower * 1.5, wrist + lower,
+			wrist - lower, elbow - lower * 1.5]), cloth.darkened(0.10))
+		canvas.draw_line(elbow + Vector2(0.0, 1.0), wrist + Vector2(0.0, 0.65), seam, 0.6)
+		canvas.draw_line(wrist - lower * 0.85, wrist + lower * 0.85, cloth.lightened(0.22), 0.75)
+	canvas.draw_circle(hand, 1.15, Color("#aa7453") if far else Color("#c18a63"))
+	canvas.draw_circle(hand + Vector2(-0.35, -0.35), 0.67, Color("#cd9a71") if far else Color("#e0ae7f"))

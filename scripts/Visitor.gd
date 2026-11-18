@@ -148,7 +148,7 @@ func _idle_at_stop(delta: float) -> void:
 	var work_pose := -1
 	if bend >= 0.5:
 		work_pose = 1 if bend >= 1.5 else 0
-	sprite.stand((Vector2(look.x, 0.6) * bend).round(), work_pose)
+	sprite.stand((Vector2(look.x, 0.6) * bend).round(), work_pose, true)
 
 func _walk_to_stop(delta: float) -> void:
 	var offset := visit_path[next_stop] - position

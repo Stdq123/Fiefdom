@@ -61,7 +61,7 @@ func check_art() -> void:
 			for figure in panel.figures:
 				var col := 0
 				if motion == figure.WALK:
-					col = footsteps.walk_column(0.36 * actor.SPEED)
+					col = footsteps.walk_column(0.36 * actor.SPEED, PlayerAttire.PASS_COLUMN)
 				elif motion >= 0:
 					col = PlayerAttire.WORK_COLUMN + 1
 				expect(figure.body.frame_coords == Vector2i(col, figure.facing) and figure.tool.visible == (motion >= 0), "Dressing pose " + id)

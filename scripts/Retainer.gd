@@ -38,8 +38,7 @@ func _ready() -> void:
 	if data == null:
 		data = RetainerData.new()
 	sprite.set_motion_sheet(CharacterArt.retainer_motion(data.name, data.school, data.visitor_appearance),
-		CharacterArt.WORKER_COLUMNS)
-	sprite.idle_time = maxi(0, VisitorData.NEIGHBORS.find(data.name)) * 0.37
+		CharacterArt.WORKER_COLUMNS, data.name)
 	tool_gesture.sleeve = CharacterArt.retainer_sleeve(data.name, data.school, data.visitor_appearance)
 	home_position = global_position
 

@@ -31,10 +31,12 @@ func _get_preset_count() -> int:
 func _get_preset_name(_preset_index: int) -> String:
 	return "2× Pixel Art"
 
-func _get_import_options(_path: String, _preset_index: int) -> Array[Dictionary]:
+func _get_import_options(path: String, _preset_index: int) -> Array[Dictionary]:
+	if path.ends_with(".png"):
+		return [{"name": "authored_at_2x", "default_value": false}]
 	return []
 
-func _import(source_file: String, save_path: String, _options: Dictionary,
+func _import(source_file: String, save_path: String, options: Dictionary,
 		_platform_variants: Array[String], _gen_files: Array[String]) -> Error:
 	var image := Image.new()
 	var source := FileAccess.get_file_as_bytes(source_file)
@@ -42,7 +44,12 @@ func _import(source_file: String, save_path: String, _options: Dictionary,
 	if error != OK:
 		return error
 	if source_file.ends_with(".png"):
-		image = _scale_pixel_art(image)
+		if options.get("authored_at_2x", false):
+			if image.get_width() % PIXEL_SCALE != 0 or image.get_height() % PIXEL_SCALE != 0:
+				push_error("Authored 2× artwork needs even pixel dimensions: " + source_file)
+				return ERR_INVALID_DATA
+		else:
+			image = _scale_pixel_art(image)
 	image.fix_alpha_edges()
 	var pixels := PortableCompressedTexture2D.new()
 	pixels.set_keep_compressed_buffer(true)

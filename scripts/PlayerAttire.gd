@@ -9,17 +9,18 @@ const WOOL := "wool"
 const SHEET_SIZE := 96
 const FRAME_SIZE := 32
 const WORK_COLUMN := 3
-const SHEET_WIDTH := FRAME_SIZE * (WORK_COLUMN + 2)
+const PASS_COLUMN := WORK_COLUMN + 2
+const SHEET_WIDTH := FRAME_SIZE * (PASS_COLUMN + 2)
 
 const CATALOG := {
-	"cloth": {"name": "黛布短衣", "detail": "深色布衣 · 木簪", "sheet": -1, "rank": 0, "sleeve": Color("#7d8e83")},
-	"rust": {"name": "赭布短衣", "detail": "赭染布衣 · 窄袖", "sheet": 0, "rank": 0, "sleeve": Color("#b36c4b")},
-	"hemp": {"name": "本色麻衣", "detail": "素麻短衣 · 骨簪", "sheet": 1, "rank": 1, "sleeve": Color("#a89a62")},
-	"silk": {"name": "湖青绸衣", "detail": "青绸斜领 · 玉簪", "sheet": 2, "rank": 2, "sleeve": Color("#539997")},
-	"dyed": {"name": "西廊纹衣", "detail": "陶辛赠的绛衣 · 米色菱纹", "sheet": 3, "rank": 0, "sleeve": Color("#ab596e")},
-	"brocade": {"name": "紫纹锦衣", "detail": "紫锦 · 金边袖口", "sheet": 4, "rank": 3, "sleeve": Color("#795f9e")},
-	"fur": {"name": "裘衣礼冠", "detail": "裘衣披肩 · 礼冠", "sheet": 5, "rank": 4, "sleeve": Color("#dbba8a")},
-	"wool": {"name": "羊毛短衣", "detail": "蔡娘织的青灰毛衣 · 浅色领边", "sheet": 6, "rank": 0, "sleeve": Color("#e1d3ba")},
+	"cloth": {"name": "黛布短衣", "detail": "深色布衣 · 木簪", "sheet": -1, "rank": 0, "sleeve": Color("#82766d")},
+	"rust": {"name": "赭布短衣", "detail": "赭染布衣 · 窄袖", "sheet": 0, "rank": 0, "sleeve": Color("#976146")},
+	"hemp": {"name": "本色麻衣", "detail": "素麻短衣 · 骨簪", "sheet": 1, "rank": 1, "sleeve": Color("#afa07a")},
+	"silk": {"name": "湖青绸衣", "detail": "青绸斜领 · 玉簪", "sheet": 2, "rank": 2, "sleeve": Color("#62877a")},
+	"dyed": {"name": "西廊纹衣", "detail": "陶辛赠的绛衣 · 米色菱纹", "sheet": 3, "rank": 0, "sleeve": Color("#a05c4c")},
+	"brocade": {"name": "紫纹锦衣", "detail": "紫锦 · 金边袖口", "sheet": 4, "rank": 3, "sleeve": Color("#835668")},
+	"fur": {"name": "裘衣礼冠", "detail": "裘衣披肩 · 礼冠", "sheet": 5, "rank": 4, "sleeve": Color("#c8a263")},
+	"wool": {"name": "羊毛短衣", "detail": "蔡娘织的青灰毛衣 · 浅色领边", "sheet": 6, "rank": 0, "sleeve": Color("#a8a391")},
 }
 
 static func can_wear(id: String, rank: int, sample_delivered: bool, wool_coat: bool) -> bool:

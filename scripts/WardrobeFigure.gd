@@ -30,7 +30,7 @@ func show_pose(motion: int, time: float) -> void:
 	if motion == WALK or motion == STAND:
 		tool.clear()
 		if motion == WALK:
-			column = NeighborMotion.walk_column(time * Player.SPEED)
+			column = NeighborMotion.walk_column(time * Player.SPEED, PlayerAttire.PASS_COLUMN)
 	else:
 		tool.show_sample(motion as ToolGesture.Action, DIRECTIONS[facing], WORK_WINDUP, time * 0.65)
 		var work := tool.work_pose()

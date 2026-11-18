@@ -74,10 +74,13 @@ func _point(t: float) -> Vector2:
 	return grip.lerp(bend, t).lerp(bend.lerp(tip, t), t).snappedf(0.5)
 
 func _draw() -> void:
-	var cuff := Vector2(side * 3.0, -9.0)
+	var profile := angler.sprite.frame_coords.y == Player.Facing.PROFILE
+	var braced := angler.sprite.frame_coords.x == PlayerAttire.WORK_COLUMN + 1
+	var lean := Vector2(side * (2.0 if braced else 0.0) if profile else 0.0, 1.5 if braced else -0.5)
+	var cuff := Vector2(side * (1.0 if profile else -3.5), -6.5) + lean
 	var support := _point(0.19)
 	if not above:
-		_draw_arm(cuff, Vector2(cuff.x, grip.y + 1.0), support)
+		ToolGesture.draw_sleeve(self, cuff, cuff.lerp(support, 0.5) + Vector2(-side, 2), support, sleeve, true)
 	var heel := grip + grip.direction_to(bend) * -3.0
 	var start := heel
 	for i in range(1, 7):
@@ -88,14 +91,6 @@ func _draw() -> void:
 		if i < 6:
 			draw_line(end + Vector2.UP, end + Vector2.DOWN * 0.5, Color("#766442"), 1.0)
 		start = end
-	var near_shoulder := Vector2(side * (6.0 if above else 5.0), -8.0)
-	var elbow := Vector2(side * (8.0 if above else 7.0), grip.y + 3.0)
-	_draw_arm(near_shoulder, elbow, grip)
-
-func _draw_arm(shoulder: Vector2, elbow: Vector2, hand: Vector2) -> void:
-	var arm := PackedVector2Array([shoulder, elbow, hand])
-	draw_polyline(arm, Color("#40392c"), 3.6)
-	draw_polyline(arm, sleeve.darkened(0.22), 2.5)
-	draw_line(shoulder + Vector2.UP, elbow + Vector2.UP, sleeve.lightened(0.13), 1.2)
-	draw_rect(Rect2(hand - Vector2.ONE, Vector2(3, 2)), Color("#b98863"))
-	draw_rect(Rect2(hand - Vector2.ONE, Vector2(2, 1)), Color("#e0ae7f"))
+	var near_shoulder := Vector2(side * (-0.5 if profile else 4.0), -6.0) + lean
+	var elbow := near_shoulder.lerp(grip, 0.46) + Vector2(side, 2.25)
+	ToolGesture.draw_sleeve(self, near_shoulder, elbow, grip, sleeve, false)

@@ -13,7 +13,7 @@ script = ExtResource("1_figure")
 
 [node name="Body" type="Sprite2D" parent="Actor"]
 position = Vector2(0, -6)
-hframes = 5
+hframes = 7
 vframes = 3
 
 [node name="Tool" type="Sprite2D" parent="Actor"]

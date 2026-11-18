@@ -15,6 +15,14 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 路上认得出的人
+
+主角八套衣装、七位具名邻里、六类普通门客和五类来客都换上了新的正面、背面和侧身。渠伯的肩窄、背略弓，迈步时先挪脚再收步。季青转过身能看见斜挎包，蒲宁的宽草帽和商音的横簪从侧面也看得清。每套步态有两个落脚姿势和两个提脚姿势，停下来时双脚站稳。图集每格 64 × 64 纹素，落在原来的 32 × 32 逻辑图框内。 [主角与七位邻里的田间步态](../docs/previews/estate-walk.gif) · [六处实机场景](../docs/previews/six-locations.png)
+
+握锄、撒种、倾桶、收镰和执竿时，衣袖沿各自的肩线接到腕部，袖色取自人物身上的布料。访客在设施旁照料时，能看见空着的双手。堂屋衣架的八套服饰与地图共用同一套动作。 [四种农事近景](../docs/previews/farm-hands.gif) · [衣架上的纹衣](../docs/previews/wardrobe-work.png) · [田边与渠伯交谈](../docs/previews/qu-bo-field-talk.png)
+
+在隔离桌面以 1920×1080 与 1024×768 窗口取景。每种尺寸下八人各取 48 帧，另取一张全景，Windows 程序与开发版逐张一致。手持农具、衣架、三处钓点和六处地图都在固定状态下取景。两次干净导出的 SHA-256 均为 `72e7e6ae08e9a85317d5f337bd84f5ea506b39cc0232f321ef8a39e0522bbe55`。本包已解压启动，双结局与人工长线试玩待验收。 [Windows 美术候选包](../build/polish-field-cast/source-final/build/Fiefdom-1.0.0-Windows-x64.zip) · [取景和导出记录](../build/polish-field-cast/release-proof.txt) · [图稿来源和制作记录](../build/polish-field-cast/asset-manifest.json)
+
 ## 田边、名册和手记里的七位邻里
 
 - 渠伯的短灰须、蒲宁的宽草帽和商音的横簪从地图小人延续到交谈与名册。七人各有初识和记事后的半身像。签好轮作簿后，渠伯把竹简托在手边。谷雨合奏后，商音手里的曲簿露出红色书带。 [七位邻里的手记近景](../docs/previews/neighbor-faces.png) · [井田边与渠伯交谈](../docs/previews/qu-bo-field-talk.png)

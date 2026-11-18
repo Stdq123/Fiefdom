@@ -20,7 +20,7 @@ visible = false
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(0, -6)
 texture = ExtResource("2_sprite")
-hframes = 5
+hframes = 7
 vframes = 3
 
 [node name="ToolGesture" type="Sprite2D" parent="."]

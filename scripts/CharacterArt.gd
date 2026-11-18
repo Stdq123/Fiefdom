@@ -18,14 +18,17 @@ const TOWN_REGIONS := {
 }
 const CELL_SIZE := 32
 const MOTION_COLUMNS := 4
-const WORKER_COLUMNS := MOTION_COLUMNS + 2
+const WORK_COLUMN := MOTION_COLUMNS
+const PASS_COLUMN := WORK_COLUMN + 2
+const ERRAND_COLUMN := PASS_COLUMN + 2
+const WORKER_COLUMNS := ERRAND_COLUMN + 2
 const MOTION_ROWS := 3
 const RETAINER_SCHOOLS := 6
 const WORKER_SLEEVES := [
-	Color("#64777a"), Color("#638499"), Color("#617660"), Color("#a06951"), Color("#587963"),
-	Color("#795a4d"), Color("#916675"),
-	Color("#798173"), Color("#a99b78"), Color("#697572"), Color("#596766"), Color("#647e58"), Color("#98614e"),
-	Color("#88908d"), Color("#65716b"), Color("#6f8766"), Color("#a8735a"), Color("#875f50"),
+	Color("#82766d"), Color("#526b83"), Color("#809262"), Color("#ab714e"), Color("#677850"),
+	Color("#976146"), Color("#a46877"),
+	Color("#968877"), Color("#c8a263"), Color("#82766d"), Color("#6c6362"), Color("#677850"), Color("#976146"),
+	Color("#968877"), Color("#82766d"), Color("#809262"), Color("#ab714e"), Color("#97654e"),
 ]
 
 static func retainer(school: int, former_visitor := -1) -> AtlasTexture:
