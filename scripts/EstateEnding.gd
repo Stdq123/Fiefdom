@@ -8,6 +8,7 @@ enum Shot { FIELD, CEREMONY, FAREWELL, RECORD }
 
 const ENVOY_HAND := "res://assets/characters/envoy-handoff.png"
 const LEDGER_DESK := preload("res://scripts/RouteLedgerDesk.gd")
+const COUNCIL_IMPLEMENTS := preload("res://scripts/CouncilImplements.gd")
 const RECORD_STAND := preload("res://scripts/EstateRecordStand.gd")
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 const TRADITIONAL_SCORE := preload("res://assets/audio/music/ending-traditional.ogg")
@@ -425,7 +426,8 @@ func _populate_record() -> void:
 	accounts = record["accounts"]
 	has_route_totals = accounts.front().has("target")
 	heading.text = "守礼安邦" if traditional else "税亩富民"
-	volume_icon.texture = LEDGER_DESK.volume_texture(traditional)
+	var choice := Global.TaxReformChoice.TRADITIONAL if traditional else Global.TaxReformChoice.REFORMED
+	volume_icon.texture = COUNCIL_IMPLEMENTS.plate(choice)
 	var accent := Color("#edca83") if traditional else Color("#b4d7c5")
 	heading.add_theme_color_override("font_color", accent)
 	date.text = record["date"]

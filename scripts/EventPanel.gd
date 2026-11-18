@@ -3,6 +3,8 @@ extends Control
 signal choice_selected(choice: Global.TaxReformChoice)
 signal dismissed
 
+const IMPLEMENTS := preload("res://scripts/CouncilImplements.gd")
+
 @onready var sheet: PanelContainer = %Council
 @onready var title_label: Label = %Title
 @onready var speaker_label: Label = %Speaker
@@ -17,10 +19,17 @@ var current_event_data: Dictionary = {}
 var option_buttons: Dictionary[int, Button] = {}
 var cards: Dictionary[int, PanelContainer] = {}
 var selected_choice := Global.TaxReformChoice.NONE
-var card_style := StyleBoxFlat.new()
-var selected_style: StyleBoxFlat
+var card_style: StyleBoxTexture
+var selected_style: StyleBoxTexture
 
 func _ready() -> void:
+	card_style = get_theme_stylebox(&"panel", &"PanelContainer").duplicate() as StyleBoxTexture
+	card_style.content_margin_left = 13
+	card_style.content_margin_right = 13
+	card_style.content_margin_top = 10
+	card_style.content_margin_bottom = 12
+	selected_style = card_style.duplicate() as StyleBoxTexture
+	selected_style.modulate_color = Color("#ffe5af")
 	confirm_button.pressed.connect(_confirm)
 	leave_button.pressed.connect(_leave)
 
@@ -30,19 +39,6 @@ func setup(event_data: Dictionary) -> void:
 	speaker_label.text = event_data["speaker"]
 	text_label.text = event_data["text"]
 	ledger.text = event_data["ledger"]
-	card_style.bg_color = Color("#27372c")
-	card_style.border_color = Color("#5d694f")
-	card_style.set_border_width_all(1)
-	card_style.set_corner_radius_all(4)
-	card_style.content_margin_left = 13
-	card_style.content_margin_right = 13
-	card_style.content_margin_top = 12
-	card_style.content_margin_bottom = 12
-	selected_style = card_style.duplicate() as StyleBoxFlat
-	selected_style.bg_color = Color("#344437")
-	selected_style.border_color = Color("#d3ba79")
-	selected_style.set_border_width_all(2)
-
 	for child in choices_container.get_children():
 		choices_container.remove_child(child)
 		child.queue_free()
@@ -62,11 +58,16 @@ func _add_choice(data: Dictionary) -> void:
 	cards[choice] = card
 
 	var stack := VBoxContainer.new()
-	stack.add_theme_constant_override("separation", 8)
+	stack.add_theme_constant_override("separation", 6)
 	card.add_child(stack)
 	var button := Button.new()
 	button.text = data["text"]
-	button.custom_minimum_size.y = 38
+	button.theme_type_variation = &"HudButton"
+	button.icon = IMPLEMENTS.plate(choice)
+	button.add_theme_constant_override(&"icon_max_width", int(IMPLEMENTS.PLATE_SIZE.x))
+	button.add_theme_constant_override(&"h_separation", 10)
+	button.add_theme_font_size_override(&"font_size", 20)
+	button.custom_minimum_size.y = 77
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.toggle_mode = true
 	button.pressed.connect(_select.bind(choice))
@@ -85,7 +86,7 @@ func _add_section(parent: VBoxContainer, heading: String, detail: String, minimu
 		var title := Label.new()
 		title.text = heading
 		title.add_theme_font_size_override("font_size", 14)
-		title.add_theme_color_override("font_color", Color("#d8c48e"))
+		title.add_theme_color_override("font_color", Color("#66361f"))
 		section.add_child(title)
 	var body := Label.new()
 	body.text = detail

@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://fwquuaxcgw1u"
+path="res://.godot/imported/first-harvest.png-2d5c3d9c7178a3d32d0edb8567aed1c3.res"
+
+[deps]
+
+source_file="res://assets/ui/first-harvest.png"
+dest_files=["res://.godot/imported/first-harvest.png-2d5c3d9c7178a3d32d0edb8567aed1c3.res"]
+
+[params]
+
+authored_at_2x=true

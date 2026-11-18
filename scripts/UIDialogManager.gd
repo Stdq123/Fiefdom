@@ -9,7 +9,8 @@ const ROTATION_BOOK := preload("res://scripts/FieldRotationBook.gd")
 const WATER_SOURCE := preload("res://scripts/WaterSource.gd")
 const SEED_GARDEN := preload("res://scripts/SeedGarden.gd")
 const WINTER_RATIONS := preload("res://scripts/WinterRoadRations.gd")
-const ESTATE_STORAGE := preload("res://assets/world/estate-storage.svg")
+const TRIBUTE_RECEIPT := "res://assets/ui/first-tribute.png"
+const PRIVATE_HARVEST := "res://assets/ui/first-harvest.png"
 const HUNGER_RETURN_LINES := {
 	VisitorData.FIELD_KEEPER: "那夜没分到饭，我只好去南边借住。今早路过，还是想看看咱们那块田。",
 	VisitorData.ROAD_KEEPER: "那晚我拎着空碗出了门，是过路人分了我一把炒菽。我记得这份情，也惦记亭西的人。",
@@ -124,12 +125,8 @@ func show_first_tribute_ledger(follow_field: Callable) -> void:
 	var can_follow := due > 0 and not Global.tribute_field_plan().is_empty()
 	if can_follow:
 		options.push_front("标出公田")
-	var sack := AtlasTexture.new()
-	sack.atlas = ESTATE_STORAGE
-	sack.region = Rect2(16, 0, 16, 16)
-	sack.filter_clip = true
 	AudioManager.play_event_sound("present_ledger")
-	var dialog := _open("贡粮账", "堂前", "\n".join(lines), options, [], sack)
+	var dialog := _open("贡粮账", "堂前", "\n".join(lines), options, [], load(TRIBUTE_RECEIPT))
 	if can_follow:
 		dialog.option_selected.connect(func(index: int):
 			if index == 0:
@@ -182,16 +179,12 @@ func show_first_harvest(open_orders: Callable, arrange_fields: Callable) -> Cont
 	if int(Global.season_order_crops_to_keep().get(crop, 0)) >= Global.crop_stock.count(crop):
 		lines.append("转粮会用掉一份可交货的%s。" % crop_name)
 
-	var sack := AtlasTexture.new()
-	sack.atlas = ESTATE_STORAGE
-	sack.region = Rect2(0, 0, 16, 16)
-	sack.filter_clip = true
 	var choices: Array[String] = ["留作物 · 看时令单", "用 1 份%s换口粮" % crop_name, "稍后再说"]
 	var has_keeper := Global.retainers.any(func(worker: RetainerData) -> bool:
 		return worker.duty in [RetainerData.Duty.FIELD, RetainerData.Duty.STEWARD])
 	if has_keeper:
 		choices.insert(1, "安排门客种下茬")
-	var dialog := _open("首茬收成", "私仓", "\n".join(lines), choices, [], sack)
+	var dialog := _open("首茬收成", "私仓", "\n".join(lines), choices, [], load(PRIVATE_HARVEST))
 	dialog.option_selected.connect(func(index: int):
 		if index == 0:
 			Global.first_harvest_reviewed = true
