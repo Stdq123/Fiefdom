@@ -15,6 +15,3 @@ const RECIPES := {
 
 static func portions(recipe: String, balance: BalanceData) -> int:
 	return balance.winter_fish_rations if recipe == FISH else balance.winter_bean_rations
-
-static func guest_art(index: int) -> AtlasTexture:
-	return CharacterArt.festival_guest_motion(index)

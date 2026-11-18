@@ -25,7 +25,7 @@ var cake_on_tray := false
 func _ready() -> void:
 	for point: Vector2 in EstateLayout.winter_rations_route():
 		route.add_point(point - position)
-	motion.set_motion_sheet(WinterSupper.guest_art(0))
+	motion.set_festival_guest(0)
 	table.draw.connect(_draw_table)
 	GameEvents.inventory_changed.connect(_refresh.unbind(1))
 	GameEvents.day_advanced.connect(_refresh.unbind(1))
@@ -86,7 +86,7 @@ func _place_courier(distance: float, animate: bool) -> void:
 		motion.stand()
 		var heading := route.sample_baked(distance + 2.0) - route.sample_baked(distance - 2.0)
 		motion.face(-point if courier_at_table() else heading)
-	bundle.position.x = -8.0 if motion.flip_h else 8.0
+	motion.carry_at(bundle, -1.0)
 
 func courier_at_table() -> bool:
 	return courier.visible and not in_transit and courier.position.distance_squared_to(route.get_point_position(route.point_count - 1)) < 4.0

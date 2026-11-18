@@ -162,7 +162,7 @@ visible = false
 
 [node name="Motion" type="Sprite2D" parent="World/Scenery/SeedGarden/Courier"]
 texture_filter = 1
-position = Vector2(0, -11)
+position = Vector2(0, -13)
 script = ExtResource("35_neighbor_motion")
 
 [node name="SeedPouch" type="Sprite2D" parent="World/Scenery/SeedGarden/Courier"]

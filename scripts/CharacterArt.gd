@@ -5,6 +5,7 @@ const NEIGHBOR_PORTRAITS := "res://assets/characters/neighbor-portraits.png"
 const RETAINER_MOTION := "res://assets/characters/retainer-motion.png"
 const TOWN_PORTRAITS := "res://assets/characters/town-portraits.png"
 const FESTIVAL_MOTION := "res://assets/characters/autumn-guests.png"
+const ENVOY_MOTION := "res://assets/characters/envoy-motion.png"
 const PORTRAIT_SIZE := 48
 const TOWN_REGIONS := {
 	"谷伯": Rect2(0, 0, 48, 48),
@@ -15,6 +16,7 @@ const TOWN_REGIONS := {
 	"召简": Rect2(144, 0, 48, 48),
 	"阿绥": Rect2(96, 48, 48, 48),
 	"林蓼": Rect2(144, 48, 48, 48),
+	"申禾": Rect2(192, 0, 48, 48),
 }
 const CELL_SIZE := 32
 const MOTION_COLUMNS := 4
@@ -53,10 +55,10 @@ static func visitor_motion(school: int) -> AtlasTexture:
 
 static func festival_guest_motion(guest: int) -> AtlasTexture:
 	return _region(FESTIVAL_MOTION, Rect2(0, guest * CELL_SIZE * MOTION_ROWS,
-		CELL_SIZE * MOTION_COLUMNS, CELL_SIZE * MOTION_ROWS))
+		CELL_SIZE * STREET_COLUMNS, CELL_SIZE * MOTION_ROWS))
 
 static func tax_envoy_icon() -> AtlasTexture:
-	return _region("res://assets/characters/envoy-motion.png", Rect2(0, 0, CELL_SIZE, CELL_SIZE))
+	return _region(ENVOY_MOTION, Rect2(0, 0, CELL_SIZE, CELL_SIZE))
 
 static func neighbor_icon(speaker: String) -> AtlasTexture:
 	return _neighbor_art(speaker, Vector2(CELL_SIZE, CELL_SIZE))

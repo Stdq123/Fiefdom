@@ -5,7 +5,6 @@ const HOST := "林蓼"
 const DELIVERY_NOTE := "林蓼送种途中"
 const STORAGE := preload("res://assets/world/estate-vessels.png")
 const TERRAIN := preload("res://scripts/EstateTerrain.gd")
-const SHARING := preload("res://assets/world/autumn-sharing.svg")
 const SHARE_START := 3.0 / 16.0
 const SHARE_END := 11.0 / 16.0
 const WALK_TIME := 0.048
@@ -20,6 +19,7 @@ const RECIPIENTS := [
 @onready var pouch: Sprite2D = $Courier/SeedPouch
 @onready var recipients: Node2D = $Recipients
 @onready var hint: Label = $Hint
+@onready var seed_packet: Texture2D = load("res://assets/world/seed-packet.png")
 
 var road := Curve2D.new()
 var planted_day := 0
@@ -55,7 +55,7 @@ static func _frame(atlas: Texture2D, area: Rect2) -> AtlasTexture:
 func _ready() -> void:
 	for point: Vector2 in EstateLayout.seed_garden_route():
 		road.add_point(point)
-	motion.set_motion_sheet(CharacterArt.festival_guest_motion(AutumnExhibit.GUESTS.find(HOST)))
+	motion.set_festival_guest(AutumnExhibit.GUESTS.find(HOST))
 	pouch.texture = _frame(STORAGE, Rect2(0, 0, 16, 16))
 	pouch.scale = Vector2(0.65, 0.65)
 	for index in RECIPIENTS.size():
@@ -64,13 +64,13 @@ func _ready() -> void:
 		var body := NeighborMotion.new()
 		body.name = "Motion"
 		body.texture_filter = TEXTURE_FILTER_NEAREST
-		body.position.y = -11.0
+		body.position.y = -13.0
 		actor.add_child(body)
-		body.set_motion_sheet(CharacterArt.festival_guest_motion(RECIPIENTS[index].sheet))
+		body.set_festival_guest(RECIPIENTS[index].sheet)
 		var bag := Sprite2D.new()
 		bag.name = "Packet"
 		bag.texture_filter = TEXTURE_FILTER_NEAREST
-		bag.texture = _frame(SHARING, Rect2(1, 34, 19, 12))
+		bag.texture = seed_packet
 		bag.scale = Vector2(0.65, 0.65)
 		actor.add_child(bag)
 	GameEvents.inventory_changed.connect(_refresh_clock.unbind(1))
@@ -131,7 +131,7 @@ func _sync_delivery(progress: float, open: bool, animate: bool) -> void:
 	var fraction := clampf(progress, 0.0, 1.0)
 	_walk_actor(courier, motion, fraction, Vector2.ZERO, Vector2.LEFT, in_transit and animate)
 	pouch.visible = in_transit
-	pouch.position.x = -8.0 if motion.flip_h else 8.0
+	motion.carry_at(pouch, 1.0)
 
 func _sync_sharing(today: bool, animate: bool) -> void:
 	var clock := Global.day_progress
@@ -155,7 +155,7 @@ func _sync_sharing(today: bool, animate: bool) -> void:
 			_walk_visit(actor, body, guest.start, guest.leave, guest.offset, -guest.offset, animate)
 			var bag := actor.get_node("Packet") as Sprite2D
 			bag.visible = packed
-			bag.position = Vector2(-8.0 if body.flip_h else 8.0, -8.0)
+			body.carry_at(bag, 0.0)
 	if sharing_table != at_table or packets_left != remaining:
 		sharing_table = at_table
 		packets_left = remaining
@@ -218,7 +218,7 @@ func _draw() -> void:
 	if sharing_table:
 		_draw_sharing_table()
 	if stage >= 2 and Global.seed_garden_gift.is_empty():
-		draw_texture_rect_region(SHARING, Rect2(-38, -2, 11, 7), Rect2(1, 34, 19, 12))
+		draw_texture_rect(seed_packet, Rect2(-38, -2, 11, 7), false)
 
 func _draw_bed(at: Vector2, crop_id: String, winter: bool) -> void:
 	var rim := Color("#b6b9aa" if winter else "#ab9474")
@@ -267,7 +267,7 @@ func _draw_sharing_table() -> void:
 	draw_colored_polygon(PackedVector2Array([Vector2(63, -5), Vector2(67, -10), Vector2(67, -6),
 		Vector2(63, -1)]), Color("#5e4834"))
 	for index in packets_left:
-		draw_texture_rect_region(SHARING, Rect2(44 + 9 * index, -10, 9, 6), Rect2(1, 34, 19, 12))
+		draw_texture_rect(seed_packet, Rect2(44 + 9 * index, -10, 9, 6), false)
 
 func _draw_row(crop_id: String, at: Vector2) -> void:
 	var crop := ItemManager.get_crop(crop_id)

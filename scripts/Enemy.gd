@@ -8,7 +8,7 @@ enum Pose { IDLE, STRIDE_A, GATHER, STRIDE_B, BRACE, READY, RELEASE, HIT, FALL }
 const ARROW_SCENE := preload("res://scenes/Arrow.tscn")
 const ARROW := preload("res://scripts/Arrow.gd")
 const FLOATING_TEXT := preload("res://scenes/FloatingText.tscn")
-const ENEMY_MOTION := preload("res://assets/characters/enemy-motion.png")
+const ENEMY_MOTION := "res://assets/characters/enemy-motion.png"
 const BOW_DRAW := preload("res://assets/audio/combat/scout-draw.wav")
 const ARROW_HIT := preload("res://assets/audio/combat/arrow-hit.wav")
 const GROWL := preload("res://assets/audio/combat/dog-windup.wav")
@@ -52,7 +52,7 @@ var actor: Player
 func _ready() -> void:
 	add_to_group("enemies")
 	_setup_stats()
-	sprite.texture = ENEMY_MOTION
+	sprite.texture = load(ENEMY_MOTION)
 	sprite.hframes = Pose.size()
 	sprite.vframes = Type.size()
 	_show_pose(Pose.IDLE)

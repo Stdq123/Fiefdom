@@ -6,7 +6,7 @@ signal restore_requested()
 
 enum Shot { FIELD, CEREMONY, FAREWELL, RECORD }
 
-const ENVOY := preload("res://assets/characters/envoy-motion.png")
+const ENVOY_HAND := "res://assets/characters/envoy-handoff.png"
 const LEDGER_DESK := preload("res://scripts/RouteLedgerDesk.gd")
 const RECORD_STAND := preload("res://scripts/EstateRecordStand.gd")
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
@@ -18,8 +18,8 @@ const FIELD_HOLD := 2.15
 const PAN_SECONDS := 1.35
 const WALK_SECONDS := 1.65
 const RECEIPT_SECONDS := 0.56
-const ENVOY_SLEEVE := Rect2(11, 80, 5, 4)
-const ENVOY_PALM := Rect2(6, 18, 4, 3)
+const ENVOY_SLEEVE := Rect2(0, 0, 7, 5)
+const ENVOY_PALM := Rect2(8, 0, 5, 5)
 const CEREMONY_HOLD := 2.30
 const FAREWELL_WALK := 1.15
 const FAREWELL_HOLD := 4.25
@@ -213,9 +213,9 @@ func _build_stage() -> void:
 	stage.add_child(envoy)
 	walk_sprite = NeighborMotion.new()
 	walk_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	walk_sprite.position.y = -10.0
+	walk_sprite.position.y = -13.0
 	envoy.add_child(walk_sprite)
-	walk_sprite.set_motion_sheet(ENVOY)
+	walk_sprite.set_motion_sheet(load(CharacterArt.ENVOY_MOTION), CharacterArt.STREET_COLUMNS, "召简")
 	sleeve = _envoy_detail(ENVOY_SLEEVE)
 	sleeve.centered = false
 	sleeve.offset.y = -2
@@ -234,7 +234,7 @@ func _build_stage() -> void:
 
 func _envoy_detail(region: Rect2) -> Sprite2D:
 	var detail := Sprite2D.new()
-	detail.texture = ENVOY
+	detail.texture = load(ENVOY_HAND)
 	detail.region_enabled = true
 	detail.region_rect = region
 	detail.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -363,7 +363,7 @@ func _receive_volume(progress: float) -> void:
 		lerpf(from_desk.y, hand.y, lift) - 2.5 * sin(PI * lift))
 	# The hand reaches the near binding before the volume starts to rise.
 	palm.position = Vector2(-side, -6).lerp(desk.volume.position + Vector2(-side * 3.5, 1.5), grasp)
-	sleeve.position = Vector2(side * 3, -10) + lean
+	sleeve.position = Vector2(side * 3, -14) + lean
 	var forearm := palm.position - sleeve.position
 	sleeve.rotation = forearm.angle()
 	sleeve.scale.x = forearm.length() / ENVOY_SLEEVE.size.x

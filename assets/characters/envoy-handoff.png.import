@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://c7h4k8vnq5rxu"
+path="res://.godot/imported/envoy-handoff.png-6170d96455703a4b1ffd5ec94b43b260.res"
+
+[deps]
+
+source_file="res://assets/characters/envoy-handoff.png"
+dest_files=["res://.godot/imported/envoy-handoff.png-6170d96455703a4b1ffd5ec94b43b260.res"]
+
+[params]
+
+authored_at_2x=true

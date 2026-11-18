@@ -47,7 +47,7 @@ visible = false
 
 [node name="Motion" type="Sprite2D" parent="Courier"]
 texture_filter = 1
-position = Vector2(0, -11)
+position = Vector2(0, -13)
 script = ExtResource("2_motion")
 
 [node name="Bundle" type="Node2D" parent="Courier"]

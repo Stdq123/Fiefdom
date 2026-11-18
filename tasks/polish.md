@@ -15,6 +15,14 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 秋社领谷、冬至围炉与溪桥运种
+
+阿绥、林蓼和禾伯在秋社展台前各自拿走一份谷样。转身时，布包从身前挪到髋侧，能看见人物迈出去的那只脚。到了冬至，禾伯穿着同一条围裙在铜釜边舀粥，阿绥和林蓼在不同的时候举碗。桌上摆的是当天的饭，炉膛里能看见明灭的炭火。 [15 秒 Windows 实景短片](../docs/previews/season-cast.mp4) · [冬至炉边近景](../docs/previews/winter-hearth.gif)
+
+车夫申禾从西市往封地运种时倾身握住木辕，车轮随路程转动。货袋落在车板和近侧木栏之间。使者召简在堂前或南路亭伸手接册时，能看见衣袖、手指和册沿。竹涧的斥候与黄犬各有九种姿势。五位具名人物、五类来客和六类普通门客的对白肖像也跟上了地图上的衣色和头饰。 [十六张对白肖像](../docs/previews/season-faces.png) · [六处地图的实景](../docs/previews/six-locations.png)
+
+隔离桌面上以 1920×1080 和 1024×768 两种窗口各取 251 张人物与器物画面，开发版、导出资源包与 Windows 程序逐张相同。两次干净导出的 SHA-256 均为 `706856da75355d42482bd4851ccb780db85bf0ee6581df1862788123807d516f`。本轮按美术取景，当前候选包的新档至双结局仍待试玩。 [Windows 美术候选包](../build/polish-season-cast/source-final/build/Fiefdom-1.0.0-Windows-x64.zip) · [取景与打包记录](../build/polish-season-cast/release-proof.txt)
+
 ## 西市的掌柜和送货人
 
 20 秒实景短片收录封地、竹涧、溪桥道、西市、堂屋和蚕棚。田间能看到主角与门客落脚、挥锄、撒种、浇水和收镰，进西市能看到送布的阿苓与提鱼篓的伙计。 [1080p 实景短片](../docs/previews/fiefdom-art-tour.mp4) · [六处场景全图](../docs/previews/six-locations.png) · [西市绸摊原尺寸](../docs/previews/west-market.png)

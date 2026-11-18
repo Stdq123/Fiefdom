@@ -6,6 +6,7 @@ enum Facing { FRONT, BACK, PROFILE }
 const STEP_LENGTH := 10.0
 const NEIGHBOR_STEP_LENGTH := {
 	"阿苓": 8.5,
+	"阿绥": 8.2, "林蓼": 8.8, "禾伯": 7.2, "申禾": 10.5, "召简": 9.0,
 	VisitorData.FIELD_KEEPER: 7.5, VisitorData.ROAD_KEEPER: 9.5, VisitorData.WATER_GUIDE: 9.0,
 	VisitorData.SILK_MERCHANT: 8.7, VisitorData.RAVINE_GUIDE: 10.2,
 	VisitorData.EAST_WATCHER: 11.0, VisitorData.MUSIC_HOST: 9.5,
@@ -31,6 +32,9 @@ static func walk_column(distance: float, passing_column := 0, stride := STEP_LEN
 func set_art(speaker: String, fallback: Texture2D) -> void:
 	var sheet := CharacterArt.neighbor_motion(speaker)
 	set_motion_sheet(sheet if sheet else fallback, CharacterArt.WORKER_COLUMNS if sheet else 1, speaker)
+
+func set_festival_guest(index: int) -> void:
+	set_motion_sheet(CharacterArt.festival_guest_motion(index), CharacterArt.STREET_COLUMNS, AutumnExhibit.GUESTS[index])
 
 func set_motion_sheet(sheet: Texture2D, columns := CharacterArt.MOTION_COLUMNS, speaker := "") -> void:
 	step_length = NEIGHBOR_STEP_LENGTH.get(speaker, STEP_LENGTH)
@@ -78,7 +82,7 @@ func walk(movement: Vector2) -> float:
 		offset = Vector2(0.0, step_height)
 	return step_height
 
-func carry_at(bundle: Sprite2D, hang: float) -> void:
+func carry_at(bundle: Node2D, hang: float) -> void:
 	var bob := -0.75 if walking and frame_coords.x in [1, 2] else 0.0
 	var side := -1.0 if flip_h else 1.0
 	var across := 6.5 if facing == Facing.PROFILE else 8.0

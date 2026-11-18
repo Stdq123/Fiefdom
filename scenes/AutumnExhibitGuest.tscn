@@ -9,17 +9,17 @@ texture_filter = 1
 script = ExtResource("1_guest")
 
 [node name="Motion" type="Sprite2D" parent="."]
-position = Vector2(0, -6)
+position = Vector2(0, -13)
 script = ExtResource("2_motion")
 
 [node name="Parcel" type="Sprite2D" parent="."]
 visible = false
 position = Vector2(7, -4)
-scale = Vector2(0.68, 0.68)
+scale = Vector2(0.87, 0.87)
 
 [node name="Crop" type="Sprite2D" parent="Parcel"]
-position = Vector2(1, -4)
-scale = Vector2(0.65, 0.65)
+position = Vector2(1, -3)
+scale = Vector2(0.42, 0.42)
 
 [node name="Hint" type="Label" parent="."]
 visible = false

@@ -30,7 +30,8 @@ func _ready() -> void:
 	if VisitorData.NEIGHBORS.has(speaker):
 		sprite.set_art(speaker, null)
 	elif guest >= 0:
-		sprite.set_motion_sheet(CharacterArt.festival_guest_motion(guest))
+		sprite.position.y = -13.0
+		sprite.set_festival_guest(guest)
 	else:
 		sprite.set_motion_sheet(CharacterArt.visitor_motion(school), CharacterArt.WORKER_COLUMNS)
 	hint.visible = data != null

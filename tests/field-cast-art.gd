@@ -64,7 +64,10 @@ func check_cast() -> void:
 		expect(motion.flip_h and motion.frame_coords.x == art.WORK_COLUMN + 1, "Working to the left")
 		motion.stand(Vector2.ZERO, 1, true)
 		expect(motion.frame_coords.x == art.ERRAND_COLUMN + 1, "Tending a stall")
-	motion.set_motion_sheet(art.festival_guest_motion(0))
+	var four_columns := AtlasTexture.new()
+	four_columns.atlas = art.festival_guest_motion(0).atlas
+	four_columns.region = Rect2(0, 0, 128, 96)
+	motion.set_motion_sheet(four_columns)
 	for column: int in [1, 0, 2, 0]:
 		motion.walk(Vector2.DOWN * (0.5 if column == 1 else motion.step_length))
 		expect(motion.frame_coords.x == column, "Four-column guest atlas")

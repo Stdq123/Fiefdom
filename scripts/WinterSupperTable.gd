@@ -6,14 +6,18 @@ const ARRIVALS := [
 	{"start": 0.55, "end": 0.71, "path": [Vector2(25, 48), Vector2(42, 30), Vector2(48, 9)]},
 ]
 const FEET := [Vector2(-30, -20), Vector2(48, 9), Vector2(22, -17)]
+const BOWL_TIMES := [0.0, 0.85, 1.55]
 
 @onready var guests: Node2D = $Guests
 @onready var hint: Label = $Hint
 @onready var hearth_glow: PointLight2D = $HearthGlow
 @onready var fire_sound: AudioStreamPlayer2D = $FireSound
+@onready var bowl_art: Texture2D = load("res://assets/characters/festival-supper.png")
+@onready var hearth_art: Texture2D = load("res://assets/world/winter-hearth.png")
 
 var actors: Array[Node2D] = []
 var motions: Array[NeighborMotion] = []
+var serving_poses: Array[Sprite2D] = []
 var routes: Array[Curve2D] = []
 var table := Node2D.new()
 var steam_layer := Node2D.new()
@@ -37,11 +41,20 @@ func _ready() -> void:
 		actor.position = FEET[index]
 		guests.add_child(actor)
 		var motion := NeighborMotion.new()
-		motion.position.y = -6.0
+		motion.position.y = -13.0
 		actor.add_child(motion)
-		motion.set_motion_sheet(WinterSupper.guest_art(index))
+		motion.set_festival_guest(index)
+		var serving := Sprite2D.new()
+		serving.position = motion.position
+		serving.texture_filter = TEXTURE_FILTER_NEAREST
+		serving.texture = bowl_art
+		serving.hframes = 2
+		serving.vframes = FEET.size()
+		serving.hide()
+		actor.add_child(serving)
 		actors.append(actor)
 		motions.append(motion)
+		serving_poses.append(serving)
 	for arrival: Dictionary in ARRIVALS:
 		var route := Curve2D.new()
 		for point in EstateLayout.festival_entrance():
@@ -133,54 +146,30 @@ func _sync_guests(snap := false) -> void:
 			motion.face(-point)
 		elif not step.is_zero_approx():
 			motion.walk(step)
+	for index in serving_poses.size():
+		var at_table: bool = index >= ARRIVALS.size() or Global.day_progress >= ARRIVALS[index].end
+		var serving := at_table and not recipe.is_empty()
+		motions[index].visible = not serving
+		serving_poses[index].visible = serving
+		if serving:
+			var beat: float = fposmod(steam + BOWL_TIMES[index], 2.8)
+			serving_poses[index].frame_coords = Vector2i(int(beat >= 1.25 and beat < 2.3), index)
 
 func _hearth_lit() -> bool:
 	return not recipe.is_empty() or Global.day_progress >= WinterSupper.EVENING
 
 func _draw_table() -> void:
-	table.draw_colored_polygon(PackedVector2Array([Vector2(-37, 1), Vector2(34, 1),
-		Vector2(45, 10), Vector2(36, 13), Vector2(-33, 10)]), Color("#2832328c"))
-	for x in [-29, 24]:
-		table.draw_rect(Rect2(x, -1, 5, 10), Color("#4a3125"))
-		table.draw_rect(Rect2(x + 1, 2, 2, 6), Color("#816045"))
-	table.draw_colored_polygon(PackedVector2Array([Vector2(-34, 0), Vector2(29, 0), Vector2(37, -8),
-		Vector2(37, -3), Vector2(30, 5), Vector2(-34, 5)]), Color("#503a2c"))
-	table.draw_colored_polygon(PackedVector2Array([Vector2(-35, -3), Vector2(28, -3),
-		Vector2(37, -13), Vector2(-28, -13)]), Color("#a07850"))
-	table.draw_line(Vector2(-33, -4), Vector2(28, -4), Color("#bd9565"), 1.0)
-	for x in [-29, -16, 16, 26]:
-		table.draw_rect(Rect2(x, -7 - posmod(x, 3), 7, 1), Color("#d7aa6b8a"))
-	table.draw_colored_polygon(PackedVector2Array([Vector2(-13, 2), Vector2(9, 2), Vector2(14, -3),
-		Vector2(14, -12), Vector2(9, -13), Vector2(-11, -13), Vector2(-13, -9)]), Color("#53534a"))
-	table.draw_rect(Rect2(-11, -10, 21, 3), Color("#918270"))
-	table.draw_rect(Rect2(-7, -7, 13, 7), Color("#343027"))
-	if heated:
-		table.draw_rect(Rect2(-5, -4, 9, 2), Color("#ba6645"))
-		table.draw_rect(Rect2(-3 + ember_frame, -4, 3, 1), Color("#efad63"))
-	table.draw_colored_polygon(PackedVector2Array([Vector2(-12, -21), Vector2(13, -21), Vector2(10, -13),
-		Vector2(6, -11), Vector2(-6, -11), Vector2(-10, -14)]), Color("#555e4b"))
-	table.draw_rect(Rect2(-8, -19, 2, 5), Color("#869074"))
-	table.draw_rect(Rect2(-14, -20, 4, 3), Color("#ab925f"))
-	table.draw_rect(Rect2(11, -20, 4, 3), Color("#948057"))
-	table.draw_colored_polygon(PackedVector2Array([Vector2(-13, -21), Vector2(-8, -25), Vector2(7, -25),
-		Vector2(13, -22), Vector2(9, -19), Vector2(-9, -19)]), Color("#b59563"))
-	table.draw_rect(Rect2(-6, -24, 12, 1), Color("#d5b780"))
-	table.draw_rect(Rect2(-2, -27, 4, 3), Color("#785d43"))
-	for x in [-23, 23]:
-		table.draw_rect(Rect2(x - 6, -10, 12, 5), Color("#654f3b"))
-		table.draw_colored_polygon(PackedVector2Array([Vector2(x - 6, -9), Vector2(x - 3, -12),
-			Vector2(x + 4, -12), Vector2(x + 6, -10), Vector2(x + 3, -7), Vector2(x - 3, -7)]), Color("#c2b298"))
-		var topping := Color("#8c7760")
-		if not recipe.is_empty():
-			topping = Color("#e9ae72") if recipe == WinterSupper.FISH else Color("#e4c998")
-		table.draw_rect(Rect2(x - 3, -10, 6, 2), topping)
+	var meal := 0 if recipe.is_empty() else (2 if recipe == WinterSupper.FISH else 1)
+	var fire := ember_frame + 1 if heated else 0
+	var size := Vector2(96, 56)
+	table.draw_texture_rect_region(hearth_art, Rect2(Vector2(-48, -44), size), Rect2(Vector2(meal, fire) * size, size))
 
 func _draw_steam() -> void:
 	if recipe.is_empty():
 		return
 	for index in 3:
 		var rise := fposmod(steam + index * 0.90, 2.8) / 2.8
-		var at := Vector2(float(index * 4 - 5) + roundf(sin(rise * TAU) * 2.0 + rise * 7.0), -27.0 - roundf(rise * 18.0))
-		var tint := Color(1.0, 0.93, 0.80, (1.0 - rise) * 0.63)
-		steam_layer.draw_rect(Rect2(at, Vector2(2 + index % 2, 2)), tint)
-		steam_layer.draw_rect(Rect2(at + Vector2(2, -3), Vector2(3 + index % 2, 1)), Color(tint, tint.a * 0.65))
+		var at := Vector2(index * 3.5 - 4 + sin(rise * TAU) * 1.8 + rise * 5.0, -24.0 - rise * 17.0)
+		var curl := 1.4 * sin(rise * TAU + index)
+		var plume := PackedVector2Array([at, at + Vector2(curl, -2), at + Vector2(curl + 1.2, -4), at + Vector2(0.5, -6)])
+		steam_layer.draw_polyline(plume, Color(1.0, 0.94, 0.84, sin(rise * PI) * 0.5), 0.95, true)
