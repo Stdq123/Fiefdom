@@ -461,6 +461,7 @@ var estate_track_widths: Array[float] = []
 var track_shapes: Array[Dictionary] = []
 var field_approaches: Dictionary[int, PackedVector2Array] = {}
 var worksite_mouths: Dictionary[int, Vector2] = {}
+var _scenery_ready := false
 
 func _ready() -> void:
 	ground_cover = SEASONAL_GROUND.new(wilderness)
@@ -630,6 +631,7 @@ func _prepare_map() -> void:
 	_place_lanterns(props_layer)
 	add_child(rain)
 	_install_boundaries()
+	_scenery_ready = true
 	_refresh_scenery()
 	for sprite in scenery:
 		var prop := scenery[sprite]
@@ -783,6 +785,9 @@ func _refresh_ambience() -> void:
 		0.78 if wilderness else 1.0)
 
 func _draw() -> void:
+	# Foot shadows and land surfaces share a canvas item. Wait for the deferred props before drawing it.
+	if not _scenery_ready:
+		return
 	_draw_ground()
 	if wilderness:
 		creek_profile.draw_shoulder(self, SEASON_PALETTES[season][0], season, raining)

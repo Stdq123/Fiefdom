@@ -2,6 +2,8 @@ extends RefCounted
 
 const TERRAIN := preload("res://scripts/EstateTerrain.gd")
 const COURSE := 7.0
+# The joint displacement and the bevel both extend slightly past a column's nominal edge.
+const JOINT_PADDING := 4.0
 const LIP := Vector2(0.45, 2.8)
 
 var outline: PackedVector2Array
@@ -16,8 +18,12 @@ func _init(surface: PackedVector2Array, joint_origin: float, joins: Array[Packed
 		area = area.expand(point)
 	for row in range(floori(area.position.y / COURSE), ceili(area.end.y / COURSE)):
 		var offset := joint_origin + posmod(row, 2) * floorf(block_width * 0.48)
-		for column in range(floori((area.position.x - offset) / block_width) - 1,
-				ceili((area.end.x - offset) / block_width) + 1):
+		var span := _course_span(row * COURSE)
+		if span.x > span.y:
+			continue
+		var left := maxf(area.position.x, span.x - JOINT_PADDING)
+		var right := minf(area.end.x, span.y + JOINT_PADDING)
+		for column in range(floori((left - offset) / block_width) - 1, ceili((right - offset) / block_width) + 1):
 			var first := _joint(column, row, offset, block_width)
 			var last := _joint(column + 1, row, offset, block_width) - Vector2(1.15, 0.0)
 			var grain := posmod(column * 7 + row * 11, 19)
@@ -39,6 +45,18 @@ func _init(surface: PackedVector2Array, joint_origin: float, joins: Array[Packed
 					if not Geometry2D.triangulate_polygon(fragment).is_empty():
 						_stones.append({"shape": fragment, "grain": grain, "full": false})
 	_build_curb(joins, curb_drop)
+
+func _course_span(top: float) -> Vector2:
+	# Keep entire edges that meet this row, including the corners of diagonal lanes.
+	var span := Vector2(INF, -INF)
+	var bottom := top + COURSE
+	var start := outline[-1]
+	for end: Vector2 in outline:
+		if maxf(start.y, end.y) >= top and minf(start.y, end.y) <= bottom:
+			span.x = minf(span.x, minf(start.x, end.x))
+			span.y = maxf(span.y, maxf(start.x, end.x))
+		start = end
+	return span
 
 func _joint(column: int, row: int, offset: float, width: float) -> Vector2:
 	return Vector2(offset + column * width + posmod(column * 11 + row * 13, 7) - 3, row * COURSE)
