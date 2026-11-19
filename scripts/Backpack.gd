@@ -7,9 +7,17 @@ enum Page { CROPS, FISH, CRAFT }
 enum Goods { MIXED_GRAIN, LEAVES, COCOONS, RAW_SILK, SILK_BOLT, WOOL, HERBS }
 
 const GOODS_PATH := "res://assets/inventory/estate-goods.png"
-const POCKET_MINIMUM := Vector2(216, 58)
+const CROP_POCKETS := CropData.IDS + [CropStock.MIXED]
+const POCKET_MINIMUM := Vector2(216, 64)
 const ITEM_NAME_INK := Color("#ffe9bd")
-const QUANTITY_INK := Color("#e7bf96")
+const QUANTITY_INK := Color("#f1cf9d")
+
+class Pocket:
+	var panel := PanelContainer.new()
+	var row := HBoxContainer.new()
+	var icon := TextureRect.new()
+	var name_label := Label.new()
+	var quantity := Label.new()
 
 @export var item_style: StyleBox
 @export var empty_pocket_style: StyleBox
@@ -30,22 +38,17 @@ const QUANTITY_INK := Color("#e7bf96")
 @onready var use_herbs_button: Button = %UseHerbs
 @onready var herb_notice: Label = %HerbNotice
 @onready var items: GridContainer = %Items
-@onready var empty_pockets: GridContainer = %EmptyPockets
 @onready var empty: Label = %Empty
 
 var page := Page.CROPS
+var pockets: Array[Pocket] = []
 
 func _ready() -> void:
 	%BagIcon.texture = HUDIcons.icon(HUDIcons.Symbol.BACKPACK)
 	%CoinIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
 	%HerbIcon.texture = _goods_icon(Goods.HERBS)
-	for index in CropStock.IDS.size():
-		var pocket := Panel.new()
-		pocket.custom_minimum_size = POCKET_MINIMUM
-		pocket.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		pocket.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		pocket.add_theme_stylebox_override("panel", empty_pocket_style)
-		empty_pockets.add_child(pocket)
+	for index in CROP_POCKETS.size():
+		pockets.append(_new_pocket())
 	close_button.pressed.connect(close_requested.emit)
 	crop_tab.pressed.connect(select_page.bind(Page.CROPS))
 	fish_tab.pressed.connect(select_page.bind(Page.FISH))
@@ -73,41 +76,51 @@ func select_page(selected: Page) -> void:
 	_refresh_items()
 
 func _refresh_items() -> void:
-	for row in items.get_children():
-		items.remove_child(row)
-		row.queue_free()
+	for index in pockets.size():
+		var pocket := pockets[index]
+		pocket.row.hide()
+		pocket.icon.texture = null
+		pocket.panel.name = "Empty%d" % index
+		pocket.panel.add_theme_stylebox_override("panel", empty_pocket_style)
+	var filled := 0
 	var empty_caption := ""
 	match page:
 		Page.CROPS:
-			for id: String in CropStock.IDS:
+			for index in CROP_POCKETS.size():
+				var id: String = CROP_POCKETS[index]
 				var count := Global.crop_stock.count(id)
-				if count == 0:
-					continue
-				_add_item(id, ItemManager.crop_label(id), "%d 份" % count, _stored_crop_icon(id))
+				if count > 0:
+					_show_item(index, id, ItemManager.crop_label(id), "%d 份" % count, _stored_crop_icon(id))
+					filled += 1
 			empty_caption = "私仓暂无作物"
 		Page.FISH:
-			for id: String in CreekFish.IDS:
+			for index in CreekFish.IDS.size():
+				var id: String = CreekFish.IDS[index]
 				var count := Global.fish_count(id)
 				if count > 0:
-					_add_item(id, CreekFish.SPECIES[id].name, "%d 尾" % count, CreekFish.portrait(id))
+					_show_item(index, id, CreekFish.SPECIES[id].name, "%d 尾" % count, CreekFish.portrait(id))
+					filled += 1
 			empty_caption = "鱼篓里还没有鱼"
 		Page.CRAFT:
-			_add_craft_items()
+			filled = _show_craft_items()
 			empty_caption = "暂无工艺材料"
-	empty.text = empty_caption if items.get_child_count() == 0 else ""
+	empty.text = empty_caption if filled == 0 else ""
 
-func _add_craft_items() -> void:
+func _show_craft_items() -> int:
 	var workshop := Global.silk_workshop
-	if workshop.leaves > 0:
-		_add_item("mulberry_leaves", "桑叶", "%d 片" % workshop.leaves, _goods_icon(Goods.LEAVES))
-	if workshop.cocoons > 0:
-		_add_item("cocoons", "蚕茧", "%d 只" % workshop.cocoons, _goods_icon(Goods.COCOONS))
-	if workshop.raw_silk > 0:
-		_add_item("raw_silk", "生丝", "%d 份" % workshop.raw_silk, _goods_icon(Goods.RAW_SILK))
-	if workshop.bolts > 0:
-		_add_item("silk", "丝绸", "%d 匹" % workshop.bolts, _goods_icon(Goods.SILK_BOLT))
-	if Global.sheepfold.wool > 0:
-		_add_item("wool", "羊毛", "%d 份" % Global.sheepfold.wool, _goods_icon(Goods.WOOL))
+	var filled := 0
+	filled += _show_material(Goods.LEAVES, "mulberry_leaves", "桑叶", workshop.leaves, "片")
+	filled += _show_material(Goods.COCOONS, "cocoons", "蚕茧", workshop.cocoons, "只")
+	filled += _show_material(Goods.RAW_SILK, "raw_silk", "生丝", workshop.raw_silk, "份")
+	filled += _show_material(Goods.SILK_BOLT, "silk", "丝绸", workshop.bolts, "匹")
+	filled += _show_material(Goods.WOOL, "wool", "羊毛", Global.sheepfold.wool, "份")
+	return filled
+
+func _show_material(kind: Goods, id: String, display_name: String, count: int, unit: String) -> int:
+	if count <= 0:
+		return 0
+	_show_item(kind - Goods.LEAVES, id, display_name, "%d %s" % [count, unit], _goods_icon(kind))
+	return 1
 
 func _stored_crop_icon(id: String) -> Texture2D:
 	if id == CropStock.MIXED:
@@ -116,43 +129,51 @@ func _stored_crop_icon(id: String) -> Texture2D:
 		return HUDIcons.icon(HUDIcons.CROPS[id])
 	return ItemManager.crop_picture(ItemManager.get_crop(id)).texture
 
-func _add_item(id: String, label: String, quantity: String, texture: Texture2D) -> void:
-	var slot := PanelContainer.new()
-	slot.name = id
+func _new_pocket() -> Pocket:
+	var pocket := Pocket.new()
+	var slot := pocket.panel
 	slot.custom_minimum_size = POCKET_MINIMUM
 	slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	slot.add_theme_stylebox_override("panel", item_style)
 	items.add_child(slot)
-	var row := HBoxContainer.new()
+	var row := pocket.row
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_theme_constant_override("separation", 9)
 	slot.add_child(row)
-	var icon := TextureRect.new()
+	var icon := pocket.icon
 	icon.custom_minimum_size = Vector2(34, 34)
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	icon.texture = texture
 	row.add_child(icon)
 	var text := VBoxContainer.new()
 	text.add_theme_constant_override("separation", 0)
+	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	text.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(text)
-	var name_label := Label.new()
+	var name_label := pocket.name_label
 	name_label.name = "Name"
 	name_label.add_theme_color_override("font_color", ITEM_NAME_INK)
-	name_label.text = label
 	text.add_child(name_label)
-	var count_label := Label.new()
+	var count_label := pocket.quantity
 	count_label.name = "Quantity"
-	count_label.add_theme_font_size_override("font_size", 14)
+	count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	count_label.add_theme_font_size_override("font_size", 16)
 	count_label.add_theme_color_override("font_color", QUANTITY_INK)
-	count_label.text = quantity
 	text.add_child(count_label)
+	return pocket
+
+func _show_item(index: int, id: String, label: String, quantity: String, texture: Texture2D) -> void:
+	var pocket := pockets[index]
+	pocket.panel.name = id
+	pocket.panel.add_theme_stylebox_override("panel", item_style)
+	pocket.name_label.text = label
+	pocket.quantity.text = quantity
+	pocket.icon.texture = texture
+	pocket.row.show()
 
 func _goods_icon(kind: Goods) -> AtlasTexture:
 	var icon := AtlasTexture.new()

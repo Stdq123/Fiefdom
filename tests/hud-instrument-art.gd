@@ -50,6 +50,39 @@ func review() -> void:
 	var meals = load("res://scripts/TravelMeal.gd")
 	for meal: String in meals.RECIPES:
 		expect(meals.icon(meal).region == Rect2(32 * meals.RECIPES[meal].frame, 0, 32, 32), "Dish " + meal)
+	var starting_stock: Dictionary = state.crop_stock.lots.duplicate()
+	state.crop_stock.lots.clear()
+	bag._refresh_items()
+	for frame in 3:
+		await process_frame
+	var empty_slots: Array[Node] = bag.items.get_children()
+	expect(empty_slots.size() == CropStock.IDS.size(), "All stock positions have exactly one pocket")
+	var empty_bounds: Array[Rect2] = []
+	for slot: Control in empty_slots:
+		empty_bounds.append(slot.get_global_rect())
+	state.crop_stock.add("millet", 3)
+	state.crop_stock.add(CropStock.MIXED, 17850)
+	bag._refresh_items()
+	for frame in 3:
+		await process_frame
+	var first := bag.items.get_node_or_null("millet") as Control
+	var legacy := bag.items.get_node_or_null(CropStock.MIXED) as Control
+	expect(first != null and legacy != null and first.get_index() == 0
+		and legacy.get_index() == empty_slots.size() - 1, "Private crops follow seed order with a pocket for older mixed grain")
+	for index in empty_bounds.size():
+		var slot := bag.items.get_child(index) as Control
+		expect(slot == empty_slots[index] and slot.get_global_rect() == empty_bounds[index], "Stock changes keep pocket position %d" % index)
+	if legacy != null:
+		var amount := legacy.find_child("Quantity", true, false) as Label
+		expect(amount.is_visible_in_tree() and amount.text == "17850 份"
+			and amount.horizontal_alignment == HORIZONTAL_ALIGNMENT_RIGHT, "Large quantities are right aligned and fully shown")
+	state.crop_stock.lots.erase("millet")
+	bag._refresh_items()
+	for frame in 3:
+		await process_frame
+	expect(not bag.items.has_node("millet") and empty_slots[0].get_global_rect() == empty_bounds[0],
+		"The pocket returns to empty without changing its footprint")
+	state.crop_stock.lots.assign(starting_stock)
 	bag.free()
 
 	var meters = load("res://scenes/HUDVitals.tscn").instantiate()

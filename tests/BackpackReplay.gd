@@ -57,6 +57,14 @@ func _quit() -> void:
 		print("SCENARIO_OK")
 	tree.quit(1 if failures else 0)
 
+func _filled_pockets(bag: Control) -> int:
+	var count := 0
+	for pocket in bag.items.get_children():
+		var amount := pocket.find_child("Quantity", true, false) as Label
+		if amount and amount.is_visible_in_tree():
+			count += 1
+	return count
+
 func run(host: SceneTree, directory := "") -> void:
 	tree = host
 	captures = directory
@@ -73,7 +81,7 @@ func run(host: SceneTree, directory := "") -> void:
 	var hud := tree.current_scene.get_node("CampaignHUD")
 	var estate_ui := tree.current_scene.get_node("UI")
 	await _click(hud.backpack_button.get_global_rect().get_center())
-	if not _expect(tree.paused and hud.backpack != null and hud.backpack.items.get_child_count() == 0,
+	if not _expect(tree.paused and hud.backpack != null and _filled_pockets(hud.backpack) == 0,
 		"The visible estate shortcut opens an empty backpack and pauses the scene."):
 		_quit()
 		return
@@ -117,18 +125,18 @@ func run(host: SceneTree, directory := "") -> void:
 	if not _expect(is_instance_valid(bag), "I opens the backpack after Continue."):
 		_quit()
 		return
-	_expect(bag.items.has_node("millet") and bag.items.has_node("mixed") and bag.items.get_child_count() == 2
+	_expect(bag.items.has_node("millet") and bag.items.has_node("mixed") and _filled_pockets(bag) == 2
 		and "27" in bag.wallet.text and "麦饼" in bag.meal_name.text,
 		"The loaded backpack shows private lots, older mixed grain, money and a packed meal.")
 	_expect(bag.items.get_node("millet").find_child("Quantity", true, false).text == "3 份",
 		"The private crop's stack shows the exact quantity.")
 	await _capture("02-private-crops")
 	await _click(bag.fish_tab.get_global_rect().get_center())
-	_expect(bag.items.has_node("carp") and bag.items.get_child_count() == 1,
+	_expect(bag.items.has_node("carp") and _filled_pockets(bag) == 1,
 		"The fish page shows what remains in stock, including no entry for an already spent fish.")
 	await _capture("03-fish")
 	await _click(bag.craft_tab.get_global_rect().get_center())
-	_expect(bag.items.has_node("wool") and bag.items.get_child_count() == 3, "Silk and wool share the workshop stock page.")
+	_expect(bag.items.has_node("wool") and _filled_pockets(bag) == 3, "Silk and wool share the workshop stock page.")
 	await _capture("04-materials")
 	var stamina_before := Global.current_stamina
 	await _click(bag.eat_button.get_global_rect().get_center())
