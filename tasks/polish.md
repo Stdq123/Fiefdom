@@ -15,6 +15,12 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 设置里的窗口尺寸
+
+「系统设置」提供 1920×1080、1600×900、1280×720 和 1024×576 四个窗口档位。首次启动为 1920×1080。标题和游戏内共用所选档位，切回窗口或重启时会恢复。设置写入失败时保留当前尺寸和显示模式。
+
+从 `39cb262` 独立构建两次，ZIP 的 SHA-256 均为 `9d29c131f553d3ce3f840a60b4969b2122738beae30a59276eb09279e0b9f536`。无窗口设置检查通过。隔离桌面以解压程序核对四种实际尺寸、全屏切换、两个进程重启及选择器焦点。封地和竹涧使用原有设置入口，1024×768 自定义窗口可用模拟手柄切到小档。Vulkan 与 OpenGL 模式读取同一份显示设置。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-window-size/release-39cb262/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-window-size/release-39cb262/release-proof.txt)
+
 ## Windows 的 OpenGL 兼容入口
 
 Windows ZIP 里随主程序附带 `Fiefdom-Compatibility.cmd`。遇到黑屏或渲染异常时可双击它用 OpenGL 启动，两种入口共用存档和设置。
