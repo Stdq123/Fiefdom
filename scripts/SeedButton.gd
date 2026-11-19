@@ -75,6 +75,15 @@ func _make_custom_tooltip(for_text: String) -> Control:
 	var period := card.get_node("%Period") as Label
 	period.text = entry.period
 	period.visible = not period.text.is_empty()
-	card.get_node("%Notes").text = entry.note
-	card.get_node("%SowingHint").text = sowing_hint
+	var notes := card.get_node("%Notes") as Label
+	var timing := card.get_node("%SowingHint") as Label
+	var reading_width: float = notes.get_parent_control().custom_minimum_size.x
+	# Establish the wrap width before the popup asks for its minimum height.
+	notes.size.x = reading_width
+	timing.size.x = reading_width
+	notes.text = entry.note
+	timing.text = sowing_hint
+	for label: Label in [card.get_node("%CropName"), period, notes, timing]:
+		InterfaceFont.scale_reading_text(label)
+	card.reset_size()
 	return card

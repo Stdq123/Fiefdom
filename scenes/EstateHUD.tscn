@@ -356,6 +356,7 @@ theme_override_font_sizes/font_size = 15
 theme_type_variation = &"HudBronzeInk"
 size_flags_horizontal = 3
 horizontal_alignment = 0
+autowrap_mode = 3
 
 [node name="Daylight" type="HBoxContainer" parent="Calendar/Stack"]
 layout_mode = 2
@@ -410,10 +411,11 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 4
 
-[node name="Status" type="HBoxContainer" parent="Calendar/Stack/LedgerDetails"]
+[node name="Status" type="HFlowContainer" parent="Calendar/Stack/LedgerDetails"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 8
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 3
 
 [node name="RankLabel" type="Label" parent="Calendar/Stack/LedgerDetails/Status"]
 layout_mode = 2
@@ -430,12 +432,19 @@ theme_type_variation = &"HudBronzeInk"
 size_flags_horizontal = 3
 horizontal_alignment = 2
 
-[node name="Treasury" type="HBoxContainer" parent="Calendar/Stack"]
+[node name="Treasury" type="HFlowContainer" parent="Calendar/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 6
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 3
 
-[node name="CoinIcon" type="TextureRect" parent="Calendar/Stack/Treasury"]
+[node name="Copper" type="HBoxContainer" parent="Calendar/Stack/Treasury"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 5
+
+[node name="CoinIcon" type="TextureRect" parent="Calendar/Stack/Treasury/Copper"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(18, 18)
 layout_mode = 2
@@ -445,7 +454,7 @@ texture_filter = 1
 expand_mode = 1
 stretch_mode = 5
 
-[node name="MoneyLabel" type="Label" parent="Calendar/Stack/Treasury"]
+[node name="MoneyLabel" type="Label" parent="Calendar/Stack/Treasury/Copper"]
 layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
@@ -453,7 +462,12 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 16
 theme_type_variation = &"HudBronzeInk"
 
-[node name="GrainIcon" type="TextureRect" parent="Calendar/Stack/Treasury"]
+[node name="Food" type="HBoxContainer" parent="Calendar/Stack/Treasury"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 5
+
+[node name="GrainIcon" type="TextureRect" parent="Calendar/Stack/Treasury/Food"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(18, 18)
 layout_mode = 2
@@ -463,7 +477,7 @@ texture_filter = 1
 expand_mode = 1
 stretch_mode = 5
 
-[node name="InventoryLabel" type="Label" parent="Calendar/Stack/Treasury"]
+[node name="InventoryLabel" type="Label" parent="Calendar/Stack/Treasury/Food"]
 layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
@@ -471,10 +485,11 @@ theme_override_font_sizes/font_size = 16
 theme_type_variation = &"HudBronzeInk"
 horizontal_alignment = 2
 
-[node name="Supplies" type="HBoxContainer" parent="Calendar/Stack/LedgerDetails"]
+[node name="Supplies" type="HFlowContainer" parent="Calendar/Stack/LedgerDetails"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 8
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 3
 
 [node name="KingLabel" type="Label" parent="Calendar/Stack/LedgerDetails/Supplies"]
 layout_mode = 2
@@ -571,13 +586,15 @@ mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 14
 text_overrun_behavior = 3
 
-[node name="BeltHeader" type="HBoxContainer" parent="SeedBelt/Stack"]
+[node name="BeltHeader" type="HFlowContainer" parent="SeedBelt/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 9
+theme_override_constants/h_separation = 9
+theme_override_constants/v_separation = 4
 
 [node name="HelpLabel" type="Label" parent="SeedBelt/Stack/BeltHeader"]
 layout_mode = 2
+custom_minimum_size = Vector2(132, 0)
 mouse_filter = 2
 unique_name_in_owner = true
 size_flags_horizontal = 3

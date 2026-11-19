@@ -127,8 +127,10 @@ func show_driving_progress(progress: String, instruction: String) -> void:
 	driving_hint.text = instruction
 
 func _ready() -> void:
-	for label: Label in [arrival, guide, visitor_label]:
-		InterfaceFont.scale_reading_text(label)
+	for control: Control in [arrival, guide, visitor_label, day_label, calendar_label, rank_label,
+			reputation_label, money_label, king_label, inventory_label, well_field_label, help_label,
+			farm_status, sow_from_plan, prepare_empty_plots, replant_after_harvest, canal_preview]:
+		InterfaceFont.scale_reading_text(control)
 	for card: PanelContainer in [$Journal, $Calendar]:
 		card.minimum_size_changed.connect(_fit_top_card.bind(card), CONNECT_DEFERRED)
 		_fit_top_card.call_deferred(card)

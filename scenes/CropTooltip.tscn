@@ -39,6 +39,7 @@ theme_override_constants/separation = 12
 [node name="Illustration" type="Panel" parent="Content"]
 custom_minimum_size = Vector2(90, 94)
 layout_mode = 2
+size_flags_vertical = 4
 theme_override_styles/panel = SubResource("Paper")
 
 [node name="AncientGlyph" type="TextureRect" parent="Content/Illustration"]
@@ -100,9 +101,11 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.931, 0.911, 0.824, 1)
 theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
 
 [node name="SowingHint" type="Label" parent="Content/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.746, 0.821, 0.676, 1)
 theme_override_font_sizes/font_size = 13
+autowrap_mode = 3

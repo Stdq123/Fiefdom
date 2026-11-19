@@ -48,6 +48,7 @@ func _ready() -> void:
 	label.use_parent_material = true
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(label)
+	InterfaceFont.scale_reading_text(label)
 	get_window().mouse_exited.connect(_clear_pointer)
 	get_viewport().size_changed.connect(_clear_pointer)
 	GameEvents.council_tribute_rows_changed.connect(queue_redraw)
@@ -89,7 +90,7 @@ func _process(_delta: float) -> void:
 	if world.sweep_action != world.FieldAction.NONE and world.sweep_action != action:
 		hide()
 		return
-	var message: String = world.field_message(cell, action)
+	var message: String = world.field_message(cell, action, false)
 	if message.is_empty():
 		hide()
 		return
@@ -119,23 +120,33 @@ func _process(_delta: float) -> void:
 	var tone := Color("#ecce87") if is_public else Color("#c2d998")
 	if not actionable:
 		tone = Color("#a7c8bd") if action in [world.FieldAction.CHANNEL, world.FieldAction.RAIN, world.FieldAction.WATERED] else Color("#efaa84")
-	var text := ("%s · %s" % ["公田" if is_public else "私田", message])
-	if actionable:
-		text += "  −%d 体力" % cost
-	if world.active_crops.has(cell) and action != world.FieldAction.HARVEST:
+	var lines := PackedStringArray(["%s · %s" % ["公田" if is_public else "私田", message]])
+	if action == world.FieldAction.HARVEST:
+		var proceeds := _harvest_note([cell])
+		if not proceeds.is_empty():
+			lines.append(proceeds)
+	elif world.active_crops.has(cell):
 		var crop: Dictionary = world.active_crops[cell]
-		text += "\n%s · 生长 %d/%d" % [crop["data"].crop_name, crop["age"], crop["growth_nights"]]
+		lines.append("%s · 还需供水 %d 夜" % [crop.data.crop_name, int(crop.growth_nights) - int(crop.age)])
+	if actionable:
+		var action_key := "A" if GamepadInput.active else "左键"
+		var cost_line := "−%d 体力" % cost
+		if world.sweep_action == world.FieldAction.NONE:
+			cost_line = "%s · %s" % [action_key, cost_line]
+		lines.append(cost_line)
+	elif cost > 0:
+		lines.append("体力不足 · 需 %d · 还差 %d" % [cost, cost - Global.current_stamina])
 	if actionable and world.sweep_action == world.FieldAction.NONE:
 		if world.uses_preparation(action):
 			if not Global.planned_field_seed(cell, true).is_empty():
-				text += "\n按住 %s 预览整备" % modifier
+				lines.append("按住 %s 预览整备" % modifier)
 		else:
 			var plots: Array[Vector2i] = world.field_batch_targets(cell, action)
 			if action == world.FieldAction.HARVEST and not world.harvest_replanting(plots).is_empty():
-				text += "\n按住 %s 预览收后续播" % modifier
+				lines.append("按住 %s 预览收后续播" % modifier)
 			elif plots.size() > 1:
-				text += "\n按住 %s 预览整田%s" % [modifier, world.FIELD_WORK_LABELS[action]]
-	_place_caption(cell, text, tone)
+				lines.append("按住 %s 预览整田%s" % [modifier, world.FIELD_WORK_LABELS[action]])
+	_place_caption(cell, "\n".join(lines), tone)
 
 func _show_field_preview(cell: Vector2i, action: int, plots: Array[Vector2i]) -> void:
 	var cost: int = plots.size() * world.field_cost(action)
@@ -157,10 +168,7 @@ func _show_field_preview(cell: Vector2i, action: int, plots: Array[Vector2i]) ->
 		var scope: Global.FieldScope = world.harvest_batch_scope()
 		if scope != Global.FieldScope.ALL:
 			title = "批收" + Global.FIELD_SCOPE_NAMES[scope]
-		var totals: Dictionary = world.batch_harvest_totals(plots)
-		var harvest_note := Global.field_work_summary(totals, ["tribute", "stock", "copper", "leaves"])
-		if totals.levy > 0:
-			harvest_note += " · 扣税 %d" % totals.levy
+		var harvest_note := _harvest_note(plots)
 		if not harvest_note.is_empty():
 			details.append(harvest_note)
 		var replanting: Dictionary = world.harvest_replanting(plots)
@@ -173,6 +181,13 @@ func _show_field_preview(cell: Vector2i, action: int, plots: Array[Vector2i]) ->
 	elif action == world.FieldAction.WATER:
 		symbol = HUDIcons.Symbol.WATER
 	_show_batch_caption(cell, title, details, cost, plots, seeds, symbol)
+
+func _harvest_note(plots: Array[Vector2i]) -> String:
+	var totals: Dictionary = world.batch_harvest_totals(plots)
+	var note := Global.field_work_summary(totals, ["tribute", "stock", "copper", "leaves"])
+	if totals.levy > 0:
+		note += " · 扣税 %d" % totals.levy
+	return note
 
 func _show_preparation_preview(cell: Vector2i, preparation: Dictionary) -> void:
 	var seeds: Dictionary[Vector2i, String] = preparation.seeds
@@ -215,7 +230,7 @@ func _place_caption(cell: Vector2i, text: String, tone: Color, plots: Array[Vect
 	if text != label.text or batch_icon.visible != is_batch:
 		batch_icon.visible = is_batch
 		label.text = text
-		caption.size = caption.get_combined_minimum_size()
+	caption.size = caption.get_combined_minimum_size()
 	label.modulate = ink
 	position = at_cell
 	var bounds := get_viewport().get_visible_rect().grow(-8.0)

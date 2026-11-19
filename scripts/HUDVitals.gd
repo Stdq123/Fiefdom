@@ -4,6 +4,8 @@ extends PanelContainer
 @onready var stamina_bar: ProgressBar = %StaminaBar
 
 func _ready() -> void:
+	for label: Label in [$Stack/Health/Title, %HealthLabel, %HealthWarning, $Stack/Stamina/Title, %StaminaLabel, %StaminaWarning]:
+		InterfaceFont.scale_reading_text(label)
 	%HealthIcon.texture = HUDIcons.icon(HUDIcons.Symbol.HEALTH)
 	%StaminaIcon.texture = HUDIcons.icon(HUDIcons.Symbol.STAMINA)
 	GameEvents.health_changed.connect(_show_health)

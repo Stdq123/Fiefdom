@@ -990,8 +990,8 @@ func field_action(grid_pos: Vector2i) -> FieldAction:
 func field_cost(action: FieldAction) -> int:
 	return FIELD_COSTS.get(action, 0)
 
-func field_message(grid_pos: Vector2i, action: FieldAction) -> String:
-	if field_cost(action) > Global.current_stamina:
+func field_message(grid_pos: Vector2i, action: FieldAction, check_stamina := true) -> String:
+	if check_stamina and field_cost(action) > Global.current_stamina:
 		return "体力不足 · 需 %d" % field_cost(action)
 	match action:
 		FieldAction.TILL: return "翻地"
