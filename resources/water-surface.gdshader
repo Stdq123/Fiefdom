@@ -9,6 +9,9 @@ uniform bool masked = false;
 uniform sampler2D shore_mask : hint_default_white, filter_linear, repeat_disable;
 uniform vec2 mask_scale;
 uniform vec2 mask_offset;
+uniform int lantern_count = 0;
+// Surface origin in local coordinates, scale, and the matching flame's energy.
+uniform vec4 lanterns[2];
 
 varying vec2 ground_position;
 
@@ -53,6 +56,20 @@ float wind_crests(vec2 p) {
 	return smoothstep(0.87, 0.99, row) * smoothstep(0.32, 0.83, light);
 }
 
+float lantern_glint(vec2 pixel, vec4 lamp) {
+	vec2 relative = (pixel - lamp.xy) / lamp.z;
+	if (relative.y < -2.5 || relative.y > 33.0 || abs(relative.x) > 14.0) {
+		return 0.0;
+	}
+	float phase = water_clock * (still_water ? 0.94 : 1.68);
+	float drift = sin(relative.y * 0.72 - phase) * 1.6 + sin(relative.y * 0.31 + phase * 0.65) * 0.65;
+	float width = 3.1 + max(relative.y, 0.0) * 0.23;
+	float across = 1.0 - smoothstep(width * 0.36, width, abs(relative.x + drift));
+	float reach = smoothstep(-2.5, 2.0, relative.y) * (1.0 - smoothstep(5.0, 33.0, relative.y));
+	float crest = smoothstep(0.20, 0.96, sin(relative.y * 1.34 - phase + relative.x * 0.16));
+	return across * reach * (0.10 + crest * 0.53) * lamp.w;
+}
+
 void fragment() {
 	vec2 pixel = floor(ground_position);
 	vec2 flow = pixel + vec2(0.0, -floor(water_clock * current_speed));
@@ -79,5 +96,15 @@ void fragment() {
 	}
 	vec3 light_color = mix(vec3(0.14, 0.29, 0.29), COLOR.rgb, smoothstep(0.0, 0.11, glint));
 	float wet_area = masked ? texture(shore_mask, ground_position * mask_scale + mask_offset).a : 1.0;
-	COLOR = vec4(light_color, max(shadow, glint) * wet_area);
+	float water_alpha = max(shadow, glint);
+	float lantern_alpha = 0.0;
+	for (int i = 0; i < lantern_count; i++) {
+		lantern_alpha = max(lantern_alpha, lantern_glint(pixel, lanterns[i]));
+	}
+	if (lantern_alpha > 0.0) {
+		lantern_alpha *= raining ? 0.72 : 1.0;
+		water_alpha += (1.0 - water_alpha) * lantern_alpha;
+		light_color = mix(light_color, vec3(0.98, 0.75, 0.43), lantern_alpha / water_alpha);
+	}
+	COLOR = vec4(light_color, water_alpha * wet_area);
 }

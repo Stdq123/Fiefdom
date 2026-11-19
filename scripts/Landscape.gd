@@ -671,8 +671,10 @@ func _add_water_surface() -> void:
 func _place_lanterns(layer: Node2D) -> void:
 	if wilderness:
 		day_lighting.place_lamp(layer, Vector2(-181, 20))
-		day_lighting.place_lamp(layer, BRIDGE + Vector2(-29, 15), 0.83)
-		day_lighting.place_lamp(layer, BRIDGE + Vector2(30, -12), 0.83)
+		var near_bank := day_lighting.place_lamp(layer, BRIDGE + Vector2(-29, 15), 0.83)
+		var far_bank := day_lighting.place_lamp(layer, BRIDGE + Vector2(30, -12), 0.83)
+		water_surface.reflect_lantern(near_bank.glow, BRIDGE + Vector2(-8, 22))
+		water_surface.reflect_lantern(far_bank.glow, BRIDGE + Vector2(7, -33))
 		day_lighting.place_lamp(layer, RavineLayout.SOUTH_TRAIL_GATE + Vector2(-22, -10), 0.72)
 		day_lighting.place_lamp(layer, RAVINE_RELIEF.WEST_GATE_LAMP, 0.94, 0.05)
 		day_lighting.place_lamp(layer, RAVINE_RELIEF.LOOKOUT_LAMP, 0.68, 0.12)
@@ -692,6 +694,8 @@ func _place_lanterns(layer: Node2D) -> void:
 		day_lighting.place_lamp(layer, Vector2(415, 31))
 		day_lighting.place_lamp(layer, Vector2(-286, -4))
 		day_lighting.place_lamp(layer, EstateLayout.WEST_COURT_SHELTER + Vector2(-24, 7), 0.78)
+		var pond_bank := day_lighting.place_lamp(layer, Vector2(265, 646), 0.74, 0.14)
+		water_surface.reflect_lantern(pond_bank.glow, Vector2(267, 655))
 	day_lighting.refresh()
 
 static func _place_sprite(layer: Node, foot: Vector2, offset: Vector2, texture: Texture2D) -> Sprite2D:

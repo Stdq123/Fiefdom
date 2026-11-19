@@ -8,12 +8,14 @@ const ORDER_CART := preload("res://scripts/SeasonOrderCart.gd")
 const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
 const DYER := preload("res://scripts/MarketDyer.gd")
 const RAIN_VEIL := preload("res://scripts/RainVeil.gd")
+const DAY_LIGHTING := preload("res://scripts/DayLighting.gd")
+const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
 const FIXTURE_ART := preload("res://assets/world/west-market-fixtures.png")
 const FISH_BOARD := Rect2(64, 64, 24, 18)
 
 @onready var player: Player = $Player
 @onready var ground: GROUND = $Ground
-@onready var lighting: CanvasModulate = $DayLighting
+@onready var lighting: DAY_LIGHTING = $DayLighting
 @onready var audio: TRACK_AUDIO = AudioManager.terrain_audio
 @onready var counter: Control = %Counter
 @onready var market_map: Control = $UI/Control/WestMarketMap
@@ -62,6 +64,10 @@ func _ready() -> void:
 			Vector2(264, 55), Vector2(-163, 110), Vector2(-53, 81), Vector2(379, 56)]:
 		lighting.place_lamp($Scenery, foot, 0.82)
 	lighting.place_lamp($Scenery, LAYOUT.DYE_EAVE + Vector2(-18, 4), 0.64, 0.08)
+	var basin_lamp := lighting.place_lamp($Scenery, LAYOUT.BASIN.position + Vector2(32, -7), 0.69, 0.12)
+	var basin_water: WATER_SURFACE = $Ground/BasinWater
+	basin_water.reflect_lantern(basin_lamp.glow, LAYOUT.BASIN.position + Vector2(30, 6))
+	lighting.refresh()
 	player.arrive_at($EstateRoadArrival)
 	player.restore_walking_checkpoint(LAYOUT.BOUNDS, ground.walking_fixture_footprints())
 	player.footstep.connect(_step)

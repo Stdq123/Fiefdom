@@ -5,6 +5,8 @@ const GROUND := preload("res://scripts/WestRoadGround.gd")
 const WOODEN_BRIDGE := preload("res://scripts/WoodenBridge.gd")
 const TRACK_AUDIO := preload("res://scripts/TerrainAudio.gd")
 const RAIN_VEIL := preload("res://scripts/RainVeil.gd")
+const DAY_LIGHTING := preload("res://scripts/DayLighting.gd")
+const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
 const VISITOR := preload("res://scenes/Visitor.tscn")
 const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
 const TRACK_DIRECTION := preload("res://scripts/RoadNetwork.gd")
@@ -13,6 +15,7 @@ const GOLD := Color("#f0cc7b")
 
 @onready var player: Player = $Player
 @onready var ground: GROUND = $Ground
+@onready var lighting: DAY_LIGHTING = $DayLighting
 @onready var settings: Panel = %Settings
 @onready var region_map: Control = $UI/Control/RegionMap
 @onready var audio: TRACK_AUDIO = AudioManager.terrain_audio
@@ -42,8 +45,14 @@ func _ready() -> void:
 	network = TRACK_DIRECTION.new([LAYOUT.ROAD, LAYOUT.MEADOW_TRACK], self, player)
 	scheduled_guest = Global.visitor_for_day(Global.current_day)
 	$DialogManager.setup($UI/Control, player)
-	for foot: Vector2 in [Vector2(-243, 59), Vector2(245, 60), Vector2(-58, 58), Vector2(54, 59)]:
-		$DayLighting.place_lamp($Scenery, foot, 0.82)
+	for foot: Vector2 in [Vector2(-243, 59), Vector2(245, 60)]:
+		lighting.place_lamp($Scenery, foot, 0.82)
+	var west_lamp := lighting.place_lamp($Scenery, Vector2(-58, 58), 0.82)
+	var east_lamp := lighting.place_lamp($Scenery, Vector2(54, 59), 0.82)
+	var creek: WATER_SURFACE = $Ground/WaterSurface
+	creek.reflect_lantern(west_lamp.glow, Vector2(-23, 64))
+	creek.reflect_lantern(east_lamp.glow, Vector2(4, 63))
+	lighting.refresh()
 	$Waypoint.draw.connect(_draw_waypoint)
 	player.footstep.connect(_step)
 	%SettingsButton.icon = HUDIcons.icon(HUDIcons.Symbol.SETTINGS)
@@ -67,7 +76,7 @@ func _process(delta: float) -> void:
 		Global.advance_away_field_work(delta)
 	_sync_silk_guest()
 	_refresh_route()
-	$DayLighting.refresh(delta)
+	lighting.refresh(delta)
 	AudioManager.set_world_ambience(ground.creek_distance(player.position),
 		player.position.distance_to(Vector2(169, -46)), player.position.distance_to(Vector2(-125, 71)))
 

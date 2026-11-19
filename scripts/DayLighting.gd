@@ -23,15 +23,15 @@ func _ready() -> void:
 	falloff.add_point(0.27, Color(0.58, 0.58, 0.58))
 	falloff.add_point(0.58, Color(0.14, 0.14, 0.14))
 	_glow.gradient = falloff
-	_glow.width = 128
-	_glow.height = 128
+	_glow.width = 152
+	_glow.height = 112
 	_glow.fill = GradientTexture2D.FILL_RADIAL
 	_glow.fill_from = Vector2(0.5, 0.5)
 	_glow.fill_to = Vector2(1.0, 0.5)
 	GameEvents.daylight_changed.connect(refresh)
 	refresh()
 
-func place_lamp(layer: Node2D, foot: Vector2, radius_scale := 1.0, ignition := -1.0) -> void:
+func place_lamp(layer: Node2D, foot: Vector2, radius_scale := 1.0, ignition := -1.0) -> Lantern:
 	var lamp := Lantern.new()
 	lamp.name = "Lantern%d" % (lamps.size() + 1)
 	lamp.position = foot
@@ -41,6 +41,7 @@ func place_lamp(layer: Node2D, foot: Vector2, radius_scale := 1.0, ignition := -
 	lamp.glow.texture_scale = radius_scale
 	layer.add_child(lamp)
 	lamps.append(lamp)
+	return lamp
 
 func refresh(delta := 0.0) -> void:
 	var dusk := Global.dusk_amount()
@@ -65,6 +66,7 @@ class Lantern extends Node2D:
 
 	func _init() -> void:
 		glow.position = AT + WINDOW.get_center()
+		glow.offset = Vector2(1.5, 9.0)
 		glow.color = Color("#ffbc75")
 		glow.range_z_max = 4
 		glow.enabled = false

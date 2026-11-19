@@ -1,11 +1,23 @@
 extends Node2D
 
 const SHADER := preload("res://resources/water-surface.gdshader")
+const MAX_REFLECTED_LAMPS := 2
+
+class ReflectedLamp:
+	var light: PointLight2D
+	var waterline: Vector2
+
+	func _init(source: PointLight2D, at: Vector2) -> void:
+		light = source
+		waterline = at
 
 var patches: Array[PackedVector2Array] = []
 var glint := Color.WHITE
 var clock := 0.0
 var surface := ShaderMaterial.new()
+var _reflected_lamps: Array[ReflectedLamp] = []
+var _reflection_data := PackedVector4Array([Vector4.ZERO, Vector4.ZERO])
+var _reflection_count := 0
 
 func _init(outline: PackedVector2Array, speed: float, crossings: Array[Rect2] = [], ravine_flow := false) -> void:
 	patches.append(outline)
@@ -33,9 +45,32 @@ func set_weather(water: Color, wet: bool) -> void:
 	surface.set_shader_parameter("raining", wet)
 	queue_redraw()
 
+func reflect_lantern(light: PointLight2D, waterline: Vector2) -> void:
+	if _reflected_lamps.size() >= MAX_REFLECTED_LAMPS:
+		push_error("The water shader has two lantern slots.")
+		return
+	_reflected_lamps.append(ReflectedLamp.new(light, waterline))
+
 func _process(delta: float) -> void:
 	clock += delta
 	surface.set_shader_parameter("water_clock", clock)
+	if not _reflected_lamps.is_empty():
+		_refresh_reflections()
+
+func _refresh_reflections() -> void:
+	var count := 0
+	for reflection in _reflected_lamps:
+		var light := reflection.light
+		if not is_instance_valid(light) or not light.enabled or not light.is_visible_in_tree():
+			continue
+		var at := reflection.waterline
+		_reflection_data[count] = Vector4(at.x, at.y, light.texture_scale, light.energy)
+		count += 1
+	if count != _reflection_count:
+		_reflection_count = count
+		surface.set_shader_parameter(&"lantern_count", count)
+	if count > 0:
+		surface.set_shader_parameter(&"lanterns", _reflection_data)
 
 func _draw() -> void:
 	for patch in patches:
