@@ -127,6 +127,8 @@ func show_driving_progress(progress: String, instruction: String) -> void:
 	driving_hint.text = instruction
 
 func _ready() -> void:
+	for label: Label in [arrival, guide, visitor_label]:
+		InterfaceFont.scale_reading_text(label)
 	for card: PanelContainer in [$Journal, $Calendar]:
 		card.minimum_size_changed.connect(_fit_top_card.bind(card), CONNECT_DEFERRED)
 		_fit_top_card.call_deferred(card)

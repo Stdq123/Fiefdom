@@ -21,6 +21,7 @@ var shortcuts: Button
 var master_slider: HSlider
 var fullscreen_button: CheckButton
 var window_size_picker: OptionButton
+var reading_size_picker: OptionButton
 
 func _ready() -> void:
 	add_theme_stylebox_override("panel", FRAME)
@@ -46,6 +47,7 @@ func _ready() -> void:
 	_add_volume_control(general, &"AmbienceVolume", "环境声", Preferences.ambience_volume, Preferences.set_ambience_volume)
 	
 	_add_display_controls(general)
+	_add_reading_control(general)
 	var autosave_button := CheckButton.new()
 	autosave_button.name = "Autosave"
 	autosave_button.text = "自动保存"
@@ -180,9 +182,7 @@ func _add_display_controls(vbox: VBoxContainer) -> void:
 	window_size_picker.allow_reselect = true
 	for preset in Preferences.WINDOW_SIZES:
 		window_size_picker.add_item("%d × %d" % [preset.x, preset.y])
-	var popup := window_size_picker.get_popup()
-	popup.add_theme_stylebox_override("panel", FRAME)
-	popup.add_theme_stylebox_override("hover", HUD_THEME.get_stylebox("hover", "HudButton"))
+	_style_picker(window_size_picker)
 	window_size_picker.item_selected.connect(_on_window_size_selected, CONNECT_DEFERRED)
 	row.add_child(window_size_picker)
 	fullscreen_button = CheckButton.new()
@@ -192,6 +192,39 @@ func _add_display_controls(vbox: VBoxContainer) -> void:
 	row.add_child(fullscreen_button)
 	get_window().size_changed.connect(_sync_display_controls, CONNECT_DEFERRED)
 	_sync_display_controls()
+
+func _add_reading_control(vbox: VBoxContainer) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	vbox.add_child(row)
+	var label := Label.new()
+	label.text = "阅读字号"
+	label.custom_minimum_size.x = 86
+	row.add_child(label)
+	reading_size_picker = OptionButton.new()
+	reading_size_picker.name = "ReadingSize"
+	reading_size_picker.accessibility_name = label.text
+	reading_size_picker.tooltip_text = "调整对白、封地手记和邻里手记的文字大小。"
+	reading_size_picker.custom_minimum_size.y = 34
+	reading_size_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for option in ["标准", "较大", "最大"]:
+		reading_size_picker.add_item(option)
+	_style_picker(reading_size_picker)
+	reading_size_picker.select(Preferences.reading_size)
+	reading_size_picker.item_selected.connect(func(index: int):
+		_show_preference_result(Preferences.set_reading_size(index))
+		_sync_reading_size()
+	)
+	Preferences.reading_size_changed.connect(_sync_reading_size)
+	row.add_child(reading_size_picker)
+
+func _style_picker(picker: OptionButton) -> void:
+	var popup := picker.get_popup()
+	popup.add_theme_stylebox_override("panel", FRAME)
+	popup.add_theme_stylebox_override("hover", HUD_THEME.get_stylebox("hover", "HudButton"))
+
+func _sync_reading_size() -> void:
+	reading_size_picker.select(Preferences.reading_size)
 
 func _sync_display_controls() -> void:
 	fullscreen_button.set_pressed_no_signal(Preferences.fullscreen)
@@ -222,20 +255,17 @@ func _on_window_size_selected(index: int) -> void:
 	_sync_display_controls()
 
 func _add_session_controls(vbox: VBoxContainer) -> void:
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	vbox.add_child(actions)
 	save_button = Button.new()
 	save_button.text = "保存游戏"
 	save_button.tooltip_text = "手动档记录当前地点、站位和面向"
 	save_button.pressed.connect(_on_save_pressed)
-	vbox.add_child(save_button)
 
 	var load_btn := Button.new()
 	load_btn.text = "读取游戏"
 	load_btn.pressed.connect(_on_load_pressed)
-	vbox.add_child(load_btn)
-
-	save_status = Label.new()
-	save_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(save_status)
 
 	var title_confirmation := TITLE_CONFIRMATION.new()
 	title_confirmation.name = "TitleConfirmation"
@@ -246,7 +276,14 @@ func _add_session_controls(vbox: VBoxContainer) -> void:
 	var title_btn := Button.new()
 	title_btn.text = "返回标题"
 	title_btn.pressed.connect(title_confirmation.ask.bind("保存会更新本局手动档。直接返回会放弃尚未保存的进度。"))
-	vbox.add_child(title_btn)
+	for button: Button in [save_button, load_btn, title_btn]:
+		button.custom_minimum_size.y = 38
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		actions.add_child(button)
+
+	save_status = Label.new()
+	save_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(save_status)
 
 func _return_to_title() -> void:
 	var tree := get_tree()

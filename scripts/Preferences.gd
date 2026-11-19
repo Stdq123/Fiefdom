@@ -1,6 +1,7 @@
 extends Node
 
 signal bindings_changed
+signal reading_size_changed
 
 const PATH := "user://settings.cfg"
 const DEFAULT_VOLUME := 0.75
@@ -10,6 +11,7 @@ const DEFAULT_AMBIENCE_VOLUME := 0.8
 const WINDOW_SIZES: Array[Vector2i] = [
 	Vector2i(1920, 1080), Vector2i(1600, 900), Vector2i(1280, 720), Vector2i(1024, 576),
 ]
+const READING_FONT_STEPS: Array[int] = [0, 3, 6]
 
 var volume := DEFAULT_VOLUME
 var music_volume := DEFAULT_MUSIC_VOLUME
@@ -18,6 +20,7 @@ var ambience_volume := DEFAULT_AMBIENCE_VOLUME
 var fullscreen := false
 # Zero keeps the startup window dimensions until a preset is selected.
 var window_size := Vector2i.ZERO
+var reading_size := 0
 var autosave := true
 var map_zoom := 2.0
 var _bindings := KeyBindings.DEFAULTS.duplicate()
@@ -35,6 +38,8 @@ func restore() -> void:
 	fullscreen = settings.get_value("display", "fullscreen", false) == true
 	var saved_size: Variant = settings.get_value("display", "window_size", Vector2i.ZERO)
 	window_size = saved_size if saved_size is Vector2i and saved_size in WINDOW_SIZES else Vector2i.ZERO
+	var saved_reading: Variant = settings.get_value("display", "reading_size", 0)
+	reading_size = saved_reading if saved_reading is int and _valid_reading_size(saved_reading) else 0
 	autosave = settings.get_value("game", "autosave", true) == true
 	_bindings = _read_bindings(settings)
 	_install_bindings()
@@ -44,6 +49,7 @@ func restore() -> void:
 	apply_ambience_volume()
 	_apply_display()
 	bindings_changed.emit()
+	reading_size_changed.emit()
 
 func _read_volume(settings: ConfigFile, key: String, fallback: float) -> float:
 	var saved: Variant = settings.get_value("audio", key, fallback)
@@ -90,6 +96,26 @@ func set_window_size(value: Vector2i) -> Error:
 	else:
 		window_size = previous
 	return result
+
+func set_reading_size(value: int) -> Error:
+	if not _valid_reading_size(value):
+		return ERR_INVALID_PARAMETER
+	if value == reading_size:
+		return OK
+	var previous := reading_size
+	reading_size = value
+	var result := _save()
+	if result == OK:
+		reading_size_changed.emit()
+	else:
+		reading_size = previous
+	return result
+
+func _valid_reading_size(value: int) -> bool:
+	return value >= 0 and value < READING_FONT_STEPS.size()
+
+func reading_font_size(standard: int) -> int:
+	return standard + READING_FONT_STEPS[reading_size]
 
 func set_autosave(value: bool) -> Error:
 	autosave = value
@@ -215,6 +241,7 @@ func _save() -> Error:
 	settings.set_value("display", "fullscreen", fullscreen)
 	if window_size != Vector2i.ZERO:
 		settings.set_value("display", "window_size", window_size)
+	settings.set_value("display", "reading_size", reading_size)
 	settings.set_value("game", "autosave", autosave)
 	for action in _bindings:
 		settings.set_value("controls", action, _bindings[action])

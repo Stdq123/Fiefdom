@@ -13,6 +13,7 @@ const ROLES := {
 @onready var roster: VBoxContainer = %Roster
 @onready var known_count: Label = %KnownCount
 @onready var page: VBoxContainer = %Page
+@onready var page_scroll: ScrollContainer = $Pages/PageCard/Scroll
 @onready var portrait: TextureRect = %Portrait
 @onready var person_name: Label = %PersonName
 @onready var first_meeting: Label = %FirstMeeting
@@ -24,6 +25,9 @@ const ROLES := {
 var selected := ""
 
 func _ready() -> void:
+	for label: Label in [first_meeting, where, memory, next_step, %Empty]:
+		InterfaceFont.scale_reading_text(label)
+	page_scroll.get_v_scroll_bar().focus_mode = Control.FOCUS_ALL
 	var group := ButtonGroup.new()
 	var normal := get_theme_stylebox("normal", "Button")
 	var chosen := get_theme_stylebox("pressed", "Button").duplicate() as StyleBox
@@ -79,6 +83,8 @@ func refresh() -> void:
 		_show_neighbor(selected if selected in known else known.front())
 
 func _show_neighbor(speaker: String) -> void:
+	if selected != speaker:
+		page_scroll.scroll_vertical = 0
 	selected = speaker
 	var button := roster.get_node(speaker) as Button
 	button.button_pressed = true
