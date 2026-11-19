@@ -378,6 +378,9 @@ func place_scenery(layer: Node2D) -> void:
 	var south_gate := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, LANDSCAPE.ESTATE_SITE_REGIONS[LANDSCAPE.Prop.GATE])
 	_prop(layer, LAYOUT.EAST_GATE + Vector2(9, -23), north_gate, 44.0, wet_tint)
 	_prop(layer, LAYOUT.EAST_GATE + Vector2(-14, 23), south_gate, 44.0, wet_tint)
+	var return_sign := VillageInscription.place(layer, LAYOUT.EAST_GATE + Vector2(-29, -9),
+		VillageInscription.Form.STONE, "封地", Vector2.RIGHT)
+	return_sign.modulate = wet_tint
 
 func _place_dye_vat(layer: Node2D, vat_name: StringName, foot: Vector2, vat_scale: float, dye: DYE_VAT.Dye) -> void:
 	var vat := DYE_VAT.new(dye)

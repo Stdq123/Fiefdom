@@ -2,6 +2,7 @@ extends Node2D
 class_name WellFieldMarker
 
 const WORKSITE := preload("res://scripts/FieldWorksite.gd")
+const INSCRIPTION := preload("res://scripts/VillageInscription.gd")
 const ENTRANCE_WIDTH := EstateLayout.FIELD_ENTRANCE_WIDTH
 
 @onready var tile_map: TileMapLayer = get_parent()
@@ -49,23 +50,13 @@ func _update_marker(field_id: int) -> void:
 		title = "井田 %d · %s\n余 %d 夜" % [
 			field_id + 1, Global.reclamation_stage(worksite.stage), Global.RECLAMATION_NIGHTS - worksite.stage]
 
-	var label := Label.new()
-	label.material = preload("res://resources/world_hint_material.tres")
-	label.name = "Status"
-	label.text = title
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 10 if field["is_unlocked"] else 9)
-	label.add_theme_constant_override("line_spacing", -2)
-	label.add_theme_color_override("font_color", Color("#e1ddbb"))
-	label.add_theme_color_override("font_outline_color", Color("#263d2e"))
-	label.add_theme_constant_override("outline_size", 2)
-	# The field name belongs to the bank, beneath passing workers and their tools.
-	label.z_as_relative = false
-	label.z_index = -1
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	marker.add_child(label)
-	var caption_size := label.get_combined_minimum_size()
-	label.position.x = half_span.x - caption_size.x if field["is_unlocked"] else -caption_size.x * 0.5
-	# Keep both the raised sluice and the top of the survey stakes clear of the caption.
-	var margin := 11.0 if field["is_unlocked"] else 8.0
-	label.position.y = half_span.y + margin if entrance == Vector2.UP else -half_span.y - caption_size.y - margin
+	var form := INSCRIPTION.Form.FIELD if field["is_unlocked"] else INSCRIPTION.Form.SURVEY
+	var foot := Vector2(6.0 if field["is_unlocked"] else 0.0, -half_span.y - 7.0)
+	if entrance == Vector2.UP:
+		foot.y = half_span.y + INSCRIPTION.HEIGHTS[form] + 5.0
+	var signboard := INSCRIPTION.place(marker, foot, form, title, Vector2.ZERO, true)
+	# Both the bank and its writing sit below passing workers and their tools.
+	signboard.z_as_relative = false
+	signboard.z_index = -1
+	signboard.caption.z_as_relative = false
+	signboard.caption.z_index = -1

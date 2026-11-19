@@ -351,10 +351,10 @@ func place_scenery(layer: Node2D) -> void:
 		sprite.self_modulate = plant_tint if riverside else wet_tint
 		if winter and mark.z in LANDSCAPE.ROCK_PROPS:
 			sprite.self_modulate *= LANDSCAPE.WINTER_ROCK_TINT
-	LANDSCAPE.place_waypost(layer, MARKET_SIGN, Vector2.LEFT, "西市", true).self_modulate = wet_tint
-	LANDSCAPE.place_waypost(layer, ESTATE_SIGN, Vector2.RIGHT, "封地", true).self_modulate = wet_tint
+	LANDSCAPE.place_waypost(layer, MARKET_SIGN, Vector2.LEFT, "西市", true).modulate = wet_tint
+	LANDSCAPE.place_waypost(layer, ESTATE_SIGN, Vector2.RIGHT, "封地", true).modulate = wet_tint
 	var meadow_heading: Vector2 = LAYOUT.MEADOW_TRACK[1] - LAYOUT.MEADOW_JUNCTION
-	LANDSCAPE.place_waypost(layer, MEADOW_SIGN, meadow_heading, Sheepfold.MEADOW, true).self_modulate = wet_tint
+	LANDSCAPE.place_waypost(layer, MEADOW_SIGN, meadow_heading, Sheepfold.MEADOW, true).modulate = wet_tint
 
 func _prop(layer: Node2D, foot: Vector2, texture: AtlasTexture) -> Sprite2D:
 	var sprite := Sprite2D.new()

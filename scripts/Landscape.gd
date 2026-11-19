@@ -25,7 +25,7 @@ const DAY_LIGHTING := preload("res://scripts/DayLighting.gd")
 const NINJA_SCENERY := preload("res://assets/world/ninja-adventure/tileset_village_abandoned.png")
 const ESTATE_STORAGE := preload("res://assets/world/estate-storage.svg")
 const RIVERSIDE_PLANTS := preload("res://assets/world/riverside-plants.png")
-const RAVINE_WAYPOSTS := preload("res://assets/world/ravine-wayposts.png")
+const INSCRIPTION := preload("res://scripts/VillageInscription.gd")
 const WOODLAND := preload("res://assets/world/ravine-woodland.svg")
 const RAVINE_BANKS := preload("res://scripts/RavineBanks.gd")
 const RAVINE_RELIEF := preload("res://scripts/RavineRelief.gd")
@@ -145,10 +145,6 @@ const ESTATE_RIVER_REGIONS := {
 	Prop.FERN: Rect2(212, 300, 27, 21),
 	Prop.RAVINE_RUSH: Rect2(240, 300, 26, 20),
 }
-const ESTATE_WAYPOST_REGIONS: Array[Rect2] = [
-	Rect2(228, 64, 48, 48), Rect2(0, 116, 32, 32), Rect2(32, 116, 32, 32), Rect2(64, 116, 32, 32),
-	Rect2(276, 64, 48, 48), Rect2(96, 116, 32, 32), Rect2(128, 116, 32, 32), Rect2(160, 116, 32, 32),
-]
 const CANOPY_SHADOW_SCALE := {
 	Prop.OAK: 1.0, Prop.BLOSSOM_TREE: 1.0, Prop.PINE: 0.82,
 	Prop.GROVE_TREE: 0.64, Prop.GROVE_CLUSTER: 1.24, Prop.WILLOW: 1.54,
@@ -216,8 +212,6 @@ const ESTATE_WAYPOSTS := [
 	[Vector2(226, 605), EstateLayout.FESTIVAL_LANE[1] - EstateLayout.FESTIVAL_FORK, "南池"],
 	[Vector2(278, 553), EstateLayout.RAVINE_TRAIL[1] - EstateLayout.FESTIVAL_FORK, EstateLayout.RAVINE_TRAIL_NAME],
 ]
-# Frames for clockwise headings from east. The east and west cuts use the long board.
-const WAYPOST_FRAMES := [-1, 1, 3, 1, -1, 2, 0, 2]
 const WINTER_ROCK_TINT := Color(0.92, 0.99, 1.08)
 const EAST_LANE_JUNCTION := EstateLayout.EAST_LANE_JUNCTION
 const ESTATE_SOUTH_LANE := EstateLayout.SOUTH_LANE
@@ -572,13 +566,19 @@ func _prepare_map() -> void:
 	if wilderness:
 		var lookout := atlas_texture(RAVINE_ART, Rect2(146, 0, 48, 40))
 		scenery[_place_sprite(props_layer, RavineLayout.LOOKOUT, Vector2(-24, -38), lookout)] = SCENE_LANDMARK
+		scenery[INSCRIPTION.place(props_layer, RavineLayout.LOOKOUT + Vector2(-76, 47),
+			INSCRIPTION.Form.STONE, "望溪台")] = Prop.SIGNPOST
 		_place_ravine_wayposts(props_layer)
 	else:
 		_place_estate_wayposts(props_layer)
 		var pavilion_texture := atlas_texture(ESTATE_ART, PAVILION_REGION)
-		scenery[_place_sprite(props_layer, SOUTH_PAVILION, _building_offset(PAVILION_REGION.size), pavilion_texture)] = SCENE_LANDMARK
+		var pavilion := _place_sprite(props_layer, SOUTH_PAVILION, _building_offset(PAVILION_REGION.size), pavilion_texture)
+		scenery[pavilion] = SCENE_LANDMARK
+		INSCRIPTION.place(pavilion, Vector2(0, -20), INSCRIPTION.Form.EAVE, "南路亭")
 		var shelter := atlas_texture(ESTATE_ART, Rect2(216, 0, 48, 40))
-		scenery[_place_sprite(props_layer, EstateLayout.WEST_COURT_SHELTER, Vector2(-24, -38), shelter)] = SCENE_WEST_COURT
+		var court := _place_sprite(props_layer, EstateLayout.WEST_COURT_SHELTER, Vector2(-24, -38), shelter)
+		scenery[court] = SCENE_WEST_COURT
+		INSCRIPTION.place(court, Vector2(0, -6), INSCRIPTION.Form.EAVE, "西廊")
 		var workshop := _place_sprite(props_layer, SILK_SHED_FOOT,
 			_prop_bounds(Vector2.ZERO, Prop.SILK_SHED).position, _prop_texture(Prop.SILK_SHED, SILK_SHED_FOOT))
 		scenery[workshop] = Prop.SILK_SHED
@@ -590,17 +590,23 @@ func _prepare_map() -> void:
 	if not wilderness:
 		rain.shelter_bounds = EstateLayout.PAVILION_SHELTER_BOUNDS
 	add_child(rain)
-	_add_landmark_labels()
 	_install_boundaries()
 	_refresh_scenery()
 
 func _place_ravine_wayposts(layer: Node2D) -> void:
 	for junction: Array in RAVINE_JUNCTIONS:
 		var lane: Array = junction[1]
-		var post := place_waypost(layer, junction[0], lane[1] - lane[0], junction[2], true)
+		var post := place_waypost(layer, junction[0], lane[1] - lane[0], junction[2])
 		scenery[post] = Prop.SIGNPOST
 		if junction[2] == RavineLayout.SOUTH_TRAIL_NAME:
 			shortcut_waypost = post
+	scenery[INSCRIPTION.place(layer, RavineLayout.WEST_GATE + Vector2(26, -9), INSCRIPTION.Form.STONE,
+		"西门·回封地", Vector2.LEFT)] = Prop.SIGNPOST
+	scenery[place_waypost(layer, RavineLayout.SHORE_FORK + Vector2(-13, -12),
+		RavineLayout.WEST_SHORE[1] - RavineLayout.SHORE_FORK, "柳湾·埠头")] = Prop.SIGNPOST
+	scenery[place_waypost(layer, RavineLayout.DOCK_FORK + Vector2(-18, -5),
+		RavineLayout.WEST_SHORE[4] - RavineLayout.DOCK_FORK, "柳湾")] = Prop.SIGNPOST
+	scenery[place_waypost(layer, BRIDGE + Vector2(-53, 20), Vector2.RIGHT, "木桥")] = Prop.SIGNPOST
 
 func _place_estate_wayposts(layer: Node2D) -> void:
 	for entry: Array in ESTATE_WAYPOSTS:
@@ -608,31 +614,15 @@ func _place_estate_wayposts(layer: Node2D) -> void:
 		scenery[post] = Prop.SIGNPOST
 		if entry[2] == EstateLayout.RAVINE_TRAIL_NAME:
 			shortcut_waypost = post
+	scenery[INSCRIPTION.place(layer, EstateLayout.EAST_GATE + Vector2(-23, -9),
+		INSCRIPTION.Form.STONE, "东关")] = Prop.SIGNPOST
+	scenery[place_waypost(layer, EstateLayout.FESTIVAL_LANE[-5] + Vector2(-14, 4),
+		EstateLayout.FESTIVAL_LANE[-4] - EstateLayout.FESTIVAL_LANE[-5], "南池畔", true)] = Prop.SIGNPOST
 
 static func place_waypost(layer: Node2D, foot: Vector2, direction: Vector2, caption: String,
 		estate_art := false) -> Sprite2D:
-	var heading := posmod(roundi(direction.angle() / (PI / 4.0)), 8)
-	var frame: int = WAYPOST_FRAMES[heading]
-	var texture: AtlasTexture
-	var offset := Vector2(-16, -29)
-	if estate_art:
-		texture = atlas_texture(ESTATE_ART, ESTATE_WAYPOST_REGIONS[heading])
-		if frame == -1:
-			offset = -PROP_ANCHOR
-	elif frame == -1:
-		var cut := Vector2(Prop.SIGNPOST % PROP_COLUMNS, floori(float(Prop.SIGNPOST) / PROP_COLUMNS))
-		texture = atlas_texture(SCENERY, Rect2(cut * PROP_SIZE, PROP_SIZE))
-		offset = -PROP_ANCHOR
-	else:
-		texture = atlas_texture(RAVINE_WAYPOSTS, Rect2(frame * 32.0, 0, 32, 32))
-	var post := _place_sprite(layer, foot, offset, texture)
-	post.name = caption + "路牌"
-	post.flip_h = not estate_art and heading in [3, 4, 5]
-	var label := _landmark_label(caption)
-	label.name = "Caption"
-	label.position = Vector2(-55, -43 if frame == -1 else -39)
-	post.add_child(label)
-	return post
+	var form := INSCRIPTION.Form.OAK if estate_art else INSCRIPTION.Form.BAMBOO
+	return INSCRIPTION.place(layer, foot, form, caption, direction)
 
 func _add_water_surface() -> void:
 	if wilderness:
@@ -670,7 +660,7 @@ func _place_lanterns(layer: Node2D) -> void:
 		day_lighting.place_lamp(layer, EstateLayout.RAVINE_TRAIL_GATE + Vector2(-16, -17), 0.72)
 		day_lighting.place_lamp(layer, Vector2(415, 31))
 		day_lighting.place_lamp(layer, Vector2(-286, -4))
-		day_lighting.place_lamp(layer, EstateLayout.WEST_COURT + Vector2(-31, -9), 0.78)
+		day_lighting.place_lamp(layer, EstateLayout.WEST_COURT_SHELTER + Vector2(-24, 7), 0.78)
 	day_lighting.refresh()
 
 static func _place_sprite(layer: Node, foot: Vector2, offset: Vector2, texture: Texture2D) -> Sprite2D:
@@ -713,7 +703,7 @@ func _refresh_scenery() -> void:
 		var tint := _prop_tint(prop)
 		if not wilderness and sprite.position.y < ESTATE_BOUNDS.position.y - 48.0:
 			tint *= Color("#b8c4ba")
-		sprite.self_modulate = tint
+		sprite.modulate = tint
 	for sprite in gate_bases:
 		gate_bases[sprite].set_deferred("disabled", not sprite.visible)
 	if not wilderness:
@@ -746,9 +736,7 @@ func _process(delta: float) -> void:
 		var from_foot := sprite.to_local(player.global_position)
 		var crown := sprite.get_rect().grow(-3.0)
 		var behind := from_foot.y < -2.0 and crown.has_point(from_foot - Vector2(0, 7))
-		var tint := sprite.self_modulate
-		tint.a = move_toward(tint.a, 0.28 if behind else 1.0, delta * 5.6)
-		sprite.self_modulate = tint
+		sprite.modulate.a = move_toward(sprite.modulate.a, 0.28 if behind else 1.0, delta * 5.6)
 
 func _draw() -> void:
 	_draw_ground()
@@ -845,38 +833,6 @@ func _surface_at(foot: Vector2) -> TERRAIN_AUDIO.Surface:
 		if wilderness or _ground_clear(Rect2(foot, Vector2.ONE)):
 			return TERRAIN_AUDIO.Surface.SNOW
 	return TERRAIN_AUDIO.Surface.GRASS
-
-func _add_landmark_labels() -> void:
-	if wilderness:
-		_label_at(RavineLayout.WEST_GATE + Vector2(1, -71), "← 西门 · 回封地")
-		_label_at(RavineLayout.SHORE_FORK + Vector2(0, -31), "↑ 柳湾 · 埠头")
-		_label_at(RavineLayout.DOCK_FORK + Vector2(-24, -19), "↑ 柳湾")
-		_label_at(BRIDGE + Vector2(-66, -31), "木桥 →")
-		_label_at(RavineLayout.LOOKOUT + Vector2(-19, -55), "望溪台")
-	else:
-		_label_at(EstateLayout.WEST_COURT_SHELTER + Vector2(0, -48), "西廊")
-		_label_at(Vector2(400, -78), "东关")
-		_label_at(SOUTH_PAVILION + Vector2(0, -69), "南路亭")
-		_label_at(EstateLayout.FESTIVAL_LANE[-5] + Vector2(-16, -18), "南池畔 ↘")
-
-func _label_at(center: Vector2, text: String) -> void:
-	var label := _landmark_label(text)
-	label.position = center - Vector2(55, 0)
-	add_child(label)
-
-static func _landmark_label(text: String) -> Label:
-	var label := Label.new()
-	label.material = preload("res://resources/world_hint_material.tres")
-	label.text = text
-	label.size.x = 110
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.z_index = 7
-	label.add_theme_font_size_override("font_size", 10)
-	label.add_theme_color_override("font_color", Color("#e8dbac"))
-	label.add_theme_color_override("font_outline_color", Color("#243a2d"))
-	label.add_theme_constant_override("outline_size", 3)
-	return label
 
 func _draw_ground() -> void:
 	var colors: Array = SEASON_PALETTES[season]

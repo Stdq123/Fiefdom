@@ -109,15 +109,20 @@ func _bind_ravine() -> bool:
 func _check_junction_posts() -> void:
 	var scenery := ravine.get_node("Scenery")
 	var names := ["野果坳", "浅滩", "望溪台", "南路小径"]
+	var headings := [Vector2.UP, Vector2(1, 1), Vector2(1, -1), Vector2.DOWN]
 	for index in names.size():
-		var post := scenery.get_node_or_null(names[index] + "路牌") as Sprite2D
+		var post := scenery.get_node_or_null(names[index] + "路牌") as VillageInscription
 		if not _expect(post != null, "The %s fork has a physical sign." % names[index]):
 			continue
 		var visible: bool = index != 3 or state.ravine_shortcut_open()
 		_expect(post.is_visible_in_tree() == visible and post.get_node("Caption").text == names[index],
 			"The %s caption belongs to the sign and the gated route is only signed when open." % names[index])
-		var art := post.texture as AtlasTexture
-		_expect(art != null and art.atlas == LANDSCAPE.RAVINE_WAYPOSTS and art.region.position == Vector2(index * 32, 0),
+		var arrow := post.get_node_or_null("Arrow") as Polygon2D
+		if not _expect(arrow != null and arrow.polygon.size() == 7, "The fork has an engraved arrow."):
+			continue
+		var tail := arrow.to_global((arrow.polygon[0] + arrow.polygon[-1]) * 0.5)
+		var tip := arrow.to_global(arrow.polygon[3])
+		_expect(tail.direction_to(tip).dot(headings[index].normalized()) > 0.999,
 			"The %s sign points into its lane." % names[index])
 	print("RAVINE_MAP_JUNCTIONS fruit=north ford=southeast lookout=northeast south=down")
 
@@ -388,13 +393,13 @@ func _check_courtyard_storage(estate_player: CharacterBody2D, landscape: Node2D)
 	await Campaign.walk_straight(tree, estate_player, jar.position + Vector2(0, -2))
 	await _capture_map_frame("00d-behind-jar")
 	_expect(estate_player.position.distance_to(jar.position + Vector2(0, -2)) < 2.0
-		and estate_player.position.y < jar.position.y and is_equal_approx(jar.self_modulate.a, 1.0),
+		and estate_player.position.y < jar.position.y and is_equal_approx(jar.modulate.a, 1.0),
 		"Passing behind the solid jar keeps its mouth and front opaque.")
 	await Campaign.walk_straight(tree, estate_player, jar.position + Vector2(0, 8))
 	await _capture_map_frame("00e-in-front-of-jar")
 	_expect(absf(estate_player.position.x - jar.position.x) < 2.0 and estate_player.position.y >= jar.position.y + 4.0,
 		"The player can keep walking past the front of the jar.")
-	print("RAVINE_MAP_STORAGE jar=", jar.position, " alpha=", jar.self_modulate.a, " front=", estate_player.position)
+	print("RAVINE_MAP_STORAGE jar=", jar.position, " alpha=", jar.modulate.a, " front=", estate_player.position)
 	await Campaign.walk_straight(tree, estate_player, Vector2(61, 48))
 
 func _lamp_at_lights(landscape: Node2D, foot: Vector2) -> bool:

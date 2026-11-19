@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://bbehfi6r1d65r"
+path="res://.godot/imported/market-trade-signs.png-680cc581033aad5addff482771cd2819.res"
+
+[deps]
+
+source_file="res://assets/world/market-trade-signs.png"
+dest_files=["res://.godot/imported/market-trade-signs.png-680cc581033aad5addff482771cd2819.res"]
+
+[params]
+
+authored_at_2x=true

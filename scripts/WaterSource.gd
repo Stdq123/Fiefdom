@@ -1,6 +1,7 @@
 extends Node2D
 
 const ART := preload("res://assets/world/estate-hall-yard.png")
+const INSCRIPTION := preload("res://scripts/VillageInscription.gd")
 const BASIN_REGION := Rect2(528, 276, 32, 26)
 const WATER := Color("#568e87")
 const WATER_LIGHT := Color("#a5d4bc")
@@ -17,6 +18,7 @@ var water_frame := 0
 var focused := false
 
 func _ready() -> void:
+	INSCRIPTION.place(self, Vector2(-23, -6), INSCRIPTION.Form.STONE, "水源")
 	GamepadInput.changed.connect(_refresh_hint)
 	Preferences.bindings_changed.connect(_refresh_hint)
 	GameEvents.day_advanced.connect(_refresh_appearance.unbind(1))
@@ -68,6 +70,7 @@ func _place_hint() -> void:
 func _refresh_hint() -> void:
 	var caption := "水源 · 量水尺" if Global.channel_survey_day > 0 else "水源"
 	hint.text = GamepadInput.interact_hint(caption) if focused else caption
+	hint.visible = focused
 	hint.z_index = 1 if focused else -1
 	hint.modulate = Color("#ffdfa0") if focused else Color("#c4e2ce")
 

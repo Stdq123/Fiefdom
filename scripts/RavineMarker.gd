@@ -1,13 +1,13 @@
 extends Node2D
 
-const OAK_BOARD := preload("res://assets/world/estate-site-art.png")
-const BOARD_REGION := Rect2(158, 252, 32, 28)
+const INSCRIPTION := preload("res://scripts/VillageInscription.gd")
 
 var site := -1
 var hint: Label
 var focused := false
 
 func _ready() -> void:
+	INSCRIPTION.place(self, Vector2(0, -3), INSCRIPTION.Form.SURVEY, "今日水迹")
 	hint = Label.new()
 	hint.material = preload("res://resources/world_hint_material.tres")
 	hint.position = Vector2(-72, -38)
@@ -36,6 +36,7 @@ func _refresh() -> void:
 func set_interaction_focused(active: bool) -> void:
 	focused = active
 	hint.text = GamepadInput.interact_hint("竹简记事") if active else "今日水迹"
+	hint.visible = active
 	hint.modulate = Color("#fff0ba") if active else Color("#e5cf94")
 	queue_redraw()
 
@@ -43,7 +44,8 @@ func interact() -> void:
 	Global.record_ravine_site(site)
 
 func _draw() -> void:
-	draw_texture_rect_region(OAK_BOARD, Rect2(-12, -18, 24, 21), BOARD_REGION)
+	# The rolled slips lie against the foot of the register.
+	draw_set_transform(Vector2(10, 4), -0.13, Vector2(0.80, 0.64))
 	var bamboo := Color("#e5ca89") if focused else Color("#c3a473")
 	for i in 5:
 		var x := -6.5 + i * 2.5

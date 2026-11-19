@@ -5,6 +5,8 @@ enum Kind { GRAIN, FISH, SILK }
 signal opened(kind: Kind)
 
 const ART_PATH := "res://assets/world/west-market-stalls.png"
+const INSCRIPTION := preload("res://scripts/VillageInscription.gd")
+const SHOP_SIGNS := [INSCRIPTION.Form.GRAIN, INSCRIPTION.Form.FISH, INSCRIPTION.Form.SILK]
 const KEEPER_PATH := "res://assets/characters/market-keepers.png"
 const TITLES := ["粮摊", "鱼摊", "绸摊"]
 const KEEPERS := ["谷伯", "渔生", "蔡娘"]
@@ -36,6 +38,8 @@ func _ready() -> void:
 		counter_front.self_modulate = counter_back.self_modulate
 	keeper.hframes = KeeperPose.size()
 	keeper.texture = _atlas(load(KEEPER_PATH), Rect2(0, KEEPER_CELL.y * kind, KEEPER_CELL.x * keeper.hframes, KEEPER_CELL.y))
+	var plaque := INSCRIPTION.place(self, Vector2(-18, -37), SHOP_SIGNS[kind], TITLES[kind])
+	plaque.modulate = counter_back.self_modulate
 	pose_time = float(kind) * 1.7
 	set_interaction_focused(false)
 
@@ -71,6 +75,7 @@ func set_interaction_focused(active: bool) -> void:
 	focused = active
 	var caption := "%s · %s" % [KEEPERS[kind], TITLES[kind]]
 	sign.text = GamepadInput.interact_hint(caption) if focused else TITLES[kind]
+	sign.visible = focused
 	sign.modulate = Color("#ffe4a1") if focused else Color("#e5d9af")
 	_update_keeper()
 
