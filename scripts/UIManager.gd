@@ -1266,6 +1266,8 @@ func _warn_before_first_tribute(ration_warning: String) -> bool:
 		message += "\n当前体力不足，田务需要 %d 点。" % cost
 	if penalty > 0:
 		message += "\n若今夜仍无纳贡，声望 −%d。" % penalty
+	if Global.is_indoors():
+		message += "\n从南门出去，回井田照料公田。"
 	var alternatives: Dictionary[String, Callable] = {field_button: _follow_tribute_plot.bind(route)}
 	if not ration_warning.is_empty():
 		message += "\n\n" + ration_warning

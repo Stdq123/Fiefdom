@@ -64,6 +64,7 @@ anchor_bottom = 1.0
 mouse_filter = 2
 script = ExtResource("1_handover")
 toggle_action = &""
+keep_focus_in_map = true
 public_plot = SubResource("Style_public")
 private_plot = SubResource("Style_private")
 
@@ -84,7 +85,7 @@ anchor_bottom = 1.0
 mouse_filter = 2
 
 [node name="Sheet" type="PanelContainer" parent="MapModal/Center"]
-custom_minimum_size = Vector2(900, 0)
+custom_minimum_size = Vector2(940, 0)
 layout_mode = 2
 theme_override_styles/panel = SubResource("Style_handover")
 
@@ -125,6 +126,7 @@ layout_mode = 2
 theme_override_constants/separation = 10
 
 [node name="Letter" type="Label" parent="MapModal/Center/Sheet/Stack/Body/Note/Text"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.91, 0.88, 0.76, 1)
 theme_override_font_sizes/font_size = 19
@@ -163,8 +165,10 @@ theme_override_font_sizes/font_size = 19
 text = "中央公田"
 
 [node name="Tribute" type="Label" parent="MapModal/Center/Sheet/Stack/Body/Field/Legend"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "收成入国库，记作纳贡。"
+autowrap_mode = 3
 
 [node name="Private" type="Label" parent="MapModal/Center/Sheet/Stack/Body/Field/Legend"]
 layout_mode = 2
@@ -173,14 +177,27 @@ theme_override_font_sizes/font_size = 19
 text = "四周私田"
 
 [node name="Income" type="Label" parent="MapModal/Center/Sheet/Stack/Body/Field/Legend"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "收成归你，可换粮或交时令单。"
+autowrap_mode = 3
 
-[node name="FindKeeper" type="Button" parent="MapModal/Center/Sheet/Stack"]
+[node name="Footer" type="HBoxContainer" parent="MapModal/Center/Sheet/Stack"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="FirstTributeDue" type="Label" parent="MapModal/Center/Sheet/Stack/Footer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 3
+
+[node name="FindKeeper" type="Button" parent="MapModal/Center/Sheet/Stack/Footer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(144, 40)
 layout_mode = 2
-size_flags_horizontal = 0
+size_flags_vertical = 4
 mouse_default_cursor_shape = 2
 theme_override_colors/font_color = Color(0.97, 0.83, 0.57, 1)
 text = "去见渠伯"
