@@ -16,7 +16,7 @@ const ESTATE_ART := ESTATE_TERRAIN.SITE_ART
 const ESTATE_VESSELS := preload("res://assets/world/estate-vessels.png")
 const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
 const SOUTH_POND := preload("res://scripts/SouthPond.gd")
-const SNOW_FOOTPRINTS := preload("res://scripts/SnowFootprints.gd")
+const FOOTSTEP_EFFECTS := preload("res://scripts/FootstepEffects.gd")
 const SILK_SAMPLE := preload("res://assets/world/west-court-sample.svg")
 const SILK_SAMPLE_BOUNDS := Rect2(EstateLayout.WEST_COURT + Vector2(-37, -4), Vector2(28, 24))
 const RAVINE_ART := preload("res://assets/world/ravine-art.png")
@@ -443,13 +443,15 @@ var forked_oak_texture: AtlasTexture
 var ground_cover: SEASONAL_GROUND
 var estate_terrain: ESTATE_TERRAIN
 var ravine_relief: RAVINE_RELIEF
-var snow_footprints: SNOW_FOOTPRINTS
+var footstep_effects := FOOTSTEP_EFFECTS.new()
 var water_surface: WATER_SURFACE
 var south_pond: SOUTH_POND
 var terrain_audio: TERRAIN_AUDIO
 var day_lighting: DAY_LIGHTING
 var creek_edge := PackedVector2Array()
 var creek_profile: RAVINE_BANKS.Channel
+var ford_shoal := PackedVector2Array()
+var ford_stones: Array[PackedVector2Array] = []
 var season := 0
 var raining := false
 var estate_tracks := ESTATE_TRACKS.duplicate()
@@ -468,9 +470,9 @@ func _ready() -> void:
 		var line := PackedVector2Array(CREEK)
 		creek_edge = _ribbon(line, WATER_HALF_WIDTH)
 		creek_profile = RAVINE_BANKS.Channel.new(line, WATER_HALF_WIDTH, [BRIDGE_DECK.grow(4.0), FORD_AREA])
-	snow_footprints = SNOW_FOOTPRINTS.new()
-	snow_footprints.name = "SnowFootprints"
-	add_child(snow_footprints)
+		ford_shoal = _ford_outline()
+		ford_stones = RAVINE_BANKS.ford_stone_faces()
+	add_child(footstep_effects)
 	terrain_audio = AudioManager.terrain_audio
 	day_lighting = DAY_LIGHTING.new()
 	day_lighting.name = "DayLighting"
@@ -718,8 +720,6 @@ static func _place_sprite(layer: Node, foot: Vector2, offset: Vector2, texture: 
 func _update_weather() -> void:
 	var next_season := Global.season_index()
 	if next_season != season or seasonal_textures.is_empty():
-		if season == Global.Season.WINTER:
-			snow_footprints.clear()
 		season = next_season
 		_update_prop_textures()
 	raining = Global.has_rain()
@@ -823,10 +823,21 @@ func _draw() -> void:
 
 func _on_footstep(at: Vector2) -> void:
 	var foot := to_local(at)
-	var surface := TERRAIN_AUDIO.Surface.PLANK if Global.is_indoors() else _surface_at(foot)
+	var indoors := Global.is_indoors()
+	var surface := TERRAIN_AUDIO.Surface.PLANK if indoors else _surface_at(foot)
 	terrain_audio.play_step(surface)
-	if surface == TERRAIN_AUDIO.Surface.SNOW:
-		snow_footprints.leave(foot, player.get_real_velocity(), terrain_audio.step_variant % 2 == 0)
+	if indoors:
+		return
+	var movement := player.get_real_velocity()
+	var left := terrain_audio.step_variant % 2 == 0
+	match surface:
+		TERRAIN_AUDIO.Surface.SNOW:
+			footstep_effects.leave_snow(foot, movement, left)
+		TERRAIN_AUDIO.Surface.SHALLOWS:
+			footstep_effects.splash(foot, movement, left, ford_shoal, ford_stones)
+		TERRAIN_AUDIO.Surface.TRACK:
+			if not raining and (wilderness or _ground_clear(Rect2(foot, Vector2.ONE))):
+				footstep_effects.lift_dust(foot, movement, left)
 
 func _surface_at(foot: Vector2) -> TERRAIN_AUDIO.Surface:
 	if wilderness:
@@ -1195,7 +1206,9 @@ func _field_verge_outline(area: Rect2, entrance: Vector2) -> PackedVector2Array:
 	return outline
 
 func _draw_crossings() -> void:
-	var ford_water: Color = WATER_TINTS[season]
+	RAVINE_BANKS.draw_ford(self, ford_shoal, WATER_TINTS[season], season, raining)
+
+static func _ford_outline() -> PackedVector2Array:
 	var shoal := PackedVector2Array()
 	var edge_y: Array[float] = [-17.0, -12.0, -6.0, 4.0, 12.0, 17.0]
 	var half_widths: Array[float] = [5.0, 12.0, 18.0, 18.0, 13.0, 7.0]
@@ -1205,7 +1218,7 @@ func _draw_crossings() -> void:
 	for i in range(edge_y.size() - 1, -1, -1):
 		var y := FORD.y + edge_y[i]
 		shoal.append(Vector2(roundf(creek_x(y)) + half_widths[i], y))
-	RAVINE_BANKS.draw_ford(self, shoal, ford_water, season, raining)
+	return shoal
 
 static func creek_x(y: float) -> float:
 	for i in range(1, CREEK.size()):

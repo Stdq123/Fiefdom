@@ -75,7 +75,7 @@ func _rainy_west_road(score: AudioStreamPlayer) -> bool:
 		_expect(score.get_playback_position() > estate_position, "Crossing into the bridge road keeps the current phrase.")
 	var road := tree.current_scene
 	await _walk(road.player, [Vector2(82, 36)])
-	_expect(_step_sample().begins_with("water-") and not road.ground.weather.ripples.is_empty(),
+	_expect(_step_sample().begins_with("water-") and _has_footstep_splash(road.ground.weather),
 		"Walking through the puddle by the bridge plays a splash and leaves a ripple.")
 	await _snapshot("02a-bridge-puddle")
 	await _walk(road.player, [Vector2(8, 36)])
@@ -96,7 +96,7 @@ func _rainy_market_return(estate_score: AudioStreamPlayer) -> bool:
 	_expect(estate_stream != null and estate_score.volume_linear > 0.0 and market_score.volume_linear > 0.0,
 		"The estate and market arrangements overlap during the entrance fade.")
 	await _walk(market.player, [Vector2(290, 36)])
-	_expect(_step_sample().begins_with("water-") and not market.ground.weather.ripples.is_empty(),
+	_expect(_step_sample().begins_with("water-") and _has_footstep_splash(market.ground.weather),
 		"The puddle on the market's stone street splashes underfoot.")
 	await _snapshot("02b-market-puddle")
 	await Campaign.walk_market_to(tree, market, Vector2(96, 36))
@@ -251,7 +251,7 @@ func _winter_walk() -> void:
 	await _walk(market.player, [Vector2(290, 36)])
 	_expect(_step_sample().begins_with("stone-"), "The middle of the winter street stays clear.")
 	await _walk(market.player, [Vector2(290, 55), Vector2(328, 55)])
-	var market_marks: int = market.ground.weather.snow_footprints.prints.size()
+	var market_marks: int = market.ground.weather.footstep_effects.snow_footprints.prints.size()
 	_expect(_step_sample().begins_with("snow-") and market_marks > 0, "Snow by the street takes footprints.")
 	await _snapshot("05-market-snow")
 	await Campaign.walk_to_market_exit(tree, market)
@@ -259,10 +259,13 @@ func _winter_walk() -> void:
 		return
 	var road := tree.current_scene
 	await _walk(road.player, [Vector2(-110, 36), Vector2(-110, 55), Vector2(-79, 55)])
-	var road_marks: int = road.ground.weather.snow_footprints.prints.size()
+	var road_marks: int = road.ground.weather.footstep_effects.snow_footprints.prints.size()
 	_expect(_step_sample().begins_with("snow-") and road_marks > 0, "Snow by the bridge takes footprints.")
 	print("ROAD_WEATHER winter_market_footprints=", market_marks, " winter_bridge_footprints=", road_marks)
 	await _snapshot("06-bridge-snow")
+
+func _has_footstep_splash(weather: Node2D) -> bool:
+	return weather.footstep_effects._marks.any(func(mark) -> bool: return not mark.water.is_empty())
 
 func _market_music_setting(market: Node2D, score: AudioStreamPlayer) -> void:
 	await _button(market.get_node("%SettingsButton"))

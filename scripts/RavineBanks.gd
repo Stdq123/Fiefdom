@@ -292,9 +292,7 @@ static func draw_ford(canvas: CanvasItem, shoal: PackedVector2Array, water: Colo
 		var step := FORD_STONES[index]
 		var at := center + Vector2(step.x, step.y)
 		var width := step.z
-		var top := PackedVector2Array([at + Vector2(-width, -2), at + Vector2(-width + 2, -5 - index % 2),
-			at + Vector2(width - 2, -5), at + Vector2(width, -2 + index % 2), at + Vector2(width - 1, 1),
-			at + Vector2(0, 3), at + Vector2(-width + 1, 1)])
+		var top := _ford_stone_top(at, width, index)
 		var shadow := Transform2D(0.0, Vector2(1, 4)) * top
 		canvas.draw_colored_polygon(shadow, Color("#304f527d"))
 		canvas.draw_line(at + Vector2(-width - 1, 5), at + Vector2(-1, 6), Color("#aac9b48f"), 1.0)
@@ -305,6 +303,21 @@ static func draw_ford(canvas: CanvasItem, shoal: PackedVector2Array, water: Colo
 		TERRAIN.draw_loam(canvas, top, stone.lightened(0.04 * (index % 3)), ROCK_STRATA)
 		canvas.draw_polyline(PackedVector2Array([top[0], top[1], top[1].lerp(top[2], 0.72)]), lit, 1.0)
 		canvas.draw_rect(Rect2(at + Vector2(0, -2), Vector2(2 + index % 3, 1)), stone.darkened(0.14))
+
+static func _ford_stone_top(at: Vector2, width: float, index: int) -> PackedVector2Array:
+	return PackedVector2Array([at + Vector2(-width, -2), at + Vector2(-width + 2, -5 - index % 2),
+		at + Vector2(width - 2, -5), at + Vector2(width, -2 + index % 2), at + Vector2(width - 1, 1),
+		at + Vector2(0, 3), at + Vector2(-width + 1, 1)])
+
+static func ford_stone_faces() -> Array[PackedVector2Array]:
+	var faces: Array[PackedVector2Array] = []
+	for index in FORD_STONES.size():
+		var step := FORD_STONES[index]
+		var top := _ford_stone_top(RavineLayout.FORD + Vector2(step.x, step.y), step.z, index)
+		var drop := Vector2(0, 3 + index % 2)
+		faces.append(PackedVector2Array([top[0], top[1], top[2], top[3], top[3] + drop,
+			top[4] + drop, top[5] + drop, top[6] + drop, top[6]]))
+	return faces
 
 func _draw() -> void:
 	var wet := Global.has_rain()

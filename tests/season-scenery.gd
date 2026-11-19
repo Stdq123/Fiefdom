@@ -106,6 +106,7 @@ func _run() -> void:
 		enemy.set_physics_process(false)
 	var landscape := current_scene.get_node("Landscape")
 	var terrain := landscape.terrain_audio as TerrainAudio
+	var footprints := landscape.get_node("FootstepEffects/SnowFootprints")
 	var willow := _tree_at(landscape, Vector2(225, -169))
 	_expect(willow != null and willow.texture.atlas == landscape.ESTATE_ART
 		and willow.texture.region.position.y == landscape.ESTATE_RIVER_REGIONS[landscape.Prop.WILLOW].position.y + landscape.RIVERSIDE_WINTER_ROW,
@@ -118,9 +119,9 @@ func _run() -> void:
 	await Campaign.walk_to(self, walker, Vector2(-251, 97))
 	await Campaign.walk_to(self, walker, Vector2(-210, 97))
 	_expect(snow_samples.size() == 2 and snow_samples.has("snow-1.wav") and snow_samples.has("snow-2.wav")
-		and not landscape.snow_footprints.prints.is_empty(), "Actual movement across snow plays two samples and leaves tracks.")
+		and not footprints.prints.is_empty(), "Actual movement across snow plays two samples and leaves tracks.")
 	await create_timer(4.0).timeout
-	_expect(landscape.snow_footprints.prints.is_empty(), "Tracks fade after standing still.")
+	_expect(footprints.prints.is_empty(), "Tracks fade after standing still.")
 	await Campaign.walk_to(self, walker, Vector2(109, 36))
 	await Campaign.walk_to(self, walker, Vector2(155, 36))
 	_expect(terrain.footsteps.stream.resource_path.get_file().begins_with("plank-"), "The winter bridge still sounds like wood.")

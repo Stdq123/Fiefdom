@@ -2,8 +2,7 @@ extends Node2D
 
 const GROUND := preload("res://scripts/EstateTerrain.gd")
 const TERRAIN_AUDIO := preload("res://scripts/TerrainAudio.gd")
-const SNOW_FOOTPRINTS := preload("res://scripts/SnowFootprints.gd")
-const SPLASH_SECONDS := 0.56
+const FOOTSTEP_EFFECTS := preload("res://scripts/FootstepEffects.gd")
 const OUTLINE := [
 	Vector2(0.0, 0.44), Vector2(0.09, 0.44), Vector2(0.09, 0.23), Vector2(0.24, 0.23),
 	Vector2(0.27, 0.10), Vector2(0.49, 0.10), Vector2(0.55, 0.0), Vector2(0.80, 0.0),
@@ -12,18 +11,10 @@ const OUTLINE := [
 	Vector2(0.22, 0.93), Vector2(0.19, 0.73), Vector2(0.04, 0.70),
 ]
 
-class Ripple:
-	var position: Vector2
-	var age := 0.0
-
-	func _init(at: Vector2) -> void:
-		position = at.round()
-
 var cover := TERRAIN_AUDIO.Surface.GRASS
 var bounds: Array[Rect2] = []
 var patches: Array[PackedVector2Array] = []
-var ripples: Array[Ripple] = []
-var snow_footprints: SNOW_FOOTPRINTS
+var footstep_effects := FOOTSTEP_EFFECTS.new()
 
 @onready var audio: TERRAIN_AUDIO = AudioManager.terrain_audio
 
@@ -44,33 +35,22 @@ func _init(puddles: Array[Rect2], drifts: Array[Rect2]) -> void:
 		patches.append(outline)
 
 func _ready() -> void:
-	set_process(false)
-	if cover == TERRAIN_AUDIO.Surface.SNOW:
-		snow_footprints = SNOW_FOOTPRINTS.new()
-		add_child(snow_footprints)
+	add_child(footstep_effects)
 
 func play_step(at: Vector2, movement: Vector2, surface: TERRAIN_AUDIO.Surface) -> void:
 	var foot := to_local(at)
 	for outline in patches:
 		if Geometry2D.is_point_in_polygon(foot, outline):
-			surface = cover
-			break
+			audio.play_step(cover)
+			var left := audio.step_variant % 2 == 0
+			if cover == TERRAIN_AUDIO.Surface.SHALLOWS:
+				footstep_effects.splash(foot, movement, left, outline)
+			else:
+				footstep_effects.leave_snow(foot, movement, left)
+			return
 	audio.play_step(surface)
-	if surface == TERRAIN_AUDIO.Surface.SHALLOWS:
-		ripples.append(Ripple.new(foot))
-		set_process(true)
-		queue_redraw()
-	elif surface == TERRAIN_AUDIO.Surface.SNOW:
-		snow_footprints.leave(foot, movement, audio.step_variant % 2 == 0)
-
-func _process(delta: float) -> void:
-	for ripple in ripples:
-		ripple.age += delta
-	while not ripples.is_empty() and ripples.front().age >= SPLASH_SECONDS:
-		ripples.pop_front()
-	if ripples.is_empty():
-		set_process(false)
-	queue_redraw()
+	if surface == TERRAIN_AUDIO.Surface.TRACK and cover != TERRAIN_AUDIO.Surface.SHALLOWS:
+		footstep_effects.lift_dust(foot, movement, audio.step_variant % 2 == 0)
 
 func _draw() -> void:
 	for index in patches.size():
@@ -79,11 +59,6 @@ func _draw() -> void:
 		else:
 			draw_colored_polygon(patches[index], Color("#bccdc115"))
 			GROUND.draw_snow(self, bounds[index], index)
-	for ripple in ripples:
-		var age := ripple.age / SPLASH_SECONDS
-		draw_set_transform(ripple.position, 0.0, Vector2(1.0, 0.57))
-		draw_arc(Vector2.ZERO, lerpf(2.0, 11.0, age), 0.0, TAU, 12,
-			Color(0.77, 0.87, 0.81, (1.0 - age) * 0.77), 1.0)
 
 func _draw_puddle(outline: PackedVector2Array, area: Rect2) -> void:
 	draw_set_transform(Vector2(0, 2))
