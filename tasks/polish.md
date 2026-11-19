@@ -15,6 +15,12 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 保存当前进度后返回标题
+
+系统设置和尚未保存的结算都可选择「保存并返回」。确认框列出本局最近的可用存档，默认选中保存。写入失败时，确认框会保留当前画面并显示重试提示。玩家也可留在游戏或结算，或选「直接返回」放弃尚未保存的改动。
+
+从 `2ac1199` 独立构建两次，ZIP 的 SHA-256 均为 `8f2636fe17834058f806db991a2f0564ac8ba6fc25ec6033a386cf576c75f318`。解压原程序通过无窗口与隔离桌面启动。1920×1080 与 1024×768 各核对 5 张界面，开发版与 Windows 程序逐张像素一致。临时写入路径受阻时，旧的第 62 天手动档校验值一致。重试后，第 65 天的结算能在重启后从标题认出。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-save-and-return/release-2ac1199/Fiefdom-1.0.0-Windows-x64.zip) · [验收记录](../build/polish-save-and-return/release-2ac1199/release-proof.txt)
+
 ## 随包提供简体中文正文字体
 
 标题菜单、设置、手记、背包、账册和室内交互提示使用随包的 Noto Sans CJK SC Regular 2.004。完整字库也覆盖「𠮷」等封地名用字。Windows 包附字体授权。 [字体上游](https://github.com/notofonts/noto-cjk/releases/tag/Sans2.004)
