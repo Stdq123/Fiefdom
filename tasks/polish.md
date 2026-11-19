@@ -15,6 +15,12 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 堂屋与蚕棚的窗光和夜灯
+
+窗棂把晴天的窗光分成四列，亮处能看见木纹和苇席织纹。光斑到正午收短，入暮前右移。谷雨时窗光变为较冷的散光。夜间的油灯向案前、工位和地板投出暖光，亮度有轻微起伏。
+
+从 `f261edd` 独立构建两次，ZIP 的 SHA-256 均为 `9ab3b7f22087584f2552d1a43c1d27eb8ec6be8218d4b2bda355a8c9b673bb27`。无窗口检查通过。隔离桌面在 1920×1080 的 Vulkan 和 Direct3D 12、1024×768 的 OpenGL 各核对 22 张。封地户外的雨天与夜间在 Vulkan、OpenGL 两组同机位对照中像素差均为 0。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-interior-light/release-f261edd/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-interior-light/release-f261edd/release-proof.txt)
+
 ## 开垦井田的费用账和九格勘地
 
 立桩铜钱、立桩用粮和施工口粮分别列出余量与缺额。施工口粮用立桩后的余粮对照四夜用量。缺粮时可查看备粮报价，再回到原先选中的田址。地图和账页的九格图用加号标出能接到渠水的格子，用叉号标出受阻的田址。账目可随阅读字号放大并滚动，田址与操作入口留在画面内。
