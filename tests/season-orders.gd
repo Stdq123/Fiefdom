@@ -149,7 +149,7 @@ func _fulfil(start: int, paid_in_food: bool, amount: int) -> void:
 	_expect(state.season_order_delivered_at(state.season_order()) == date and book.copper_button.disabled
 		and world.get_node("SeasonBoard").delivered, "The receipt and physical seal update together.")
 	for row in book.cargo.get_children():
-		_expect("已交" in row.get_child(1).text, "The receipt labels shipped quantities as delivered.")
+		_expect("已交" in row.get_node("Goods/Counts/Quantity").text, "The receipt labels shipped quantities as delivered.")
 	for id in stock_before:
 		_expect(state.crop_stock.count(id) == stock_before[id] - requested.get(id, 0),
 			"Delivery takes only the listed amount of each crop and leaves surplus in stock.")

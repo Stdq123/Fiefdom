@@ -62,7 +62,7 @@ func _open_sheep() -> void:
 
 func _open_view(heading: String, active_view: Control, speaker := "") -> void:
 	title.text = heading
-	card.custom_minimum_size.x = 744.0 if active_view == fish else usual_width
+	card.custom_minimum_size.x = 744.0 if active_view in [fish, orders] else usual_width
 	keeper_card.visible = not speaker.is_empty()
 	keeper_portrait.texture = CharacterArt.dialogue_portrait(speaker, null, false)
 	if keeper_card.visible:

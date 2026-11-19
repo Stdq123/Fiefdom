@@ -1,0 +1,51 @@
+[gd_scene format=3]
+
+[sub_resource type="StyleBoxFlat" id="CargoSlip"]
+content_margin_left = 10.0
+content_margin_top = 6.0
+content_margin_right = 10.0
+content_margin_bottom = 6.0
+bg_color = Color(0.084, 0.122, 0.1, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.32, 0.36, 0.254, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_left = 4
+corner_radius_bottom_right = 4
+
+[node name="CargoSlip" type="PanelContainer"]
+size_flags_horizontal = 3
+mouse_filter = 1
+theme_override_styles/panel = SubResource("CargoSlip")
+
+[node name="Goods" type="HBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Icon" type="TextureRect" parent="Goods"]
+texture_filter = 1
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Counts" type="VBoxContainer" parent="Goods"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="ItemName" type="Label" parent="Goods/Counts"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+
+[node name="Quantity" type="Label" parent="Goods/Counts"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3

@@ -27,67 +27,82 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 26
 text = "南路亭交货簿"
 
-[node name="Lead" type="Label" parent="."]
+[node name="Scroll" type="ScrollContainer" parent="."]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+follow_focus = true
+
+[node name="Pages" type="VBoxContainer" parent="Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="Lead" type="Label" parent="Scroll/Pages"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.73, 0.8, 0.66, 1)
 text = "每季可交一单。跟踪下季备货后，夜间备粮也会留出下季所需的作物。"
 autowrap_mode = 3
 
-[node name="Current" type="PanelContainer" parent="."]
+[node name="Current" type="PanelContainer" parent="Scroll/Pages"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("Card")
 
-[node name="Content" type="VBoxContainer" parent="Current"]
+[node name="Content" type="VBoxContainer" parent="Scroll/Pages/Current"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 9
 
-[node name="Heading" type="HBoxContainer" parent="Current/Content"]
+[node name="Heading" type="HBoxContainer" parent="Scroll/Pages/Current/Content"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Name" type="Label" parent="Current/Content/Heading"]
+[node name="Name" type="Label" parent="Scroll/Pages/Current/Content/Heading"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.96, 0.85, 0.62, 1)
 theme_override_font_sizes/font_size = 23
 
-[node name="Deadline" type="Label" parent="Current/Content/Heading"]
+[node name="Deadline" type="Label" parent="Scroll/Pages/Current/Content/Heading"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 15
+theme_override_font_sizes/font_size = 17
 
-[node name="Request" type="Label" parent="Current/Content"]
+[node name="Request" type="Label" parent="Scroll/Pages/Current/Content"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 17
 autowrap_mode = 3
 
-[node name="Cargo" type="HBoxContainer" parent="Current/Content"]
+[node name="Cargo" type="HBoxContainer" parent="Scroll/Pages/Current/Content"]
 layout_mode = 2
-theme_override_constants/separation = 26
+theme_override_constants/separation = 10
 
-[node name="State" type="Label" parent="Current/Content"]
+[node name="State" type="Label" parent="Scroll/Pages/Current/Content"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 
-[node name="Rewards" type="HBoxContainer" parent="Current/Content"]
+[node name="Rewards" type="HBoxContainer" parent="Scroll/Pages/Current/Content"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Copper" type="Button" parent="Current/Content/Rewards"]
+[node name="Copper" type="Button" parent="Scroll/Pages/Current/Content/Rewards"]
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+theme_override_constants/icon_max_width = 20
 
-[node name="Food" type="Button" parent="Current/Content/Rewards"]
+[node name="Food" type="Button" parent="Scroll/Pages/Current/Content/Rewards"]
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+theme_override_constants/icon_max_width = 20
 
-[node name="Actions" type="HBoxContainer" parent="Current/Content"]
+[node name="Actions" type="HBoxContainer" parent="Scroll/Pages/Current/Content"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Pin" type="Button" parent="Current/Content/Actions"]
+[node name="Pin" type="Button" parent="Scroll/Pages/Current/Content/Actions"]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -95,35 +110,35 @@ mouse_default_cursor_shape = 2
 toggle_mode = true
 text = "在田边跟踪此单"
 
-[node name="FieldActions" type="HBoxContainer" parent="Current/Content"]
+[node name="FieldActions" type="HBoxContainer" parent="Scroll/Pages/Current/Content"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="FieldWork" type="Button" parent="Current/Content/FieldActions"]
+[node name="FieldWork" type="Button" parent="Scroll/Pages/Current/Content/FieldActions"]
 visible = false
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 
-[node name="StewardWork" type="Button" parent="Current/Content/FieldActions"]
+[node name="StewardWork" type="Button" parent="Scroll/Pages/Current/Content/FieldActions"]
 visible = false
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 
-[node name="FishRoute" type="Button" parent="Current/Content/Actions"]
+[node name="FishRoute" type="Button" parent="Scroll/Pages/Current/Content/Actions"]
 visible = false
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 
-[node name="ProduceRoute" type="Button" parent="Current/Content/Actions"]
+[node name="ProduceRoute" type="Button" parent="Scroll/Pages/Current/Content/Actions"]
 visible = false
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 
-[node name="WaterRoute" type="Button" parent="Current/Content/Actions"]
+[node name="WaterRoute" type="Button" parent="Scroll/Pages/Current/Content/Actions"]
 visible = false
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
@@ -131,53 +146,53 @@ tooltip_text = "跟踪此单并指路去封地水源。"
 mouse_default_cursor_shape = 2
 text = "备稻 · 去水源"
 
-[node name="Silk" type="Button" parent="Current/Content/Actions"]
+[node name="Silk" type="Button" parent="Scroll/Pages/Current/Content/Actions"]
 visible = false
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 text = "去蚕桑备绸"
 
-[node name="FreightRoute" type="Button" parent="Current/Content/Actions"]
+[node name="FreightRoute" type="Button" parent="Scroll/Pages/Current/Content/Actions"]
 visible = false
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 text = "指路去卸货场"
 
-[node name="Next" type="PanelContainer" parent="."]
+[node name="Next" type="PanelContainer" parent="Scroll/Pages"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("Card")
 
-[node name="Content" type="VBoxContainer" parent="Next"]
+[node name="Content" type="VBoxContainer" parent="Scroll/Pages/Next"]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="HeadingRow" type="HBoxContainer" parent="Next/Content"]
+[node name="HeadingRow" type="HBoxContainer" parent="Scroll/Pages/Next/Content"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Heading" type="Label" parent="Next/Content/HeadingRow"]
+[node name="Heading" type="Label" parent="Scroll/Pages/Next/Content/HeadingRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.76, 0.84, 0.65, 1)
 theme_override_font_sizes/font_size = 18
 
-[node name="Silk" type="Button" parent="Next/Content/HeadingRow"]
+[node name="Silk" type="Button" parent="Scroll/Pages/Next/Content/HeadingRow"]
 visible = false
 custom_minimum_size = Vector2(120, 36)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 text = "去蚕桑备绸"
 
-[node name="Plan" type="Button" parent="Next/Content/HeadingRow"]
+[node name="Plan" type="Button" parent="Scroll/Pages/Next/Content/HeadingRow"]
 custom_minimum_size = Vector2(124, 36)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 toggle_mode = true
 text = "跟踪下季备货"
 
-[node name="WaterRoute" type="Button" parent="Next/Content/HeadingRow"]
+[node name="WaterRoute" type="Button" parent="Scroll/Pages/Next/Content/HeadingRow"]
 visible = false
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
@@ -185,29 +200,29 @@ tooltip_text = "跟踪下季备货并指路去封地水源。"
 mouse_default_cursor_shape = 2
 text = "备稻 · 去水源"
 
-[node name="Details" type="Label" parent="Next/Content"]
+[node name="Details" type="Label" parent="Scroll/Pages/Next/Content"]
 layout_mode = 2
 tooltip_text = "可留的数量已扣除本季尚未交付的货物。"
 mouse_filter = 1
 autowrap_mode = 3
 
-[node name="FieldActions" type="HBoxContainer" parent="Next/Content"]
+[node name="FieldActions" type="HBoxContainer" parent="Scroll/Pages/Next/Content"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="FieldWork" type="Button" parent="Next/Content/FieldActions"]
+[node name="FieldWork" type="Button" parent="Scroll/Pages/Next/Content/FieldActions"]
 visible = false
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 
-[node name="StewardWork" type="Button" parent="Next/Content/FieldActions"]
+[node name="StewardWork" type="Button" parent="Scroll/Pages/Next/Content/FieldActions"]
 visible = false
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 
-[node name="LastReceipt" type="Label" parent="."]
+[node name="LastReceipt" type="Label" parent="Scroll/Pages"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.73, 0.8, 0.66, 1)
 autowrap_mode = 3

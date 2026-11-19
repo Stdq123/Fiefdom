@@ -4,6 +4,8 @@ signal silk_requested
 
 const READY_INK := Color("#b8d29a")
 const WAIT_INK := Color("#e3c289")
+const CARGO_SLIP := preload("res://scenes/SeasonOrderCargo.tscn")
+const MARKET_FRAME_AND_MARGINS := 136.0
 const CROP_PROGRESS := {
 	Global.NightGrowth.READY: "%d 格已熟",
 	Global.NightGrowth.RIPEN: "%d 格明日熟",
@@ -14,35 +16,44 @@ const CROP_PROGRESS := {
 
 @export var at_market := false
 
-@onready var order_title: Label = $Current/Content/Heading/Name
-@onready var deadline: Label = $Current/Content/Heading/Deadline
-@onready var request: Label = $Current/Content/Request
-@onready var cargo: HBoxContainer = $Current/Content/Cargo
-@onready var status: Label = $Current/Content/State
-@onready var copper_button: Button = $Current/Content/Rewards/Copper
-@onready var food_button: Button = $Current/Content/Rewards/Food
-@onready var pin_button: Button = $Current/Content/Actions/Pin
-@onready var field_work_button: Button = $Current/Content/FieldActions/FieldWork
-@onready var steward_work: Button = $Current/Content/FieldActions/StewardWork
-@onready var fish_route_button: Button = $Current/Content/Actions/FishRoute
-@onready var produce_route_button: Button = $Current/Content/Actions/ProduceRoute
-@onready var water_route_button: Button = $Current/Content/Actions/WaterRoute
-@onready var silk_button: Button = $Current/Content/Actions/Silk
-@onready var freight_route: Button = $Current/Content/Actions/FreightRoute
-@onready var next_heading: Label = $Next/Content/HeadingRow/Heading
-@onready var next_plan_button: Button = $Next/Content/HeadingRow/Plan
-@onready var next_silk_button: Button = $Next/Content/HeadingRow/Silk
-@onready var next_water_button: Button = $Next/Content/HeadingRow/WaterRoute
-@onready var next_details: Label = $Next/Content/Details
-@onready var next_field_work_button: Button = $Next/Content/FieldActions/FieldWork
-@onready var next_steward_work: Button = $Next/Content/FieldActions/StewardWork
-@onready var last_receipt: Label = $LastReceipt
+@onready var scroll: ScrollContainer = $Scroll
+@onready var pages: VBoxContainer = $Scroll/Pages
+@onready var order_title: Label = $Scroll/Pages/Current/Content/Heading/Name
+@onready var deadline: Label = $Scroll/Pages/Current/Content/Heading/Deadline
+@onready var request: Label = $Scroll/Pages/Current/Content/Request
+@onready var cargo: HBoxContainer = $Scroll/Pages/Current/Content/Cargo
+@onready var status: Label = $Scroll/Pages/Current/Content/State
+@onready var copper_button: Button = $Scroll/Pages/Current/Content/Rewards/Copper
+@onready var food_button: Button = $Scroll/Pages/Current/Content/Rewards/Food
+@onready var pin_button: Button = $Scroll/Pages/Current/Content/Actions/Pin
+@onready var field_work_button: Button = $Scroll/Pages/Current/Content/FieldActions/FieldWork
+@onready var steward_work: Button = $Scroll/Pages/Current/Content/FieldActions/StewardWork
+@onready var fish_route_button: Button = $Scroll/Pages/Current/Content/Actions/FishRoute
+@onready var produce_route_button: Button = $Scroll/Pages/Current/Content/Actions/ProduceRoute
+@onready var water_route_button: Button = $Scroll/Pages/Current/Content/Actions/WaterRoute
+@onready var silk_button: Button = $Scroll/Pages/Current/Content/Actions/Silk
+@onready var freight_route: Button = $Scroll/Pages/Current/Content/Actions/FreightRoute
+@onready var next_heading: Label = $Scroll/Pages/Next/Content/HeadingRow/Heading
+@onready var next_plan_button: Button = $Scroll/Pages/Next/Content/HeadingRow/Plan
+@onready var next_silk_button: Button = $Scroll/Pages/Next/Content/HeadingRow/Silk
+@onready var next_water_button: Button = $Scroll/Pages/Next/Content/HeadingRow/WaterRoute
+@onready var next_details: Label = $Scroll/Pages/Next/Content/Details
+@onready var next_field_work_button: Button = $Scroll/Pages/Next/Content/FieldActions/FieldWork
+@onready var next_steward_work: Button = $Scroll/Pages/Next/Content/FieldActions/StewardWork
+@onready var last_receipt: Label = $Scroll/Pages/LastReceipt
 
 var start_day := 0
 var fish_route_target := ""
 
 func _ready() -> void:
 	$Title.visible = not at_market
+	for note: Label in [$Scroll/Pages/Lead, request, status, next_details, last_receipt]:
+		InterfaceFont.scale_reading_text(note)
+	copper_button.icon = HUDIcons.icon(HUDIcons.Symbol.COIN)
+	food_button.icon = HUDIcons.icon(HUDIcons.Symbol.RATIONS)
+	if at_market:
+		pages.minimum_size_changed.connect(_fit_market_book)
+		get_viewport().size_changed.connect(_fit_market_book)
 	copper_button.pressed.connect(_deliver.bind(false))
 	food_button.pressed.connect(_deliver.bind(true))
 	pin_button.toggled.connect(Global.pin_season_order)
@@ -58,7 +69,7 @@ func _ready() -> void:
 	silk_button.pressed.connect(silk_requested.emit)
 	freight_route.pressed.connect(GameEvents.west_market_directions_requested.emit.bind(Global.FREIGHT_YARD))
 	next_silk_button.pressed.connect(silk_requested.emit)
-	visibility_changed.connect(_refresh)
+	visibility_changed.connect(_open_book)
 	GameEvents.season_order_pin_changed.connect(_refresh)
 	GameEvents.daylight_changed.connect(_refresh)
 	GameEvents.day_advanced.connect(_refresh.unbind(1))
@@ -75,7 +86,18 @@ func _ready() -> void:
 	GameEvents.retainer_duty_changed.connect(_refresh.unbind(1))
 	GameEvents.retainer_departed.connect(_refresh.unbind(1))
 	GameEvents.campaign_ended.connect(_refresh.unbind(1))
-	_refresh()
+	_open_book()
+
+func _open_book() -> void:
+	if is_visible_in_tree():
+		scroll.scroll_vertical = 0
+		_refresh()
+		if at_market:
+			_fit_market_book()
+
+func _fit_market_book() -> void:
+	var available := maxf(0.0, get_viewport_rect().size.y - MARKET_FRAME_AND_MARGINS)
+	scroll.custom_minimum_size.y = minf(available, pages.get_combined_minimum_size().y)
 
 func _refresh() -> void:
 	if not is_visible_in_tree():
@@ -87,8 +109,13 @@ func _refresh() -> void:
 	var rewards := Global.season_order_rewards(schedule)
 	start_day = schedule.start
 	order_title.text = "%s单 · %s" % [Global.SEASON_NAMES[Global.season_index()], order.title]
-	deadline.text = ("第 %d 天截止 · 余 %d 天" % [schedule.end, schedule.end - Global.current_day + 1]
+	var days_left: int = schedule.end - Global.current_day + 1
+	deadline.text = ("第 %d 天截止 · 余 %d 天" % [schedule.end, days_left]
 		if delivered_on == 0 else "第 %d–%d 天" % [schedule.start, schedule.end])
+	if delivered_on == 0 and days_left <= 2:
+		deadline.add_theme_color_override("font_color", WAIT_INK)
+	else:
+		deadline.remove_theme_color_override("font_color")
 	request.text = "%s托付    %s" % [order.speaker, order.request] if delivered_on == 0 else order.thanks
 	copper_button.text = "交货 · 领 %d 铜钱" % rewards.copper
 	food_button.text = "交货 · 领 %d 口粮" % rewards.food
@@ -313,25 +340,31 @@ func _show_cargo(needs: Dictionary, delivered: bool) -> void:
 	for child in cargo.get_children():
 		cargo.remove_child(child)
 		child.queue_free()
-	for id in needs:
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 8)
-		cargo.add_child(row)
+	for id: String in needs:
+		var slip := CARGO_SLIP.instantiate() as PanelContainer
 		var picture := ItemManager.season_item_picture(id)
-		var icon := TextureRect.new()
+		var icon: TextureRect = slip.get_node("Goods/Icon")
 		icon.texture = picture.texture
 		icon.self_modulate = picture.tint
-		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.custom_minimum_size = Vector2(32, 32)
-		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		row.add_child(icon)
 		var stock := Global.season_order_stock(id)
-		var name := ItemManager.season_item_label(id)
-		var label := Label.new()
-		label.text = "%s 已交 %d" % [name, needs[id]] if delivered else "%s  %d/%d" % [name, stock, needs[id]]
-		label.add_theme_color_override("font_color", READY_INK if delivered or stock >= needs[id] else WAIT_INK)
-		row.add_child(label)
+		var needed: int = needs[id]
+		var unit := "份"
+		if id == SeasonOrders.SILK_ITEM:
+			unit = "匹"
+		elif CreekFish.SPECIES.has(id):
+			unit = "尾"
+		slip.get_node("Goods/Counts/ItemName").text = ItemManager.season_item_label(id)
+		var quantity: Label = slip.get_node("Goods/Counts/Quantity")
+		if delivered:
+			quantity.text = "已交 %d %s" % [needed, unit]
+		elif stock >= needed:
+			quantity.text = "已备齐 · %d/%d" % [needed, needed]
+		else:
+			quantity.text = "缺 %d %s · %d/%d" % [needed - stock, unit, stock, needed]
+		quantity.add_theme_color_override("font_color", READY_INK if delivered or stock >= needed else WAIT_INK)
+		if not delivered:
+			slip.tooltip_text = "库存 %d %s · 此单需 %d %s" % [stock, unit, needed, unit]
+		cargo.add_child(slip)
 
 func _deliver(paid_in_food: bool) -> void:
 	if Global.deliver_season_order(start_day, paid_in_food):
