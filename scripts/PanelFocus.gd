@@ -24,7 +24,7 @@ static func edge(panel: Control, backward := false) -> Control:
 			return control
 	return null
 
-static func keep_navigation_inside(panel: Control, current: Control, event: InputEventKey) -> void:
+static func keep_navigation_inside(panel: Control, current: Control, event: InputEvent) -> void:
 	var viewport := panel.get_viewport()
 	var backward := event.is_action_pressed(&"ui_focus_prev", true)
 	if backward or event.is_action_pressed(&"ui_focus_next", true):

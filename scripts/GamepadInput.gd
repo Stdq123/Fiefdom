@@ -15,6 +15,10 @@ const DIALOGUE_MOVES := {
 	JOY_BUTTON_DPAD_LEFT: -1, JOY_BUTTON_DPAD_UP: -1,
 	JOY_BUTTON_DPAD_RIGHT: 1, JOY_BUTTON_DPAD_DOWN: 1,
 }
+const UI_DIRECTIONS := {
+	JOY_BUTTON_DPAD_LEFT: &"ui_left", JOY_BUTTON_DPAD_UP: &"ui_up",
+	JOY_BUTTON_DPAD_RIGHT: &"ui_right", JOY_BUTTON_DPAD_DOWN: &"ui_down",
+}
 
 class AimCursor extends Node2D:
 	func _draw() -> void:
@@ -160,7 +164,7 @@ func _process(delta: float) -> void:
 		return
 	var direction := _stick(JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y)
 	if direction.is_zero_approx() and _menu_controls():
-		direction = _stick(JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y) if _active_dialogue() else _left_direction()
+		direction = _stick(JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y) if _active_dialogue() or _active_backpack() else _left_direction()
 	if direction.is_zero_approx():
 		return
 	var previous := cursor.position
@@ -197,6 +201,12 @@ func _active_dialogue() -> Node:
 	var dialogue := get_tree().get_first_node_in_group("dialogue_panel")
 	return null if dialogue and PANEL_FOCUS.has_popup(window) else dialogue
 
+func _active_backpack() -> Control:
+	var backpack := get_tree().get_first_node_in_group("backpack_panel") as Control
+	if backpack and backpack.is_visible_in_tree() and not PANEL_FOCUS.has_popup(window):
+		return backpack
+	return null
+
 func _pad_button(id: int, button: JoyButton, pressed: bool) -> void:
 	if id != device_id or (pointer_suspended and button != JOY_BUTTON_B):
 		return
@@ -204,6 +214,12 @@ func _pad_button(id: int, button: JoyButton, pressed: bool) -> void:
 	if dialogue and DIALOGUE_MOVES.has(button):
 		if pressed:
 			dialogue.move_choice(DIALOGUE_MOVES[button])
+			snap_pointer_to_focus()
+		return
+	var backpack := _active_backpack()
+	if backpack and UI_DIRECTIONS.has(button):
+		_action(UI_DIRECTIONS[button], pressed)
+		if pressed:
 			snap_pointer_to_focus()
 		return
 	match button:
@@ -223,6 +239,10 @@ func _pad_button(id: int, button: JoyButton, pressed: bool) -> void:
 				if dialogue:
 					if not left_down:
 						dialogue.page_speech(step)
+				elif backpack:
+					if not left_down:
+						backpack.cycle_page(step)
+						snap_pointer_to_focus()
 				elif not _menu_controls():
 					GameEvents.seed_cycle_requested.emit(step)
 				elif not left_down:
