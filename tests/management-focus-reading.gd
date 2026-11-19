@@ -141,6 +141,12 @@ func _review(scenario: SceneTree) -> void:
 	await _settle()
 	_expect(panel.visible and not popup.visible and seed_picker.has_focus() and seed_picker.selected == selected,
 		"Escape returns to the seed picker without editing it.")
+	pad.snap_pointer_to_focus()
+	await _pad(JOY_BUTTON_A)
+	_expect(popup.visible, "A opens the focused seed dropdown.")
+	await _pad(JOY_BUTTON_B)
+	_expect(panel.visible and not popup.visible and seed_picker.has_focus() and seed_picker.selected == selected,
+		"B dismisses the dropdown and returns to its picker.")
 
 	panel.show_market()
 	await _settle()
