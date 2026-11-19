@@ -178,14 +178,16 @@ func _clamp_pointer() -> void:
 	var bounds := window.get_visible_rect()
 	cursor.position = cursor.position.clamp(bounds.position, bounds.end - Vector2.ONE)
 
+func _focused_window() -> Window:
+	for subwindow in window.get_embedded_subwindows():
+		if subwindow.has_focus():
+			return subwindow
+	return window
+
 func snap_pointer_to_focus(use_focus := true) -> void:
 	if not active or pointer_suspended:
 		return
-	var focus_window := window
-	for subwindow in window.get_embedded_subwindows():
-		if subwindow.has_focus():
-			focus_window = subwindow
-			break
+	var focus_window := _focused_window()
 	var offset := Vector2(focus_window.position) if focus_window != window else Vector2.ZERO
 	var focus := focus_window.gui_get_focus_owner() if use_focus else null
 	if focus:
@@ -209,8 +211,11 @@ func _active_backpack() -> Control:
 	return null
 
 func _menu_has_directional_focus() -> bool:
-	for panel: Control in get_tree().get_nodes_in_group("gamepad_directional_menu"):
-		if PANEL_FOCUS.input_owner(panel):
+	var focus_window := _focused_window()
+	if focus_window != window:
+		return focus_window.is_in_group("gamepad_directional_menu") and focus_window.gui_get_focus_owner() != null
+	for panel in get_tree().get_nodes_in_group("gamepad_directional_menu"):
+		if panel is Control and PANEL_FOCUS.input_owner(panel):
 			return true
 	return false
 

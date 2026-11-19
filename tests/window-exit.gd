@@ -72,6 +72,27 @@ func _cancel_and_wait_for_transitions() -> void:
 		and state.latest_campaign_save().is_empty(), "Cancel returns to the original focus, input mode and pause state without saving.")
 	pad.suspend_pointer(false)
 	print("WINDOW_EXIT_CANCEL days_unchanged=4 focus_restored=", focus.has_focus())
+	await _return_prompt(ui.panel_manager.settings_panel_instance, focus)
+
+func _return_prompt(settings: Panel, opener: Button) -> void:
+	var confirmation := settings.get_node("TitleConfirmation") as ConfirmationDialog
+	var label := confirmation.get_label()
+	var text_size := label.get_theme_font_size(&"font_size")
+	var save_size: int = confirmation.save_button.get_theme_font_size(&"font_size")
+	var preferences := tree.root.get_node("Preferences")
+	confirmation.ask("保存后返回标题。")
+	_expect(preferences.set_reading_size(2) == OK, "Select maximum reading size for the save prompt.")
+	await _frames()
+	_expect(confirmation.visible and confirmation.save_button.has_focus()
+		and "第 4 天" in label.text and "本局尚无存档" in label.text
+		and label.get_theme_font_size(&"font_size") == text_size + 6
+		and confirmation.save_button.get_theme_font_size(&"font_size") == save_size + 6,
+		"The Return to Title prompt shows the present day and respects the selected reading size.")
+	confirmation.get_cancel_button().pressed.emit()
+	await _frames()
+	_expect(not confirmation.visible and opener.has_focus() and not tree.paused,
+		"Canceling Return to Title restores the prior control and session state.")
+	_expect(preferences.set_reading_size(0) == OK, "Restore the test profile's standard reading size.")
 
 func _defeat() -> void:
 	await _open_fixture("window-exit-defeat", 7)
