@@ -30,6 +30,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_map")
+keep_focus_in_map = true
 
 [node name="MapModal" type="Control" parent="."]
 unique_name_in_owner = true

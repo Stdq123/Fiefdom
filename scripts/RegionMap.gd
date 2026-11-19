@@ -37,8 +37,11 @@ const HERE_RADIUS := 23.0
 @onready var place_title: Label = %PlaceTitle
 @onready var local_button: Button = %LocalMap
 @onready var road_button: Button = %RoadMap
+@onready var current_location: Label = %CurrentLocation
+@onready var active_route: Label = %ActiveRoute
 @onready var route_label: Label = %Route
 @onready var place_detail: Label = %PlaceDetail
+@onready var preview_badge: Label = %PreviewBadge
 @onready var route_button: Button = %Follow
 @onready var clear_button: Button = %ClearDirections
 @onready var region_buttons: HBoxContainer = %Regions
@@ -58,6 +61,8 @@ var destination_buttons: Dictionary[String, Button] = {}
 
 func _ready() -> void:
 	super._ready()
+	for label: Label in [active_route, route_label, place_detail]:
+		InterfaceFont.scale_reading_text(label)
 	paper.draw.connect(_draw_chart)
 	paper.resized.connect(paper.queue_redraw)
 	paper.gui_input.connect(_select_region_on_map)
@@ -65,7 +70,7 @@ func _ready() -> void:
 		button.pressed.connect(_browse.bind(button.get_index()))
 	route_button.pressed.connect(_follow)
 	clear_button.pressed.connect(_cancel_route)
-	local_button.pressed.connect(func(): switch_to(local_map))
+	local_button.pressed.connect(func(): switch_to(local_map, local_map.get_node("%RegionMap")))
 	road_button.pressed.connect(open_map)
 
 func setup(current: Region, blocked: Callable, active: Callable, choose: Callable, clear: Callable,
@@ -78,6 +83,7 @@ func setup(current: Region, blocked: Callable, active: Callable, choose: Callabl
 	clear_trip = clear
 	uses_south_trail = south
 	road_progress = progress
+	current_location.text = "当前位置 · " + REGIONS[region]
 	local_button.visible = local_map != null
 	road_button.visible = region == Region.ROAD
 
@@ -191,7 +197,13 @@ func _refresh_route() -> void:
 	for place in destination_buttons:
 		destination_buttons[place].set_pressed_no_signal(place == selected_place)
 	var active: String = active_trip.call()
-	place_detail.text = Global.meadow_status() if selected_place == Sheepfold.MEADOW else ""
+	var active_place := Global.field_return_place_name() if active == Global.FIELD_RETURN else active
+	active_route.text = "当前未指路" if active_place.is_empty() else "当前指路 · " + active_place
+	preview_badge.visible = not selected_place.is_empty() and selected_place != active
+	var destination: Button = destination_buttons.get(selected_place)
+	place_detail.text = destination.tooltip_text if destination else ""
+	if selected_place == Sheepfold.MEADOW:
+		place_detail.text = Global.meadow_status()
 	clear_button.disabled = active.is_empty()
 	route_button.disabled = selected_place.is_empty() or selected_place == active
 	route_button.text = "开始指路" if selected_place.is_empty() else "指路去" + selected_place
@@ -200,7 +212,8 @@ func _refresh_route() -> void:
 	elif selected_place == Global.FIELD_RETURN:
 		var work := Global.field_return_caption()
 		route_button.text = "指路回井田" if work.is_empty() else "接着田务"
-		place_detail.text = work
+		if not work.is_empty():
+			place_detail.text = work
 	if not selected_place.is_empty() and selected_place == active:
 		route_button.text = "正在指路"
 	if selected_place.is_empty():
@@ -344,7 +357,11 @@ func _draw_road(path: Array, highlighted: bool) -> void:
 	var line := PackedVector2Array(path)
 	paper.draw_polyline(line, INK if highlighted else ROAD_INK, 8.0 if highlighted else 5.0, true)
 	if highlighted:
-		paper.draw_polyline(line, GOLD, 4.0, true)
+		if selected_place == _active_destination():
+			paper.draw_polyline(line, GOLD, 4.0, true)
+		else:
+			for index in range(1, line.size()):
+				paper.draw_dashed_line(line[index - 1], line[index], GOLD, 4.0, 9.0, true, true)
 
 func _draw_bridge() -> void:
 	var deck := Rect2(247, 175, 38, 18)
