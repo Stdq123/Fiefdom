@@ -15,16 +15,18 @@ const TRADITIONAL_SCORE := preload("res://assets/audio/music/ending-traditional.
 const REFORMED_SCORE := preload("res://assets/audio/music/ending-reformed.ogg")
 const UNITS := {"新增公田纳贡": "份", "进献丝绸": "匹", "新增计税收成": "份",
 	"售出丝绸": "匹", "现有铜钱": "枚", "击退敌袭": "次", "国库": "份", "私田收成": "份", "铜钱": "枚"}
-const FIELD_HOLD := 2.15
+const FIELD_HOLD := 3.2
 const PAN_SECONDS := 1.35
 const WALK_SECONDS := 1.65
+const ARRIVAL_HOLD := 0.9
 const RECEIPT_SECONDS := 0.56
 const ENVOY_SLEEVE := Rect2(0, 0, 7, 5)
 const ENVOY_PALM := Rect2(8, 0, 5, 5)
-const CEREMONY_HOLD := 2.30
+const HANDOFF_HOLD := 3.6
 const FAREWELL_WALK := 1.15
-const FAREWELL_HOLD := 4.25
-const SCORE_FADE := 0.8
+const FAREWELL_HOLD := 5.25
+const FILM_MUSIC_GAIN := 0.12
+const SCORE_FADE := 1.2
 const SCORE_DB := -6.0
 const REPORT_MARGIN := 16.0
 
@@ -75,7 +77,7 @@ var walk_sprite: NeighborMotion
 var sleeve: Sprite2D
 var palm: Sprite2D
 var motion: Tween
-var score_fade: Tween
+var film_duration := 0.0
 var field_focus: Vector2
 var ceremony_focus: Vector2
 var walk_start: Vector2
@@ -93,6 +95,7 @@ var ending_saved := false
 var shot := Shot.RECORD
 
 func _ready() -> void:
+	set_process(false)
 	for label: Label in [caption, estate_name, date, epilogue, farewell_line, restore_detail]:
 		InterfaceFont.scale_reading_text(label)
 	var bar := report_scroll.get_v_scroll_bar()
@@ -120,7 +123,6 @@ func present(estate_world: Node2D, already_finished: bool) -> void:
 	skip_button.pressed.connect(_show_record)
 	replay_button.pressed.connect(_play)
 	_build_stage()
-	AudioManager.duck_music_for(self, 0.12)
 	if already_finished:
 		_show_record()
 	else:
@@ -287,8 +289,7 @@ func _build_farewell_guest() -> void:
 func _play(from_handoff := false) -> void:
 	if motion:
 		motion.kill()
-	if score_fade:
-		score_fade.kill()
+	_stop_score()
 	report.hide()
 	shade.hide()
 	film.show()
@@ -316,9 +317,6 @@ func _play(from_handoff := false) -> void:
 		camera.global_position = field_focus
 		camera.zoom = Vector2.ONE * 2.65
 	camera.force_update_scroll()
-	score.volume_db = SCORE_DB
-	if DisplayServer.get_name() != "headless":
-		score.play()
 	_focus_action(skip_button)
 	motion = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	if not from_handoff:
@@ -326,30 +324,57 @@ func _play(from_handoff := false) -> void:
 		motion.tween_property(camera, "global_position", ceremony_focus, PAN_SECONDS).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 		motion.parallel().tween_property(camera, "zoom", Vector2.ONE * 3.05, PAN_SECONDS).set_trans(Tween.TRANS_SINE)
 		motion.tween_callback(_show_ceremony)
+		motion.tween_callback(_play_score)
 	motion.tween_method(_walk_to_table, 0.0, 1.0, WALK_SECONDS)
+	motion.tween_callback(walk_sprite.stand)
+	motion.tween_interval(ARRIVAL_HOLD)
 	motion.tween_method(_receive_volume, 0.0, 1.0, RECEIPT_SECONDS).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	motion.tween_callback(_finish_handoff)
 	if guest:
-		motion.tween_interval(CEREMONY_HOLD - RECEIPT_SECONDS - FAREWELL_WALK)
+		motion.tween_interval(HANDOFF_HOLD - FAREWELL_WALK)
 		motion.tween_callback(guest.show)
 		motion.tween_method(_walk_guest, 0.0, 1.0, FAREWELL_WALK)
 		motion.tween_callback(_show_farewell)
 		motion.tween_interval(FAREWELL_HOLD)
 	else:
-		motion.tween_interval(CEREMONY_HOLD - RECEIPT_SECONDS)
+		motion.tween_interval(HANDOFF_HOLD)
 	if from_handoff:
 		motion.tween_callback(_show_fields)
 		motion.tween_interval(FIELD_HOLD)
-	var length := WALK_SECONDS + CEREMONY_HOLD + FIELD_HOLD
-	if guest:
-		length += FAREWELL_HOLD
-	if not from_handoff:
-		length += PAN_SECONDS
-	if score.playing:
-		var fade_at := minf(length, score.stream.get_length())
-		score_fade = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-		score_fade.tween_property(score, "volume_db", -40.0, SCORE_FADE).set_delay(maxf(0.0, fade_at - SCORE_FADE))
 	motion.tween_callback(_show_record)
+	film_duration = WALK_SECONDS + ARRIVAL_HOLD + RECEIPT_SECONDS + HANDOFF_HOLD + FIELD_HOLD
+	if guest:
+		film_duration += FAREWELL_HOLD
+	if from_handoff:
+		_play_score()
+	else:
+		film_duration += PAN_SECONDS
+
+func _play_score() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	AudioManager.duck_music_for(self, FILM_MUSIC_GAIN)
+	score.volume_db = SCORE_DB
+	score.play()
+	set_process(true)
+
+func _process(_delta: float) -> void:
+	if not score.playing:
+		_stop_score()
+		return
+	# Audio keeps playing even when a slow frame delays the animation clock.
+	var remaining := minf(score.stream.get_length() - score.get_playback_position(),
+		film_duration - motion.get_total_elapsed_time())
+	if remaining < SCORE_FADE:
+		var fade := 1.0 - clampf(remaining / SCORE_FADE, 0.0, 1.0)
+		score.volume_db = lerpf(SCORE_DB, -40.0, fade)
+		AudioManager.duck_music_for(self, 1.0)
+
+func _stop_score() -> void:
+	if is_processing():
+		set_process(false)
+		AudioManager.duck_music_for(self, 1.0)
+	score.stop()
 
 func _show_fields() -> void:
 	shot = Shot.FIELD
@@ -424,9 +449,7 @@ func _face_farewell_guest() -> void:
 func _show_record() -> void:
 	if motion:
 		motion.kill()
-	if score_fade:
-		score_fade.kill()
-	score.stop()
+	_stop_score()
 	if camera:
 		camera.global_position = ceremony_focus
 		camera.zoom = Vector2.ONE * 2.5

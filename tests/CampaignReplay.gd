@@ -1346,12 +1346,14 @@ func run(game_tree: SceneTree, branch: String, release_required := false, captur
 		await tree.create_timer(2.0).timeout
 		_expect(ending.shot == ending.Shot.CEREMONY, "The ceremony starts with the envoy's arrival.")
 		await _capture_ending(capture_directory, ending_capture + "-ceremony")
-		await tree.create_timer(2.1).timeout
 		if ending.guest:
+			while ending.motion.is_running() and ending.shot == ending.Shot.CEREMONY:
+				await tree.process_frame
 			_expect(ending.shot == ending.Shot.FAREWELL and ending.guest.visible,
 				"An actual retainer follows the envoy's handoff with a farewell.")
 			await _capture_ending(capture_directory, ending_capture + "-farewell")
-			await tree.create_timer(ending.FAREWELL_HOLD).timeout
+		while ending.motion.is_running() and ending.shot != ending.Shot.FIELD:
+			await tree.process_frame
 		_expect(ending.shot == ending.Shot.FIELD, "The film returns to the fields after the handoff.")
 		await _capture_ending(capture_directory, ending_capture + "-fields")
 		if not ending.report.visible:
