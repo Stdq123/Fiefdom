@@ -155,31 +155,42 @@ static func draw_tiled_surface(canvas: CanvasItem, polygon: PackedVector2Array,
 		uvs.append(point / size)
 	canvas.draw_polygon(polygon, colors, uvs, texture)
 
+class SurfaceBatch:
+	var _points := PackedVector2Array()
+	var _colors := PackedColorArray()
+	var _triangles := PackedInt32Array()
+
+	func add_polygon(outline: PackedVector2Array, tints: PackedColorArray) -> void:
+		var first := _points.size()
+		for vertex in Geometry2D.triangulate_polygon(outline):
+			_triangles.append(first + vertex)
+		_points.append_array(outline)
+		if tints.size() == 1:
+			for _vertex in outline:
+				_colors.append(tints[0])
+		else:
+			_colors.append_array(tints)
+
+	func draw(canvas: CanvasItem, texture: Texture2D = null) -> void:
+		if _triangles.is_empty():
+			return
+		var uvs := PackedVector2Array()
+		var texture_rid := RID()
+		if texture:
+			texture_rid = texture.get_rid()
+			var size := texture.get_size()
+			for point in _points:
+				uvs.append(point / size)
+		RenderingServer.canvas_item_add_triangle_array(canvas.get_canvas_item(), _triangles, _points, _colors, uvs,
+			PackedInt32Array(), PackedFloat32Array(), texture_rid)
+
 static func draw_tiled_band(canvas: CanvasItem, a: PackedVector2Array, b: PackedVector2Array,
 		near: Color, far: Color, texture: Texture2D = null) -> void:
-	var points := PackedVector2Array()
-	var colors := PackedColorArray()
-	var triangles := PackedInt32Array()
-	var segment_colors := PackedColorArray([near, near, far, far])
-	# Keep each segment's triangulation and its tint while submitting the full band once.
+	var band := SurfaceBatch.new()
+	var colors := PackedColorArray([near, near, far, far])
 	for index in a.size() - 1:
-		var segment := PackedVector2Array([a[index], a[index + 1], b[index + 1], b[index]])
-		var first := points.size()
-		for vertex in Geometry2D.triangulate_polygon(segment):
-			triangles.append(first + vertex)
-		points.append_array(segment)
-		colors.append_array(segment_colors)
-	if triangles.is_empty():
-		return
-	var uvs := PackedVector2Array()
-	var texture_rid := RID()
-	if texture:
-		texture_rid = texture.get_rid()
-		var size := texture.get_size()
-		for point in points:
-			uvs.append(point / size)
-	RenderingServer.canvas_item_add_triangle_array(canvas.get_canvas_item(), triangles, points, colors, uvs,
-		PackedInt32Array(), PackedFloat32Array(), texture_rid)
+		band.add_polygon(PackedVector2Array([a[index], a[index + 1], b[index + 1], b[index]]), colors)
+	band.draw(canvas, texture)
 
 func draw_meadow(canvas: CanvasItem, season: int, wet: bool) -> void:
 	for index in meadow_sprigs.size():

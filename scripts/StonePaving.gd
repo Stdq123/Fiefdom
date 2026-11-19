@@ -8,6 +8,7 @@ const LIP := Vector2(0.45, 2.8)
 
 var outline: PackedVector2Array
 var _stones: Array[Dictionary] = []
+var _split_fragments := PackedInt32Array()
 var _curb: Array[Dictionary] = []
 
 func _init(surface: PackedVector2Array, joint_origin: float, joins: Array[PackedVector2Array] = [],
@@ -41,8 +42,11 @@ func _init(surface: PackedVector2Array, joint_origin: float, joins: Array[Packed
 			if full:
 				_stones.append({"shape": shape, "grain": grain, "full": true})
 			else:
-				for fragment in Geometry2D.intersect_polygons(shape, outline):
+				var fragments := Geometry2D.intersect_polygons(shape, outline)
+				for fragment in fragments:
 					if not Geometry2D.triangulate_polygon(fragment).is_empty():
+						if fragments.size() > 1:
+							_split_fragments.append(_stones.size())
 						_stones.append({"shape": fragment, "grain": grain, "full": false})
 	_build_curb(joins, curb_drop)
 
@@ -88,11 +92,22 @@ func draw(canvas: CanvasItem, loam: Color, winter: bool, wet: bool,
 		stone = stone.lerp(Color("#b8c2b4"), 0.29)
 	_draw_curb(canvas, stone, winter, stone_grain)
 	canvas.draw_colored_polygon(outline, grout)
-	for slab in _stones:
+	_draw_slabs(canvas, grout, stone, stone_grain)
+
+func _draw_slabs(canvas: CanvasItem, grout: Color, stone: Color, grain_texture: Texture2D) -> void:
+	# The course gutters also separate the bevels and marks of neighboring stones.
+	var faces := TERRAIN.SurfaceBatch.new()
+	var bevels := TERRAIN.SurfaceBatch.new()
+	var shines := PackedVector2Array()
+	var shine_colors := PackedColorArray()
+	var grain_marks := PackedVector2Array()
+	var grain_colors := PackedColorArray()
+	for index in _stones.size():
+		var slab := _stones[index]
 		var face: PackedVector2Array = slab.shape
 		var grain: int = slab.grain
 		var top := grout.lerp(stone, 0.48 + grain * 0.020)
-		canvas.draw_colored_polygon(face, top.darkened(0.21))
+		var side := top.darkened(0.21)
 		var center := Vector2.ZERO
 		for point in face:
 			center += point
@@ -100,13 +115,27 @@ func draw(canvas: CanvasItem, loam: Color, winter: bool, wet: bool,
 		var bevel := PackedVector2Array()
 		for point in face:
 			bevel.append(point.lerp(center, 0.15) - Vector2(0.2, 0.27))
-		TERRAIN.draw_loam(canvas, bevel, top, stone_grain)
+		# Fragments of one stone can touch. Keep their original layering.
+		if index in _split_fragments:
+			canvas.draw_colored_polygon(face, side)
+			TERRAIN.draw_loam(canvas, bevel, top, grain_texture)
+			continue
+		faces.add_polygon(face, PackedColorArray([side]))
+		bevels.add_polygon(bevel, PackedColorArray([top]))
 		if slab.full:
-			var edge := bevel[0].lerp(bevel[1], 0.14)
-			var shine := bevel[0].lerp(bevel[1], 0.46 + (grain % 5) * 0.07)
-			canvas.draw_line(edge, shine, top.lightened(0.19), 0.7)
+			shines.append(bevel[0].lerp(bevel[1], 0.14))
+			shines.append(bevel[0].lerp(bevel[1], 0.46 + (grain % 5) * 0.07))
+			shine_colors.append(top.lightened(0.19))
 			if grain % 4 == 0:
-				canvas.draw_line(center + Vector2(-2.0, 0.5), center + Vector2(2.0, 0.5), top.darkened(0.12), 0.65)
+				grain_marks.append(center + Vector2(-2.0, 0.5))
+				grain_marks.append(center + Vector2(2.0, 0.5))
+				grain_colors.append(top.darkened(0.12))
+	faces.draw(canvas)
+	bevels.draw(canvas, grain_texture)
+	if not shines.is_empty():
+		canvas.draw_multiline_colors(shines, shine_colors, 0.7)
+	if not grain_marks.is_empty():
+		canvas.draw_multiline_colors(grain_marks, grain_colors, 0.65)
 
 func _draw_curb(canvas: CanvasItem, stone: Color, winter: bool, stone_grain: Texture2D) -> void:
 	for index in _curb.size():
