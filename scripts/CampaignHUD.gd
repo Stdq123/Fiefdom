@@ -9,6 +9,7 @@ const TRAVEL_HEADING := preload("res://scenes/TravelHeading.tscn")
 const TRAVEL_ROUTE_SIGN := preload("res://scenes/TravelRouteSign.tscn")
 const BACKPACK := preload("res://scenes/Backpack.tscn")
 const NOTICE_TOP := 112.0
+const NOTICE_MAX_WIDTH := 536.0
 
 @export var show_field_status := true
 @export var backpack_trigger: NodePath
@@ -44,15 +45,22 @@ func _ready() -> void:
 		_build_status()
 	_setup_backpack_button()
 	notice = Label.new()
+	notice.name = "WorldNotice"
+	notice.hide()
 	notice.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	notice.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	notice.add_theme_color_override("font_color", Color("#edca83"))
-	notice.add_theme_color_override("font_outline_color", Color("#25342a"))
-	notice.add_theme_constant_override("outline_size", 3)
+	notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	notice.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	notice.theme = HUD_THEME
+	notice.theme_type_variation = &"HudBronzeInk"
+	notice.add_theme_stylebox_override(&"normal", HUD_THEME.get_stylebox(&"panel", &"HudRail"))
+	notice.add_to_group(&"interaction_prompt_obstacle")
 	view.add_child(notice)
 	notice.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	notice.offset_left = -265.0
-	notice.offset_right = 265.0
+	InterfaceFont.scale_reading_text(notice)
+	Preferences.reading_size_changed.connect(_fit_notice_width)
+	view.resized.connect(_fit_notice_width)
+	notice.minimum_size_changed.connect(_fit_notice_height, CONNECT_DEFERRED)
 	set_notice_clearance(0.0)
 	GameEvents.world_notice.connect(show_world_notice)
 	GameEvents.management_visibility_changed.connect(func(open: bool):
@@ -76,11 +84,8 @@ func _ready() -> void:
 		Global.restore_notice = ""
 
 func set_notice_clearance(minimum_top: float) -> void:
-	if not is_instance_valid(notice):
-		return
-	var top := maxf(NOTICE_TOP, minimum_top)
-	notice.offset_top = top
-	notice.offset_bottom = top + 28.0
+	if is_instance_valid(notice):
+		notice.position.y = maxf(NOTICE_TOP, minimum_top)
 
 func add_field_return(walker: Player, choose_trip: Callable) -> void:
 	_return_player = walker
@@ -180,7 +185,8 @@ func _close_backpack() -> void:
 	GameEvents.modal_visibility_changed.emit(false)
 
 func _refresh_notice_visibility() -> void:
-	notice.visible = not (management_open or settings_open or modal_open)
+	notice.visible = not notice.text.is_empty() and notice.modulate.a > 0.0 \
+		and not (management_open or settings_open or modal_open)
 
 func _build_status() -> void:
 	var trail_note := PanelContainer.new()
@@ -256,11 +262,30 @@ func show_world_notice(message: String, hold_seconds := -1.0) -> void:
 		notice_tween.kill()
 	notice.text = message
 	notice.modulate.a = 1.0
+	_fit_notice_width()
+	_refresh_notice_visibility()
 	var hold := hold_seconds if hold_seconds >= 0.0 else (2.8 if show_field_status else 0.0)
 	if hold > 0.0 and not message.is_empty():
 		notice_tween = create_tween()
 		notice_tween.tween_interval(hold)
 		notice_tween.tween_property(notice, "modulate:a", 0.0, 0.45)
+		notice_tween.tween_callback(notice.hide)
+
+func _fit_notice_width() -> void:
+	if notice.text.is_empty():
+		return
+	var font := notice.get_theme_font(&"font")
+	var font_size := notice.get_theme_font_size(&"font_size")
+	var text_width := font.get_multiline_string_size(notice.text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
+	var padding := notice.get_theme_stylebox(&"normal").get_minimum_size().x
+	var available := clampf(view.size.x - 16.0, padding, NOTICE_MAX_WIDTH)
+	var width := minf(ceilf(text_width + padding), available)
+	notice.offset_left = -width * 0.5
+	notice.offset_right = width * 0.5
+	_fit_notice_height.call_deferred()
+
+func _fit_notice_height() -> void:
+	notice.size.y = notice.get_combined_minimum_size().y
 
 func _show_outcome(outcome: Global.Outcome, saved_ending := false) -> void:
 	if is_instance_valid(summary):

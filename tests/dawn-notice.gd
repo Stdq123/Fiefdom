@@ -149,6 +149,34 @@ func _review_results(ui: Node, state: Node, actor: Node) -> void:
 	await _capture("08-fieldwork")
 	print("DAWN_NOTICE_HOLD result_seconds=5 fade_seconds=0.34 positions_clear=true")
 
+func _review_world_notice(ui: Node) -> void:
+	var campaign: CanvasLayer = ui.campaign_hud
+	var notice: Label = campaign.notice
+	var receipt := ("今日外出田务 · 翻地 12 格 · 浇水 18 格 · 收割 12 格 · 补播 10 格\n"
+		+ "国库 +1 · 私仓 +11 · 铜钱 +96 · 桑叶 +18\n首份纳贡已入库 · 堂前可翻账 · 可找渠伯谈轮作")
+	campaign.show_world_notice(receipt, 5.0)
+	await _frames(6)
+	var bounds := notice.get_global_rect()
+	_expect(notice.visible and notice.get_theme_font_size(&"font_size") == 22 and notice.text == receipt
+		and notice.get_line_count() > 3 and notice.get_visible_line_count() == notice.get_line_count(),
+		"The larger return receipt wraps without dropping any text.")
+	_expect(screen.get_visible_rect().encloses(bounds) and ui.hud.map_space_clear(bounds)
+		and notice.is_in_group(&"interaction_prompt_obstacle") and notice.mouse_filter == Control.MOUSE_FILTER_IGNORE,
+		"The notice fits between the HUD panels and leaves input to the map.")
+	var events := screen.get_node("GameEvents")
+	events.modal_visibility_changed.emit(true)
+	_expect(not notice.visible, "A modal hides the active notice.")
+	events.modal_visibility_changed.emit(false)
+	_expect(notice.visible and notice.text == receipt, "The active notice returns when the modal closes.")
+	campaign.show_world_notice("草料 +2 · 已送回羊棚", 0.05)
+	await _frames(6)
+	_expect(notice.size.y < bounds.size.y and notice.size.x < bounds.size.x,
+		"A short message uses a compact panel after the long receipt.")
+	await _frames(30)
+	_expect(not notice.visible and is_zero_approx(notice.modulate.a), "Fading frees the notice's reserved area.")
+	events.world_notice.emit("")
+	_expect(not notice.visible, "An empty notice leaves no panel behind.")
+
 func _review_hall(state: Node, prefs: Node) -> void:
 	state.estate_room = state.EstateRoom.HALL
 	state.last_dawn = {"day": state.current_day - 1}
@@ -206,6 +234,7 @@ func _review(scenario: SceneTree) -> void:
 		and ui.hud.dawn_notice.result_label.get_theme_font_size("font_size") == 23, "Both text lines scale with the reading setting.")
 	await _review_reveal(ui, state, actor)
 	await _review_results(ui, state, actor)
+	await _review_world_notice(ui)
 	await _review_hall(state, prefs)
 	_expect(tree.paused and state.saved_games().is_empty() and state.day_progress == 0.0,
 		"Presentation checks keep the world paused and write no game saves.")
