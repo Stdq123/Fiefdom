@@ -2,8 +2,11 @@ extends Node2D
 
 const AIR_INK := Color("#b0cec7")
 const WATER_INK := Color("#c2dbd3")
+const SNOW_INK := Color("#edf6f0")
 # From far to near, each lane specifies speed, streak length and opacity.
 const AIR_LANES := [Vector3(172, 9, 0.16), Vector3(222, 13, 0.23), Vector3(276, 18, 0.30)]
+# Snow uses the same depth lanes, with size measured in viewport pixels.
+const SNOW_LANES := [Vector3(18, 1.0, 0.30), Vector3(27, 1.5, 0.44), Vector3(38, 2.1, 0.58)]
 const DRIP_FLIGHT := 0.55
 const DRIP_SPLASH := 0.26
 const RING_RADIUS := 3.5
@@ -28,6 +31,7 @@ class Contact:
 		puddle = in_water
 
 var elapsed := 0.0
+var snowflake_count := 0
 var roofs: Array[Roof] = []
 var contacts: Array[Contact] = []
 @onready var splashes := Node2D.new()
@@ -68,16 +72,25 @@ func _ring_inside(point: Vector2, outline: PackedVector2Array) -> bool:
 	return true
 
 func _refresh() -> void:
-	var raining := Global.has_rain() and not Global.is_indoors()
-	visible = raining
-	set_process(raining)
+	var outdoors := not Global.is_indoors()
+	var raining := outdoors and Global.has_rain()
+	snowflake_count = 0
+	if outdoors and not raining:
+		match Global.get_current_solar_term():
+			"小雪": snowflake_count = 54
+			"大雪": snowflake_count = 96
+	visible = raining or snowflake_count > 0
+	splashes.visible = raining
+	set_process(visible)
 	queue_redraw()
-	splashes.queue_redraw()
+	if raining:
+		splashes.queue_redraw()
 
 func _process(delta: float) -> void:
 	elapsed = fposmod(elapsed + delta, 900.0)
 	queue_redraw()
-	splashes.queue_redraw()
+	if splashes.visible:
+		splashes.queue_redraw()
 
 func _draw() -> void:
 	var viewport := get_viewport_rect()
@@ -92,12 +105,17 @@ func _draw() -> void:
 		var shade := roof_to_map * roof.cover
 		if shade.intersects(view):
 			cover.append(shade)
+		if snowflake_count > 0:
+			continue
 		for outlet in roof.outlets:
 			var start := roof_to_map * Vector2(outlet.x, outlet.y)
 			var landing := roof_to_map * _landing(outlet)
 			if view.intersects(Rect2(start, Vector2.ZERO).expand(landing).grow(2.0)):
 				_draw_drip(start, landing)
-	_draw_air(viewport.size, screen_to_map, cover)
+	if snowflake_count > 0:
+		_draw_snow(viewport.size, screen_to_map, cover)
+	else:
+		_draw_air(viewport.size, screen_to_map, cover)
 
 func _roof_visible(roof: Roof) -> bool:
 	return is_instance_valid(roof.anchor) and roof.anchor.is_visible_in_tree()
@@ -115,9 +133,30 @@ func _draw_air(view_size: Vector2, screen_to_map: Transform2D, cover: Array[Rect
 		if not _under_roof(footprint, cover):
 			draw_line(start, finish, Color(AIR_INK, streak.z), 0.43 + 0.13 * lane)
 
-func _under_roof(streak: Rect2, cover: Array[Rect2]) -> bool:
+func _draw_snow(view_size: Vector2, screen_to_map: Transform2D, cover: Array[Rect2]) -> void:
+	var margin := Vector2(16, 16)
+	var span := view_size + margin * 2.0
+	draw_set_transform_matrix(screen_to_map)
+	for flake in snowflake_count:
+		var lane := flake % SNOW_LANES.size()
+		var flight: Vector3 = SNOW_LANES[lane]
+		var phase := flake * 2.39996
+		var sway := sin(phase + elapsed * (0.60 + 0.13 * lane)) * (5.0 + 2.0 * lane)
+		var start := Vector2(fposmod(flake * 0.6180339887, 1.0), fposmod(flake * 0.4142135624, 1.0)) * span
+		var drift := Vector2(sway - elapsed * (6.0 + 3.0 * lane), elapsed * flight.x)
+		var point := (start + drift).posmodv(span) - margin
+		var footprint := screen_to_map * Rect2(point, Vector2.ZERO).grow(flight.y)
+		if _under_roof(footprint, cover):
+			continue
+		var arm := Vector2.from_angle(phase + elapsed * 0.42) * flight.y
+		var cross := arm.orthogonal() * 0.8
+		draw_colored_polygon(PackedVector2Array([point + arm, point + cross, point - arm, point - cross]),
+			Color(SNOW_INK, flight.z))
+	draw_set_transform_matrix(Transform2D.IDENTITY)
+
+func _under_roof(footprint: Rect2, cover: Array[Rect2]) -> bool:
 	for area in cover:
-		if area.intersects(streak):
+		if area.intersects(footprint):
 			return true
 	return false
 
