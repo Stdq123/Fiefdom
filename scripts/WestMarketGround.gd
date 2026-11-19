@@ -11,8 +11,14 @@ const ROAD_WEATHER := preload("res://scripts/RoadWeather.gd")
 const FIXTURE_ART := preload("res://assets/world/west-market-fixtures.png")
 const BACKDROP := Rect2(-1600, -1300, 3200, 2600)
 const BASIN_INNER := Rect2(LAYOUT.BASIN.position + Vector2(6, 6), LAYOUT.BASIN.size - Vector2(12, 12))
-const BASIN_BACK := Rect2(196, 0, 70, 46)
-const BASIN_FRONT := Rect2(196, 48, 70, 14)
+const BASIN_ART := "res://assets/world/stillwater-stone.png"
+const SWIMMERS := "res://assets/world/market-pool-fish.png"
+const FISH_CELL := 16
+const TAIL_FRAMES := 8
+const BASIN_DRAW := Rect2(LAYOUT.BASIN.position - Vector2(5, 4), Vector2(70, 46))
+const BASIN_BACK := Rect2(37, 1, 70, 32)
+const BASIN_FRONT := Rect2(37, 33, 70, 14)
+const BASIN_MASK := Rect2(110, 1, 70, 46)
 const CRATES := Rect2(32, 64, 30, 28)
 const CRATE_FEET := [Vector2(-306, 99), Vector2(343, -3)]
 const GRAIN_YARD := [
@@ -121,7 +127,10 @@ var _dye_vats: Array[DYE_VAT] = []
 var main_path: PackedVector2Array
 var weather := ROAD_WEATHER.new(RAIN_PUDDLES, SNOW_DRIFTS)
 var held_fish := Sprite2D.new()
+var fish_shadow := Sprite2D.new()
+var swimming_frame := AtlasTexture.new()
 var fish_swim := 0.0
+var basin_art: Texture2D = load(BASIN_ART)
 
 func _ready() -> void:
 	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
@@ -155,36 +164,51 @@ func _ready() -> void:
 	collider.shape = rim
 	basin.add_child(collider)
 	add_child(basin)
-	var surface := WATER_SURFACE.new(EstateLayout.corners(BASIN_INNER), 0.0)
+	var surface := WATER_SURFACE.new(EstateLayout.corners(BASIN_DRAW), 0.0)
 	surface.name = "BasinWater"
-	add_child(surface)
-	surface.set_weather(Color("#4b7772"), Global.has_rain())
+	surface.mask_to_water(basin_art, BASIN_MASK, BASIN_DRAW)
+	swimming_frame.atlas = load(SWIMMERS)
+	swimming_frame.filter_clip = true
+	swimming_frame.region = Rect2(0, 0, FISH_CELL, FISH_CELL)
+	fish_shadow.name = "FishShadow"
+	fish_shadow.texture = swimming_frame
+	fish_shadow.self_modulate = Color("#17383243")
+	fish_shadow.hide()
+	add_child(fish_shadow)
 	held_fish.name = "HeldFish"
 	held_fish.texture_filter = TEXTURE_FILTER_NEAREST
-	held_fish.self_modulate = Color("#cee0d8eb")
+	held_fish.texture = swimming_frame
+	held_fish.self_modulate = Color("#b7d7c6e5")
 	held_fish.hide()
 	add_child(held_fish)
+	# The swimmer and its bed shadow sit below the water reflections.
+	add_child(surface)
+	surface.set_weather(Color("#4b7772"), Global.has_rain())
 	set_process(false)
 	weather.name = "RoadWeather"
 	add_child(weather)
 
 func show_held_fish(species: String) -> void:
-	if species.is_empty():
-		held_fish.hide()
-		set_process(false)
-		return
-	held_fish.texture = CreekFish.portrait(species)
-	held_fish.show()
-	_move_fish()
-	set_process(true)
+	var column := CreekFish.IDS.find(species)
+	held_fish.visible = column >= 0
+	fish_shadow.visible = held_fish.visible
+	set_process(held_fish.visible)
+	if held_fish.visible:
+		swimming_frame.region.position.x = column * FISH_CELL
+		_move_fish()
 
 func _process(delta: float) -> void:
 	fish_swim = fposmod(fish_swim + delta * 1.6, TAU)
 	_move_fish()
 
 func _move_fish() -> void:
-	held_fish.position = (LAYOUT.BASIN.get_center() + Vector2(12.0 * sin(fish_swim), 5.0 * cos(fish_swim))).round()
-	held_fish.flip_h = cos(fish_swim) >= 0.0
+	var along := Vector2(12.0 * cos(fish_swim), -5.0 * sin(fish_swim))
+	held_fish.position = (LAYOUT.BASIN.get_center() + Vector2(12.0 * sin(fish_swim), 5.0 * cos(fish_swim))).snappedf(0.5)
+	held_fish.rotation = along.angle()
+	var beat := posmod(floori(fish_swim * (6.0 * TAIL_FRAMES / TAU)), TAIL_FRAMES)
+	swimming_frame.region.position.y = beat * FISH_CELL
+	fish_shadow.position = held_fish.position + Vector2(1.5, 2)
+	fish_shadow.rotation = held_fish.rotation
 
 func _road_outline(points: PackedVector2Array, radius: float) -> PackedVector2Array:
 	return Geometry2D.offset_polyline(points, radius, Geometry2D.JOIN_ROUND, Geometry2D.END_ROUND)[0]
@@ -282,8 +306,7 @@ func _draw() -> void:
 	for kind: int in stall_paving:
 		stall_paving[kind].draw(self, dirt, winter, raining, STALL_STONE[kind], TERRAIN.STONE_GRAIN)
 	_draw_scene_shadows(raining)
-	var wash := LAYOUT.BASIN.position - Vector2(5, 4)
-	_draw_basin_piece(self, wash, BASIN_BACK)
+	_draw_basin_piece(self, BASIN_DRAW.position, BASIN_BACK)
 
 func _draw_cart_ruts(dirt: Color) -> void:
 	for offset: float in [-4.0, 5.0]:
@@ -329,13 +352,14 @@ func _draw_shadow(foot: Vector2, profile: Array[Vector2], shade: Color) -> void:
 	draw_colored_polygon(outline, shade)
 
 func _draw_basin_front(rim: Node2D) -> void:
-	_draw_basin_piece(rim, Vector2(-5, -8), BASIN_FRONT)
+	var top := BASIN_DRAW.position + Vector2(0, BASIN_BACK.size.y) - rim.position
+	_draw_basin_piece(rim, top, BASIN_FRONT)
 
 func _draw_basin_piece(canvas: CanvasItem, at: Vector2, region: Rect2) -> void:
 	if Global.season_index() == Global.Season.WINTER:
-		region.position.x += region.size.x
+		region.position.y += 49
 	var tint := Color("#c2cfd1") if Global.has_rain() else Color.WHITE
-	canvas.draw_texture_rect_region(FIXTURE_ART, Rect2(at, region.size), region, tint)
+	canvas.draw_texture_rect_region(basin_art, Rect2(at, region.size), region, tint)
 
 func place_scenery(layer: Node2D) -> void:
 	var rim := Node2D.new()

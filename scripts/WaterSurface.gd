@@ -17,7 +17,16 @@ func _init(outline: PackedVector2Array, speed: float, crossings: Array[Rect2] = 
 	surface.shader = SHADER
 	surface.set_shader_parameter("current_speed", speed)
 	surface.set_shader_parameter("ravine_flow", ravine_flow)
+	surface.set_shader_parameter("still_water", is_zero_approx(speed))
 	material = surface
+
+# The alpha in this atlas cell follows the exposed water, including holes for rocks or ice.
+func mask_to_water(atlas: Texture2D, cell: Rect2, ground: Rect2) -> void:
+	var uv_scale := cell.size / ground.size / atlas.get_size()
+	surface.set_shader_parameter("shore_mask", atlas)
+	surface.set_shader_parameter("mask_scale", uv_scale)
+	surface.set_shader_parameter("mask_offset", cell.position / atlas.get_size() - ground.position * uv_scale)
+	surface.set_shader_parameter("masked", true)
 
 func set_weather(water: Color, wet: bool) -> void:
 	glint = water.lerp(Color("#b6d2b6"), 0.72)

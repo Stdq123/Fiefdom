@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://2vwnso8ml56o"
+path="res://.godot/imported/south-pond.png-e0a6de4c359737091c6e9f81ad12236c.res"
+
+[deps]
+
+source_file="res://assets/world/south-pond.png"
+dest_files=["res://.godot/imported/south-pond.png-e0a6de4c359737091c6e9f81ad12236c.res"]
+
+[params]
+
+authored_at_2x=true

@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://dhgvorrhlduia"
+path="res://.godot/imported/market-pool-fish.png-dd96f26e81f2b6f85a8520b171841591.res"
+
+[deps]
+
+source_file="res://assets/world/market-pool-fish.png"
+dest_files=["res://.godot/imported/market-pool-fish.png-dd96f26e81f2b6f85a8520b171841591.res"]
+
+[params]
+
+authored_at_2x=true

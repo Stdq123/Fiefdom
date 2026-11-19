@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://pwt1wqbdkpqo"
+path="res://.godot/imported/pond-margin-plants.png-7ceb333f91e86a1e7502758bc9357f06.res"
+
+[deps]
+
+source_file="res://assets/world/pond-margin-plants.png"
+dest_files=["res://.godot/imported/pond-margin-plants.png-7ceb333f91e86a1e7502758bc9357f06.res"]
+
+[params]
+
+authored_at_2x=true

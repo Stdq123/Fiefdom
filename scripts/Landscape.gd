@@ -15,6 +15,7 @@ const ESTATE_TERRAIN := preload("res://scripts/EstateTerrain.gd")
 const ESTATE_ART := ESTATE_TERRAIN.SITE_ART
 const ESTATE_VESSELS := preload("res://assets/world/estate-vessels.png")
 const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
+const SOUTH_POND := preload("res://scripts/SouthPond.gd")
 const SNOW_FOOTPRINTS := preload("res://scripts/SnowFootprints.gd")
 const SILK_SAMPLE := preload("res://assets/world/west-court-sample.svg")
 const SILK_SAMPLE_BOUNDS := Rect2(EstateLayout.WEST_COURT + Vector2(-37, -4), Vector2(28, 24))
@@ -336,8 +337,7 @@ const ESTATE_PROPS := [
 	Vector3i(489, 612, Prop.PINE), Vector3i(483, 664, Prop.OAK),
 	# Reeds mark the waterline. The open west bank is the approach to the clearing.
 	Vector3i(198, 663, Prop.RAVINE_RUSH), Vector3i(174, 697, Prop.BANK_GRASS),
-	Vector3i(190, 742, Prop.REEDS), Vector3i(219, 766, Prop.RAVINE_ROCK),
-	Vector3i(270, 766, Prop.BANK_GRASS), Vector3i(327, 735, Prop.REEDS),
+	Vector3i(219, 766, Prop.RAVINE_ROCK), Vector3i(270, 766, Prop.BANK_GRASS),
 	Vector3i(368, 715, Prop.WILLOW), Vector3i(394, 741, Prop.RAVINE_ROCK),
 	Vector3i(452, 705, Prop.GROVE_TREE), Vector3i(467, 762, Prop.TALL_BAMBOO),
 	Vector3i(116, 680, Prop.PINE), Vector3i(96, 735, Prop.TALL_BAMBOO), Vector3i(123, 761, Prop.MOSS_STONE),
@@ -437,6 +437,7 @@ var estate_terrain: ESTATE_TERRAIN
 var ravine_relief: RAVINE_RELIEF
 var snow_footprints: SNOW_FOOTPRINTS
 var water_surface: WATER_SURFACE
+var south_pond: SOUTH_POND
 var terrain_audio: TERRAIN_AUDIO
 var day_lighting: DAY_LIGHTING
 var creek_edge := PackedVector2Array()
@@ -573,6 +574,7 @@ func _prepare_map() -> void:
 		_place_ravine_wayposts(props_layer)
 	else:
 		_place_estate_wayposts(props_layer)
+		south_pond.place_bank_plants(props_layer)
 		var pavilion_texture := atlas_texture(ESTATE_ART, PAVILION_REGION)
 		var pavilion := _place_sprite(props_layer, SOUTH_PAVILION, _building_offset(PAVILION_REGION.size), pavilion_texture)
 		scenery[pavilion] = SCENE_LANDMARK
@@ -631,7 +633,8 @@ func _add_water_surface() -> void:
 		water_surface = WATER_SURFACE.new(creek_edge, 10.0,
 			[BRIDGE_DECK.grow(2.0), FORD_AREA], true)
 	else:
-		water_surface = WATER_SURFACE.new(estate_terrain.pond_waterline, 0.0)
+		south_pond = SOUTH_POND.new()
+		water_surface = south_pond
 	water_surface.name = "WaterSurface"
 	add_child(water_surface)
 	if wilderness:
@@ -868,8 +871,7 @@ func _draw_ground() -> void:
 		draw_texture_rect_region(ESTATE_TERRAIN.HALL_YARD_ART, Rect2(HALL_YARD_GROUND_AT, HALL_YARD_GROUND.size),
 			HALL_YARD_GROUND, ground_tint)
 		estate_terrain.draw_north_bank(self, MAP_BACKDROP.position.y, shade, sun, winter)
-		var pond_water: Color = WATER_TINTS[season]
-		estate_terrain.draw_pond(self, meadow, pond_water, winter, raining, pond_landing.visible)
+		south_pond.draw_bed(self)
 	var grass := shade.lightened(0.09)
 	for prop in props:
 		if SCENERY_SHADOW_SIZES.has(prop.z):

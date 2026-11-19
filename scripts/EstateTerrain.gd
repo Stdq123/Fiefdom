@@ -21,13 +21,6 @@ static var _meadow_textures: Dictionary[int, Texture2D] = {}
 static var _verge_texture: Texture2D
 static var _trail_texture: Texture2D
 static var _snow_texture: Texture2D
-const POND_CENTER := Vector2(258, 705)
-const POND_FAR_BANK := [4, 9, 13, 9, 15, 12, 6, 3]
-const POND_WEST_FACE := [Vector2(1, -2), Vector2(3, -3), Vector2(5, -2), Vector2(6, 2), Vector2(5, 2)]
-const SUBMERGED_STONES := [Vector3(218, 679, 10), Vector3(244, 677, 7), Vector3(292, 665, 13),
-	Vector3(316, 681, 8), Vector3(323, 723, 9), Vector3(307, 737, 5), Vector3(263, 751, 12), Vector3(223, 750, 8)]
-const LILY_PADS := [Vector2(299, 682), Vector2(305, 688), Vector2(311, 682), Vector2(318, 703),
-	Vector2(206, 730), Vector2(211, 738)]
 const RIDGE_PROFILE := [
 	Vector2(-540, -13), Vector2(-430, -16), Vector2(-368, -21), Vector2(-334, -25),
 	Vector2(-305, -24), Vector2(-288, -32), Vector2(-259, -34), Vector2(-221, -31),
@@ -71,10 +64,6 @@ var crest := PackedVector2Array()
 var north_edge: float
 var meadow_sprigs := PackedVector2Array()
 var pond := PackedVector2Array(EstateLayout.FESTIVAL_POND)
-var pond_bank := Geometry2D.offset_polygon(pond, 8.0)[0]
-var pond_waterline := pond.duplicate()
-var _pond_shelf := PackedVector2Array()
-var _pond_basin := PackedVector2Array()
 var pond_paving := PackedVector2Array(EstateLayout.FESTIVAL_PAVING)
 var _paving_margin := Geometry2D.offset_polygon(pond_paving, 5.0)[0]
 var _paving_entrance := EstateLayout.FESTIVAL_LANE[-4]
@@ -91,10 +80,6 @@ func _init(north: float) -> void:
 		for index in 9:
 			var offset := Vector2(rng.randf(), rng.randf()) * patch.size
 			meadow_sprigs.append((patch.position + offset).round())
-	for index in POND_FAR_BANK.size():
-		pond_waterline[index].y += POND_FAR_BANK[index]
-	_pond_shelf = _inset_pool(pond_waterline, Vector2(0.89, 0.85), Vector2(0, 0))
-	_pond_basin = _inset_pool(pond_waterline, Vector2(0.74, 0.72), Vector2(9, 3))
 
 func draw_north_bank(canvas: CanvasItem, background_top: float, shade: Color, sun: Color, winter: bool) -> void:
 	var slope := crest.duplicate()
@@ -276,96 +261,6 @@ static func _draw_stone_curb(canvas: CanvasItem, rim: PackedVector2Array, depths
 			canvas.draw_line(edge.lerp(foot, 0.20), foot, riser.darkened(0.21), 0.75)
 		var lip := stone.lerp(Color("#c0c9b4"), 0.54 if winter else 0.10)
 		canvas.draw_line(a.lerp(b, 0.12), a.lerp(b, 0.72), lip, 0.7)
-
-func draw_pond(canvas: CanvasItem, grass: Color, water: Color, winter: bool, raining: bool, has_dock: bool) -> void:
-	var silt := grass.lerp(Color("#9f9371"), 0.46)
-	var shallow := water.lerp(Color("#98ae8f"), 0.39 if winter else 0.49)
-	var deep := water.lerp(Color("#23464d"), 0.56)
-	canvas.draw_colored_polygon(pond_bank, silt)
-	# At the north bank, the foot of the rock sits below its grass edge in the image.
-	canvas.draw_colored_polygon(pond_waterline, shallow)
-	canvas.draw_colored_polygon(_pond_shelf, shallow.lerp(water, 0.43))
-	var basin_colors := PackedColorArray()
-	for point in _pond_basin:
-		basin_colors.append(deep.lerp(water, clampf((point.y - 687.0) * 0.016, 0.0, 0.67)))
-	canvas.draw_polygon(_pond_basin, basin_colors)
-	_draw_pond_faces(canvas, pond, pond_waterline, POND_FAR_BANK.size() - 1, winter, raining)
-	var west := PackedVector2Array()
-	var feet := PackedVector2Array()
-	for index in POND_WEST_FACE.size():
-		var at := pond[pond.size() - POND_WEST_FACE.size() + index]
-		west.append(at)
-		feet.append(at + POND_WEST_FACE[index])
-	_draw_pond_faces(canvas, west, feet, west.size() - 1, winter, raining)
-	_draw_pond_gravel(canvas, silt, shallow, winter, has_dock)
-	_draw_pond_details(canvas, shallow, winter)
-
-func _inset_pool(outline: PackedVector2Array, scale: Vector2, shift: Vector2) -> PackedVector2Array:
-	var inset := PackedVector2Array()
-	for index in outline.size():
-		var point := outline[index]
-		var irregularity := Vector2(posmod(index * 7, 6) - 3, posmod(index * 3, 8) - 4)
-		inset.append((POND_CENTER + (point - POND_CENTER) * scale + shift + irregularity).round())
-	return inset
-
-func _draw_pond_faces(canvas: CanvasItem, lip: PackedVector2Array, feet: PackedVector2Array,
-		sections: int, winter: bool, raining: bool) -> void:
-	var rock := Color("#7d7f6d").lerp(Color("#526862"), 0.31 if raining else 0.0)
-	var moss := Color("#b9c8b9") if winter else Color("#99946a")
-	for index in sections:
-		var a := lip[index]
-		var b := lip[index + 1]
-		var foot_a := feet[index]
-		var foot_b := feet[index + 1]
-		var tone := rock.lightened(0.045 * (index % 4))
-		_quad(canvas, a, b, foot_b, foot_a, tone, STONE_GRAIN)
-		var split_a := a.lerp(foot_a, 0.56).round()
-		var split_b := b.lerp(foot_b, 0.49 + (index % 3) * 0.10).round()
-		_quad(canvas, split_a, split_b, foot_b, foot_a, tone.darkened(0.24), STONE_GRAIN)
-		var crack := a.lerp(b, 0.48 + (index % 3) * 0.09).round()
-		var crack_foot := foot_a.lerp(foot_b, 0.38 + (index % 3) * 0.08).round()
-		canvas.draw_line(crack, crack_foot, tone.darkened(0.25), 1.0)
-		if index % 4 != 3:
-			canvas.draw_line(a.lerp(b, 0.08).round(), a.lerp(b, 0.78).round(), moss, 2.0 if winter else 1.0)
-			canvas.draw_line(foot_a.lerp(foot_b, 0.15).round(), foot_a.lerp(foot_b, 0.58).round(), Color("#95beb0b5"), 1.0)
-		for chip in 2:
-			var vein := a.lerp(b, 0.17 + chip * 0.36).lerp(foot_a.lerp(foot_b, 0.20 + chip * 0.35), 0.40).round()
-			if Geometry2D.is_point_in_polygon(vein, PackedVector2Array([a, b, foot_b, foot_a])):
-				canvas.draw_rect(Rect2(vein, Vector2(3 + (index + chip) % 4, 1)), Color(tone.lightened(0.15), 0.71))
-
-func _draw_pond_gravel(canvas: CanvasItem, silt: Color, shallow: Color, winter: bool, has_dock: bool) -> void:
-	for index in range(8, pond.size()):
-		var a := pond[index]
-		var b := pond[(index + 1) % pond.size()]
-		var at := a.lerp(b, 0.45).round()
-		var inland := a.direction_to(b).orthogonal()
-		var gravel := silt.lightened(0.22 + (index % 3) * 0.07)
-		# Skip the row of stones where the fishing deck meets the path.
-		if has_dock and EstateLayout.POND_DECK.grow(5.0).has_point(at):
-			continue
-		for chip in 4:
-			var foot := a.lerp(b, 0.15 + 0.22 * chip).round()
-			var stone := (foot - inland * (3 + (chip * 7 + index) % 5)).round()
-			canvas.draw_rect(Rect2(stone, Vector2(3 + (index + chip) % 5, 2)), gravel.darkened(0.19))
-			canvas.draw_rect(Rect2(stone - Vector2(0, 1), Vector2(2 + (index + chip) % 5, 1)), gravel)
-			var wash := (foot + inland * (2 + chip % 3)).round()
-			var rim := Color("#b6c8bf") if winter else shallow.lightened(0.24)
-			canvas.draw_rect(Rect2(wash, Vector2(3 + chip % 3, 1)), Color(rim, 0.70))
-
-func _draw_pond_details(canvas: CanvasItem, shallow: Color, winter: bool) -> void:
-	for stone: Vector3 in SUBMERGED_STONES:
-		var at := Vector2(stone.x, stone.y)
-		canvas.draw_colored_polygon(PackedVector2Array([at, at + Vector2(stone.z - 2, -2),
-			at + Vector2(stone.z, 1), at + Vector2(stone.z - 1, 3), at + Vector2(1, 4)]), shallow.darkened(0.21))
-		canvas.draw_line(at, at + Vector2(stone.z * 0.68, -1), shallow.lightened(0.12), 1.0)
-	if winter:
-		return
-	for index in LILY_PADS.size():
-		var at: Vector2 = LILY_PADS[index]
-		var leaf := Color("#728468").lerp(shallow, float(index % 3) * 0.10)
-		canvas.draw_colored_polygon(PackedVector2Array([at, at + Vector2(2, -2), at + Vector2(6, -1),
-			at + Vector2(7, 2), at + Vector2(4, 4), at + Vector2(1, 3), at + Vector2(3, 1)]), leaf)
-		canvas.draw_rect(Rect2(at + Vector2(2, -2), Vector2(3, 1)), leaf.lightened(0.14))
 
 func festival_stone_at(foot: Vector2) -> bool:
 	return Geometry2D.is_point_in_polygon(foot, pond_paving)

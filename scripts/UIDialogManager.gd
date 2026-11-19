@@ -652,7 +652,7 @@ func show_water_source(starter_tiles: int, rice_plots: int, open_study: Callable
 			action = open_technology
 		else:
 			text += "\n书艺 %d/%d 级。每天可研读一次。" % [level, needed]
-	var dialog := _open(Global.WATER_SOURCE, context, text, [choice, "离开"], [], WATER_SOURCE.ART)
+	var dialog := _open(Global.WATER_SOURCE, context, text, [choice, "离开"], [], WATER_SOURCE.portrait())
 	dialog.option_selected.connect(func(index: int):
 		if index == 0:
 			action.call()

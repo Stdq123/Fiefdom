@@ -170,7 +170,7 @@ func _process(delta: float) -> void:
 	var next_frame := floori(water_time)
 	if next_frame != water_frame:
 		water_frame = next_frame
-		water_source.animate_water(water_frame)
+		water_source.animate_water(water_frame, int(RIPPLE_SPACING))
 		flow_ink.queue_redraw()
 
 func _pointer_cell() -> Vector2i:

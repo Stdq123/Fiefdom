@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://dpf8m4vayki62"
+path="res://.godot/imported/stillwater-stone.png-d072836fe90152403921c5d6113d2185.res"
+
+[deps]
+
+source_file="res://assets/world/stillwater-stone.png"
+dest_files=["res://.godot/imported/stillwater-stone.png-d072836fe90152403921c5d6113d2185.res"]
+
+[params]
+
+authored_at_2x=true

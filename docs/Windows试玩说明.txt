@@ -260,6 +260,7 @@
   许可 https://creativecommons.org/licenses/by/4.0/
   封地、溪桥道、西市和竹涧的阔叶树、花树、松树和灌木为本项目绘制。柳树、芦苇、莎草、蕨和嫩芽同为本项目绘制，冬季另绘柳枝和芦苇。
   溪桥道木桥、竹涧绳桥、南池钓台、竹丛和跌水以本作实景为参照，由 OpenAI ImageGen 生成底图。桥面与栏杆分层整理为 creek-road-bridge.png。竹丛和霜叶整理为 river-bamboo.png。落水涟漪和水帘整理为八帧动画图集 ravine-cascade.png。
+  南池岸线、荷叶和香蒲、田口泉眼、西市鱼池与池中四种游鱼也由 OpenAI ImageGen 生成底图。岸边的冬霜和水面遮罩收在 south-pond.png，四季水草收在 pond-margin-plants.png，两处石池收在 stillwater-stone.png。游鱼的俯视摆尾动画使用 market-pool-fish.png。
   西市晒布院的青瓦屋以本作西市画面为构图参考，由 OpenAI ImageGen 生成底图，裁切和减色后加入冬霜。晒布架和染缸为本项目绘制，阿苓的步态由本作西市伙计图集改绘。
   结局使者召简的行走造型、堂前谷帛和南路亭税册摊为本项目绘制。
   堂前和南路亭的两种谷袋来自 Kenney Vleugels 与 Lynn Evers 的 Roguelike/RPG pack（CC0 1.0）。
