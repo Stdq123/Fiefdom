@@ -19,18 +19,40 @@ var movement: Tween
 func _ready() -> void:
 	details.draw.connect(_draw_details)
 	GameEvents.silk_changed.connect(details.queue_redraw)
+	GameEvents.silk_changed.connect(_refresh_hint)
+	GameEvents.retainer_duty_changed.connect(_refresh_hint.unbind(1))
+	GamepadInput.changed.connect(_refresh_hint)
 
 func can_interact_from(point: Vector2) -> bool:
 	return is_visible_in_tree() and global_position.distance_squared_to(point) <= 25.0 * 25.0
 
 func set_interaction_focused(active: bool) -> void:
 	hint.visible = active
-	if active:
-		var key := GamepadInput.interact_key()
-		match action:
-			SilkWorkshop.Action.START_BATCH: hint.text = key + "  养蚕"
-			SilkWorkshop.Action.REEL: hint.text = key + "  缫丝"
-			SilkWorkshop.Action.WEAVE: hint.text = key + "  织绸"
+	_refresh_hint()
+
+func _refresh_hint() -> void:
+	if not hint.visible:
+		return
+	var workshop := Global.silk_workshop
+	var balance := Global.balance
+	var detail := workshop.material_shortage(action, balance)
+	var title := ""
+	match action:
+		SilkWorkshop.Action.START_BATCH:
+			title = "养蚕"
+			if workshop.nights_left > 0:
+				detail = "余 %d 夜" % workshop.nights_left if detail.is_empty() else "今夜" + detail
+			elif detail.is_empty():
+				detail = "首夜用 %d 片桑叶" % balance.silk_leaves_per_night
+		SilkWorkshop.Action.REEL:
+			title = "缫丝"
+			if detail.is_empty():
+				detail = "1 茧 → %d 份生丝" % Global.silk_thread_yield()
+		SilkWorkshop.Action.WEAVE:
+			title = "织绸"
+			if detail.is_empty():
+				detail = "%d 份生丝 → 1 匹" % balance.silk_thread_per_bolt
+	hint.text = "%s\n%s" % [GamepadInput.interact_hint(title), detail]
 
 func interact() -> void:
 	if Global.estate_room != Global.EstateRoom.SILK_SHED:
@@ -54,16 +76,9 @@ func interact() -> void:
 	GameEvents.silk_station_feedback.emit(message)
 
 func _materials_needed() -> String:
-	match action:
-		SilkWorkshop.Action.START_BATCH:
-			if Global.silk_workshop.nights_left > 0:
-				return "这批蚕还需养 %d 夜" % Global.silk_workshop.nights_left
-			return "养蚕还缺 %d 片桑叶" % (Global.balance.silk_leaves_per_night - Global.silk_workshop.leaves)
-		SilkWorkshop.Action.REEL:
-			return "等蚕结茧后再缫丝"
-		SilkWorkshop.Action.WEAVE:
-			return "织绸还缺 %d 份生丝" % (Global.balance.silk_thread_per_bolt - Global.silk_workshop.raw_silk)
-	return ""
+	if action == SilkWorkshop.Action.START_BATCH and Global.silk_workshop.nights_left > 0:
+		return "这批蚕还需养 %d 夜" % Global.silk_workshop.nights_left
+	return Global.silk_workshop.material_shortage(action, Global.balance)
 
 func _set_phase(value: float) -> void:
 	phase = value

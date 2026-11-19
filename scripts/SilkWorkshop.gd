@@ -39,6 +39,19 @@ func can_act(action: Action, balance: BalanceData, literacy: int, money: int) ->
 		Action.SELL, Action.OFFER: return bolts > 0
 	return false
 
+func material_shortage(action: Action, balance: BalanceData) -> String:
+	match action:
+		Action.START_BATCH:
+			if leaves < balance.silk_leaves_per_night:
+				return "缺 %d 片桑叶" % (balance.silk_leaves_per_night - leaves)
+		Action.REEL:
+			if cocoons <= 0:
+				return "等蚕结茧后再缫丝"
+		Action.WEAVE:
+			if raw_silk < balance.silk_thread_per_bolt:
+				return "织绸还缺 %d 份生丝" % (balance.silk_thread_per_bolt - raw_silk)
+	return ""
+
 func apply(action: Action, balance: BalanceData, thread_per_cocoon: int, amount := 1) -> void:
 	match action:
 		Action.BUILD: built = true
