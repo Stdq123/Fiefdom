@@ -78,7 +78,7 @@ func _ready() -> void:
 	player.arrive_at($EstateRoadArrival)
 	player.restore_walking_checkpoint(LAYOUT.BOUNDS, ground.walking_fixture_footprints())
 	player.footstep.connect(_step)
-	market_map.setup(self, destinations, $MarketWaypoint)
+	market_map.setup(self, destinations, $MarketWaypoint, %RouteSign)
 	market_map.open_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
 	$CampaignHUD.add_field_return(player, market_map.follow_region_destination)
 	$DialogManager.setup($UI/Control, player)

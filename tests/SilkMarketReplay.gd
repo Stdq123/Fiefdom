@@ -214,7 +214,7 @@ func _market_visit() -> bool:
 	_expect(market.sample.visible and market.silk_guest == null, "Find the sample and wait for the merchant at the market.")
 	var chart: Control = market.market_map
 	await tree.create_timer(0.06).timeout
-	_expect(chart.pin.visible and state.market_trip_target == TAO and "午时到绸摊" in chart.cancel_button.text
+	_expect(chart.pin.visible and state.market_trip_target == TAO and "午时到绸摊" in chart.route_sign.step_label.text
 		and chart.pin.global_position.is_equal_approx(chart.places["绸摊"]),
 		"The route leads to the meeting spot while the merchant is still on the road.")
 	print("SILK_MARKET_ROUTE_WAIT day=", state.current_day, " point=", chart.pin.global_position)
@@ -279,7 +279,7 @@ func _back_to_pavilion() -> bool:
 	_expect(market.silk_guest != null and market.silk_guest.walking_to_stop and market.silk_guest.position.x > 150,
 		"At 申时 Tao Xin walks back to the gate.")
 	await tree.create_timer(7.6).timeout
-	_expect(market.silk_guest == null and chart.pin.visible and "回封地找陶辛" in chart.cancel_button.text
+	_expect(market.silk_guest == null and chart.pin.visible and "回封地找陶辛" in chart.route_sign.destination_label.text
 		and chart.pin.global_position.is_equal_approx(market.get_node("EstateRoad").position),
 		"After the merchant leaves, the guide switches to the return gate.")
 	await _snapshot("04a-market-return-guide")

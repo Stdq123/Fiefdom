@@ -50,10 +50,10 @@ func _play() -> void:
 		await _button(market.get_node("UI/Control/Wallet/SettingsButton"))
 		await _save(market.settings)
 		return
-	if not _expect(chart != null and chart.cancel_button.visible and state.market_trip_target == "鱼摊",
+	if not _expect(chart != null and chart.route_sign.visible and state.market_trip_target == "鱼摊",
 		"The west-gate errand continues at the actual fish stall on entry."):
 		return
-	_expect(chart.cancel_button.text.begins_with("←") and chart.route.has(Vector2(-38, 61))
+	_expect(chart.route_sign.direction_label.text == "←" and chart.route.has(Vector2(-38, 61))
 		and chart.route[-1].is_equal_approx(chart.places["鱼摊"]),
 		"The route starts along the main street and turns into the fish lane.")
 	await _snapshot("02-market-arrival")
@@ -72,14 +72,14 @@ func _play() -> void:
 	_expect(state.market_trip_target.is_empty(), "Clear directions on the chart.")
 	await _button(chart.markers["鱼摊"])
 	await _key(KEY_ESCAPE)
-	_expect(not tree.paused and not market.settings.visible and chart.cancel_button.visible, "Escape returns to the market street.")
+	_expect(not tree.paused and not market.settings.visible and chart.route_sign.visible, "Escape returns to the market street.")
 	await _button(market.get_node("UI/Control/Wallet/SettingsButton"))
 	if not await _save_continue(market.settings):
 		return
 	market = tree.current_scene
 	chart = market.get_node("UI/Control/WestMarketMap")
 	await tree.create_timer(0.05).timeout
-	_expect(state.market_trip_target == "鱼摊" and chart.cancel_button.visible,
+	_expect(state.market_trip_target == "鱼摊" and chart.route_sign.visible,
 		"Continue in the market restores the route to the selected stall.")
 	if not await _trade_at_fish_stall():
 		return
@@ -195,7 +195,7 @@ func _follow_to_cart_and_home() -> void:
 		"The new button fits beside the other street controls.")
 	await gamepad._click(return_button)
 	if not _expect(state.market_trip_target == state.FIELD_RETURN and chart.pin.visible
-		and "井田 1" in chart.cancel_button.text and chart.route[-1] == chart.places[state.MARKET_RETURN],
+		and "井田 1" in chart.route_sign.destination_label.text and chart.route[-1] == chart.places[state.MARKET_RETURN],
 		"The gamepad starts the return and the first leg leads to the market's eastern gate."):
 		return
 	await _snapshot("return-market-east-gate")

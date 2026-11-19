@@ -122,7 +122,7 @@ func _ravine_checkpoint(gamepad: RefCounted) -> bool:
 			state.day_progress, progress, state.current_stamina, stamina, state.health, health])
 	_expect(state.fish_count(FISH) == 1 and state.crop_stock.count("rice") == 2
 		and state.market_trip_target == state.MARKET_ORDERS and guide.destination_name == "西门回封地"
-		and "西市 · 收货牌" in ravine.ravine_map.cancel_button.text, "Resume with the catch and the route to the receiving board.")
+		and "西市 · 收货牌" in ravine.ravine_map.route_sign.destination_label.text, "Resume with the catch and the route to the receiving board.")
 	await _snapshot("06c-ravine-position-restored")
 	print("FISH_JOURNEY_RAVINE_RESUME day=", state.current_day, " position=", player.position,
 		" route=", state.market_trip_target, " fish=", state.fish_count(FISH))
@@ -159,13 +159,13 @@ func _start_from_market() -> bool:
 	await _button(orders.fish_route_button)
 	var chart: Control = market.market_map
 	_expect(not market.counter.visible and state.ravine_trip_target == WILLOW and state.market_trip_target.is_empty()
-		and "竹涧 · 柳湾" in chart.cancel_button.text
+		and "竹涧 · 柳湾" in chart.route_sign.destination_label.text
 		and chart.pin.global_position.is_equal_approx(market.get_node("EstateRoad").global_position),
 		"The order closes and marks the real exit from the western market.")
 	if legacy:
 		print("FISH_JOURNEY_OLD_SAVE day=", state.current_day, " rice=", state.crop_stock.count("rice"), " goal=", state.ravine_trip_target)
 		return false
-	await _button(chart.cancel_button)
+	await _button(chart.route_sign.cancel_button)
 	_expect(state.ravine_trip_target.is_empty() and state.market_trip_target.is_empty() and not chart.pin.visible,
 		"Cancel removes the whole outbound route.")
 	if not await _stall(market, "FishStall", ""):
@@ -188,7 +188,7 @@ func _start_from_market() -> bool:
 		return false
 	market = tree.current_scene as Node2D
 	chart = market.market_map
-	_expect(state.ravine_trip_target == WILLOW and chart.pin.visible and "柳湾" in chart.cancel_button.text,
+	_expect(state.ravine_trip_target == WILLOW and chart.pin.visible and "柳湾" in chart.route_sign.destination_label.text,
 		"Continuing in the western market restores the first leg.")
 	await _snapshot("03-west-market-route")
 	print("FISH_JOURNEY_OUTBOUND day=", state.current_day, " goal=", state.ravine_trip_target)
@@ -227,7 +227,7 @@ func _choose_return() -> bool:
 	await _button(fish)
 	var map: Control = ravine.ravine_map
 	_expect(not tree.paused and trail_hud.notice.visible and state.market_trip_target == FISH_STALL and guide.destination_name == "西门回封地"
-		and "西市 · 鱼摊" in map.cancel_button.text and state.fish_count(FISH) == 1,
+		and "西市 · 鱼摊" in map.route_sign.destination_label.text and state.fish_count(FISH) == 1,
 		"Choosing the stall resumes play and guides to the west exit without trading the fish.")
 	await _key(KEY_M)
 	_expect(map.modal.visible and map.fish_delivery.visible and map.season_delivery.visible,
@@ -254,7 +254,7 @@ func _choose_return() -> bool:
 	await gamepad._click(map.season_delivery, true)
 	_expect(gamepad.failures == 0, "The new chart action works with the gamepad cursor.")
 	_expect(not map.modal.visible and not tree.paused and state.market_trip_target == state.MARKET_ORDERS
-		and "西市 · 收货牌" in map.cancel_button.text, "The chart can restart the trip for the other destination.")
+		and "西市 · 收货牌" in map.route_sign.destination_label.text, "The chart can restart the trip for the other destination.")
 	if not await _ravine_checkpoint(gamepad) or not await _gather_on_the_way_back():
 		return false
 	if not await _cross(&"ui_left", state.ESTATE_SCENE):
@@ -277,9 +277,9 @@ func _deliver_to_cart() -> void:
 	await tree.process_frame
 	market = tree.current_scene as Node2D
 	var chart: Control = market.market_map
-	_expect(chart.pin.visible and state.market_trip_target == state.MARKET_ORDERS and "收货牌" in chart.cancel_button.text,
+	_expect(chart.pin.visible and state.market_trip_target == state.MARKET_ORDERS and "收货牌" in chart.route_sign.destination_label.text,
 		"The fourth crossing leads to the receiving board (pin=%s, target=%s, sign=%s)." % [
-			chart.pin.visible, state.market_trip_target, chart.cancel_button.text])
+			chart.pin.visible, state.market_trip_target, chart.route_sign.destination_label.text])
 	await _snapshot("07-back-in-market")
 	if not await _open_cart():
 		return

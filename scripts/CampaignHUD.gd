@@ -6,6 +6,7 @@ const ESTATE_ENDING := preload("res://scenes/EstateEnding.tscn")
 const TITLE_CONFIRMATION := preload("res://scripts/ReturnToTitleDialog.gd")
 const VITALS := preload("res://scenes/HUDVitals.tscn")
 const TRAVEL_HEADING := preload("res://scenes/TravelHeading.tscn")
+const TRAVEL_ROUTE_SIGN := preload("res://scenes/TravelRouteSign.tscn")
 const BACKPACK := preload("res://scenes/Backpack.tscn")
 
 @export var show_field_status := true
@@ -16,6 +17,7 @@ var trail_vitals: PanelContainer
 var trail_date: Label
 var outing_label: Label
 var ravine_label: Label
+var trail_route_sign: TravelRouteSign
 var notice: Label
 var notice_tween: Tween
 var management_open := false
@@ -204,6 +206,8 @@ func _build_status() -> void:
 	trail_text.add_child(ravine_label)
 	GameEvents.ravine_journal_changed.connect(_refresh_ravine)
 	_refresh_ravine()
+	trail_route_sign = TRAVEL_ROUTE_SIGN.instantiate()
+	trail_text.add_child(trail_route_sign)
 
 	trail_vitals = VITALS.instantiate()
 	view.add_child(trail_vitals)

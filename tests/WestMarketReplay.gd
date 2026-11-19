@@ -266,7 +266,7 @@ func _buy_spring_produce(market: Node2D) -> void:
 	await _snapshot("02b-produce-sold")
 	await _button(counter.order_route)
 	_expect(not counter.visible and state.market_trip_target == state.MARKET_ORDERS
-		and market.market_map.cancel_button.visible, "The grain stall marks the actual receiving board.")
+		and market.market_map.route_sign.visible, "The grain stall marks the actual receiving board.")
 	await _snapshot("02c-empty-sack")
 	print("MARKET_PRODUCE day=", state.current_day, " stock=", state.crop_stock.lots, " copper=", state.money)
 

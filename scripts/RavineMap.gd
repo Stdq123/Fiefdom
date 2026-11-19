@@ -13,7 +13,6 @@ const ROAD_NETWORK := preload("res://scripts/RoadNetwork.gd")
 @onready var open_button: Button = %OpenMap
 @onready var journal_button: Button = %JournalSite
 @onready var trap_button: Button = %TrapSite
-@onready var cancel_button: Button = %CancelDirections
 @onready var clear_button: Button = %ClearRoute
 @onready var route_status: Label = %RouteStatus
 @onready var fish_delivery: Button = %FishDelivery
@@ -22,6 +21,7 @@ const ROAD_NETWORK := preload("res://scripts/RoadNetwork.gd")
 var guide: Node2D
 var player: Player
 var landscape: LANDSCAPE
+var route_sign: TravelRouteSign
 var places: Dictionary[String, Vector2] = {}
 var markers: Dictionary[String, Button] = {}
 var region_map: Control
@@ -30,10 +30,12 @@ func _refresh_shortcuts() -> void:
 	super._refresh_shortcuts()
 	open_button.text = "竹涧舆图  %s" % ("Y" if GamepadInput.active else Preferences.key_label(KeyBindings.MAP))
 
-func setup(trail_guide: Node2D, walker: Player, terrain: LANDSCAPE, destinations: Dictionary[String, Vector2]) -> void:
+func setup(trail_guide: Node2D, walker: Player, terrain: LANDSCAPE,
+		destinations: Dictionary[String, Vector2], hud: CanvasLayer) -> void:
 	guide = trail_guide
 	player = walker
 	landscape = terrain
+	route_sign = hud.trail_route_sign
 	places = destinations
 	var trap_icon := CreekTrap.icon()
 	for place in places:
@@ -55,7 +57,7 @@ func setup(trail_guide: Node2D, walker: Player, terrain: LANDSCAPE, destinations
 	open_button.pressed.connect(open_map)
 	journal_button.pressed.connect(_select_journal_site)
 	trap_button.pressed.connect(_select_deployed_trap)
-	cancel_button.pressed.connect(guide.clear)
+	route_sign.setup(player, hud, guide.clear, open_button)
 	clear_button.pressed.connect(guide.clear)
 	fish_delivery.pressed.connect(_select_market.bind(MarketStall.TITLES[MarketStall.Kind.FISH]))
 	season_delivery.pressed.connect(_select_market.bind(Global.MARKET_ORDERS))
@@ -192,14 +194,21 @@ func _refresh_route() -> void:
 	var regional_target := Global.market_trip_target
 	var using_exit := name in [ESTATE_EXIT, RavineLayout.SOUTH_TRAIL_NAME] and not regional_target.is_empty()
 	var destination := name
+	var step := ""
 	if using_exit:
 		if regional_target == Sheepfold.MEADOW:
 			destination = Sheepfold.MEADOW
 		else:
 			var region := "封地" if regional_target in Global.ESTATE_REGIONAL_STOPS else "西市"
+			if regional_target == Global.FIELD_RETURN:
+				regional_target = Global.field_return_place_name()
 			destination = "%s · %s" % [region, regional_target]
-	cancel_button.visible = not name.is_empty()
-	cancel_button.text = destination + " · 清除指路"
+		step = "先走南路小径回封地。" if name == RavineLayout.SOUTH_TRAIL_NAME else "先走竹涧西门回封地。"
+	elif guide.route.has(LANDSCAPE.BRIDGE):
+		step = "沿金线走木桥。"
+	elif guide.route.has(LANDSCAPE.FORD):
+		step = "沿金线走浅滩。"
+	route_sign.set_route(destination, step)
 	clear_button.disabled = name.is_empty()
 	for place in markers:
 		markers[place].set_pressed_no_signal(place == name)

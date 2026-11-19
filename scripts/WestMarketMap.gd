@@ -14,7 +14,6 @@ const LABELS_ABOVE := [MarketStall.TITLES[MarketStall.Kind.GRAIN], MarketStall.T
 @onready var chart: Control = %Chart
 @onready var paper: Control = %MapInk
 @onready var open_button: Button = %OpenMap
-@onready var cancel_button: Button = %CancelDirections
 @onready var clear_button: Button = %ClearRoute
 @onready var route_status: Label = %RouteStatus
 @onready var merchant_button: Button = %FindMerchant
@@ -26,17 +25,19 @@ var pin: Node2D
 var places: Dictionary[String, Vector2] = {}
 var markers: Dictionary[String, Button] = {}
 var network: ROAD_NETWORK
+var route_sign: TravelRouteSign
 var route := PackedVector2Array()
 var route_origin := Vector2.INF
 var route_target := Vector2.INF
 var region_map: Control
 
-func setup(street: Node2D, destinations: Dictionary[String, Vector2], waypoint: Node2D) -> void:
+func setup(street: Node2D, destinations: Dictionary[String, Vector2], waypoint: Node2D, sign: TravelRouteSign) -> void:
 	market = street
 	player = market.player
 	ground = market.ground
 	places = destinations
 	pin = waypoint
+	route_sign = sign
 	network = ROAD_NETWORK.new(LAYOUT.WALKING_ROADS, ground, player)
 	pin.draw.connect(_draw_waypoint)
 	for place in places:
@@ -49,7 +50,7 @@ func setup(street: Node2D, destinations: Dictionary[String, Vector2], waypoint: 
 		chart.add_child(button)
 		markers[place] = button
 	open_button.pressed.connect(open_map)
-	cancel_button.pressed.connect(_clear)
+	route_sign.setup(player, market.get_node("CampaignHUD"), _clear, open_button)
 	clear_button.pressed.connect(_clear)
 	merchant_button.icon = CharacterArt.dialogue_portrait(MERCHANT, null, true)
 	merchant_button.pressed.connect(_select_place.bind(MERCHANT))
@@ -76,18 +77,28 @@ func _process(_delta: float) -> void:
 	var available := _map_available()
 	open_button.visible = available and not modal.visible
 	var place := _current_stop()
-	cancel_button.visible = available and not modal.visible and not place.is_empty()
-	pin.visible = cancel_button.visible
-	if place.is_empty() or (not pin.visible and not modal.visible):
+	if place.is_empty():
+		if not route_sign.destination_label.text.is_empty():
+			route_sign.set_route("")
+		pin.hide()
+		return
+	if not available and not modal.visible:
+		pin.hide()
 		return
 	var label := _destination_label(place)
+	var east_exit := "先走西市东口，接上溪桥道。"
+	var step := east_exit if place == Global.MARKET_RETURN else ""
 	var point: Vector2
 	if place == MERCHANT and market.silk_guest:
 		point = ground.to_local(market.silk_guest.global_position)
 	elif place == MERCHANT:
 		var next := _merchant_waiting_stop()
 		point = places[next]
-		label = "陶辛 · 午时到绸摊" if next != Global.MARKET_RETURN else "回封地找陶辛"
+		if next == Global.MARKET_RETURN:
+			label = "回封地找陶辛"
+			step = east_exit
+		else:
+			step = "午时到绸摊，可在摊前等候。"
 	else:
 		point = places[place]
 	var foot := ground.to_local(player.global_position)
@@ -96,11 +107,11 @@ func _process(_delta: float) -> void:
 		route_origin = foot
 		route_target = point
 		paper.queue_redraw()
+	route_sign.set_route(label, step, _next_bearing(foot, point))
+	pin.visible = route_sign.visible
 	if pin.visible:
 		pin.global_position = ground.to_global(point)
 		pin.queue_redraw()
-		var bearing := _next_bearing(foot, point)
-		cancel_button.text = "%s  %s · 取消指路" % [bearing, label]
 
 func _next_bearing(foot: Vector2, target: Vector2) -> String:
 	if foot.distance_to(target) < TURN_DISTANCE:
@@ -157,6 +168,9 @@ func _clear() -> void:
 
 func _refresh_destination() -> void:
 	var place := _current_stop()
+	if place.is_empty():
+		route_sign.set_route("")
+		pin.hide()
 	clear_button.disabled = place.is_empty()
 	for name in markers:
 		markers[name].set_pressed_no_signal(name == place)

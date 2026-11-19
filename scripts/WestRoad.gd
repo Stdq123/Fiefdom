@@ -19,6 +19,7 @@ const GOLD := Color("#f0cc7b")
 @onready var lighting: DAY_LIGHTING = $DayLighting
 @onready var settings: Panel = %Settings
 @onready var region_map: Control = $UI/Control/RegionMap
+@onready var route_sign: TravelRouteSign = %RouteSign
 @onready var audio: TRACK_AUDIO = AudioManager.terrain_audio
 
 var route_direction := Vector2.ZERO
@@ -65,7 +66,7 @@ func _ready() -> void:
 		_follow_region_destination, _clear_regional_trip, null, Callable(), _map_road_progress)
 	$CampaignHUD.add_field_return(player, _follow_region_destination)
 	region_map.road_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
-	%RouteIcon.texture = HUDIcons.icon(HUDIcons.Symbol.MAP)
+	route_sign.setup(player, $CampaignHUD, _clear_regional_trip, region_map.road_button)
 	GameEvents.daylight_changed.connect(_refresh_clock)
 	GameEvents.visitor_interacted.connect(_talk_to_silk_guest)
 	GameEvents.retainer_recruited.connect(_refresh_scheduled_guest.unbind(1))
@@ -159,41 +160,54 @@ func _refresh_route() -> void:
 	if not tracking_meadow and not tracking_field and (not tracking_guest or not silk_guest):
 		route.clear()
 		route_origin = Vector2.INF
+	var destination := ""
+	var next_step := ""
 	if not Global.ravine_trip_target.is_empty():
-		%Route.text = "竹涧 · %s →" % Global.ravine_trip_target
+		destination = "竹涧 · " + Global.ravine_trip_target
+		next_step = "向东进封地，再走东关入竹涧。"
 		route_direction = Vector2.RIGHT
 	elif tracking_meadow:
-		%Route.text = Sheepfold.MEADOW
+		destination = Sheepfold.MEADOW
+		next_step = "在桥东岔口沿金线转向南。"
 		route_direction = Vector2.ZERO
 		_route_to(LAYOUT.MEADOW, 5.0)
 	elif target == Global.MARKET_RETURN:
-		%Route.text = "回封地 →"
+		destination = "回封地"
+		next_step = "沿桥道向东，到封地西关。"
 		route_direction = Vector2.RIGHT
 	elif tracking_field:
-		%Route.text = "封地 · %s →" % Global.field_return_place_name()
+		destination = "封地 · " + Global.field_return_place_name()
+		next_step = "沿金线向东，到封地西关。"
 		route_direction = Vector2.RIGHT
 		_route_to(LAYOUT.ESTATE_GATE, 8.0)
 	elif target in Global.ESTATE_REGIONAL_STOPS:
-		%Route.text = "封地 · %s →" % target
+		destination = "封地 · " + target
+		next_step = "沿桥道向东，到封地西关。"
 		route_direction = Vector2.RIGHT
 	elif tracking_guest and silk_guest:
 		var foot := silk_guest.position
 		route_direction = Vector2(signf(foot.x - player.position.x), 0)
-		%Route.text = ("← " if route_direction.x < 0.0 else "") + "陶辛 · 溪桥道" + (" →" if route_direction.x > 0.0 else "")
+		destination = "陶辛 · 溪桥道"
+		next_step = "沿金线去找路上的陶辛。"
 		_route_to(foot, 3.0)
 	elif silk_trip in [VisitorData.SilkTrip.RETURN_ROAD, VisitorData.SilkTrip.PAVILION]:
-		%Route.text = "陶辛 · 南路亭 →"
+		destination = "陶辛 · 南路亭"
+		next_step = "从封地西关回去，再到南路亭。"
 		route_direction = Vector2.RIGHT
 	elif tracking_guest and silk_trip == VisitorData.SilkTrip.NONE:
-		%Route.text = "陶辛 · 回封地 →"
+		destination = "回封地找陶辛"
+		next_step = "沿桥道向东，到封地西关。"
 		route_direction = Vector2.RIGHT
 	elif not target.is_empty():
-		%Route.text = "← 西市 · %s" % target
+		destination = "西市 · " + target
+		next_step = "沿桥道向西，到西市东口。"
 		route_direction = Vector2.LEFT
 	else:
-		%Route.text = ""
 		route_direction = Vector2.ZERO
-	%RouteRow.visible = not %Route.text.is_empty()
+	var direction := "◆"
+	if route_direction.x != 0.0:
+		direction = "←" if route_direction.x < 0.0 else "→"
+	route_sign.set_route(destination, next_step, direction)
 	$Waypoint.queue_redraw()
 
 func _route_to(foot: Vector2, refresh_distance: float) -> void:

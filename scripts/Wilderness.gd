@@ -41,7 +41,7 @@ func _ready() -> void:
 		CreekTrap.PLACES[CreekFish.Site.POOL]: $PoolTrap.position,
 		CreekTrap.PLACES[CreekFish.Site.SHOAL]: $ShoalTrap.position,
 	}
-	ravine_map.setup(directions, $Player, $Landscape, destinations)
+	ravine_map.setup(directions, $Player, $Landscape, destinations, $CampaignHUD)
 	ravine_map.open_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
 	$CampaignHUD.add_field_return($Player, ravine_map.follow_region_destination)
 	_setup_settings($CampaignHUD.view)

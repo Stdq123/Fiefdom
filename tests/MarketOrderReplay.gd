@@ -249,7 +249,7 @@ func _deliver() -> void:
 	await _button(book.freight_route)
 	await tree.process_frame
 	_expect(not market.counter.visible and state.market_trip_target == state.FREIGHT_YARD
-		and state.FREIGHT_YARD in market.market_map.cancel_button.text,
+		and state.FREIGHT_YARD in market.market_map.route_sign.destination_label.text,
 		"The receipt's action starts an eastbound route without changing the booked trade.")
 	await _snapshot("04-loaded-cart")
 	if not await _continue(state.WEST_MARKET_SCENE):
@@ -257,7 +257,7 @@ func _deliver() -> void:
 	market = tree.current_scene
 	_expect(market.get_node("Freight/Cargo").visible and not state.is_season_order_pinned(state.season_order())
 		and state.food_storage == before_grain + reward and state.market_trip_target == state.FREIGHT_YARD
-		and state.FREIGHT_YARD in market.market_map.cancel_button.text,
+		and state.FREIGHT_YARD in market.market_map.route_sign.destination_label.text,
 		"Continue restores the loaded cart, settled reward and return route.")
 	if waiting_shipment:
 		await _try_freight_bench()
@@ -402,19 +402,20 @@ func _summer_handoff(book: Control) -> void:
 	var stock: int = state.food_storage
 	await _button(book.next_water_button)
 	_expect(not market.counter.visible and state.market_trip_target == state.WATER_SOURCE
-		and state.pinned_season_start == 7 and "水源" in market.market_map.cancel_button.text,
+		and state.pinned_season_start == 7 and "水源" in market.market_map.route_sign.destination_label.text,
 		"The delivered spring order leads from the market to the estate spring and tracks summer.")
 	await _snapshot("04-spring-route-from-market")
 	if not await _continue(state.WEST_MARKET_SCENE):
 		return
 	market = tree.current_scene
 	_expect(state.pinned_season_start == 7 and state.food_storage == stock
-		and "水源" in market.market_map.cancel_button.text, "Continue restores both the summer order and the return route.")
+		and "水源" in market.market_map.route_sign.destination_label.text, "Continue restores both the summer order and the return route.")
 	await Campaign.walk_to_market_exit(tree, market)
 	if not await _cross(market.player, [], &"ui_right", state.WEST_ROAD_SCENE):
 		return
 	var road := tree.current_scene
-	_expect("水源 →" in road.get_node("%Route").text, "The bridge sends the player east to the spring.")
+	_expect("水源" in road.route_sign.destination_label.text and road.route_sign.direction_label.text == "→",
+		"The bridge sends the player east to the spring.")
 	await _snapshot("05-spring-route-on-bridge")
 	if not await _cross(road.player, [], &"ui_right", state.ESTATE_SCENE):
 		return
@@ -639,7 +640,7 @@ func _freight_to_pavilion() -> void:
 	if not await _cross(market.player, [], &"ui_right", state.WEST_ROAD_SCENE):
 		return
 	var road := tree.current_scene as Node2D
-	_expect(state.market_trip_target == state.FREIGHT_YARD and state.FREIGHT_YARD in road.get_node("%Route").text,
+	_expect(state.market_trip_target == state.FREIGHT_YARD and state.FREIGHT_YARD in road.route_sign.destination_label.text,
 		"The bridge continues the unloading-yard route through the east gate.")
 	var bridge_progress := (SeasonFreight.west_road_start + SeasonFreight.west_road.get_baked_length() * 0.5) / SeasonFreight.route_length
 	await _set_watch(SeasonOrders.EVENING_DISPATCH + SeasonOrders.TRAVEL_FRACTION * bridge_progress)

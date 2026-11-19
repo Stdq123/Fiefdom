@@ -240,7 +240,7 @@ func _cross_the_ravine() -> bool:
 	tree.root.size = original_size
 	await _capture_map_frame("01-ridge-route")
 	await _key(KEY_ESCAPE)
-	_expect(not map.modal.visible and not tree.paused and map.cancel_button.visible, "Esc returns to the trail and keeps directions.")
+	_expect(not map.modal.visible and not tree.paused and map.route_sign.visible, "Esc returns to the trail and keeps directions.")
 	if not await _walk_route():
 		return false
 	_expect(state.ravine_trip_target.is_empty(), "Reaching the herbs clears the persisted route.")
@@ -519,8 +519,8 @@ func _check_journal() -> void:
 	_expect(state.ravine_journal.recorded_days[site] == state.current_day and not map.journal_button.visible,
 		"The player records today's water mark at the real sign using E.")
 	_expect(guide.destination_name == "望溪台", "Recording a water mark leaves a route to a place active.")
-	await _click(map.cancel_button)
-	_expect(guide.route.is_empty() and not map.cancel_button.visible, "The trail HUD can also clear directions.")
+	await _click(map.route_sign.cancel_button)
+	_expect(guide.route.is_empty() and not map.route_sign.visible, "The trail HUD can also clear directions.")
 	print("RAVINE_MAP_JOURNAL site=", site, " day=", state.current_day)
 
 	if not await _select_place(SummerRaft.PLACE):
