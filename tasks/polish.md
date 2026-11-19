@@ -15,6 +15,12 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 四处户外的晴雨光色
+
+封地、竹涧、溪桥道和西市共用晴雨光色。晴天的云影随时辰缓慢掠过屋瓦、路面和人物。谷雨的青灰天光让湿路和岩壁偏冷，傍晚路灯先亮起一层暖色。入暮后云影收起，堂屋和蚕棚沿用窗光与灯火。
+
+从 `4684dda` 独立构建两次，ZIP 的 SHA-256 均为 `879ba8ffbf8d530a0f681470f24276cf6df0f5c2ff4bc73fec5baf3dbb7335fb`。五项无窗口回归通过。隔离桌面用 1920×1080 的 Vulkan 和 Direct3D 12、1024×768 的 OpenGL 核对 48 个同机位画面。OpenGL 的雨天样例中，人物、田埂和草甸路牌周边的边缘反差保留约 84% 至 85%。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-outdoor-light/release-4684dda/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-outdoor-light/release-4684dda/release-proof.txt)
+
 ## Windows 关窗与继续游戏
 
 游戏中关闭窗口会显示本局当前日期与最近存档，默认聚焦「保存并退出」。保存失败时可在确认框内重试。直接退出会放弃尚未保存的改动，取消会恢复原来的焦点和暂停状态。通关结算也可保存后退出，战败时可留在结算读取旧档。
