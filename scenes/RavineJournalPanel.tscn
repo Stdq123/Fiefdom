@@ -1,0 +1,304 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/RavineJournalPanel.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/world/creek-road-bridge.png" id="2_bridge"]
+[ext_resource type="Texture2D" path="res://assets/world/ravine-forage.svg" id="3_forage"]
+[ext_resource type="Texture2D" path="res://assets/world/ravine-art.png" id="4_ravine"]
+[ext_resource type="Texture2D" path="res://assets/world/bamboo-herb-bed.svg" id="5_herbs"]
+
+[sub_resource type="AtlasTexture" id="Bridge"]
+atlas = ExtResource("2_bridge")
+region = Rect2(111, 1, 62, 40)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Ford"]
+atlas = ExtResource("3_forage")
+region = Rect2(80, 0, 28, 28)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Lookout"]
+atlas = ExtResource("4_ravine")
+region = Rect2(146, 0, 48, 40)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="YoungHerbs"]
+atlas = ExtResource("5_herbs")
+region = Rect2(0, 0, 44, 28)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="GrownHerbs"]
+atlas = ExtResource("5_herbs")
+region = Rect2(44, 0, 44, 28)
+filter_clip = true
+
+[sub_resource type="StyleBoxFlat" id="Page"]
+content_margin_left = 14.0
+content_margin_top = 10.0
+content_margin_right = 16.0
+content_margin_bottom = 10.0
+bg_color = Color(0.144, 0.209, 0.167, 1)
+border_width_left = 3
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.305, 0.407, 0.305, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_left = 5
+corner_radius_bottom_right = 5
+
+[node name="溪行手记" type="VBoxContainer"]
+theme_override_constants/separation = 12
+script = ExtResource("1_script")
+trace_frame = SubResource("Page")
+trace_art = Array[Texture2D]([SubResource("Bridge"), SubResource("Ford"), SubResource("Lookout")])
+garden_art = Array[Texture2D]([SubResource("YoungHerbs"), SubResource("GrownHerbs")])
+
+[node name="Header" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 29
+text = "竹涧溪行手记"
+
+[node name="Today" type="Label" parent="Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.82, 0.70, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="RouteRail" type="PanelContainer" parent="."]
+layout_mode = 2
+theme_type_variation = &"HudLacquerTray"
+
+[node name="Inset" type="MarginContainer" parent="RouteRail"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="Row" type="HBoxContainer" parent="RouteRail/Inset"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="CurrentStep" type="VBoxContainer" parent="RouteRail/Inset/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 3
+
+[node name="Progress" type="Label" parent="RouteRail/Inset/Row/CurrentStep"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 21
+autowrap_mode = 3
+
+[node name="NextStep" type="Label" parent="RouteRail/Inset/Row/CurrentStep"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 3
+
+[node name="NextRoute" type="Button" parent="RouteRail/Inset/Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(132, 42)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+theme_type_variation = &"HudPrimary"
+theme_override_font_sizes/font_size = 17
+
+[node name="Reading" type="ScrollContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="Columns" type="HBoxContainer" parent="Reading"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="Journal" type="VBoxContainer" parent="Reading/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.62
+
+[node name="Introduction" type="PanelContainer" parent="Reading/Columns/Journal"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/panel = SubResource("Page")
+
+[node name="Neighbor" type="HBoxContainer" parent="Reading/Columns/Journal/Introduction"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="GuidePortrait" type="TextureRect" parent="Reading/Columns/Journal/Introduction/Neighbor"]
+unique_name_in_owner = true
+texture_filter = 1
+custom_minimum_size = Vector2(92, 92)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="GuideInfo" type="VBoxContainer" parent="Reading/Columns/Journal/Introduction/Neighbor"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+theme_override_constants/separation = 6
+
+[node name="GuideName" type="Label" parent="Reading/Columns/Journal/Introduction/Neighbor/GuideInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 23
+text = "蒲宁 · 竹涧行者"
+
+[node name="VisitorWhere" type="Label" parent="Reading/Columns/Journal/Introduction/Neighbor/GuideInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 3
+
+[node name="Pages" type="VBoxContainer" parent="Reading/Columns/Journal"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 9
+
+[node name="Outing" type="VBoxContainer" parent="Reading/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 9
+
+[node name="Forage" type="PanelContainer" parent="Reading/Columns/Outing"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("Page")
+
+[node name="List" type="VBoxContainer" parent="Reading/Columns/Outing/Forage"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="OutingStatus" type="Label" parent="Reading/Columns/Outing/Forage/List"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 3
+
+[node name="Fruit" type="HBoxContainer" parent="Reading/Columns/Outing/Forage/List"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Info" type="VBoxContainer" parent="Reading/Columns/Outing/Forage/List/Fruit"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+theme_override_constants/separation = 3
+
+[node name="FruitName" type="Label" parent="Reading/Columns/Outing/Forage/List/Fruit/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 19
+text = "野果坳"
+
+[node name="FruitQuote" type="Label" parent="Reading/Columns/Outing/Forage/List/Fruit/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.80, 0.86, 0.75, 1)
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+
+[node name="FruitRoute" type="Button" parent="Reading/Columns/Outing/Forage/List/Fruit"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(70, 38)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+theme_type_variation = &"HudButton"
+theme_override_font_sizes/font_size = 16
+text = "指路"
+accessibility_name = "指路去野果坳"
+
+[node name="ForageDivider" type="HSeparator" parent="Reading/Columns/Outing/Forage/List"]
+layout_mode = 2
+
+[node name="Herbs" type="HBoxContainer" parent="Reading/Columns/Outing/Forage/List"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Info" type="VBoxContainer" parent="Reading/Columns/Outing/Forage/List/Herbs"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+theme_override_constants/separation = 3
+
+[node name="HerbName" type="Label" parent="Reading/Columns/Outing/Forage/List/Herbs/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 19
+text = "望溪台"
+
+[node name="HerbQuote" type="Label" parent="Reading/Columns/Outing/Forage/List/Herbs/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.80, 0.86, 0.75, 1)
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+
+[node name="HerbRoute" type="Button" parent="Reading/Columns/Outing/Forage/List/Herbs"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(70, 38)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+theme_type_variation = &"HudButton"
+theme_override_font_sizes/font_size = 16
+text = "指路"
+accessibility_name = "指路去望溪台"
+
+[node name="GardenCard" type="PanelContainer" parent="Reading/Columns/Outing"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_styles/panel = SubResource("Page")
+
+[node name="Bed" type="HBoxContainer" parent="Reading/Columns/Outing/GardenCard"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="GardenArt" type="TextureRect" parent="Reading/Columns/Outing/GardenCard/Bed"]
+unique_name_in_owner = true
+texture_filter = 1
+custom_minimum_size = Vector2(87, 58)
+layout_mode = 2
+mouse_filter = 2
+texture = SubResource("GrownHerbs")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Info" type="VBoxContainer" parent="Reading/Columns/Outing/GardenCard/Bed"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+theme_override_constants/separation = 4
+
+[node name="GardenTitle" type="Label" parent="Reading/Columns/Outing/GardenCard/Bed/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 19
+text = "竹径药圃"
+
+[node name="Garden" type="Label" parent="Reading/Columns/Outing/GardenCard/Bed/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.80, 0.86, 0.75, 1)
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 3

@@ -325,6 +325,7 @@ func _connect_signals() -> void:
 	GameEvents.mulberry_directions_requested.connect(_on_mulberry_directions_requested)
 	GameEvents.west_market_directions_requested.connect(_on_west_market_directions_requested)
 	GameEvents.ravine_trip_requested.connect(_on_ravine_trip_requested)
+	GameEvents.ravine_journal_directions_requested.connect(_on_ravine_journal_directions_requested)
 
 	world.seed_selected.connect(_refresh_seed_belt.unbind(1))
 	world.pavilion_rest.story_changed.connect(_refresh_pavilion_story.unbind(1))
@@ -980,6 +981,20 @@ func _on_ravine_trip_requested(place: String) -> void:
 	panel_manager.hide_management_panel()
 	if Global.is_indoors():
 		hud.practice_label.text = "已标出东关 · 从南门回封地"
+
+func _on_ravine_journal_directions_requested(place: String) -> void:
+	var destination: Node2D
+	if place == "东关" and Global.ravine_site_today() >= 0:
+		destination = world.get_node("EastGate")
+	elif place == "药圃" and Global.ravine_shortcut_open():
+		destination = world.get_node("HerbGarden")
+	else:
+		return
+	world.set_channel_mode(false)
+	directions.follow_place(place, world.to_local(destination.global_position))
+	panel_manager.hide_management_panel()
+	if Global.is_indoors():
+		hud.practice_label.text = "已标出%s · 从南门回封地" % place
 
 func _on_pinned_order_pressed() -> void:
 	if _estate_controls_busy() or world.player.training_cart.visible:

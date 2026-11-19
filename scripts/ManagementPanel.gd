@@ -13,6 +13,7 @@ const ART_ACTIVITIES := {
 }
 const SEASON_ORDER_PANEL := preload("res://scenes/SeasonOrderPanel.tscn")
 const NEIGHBOR_JOURNAL := preload("res://scenes/NeighborJournal.tscn")
+const RAVINE_JOURNAL := preload("res://scenes/RavineJournalPanel.tscn")
 const FISH_LEDGER := preload("res://scripts/FishLedger.gd")
 const MAP_GRID_ITEM := preload("res://scripts/MapGridItem.gd")
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
@@ -55,6 +56,7 @@ var section_buttons: Array[Button] = []
 var previous_focus: Control
 var season_order_panel: Control
 var neighbor_journal: Control
+var ravine_panel: Control
 var fish_ledger: Control
 var silk_panel: VBoxContainer
 var steward_field_id := -1
@@ -63,7 +65,6 @@ var resume_sowing_index := -1
 
 var retainer_item_scene = preload("res://scenes/RetainerItem.tscn")
 var silk_panel_script = preload("res://scripts/SilkPanel.gd")
-var ravine_panel_script = preload("res://scripts/RavineJournalPanel.gd")
 var music_practice_script = preload("res://scripts/MusicPractice.gd")
 
 # Six Arts
@@ -146,8 +147,7 @@ func _ready() -> void:
 	silk_panel.add_theme_constant_override("separation", 12)
 	tabs.add_child(silk_panel)
 	silk_panel.study_requested.connect(show_six_arts)
-	var ravine_panel := ravine_panel_script.new() as VBoxContainer
-	ravine_panel.name = "溪行手记"
+	ravine_panel = RAVINE_JOURNAL.instantiate()
 	tabs.add_child(ravine_panel)
 	season_order_panel = SEASON_ORDER_PANEL.instantiate()
 	tabs.add_child(season_order_panel)
@@ -201,7 +201,7 @@ func _build_sections() -> void:
 func _refresh_section(index: int) -> void:
 	var focus := get_viewport().gui_get_focus_owner()
 	var page := tabs.get_tab_control(index)
-	var show_roster := page not in [neighbor_journal, fish_ledger]
+	var show_roster := page not in [neighbor_journal, fish_ledger, ravine_panel]
 	if show_roster != retainer_panel.visible:
 		retainer_panel.visible = show_roster
 		if show_roster:
