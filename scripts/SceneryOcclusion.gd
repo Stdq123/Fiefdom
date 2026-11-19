@@ -17,34 +17,36 @@ class Cover:
 
 	func _init(art: Sprite2D, origin: Node2D, first_sample: int) -> void:
 		sprite = art
-		sort_origin = origin
+		sort_origin = art if origin == null else origin
 		original_alpha = art.modulate.a
 		first_fade_sample = first_sample
 
 var _player: Player
+var _room: Global.EstateRoom
 var _cover: Array[Cover] = []
 
-func _init(player: Player) -> void:
+func _init(player: Player, room := Global.EstateRoom.OUTDOORS) -> void:
 	name = "SceneryOcclusion"
 	_player = player
+	_room = room
 
 func watch(sprite: Sprite2D, sort_origin: Node2D = null) -> void:
 	# A grouped prop sorts at its parent's foot even when the art is raised.
-	_cover.append(Cover.new(sprite, sprite if sort_origin == null else sort_origin, 1))
+	_cover.append(Cover.new(sprite, sort_origin, 1))
 
-func watch_prop(sprite: Sprite2D) -> void:
-	# Allow rocks and other low props to cover part of the body at normal opacity.
-	_cover.append(Cover.new(sprite, sprite, PROP_COVER_SAMPLES))
+func watch_prop(sprite: Sprite2D, sort_origin: Node2D = null) -> void:
+	# Keep foreground props solid when they only cover part of the body.
+	_cover.append(Cover.new(sprite, sort_origin, PROP_COVER_SAMPLES))
 
 func _process(delta: float) -> void:
 	var body := _player.sprite
-	var outdoors := not Global.is_indoors() and body.is_visible_in_tree()
+	var room_visible := Global.estate_room == _room and body.is_visible_in_tree()
 	var body_pose := body.global_transform.translated_local(body.offset)
 	var foot_y := _player.global_position.y
 	for cover in _cover:
 		var sprite := cover.sprite
 		var alpha := cover.original_alpha
-		if outdoors and foot_y < cover.sort_origin.global_position.y and sprite.is_visible_in_tree():
+		if room_visible and foot_y < cover.sort_origin.global_position.y and sprite.is_visible_in_tree():
 			alpha *= _opacity_at(cover, body_pose)
 		var current := sprite.modulate.a
 		if not is_equal_approx(current, alpha):

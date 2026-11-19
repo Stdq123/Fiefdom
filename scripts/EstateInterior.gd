@@ -1,8 +1,11 @@
 extends Node2D
 
+const SCENERY_OCCLUSION := preload("res://scripts/SceneryOcclusion.gd")
+
 @export var room_kind := Global.EstateRoom.HALL
 @export var facade_path: NodePath = ^"../HallRest"
 @export var resume_path: NodePath = ^"Entry"
+@export var foreground_paths: Array[NodePath] = []
 
 @onready var player: Player = $"../Player"
 @onready var facade: Node2D = get_node(facade_path)
@@ -17,6 +20,12 @@ var flame_phase := 0.0
 
 func _ready() -> void:
 	window_projection.set_shader_parameter("room_origin", global_position)
+	if not foreground_paths.is_empty():
+		var occlusion := SCENERY_OCCLUSION.new(player, room_kind)
+		for path in foreground_paths:
+			var art := get_node(path) as Sprite2D
+			occlusion.watch_prop(art, art.get_parent() as Node2D)
+		add_child(occlusion)
 	entrance.add_to_group("travel_threshold")
 	$Exit.add_to_group("travel_threshold")
 	entrance.body_entered.connect(_on_entrance)

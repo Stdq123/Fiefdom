@@ -10,6 +10,20 @@ func _expect(condition: bool, detail: String) -> void:
 		failed = true
 		push_error(detail)
 
+func _check_clothes_rack(hall: Node2D, actor: Node2D) -> void:
+	var rack := hall.get_node("ClothesRack/Sprite") as Sprite2D
+	var occlusion := hall.get_node("SceneryOcclusion")
+	var original := actor.global_position
+	actor.global_position = hall.to_global(Vector2(-54, 14))
+	occlusion._process(1.0 / 60.0)
+	_expect(rack.modulate.a < 1.0 and rack.modulate.a > 0.76, "The clothes rack begins fading behind its foot.")
+	occlusion._process(0.4)
+	_expect(is_equal_approx(rack.modulate.a, 0.76), "The rack lets the covered torso show without losing its shape.")
+	actor.global_position = hall.to_global(Vector2(-60, 43))
+	occlusion._process(0.4)
+	_expect(is_equal_approx(rack.modulate.a, 1.0), "The rack returns to solid when the player is in front.")
+	actor.global_position = original
+
 func _review() -> void:
 	if not ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"):
 		push_error("Run the interior-light check with an isolated smoke profile.")
@@ -44,6 +58,7 @@ func _review() -> void:
 		and hall_projection.get_shader_parameter("room_origin") == hall.global_position
 		and silk_projection.get_shader_parameter("room_origin") == silk.global_position,
 		"Each room owns its projection with the hall floor and mat sharing the same coordinates.")
+	_check_clothes_rack(hall, current_scene.get_node("World/Player"))
 
 	var morning: Vector2 = hall_projection.get_shader_parameter("beam_origin")
 	var morning_depth: float = hall_projection.get_shader_parameter("beam_depth")

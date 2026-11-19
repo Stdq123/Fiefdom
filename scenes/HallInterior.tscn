@@ -88,6 +88,7 @@ visible = false
 y_sort_enabled = true
 script = ExtResource("1_room")
 resume_path = NodePath("Wake")
+foreground_paths = Array[NodePath]([NodePath("ClothesRack/Sprite")])
 
 [node name="Backdrop" type="Polygon2D" parent="."]
 z_index = -3
