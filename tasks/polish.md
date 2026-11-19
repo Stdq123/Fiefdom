@@ -15,6 +15,12 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 议税筹备账与三案对照的阅读布局
+
+筹备账和定案面板的正文随阅读字号调整。定案面板优先列出两条路线的结局门槛和暂缓的经费，三案正文一起滚动，方案名、离席和定案按钮留在画面内。正反向 Tab 在当前面板内循环。
+
+从 `aadbc8b` 独立构建两次，ZIP 的 SHA-256 均为 `4c5d3ec9b4c24b7d0412575abadaedfe947cc597d61b1bac742dd4f934f881b6`。无窗口检查通过。隔离桌面在 1920×1080 的 Vulkan 和 Direct3D 12、1024×768 的 OpenGL 各核对 10 个界面。最大字号下可翻读完整的研究费用和结局门槛，切换预选时保持阅读位置。另核对研究到期与经费不足的两案提示。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-council-reading/release-aadbc8b/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-council-reading/release-aadbc8b/release-proof.txt)
+
 ## 交接简的公私田与首贡期限
 
 交接简的九格图用文字标出中央公田与四周私田，页脚显示一份首贡的期限、今夜到期或已逾期。书信、收成去向与期限随阅读字号放大。人在堂屋时，首贡前过夜提醒会在确认前说明从南门回田边。
