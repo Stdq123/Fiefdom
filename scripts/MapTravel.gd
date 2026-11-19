@@ -9,6 +9,7 @@ const ARRIVAL_PLATE := preload("res://scenes/TravelArrival.tscn")
 const ARRIVAL_HOLD := 0.95
 const SESSION_PLATE := preload("res://scenes/SessionLoading.tscn")
 const RESOURCE_BATCH_USEC := 5000
+const RESOURCE_BATCH_LIMIT_USEC := 120000
 
 var active := false
 var cover: ColorRect
@@ -18,6 +19,7 @@ var _arrival_tween: Tween
 var _preloads: Dictionary[String, PackedScene] = {}
 var _session_plate: CenterContainer
 var _session_caption: Label
+var _session_batch_usec := RESOURCE_BATCH_USEC
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -65,6 +67,7 @@ func prepare_session(path: String, caption: String) -> bool:
 	cover.show()
 	_session_caption.text = caption
 	_session_plate.show()
+	_session_batch_usec = RESOURCE_BATCH_USEC
 	# Draw the loading card before the first synchronous read.
 	await tree.process_frame
 	await tree.process_frame
@@ -93,9 +96,13 @@ func _prepare_in_batches(path: String) -> PackedScene:
 		var resource := ResourceLoader.load(target)
 		if resource:
 			held.append(resource)
-		if Time.get_ticks_usec() - started >= RESOURCE_BATCH_USEC:
+		if Time.get_ticks_usec() - started >= _session_batch_usec:
+			var waiting := Time.get_ticks_usec()
 			await get_tree().process_frame
 			started = Time.get_ticks_usec()
+			# Slow frame delivery can cost more than a small batch. Amortize that wait for this entry.
+			_session_batch_usec = clampi(maxi(_session_batch_usec, (started - waiting) * 3),
+				RESOURCE_BATCH_USEC, RESOURCE_BATCH_LIMIT_USEC)
 	prepare(path)
 	await get_tree().process_frame
 	return _preloads.get(path)
