@@ -10,12 +10,15 @@ signal silk_requested
 @onready var receipt: Label = %SheepReceipt
 
 func _ready() -> void:
+	for control: Control in [account, buy_sheep, buy_fodder, sell_wool, weave_coat, receipt, %BackToSilk]:
+		InterfaceFont.scale_reading_text(control)
 	buy_sheep.pressed.connect(_trade.bind(Sheepfold.Action.BUY_SHEEP))
 	buy_fodder.pressed.connect(_trade.bind(Sheepfold.Action.BUY_FODDER))
 	sell_wool.pressed.connect(_trade.bind(Sheepfold.Action.SELL_WOOL))
 	weave_coat.pressed.connect(_trade.bind(Sheepfold.Action.WEAVE_COAT))
 	%BackToSilk.pressed.connect(silk_requested.emit)
 	GameEvents.sheepfold_changed.connect(_refresh)
+	GameEvents.money_changed.connect(_refresh.unbind(1))
 
 func show_offer() -> void:
 	receipt.text = ""
@@ -27,6 +30,10 @@ func _refresh() -> void:
 	if flock.owned():
 		account.text = "羊在西坡羊棚 · 草料 %d 份 · 羊毛 %d 份" % [flock.fodder, flock.wool]
 		account.text += "\n桥东草甸 · " + Global.meadow_status()
+		if Global.money < prices.sheep_fodder_price:
+			account.text += "\n买草料还差 %d 铜钱。" % (prices.sheep_fodder_price - Global.money)
+		if not flock.coat and flock.wool < prices.sheep_coat_wool:
+			account.text += "\n织衣还差 %d 份羊毛。" % (prices.sheep_coat_wool - flock.wool)
 	else:
 		account.text = "领羊后在封地西坡立栏。\n雨天和冬季要备草料，饱食 %d 夜可剪毛。" % prices.sheep_wool_nights
 		if Global.money < prices.sheep_price:

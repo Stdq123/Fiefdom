@@ -46,6 +46,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(0.95, 0.84, 0.57, 1)
+autowrap_mode = 3
 
 [node name="OfferNote" type="Label" parent="Row/Details"]
 unique_name_in_owner = true

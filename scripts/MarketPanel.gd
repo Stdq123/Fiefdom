@@ -56,6 +56,8 @@ func _ready() -> void:
 	var grain_stall: String = MarketStall.TITLES[MarketStall.Kind.GRAIN]
 	$MarketHeader/MarketDirections.pressed.connect(GameEvents.west_market_directions_requested.emit.bind(grain_stall))
 	$MarketHeader.visible = not at_stall
+	if at_stall:
+		_enable_stall_reading()
 	visibility_changed.connect(_on_visibility_changed)
 	GameEvents.crop_harvested.connect(_refresh.unbind(1))
 	GameEvents.inventory_changed.connect(_refresh.unbind(1))
@@ -74,6 +76,17 @@ func _ready() -> void:
 		_refresh()
 	)
 	_refresh()
+
+func _enable_stall_reading() -> void:
+	for control: Control in [grain_stock, crop_stock, copper_stock, food_label, stock_detail, debit_plan,
+		$QuantityRow/Label, quantity.get_line_edit(), $QuantityRow/Five, all_crops, crop_choice,
+		sell_button, convert_button, buy_button, reform_sale_note, reform_sale_button,
+		reserve_kind, use_reserved, reserve_label, reserve_button, receipt]:
+		InterfaceFont.scale_reading_text(control)
+	for picker: OptionButton in [crop_choice, reserve_kind]:
+		var menu := picker.get_popup()
+		var standard := menu.get_theme_font_size(&"font_size")
+		menu.about_to_popup.connect(func(): menu.add_theme_font_size_override(&"font_size", Preferences.reading_font_size(standard)))
 
 func focus_reform_sale() -> void:
 	if reform_sale_button.is_visible_in_tree():
@@ -189,7 +202,9 @@ func _refresh_trade() -> void:
 	if not use.is_empty():
 		debit_plan.text = "会取用   " + ItemManager.describe_crops(use) + _order_stock_note(use)
 	else:
-		debit_plan.text = "该品种还差 %d 份" % crop_shortage if crop_shortage > 0 else "选品种和数量，查看将用哪些作物。"
+		debit_plan.text = "出售或转粮还差 %d 份%s" % [crop_shortage, label] if crop_shortage > 0 else quantity_hint
+	if valid and copper_shortage > 0:
+		debit_plan.text += "\n买粮还差 %d 铜钱" % copper_shortage
 
 func _selected_crop() -> String:
 	return CropStock.IDS[crop_choice.selected - 1] if crop_choice.selected > 0 else ""

@@ -27,8 +27,12 @@ func _ready() -> void:
 		_add_fish_row(id)
 	receipt = Label.new()
 	receipt.add_theme_color_override("font_color", Color("#bfd59f"))
+	receipt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	receipt.hide()
 	add_child(receipt)
+	if at_stall:
+		InterfaceFont.scale_reading_text(summary)
+		InterfaceFont.scale_reading_text(receipt)
 	GameEvents.fish_changed.connect(_refresh)
 	GameEvents.creek_trap_changed.connect(_refresh)
 	GameEvents.pond_landing_opened.connect(_refresh)
@@ -59,6 +63,7 @@ func _add_fish_row(id: String) -> void:
 	row.add_child(text)
 	var label := Label.new()
 	label.add_theme_font_size_override("font_size", 18)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	text.add_child(label)
 	var history := Label.new()
 	history.add_theme_font_size_override("font_size", 14)
@@ -66,17 +71,20 @@ func _add_fish_row(id: String) -> void:
 	history.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	text.add_child(history)
 	var food := Button.new()
-	food.text = "留作口粮 +%d" % fish.food
+	food.text = "留 1 尾 · 口粮 +%d" % fish.food
 	food.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	food.custom_minimum_size.y = 36
 	food.pressed.connect(_exchange.bind(id, true))
 	row.add_child(food)
 	var sell := Button.new()
-	sell.text = "售出 · %d 铜钱" % fish.copper
+	sell.text = "售 1 尾 · +%d 铜钱" % fish.copper
 	sell.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	sell.custom_minimum_size.y = 36
 	sell.pressed.connect(_exchange.bind(id, false))
 	row.add_child(sell)
+	if at_stall:
+		for control: Control in [label, history, food, sell]:
+			InterfaceFont.scale_reading_text(control)
 	rows[id] = {"icon": icon, "label": label, "history": history, "food": food, "sell": sell}
 
 func _refresh() -> void:
