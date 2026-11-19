@@ -15,6 +15,12 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## Windows 的 OpenGL 兼容入口
+
+Windows ZIP 里随主程序附带 `Fiefdom-Compatibility.cmd`。遇到黑屏或渲染异常时可双击它用 OpenGL 启动，两种入口共用存档和设置。
+
+从 `7418cdd` 独立构建两次，ZIP 的 SHA-256 均为 `0ee2aec66a4941ee6a791dea9cad2f9af8eb0c267635e3d2236c87c339ddace6`。无窗口检查通过，含中文、空格和感叹号的解压目录可从其他目录调用兼容入口。本机隔离桌面在默认 1920×1080 和 1024×768 各核对 Vulkan、Direct3D 12 和 OpenGL 的 12 个定点画面，覆盖标题、封地 HUD、南池、堂屋、蚕棚、竹涧、溪桥道和西市。三种方式下都测得南池雨纹在动，堂屋和蚕棚的夜灯照亮室内。模拟 Vulkan 不可用后自动切到 Direct3D 12，并核对同一组 1920×1080 画面。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-render-fallback/release-7418cdd/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-render-fallback/release-7418cdd/release-proof.txt)
+
 ## 从中断的存档替换恢复
 
 写入新版本前会保留同一档位上一份可用记录。主档缺失或损坏时，标题和选档页标为「备份」，恢复经营后显示读回的日期。手动档和三个自动档仍各占原来的位置。Windows 同一存档目录一次只接受一个写入进程，前一个进程结束后可以继续保存。
