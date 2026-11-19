@@ -6,6 +6,11 @@
 [ext_resource type="Material" path="res://resources/world_hint_material.tres" id="4_unshaded"]
 [ext_resource type="Texture2D" path="res://assets/world/hall-decor.png" id="6_decor_art"]
 [ext_resource type="Script" path="res://scripts/HallDecorView.gd" id="7_decor_view"]
+[ext_resource type="Shader" path="res://resources/interior-window.gdshader" id="8_window"]
+
+[sub_resource type="ShaderMaterial" id="WindowProjection"]
+resource_local_to_scene = true
+shader = ExtResource("8_window")
 
 [sub_resource type="AtlasTexture" id="Atlas_room"]
 atlas = ExtResource("2_art")
@@ -91,6 +96,7 @@ color = Color(0.075, 0.093, 0.08, 1)
 polygon = PackedVector2Array(-512, -384, 512, -384, 512, 384, -512, 384)
 
 [node name="Floor" type="Sprite2D" parent="."]
+material = SubResource("WindowProjection")
 z_index = -2
 texture = SubResource("Atlas_room")
 
@@ -111,6 +117,7 @@ script = ExtResource("7_decor_view")
 atlas = ExtResource("6_decor_art")
 
 [node name="Mat" type="Sprite2D" parent="Decor"]
+material = SubResource("WindowProjection")
 z_index = -1
 position = Vector2(-29, 5)
 centered = false
@@ -303,7 +310,8 @@ enabled = false
 [node name="Lamp" type="PointLight2D" parent="."]
 position = Vector2(38, -34)
 color = Color(1, 0.68, 0.39, 1)
-energy = 0.32
+energy = 0.19
+offset = Vector2(2, 11)
 range_z_min = -2
 texture = SubResource("Texture_glow")
 texture_scale = 1.16
@@ -311,7 +319,7 @@ texture_scale = 1.16
 [node name="WindowLight" type="PointLight2D" parent="."]
 position = Vector2(0, -31)
 color = Color(0.68, 0.89, 1, 1)
-energy = 0.36
+energy = 0.30
 range_z_min = -2
 texture = SubResource("Texture_glow")
 texture_scale = 1.7

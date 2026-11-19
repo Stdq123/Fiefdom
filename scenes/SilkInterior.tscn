@@ -4,6 +4,11 @@
 [ext_resource type="Texture2D" path="res://assets/world/silk-interior.png" id="2_art"]
 [ext_resource type="Script" path="res://scripts/SilkStation.gd" id="3_station"]
 [ext_resource type="Material" path="res://resources/world_hint_material.tres" id="4_unshaded"]
+[ext_resource type="Shader" path="res://resources/interior-window.gdshader" id="5_window"]
+
+[sub_resource type="ShaderMaterial" id="WindowProjection"]
+resource_local_to_scene = true
+shader = ExtResource("5_window")
 
 [sub_resource type="AtlasTexture" id="Atlas_floor"]
 atlas = ExtResource("2_art")
@@ -82,6 +87,7 @@ color = Color(0.075, 0.093, 0.08, 1)
 polygon = PackedVector2Array(-512, -384, 512, -384, 512, 384, -512, 384)
 
 [node name="Floor" type="Sprite2D" parent="."]
+material = SubResource("WindowProjection")
 z_index = -2
 texture = SubResource("Atlas_floor")
 
@@ -255,7 +261,8 @@ enabled = false
 [node name="Lamp" type="PointLight2D" parent="."]
 position = Vector2(38, -33)
 color = Color(1, 0.71, 0.45, 1)
-energy = 0.32
+energy = 0.19
+offset = Vector2(2, 11)
 range_z_min = -2
 texture = SubResource("Texture_glow")
 texture_scale = 1.55
@@ -263,7 +270,7 @@ texture_scale = 1.55
 [node name="WindowLight" type="PointLight2D" parent="."]
 position = Vector2(0, -31)
 color = Color(0.73, 0.93, 1, 1)
-energy = 0.36
+energy = 0.30
 range_z_min = -2
 texture = SubResource("Texture_glow")
 texture_scale = 1.68

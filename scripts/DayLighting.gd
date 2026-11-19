@@ -46,7 +46,11 @@ func place_lamp(layer: Node2D, foot: Vector2, radius_scale := 1.0, ignition := -
 func refresh(delta := 0.0) -> void:
 	var dusk := Global.dusk_amount()
 	var winter := Global.season_index() == Global.Season.WINTER
-	color = Color("#efe0c6").lerp(Color("#be9b88"), dusk) if Global.is_indoors() else _sky.sample(Global.day_progress)
+	if Global.is_indoors():
+		var room_day := Color("#d6dbd2") if Global.has_rain() else Color("#efe0c6")
+		color = room_day.lerp(Color("#aaa5a6"), dusk)
+	else:
+		color = _sky.sample(Global.day_progress)
 	_flicker = fposmod(_flicker + delta, TAU * 4.0)
 	for index in lamps.size():
 		var phase := _flicker * 4.0 + float(index) * 2.1

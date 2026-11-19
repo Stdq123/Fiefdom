@@ -11,10 +11,12 @@ extends Node2D
 @onready var room_camera: Camera2D = $RoomCamera
 @onready var lamp: PointLight2D = $Lamp
 @onready var window_light: PointLight2D = $WindowLight
+@onready var window_projection: ShaderMaterial = $Floor.material
 
 var flame_phase := 0.0
 
 func _ready() -> void:
+	window_projection.set_shader_parameter("room_origin", global_position)
 	entrance.add_to_group("travel_threshold")
 	$Exit.add_to_group("travel_threshold")
 	entrance.body_entered.connect(_on_entrance)
@@ -64,14 +66,29 @@ func _arrive(inside: bool, marker: Marker2D) -> void:
 	camera.make_current()
 	camera.reset_smoothing()
 	camera.force_update_scroll()
+	if inside:
+		_refresh_lighting()
 	set_process(inside)
 	GameEvents.estate_room_changed.emit(Global.estate_room)
 
 func _process(delta: float) -> void:
 	flame_phase = fposmod(flame_phase + delta * 4.0, TAU)
+	_refresh_lighting()
+
+func _refresh_lighting() -> void:
 	var dusk := Global.dusk_amount()
-	lamp.energy = lerpf(0.32, 0.78, dusk) + 0.04 * sin(flame_phase)
-	window_light.energy = 0.36 * (1.0 - dusk)
+	var rain := Global.has_rain()
+	var flicker := 0.032 * sin(flame_phase) + 0.013 * sin(3.0 * flame_phase)
+	lamp.energy = lerpf(0.34 if rain else 0.19, 0.86, dusk) + flicker
+	window_light.energy = lerpf(0.26 if rain else 0.30, 0.035, dusk)
+
+	var daylight := minf(Global.day_progress / 0.86, 1.0)
+	var sun_height := sin(daylight * PI)
+	var strength := (1.0 - dusk) * lerpf(0.76, 1.0, sun_height)
+	window_projection.set_shader_parameter("direct_light", 0.0 if rain else strength)
+	window_projection.set_shader_parameter("beam_origin",
+		Vector2(lerpf(-17.0, 18.0, daylight), lerpf(3.0, -12.0, sun_height)))
+	window_projection.set_shader_parameter("beam_depth", lerpf(47.0, 34.0, sun_height))
 
 func _on_campaign_ended(_outcome: Global.Outcome) -> void:
 	if Global.estate_room == room_kind:
