@@ -15,6 +15,12 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 屋檐和树冠后的主角可见度
+
+封地、竹涧、溪桥道和西市用主角上半身与贴图实色部分判断遮挡。挡住人物的屋顶、树冠、竹梢和摊棚逐渐变淡，人物离开后恢复原样。西市晒布院屋后、粮摊后和街树后三个原本完全遮住主角的位置，现在都能辨认人物。
+
+从 `84adae7` 独立构建两次，ZIP 的 SHA-256 均为 `d460deb69700c16d1659a3eabcf691b605464e9355d8c1f232073c4b3eef712c`。隔离桌面以 1920×1080 检查 Vulkan 和 Direct3D 12，以 1024×768 检查 OpenGL。每组覆盖 11 处户外机位和两间室内，共 81 张取样。Vulkan 同机位核对确认两间室内与上一包逐像素一致。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-scenery-occlusion/release-84adae7/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-scenery-occlusion/release-84adae7/release-proof.txt)
+
 ## 路灯与水面倒影
 
 路灯的暖光沿地面铺开，堂前台阶下的路面比上一版更明亮。封地南池、竹涧和溪桥道的木桥、西市石池可见随水纹断开的灯影。灯影跟随岸灯亮度变化，谷雨夜更淡，桥板与干岸遮住反光。
