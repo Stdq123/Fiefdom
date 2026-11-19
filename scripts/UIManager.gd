@@ -1244,23 +1244,29 @@ func _warn_before_first_tribute(ration_warning: String) -> bool:
 	if penalty == 0 and cost > Global.current_stamina:
 		return false
 	var message: String
+	var field_button := "标出公田"
 	match route:
 		Global.NightGrowth.DRY:
 			message = "公田待浇。现在过夜，这一茬今晚不会生长。"
+			field_button = "找待浇公田"
 		Global.NightGrowth.BLOCKED:
 			message = "公田断水。接通水渠前，稻苗过夜也不会生长。"
+			field_button = "找断水公田"
 		Global.NightGrowth.READY:
 			message = "公田已熟。收割后，收成直接入国库。"
+			field_button = "找熟公田"
 		_:
 			if penalty == 0:
 				return false
 			route = Global.TributeRoute.TEND
 			message = "公田还没播种。" if not plan.seed_id.is_empty() else "公田尚未成熟，今天还不能收割。"
+			if not plan.seed_id.is_empty():
+				field_button = "选%s并指路" % plan.crop
 	if cost > Global.current_stamina:
 		message += "\n当前体力不足，田务需要 %d 点。" % cost
 	if penalty > 0:
 		message += "\n若今夜仍无纳贡，声望 −%d。" % penalty
-	var alternatives: Dictionary[String, Callable] = {"标出公田": _follow_tribute_plot.bind(route)}
+	var alternatives: Dictionary[String, Callable] = {field_button: _follow_tribute_plot.bind(route)}
 	if not ration_warning.is_empty():
 		message += "\n\n" + ration_warning
 		alternatives["查看今夜安排"] = _show_night_rations.bind(false, true)

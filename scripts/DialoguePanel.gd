@@ -1,5 +1,8 @@
 extends Control
 
+const TRIBUTE_INK := Color("#33432d")
+const TRIBUTE_ALERT := Color("#7b3522")
+
 @onready var name_label: Label = %NameLabel
 @onready var context_label: Label = %ContextLabel
 @onready var text_label: RichTextLabel = %TextLabel
@@ -47,6 +50,30 @@ func show_tribute_plot(field: Dictionary) -> void:
 	%PortraitFrame.show()
 	%PlotCaption.text = "井田 %d · %s" % [field.field, "待播" if field.status < 0 else field.crop]
 	%PlotCaption.show()
+	_show_tribute_timing(field)
+
+func _show_tribute_timing(field: Dictionary) -> void:
+	var due := Global.tribute_deadline()
+	%TributeTiming.visible = due > 0
+	if due <= 0:
+		return
+	var overdue := Global.tribute_overdue()
+	var tonight := due == Global.current_day
+	var deadline: Label = %TributeDue
+	deadline.text = "首贡期限 · 今夜到期" if tonight else "首贡期限 · 第 %d 天过夜前" % due
+	if overdue:
+		deadline.text = "首贡已逾期"
+	deadline.add_theme_color_override("font_color", TRIBUTE_ALERT if tonight or overdue else TRIBUTE_INK)
+
+	var estimate: Label = %TributeEstimate
+	estimate.visible = field.status not in [Global.NightGrowth.READY, Global.NightGrowth.BLOCKED]
+	if estimate.visible:
+		var start := "今日播种并逐夜供水" if field.status < 0 else "逐夜供水"
+		var late: bool = not overdue and field.ready_day > due
+		estimate.text = "%s · 最早第 %d 天可收" % [start, field.ready_day]
+		if late:
+			estimate.text += " · 赶不上期限"
+		estimate.add_theme_color_override("font_color", TRIBUTE_ALERT if late else TRIBUTE_INK)
 
 func _link_choices() -> void:
 	for index in choices.size():

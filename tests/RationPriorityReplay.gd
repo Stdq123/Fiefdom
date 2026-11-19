@@ -233,7 +233,8 @@ func _play_bedtime_with_tribute() -> void:
 	await _click(panel.get_node("%Sleep"))
 	await tree.process_frame
 	var warning := _bedtime_warning()
-	if not _expect(warning != null and warning.choices.size() == 3 and warning.choices[0].text == "标出公田"
+	var field_choice := "选%s并指路" % state.tribute_field_plan().crop
+	if not _expect(warning != null and warning.choices.size() == 3 and warning.choices[0].text == field_choice
 		and warning.choices[1].text == RATION_CHOICE and "声望" in warning.text_label.text
 		and "渠伯缺餐后将离任" in warning.text_label.text, "One warning offers both routes when tribute and the meal are at risk."):
 		return

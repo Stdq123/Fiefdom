@@ -127,9 +127,10 @@ func _show_first_tribute() -> void:
 	var public_cell: Vector2i = Global.well_fields[0].center_pos
 	var public_step := _opening_field_step(public_cell, true)
 	var due := Global.tribute_deadline()
-	if due > 0 and not Global.active_crops.has(public_cell):
-		public_step += "\n首贡 1 份 · 第 %d 天过夜前" % due
-	_describe("第一次纳贡", public_step)
+	var deadline := ""
+	if due > 0:
+		deadline = "\n首贡 1 份 · 已逾期" if Global.tribute_overdue() else "\n首贡 1 份 · 第 %d 天过夜前" % due
+	_describe("第一次纳贡", public_step + deadline)
 	if not waiting_for_tribute_crop or Global.private_harvest_total > 0:
 		return
 	var cell := _first_private_cell()
@@ -139,7 +140,7 @@ func _show_first_tribute() -> void:
 		ESTATE_WORLD.FieldAction.RICE_SEED, ESTATE_WORLD.FieldAction.WATER, ESTATE_WORLD.FieldAction.HARVEST]
 		and world.field_cost(action) <= Global.current_stamina)
 	if offer_first_private and tending_first_private:
-		_describe("兼顾一格私田", _opening_field_step(cell, false))
+		_describe("兼顾一格私田", _opening_field_step(cell, false) + deadline)
 
 func _toggle_first_private() -> void:
 	tending_first_private = not tending_first_private
