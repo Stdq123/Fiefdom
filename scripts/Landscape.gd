@@ -573,7 +573,8 @@ func _prepare_map() -> void:
 	if not is_inside_tree():
 		return
 	var props_layer := get_parent().get_node("Scenery") as Node2D
-	var wind := FOLIAGE_WIND.new()
+	var crops: TileMapLayer = null if wilderness else tile_map.get_node("CropsLayer")
+	var wind := FOLIAGE_WIND.new(crops)
 	add_child(wind)
 	var occlusion := SCENERY_OCCLUSION.new(player)
 	add_child(occlusion)
