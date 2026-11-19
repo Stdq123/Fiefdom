@@ -28,12 +28,14 @@ func open_map() -> void:
 		return
 	get_tree().paused = true
 	_show_map()
+	AudioManager.play_menu_cue(AudioManager.MenuCue.OPEN)
 	GameEvents.modal_visibility_changed.emit(true)
 
 func switch_to(next: Control, preferred_focus: Control) -> void:
 	owns_pause = false
 	modal.hide()
 	next._show_map()
+	AudioManager.play_menu_cue(AudioManager.MenuCue.PAGE)
 	preferred_focus.grab_focus()
 	GamepadInput.snap_pointer_to_focus.call_deferred()
 
@@ -53,6 +55,8 @@ func _show_map() -> void:
 	close_button.grab_focus()
 
 func close_map() -> void:
+	if owns_pause and Global.outcome == Global.Outcome.RUNNING:
+		AudioManager.play_menu_cue(AudioManager.MenuCue.CLOSE)
 	modal.hide()
 	_release_pause()
 

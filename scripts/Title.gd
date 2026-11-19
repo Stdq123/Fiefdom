@@ -22,6 +22,7 @@ func _ready() -> void:
 	$Center/Menu/Settings.pressed.connect(_open_settings)
 	$Center/Menu/Exit.pressed.connect(func(): get_tree().quit())
 	new_confirmation.confirmed.connect(_start_game)
+	new_confirmation.canceled.connect(AudioManager.play_menu_cue.bind(AudioManager.MenuCue.CLOSE))
 	new_confirmation.register_text_enter(new_name)
 	new_confirmation.get_cancel_button().text = "取消"
 	for button in [new_confirmation.get_ok_button(), new_confirmation.get_cancel_button()]:
@@ -57,6 +58,7 @@ func _on_new_requested() -> void:
 	if Global.has_saved_game():
 		new_name.text = Global.next_campaign_name()
 		new_confirmation.popup_centered()
+		AudioManager.play_menu_cue(AudioManager.MenuCue.OPEN)
 		new_name.grab_focus()
 		new_name.select_all()
 	else:

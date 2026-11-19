@@ -30,6 +30,7 @@ func _precreate_settings_panel() -> void:
 
 ## 显示管理面板
 func show_management_panel() -> void:
+	var opening := management_panel_instance == null or not management_panel_instance.visible
 	if management_panel_instance == null:
 		management_panel_instance = management_panel_scene.instantiate()
 		parent_node.add_child(management_panel_instance)
@@ -38,11 +39,14 @@ func show_management_panel() -> void:
 		management_panel_instance.refresh_retainers()
 		management_panel_instance.refresh_well_fields()
 	management_panel_instance.show()
+	if opening:
+		AudioManager.play_menu_cue(AudioManager.MenuCue.OPEN)
 
 ## 隐藏管理面板
 func hide_management_panel() -> void:
-	if management_panel_instance != null:
+	if management_panel_instance != null and management_panel_instance.visible:
 		management_panel_instance.hide()
+		AudioManager.play_menu_cue(AudioManager.MenuCue.CLOSE)
 
 ## 切换管理面板
 func toggle_management_panel() -> void:

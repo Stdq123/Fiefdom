@@ -198,7 +198,10 @@ func _show_date(index: int, detail_day := 0) -> void:
 		day = Global.current_day
 	var upcoming := day > Global.current_day
 	var date := _day_label(term_day) if detail_day == 0 else "第 %d 天" % day
-	title.text = "%s   ·   %s" % [Global.get_current_solar_term(day), date]
+	var caption := "%s   ·   %s" % [Global.get_current_solar_term(day), date]
+	if modal.is_visible_in_tree() and title.text != caption:
+		AudioManager.play_menu_cue(AudioManager.MenuCue.PAGE)
+	title.text = caption
 	var remaining := day - Global.current_day
 	if remaining < 0:
 		date_context.text = "已过"

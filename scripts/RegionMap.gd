@@ -126,6 +126,8 @@ func _active_destination() -> String:
 	return place if listed else ""
 
 func _browse(index: int) -> void:
+	if selected != index and modal.is_visible_in_tree():
+		AudioManager.play_menu_cue(AudioManager.MenuCue.PAGE)
 	selected = index as Region
 	var active := _active_destination()
 	selected_place = active if not active.is_empty() and _region_for(active) == selected else ""

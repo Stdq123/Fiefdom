@@ -167,7 +167,7 @@ func _ready() -> void:
 	tabs.add_child(fish_ledger)
 	market_panel.fish_book_button.pressed.connect(show_fish_ledger)
 	_build_sections()
-	tabs.tab_changed.connect(_refresh_section)
+	tabs.tab_changed.connect(_on_section_changed)
 	GameEvents.management_section_requested.connect(_cycle_section)
 	GamepadInput.changed.connect(_refresh_input_hints)
 	visibility_changed.connect(_announce_visibility)
@@ -205,6 +205,11 @@ func _build_sections() -> void:
 		button.focus_neighbor_top = NodePath(".")
 	close_button.focus_next = close_button.get_path_to(section_buttons[0])
 	section_buttons[0].focus_previous = section_buttons[0].get_path_to(close_button)
+
+func _on_section_changed(index: int) -> void:
+	_refresh_section(index)
+	if is_visible_in_tree():
+		AudioManager.play_menu_cue(AudioManager.MenuCue.PAGE)
 
 func _refresh_section(index: int) -> void:
 	var focus := get_viewport().gui_get_focus_owner()

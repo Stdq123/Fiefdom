@@ -87,17 +87,20 @@ func _ready() -> void:
 		if button is not CheckButton:
 			button.theme = HUD_THEME
 			button.theme_type_variation = &"HudButton"
-	visibility_changed.connect(_focus_open_page)
+	visibility_changed.connect(_on_visibility_changed)
 	_set_focus_edges()
 	contents.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, PADDING)
 	contents.minimum_size_changed.connect(_fit_contents)
 	_fit_contents()
 
-func _focus_open_page() -> void:
+func _on_visibility_changed() -> void:
 	if is_visible_in_tree():
+		AudioManager.play_menu_cue(AudioManager.MenuCue.OPEN)
 		_sync_display_controls()
 		var first: Control = bindings_page.keys[KeyBindings.UP] if bindings_page.visible else master_slider
 		first.grab_focus()
+	elif not visible:
+		AudioManager.play_menu_cue(AudioManager.MenuCue.CLOSE)
 
 func _set_focus_edges() -> void:
 	var first: Control = save_button if session_controls else master_slider
@@ -118,6 +121,8 @@ func _back_or_close() -> void:
 		hide()
 
 func _show_bindings(show_page: bool) -> void:
+	if bindings_page.visible != show_page:
+		AudioManager.play_menu_cue(AudioManager.MenuCue.PAGE)
 	general.visible = not show_page
 	bindings_page.visible = show_page
 	heading.text = "键盘键位" if show_page else "系统设置"

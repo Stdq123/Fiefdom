@@ -41,7 +41,7 @@ func _ready() -> void:
 	counter_layout.minimum_size_changed.connect(_fit_body, CONNECT_DEFERRED)
 	heading_row.minimum_size_changed.connect(_fit_body, CONNECT_DEFERRED)
 	get_viewport().size_changed.connect(_fit_body)
-	close_button.pressed.connect(hide)
+	close_button.pressed.connect(close_counter)
 	GamepadInput.changed.connect(_refresh_close_hint)
 	_refresh_close_hint()
 	sell_silk.pressed.connect(_sell_silk)
@@ -117,6 +117,8 @@ func _open_sheep() -> void:
 	_open_view("%s · 羊与羊毛" % speaker, sheep, speaker)
 
 func _open_view(heading: String, active_view: Control, speaker := "") -> void:
+	var opening := not is_visible_in_tree()
+	var changing_page := not active_view.visible
 	title.text = heading
 	counter_balance.visible = active_view in [fish, silk, sheep]
 	_refresh_balance()
@@ -135,7 +137,12 @@ func _open_view(heading: String, active_view: Control, speaker := "") -> void:
 	scroll.set_deferred(&"scroll_vertical", 0)
 	_fit_body.call_deferred()
 	close_button.grab_focus()
-	AudioManager.play_ui_sfx()
+	if opening or changing_page:
+		AudioManager.play_menu_cue(AudioManager.MenuCue.OPEN if opening else AudioManager.MenuCue.PAGE)
+
+func close_counter() -> void:
+	hide()
+	AudioManager.play_menu_cue(AudioManager.MenuCue.CLOSE)
 
 func _keeper_line(active_view: Control) -> String:
 	if active_view == grain:

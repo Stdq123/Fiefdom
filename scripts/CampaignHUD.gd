@@ -159,6 +159,7 @@ func _open_backpack() -> bool:
 	backpack.close_requested.connect(_close_backpack)
 	_refresh_backpack_shortcuts()
 	GamepadInput.snap_pointer_to_focus()
+	AudioManager.play_menu_cue(AudioManager.MenuCue.OPEN)
 	GameEvents.modal_visibility_changed.emit(true)
 	return true
 
@@ -167,6 +168,8 @@ func _close_backpack() -> void:
 	backpack.queue_free()
 	backpack = null
 	get_tree().paused = Global.outcome != Global.Outcome.RUNNING
+	if Global.outcome == Global.Outcome.RUNNING:
+		AudioManager.play_menu_cue(AudioManager.MenuCue.CLOSE)
 	GameEvents.modal_visibility_changed.emit(false)
 
 func _refresh_notice_visibility() -> void:

@@ -69,6 +69,8 @@ func _ready() -> void:
 	close_button.grab_focus()
 
 func select_page(selected: Page) -> void:
+	if selected != page and is_visible_in_tree():
+		AudioManager.play_menu_cue(AudioManager.MenuCue.PAGE)
 	page = selected
 	crop_tab.set_pressed_no_signal(page == Page.CROPS)
 	fish_tab.set_pressed_no_signal(page == Page.FISH)

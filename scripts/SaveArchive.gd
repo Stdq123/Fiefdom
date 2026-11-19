@@ -21,6 +21,7 @@ func _ready() -> void:
 	previously_paused = get_tree().paused
 	previous_focus = get_viewport().gui_get_focus_owner()
 	get_tree().paused = true
+	AudioManager.play_menu_cue(AudioManager.MenuCue.OPEN)
 	close_button.pressed.connect(_close)
 	GamepadInput.changed.connect(_refresh_controls_hint)
 	_refresh_controls_hint()
@@ -67,6 +68,8 @@ func _show_records(key: String) -> void:
 	if key == selected_campaign:
 		campaign_buttons[key].set_pressed_no_signal(true)
 		return
+	if not selected_campaign.is_empty():
+		AudioManager.play_menu_cue(AudioManager.MenuCue.PAGE)
 	selected_campaign = key
 	for estate in campaign_buttons:
 		campaign_buttons[estate].theme_type_variation = &"HudPrimary" if estate == key else &"HudButton"
@@ -167,6 +170,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 func _close() -> void:
 	get_tree().paused = previously_paused
 	hide()
+	AudioManager.play_menu_cue(AudioManager.MenuCue.CLOSE)
 	if is_instance_valid(previous_focus) and previous_focus.is_visible_in_tree():
 		previous_focus.grab_focus()
 	queue_free()

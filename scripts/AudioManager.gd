@@ -1,6 +1,7 @@
 extends Node
 
 enum TradeCue { SALE, PURCHASE, STORE_FOOD }
+enum MenuCue { PAGE, CLOSE, OPEN }
 
 const SFX_SAMPLE_RATE := 22050
 # Indexed by Player.Action from TILL through HARVEST.
@@ -29,6 +30,12 @@ const TRADE_CUES := [
 	preload("res://assets/audio/market/purchase.wav"),
 	preload("res://assets/audio/market/grain-stored.wav"),
 ]
+const MENU_CUES := [
+	preload("res://assets/audio/ui/page-turn.wav"),
+	preload("res://assets/audio/ui/book-close.wav"),
+	preload("res://assets/audio/ui/book-open.wav"),
+]
+const MENU_PAGE_INTERVAL := 0.065
 const TITLE_SCORE := "res://assets/audio/music/score-title.ogg"
 const RAVINE_SCORE := "res://assets/audio/music/score-ravine.ogg"
 const WEST_MARKET_SCORE := "res://assets/audio/music/score-west-market.ogg"
@@ -48,6 +55,8 @@ var ui_sfx_player: AudioStreamPlayer
 var terrain_audio: TERRAIN_AUDIO
 var field_sounds: Array[AudioStreamWAV] = []
 var _workshop_sound: AudioStreamPlayer
+var _menu_sound: AudioStreamPlayer
+var _pending_menu_cue := -1
 var _music_players: Array[AudioStreamPlayer] = []
 var _music_gains: Array[float] = [0.0, 0.0]
 var _music_bookmarks: Dictionary[AudioStream, float] = {}
@@ -99,6 +108,12 @@ func _ready() -> void:
 	ui_sfx_player.bus = "SFX"
 	ui_sfx_player.volume_db = -8.0
 	add_child(ui_sfx_player)
+
+	_menu_sound = AudioStreamPlayer.new()
+	_menu_sound.name = "MenuSound"
+	_menu_sound.bus = &"SFX"
+	_menu_sound.volume_db = -14.0
+	add_child(_menu_sound)
 
 	_workshop_sound = AudioStreamPlayer.new()
 	_workshop_sound.name = "WorkshopCue"
@@ -239,6 +254,21 @@ func play_world_sfx(stream: AudioStream, source: Node2D, volume := 0.0, hearing_
 	sound.global_position = source.global_position
 	sound.finished.connect(sound.queue_free)
 	sound.play()
+
+func play_menu_cue(cue: MenuCue) -> void:
+	if _pending_menu_cue < 0:
+		_play_pending_menu_cue.call_deferred()
+	# A new panel takes precedence when an action also closes or turns a page below it.
+	_pending_menu_cue = maxi(_pending_menu_cue, cue)
+
+func _play_pending_menu_cue() -> void:
+	var cue := _pending_menu_cue
+	_pending_menu_cue = -1
+	if cue == MenuCue.PAGE and _menu_sound.playing and _menu_sound.get_playback_position() < MENU_PAGE_INTERVAL:
+		return
+	_menu_sound.stream = MENU_CUES[cue]
+	if DisplayServer.get_name() != "headless":
+		_menu_sound.play()
 
 # Play UI sound effect (button clicks, etc.)
 func play_ui_sfx(pitch: float = 1.0) -> void:

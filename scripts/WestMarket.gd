@@ -144,7 +144,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if $UI/Control.has_node("DialoguePanel"):
 		return
 	if counter.visible:
-		counter.hide()
+		counter.close_counter()
 	elif settings.visible:
 		settings.hide()
 	else:

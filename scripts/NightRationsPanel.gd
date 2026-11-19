@@ -133,7 +133,7 @@ func _ready() -> void:
 	priority_picker.item_selected.connect(_select_priority)
 	body.minimum_size_changed.connect(_fit_body)
 	get_viewport().size_changed.connect(_fit_body)
-	close_button.pressed.connect(queue_free)
+	close_button.pressed.connect(_close)
 	tomorrow_calendar.pressed.connect(tomorrow_calendar_requested.emit)
 	find_plot.pressed.connect(dry_plot_requested.emit)
 	find_ready_plot.pressed.connect(harvest_requested.emit)
@@ -148,7 +148,10 @@ func _ready() -> void:
 		queue_free()
 		east_watch_requested.emit()
 	)
-	page_button.pressed.connect(func(): _show_page(not show_previous))
+	page_button.pressed.connect(func():
+		_show_page(not show_previous)
+		AudioManager.play_menu_cue(AudioManager.MenuCue.PAGE)
+	)
 	%Market.pressed.connect(func():
 		queue_free()
 		market_requested.emit()
@@ -188,6 +191,7 @@ func _ready() -> void:
 	_refresh()
 	_show_page(show_previous)
 	close_button.grab_focus()
+	AudioManager.play_menu_cue(AudioManager.MenuCue.OPEN)
 	_finish_opening_focus()
 
 func show_pavilion_story(story_id: String, appointment_id: String, place: String) -> void:
@@ -762,4 +766,8 @@ func _input(event: InputEvent) -> void:
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
-		queue_free()
+		_close()
+
+func _close() -> void:
+	AudioManager.play_menu_cue(AudioManager.MenuCue.CLOSE)
+	queue_free()
