@@ -48,9 +48,22 @@ const RESUME_SOWING := "resume_sowing"
 @onready var sowing_rations: Button = %SowingRations
 @onready var market_panel: VBoxContainer = $HBoxContainer/RightPanel/市场
 @onready var food_label: Label = $HBoxContainer/RightPanel/市场/FoodLabel
-@onready var irrigation_button: Button = $HBoxContainer/RightPanel/科技/TechContainer/IrrigationButton
-@onready var bow_button: Button = $HBoxContainer/RightPanel/科技/TechContainer/BowButton
-@onready var rank_progress_label: Label = $HBoxContainer/RightPanel/科技/RankLabel
+@onready var technology_page: ScrollContainer = $HBoxContainer/RightPanel/科技
+@onready var irrigation_button: Button = %IrrigationButton
+@onready var water_next: Button = %WaterNext
+@onready var water_status: Label = %WaterStatus
+@onready var water_budget: Label = %WaterBudget
+@onready var bow_button: Button = %BowButton
+@onready var bow_study: Button = %BowStudy
+@onready var bow_status: Label = %BowStatus
+@onready var bow_note: Label = %BowNote
+@onready var rank_title: Label = %RankTitle
+@onready var rank_progress_label: Label = %RankLabel
+@onready var rank_meter: ProgressBar = %RankMeter
+@onready var rank_requirement: Label = %RankRequirement
+@onready var rank_next: Label = %RankNext
+@onready var rank_tribute: Label = %RankTribute
+@onready var rank_arts: Button = %RankArts
 @onready var tabs: TabContainer = $HBoxContainer/RightPanel
 var section_buttons: Array[Button] = []
 var previous_focus: Control
@@ -137,11 +150,6 @@ func _ready() -> void:
 	GameEvents.tax_reform_choice_made.connect(_refresh_field_tiles.unbind(1))
 	setup_six_arts()
 	setup_tech()
-	_refresh_rank_progress()
-	GameEvents.rank_changed.connect(_refresh_rank_progress.unbind(1))
-	GameEvents.reputation_changed.connect(_refresh_rank_progress.unbind(1))
-	GameEvents.crop_harvested.connect(_refresh_rank_progress.unbind(1))
-	GameEvents.day_advanced.connect(_refresh_rank_progress.unbind(1))
 	silk_panel = silk_panel_script.new()
 	silk_panel.name = "蚕桑"
 	silk_panel.add_theme_constant_override("separation", 12)
@@ -208,6 +216,10 @@ func _refresh_section(index: int) -> void:
 	section_buttons[index].button_pressed = true
 	if page == map_grid_container.get_parent():
 		_refresh_field_tiles()
+	if page == technology_page:
+		_refresh_water_technology()
+		_refresh_bow_technology()
+		_refresh_rank_progress()
 	if is_visible_in_tree() and (focus == null or focus in section_buttons):
 		section_buttons[index].grab_focus()
 
@@ -240,7 +252,7 @@ func show_six_arts() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(arts_page)
 
 func show_technology() -> void:
-	tabs.current_tab = tabs.get_tab_idx_from_control(irrigation_button.get_parent().get_parent())
+	tabs.current_tab = tabs.get_tab_idx_from_control(technology_page)
 
 func show_silk() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(silk_panel)
@@ -289,11 +301,28 @@ func _announce_visibility() -> void:
 		previous_focus.grab_focus()
 
 func setup_tech() -> void:
-	for control: Control in [rank_progress_label, irrigation_button, bow_button]:
+	var bar := technology_page.get_v_scroll_bar()
+	bar.theme_type_variation = &"HudJournalBar"
+	bar.focus_mode = Control.FOCUS_ALL
+	for control: Control in [%WaterTitle, %WaterUse, water_status, water_budget, irrigation_button, water_next,
+			%BowTitle, %BowUse, bow_status, bow_note, bow_button, bow_study,
+			rank_title, rank_progress_label, rank_requirement, rank_next, rank_tribute, rank_arts]:
 		InterfaceFont.scale_reading_text(control)
 	irrigation_button.pressed.connect(_on_unlock_irrigation)
+	water_next.pressed.connect(_on_water_next)
 	bow_button.pressed.connect(_on_unlock_bow)
-	_refresh_tech()
+	bow_study.pressed.connect(_show_tech_arts)
+	rank_arts.pressed.connect(_show_tech_arts)
+	for changed: Signal in [GameEvents.rank_changed, GameEvents.reputation_changed, GameEvents.crop_harvested,
+			GameEvents.day_advanced, GameEvents.tax_reform_choice_made]:
+		changed.connect(_refresh_rank_progress.unbind(1))
+	GameEvents.money_changed.connect(_refresh_water_technology.unbind(1))
+	GameEvents.irrigation_unlocked.connect(_refresh_water_technology)
+	GameEvents.channels_changed.connect(_refresh_water_technology)
+	GameEvents.well_field_reclaimed.connect(_refresh_water_technology.unbind(2))
+	_refresh_water_technology()
+	_refresh_bow_technology()
+	_refresh_rank_progress()
 
 func _on_unlock_irrigation() -> void:
 	var literacy := Global.player_stats.get_level(PlayerStats.Art.LITERACY)
@@ -301,34 +330,81 @@ func _on_unlock_irrigation() -> void:
 		return
 	Global.tech_unlocked["irrigation"] = true
 	GameEvents.irrigation_unlocked.emit()
-	_refresh_tech()
 
-func _refresh_tech() -> void:
+func _refresh_water_technology() -> void:
 	var unlocked: bool = Global.tech_unlocked["irrigation"]
 	var literacy := Global.player_stats.get_level(PlayerStats.Art.LITERACY)
-	irrigation_button.disabled = unlocked or literacy < Irrigation.UNLOCK_LITERACY_LEVEL
+	var needed := Irrigation.UNLOCK_LITERACY_LEVEL
+	var can_unlock := not unlocked and literacy >= needed
+	var transfer_focus := irrigation_button.has_focus() or water_next.has_focus()
+	irrigation_button.disabled = not can_unlock
+	irrigation_button.visible = can_unlock
+	water_next.visible = not can_unlock
+	water_next.text = "指路去泉眼" if unlocked else "查看研读"
+	var cost := Global.channel_cost()
+	water_budget.text = "解锁免费 · 挖渠每格 %d 铜钱" % cost
 	if unlocked:
-		irrigation_button.text = "水利已解锁 · 返回地图挖渠"
-	elif irrigation_button.disabled:
-		irrigation_button.text = "水利待研习 · 书 %d/%d 级" % [literacy, Irrigation.UNLOCK_LITERACY_LEVEL]
+		water_status.text = "已解锁 · %d 块井田接水" % Global.irrigated_well_fields()
+		water_budget.text = "挖渠每格 %d 铜钱 · 钱袋 %d 铜钱" % [cost, Global.money]
+		if Global.money < cost:
+			water_budget.text += "\n挖一格还差 %d 铜钱。" % (cost - Global.money)
+	elif can_unlock:
+		water_status.text = "书艺 %d 级 · 已达解锁条件" % literacy
 	else:
-		irrigation_button.text = "解锁水利"
+		water_status.text = "书艺 %d/%d 级 · 还差 %d 级" % [literacy, needed, needed - literacy]
+	var action := irrigation_button if can_unlock else water_next
+	if not section_buttons.is_empty():
+		var section := section_buttons[tabs.get_tab_idx_from_control(technology_page)]
+		section.focus_neighbor_bottom = section.get_path_to(action)
+	if transfer_focus and not action.has_focus():
+		action.grab_focus()
+		GamepadInput.snap_pointer_to_focus.call_deferred()
 
+func _on_water_next() -> void:
+	if Global.tech_unlocked["irrigation"]:
+		GameEvents.water_source_directions_requested.emit()
+		return
+	_show_tech_arts()
+	if not read_button.disabled:
+		read_button.grab_focus()
+
+func _show_tech_arts() -> void:
+	show_six_arts()
+	arts_scroll.scroll_vertical = 0
+	section_buttons[tabs.current_tab].grab_focus()
+	GamepadInput.snap_pointer_to_focus.call_deferred()
+
+func _refresh_bow_technology() -> void:
 	var bow_unlocked: bool = Global.tech_unlocked["composite_bow"]
 	var archery := Global.player_stats.get_level(PlayerStats.Art.ARCHERY)
-	bow_button.disabled = bow_unlocked or archery < BOW_ARCHERY_LEVEL
+	var can_unlock := not bow_unlocked and archery >= BOW_ARCHERY_LEVEL
+	var transfer_focus := bow_button.has_focus() or bow_study.has_focus()
+	bow_button.disabled = not can_unlock
+	bow_button.visible = can_unlock
+	bow_study.visible = not bow_unlocked and not can_unlock
+	bow_note.visible = not bow_unlocked
 	if bow_unlocked:
-		bow_button.text = "复合弓已解锁"
-	elif bow_button.disabled:
-		bow_button.text = "复合弓待研习 · 射 %d/%d 级" % [archery, BOW_ARCHERY_LEVEL]
+		bow_status.text = "已解锁 · 我方已用复合弓"
+	elif can_unlock:
+		bow_status.text = "射艺 %d 级 · 已达解锁条件" % archery
+		bow_note.text = "解锁无需花费。"
 	else:
-		bow_button.text = "解锁复合弓"
+		bow_status.text = "射艺 %d/%d 级 · 还差 %d 级" % [archery, BOW_ARCHERY_LEVEL, BOW_ARCHERY_LEVEL - archery]
+		bow_note.text = "击退来敌可积累射艺经验。"
+	if transfer_focus and get_viewport().gui_get_focus_owner() == null:
+		if bow_unlocked:
+			section_buttons[tabs.current_tab].grab_focus()
+		elif can_unlock:
+			bow_button.grab_focus()
+		else:
+			bow_study.grab_focus()
+		GamepadInput.snap_pointer_to_focus.call_deferred()
 
 func _on_unlock_bow() -> void:
 	var archery := Global.player_stats.get_level(PlayerStats.Art.ARCHERY)
 	if not Global.tech_unlocked["composite_bow"] and archery >= BOW_ARCHERY_LEVEL:
 		Global.tech_unlocked["composite_bow"] = true
-		_refresh_tech()
+		_refresh_bow_technology()
 
 func setup_six_arts() -> void:
 	var bar := arts_scroll.get_v_scroll_bar()
@@ -376,13 +452,46 @@ func _on_xp_changed(_art_name: String, _xp: int, _max_xp: int) -> void:
 	_refresh_study_gates()
 	_refresh_arts_promotion()
 	_refresh_rank_progress()
-	_refresh_tech()
+	_refresh_water_technology()
+	_refresh_bow_technology()
 
 func _refresh_rank_progress() -> void:
-	rank_progress_label.text = Global.promotion_summary()
-	if Global.tax_reform_choice != Global.TaxReformChoice.REFORMED:
-		rank_progress_label.text += "\n连续欠贡 %d 夜 · 声望到 %d 会削爵或失地" % [
-			Global.days_without_contribution, Global.balance.rank_strip_threshold]
+	var rank := Global.current_rank
+	var reputation := Global.reputation
+	var target := Global.promotion_reputation()
+	var penalty := Global.tribute_penalty_tonight()
+	var qualified := Global.eligible_for_promotion()
+	var arts := _art_promotion_progress()
+	rank_title.text = "爵位 · %s" % Global.rank_names[rank]
+	rank_meter.visible = rank != Global.Rank.QING
+	rank_arts.visible = not arts.is_empty()
+	rank_requirement.text = arts
+	rank_next.text = ""
+	if rank == Global.Rank.QING:
+		rank_progress_label.text = "已至最高爵位 · 声望 %d · 井田上限 %d 块" % [reputation, Global.WELL_FIELD_LIMITS[rank]]
+	else:
+		rank_progress_label.text = "晋升%s · 声望 %d/%d · 井田上限 %d → %d 块" % [
+			Global.rank_names[rank + 1], reputation, target, Global.WELL_FIELD_LIMITS[rank], Global.WELL_FIELD_LIMITS[rank + 1]]
+		rank_meter.max_value = maxi(1, target)
+		rank_meter.value = reputation
+		if rank == Global.Rank.XIA_SHI:
+			rank_requirement.text = "周礼为「%s」 · 晋升需中等或以上" % Global.zhou_li_score
+		if qualified:
+			rank_next.text = "当前条件已达，过夜核定爵位。"
+		elif reputation < target:
+			rank_next.text = "还差 %d 声望。纳贡或与来客交谈可积声望。" % (target - reputation)
+	var after_penalty := reputation - penalty
+	rank_tribute.text = ""
+	if penalty > 0:
+		rank_tribute.text = "今夜若仍欠贡，预计扣 %d 声望，扣后余 %d。" % [penalty, after_penalty]
+		if after_penalty <= Global.balance.rank_strip_threshold:
+			rank_tribute.text += "可能因此失地。" if rank == Global.Rank.XIA_SHI else "可能因此削爵。"
+		elif qualified and after_penalty < target:
+			rank_next.text = "当前条件已达。先补纳贡，以免扣声望后错过晋升。"
+	elif Global.days_without_contribution > 0 and Global.tribute_deadline() > Global.current_day:
+		rank_tribute.text = "已欠贡 %d 夜 · 下次结算在第 %d 天晚" % [Global.days_without_contribution, Global.tribute_deadline()]
+	for line: Label in [rank_requirement, rank_next, rank_tribute]:
+		line.visible = not line.text.is_empty()
 
 func _refresh_practice_buttons() -> void:
 	read_button.disabled = not Global.can_practice_today(PlayerStats.Art.LITERACY)
@@ -428,21 +537,24 @@ func _refresh_study_gates() -> void:
 		irrigation_requirement.text = "书艺已达标 · 可解锁水利"
 
 func _refresh_arts_promotion() -> void:
-	var note := ""
+	var progress := _art_promotion_progress()
+	arts_promotion.visible = not progress.is_empty()
+	arts_promotion.text = "" if progress.is_empty() else "晋%s · %s" % [Global.rank_names[Global.current_rank + 1], progress]
+
+func _art_promotion_progress() -> String:
 	match Global.current_rank:
 		Global.Rank.ZHONG_SHI:
 			var target := Global.balance.upper_rank_art_level
 			var highest := Global.highest_six_art_level()
 			var progress := "六艺已达标" if highest >= target else "任一艺需 %d 级" % target
-			note = "晋上士 · %s · 最高 %d 级" % [progress, highest]
+			return "%s · 最高 %d 级" % [progress, highest]
 		Global.Rank.DA_FU:
 			var target := Global.balance.minister_rank_art_level
 			var reached := 0
 			for art in PlayerStats.Art.values():
 				reached += int(Global.player_stats.get_level(art) >= target)
-			note = "晋卿 · 六艺 %d/%d 项达 %d 级" % [reached, ART_ACTIVITIES.size(), target]
-	arts_promotion.text = note
-	arts_promotion.visible = not note.is_empty()
+			return "六艺 %d/%d 项达 %d 级" % [reached, ART_ACTIVITIES.size(), target]
+	return ""
 
 func _open_music_practice() -> void:
 	if not music_button.disabled and not has_node("MusicPractice"):

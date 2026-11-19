@@ -471,26 +471,193 @@ size_flags_horizontal = 3
 mouse_default_cursor_shape = 2
 text = "指路去驾御"
 
-[node name="科技" type="VBoxContainer" parent="HBoxContainer/RightPanel"]
+[node name="科技" type="ScrollContainer" parent="HBoxContainer/RightPanel"]
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 20
+theme = ExtResource("3_hud")
+follow_focus = true
+horizontal_scroll_mode = 0
 
-[node name="RankLabel" type="Label" parent="HBoxContainer/RightPanel/科技"]
+[node name="Entries" type="VBoxContainer" parent="HBoxContainer/RightPanel/科技"]
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="Disciplines" type="HBoxContainer" parent="HBoxContainer/RightPanel/科技/Entries"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Water" type="PanelContainer" parent="HBoxContainer/RightPanel/科技/Entries/Disciplines"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HudLacquerTray"
+
+[node name="Sheet" type="VBoxContainer" parent="HBoxContainer/RightPanel/科技/Entries/Disciplines/Water"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="WaterTitle" type="Label" parent="HBoxContainer/RightPanel/科技/Entries/Disciplines/Water/Sheet"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 22
+text = "水利"
+
+[node name="WaterUse" type="Label" parent="HBoxContainer/RightPanel/科技/Entries/Disciplines/Water/Sheet"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.86, 0.89, 0.78, 1)
+theme_override_font_sizes/font_size = 17
+text = "渠水灌溉井田。接水后，稻苗才能过夜生长。"
 autowrap_mode = 3
 
-[node name="TechContainer" type="VBoxContainer" parent="HBoxContainer/RightPanel/科技"]
+[node name="WaterStatus" type="Label" parent="HBoxContainer/RightPanel/科技/Entries/Disciplines/Water/Sheet"]
+unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 3
 
-[node name="IrrigationButton" type="Button" parent="HBoxContainer/RightPanel/科技/TechContainer"]
-custom_minimum_size = Vector2(0, 36)
+[node name="WaterBudget" type="Label" parent="HBoxContainer/RightPanel/科技/Entries/Disciplines/Water/Sheet"]
+unique_name_in_owner = true
 layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.88, 0.89, 0.78, 1)
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 3
 
-[node name="BowButton" type="Button" parent="HBoxContainer/RightPanel/科技/TechContainer"]
-custom_minimum_size = Vector2(0, 36)
+[node name="IrrigationButton" type="Button" parent="HBoxContainer/RightPanel/科技/Entries/Disciplines/Water/Sheet"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+theme_type_variation = &"HudPrimary"
+text = "解锁水利"
+
+[node name="WaterNext" type="Button" parent="HBoxContainer/RightPanel/科技/Entries/Disciplines/Water/Sheet"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+theme_type_variation = &"HudButton"
+text = "查看研读"
+
+[node name="Archery" type="PanelContainer" parent="HBoxContainer/RightPanel/科技/Entries/Disciplines"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HudLacquerTray"
+
+[node name="Sheet" type="VBoxContainer" parent="HBoxContainer/RightPanel/科技/Entries/Disciplines/Archery"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BowTitle" type="Label" parent="HBoxContainer/RightPanel/科技/Entries/Disciplines/Archery/Sheet"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 22
+text = "复合弓"
+
+[node name="BowUse" type="Label" parent="HBoxContainer/RightPanel/科技/Entries/Disciplines/Archery/Sheet"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.86, 0.89, 0.78, 1)
+theme_override_font_sizes/font_size = 17
+text = "解锁后，我方箭矢的伤害、速度和射程提高。"
+autowrap_mode = 3
+
+[node name="BowStatus" type="Label" parent="HBoxContainer/RightPanel/科技/Entries/Disciplines/Archery/Sheet"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 3
+
+[node name="BowNote" type="Label" parent="HBoxContainer/RightPanel/科技/Entries/Disciplines/Archery/Sheet"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.88, 0.89, 0.78, 1)
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 3
+
+[node name="BowButton" type="Button" parent="HBoxContainer/RightPanel/科技/Entries/Disciplines/Archery/Sheet"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+theme_type_variation = &"HudPrimary"
+text = "解锁复合弓"
+
+[node name="BowStudy" type="Button" parent="HBoxContainer/RightPanel/科技/Entries/Disciplines/Archery/Sheet"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+theme_type_variation = &"HudButton"
+text = "查看射艺"
+
+[node name="Rank" type="PanelContainer" parent="HBoxContainer/RightPanel/科技/Entries"]
+layout_mode = 2
+theme_type_variation = &"HudLacquerTray"
+
+[node name="Sheet" type="VBoxContainer" parent="HBoxContainer/RightPanel/科技/Entries/Rank"]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="RankTitle" type="Label" parent="HBoxContainer/RightPanel/科技/Entries/Rank/Sheet"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 22
+
+[node name="RankLabel" type="Label" parent="HBoxContainer/RightPanel/科技/Entries/Rank/Sheet"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.91, 0.89, 0.76, 1)
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 3
+
+[node name="RankMeter" type="ProgressBar" parent="HBoxContainer/RightPanel/科技/Entries/Rank/Sheet"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+mouse_filter = 2
+show_percentage = false
+
+[node name="RankRequirement" type="Label" parent="HBoxContainer/RightPanel/科技/Entries/Rank/Sheet"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.86, 0.89, 0.78, 1)
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 3
+
+[node name="RankNext" type="Label" parent="HBoxContainer/RightPanel/科技/Entries/Rank/Sheet"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.86, 0.89, 0.78, 1)
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 3
+
+[node name="RankTribute" type="Label" parent="HBoxContainer/RightPanel/科技/Entries/Rank/Sheet"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.74, 0.57, 1)
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 3
+
+[node name="RankArts" type="Button" parent="HBoxContainer/RightPanel/科技/Entries/Rank/Sheet"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+theme_type_variation = &"HudButton"
+text = "核对六艺"
 
 [node name="SectionHint" type="Label" parent="."]
 unique_name_in_owner = true
