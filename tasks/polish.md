@@ -15,6 +15,12 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 随包提供简体中文正文字体
+
+标题菜单、设置、手记、背包、账册和室内交互提示使用随包的 Noto Sans CJK SC Regular 2.004。完整字库也覆盖「𠮷」等封地名用字。Windows 包附字体授权。 [字体上游](https://github.com/notofonts/noto-cjk/releases/tag/Sans2.004)
+
+从 `844133c` 独立构建两次，ZIP 的 SHA-256 均为 `ff873fdff8cd1ca29c48f203a8dcfaf4e51d40b36da370c204a6bc66134676c5`。解压原程序通过无窗口与隔离桌面启动。关闭系统字体补位后，在默认 1920×1080 和 1024×768 各核对 38 张定帧，开发版与 Windows 程序逐张像素一致。取景涵盖封地名、首贡过夜提醒、议税账册、账档列表和两种结算。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-chinese-font/release-844133c/Fiefdom-1.0.0-Windows-x64.zip) · [验收记录](../build/polish-chinese-font/release-844133c/release-proof.txt)
+
 ## 单独调节音效与脚步
 
 标题和游戏内的系统设置新增「音效与脚步」，统一调节脚步、工具与操作反馈。「环境声」调节溪水、雨声和鸟虫鸣。旧配置的主音量、音乐与环境声沿用原值，新增音效项默认为 100%。调整后会保存到下次启动。
