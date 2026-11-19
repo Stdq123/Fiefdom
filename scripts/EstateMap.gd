@@ -337,7 +337,9 @@ func _show_category(next: Category) -> void:
 	field_routes.visible = category == Category.FIELDS
 	entrance_legend.visible = field_routes.visible
 	if field_routes.visible:
-		entrance_legend.text = "▱ 田口 · 金框 公田" if fields.any(func(field: Dictionary) -> bool: return field.public) else "▱ 田口"
+		entrance_legend.text = "▱ 田口"
+		if fields.any(func(field: Dictionary) -> bool: return field.public):
+			entrance_legend.text += " · 金框 纳贡" if Global.council_tribute_rows else " · 金框 公田"
 		var report := Global.field_night_forecast()
 		_update_field_button(harvest_route, "■ 可收", report.ready)
 		var public_ready := 0

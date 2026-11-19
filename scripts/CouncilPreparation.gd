@@ -9,6 +9,18 @@ signal sowing_plans_requested(field_id: int)
 
 const READY := Color("#c5d592")
 const PENDING := Color("#f2bc85")
+const TRIBUTE_FRAME := Color("#f2ce78")
+const TRIBUTE_PLOT := Color("#725735")
+const PRIVATE_PLOT := Color("#59664a")
+const DIAGRAM_CELL := 18.0
+const LEDGER_MARGIN := 20.0
+
+@onready var ledger: PanelContainer = %Ledger
+@onready var stack: VBoxContainer = %Stack
+@onready var header: HBoxContainer = %Header
+@onready var scroll: ScrollContainer = %LedgerScroll
+@onready var body: VBoxContainer = %LedgerBody
+@onready var actions: HBoxContainer = %Actions
 
 @onready var date_line: Label = %DateLine
 @onready var date_status: Label = %DateStatus
@@ -30,7 +42,8 @@ const PENDING := Color("#f2bc85")
 @onready var mixed_title: Label = %MixedTitle
 @onready var mixed_preview: Label = %MixedPreview
 @onready var mixed_result: Label = %MixedResult
-@onready var harvest_policy: HBoxContainer = %HarvestPolicy
+@onready var harvest_policy: PanelContainer = %HarvestPolicy
+@onready var allocation_grid: Control = %AllocationGrid
 @onready var harvest_policy_note: Label = %HarvestPolicyNote
 @onready var harvest_policy_button: Button = %HarvestPolicyButton
 @onready var tribute_rows_button: Button = %TributeRowsButton
@@ -50,6 +63,12 @@ var sowing_field_id := -1
 
 func _ready() -> void:
 	super()
+	var bar := scroll.get_v_scroll_bar()
+	bar.theme = preload("res://resources/estate_hud_theme.tres")
+	bar.theme_type_variation = &"HudJournalBar"
+	body.minimum_size_changed.connect(_fit_body, CONNECT_DEFERRED)
+	get_viewport().size_changed.connect(_fit_body)
+	allocation_grid.draw.connect(_draw_allocation_grid)
 	field_button.pressed.connect(func():
 		close_map()
 		fields_requested.emit())
@@ -80,6 +99,17 @@ func _ready() -> void:
 
 func _map_available() -> bool:
 	return Global.tax_reform_choice == Global.TaxReformChoice.NONE and not Global.tax_council_waiting()
+
+func _show_map() -> void:
+	super()
+	scroll.set_deferred("scroll_vertical", 0)
+
+func _fit_body() -> void:
+	var chrome := ledger.get_theme_stylebox("panel").get_minimum_size().y \
+		+ header.get_combined_minimum_size().y + actions.get_combined_minimum_size().y \
+		+ stack.get_theme_constant("separation") * 2
+	var room := maxf(0.0, get_viewport_rect().size.y - LEDGER_MARGIN * 2.0 - chrome)
+	scroll.custom_minimum_size.y = minf(body.get_combined_minimum_size().y, room)
 
 func _refresh_on_open() -> void:
 	var opening := Global.tax_council_start_day()
@@ -137,6 +167,7 @@ func _refresh_on_open() -> void:
 	silk_stock.text = "备绸 · %d / %d 匹" % [bolts, silk_target]
 	silk_stock.modulate = READY if bolts >= silk_target else PENDING
 	silk_button.text = "查看蚕桑" if bolts >= silk_target else "准备丝绸"
+	_fit_body.call_deferred()
 
 func _refresh_harvest_policy() -> void:
 	var held := Global.hold_private_harvest
@@ -149,15 +180,27 @@ func _refresh_harvest_policy() -> void:
 	tribute_rows_button.text = "北排恢复私收" if rows else "北排三格纳贡"
 	harvest_policy_button.text = "恢复门客收私田" if held else "暂留熟私田"
 	harvest_policy_note.modulate = READY if held or rows else Color.WHITE
+	allocation_grid.queue_redraw()
 	if rows:
-		harvest_policy_note.text = ("每块井田北排已纳贡，余田仍暂留。" if held
-			else "每块井田北排纳贡，余田照收。议税选定后复原。")
+		harvest_policy_note.text = ("中央和北排纳贡。门客会暂留其余熟田。" if held
+			else "中央和北排纳贡，其余入私仓。议税定案后复原。")
 	elif held:
-		harvest_policy_note.text = "门客暂留熟私田，仍可亲手收。定案后恢复代收。"
+		harvest_policy_note.text = "门客照收公田，熟私田留给你收。议税定案后恢复代收。"
 	elif tribute_rows_button.visible:
-		harvest_policy_note.text = "暂划每块井田北排三格纳贡，另外五格照收。"
+		harvest_policy_note.text = "金框内的中央公田纳贡，外围八格入私仓。"
 	else:
-		harvest_policy_note.text = "想先收公田时，可请门客把熟私田留给你。"
+		harvest_policy_note.text = "可请门客把熟私田留给你收，公田照常收割。"
+
+func _draw_allocation_grid() -> void:
+	var tribute_plots := Global.public_field_offsets()
+	for y in range(-1, 2):
+		for x in range(-1, 2):
+			var origin := Vector2(x + 1, y + 1) * DIAGRAM_CELL + Vector2.ONE
+			var plot := Rect2(origin, Vector2.ONE * (DIAGRAM_CELL - 2.0))
+			var pays_tribute := Vector2i(x, y) in tribute_plots
+			allocation_grid.draw_rect(plot, TRIBUTE_PLOT if pays_tribute else PRIVATE_PLOT)
+			if pays_tribute:
+				allocation_grid.draw_rect(plot.grow(-1.0), TRIBUTE_FRAME, false, 2.0)
 
 func _refresh_public_plan(needs_crop: bool) -> void:
 	var plan := Global.tribute_field_plan() if needs_crop else {}

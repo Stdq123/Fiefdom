@@ -1,24 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/CouncilPreparation.gd" id="1_prep"]
-
-[sub_resource type="StyleBoxFlat" id="Ledger"]
-content_margin_left = 24.0
-content_margin_top = 19.0
-content_margin_right = 24.0
-content_margin_bottom = 20.0
-bg_color = Color(0.101, 0.15, 0.125, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.64, 0.54, 0.36, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_left = 6
-corner_radius_bottom_right = 6
-shadow_color = Color(0, 0, 0, 0.32)
-shadow_size = 8
+[ext_resource type="StyleBox" path="res://resources/estate_archive_frame.tres" id="2_frame"]
 
 [sub_resource type="StyleBoxFlat" id="Card"]
 content_margin_left = 14.0
@@ -63,15 +46,19 @@ anchor_bottom = 1.0
 mouse_filter = 2
 
 [node name="Ledger" type="PanelContainer" parent="MapModal/Center"]
+unique_name_in_owner = true
+texture_filter = 1
 custom_minimum_size = Vector2(852, 0)
 layout_mode = 2
-theme_override_styles/panel = SubResource("Ledger")
+theme_override_styles/panel = ExtResource("2_frame")
 
 [node name="Stack" type="VBoxContainer" parent="MapModal/Center/Ledger"]
+unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 13
+theme_override_constants/separation = 11
 
 [node name="Header" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack"]
+unique_name_in_owner = true
 layout_mode = 2
 
 [node name="Title" type="Label" parent="MapModal/Center/Ledger/Stack/Header"]
@@ -88,74 +75,87 @@ layout_mode = 2
 mouse_default_cursor_shape = 2
 text = "返回  Esc"
 
-[node name="Gates" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack"]
+[node name="LedgerScroll" type="ScrollContainer" parent="MapModal/Center/Ledger/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_scroll_mode = 0
+follow_focus = true
+
+[node name="LedgerBody" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+
+[node name="Gates" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Date" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/Gates"]
+[node name="Date" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Gates"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("Card")
 
-[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/Gates/Date"]
+[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Gates/Date"]
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="DateLine" type="Label" parent="MapModal/Center/Ledger/Stack/Gates/Date/Details"]
+[node name="DateLine" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Gates/Date/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 19
 
-[node name="DateStatus" type="Label" parent="MapModal/Center/Ledger/Stack/Gates/Date/Details"]
+[node name="DateStatus" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Gates/Date/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
 
-[node name="Rank" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/Gates"]
+[node name="Rank" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Gates"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("Card")
 
-[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/Gates/Rank"]
+[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Gates/Rank"]
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="RankLine" type="Label" parent="MapModal/Center/Ledger/Stack/Gates/Rank/Details"]
+[node name="RankLine" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Gates/Rank/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 19
 
-[node name="RankStatus" type="Label" parent="MapModal/Center/Ledger/Stack/Gates/Rank/Details"]
+[node name="RankStatus" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Gates/Rank/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 
-[node name="Tribute" type="PanelContainer" parent="MapModal/Center/Ledger/Stack"]
+[node name="Tribute" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("Card")
 
-[node name="Row" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack/Tribute"]
+[node name="Row" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Tribute"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/Tribute/Row"]
+[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Tribute/Row"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 5
 
-[node name="Contribution" type="Label" parent="MapModal/Center/Ledger/Stack/Tribute/Row/Details"]
+[node name="Contribution" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Tribute/Row/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.96, 0.83, 0.59, 1)
 theme_override_font_sizes/font_size = 22
 
-[node name="Account" type="Label" parent="MapModal/Center/Ledger/Stack/Tribute/Row/Details"]
+[node name="Account" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Tribute/Row/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 
-[node name="SowingNote" type="Label" parent="MapModal/Center/Ledger/Stack/Tribute/Row/Details"]
+[node name="SowingNote" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Tribute/Row/Details"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -163,38 +163,38 @@ theme_override_colors/font_color = Color(0.92, 0.79, 0.58, 1)
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 
-[node name="ContributionStatus" type="Label" parent="MapModal/Center/Ledger/Stack/Tribute/Row"]
+[node name="ContributionStatus" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Tribute/Row"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 18
 
-[node name="PetitionCard" type="PanelContainer" parent="MapModal/Center/Ledger/Stack"]
+[node name="PetitionCard" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_styles/panel = SubResource("Card")
 
-[node name="Row" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack/PetitionCard"]
+[node name="Row" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/PetitionCard"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/PetitionCard/Row"]
+[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/PetitionCard/Row"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="PetitionHeading" type="Label" parent="MapModal/Center/Ledger/Stack/PetitionCard/Row/Details"]
+[node name="PetitionHeading" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/PetitionCard/Row/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 19
 
-[node name="PetitionDetail" type="Label" parent="MapModal/Center/Ledger/Stack/PetitionCard/Row/Details"]
+[node name="PetitionDetail" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/PetitionCard/Row/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 
-[node name="OrdersButton" type="Button" parent="MapModal/Center/Ledger/Stack/PetitionCard/Row"]
+[node name="OrdersButton" type="Button" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/PetitionCard/Row"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(136, 36)
 layout_mode = 2
@@ -202,7 +202,7 @@ size_flags_vertical = 4
 mouse_default_cursor_shape = 2
 text = "查看时令单"
 
-[node name="PetitionButton" type="Button" parent="MapModal/Center/Ledger/Stack/PetitionCard/Row"]
+[node name="PetitionButton" type="Button" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/PetitionCard/Row"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(136, 36)
 layout_mode = 2
@@ -210,37 +210,42 @@ size_flags_vertical = 4
 mouse_default_cursor_shape = 2
 text = "请召简议税"
 
-[node name="Preview" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="Heading" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack/Preview"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="PreviewHeading" type="Label" parent="MapModal/Center/Ledger/Stack/Preview/Heading"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-vertical_alignment = 1
-
-[node name="HarvestPolicy" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack/Preview/Heading"]
+[node name="HarvestPolicy" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 10
+theme_override_styles/panel = SubResource("Card")
 
-[node name="HarvestPolicyNote" type="Label" parent="MapModal/Center/Ledger/Stack/Preview/Heading/HarvestPolicy"]
+[node name="Contents" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/HarvestPolicy"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="AllocationGrid" type="Control" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/HarvestPolicy/Contents"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(54, 54)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/HarvestPolicy/Contents"]
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 4
+
+[node name="Title" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/HarvestPolicy/Contents/Details"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.83, 0.59, 1)
+theme_override_font_sizes/font_size = 18
+text = "收割安排"
+
+[node name="HarvestPolicyNote" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/HarvestPolicy/Contents/Details"]
+unique_name_in_owner = true
+layout_mode = 2
 theme_override_font_sizes/font_size = 16
-horizontal_alignment = 2
-vertical_alignment = 1
 autowrap_mode = 3
 
-[node name="TributeRowsButton" type="Button" parent="MapModal/Center/Ledger/Stack/Preview/Heading/HarvestPolicy"]
+[node name="TributeRowsButton" type="Button" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/HarvestPolicy/Contents"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(137, 36)
@@ -248,70 +253,79 @@ layout_mode = 2
 size_flags_vertical = 4
 mouse_default_cursor_shape = 2
 
-[node name="HarvestPolicyButton" type="Button" parent="MapModal/Center/Ledger/Stack/Preview/Heading/HarvestPolicy"]
+[node name="HarvestPolicyButton" type="Button" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/HarvestPolicy/Contents"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(152, 36)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_default_cursor_shape = 2
 
-[node name="Options" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack/Preview"]
+[node name="Preview" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PreviewHeading" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+
+[node name="Options" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="PublicCard" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/Preview/Options"]
+[node name="PublicCard" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview/Options"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("Card")
 
-[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/Preview/Options/PublicCard"]
+[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview/Options/PublicCard"]
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="Title" type="Label" parent="MapModal/Center/Ledger/Stack/Preview/Options/PublicCard/Details"]
+[node name="Title" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview/Options/PublicCard/Details"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 17
 text = "只收熟公田"
 
-[node name="PublicPreview" type="Label" parent="MapModal/Center/Ledger/Stack/Preview/Options/PublicCard/Details"]
+[node name="PublicPreview" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview/Options/PublicCard/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
 
-[node name="PublicResult" type="Label" parent="MapModal/Center/Ledger/Stack/Preview/Options/PublicCard/Details"]
+[node name="PublicResult" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview/Options/PublicCard/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 
-[node name="PublicPlanCard" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/Preview/Options"]
+[node name="PublicPlanCard" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview/Options"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("Card")
 
-[node name="Row" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack/Preview/Options/PublicPlanCard"]
+[node name="Row" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview/Options/PublicPlanCard"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/Preview/Options/PublicPlanCard/Row"]
+[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview/Options/PublicPlanCard/Row"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="PublicPlanTitle" type="Label" parent="MapModal/Center/Ledger/Stack/Preview/Options/PublicPlanCard/Row/Details"]
+[node name="PublicPlanTitle" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview/Options/PublicPlanCard/Row/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 17
 
-[node name="PublicPlanDetail" type="Label" parent="MapModal/Center/Ledger/Stack/Preview/Options/PublicPlanCard/Row/Details"]
+[node name="PublicPlanDetail" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview/Options/PublicPlanCard/Row/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 
-[node name="PublicPlanButton" type="Button" parent="MapModal/Center/Ledger/Stack/Preview/Options/PublicPlanCard/Row"]
+[node name="PublicPlanButton" type="Button" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview/Options/PublicPlanCard/Row"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(136, 36)
 layout_mode = 2
@@ -319,56 +333,56 @@ size_flags_vertical = 4
 mouse_default_cursor_shape = 2
 text = "标出公田"
 
-[node name="MixedCard" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/Preview/Options"]
+[node name="MixedCard" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview/Options"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("Card")
 
-[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/Preview/Options/MixedCard"]
+[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview/Options/MixedCard"]
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="MixedTitle" type="Label" parent="MapModal/Center/Ledger/Stack/Preview/Options/MixedCard/Details"]
+[node name="MixedTitle" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview/Options/MixedCard/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 17
 
-[node name="MixedPreview" type="Label" parent="MapModal/Center/Ledger/Stack/Preview/Options/MixedCard/Details"]
+[node name="MixedPreview" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview/Options/MixedCard/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
 
-[node name="MixedResult" type="Label" parent="MapModal/Center/Ledger/Stack/Preview/Options/MixedCard/Details"]
+[node name="MixedResult" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview/Options/MixedCard/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 
-[node name="Silk" type="PanelContainer" parent="MapModal/Center/Ledger/Stack"]
+[node name="Silk" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("Card")
 
-[node name="Row" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack/Silk"]
+[node name="Row" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Silk"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/Silk/Row"]
+[node name="Details" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Silk/Row"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="SilkStock" type="Label" parent="MapModal/Center/Ledger/Stack/Silk/Row/Details"]
+[node name="SilkStock" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Silk/Row/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 19
 
-[node name="SilkNote" type="Label" parent="MapModal/Center/Ledger/Stack/Silk/Row/Details"]
+[node name="SilkNote" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Silk/Row/Details"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 text = "两案都用得上丝绸。可先织好，定案后再进献或出售。"
 
-[node name="SilkButton" type="Button" parent="MapModal/Center/Ledger/Stack/Silk/Row"]
+[node name="SilkButton" type="Button" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Silk/Row"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(136, 36)
 layout_mode = 2
@@ -377,6 +391,7 @@ mouse_default_cursor_shape = 2
 text = "准备丝绸"
 
 [node name="Actions" type="HBoxContainer" parent="MapModal/Center/Ledger/Stack"]
+unique_name_in_owner = true
 layout_mode = 2
 alignment = 2
 theme_override_constants/separation = 8
