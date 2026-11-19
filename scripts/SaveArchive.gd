@@ -7,9 +7,11 @@ const LEDGER_DESK := preload("res://scripts/RouteLedgerDesk.gd")
 @onready var records_heading: Label = %RecordsHeading
 @onready var record_scroll: ScrollContainer = %RecordScroll
 @onready var status: Label = %Status
+@onready var controls_hint: Label = %ControlsHint
 @onready var close_button: Button = %Close
 
 var preferred_campaign := ""
+var selected_campaign := ""
 var previously_paused := false
 var previous_focus: Control
 var campaigns: Dictionary[String, Array] = {}
@@ -20,6 +22,8 @@ func _ready() -> void:
 	previous_focus = get_viewport().gui_get_focus_owner()
 	get_tree().paused = true
 	close_button.pressed.connect(_close)
+	GamepadInput.changed.connect(_refresh_controls_hint)
+	_refresh_controls_hint()
 	for entry in Global.saved_games():
 		var key: String = entry["campaign_key"]
 		if not campaigns.has(key):
@@ -54,11 +58,16 @@ func _add_campaign(key: String, latest: Dictionary) -> void:
 		detail = "第 %d 天 · %s" % [latest["day"], route if not route.is_empty() else Global.rank_names[latest["rank"]]]
 	button.text = heading + "\n" + detail
 	button.tooltip_text = button.text
+	button.focus_entered.connect(_show_records.bind(key))
 	button.pressed.connect(_show_records.bind(key))
 	estates.add_child(button)
 	campaign_buttons[key] = button
 
 func _show_records(key: String) -> void:
+	if key == selected_campaign:
+		campaign_buttons[key].set_pressed_no_signal(true)
+		return
+	selected_campaign = key
 	for estate in campaign_buttons:
 		campaign_buttons[estate].theme_type_variation = &"HudPrimary" if estate == key else &"HudButton"
 		campaign_buttons[estate].set_pressed_no_signal(estate == key)
@@ -67,7 +76,8 @@ func _show_records(key: String) -> void:
 		row.queue_free()
 	record_scroll.scroll_vertical = 0
 	var entries: Array = campaigns[key]
-	records_heading.text = "%s的存档" % entries[0]["campaign_name"]
+	records_heading.text = ("%s的存档" % entries[0]["campaign_name"] if entries[0]["error"] == OK
+		else "受损记录")
 	status.hide()
 	var readable := false
 	for entry: Dictionary in entries:
@@ -119,8 +129,15 @@ func _link_focus(selected: Button) -> void:
 	var first_record := record_rows[0] if not record_rows.is_empty() else close_button
 	_column_focus(estate_rows, SIDE_RIGHT, first_record)
 	_column_focus(record_rows, SIDE_LEFT, selected)
-	estate_rows[0].focus_previous = estate_rows[0].get_path_to(close_button)
-	close_button.focus_next = close_button.get_path_to(estate_rows[0])
+	for row in estate_rows:
+		row.focus_next = row.get_path_to(first_record)
+		row.focus_previous = row.get_path_to(close_button)
+	for i in record_rows.size():
+		var row := record_rows[i]
+		row.focus_next = row.get_path_to(record_rows[i + 1] if i + 1 < record_rows.size() else close_button)
+		row.focus_previous = row.get_path_to(record_rows[i - 1] if i > 0 else selected)
+	close_button.focus_next = close_button.get_path_to(selected)
+	close_button.focus_previous = close_button.get_path_to(record_rows.back() if not record_rows.is_empty() else selected)
 	close_button.focus_neighbor_top = close_button.get_path_to(record_rows.back() if not record_rows.is_empty() else selected)
 	close_button.focus_neighbor_left = close_button.get_path_to(selected)
 	close_button.focus_neighbor_right = ^"."
@@ -135,8 +152,12 @@ func _column_focus(items: Array[Button], toward: Side, across: Button) -> void:
 		row.focus_neighbor_bottom = row.get_path_to(items[i + 1] if i + 1 < items.size() else close_button)
 
 func _show_unavailable() -> void:
-	status.text = "没有可读取的存档。"
+	status.text = "没有可读取的存档。" if selected_campaign.is_empty() else "这处封地没有可读取的存档。"
 	status.show()
+
+func _refresh_controls_hint() -> void:
+	controls_hint.text = ("摇杆移动 · A 选择 · B 返回" if GamepadInput.active
+		else "↑ ↓ 选条目 · ← → 换栏 · 回车确认 · Esc 返回")
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):

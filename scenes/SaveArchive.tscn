@@ -75,7 +75,7 @@ theme_override_constants/separation = 8
 [node name="RecordsHeading" type="Label" parent="Center/Panel/Stack/Columns/RecordColumn"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.73, 0.79, 0.66, 1)
+theme_override_colors/font_color = Color(0.94, 0.82, 0.57, 1)
 
 [node name="RecordScroll" type="ScrollContainer" parent="Center/Panel/Stack/Columns/RecordColumn"]
 unique_name_in_owner = true
@@ -90,17 +90,34 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="Status" type="Label" parent="Center/Panel/Stack"]
+[node name="Footer" type="HBoxContainer" parent="Center/Panel/Stack"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Notes" type="VBoxContainer" parent="Center/Panel/Stack/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 4
+
+[node name="Status" type="Label" parent="Center/Panel/Stack/Footer/Notes"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.91, 0.66, 0.48, 1)
 
-[node name="Close" type="Button" parent="Center/Panel/Stack"]
+[node name="ControlsHint" type="Label" parent="Center/Panel/Stack/Footer/Notes"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.73, 0.79, 0.66, 1)
+autowrap_mode = 3
+
+[node name="Close" type="Button" parent="Center/Panel/Stack/Footer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(96, 40)
 layout_mode = 2
-size_flags_horizontal = 8
+size_flags_vertical = 4
 mouse_default_cursor_shape = 2
 theme_type_variation = &"HudButton"
 text = "返回"

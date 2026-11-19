@@ -25,21 +25,29 @@ func _run() -> void:
 		quit(1)
 		return
 	var state := root.get_node("Global")
-	var folder: String = state.CAMPAIGN_SAVE_ROOT.path_join("front-menu".md5_text())
-	if DirAccess.make_dir_recursive_absolute(folder) != OK:
-		push_error("Cannot stage the archive.")
-		quit(1)
-		return
-	for route: int in [state.Outcome.TRADITIONAL, state.Outcome.REFORMED]:
-		var path := folder.path_join("autosave-1.json" if route == state.Outcome.TRADITIONAL else "autosave-2.json")
+	var entries := [
+		{"campaign_id": "front-menu", "campaign_name": "柳湾", "file": "autosave-1.json",
+			"save_origin": "ending", "current_day": 65, "outcome": state.Outcome.TRADITIONAL, "save_sequence": 2},
+		{"campaign_id": "front-menu", "campaign_name": "柳湾", "file": "autosave-2.json",
+			"save_origin": "ending", "current_day": 65, "outcome": state.Outcome.REFORMED, "save_sequence": 3},
+		{"campaign_id": "front-menu-next", "campaign_name": "南路亭", "file": "savegame.json",
+			"current_day": 21, "outcome": state.Outcome.RUNNING, "save_sequence": 1},
+	]
+	for entry: Dictionary in entries:
+		var folder: String = state.CAMPAIGN_SAVE_ROOT.path_join(entry.campaign_id.md5_text())
+		if DirAccess.make_dir_recursive_absolute(folder) != OK:
+			push_error("Cannot stage the archive.")
+			quit(1)
+			return
+		var path := folder.path_join(entry.file)
 		var file := FileAccess.open(path, FileAccess.WRITE)
 		if not file:
 			push_error("Cannot stage " + path)
 			quit(1)
 			return
-		file.store_string(JSON.stringify({"save_version": state.SAVE_VERSION, "campaign_id": "front-menu",
-			"campaign_name": "柳湾", "save_origin": "ending", "current_day": 65,
-			"outcome": route, "save_sequence": route}))
+		entry.erase("file")
+		entry.save_version = state.SAVE_VERSION
+		file.store_string(JSON.stringify(entry))
 		file.close()
 	change_scene_to_file(state.TITLE_SCENE)
 	await scene_changed
@@ -61,10 +69,23 @@ func _run() -> void:
 	_expect(first.has_focus(), "Right from an estate must enter its list of records.")
 	await _key(KEY_LEFT)
 	_expect(estate.has_focus(), "Left from a record must return to the selected estate.")
+	var next_estate: Button = archive.campaign_buttons["front-menu-next".md5_text()]
+	await _key(KEY_DOWN)
+	_expect(next_estate.has_focus() and next_estate.button_pressed and "南路亭" in archive.records_heading.text,
+		"Focusing the second estate changes the visible record list.")
+	await _key(KEY_RIGHT)
+	var next_record: Button = archive.records.get_child(0)
+	_expect(next_record.has_focus() and "第 21 天" in next_record.text,
+		"Right enters the focused estate's records.")
+	await _key(KEY_LEFT)
+	_expect(next_estate.has_focus(), "Left returns to the same estate.")
+	await _key(KEY_TAB)
+	_expect(next_record.has_focus(), "Tab enters the selected estate's records.")
 	for i in 9:
 		await _key(KEY_TAB)
 		var focus := root.gui_get_focus_owner()
 		_expect(focus != null and archive.is_ancestor_of(focus), "Tab must stay inside the archive.")
+		_expect(next_estate.button_pressed, "Tab keeps the selected estate while browsing records.")
 	archive.close_button.pressed.emit()
 	await process_frame
 	await process_frame
