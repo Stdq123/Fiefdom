@@ -8,6 +8,7 @@ const ORDER_CART := preload("res://scripts/SeasonOrderCart.gd")
 const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
 const DYER := preload("res://scripts/MarketDyer.gd")
 const RAIN_VEIL := preload("res://scripts/RainVeil.gd")
+const SCENERY_OCCLUSION := preload("res://scripts/SceneryOcclusion.gd")
 const DAY_LIGHTING := preload("res://scripts/DayLighting.gd")
 const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
 const FIXTURE_ART := preload("res://assets/world/west-market-fixtures.png")
@@ -38,7 +39,9 @@ var fish_reserved := false
 
 func _ready() -> void:
 	var rain: RAIN_VEIL = $Rain
-	ground.place_scenery($Scenery)
+	var occlusion := SCENERY_OCCLUSION.new(player)
+	add_child(occlusion)
+	ground.place_scenery($Scenery, occlusion)
 	dye_house.position = LAYOUT.DYE_HOUSE
 	drying_rack.position = LAYOUT.DYE_RACK
 	rain.add_roof(dye_house, Rect2(-49, -40, 93, 41), [
@@ -50,9 +53,13 @@ func _ready() -> void:
 		drying_rack.modulate = Color("#c4d1d3")
 		rain.add_puddles(ground.weather.bounds, ground.weather.patches)
 	dyer.approached.connect(_talk_to_dyer)
+	occlusion.watch($DyeHouse/Building, dye_house)
+	occlusion.watch($DryingRack/ClothLine, drying_rack)
 	var destinations: Dictionary[String, Vector2] = {}
 	for stall: MarketStall in $Stalls.get_children():
 		stall.opened.connect(_open_stall)
+		occlusion.watch(stall.counter_back, stall)
+		occlusion.watch(stall.counter_front, stall)
 		rain.add_roof(stall, Rect2(-46, -41, 91, 44), [Vector3(-44, -40, 46), Vector3(41, -40, 45)])
 		var approach := ground.to_local(stall.to_global(MarketStall.APPROACH))
 		destinations[MarketStall.TITLES[stall.kind]] = approach

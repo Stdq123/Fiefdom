@@ -5,6 +5,7 @@ const GROUND := preload("res://scripts/WestRoadGround.gd")
 const WOODEN_BRIDGE := preload("res://scripts/WoodenBridge.gd")
 const TRACK_AUDIO := preload("res://scripts/TerrainAudio.gd")
 const RAIN_VEIL := preload("res://scripts/RainVeil.gd")
+const SCENERY_OCCLUSION := preload("res://scripts/SceneryOcclusion.gd")
 const DAY_LIGHTING := preload("res://scripts/DayLighting.gd")
 const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
 const VISITOR := preload("res://scenes/Visitor.tscn")
@@ -36,7 +37,9 @@ func _ready() -> void:
 	$FodderMeadow.position = LAYOUT.MEADOW
 	player.arrive_at($MarketArrival if Global.restored_west_road_from_market else $EstateArrival)
 	Global.restored_west_road_from_market = false
-	ground.place_scenery($Scenery)
+	var occlusion := SCENERY_OCCLUSION.new(player)
+	add_child(occlusion)
+	ground.place_scenery($Scenery, occlusion)
 	add_child(WOODEN_BRIDGE.new(LAYOUT.BRIDGE))
 	rain.add_surface(LAYOUT.BRIDGE.grow(-3.0), 8)
 	if Global.has_rain():

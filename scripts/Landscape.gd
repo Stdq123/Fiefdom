@@ -22,6 +22,7 @@ const SILK_SAMPLE_BOUNDS := Rect2(EstateLayout.WEST_COURT + Vector2(-37, -4), Ve
 const RAVINE_ART := preload("res://assets/world/ravine-art.png")
 const RAIN_VEIL := preload("res://scripts/RainVeil.gd")
 const FOLIAGE_WIND := preload("res://scripts/FoliageWind.gd")
+const SCENERY_OCCLUSION := preload("res://scripts/SceneryOcclusion.gd")
 const TERRAIN_AUDIO := preload("res://scripts/TerrainAudio.gd")
 const DAY_LIGHTING := preload("res://scripts/DayLighting.gd")
 const NINJA_SCENERY := preload("res://assets/world/ninja-adventure/tileset_village_abandoned.png")
@@ -568,6 +569,8 @@ func _prepare_map() -> void:
 	var props_layer := get_parent().get_node("Scenery") as Node2D
 	var wind := FOLIAGE_WIND.new()
 	add_child(wind)
+	var occlusion := SCENERY_OCCLUSION.new(player)
+	add_child(occlusion)
 	var rain := RAIN_VEIL.new()
 	rain.name = "Rain"
 	rain.z_index = 11
@@ -608,6 +611,7 @@ func _prepare_map() -> void:
 		var workshop := _place_sprite(props_layer, SILK_SHED_FOOT,
 			_prop_bounds(Vector2.ZERO, Prop.SILK_SHED).position, _prop_texture(Prop.SILK_SHED, SILK_SHED_FOOT))
 		scenery[workshop] = Prop.SILK_SHED
+		occlusion.watch(get_parent().get_node("RainShelterFrontPosts") as Sprite2D)
 		rain.add_roof(workshop, Rect2(-35, -29, 65, 29), [
 			Vector3(-32, -28, 34), Vector3(-18, -28, 33), Vector3(26, -28, 33),
 		])
@@ -622,6 +626,10 @@ func _prepare_map() -> void:
 	add_child(rain)
 	_install_boundaries()
 	_refresh_scenery()
+	for sprite in scenery:
+		var prop := scenery[sprite]
+		if not STORAGE_TINTS.has(prop) and prop not in ROCK_PROPS and prop not in ROADSIDE_PROPS:
+			occlusion.watch(sprite)
 
 func _place_ravine_wayposts(layer: Node2D) -> void:
 	for junction: Array in RAVINE_JUNCTIONS:
@@ -738,6 +746,7 @@ func _refresh_scenery() -> void:
 		var tint := _prop_tint(prop)
 		if not wilderness and sprite.position.y < ESTATE_BOUNDS.position.y - 48.0:
 			tint *= Color("#b8c4ba")
+		tint.a = sprite.modulate.a
 		sprite.modulate = tint
 	for sprite in gate_bases:
 		gate_bases[sprite].set_deferred("disabled", not sprite.visible)
@@ -764,14 +773,6 @@ func _process(delta: float) -> void:
 	var cricket_distance := foot.distance_to(BERRY_GROVE if wilderness else SOUTH_PAVILION)
 	var under_roof := not wilderness and EstateLayout.PAVILION_SHELTER_FLOOR.has_point(foot)
 	AudioManager.set_world_ambience(creek_distance, birds_distance, cricket_distance, under_roof)
-	for sprite in scenery:
-		var prop: int = scenery[sprite]
-		if not sprite.visible or STORAGE_TINTS.has(prop) or prop in ROCK_PROPS or prop in ROADSIDE_PROPS:
-			continue
-		var from_foot := sprite.to_local(player.global_position)
-		var crown := sprite.get_rect().grow(-3.0)
-		var behind := from_foot.y < -2.0 and crown.has_point(from_foot - Vector2(0, 7))
-		sprite.modulate.a = move_toward(sprite.modulate.a, 0.28 if behind else 1.0, delta * 5.6)
 
 func _draw() -> void:
 	_draw_ground()

@@ -362,7 +362,7 @@ func _draw_basin_piece(canvas: CanvasItem, at: Vector2, region: Rect2) -> void:
 	var tint := Color("#c2cfd1") if Global.has_rain() else Color.WHITE
 	canvas.draw_texture_rect_region(basin_art, Rect2(at, region.size), region, tint)
 
-func place_scenery(layer: Node2D) -> void:
+func place_scenery(layer: Node2D, occlusion: LANDSCAPE.SCENERY_OCCLUSION) -> void:
 	var wind := FOLIAGE_WIND.new()
 	add_child(wind)
 	var rim := Node2D.new()
@@ -382,6 +382,7 @@ func place_scenery(layer: Node2D) -> void:
 		var variant := index % tree_art.size()
 		var tree := _prop(layer, TREE_FEET[index], tree_art[variant], 45.0, wet_tint)
 		wind.attach(tree, LANDSCAPE.WIND_FLEXIBILITY[TREE_PATTERN[variant]])
+		occlusion.watch(tree)
 	var fence := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, LANDSCAPE.ESTATE_SITE_REGIONS[LANDSCAPE.Prop.FENCE])
 	for foot: Vector2 in FENCE_FEET:
 		_prop(layer, foot, fence, 45.0, wet_tint)
@@ -405,8 +406,8 @@ func place_scenery(layer: Node2D) -> void:
 	_place_dye_vat(layer, &"IndigoVat", LAYOUT.DYE_INDIGO_VAT, 1.0, DYE_VAT.Dye.INDIGO)
 	var north_gate := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, LANDSCAPE.ESTATE_SITE_REGIONS[LANDSCAPE.Prop.GATE_FAR])
 	var south_gate := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, LANDSCAPE.ESTATE_SITE_REGIONS[LANDSCAPE.Prop.GATE])
-	_prop(layer, LAYOUT.EAST_GATE + Vector2(9, -23), north_gate, 44.0, wet_tint)
-	_prop(layer, LAYOUT.EAST_GATE + Vector2(-14, 23), south_gate, 44.0, wet_tint)
+	occlusion.watch(_prop(layer, LAYOUT.EAST_GATE + Vector2(9, -23), north_gate, 44.0, wet_tint))
+	occlusion.watch(_prop(layer, LAYOUT.EAST_GATE + Vector2(-14, 23), south_gate, 44.0, wet_tint))
 	var return_sign := VillageInscription.place(layer, LAYOUT.EAST_GATE + Vector2(-29, -9),
 		VillageInscription.Form.STONE, "封地", Vector2.RIGHT)
 	return_sign.modulate = wet_tint

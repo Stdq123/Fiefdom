@@ -324,7 +324,7 @@ func _draw_meadow(grass: Color, loam: Color, season: int) -> void:
 	TERRAIN.draw_verge(self, meadow_lane, MEADOW_HALF_WIDTH * 2.0, season, rain)
 	TERRAIN.draw_loam(self, meadow_track, loam, TERRAIN.trail_texture())
 
-func place_scenery(layer: Node2D) -> void:
+func place_scenery(layer: Node2D, occlusion: LANDSCAPE.SCENERY_OCCLUSION) -> void:
 	var season := Global.season_index()
 	var winter := season == Global.Season.WINTER
 	var wind := FOLIAGE_WIND.new()
@@ -340,6 +340,7 @@ func place_scenery(layer: Node2D) -> void:
 		var tree := _prop(layer, TREES[index], texture)
 		tree.self_modulate = wet_tint
 		wind.attach(tree, LANDSCAPE.WIND_FLEXIBILITY[variety])
+		occlusion.watch(tree)
 	var willow := LANDSCAPE.painted_riverside_texture(LANDSCAPE.Prop.WILLOW, season)
 	var plant_tint := LANDSCAPE.riverside_tint(season, Global.has_rain())
 	for placement: Vector3 in WILLOWS:
@@ -347,6 +348,7 @@ func place_scenery(layer: Node2D) -> void:
 		tree.scale = Vector2.ONE * placement.z
 		tree.self_modulate = plant_tint
 		wind.attach(tree, FOLIAGE_WIND.WILLOW)
+		occlusion.watch(tree)
 	for mark: Vector3i in BANK_PROPS:
 		if winter and mark.z == LANDSCAPE.Prop.FLOWERS:
 			continue
