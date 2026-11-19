@@ -62,7 +62,8 @@ const VISITOR_NOTES_MAX_HEIGHT := 116.0
 @onready var cancel_directions: Button = %CancelDirections
 @onready var save_notice: Label = %SaveNotice
 @onready var morning_button: Button = %MorningButton
-@onready var map_overlays: Array[Control] = [$Journal, $Calendar, $SeedBelt, $Vitals, $Tools, $Actions, $RationsButton, $SaveNotice]
+@onready var map_overlays: Array[Control] = [$Journal, $Calendar, $SeedBelt, $Vitals, $Tools, $Actions,
+	$RationsButton, $SaveNotice, $HarvestReceipt]
 
 var seed_buttons: Dictionary = {}
 var save_notice_tween: Tween
@@ -78,10 +79,17 @@ var sky_icons := HUDIcons.SKY.map(HUDIcons.icon)
 func map_space_clear(area: Rect2) -> bool:
 	if not get_viewport_rect().grow(-8.0).encloses(area):
 		return false
-	for overlay in map_overlays:
-		if overlay.is_visible_in_tree() and overlay.get_global_rect().grow(4.0).intersects(area):
+	for reserved in map_obstacles():
+		if reserved.intersects(area):
 			return false
 	return true
+
+func map_obstacles() -> Array[Rect2]:
+	var occupied: Array[Rect2] = []
+	for overlay in map_overlays:
+		if overlay.is_visible_in_tree():
+			occupied.append(overlay.get_global_rect().grow(4.0))
+	return occupied
 
 func set_reclamation_mode(active: bool) -> void:
 	reclamation_mode = active

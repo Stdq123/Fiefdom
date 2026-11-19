@@ -1,12 +1,15 @@
 extends Node2D
 
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
+const CURSOR_EDGE := Color("#382519")
+const PUBLIC_MARK := Color("#ffdd91")
 
 @onready var tile_map: TileMapLayer = get_parent()
 @onready var world = tile_map.get_parent()
 
 @onready var caption := PanelContainer.new()
 @onready var label := Label.new()
+@onready var batch_icon := TextureRect.new()
 var pointer := Vector2.ZERO
 var pointer_seen := false
 var ink := Color("#edce88")
@@ -27,12 +30,28 @@ func _ready() -> void:
 	plate.set_content_margin(SIDE_BOTTOM, 6)
 	caption.add_theme_stylebox_override("panel", plate)
 	add_child(caption)
+	var row := HBoxContainer.new()
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.use_parent_material = true
+	row.add_theme_constant_override("separation", 7)
+	caption.add_child(row)
+	batch_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	batch_icon.use_parent_material = true
+	batch_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	batch_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	batch_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	batch_icon.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	batch_icon.custom_minimum_size = Vector2(18, 22)
+	batch_icon.hide()
+	row.add_child(batch_icon)
 	label.add_theme_font_size_override("font_size", 15)
 	label.use_parent_material = true
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	caption.add_child(label)
+	row.add_child(label)
 	get_window().mouse_exited.connect(_clear_pointer)
 	get_viewport().size_changed.connect(_clear_pointer)
+	GameEvents.council_tribute_rows_changed.connect(queue_redraw)
+	GameEvents.tax_reform_choice_made.connect(queue_redraw.unbind(1))
 
 func _clear_pointer() -> void:
 	pointer_seen = false
@@ -123,7 +142,9 @@ func _show_field_preview(cell: Vector2i, action: int, plots: Array[Vector2i]) ->
 	var title: String = "整田" + world.FIELD_WORK_LABELS[action]
 	var seeds: Dictionary[Vector2i, String] = {}
 	var details := PackedStringArray()
+	var symbol := HUDIcons.Symbol.HOE
 	if action == world.FieldAction.SOW:
+		symbol = HUDIcons.Symbol.GRAIN if world.sow_from_plan else HUDIcons.CROPS[world.current_seed_id]
 		if world.sow_from_plan:
 			title = "按安排播种"
 			for plot in plots:
@@ -132,6 +153,7 @@ func _show_field_preview(cell: Vector2i, action: int, plots: Array[Vector2i]) ->
 		else:
 			title += ItemManager.crop_label(world.current_seed_id)
 	elif action == world.FieldAction.HARVEST:
+		symbol = HUDIcons.Symbol.GRAIN
 		var scope: Global.FieldScope = world.harvest_batch_scope()
 		if scope != Global.FieldScope.ALL:
 			title = "批收" + Global.FIELD_SCOPE_NAMES[scope]
@@ -148,7 +170,9 @@ func _show_field_preview(cell: Vector2i, action: int, plots: Array[Vector2i]) ->
 			cost = replanting.cost
 			details.append("下茬 %s" % _seed_varieties(seeds))
 			details.append("续播 %d 格 · 浇水 %d 格" % [seeds.size(), replanting.water])
-	_show_batch_caption(cell, title, details, cost, plots, seeds)
+	elif action == world.FieldAction.WATER:
+		symbol = HUDIcons.Symbol.WATER
+	_show_batch_caption(cell, title, details, cost, plots, seeds, symbol)
 
 func _show_preparation_preview(cell: Vector2i, preparation: Dictionary) -> void:
 	var seeds: Dictionary[Vector2i, String] = preparation.seeds
@@ -166,7 +190,7 @@ func _seed_varieties(seeds: Dictionary[Vector2i, String]) -> String:
 	return ItemManager.describe_crops(varieties)
 
 func _show_batch_caption(cell: Vector2i, title: String, details: PackedStringArray, cost: int,
-		plots: Array[Vector2i], seeds: Dictionary[Vector2i, String]) -> void:
+		plots: Array[Vector2i], seeds: Dictionary[Vector2i, String], symbol := HUDIcons.Symbol.HOE) -> void:
 	var public_plots := 0
 	for plot in plots:
 		public_plots += int(Global.is_public_plot(plot))
@@ -175,17 +199,21 @@ func _show_batch_caption(cell: Vector2i, title: String, details: PackedStringArr
 	var accept := "A 确认" if GamepadInput.active else "左键确认"
 	details.append("%d 体力 · %s" % [cost, accept] if can_afford
 		else "需 %d 体力 · 还差 %d" % [cost, cost - Global.current_stamina])
-	_place_caption(cell, "\n".join(details), Color("#eacb80") if can_afford else Color("#efaa84"), plots, seeds)
+	_place_caption(cell, "\n".join(details), Color("#eacb80") if can_afford else Color("#efaa84"), plots, seeds, symbol)
 
 func _place_caption(cell: Vector2i, text: String, tone: Color, plots: Array[Vector2i] = [],
-		seeds: Dictionary[Vector2i, String] = {}) -> void:
+		seeds: Dictionary[Vector2i, String] = {}, symbol := HUDIcons.Symbol.HOE) -> void:
 	var at_cell := tile_map.map_to_local(cell)
 	if tone != ink or preview_plots != plots or preview_seeds != seeds or (not plots.is_empty() and position != at_cell):
 		ink = tone
 		preview_plots = plots
 		preview_seeds = seeds
 		queue_redraw()
-	if text != label.text:
+	var is_batch := not plots.is_empty()
+	if is_batch:
+		batch_icon.texture = HUDIcons.icon(symbol)
+	if text != label.text or batch_icon.visible != is_batch:
+		batch_icon.visible = is_batch
 		label.text = text
 		caption.size = caption.get_combined_minimum_size()
 	label.modulate = ink
@@ -195,41 +223,89 @@ func _place_caption(cell: Vector2i, text: String, tone: Color, plots: Array[Vect
 	var scale_in_view := transform.get_scale()
 	var margin := Vector2(tile_map.tile_set.tile_size) * scale_in_view * 0.5 + Vector2(4, 4)
 	var at := transform * position
-	var centered := (at - caption.size * 0.5).clamp(bounds.position, bounds.end - caption.size)
 	var area := Rect2(at, Vector2.ZERO)
 	for plot in plots:
 		area = area.expand(transform * tile_map.map_to_local(plot))
-	var above := Vector2(centered.x, area.position.y - margin.y - caption.size.y)
-	var below := Vector2(centered.x, area.end.y + margin.y)
-	var has_worker: bool = world.retainer_instances.values().any(func(worker: Retainer) -> bool:
-		return worker.current_state == Retainer.State.WORK and worker.target_grid_pos == cell
-	)
+	area = Rect2(area.position - margin, area.size + margin * 2.0)
+	var occupied: Array[Rect2] = hud.map_obstacles()
+	occupied.append(area)
+	var player_body: Sprite2D = world.player.sprite
+	if player_body.is_visible_in_tree():
+		occupied.append((player_body.get_global_transform_with_canvas() * player_body.get_rect()).grow(2.0))
+	var has_worker := false
+	for worker: Retainer in world.retainer_instances.values():
+		if worker.current_state == Retainer.State.WORK and worker.target_grid_pos == cell and worker.sprite.is_visible_in_tree():
+			has_worker = true
+			var body := worker.sprite
+			occupied.append((body.get_global_transform_with_canvas() * body.get_rect()).grow(2.0))
+	var screen_position := _fit_caption(at, area, bounds, occupied, has_worker)
 	caption.scale = Vector2.ONE / scale_in_view
 	show()
-	for placement: Vector2 in [below if has_worker else above, above if has_worker else below,
-			Vector2(area.end.x + margin.x, centered.y), Vector2(area.position.x - margin.x - caption.size.x, centered.y)]:
-		var screen_position := placement.round()
-		var rect := Rect2(screen_position, caption.size)
-		if (plots.is_empty() or bounds.encloses(rect)) and hud.map_space_clear(rect):
-			caption.position = transform.affine_inverse() * screen_position - position
-			caption.show()
-			return
-	caption.hide()
+	caption.visible = screen_position != Vector2.INF
+	if caption.visible:
+		caption.position = transform.affine_inverse() * screen_position - position
+
+func _fit_caption(at: Vector2, field: Rect2, bounds: Rect2, occupied: Array[Rect2], below_first: bool) -> Vector2:
+	var minimum := bounds.position.ceil()
+	var maximum := (bounds.end - caption.size).floor()
+	if maximum.x < minimum.x or maximum.y < minimum.y:
+		return Vector2.INF
+	var center := (at - caption.size * 0.5).round().clamp(minimum, maximum)
+	var above := Vector2(center.x, floorf(field.position.y - caption.size.y))
+	var below := Vector2(center.x, ceilf(field.end.y))
+	var right := Vector2(ceilf(field.end.x), center.y)
+	var left := Vector2(floorf(field.position.x - caption.size.x), center.y)
+	for anchor: Vector2 in [below if below_first else above, above if below_first else below, right, left]:
+		if bounds.encloses(Rect2(anchor, caption.size)) and _caption_clear(anchor, occupied):
+			return anchor
+
+	# A free rectangle starts at its preferred alignment, the window edge, or a blocker edge.
+	var columns := PackedFloat32Array([center.x, minimum.x, maximum.x])
+	var rows := PackedFloat32Array([center.y, minimum.y, maximum.y])
+	for blocker in occupied:
+		columns.append(clampf(floorf(blocker.position.x - caption.size.x), minimum.x, maximum.x))
+		columns.append(clampf(ceilf(blocker.end.x), minimum.x, maximum.x))
+		rows.append(clampf(floorf(blocker.position.y - caption.size.y), minimum.y, maximum.y))
+		rows.append(clampf(ceilf(blocker.end.y), minimum.y, maximum.y))
+	var best := Vector2.INF
+	var distance := INF
+	for y in rows:
+		for x in columns:
+			var candidate := Vector2(x, y)
+			var gap := at.distance_squared_to(candidate + caption.size * 0.5)
+			if gap < distance and _caption_clear(candidate, occupied):
+				best = candidate
+				distance = gap
+	return best
+
+func _caption_clear(at: Vector2, occupied: Array[Rect2]) -> bool:
+	var rect := Rect2(at, caption.size)
+	for blocker in occupied:
+		if blocker.intersects(rect):
+			return false
+	return true
 
 func _draw() -> void:
 	var half_cell := Vector2(tile_map.tile_set.tile_size) / 2 - Vector2.ONE
+	var focus_ink := ink
 	if not preview_plots.is_empty():
+		focus_ink = ink.lightened(0.48)
 		for plot in preview_plots:
 			var local_center := tile_map.map_to_local(plot) - position
 			var box := Rect2(local_center - half_cell, half_cell * 2)
-			draw_rect(box, Color(ink, 0.15))
-			draw_rect(box, ink, false, 1.15)
+			draw_rect(box, Color(ink, 0.11))
+			draw_rect(box, CURSOR_EDGE, false, 2.2)
+			draw_rect(box, Color(ink, 0.85), false, 0.95)
 			if preview_seeds.has(plot):
 				var picture := ItemManager.crop_picture(ItemManager.get_crop(preview_seeds[plot]))
 				draw_texture_rect(picture.texture, Rect2(local_center - half_cell + Vector2.ONE, (half_cell - Vector2.ONE) * 2), false)
-		return
+			if Global.is_public_plot(plot):
+				var corner := Vector2(box.position.x + 2.5, box.end.y - 2.5)
+				var stamp := PackedVector2Array([corner - Vector2(0, 2.5), corner, corner + Vector2(2.5, 0)])
+				draw_polyline(stamp, CURSOR_EDGE, 1.8)
+				draw_polyline(stamp, PUBLIC_MARK, 1.15)
 	for corner in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]:
 		var tip: Vector2 = half_cell * corner
 		var stroke := PackedVector2Array([tip - Vector2(4 * corner.x, 0), tip, tip - Vector2(0, 4 * corner.y)])
-		draw_polyline(stroke, Color("#382519"), 2.6)
-		draw_polyline(stroke, ink, 1.1)
+		draw_polyline(stroke, CURSOR_EDGE, 2.6)
+		draw_polyline(stroke, focus_ink, 1.1)
