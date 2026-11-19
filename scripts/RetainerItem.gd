@@ -1,18 +1,24 @@
-extends Control
+extends PanelContainer
 
 var data: RetainerData
+var duty_menu_font_size: int
 
 @onready var name_label: Label = $HBoxContainer/InfoBox/NameLabel
 @onready var job_label: Label = $HBoxContainer/InfoBox/JobLabel
 @onready var icon: TextureRect = $HBoxContainer/Icon
-@onready var duty_picker: OptionButton = $HBoxContainer/Duty
+@onready var duty_picker: OptionButton = $HBoxContainer/Duties/Duty
 @onready var field_picker: OptionButton = $HBoxContainer/InfoBox/Field
+@onready var meal_cost: Label = %MealCost
+@onready var meal_status: Label = %MealStatus
 
 func _ready() -> void:
+	for control: Control in [name_label, job_label, meal_cost, meal_status, duty_picker, field_picker]:
+		InterfaceFont.scale_reading_text(control)
 	for duty: RetainerData.Duty in [RetainerData.Duty.FIELD, RetainerData.Duty.REEL, RetainerData.Duty.TEACH,
 			RetainerData.Duty.GUARD, RetainerData.Duty.HARVEST, RetainerData.Duty.STEWARD]:
 		duty_picker.add_item(RetainerData.duty_label(duty), duty)
 	var menu := duty_picker.get_popup()
+	duty_menu_font_size = menu.get_theme_font_size("font_size")
 	menu.add_theme_stylebox_override("panel", duty_picker.get_theme_stylebox("panel", "PanelContainer"))
 	menu.add_theme_stylebox_override("hover", duty_picker.get_theme_stylebox("hover", "Button"))
 	menu.add_theme_color_override("font_color", duty_picker.get_theme_color("font_color", "Button"))
@@ -33,6 +39,11 @@ func setup(p_data: RetainerData) -> void:
 	icon.texture = data.get_portrait()
 	_refresh_duty()
 
+func show_meal_status(missed: bool) -> void:
+	meal_status.visible = missed
+	if missed:
+		meal_status.text = "预计离任" if NightRations.loyalty_after_missed_meal(data.loyalty) == 0.0 else "预计缺餐"
+
 func _refresh_duty() -> void:
 	if data == null:
 		return
@@ -41,14 +52,14 @@ func _refresh_duty() -> void:
 		duty_picker.set_item_disabled(index, not Global.can_assign_duty(data, duty))
 	duty_picker.select(duty_picker.get_item_index(data.duty))
 	duty_picker.text = data.duty_name()
-	var tooltip := "每夜 %d 份口粮" % Global.retainer_night_ration(data)
+	meal_cost.text = "每夜 %d 份" % Global.retainer_night_ration(data)
+	var tooltip := meal_cost.text + "口粮"
 	if data.duty == RetainerData.Duty.STEWARD:
 		tooltip += " · 收割、浇水、按计划续播"
 	elif not Global.field_steward_unlocked():
 		tooltip += " · 记完轮作簿或第二块井田完工后可任管事"
 	duty_picker.tooltip_text = tooltip
 	field_picker.visible = data.duty == RetainerData.Duty.STEWARD
-	custom_minimum_size.y = $HBoxContainer.get_combined_minimum_size().y + 16.0
 	if field_picker.visible:
 		field_picker.clear()
 		for field in Global.well_fields:
@@ -59,6 +70,7 @@ func _refresh_duty() -> void:
 
 func _preview_duties() -> void:
 	var menu := duty_picker.get_popup()
+	menu.add_theme_font_size_override("font_size", Preferences.reading_font_size(duty_menu_font_size))
 	var meals_by_portion: Dictionary[int, Dictionary] = {}
 	for index in duty_picker.item_count:
 		var duty := duty_picker.get_item_id(index) as RetainerData.Duty

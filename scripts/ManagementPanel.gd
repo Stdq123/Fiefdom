@@ -62,9 +62,11 @@ var music_practice_script = preload("res://scripts/MusicPractice.gd")
 @onready var driving_button: Button = $HBoxContainer/RightPanel/君子六艺/Actions/DrivingButton
 
 func _ready() -> void:
+	InterfaceFont.scale_reading_text(roster_meal_summary)
+	InterfaceFont.scale_reading_text(roster_night_rations)
 	refresh_retainers()
 	roster_night_rations.pressed.connect(GameEvents.night_rations_requested.emit)
-	for changed: Signal in [GameEvents.food_changed, GameEvents.money_changed, GameEvents.inventory_changed]:
+	for changed: Signal in [GameEvents.food_changed, GameEvents.money_changed, GameEvents.inventory_changed, GameEvents.day_advanced]:
 		changed.connect(_refresh_ration_previews.unbind(1))
 	for changed: Signal in [GameEvents.retainer_duty_changed, GameEvents.retainer_recruited, GameEvents.retainer_departed]:
 		changed.connect(_refresh_roster_meals.unbind(1))
@@ -181,7 +183,11 @@ func _build_sections() -> void:
 func _refresh_section(index: int) -> void:
 	var focus := get_viewport().gui_get_focus_owner()
 	var page := tabs.get_tab_control(index)
-	retainer_panel.visible = page not in [neighbor_journal, fish_ledger]
+	var show_roster := page not in [neighbor_journal, fish_ledger]
+	if show_roster != retainer_panel.visible:
+		retainer_panel.visible = show_roster
+		if show_roster:
+			_refresh_roster_meals()
 	section_buttons[index].button_pressed = true
 	if page == map_grid_container.get_parent():
 		_refresh_field_tiles()
@@ -439,6 +445,8 @@ func _refresh_roster_meals() -> void:
 	if not meal.departing.is_empty():
 		roster_meal_summary.text += "\n预计离任 · " + "、".join(meal.departing)
 	roster_meal_summary.add_theme_color_override("font_color", Color("#f0b591") if short else Color("#c5d2b7"))
+	for item in retainer_list_container.get_children():
+		item.show_meal_status(item.data in meal.missed)
 
 func refresh_well_fields() -> void:
 	var previous_id := well_field_selector.get_selected_id()

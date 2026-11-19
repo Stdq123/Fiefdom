@@ -3,6 +3,10 @@
 [ext_resource type="Script" path="res://scripts/RetainerItem.gd" id="1_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_roster_item"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
 bg_color = Color(0.150, 0.216, 0.163, 1)
 border_width_left = 1
 border_width_top = 1
@@ -14,33 +18,13 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[node name="RetainerItem" type="Control"]
+[node name="RetainerItem" type="PanelContainer"]
 custom_minimum_size = Vector2(0, 62)
-layout_mode = 3
-anchors_preset = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_roster_item")
 script = ExtResource("1_script")
 
-[node name="Background" type="Panel" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_roster_item")
-
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 8.0
-offset_top = 8.0
-offset_right = -8.0
-offset_bottom = -8.0
-grow_horizontal = 2
-grow_vertical = 2
+layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
@@ -61,15 +45,21 @@ theme_override_constants/separation = 2
 
 [node name="NameLabel" type="Label" parent="HBoxContainer/InfoBox"]
 layout_mode = 2
-text_overrun_behavior = 3
-text = "Name"
+autowrap_mode = 3
 
 [node name="JobLabel" type="Label" parent="HBoxContainer/InfoBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.76, 0.81, 0.70, 1)
 theme_override_font_sizes/font_size = 13
-text_overrun_behavior = 3
-text = "Farmer"
+autowrap_mode = 3
+
+[node name="MealStatus" type="Label" parent="HBoxContainer/InfoBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.71, 0.57, 1)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
 
 [node name="Field" type="OptionButton" parent="HBoxContainer/InfoBox"]
 visible = false
@@ -80,9 +70,21 @@ mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 14
 tooltip_text = "为管事选择一块井田。"
 
-[node name="Duty" type="OptionButton" parent="HBoxContainer"]
-custom_minimum_size = Vector2(112, 36)
+[node name="Duties" type="VBoxContainer" parent="HBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 3
+
+[node name="Duty" type="OptionButton" parent="HBoxContainer/Duties"]
+custom_minimum_size = Vector2(112, 36)
+layout_mode = 2
 mouse_default_cursor_shape = 2
 fit_to_longest_item = false
+
+[node name="MealCost" type="Label" parent="HBoxContainer/Duties"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.76, 0.81, 0.70, 1)
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
