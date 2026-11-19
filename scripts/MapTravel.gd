@@ -5,7 +5,6 @@ signal finished
 const COVER_COLOR := Color("#151e1a")
 const CLOSE_SECONDS := 0.16
 const OPEN_SECONDS := 0.22
-const LOAD_WAIT_MS := 12000
 const ARRIVAL_PLATE := preload("res://scenes/TravelArrival.tscn")
 const ARRIVAL_HOLD := 0.95
 
@@ -15,7 +14,6 @@ var arrival_plate: CenterContainer
 var arrival_name: Label
 var _arrival_tween: Tween
 var _preloads: Dictionary[String, PackedScene] = {}
-var _loading: Array[String] = []
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -35,44 +33,14 @@ func _ready() -> void:
 		visibility.connect(_dismiss_arrival_for_panel)
 	GameEvents.campaign_ended.connect(_clear_arrival.unbind(1))
 	get_tree().scene_changed.connect(_clear_arrival)
-	set_process(false)
 	set_process_input(false)
 
-func _exit_tree() -> void:
-	if not _loading.is_empty():
-		# Collect the one started request before Godot tears down the script resources it can use.
-		var path := _loading[0]
-		if ResourceLoader.load_threaded_get_status(path) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
-			ResourceLoader.load_threaded_get(path)
-		_loading.clear()
-
 func prepare(path: String) -> void:
-	if path.is_empty() or _preloads.has(path) or path in _loading or not ResourceLoader.exists(path, "PackedScene"):
+	if path.is_empty() or _preloads.has(path) or not ResourceLoader.exists(path, "PackedScene"):
 		return
-	_loading.append(path)
-	if _loading.size() == 1:
-		_load_next()
-
-func _load_next() -> void:
-	# Map scenes share scripts and textures. Load only the first queued map at a time.
-	while not _loading.is_empty():
-		if ResourceLoader.load_threaded_request(_loading[0], "PackedScene") == OK:
-			set_process(true)
-			return
-		_loading.pop_front()
-	set_process(false)
-
-func _process(_delta: float) -> void:
-	var path := _loading[0]
-	var status := ResourceLoader.load_threaded_get_status(path)
-	if status == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
-		return
-	if status != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
-		var packed := ResourceLoader.load_threaded_get(path) as PackedScene
-		if packed:
-			_preloads[path] = packed
-	_loading.pop_front()
-	_load_next()
+	var packed := ResourceLoader.load(path, "PackedScene") as PackedScene
+	if packed:
+		_preloads[path] = packed
 
 func cross(path: String, arrival_path: NodePath, player_path: NodePath) -> void:
 	relocate(_open_destination.bind(path, arrival_path, player_path), path)
@@ -115,14 +83,7 @@ func _can_depart(origin: Node) -> bool:
 		and Global.outcome == Global.Outcome.RUNNING
 
 func _open_destination(path: String, arrival_path: NodePath, player_path: NodePath) -> bool:
-	var tree := get_tree()
-	var origin := tree.current_scene
 	prepare(path)
-	var deadline := Time.get_ticks_msec() + LOAD_WAIT_MS
-	while path in _loading:
-		await tree.process_frame
-		if not _can_depart(origin) or Time.get_ticks_msec() >= deadline:
-			return false
 	var packed: PackedScene = _preloads.get(path)
 	if packed == null:
 		return false
@@ -131,6 +92,7 @@ func _open_destination(path: String, arrival_path: NodePath, player_path: NodePa
 		return false
 	var marker := destination.get_node_or_null(arrival_path) as Marker2D
 	var player := destination.get_node_or_null(player_path) as Player
+	var tree := get_tree()
 	if marker == null or player == null:
 		destination.free()
 		return false

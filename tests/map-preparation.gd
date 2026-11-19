@@ -18,29 +18,12 @@ func _check() -> void:
 		return
 	state = root.get_node("Global")
 	travel = root.get_node("MapTravel")
-	if DisplayServer.get_name() == "headless":
-		process_frame.connect(_give_loader_time)
 	state.current_day = 5
 	state.day_progress = 0.35
-	travel.prepare("res://scenes/UnavailableMap.tscn")
-	_expect(travel._loading.is_empty(), "An unavailable path does not leave a pending request.")
-	if failed or change_scene_to_file(state.ESTATE_SCENE) != OK:
+	if change_scene_to_file(state.ESTATE_SCENE) != OK:
 		quit(1)
 		return
 	await scene_changed
-	var ravine: String = state.WILDERNESS_SCENE
-	travel.prepare(ravine)
-	travel.prepare(ravine)
-	_expect(travel._loading.count(ravine) == 1 or travel._preloads.get(ravine) is PackedScene,
-		"Two preparations share a single request or an already loaded scene.")
-	var deadline := Time.get_ticks_msec() + 8000
-	while not travel._loading.is_empty() and Time.get_ticks_msec() < deadline:
-		await process_frame
-	_expect(travel._preloads.get(ravine) is PackedScene and not travel.is_processing(),
-		"A completed load is kept for the next travel and stops the polling process.")
-	if failed:
-		quit(1)
-		return
 	await process_frame
 
 	# Call the gates on a fixed scene fixture, without walking or advancing the test day.
@@ -53,18 +36,9 @@ func _check() -> void:
 		await _try_gate(^"MarketGate")
 	_expect(state.current_day == 5 and state.saved_games().is_empty(), "The test uses one fixed campaign day and no saves.")
 	if not failed:
-		# Exit with a started request, before the next process frame can collect it.
-		travel.prepare(state.TITLE_SCENE)
-		_expect(not travel._loading.is_empty(), "The test exits with an uncollected map request.")
-	if not failed:
 		print("MAP_PREPARATION gates=4 missing_arrivals=4 no_orphans=true")
 		print("SCENARIO_OK")
 	quit(1 if failed else 0)
-
-func _give_loader_time() -> void:
-	# Fixed-rate smoke frames run without a display clock or sleep between frames.
-	if not travel._loading.is_empty():
-		OS.delay_msec(1)
 
 func _try_gate(at: NodePath) -> void:
 	var origin := current_scene
