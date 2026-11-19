@@ -53,6 +53,10 @@ func _check() -> void:
 		await _try_gate(^"MarketGate")
 	_expect(state.current_day == 5 and state.saved_games().is_empty(), "The test uses one fixed campaign day and no saves.")
 	if not failed:
+		# Exit with a started request, before the next process frame can collect it.
+		travel.prepare(state.TITLE_SCENE)
+		_expect(not travel._loading.is_empty(), "The test exits with an uncollected map request.")
+	if not failed:
 		print("MAP_PREPARATION gates=4 missing_arrivals=4 no_orphans=true")
 		print("SCENARIO_OK")
 	quit(1 if failed else 0)

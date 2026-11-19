@@ -38,6 +38,14 @@ func _ready() -> void:
 	set_process(false)
 	set_process_input(false)
 
+func _exit_tree() -> void:
+	if not _loading.is_empty():
+		# Collect the one started request before Godot tears down the script resources it can use.
+		var path := _loading[0]
+		if ResourceLoader.load_threaded_get_status(path) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+			ResourceLoader.load_threaded_get(path)
+		_loading.clear()
+
 func prepare(path: String) -> void:
 	if path.is_empty() or _preloads.has(path) or path in _loading or not ResourceLoader.exists(path, "PackedScene"):
 		return
