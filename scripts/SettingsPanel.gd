@@ -40,7 +40,8 @@ func _ready() -> void:
 	
 	master_slider = _add_volume_control(general, &"MasterVolume", "主音量", Preferences.volume, Preferences.set_volume)
 	_add_volume_control(general, &"MusicVolume", "音乐", Preferences.music_volume, Preferences.set_music_volume)
-	_add_volume_control(general, &"AmbienceVolume", "环境与脚步", Preferences.ambience_volume, Preferences.set_ambience_volume)
+	_add_volume_control(general, &"SfxVolume", "音效与脚步", Preferences.sfx_volume, Preferences.set_sfx_volume)
+	_add_volume_control(general, &"AmbienceVolume", "环境声", Preferences.ambience_volume, Preferences.set_ambience_volume)
 	
 	# Fullscreen
 	var fs_btn = CheckButton.new()

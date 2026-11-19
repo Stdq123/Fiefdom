@@ -18,7 +18,7 @@ func _run() -> void:
 		return
 	preferences.restore()
 	if not is_equal_approx(preferences.volume, 0.65) or preferences.ambience_volume != preferences.DEFAULT_AMBIENCE_VOLUME \
-			or preferences.music_volume != preferences.DEFAULT_MUSIC_VOLUME:
+			or preferences.music_volume != preferences.DEFAULT_MUSIC_VOLUME or preferences.sfx_volume != 1.0:
 		push_error("Legacy settings keep their master volume and use the new defaults.")
 		quit(1)
 		return
@@ -29,11 +29,24 @@ func _run() -> void:
 	var panel: Panel = current_scene.settings_panel
 	var volume := panel.find_child("MasterVolume", true, false) as HSlider
 	var music := panel.find_child("MusicVolume", true, false) as HSlider
+	var sfx := panel.find_child("SfxVolume", true, false) as HSlider
 	var ambience := panel.find_child("AmbienceVolume", true, false) as HSlider
 	var fullscreen := panel.find_child("Fullscreen", true, false) as CheckButton
 	var music_bus := AudioServer.get_bus_index(&"Music")
 	var ambience_bus := AudioServer.get_bus_index(&"Ambience")
 	var sfx_bus := AudioServer.get_bus_index(&"SFX")
+	var terrain = root.get_node("AudioManager").terrain_audio
+	if sfx.value != 1.0 or terrain.footsteps.bus != &"SFX" or terrain.creek.bus != &"Ambience":
+		push_error("The legacy settings show full SFX level, with steps and creek on their own buses.")
+		quit(1)
+		return
+	sfx.value = 0
+	if sfx_bus < 0 or not AudioServer.is_bus_mute(sfx_bus) or AudioServer.is_bus_mute(music_bus) \
+			or AudioServer.is_bus_mute(ambience_bus) or AudioServer.is_bus_mute(0):
+		push_error("The SFX control only mutes the SFX bus.")
+		quit(1)
+		return
+	sfx.value = 1.0
 	music.value = 0
 	if not AudioServer.is_bus_mute(music_bus) or AudioServer.is_bus_mute(ambience_bus) \
 			or AudioServer.is_bus_mute(sfx_bus) or AudioServer.is_bus_mute(0):
@@ -45,12 +58,13 @@ func _run() -> void:
 		push_error("Ambience can be muted while master sound remains on.")
 		quit(1)
 		return
+	sfx.value = 0
 	volume.value = 0
 	fullscreen.button_pressed = true
 	if config.load(preferences.PATH) != OK or config.get_value("audio", "master") != 0.0 \
 			or config.get_value("audio", "music") != 0.0 or config.get_value("audio", "ambience") != 0.0 \
-			or not config.get_value("display", "fullscreen"):
-		push_error("Title settings write all three volume levels and display mode.")
+			or config.get_value("audio", "sfx") != 0.0 or not config.get_value("display", "fullscreen"):
+		push_error("Title settings write all four volume levels and display mode.")
 		quit(1)
 		return
 	if not AudioServer.is_bus_mute(0) or panel.preferences_status.text != "设置已保存":
@@ -59,10 +73,12 @@ func _run() -> void:
 		return
 	preferences.volume = 1.0
 	preferences.music_volume = 1.0
+	preferences.sfx_volume = 1.0
 	preferences.ambience_volume = 1.0
 	preferences.fullscreen = false
 	AudioServer.set_bus_mute(0, false)
 	AudioServer.set_bus_mute(music_bus, false)
+	AudioServer.set_bus_mute(sfx_bus, false)
 	AudioServer.set_bus_mute(ambience_bus, false)
 	preferences.restore()
 	if preferences.volume != 0.0 or not preferences.fullscreen or not AudioServer.is_bus_mute(0):
@@ -77,8 +93,13 @@ func _run() -> void:
 		push_error("Startup restores the persisted music mute.")
 		quit(1)
 		return
+	if preferences.sfx_volume != 0.0 or not AudioServer.is_bus_mute(sfx_bus):
+		push_error("Startup restores the persisted SFX mute.")
+		quit(1)
+		return
 	volume.value = 0.35
 	music.value = 0.55
+	sfx.value = 0.25
 	ambience.value = 0.2
 	fullscreen.button_pressed = false
 	preferences.restore()
@@ -94,6 +115,11 @@ func _run() -> void:
 		push_error("The music level persists independently.")
 		quit(1)
 		return
+	if AudioServer.is_bus_mute(sfx_bus) or not is_equal_approx(preferences.sfx_volume, 0.25) \
+			or not is_equal_approx(AudioServer.get_bus_volume_db(sfx_bus), linear_to_db(0.25)):
+		push_error("The SFX level restores independently using its saved gain.")
+		quit(1)
+		return
 	current_scene.new_button.pressed.emit()
 	await scene_changed
 	var ui := current_scene.get_node("UI")
@@ -101,8 +127,9 @@ func _run() -> void:
 	panel = ui.panel_manager.settings_panel_instance
 	ambience = panel.find_child("AmbienceVolume", true, false) as HSlider
 	music = panel.find_child("MusicVolume", true, false) as HSlider
-	if not is_equal_approx(music.value, 0.55):
-		push_error("In-game settings open at the saved music level.")
+	sfx = panel.find_child("SfxVolume", true, false) as HSlider
+	if not is_equal_approx(music.value, 0.55) or not is_equal_approx(sfx.value, 0.25):
+		push_error("In-game settings open at the saved music and SFX levels.")
 		quit(1)
 		return
 	ambience.value = 0.4

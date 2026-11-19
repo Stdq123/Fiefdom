@@ -75,6 +75,7 @@ func _ready() -> void:
 			AudioServer.set_bus_name(index, bus)
 			AudioServer.set_bus_send(index, &"Master")
 	Preferences.apply_music_volume()
+	Preferences.apply_sfx_volume()
 	Preferences.apply_ambience_volume()
 
 	terrain_audio = TERRAIN_AUDIO.new()
@@ -222,7 +223,7 @@ func play_sfx(stream: AudioStream, volume := 0.0, pitch := 1.0, music_gain := 1.
 	player.pitch_scale = pitch
 	player.finished.connect(player.queue_free)
 	add_child(player)
-	if music_gain < 1.0:
+	if music_gain < 1.0 and not is_zero_approx(Preferences.sfx_volume):
 		duck_music_for(player, music_gain)
 	player.play()
 

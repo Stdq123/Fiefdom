@@ -50,8 +50,8 @@ func _ready() -> void:
 	crickets = _add_loop("NightCrickets", load(CRICKETS_PATH))
 	footsteps = AudioStreamPlayer.new()
 	footsteps.name = "Footsteps"
-	footsteps.bus = "Ambience"
-	footsteps.volume_db = -13.0
+	footsteps.bus = &"SFX"
+	footsteps.volume_db = -15.0
 	add_child(footsteps)
 
 func set_ambience(creek_distance: float, raining: bool, birds_distance: float,

@@ -5,10 +5,12 @@ signal bindings_changed
 const PATH := "user://settings.cfg"
 const DEFAULT_VOLUME := 0.75
 const DEFAULT_MUSIC_VOLUME := 0.8
+const DEFAULT_SFX_VOLUME := 1.0
 const DEFAULT_AMBIENCE_VOLUME := 0.8
 
 var volume := DEFAULT_VOLUME
 var music_volume := DEFAULT_MUSIC_VOLUME
+var sfx_volume := DEFAULT_SFX_VOLUME
 var ambience_volume := DEFAULT_AMBIENCE_VOLUME
 var fullscreen := false
 var autosave := true
@@ -23,6 +25,7 @@ func restore() -> void:
 	settings.load(PATH)
 	volume = _read_volume(settings, "master", DEFAULT_VOLUME)
 	music_volume = _read_volume(settings, "music", DEFAULT_MUSIC_VOLUME)
+	sfx_volume = _read_volume(settings, "sfx", DEFAULT_SFX_VOLUME)
 	ambience_volume = _read_volume(settings, "ambience", DEFAULT_AMBIENCE_VOLUME)
 	fullscreen = settings.get_value("display", "fullscreen", false) == true
 	autosave = settings.get_value("game", "autosave", true) == true
@@ -30,6 +33,7 @@ func restore() -> void:
 	_install_bindings()
 	_apply_bus_volume(&"Master", volume)
 	apply_music_volume()
+	apply_sfx_volume()
 	apply_ambience_volume()
 	_apply_display()
 	bindings_changed.emit()
@@ -46,6 +50,11 @@ func set_volume(value: float) -> Error:
 func set_music_volume(value: float) -> Error:
 	music_volume = clampf(value, 0.0, 1.0)
 	apply_music_volume()
+	return _save()
+
+func set_sfx_volume(value: float) -> Error:
+	sfx_volume = clampf(value, 0.0, 1.0)
+	apply_sfx_volume()
 	return _save()
 
 func set_ambience_volume(value: float) -> Error:
@@ -145,6 +154,9 @@ func _install_bindings() -> void:
 func apply_music_volume() -> void:
 	_apply_bus_volume(&"Music", music_volume)
 
+func apply_sfx_volume() -> void:
+	_apply_bus_volume(&"SFX", sfx_volume)
+
 func apply_ambience_volume() -> void:
 	_apply_bus_volume(&"Ambience", ambience_volume)
 
@@ -164,6 +176,7 @@ func _save() -> Error:
 	var settings := ConfigFile.new()
 	settings.set_value("audio", "master", volume)
 	settings.set_value("audio", "music", music_volume)
+	settings.set_value("audio", "sfx", sfx_volume)
 	settings.set_value("audio", "ambience", ambience_volume)
 	settings.set_value("display", "fullscreen", fullscreen)
 	settings.set_value("game", "autosave", autosave)
