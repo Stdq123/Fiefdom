@@ -15,6 +15,12 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 贡簿和新税册的缺额与呈交地点
+
+每项结局目标在实绩和门槛下方写明还差多少，达成后保留实绩。首笔收成放在目标列表前，正文可随字号放大并滚动。簿名、返回与页尾的呈交地点固定。守礼前往堂前呈交贡簿，改税前往南路亭呈交新税册。
+
+从 `85b9f38` 独立构建两次，ZIP 的 SHA-256 均为 `6652fd24a3666360081ab5cfcc70d5194ba5a7ca5773bfd3cccea5fbb6759167`。无窗口检查通过。隔离桌面在 1920×1080 的 Vulkan 和 Direct3D 12、1024×768 的 OpenGL 各核对 9 个界面。覆盖两条路线的缺额与达成、长收成记录翻页、铜钱余额跨过门槛及手记的呈交入口。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-route-ledger-reading/release-85b9f38/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-route-ledger-reading/release-85b9f38/release-proof.txt)
+
 ## 议税筹备账与三案对照的阅读布局
 
 筹备账和定案面板的正文随阅读字号调整。定案面板优先列出两条路线的结局门槛和暂缓的经费，三案正文一起滚动，方案名、离席和定案按钮留在画面内。正反向 Tab 在当前面板内循环。
