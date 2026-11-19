@@ -81,8 +81,11 @@ func _process(delta: float) -> void:
 	_sync_silk_guest()
 	_refresh_route()
 	lighting.refresh(delta)
+	_refresh_ambience()
+
+func _refresh_ambience() -> void:
 	AudioManager.set_world_ambience(ground.creek_distance(player.position),
-		player.position.distance_to(Vector2(169, -46)), player.position.distance_to(Vector2(-125, 71)))
+		player.position.distance_to(Vector2(169, -46)), player.position.distance_to(Vector2(-125, 71)), false, 1.15)
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if not player.conversation_open and event.is_action_pressed("ui_cancel"):

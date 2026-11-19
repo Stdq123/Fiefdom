@@ -47,6 +47,7 @@ const SEASON_SCORES := [
 ]
 const SCORE_GAIN := 0.36
 const CROSSFADE_SECONDS := 1.45
+const WIND_GAIN_BY_SEASON: Array[float] = [0.115, 0.100, 0.138, 0.175]
 const TERRAIN_AUDIO := preload("res://scripts/TerrainAudio.gd")
 
 var bgm_player: AudioStreamPlayer
@@ -126,12 +127,17 @@ func _ready() -> void:
 	_sync_score.call_deferred()
 
 func set_world_ambience(creek_distance: float, birds_distance: float, cricket_distance: float,
-		under_roof := false) -> void:
+		under_roof := false, wind_exposure := 1.0) -> void:
 	var season := Global.season_index()
-	var birds := birds_distance if season != Global.Season.WINTER else INF
-	var crickets := cricket_distance if season in [Global.Season.SUMMER, Global.Season.AUTUMN] else INF
-	terrain_audio.set_ambience(creek_distance, Global.has_rain(), birds, crickets,
-		Global.dusk_amount(), under_roof or Global.is_indoors())
+	var indoors := Global.is_indoors()
+	var raining := Global.has_rain()
+	var dusk := Global.dusk_amount()
+	var birds := birds_distance if not indoors and season != Global.Season.WINTER else INF
+	var crickets := cricket_distance if not indoors and season in [Global.Season.SUMMER, Global.Season.AUTUMN] else INF
+	var wind_gain := WIND_GAIN_BY_SEASON[season] * wind_exposure * lerpf(1.0, 0.80, dusk)
+	if raining:
+		wind_gain *= 0.70
+	terrain_audio.set_ambience(creek_distance, raining, birds, crickets, dusk, under_roof or indoors, wind_gain)
 
 func _sync_score() -> void:
 	var scene := get_tree().current_scene
