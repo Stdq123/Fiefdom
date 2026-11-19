@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://c7wvhcm5kchvg"
+path="res://.godot/imported/ravine-trail-gates.png-f04a2e35fbed0df5016b8b4bf49abfc1.res"
+
+[deps]
+
+source_file="res://assets/world/ravine-trail-gates.png"
+dest_files=["res://.godot/imported/ravine-trail-gates.png-f04a2e35fbed0df5016b8b4bf49abfc1.res"]
+
+[params]
+
+authored_at_2x=true
