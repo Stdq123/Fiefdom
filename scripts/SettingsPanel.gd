@@ -4,7 +4,7 @@ const PADDING := 22
 const SAVE_ARCHIVE := preload("res://scenes/SaveArchive.tscn")
 const BINDINGS_PANEL := preload("res://scripts/KeyboardBindingsPanel.gd")
 const FRAME := preload("res://resources/estate_archive_frame.tres")
-const DIALOG_THEME := preload("res://resources/estate_dialog_theme.tres")
+const TITLE_CONFIRMATION := preload("res://scripts/ReturnToTitleDialog.gd")
 const VOLUME_THEME := preload("res://resources/estate_volume_theme.tres")
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 
@@ -183,23 +183,15 @@ func _add_session_controls(vbox: VBoxContainer) -> void:
 	save_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(save_status)
 
-	var title_confirmation := ConfirmationDialog.new()
+	var title_confirmation := TITLE_CONFIRMATION.new()
 	title_confirmation.name = "TitleConfirmation"
-	title_confirmation.theme = DIALOG_THEME
-	title_confirmation.title = "返回标题"
-	title_confirmation.dialog_text = "返回标题后可继续最近的存档。当天未保存的改动会丢失。"
-	title_confirmation.ok_button_text = "返回标题"
-	title_confirmation.get_cancel_button().text = "继续游戏"
-	title_confirmation.get_cancel_button().theme = HUD_THEME
-	title_confirmation.get_cancel_button().theme_type_variation = &"HudPrimary"
-	title_confirmation.get_ok_button().theme = HUD_THEME
-	title_confirmation.get_ok_button().theme_type_variation = &"HudButton"
-	title_confirmation.confirmed.connect(_return_to_title)
+	title_confirmation.save_progress = _on_save_pressed
+	title_confirmation.return_requested.connect(_return_to_title, CONNECT_DEFERRED)
 	add_child(title_confirmation)
 
 	var title_btn := Button.new()
 	title_btn.text = "返回标题"
-	title_btn.pressed.connect(func(): title_confirmation.popup_centered())
+	title_btn.pressed.connect(title_confirmation.ask.bind("保存会更新本局手动档。直接返回会放弃尚未保存的进度。"))
 	vbox.add_child(title_btn)
 
 func _return_to_title() -> void:
@@ -210,9 +202,10 @@ func _return_to_title() -> void:
 	else:
 		save_status.text = "返回标题失败（%s）" % error_string(result)
 
-func _on_save_pressed() -> void:
+func _on_save_pressed() -> Error:
 	var result := Global.save_game()
 	save_status.text = "游戏已保存" if result == OK else "保存失败（%s）" % error_string(result)
+	return result
 
 func _on_load_pressed() -> void:
 	if Global.has_saved_game():

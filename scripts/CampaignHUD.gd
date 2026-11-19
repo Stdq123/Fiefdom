@@ -3,6 +3,7 @@ extends CanvasLayer
 const GAME_THEME := preload("res://resources/game_theme.tres")
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 const ESTATE_ENDING := preload("res://scenes/EstateEnding.tscn")
+const TITLE_CONFIRMATION := preload("res://scripts/ReturnToTitleDialog.gd")
 const VITALS := preload("res://scenes/HUDVitals.tscn")
 const TRAVEL_HEADING := preload("res://scenes/TravelHeading.tscn")
 const BACKPACK := preload("res://scenes/Backpack.tscn")
@@ -269,7 +270,17 @@ func _show_ending(saved_ending: bool) -> void:
 	ending.save_button.pressed.connect(_save_ending)
 	ending.refresh_restore()
 	ending.restore_requested.connect(_restore_game)
-	ending.title_button.pressed.connect(_return_to_title)
+	var title_confirmation := TITLE_CONFIRMATION.new()
+	title_confirmation.name = "TitleConfirmation"
+	title_confirmation.save_progress = _save_ending
+	title_confirmation.return_requested.connect(_return_to_title, CONNECT_DEFERRED)
+	ending.add_child(title_confirmation)
+	ending.title_button.pressed.connect(func():
+		if ending.ending_saved:
+			_return_to_title()
+		else:
+			title_confirmation.ask("结局尚未保存。保存会更新本局手动档，直接返回会放弃这份结局记录。", "留在结算")
+	)
 
 func _add_ending_panel() -> Control:
 	summary = ESTATE_ENDING.instantiate()
@@ -362,12 +373,13 @@ func _show_defeat(outcome: Global.Outcome) -> void:
 	else:
 		load_button.grab_focus()
 
-func _save_ending() -> void:
+func _save_ending() -> Error:
 	var result := Global.save_game()
 	status.text = "结局已存档。" if result == OK else "保存失败（%s）" % error_string(result)
 	if result == OK:
 		summary.ending_saved = true
 		summary.refresh_restore()
+	return result
 
 func _restore_game() -> void:
 	get_tree().paused = false

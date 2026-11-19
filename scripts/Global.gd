@@ -4001,6 +4001,12 @@ func latest_saved_game(current_campaign_only := false) -> Dictionary:
 			return entry
 	return {}
 
+func latest_campaign_save() -> Dictionary:
+	for entry in saved_games():
+		if entry["error"] == OK and entry["campaign"] == campaign_id:
+			return entry
+	return {}
+
 func load_latest_game(current_campaign_only := false) -> Error:
 	var catalog := saved_games()
 	var key := campaign_id.md5_text()
