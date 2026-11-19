@@ -27,7 +27,7 @@ anchor_bottom = 1.0
 mouse_filter = 2
 
 [node name="Book" type="PanelContainer" parent="MapModal/Center"]
-custom_minimum_size = Vector2(962, 494)
+custom_minimum_size = Vector2(982, 624)
 layout_mode = 2
 
 [node name="Stack" type="VBoxContainer" parent="MapModal/Center/Book"]
@@ -134,36 +134,76 @@ size_flags_horizontal = 3
 layout_mode = 2
 theme_override_constants/separation = 11
 
-[node name="DateTitle" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+[node name="DateHeading" type="HBoxContainer" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="DateTitle" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column/DateHeading"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.95, 0.82, 0.57, 1)
 theme_override_font_sizes/font_size = 25
 
-[node name="Forecast" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+[node name="DateContext" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column/DateHeading"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_colors/font_color = Color(0.73, 0.82, 0.67, 1)
+theme_override_font_sizes/font_size = 17
+
+[node name="ReadScroll" type="ScrollContainer" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+follow_focus = true
+
+[node name="Reading" type="VBoxContainer" parent="MapModal/Center/Book/Stack/Pages/Details/Column/ReadScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 11
+
+[node name="Weather" type="HBoxContainer" parent="MapModal/Center/Book/Stack/Pages/Details/Column/ReadScroll/Reading"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="WeatherIcon" type="TextureRect" parent="MapModal/Center/Book/Stack/Pages/Details/Column/ReadScroll/Reading/Weather"]
+unique_name_in_owner = true
+texture_filter = 1
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Forecast" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column/ReadScroll/Reading/Weather"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.71, 0.82, 0.75, 1)
+autowrap_mode = 3
 
-[node name="Planting" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+[node name="Planting" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column/ReadScroll/Reading"]
 unique_name_in_owner = true
 layout_mode = 2
+autowrap_mode = 3
 
-[node name="Rule" type="HSeparator" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+[node name="Rule" type="HSeparator" parent="MapModal/Center/Book/Stack/Pages/Details/Column/ReadScroll/Reading"]
 layout_mode = 2
 
-[node name="OrderRow" type="HBoxContainer" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+[node name="OrderRow" type="HBoxContainer" parent="MapModal/Center/Book/Stack/Pages/Details/Column/ReadScroll/Reading"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Order" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column/OrderRow"]
+[node name="Order" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column/ReadScroll/Reading/OrderRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/line_spacing = 5
 autowrap_mode = 3
 
-[node name="OrderBook" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/OrderRow"]
+[node name="OrderBook" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/ReadScroll/Reading/OrderRow"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
@@ -171,15 +211,14 @@ size_flags_vertical = 4
 mouse_default_cursor_shape = 2
 text = "查看交货簿"
 
-[node name="Event" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+[node name="Event" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column/ReadScroll/Reading"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_vertical = 3
 theme_override_colors/font_color = Color(0.95, 0.82, 0.57, 1)
 theme_override_constants/line_spacing = 5
 autowrap_mode = 3
 
-[node name="PantryNote" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+[node name="PantryNote" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column/ReadScroll/Reading"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -187,24 +226,35 @@ theme_override_colors/font_color = Color(0.75, 0.84, 0.68, 1)
 theme_override_font_sizes/font_size = 16
 autowrap_mode = 3
 
-[node name="Routes" type="HBoxContainer" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+[node name="Actions" type="VBoxContainer" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Routes" type="HBoxContainer" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Actions"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Guide" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Routes"]
+[node name="Guide" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Actions/Routes"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 
-[node name="FishGuide" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Routes"]
+[node name="FishGuide" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Actions/Routes"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 
-[node name="KeepSamples" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Routes"]
+[node name="Pantry" type="HBoxContainer" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="KeepSamples" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Actions/Pantry"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(0, 38)
@@ -213,7 +263,7 @@ mouse_default_cursor_shape = 2
 toggle_mode = true
 tooltip_text = "夜间备粮为秋社各留一份谷样，最多三种。"
 
-[node name="KeepPorridge" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Routes"]
+[node name="KeepPorridge" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Actions/Pantry"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(0, 38)
@@ -223,7 +273,7 @@ toggle_mode = true
 text = "留麦菽粥料"
 tooltip_text = "夜间备粮会给麦菽粥留料。再按一次取消。"
 
-[node name="KeepSoup" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Routes"]
+[node name="KeepSoup" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Actions/Pantry"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(0, 38)

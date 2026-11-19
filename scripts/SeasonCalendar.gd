@@ -13,6 +13,9 @@ const EVENT_TERMS := [Global.GATHERING_TERM, SummerRaft.TERM, AutumnExhibit.TERM
 @onready var next_year: Button = %NextYear
 @onready var today_button: Button = %Today
 @onready var title: Label = %DateTitle
+@onready var date_context: Label = %DateContext
+@onready var read_scroll: ScrollContainer = %ReadScroll
+@onready var weather_icon: TextureRect = %WeatherIcon
 @onready var forecast: Label = %Forecast
 @onready var planting: Label = %Planting
 @onready var order_note: Label = %Order
@@ -24,6 +27,9 @@ const EVENT_TERMS := [Global.GATHERING_TERM, SummerRaft.TERM, AutumnExhibit.TERM
 @onready var keep_samples: Button = %KeepSamples
 @onready var keep_porridge: Button = %KeepPorridge
 @onready var keep_soup: Button = %KeepSoup
+@onready var routes: HBoxContainer = %Routes
+@onready var pantry_actions: HBoxContainer = %Pantry
+@onready var actions: VBoxContainer = %Actions
 
 var controls_blocked: Callable
 var year_start := 1
@@ -35,6 +41,11 @@ var day_to_open := 0
 
 func _ready() -> void:
 	super._ready()
+	for label: Label in [forecast, planting, order_note, event_note, pantry_note]:
+		InterfaceFont.scale_reading_text(label)
+	var bar := read_scroll.get_v_scroll_bar()
+	bar.focus_mode = FOCUS_ALL
+	bar.visibility_changed.connect(_refresh_focus, CONNECT_DEFERRED)
 	previous_year.pressed.connect(_change_year.bind(-1))
 	next_year.pressed.connect(_change_year.bind(1))
 	today_button.pressed.connect(func(): _show_day(Global.current_day))
@@ -178,6 +189,7 @@ func _event_name(day: int) -> String:
 
 func _show_date(index: int, detail_day := 0) -> void:
 	focus = index
+	read_scroll.scroll_vertical = 0
 	for row: Button in dates.get_children():
 		row.set_pressed_no_signal(row.get_index() == focus)
 	var term_day := _day(focus)
@@ -187,7 +199,18 @@ func _show_date(index: int, detail_day := 0) -> void:
 	var upcoming := day > Global.current_day
 	var date := _day_label(term_day) if detail_day == 0 else "第 %d 天" % day
 	title.text = "%s   ·   %s" % [Global.get_current_solar_term(day), date]
-	var weather := "雨 · 旱作可得水" if Global.has_rain(day) else "晴"
+	var remaining := day - Global.current_day
+	if remaining < 0:
+		date_context.text = "已过"
+	elif remaining == 0:
+		date_context.text = "今日"
+	elif remaining == 1:
+		date_context.text = "明日"
+	else:
+		date_context.text = "%d 天后" % remaining
+	var rain := Global.has_rain(day)
+	weather_icon.texture = HUDIcons.icon(HUDIcons.Symbol.RAIN if rain else HUDIcons.Symbol.SUN)
+	var weather := "雨 · 旱作可得水" if rain else "晴"
 	if day < Global.current_day:
 		forecast.text = weather + "    ·    此日已过"
 	else:
@@ -207,6 +230,62 @@ func _show_date(index: int, detail_day := 0) -> void:
 			break
 	_show_order(day)
 	_show_event(term_day)
+	_refresh_focus()
+
+func _refresh_focus() -> void:
+	if not modal.visible:
+		return
+	var headers := _visible_controls([previous_year, next_year, today_button, close_button])
+	var season_tabs: Array[Control] = []
+	season_tabs.assign(seasons.get_children())
+	var date_rows: Array[Control] = []
+	date_rows.assign(dates.get_children())
+	var active_season := season_tabs[season]
+	var active_date := date_rows[focus]
+	var detail_rows: Array[Array] = [
+		_visible_controls([order_button, read_scroll.get_v_scroll_bar()]),
+		_visible_controls([guide, fish_guide]),
+		_visible_controls([keep_samples, keep_porridge, keep_soup]),
+	]
+	detail_rows = detail_rows.filter(func(row: Array) -> bool: return not row.is_empty())
+	var first_detail: Control = close_button if detail_rows.is_empty() else detail_rows[0][0]
+	_focus_row(headers, null, active_season)
+	_focus_row(season_tabs, today_button, active_date)
+	for index in date_rows.size():
+		var row := date_rows[index]
+		row.focus_neighbor_left = ^"."
+		row.focus_neighbor_right = row.get_path_to(first_detail)
+		row.focus_neighbor_top = row.get_path_to(date_rows[index - 1] if index > 0 else active_season)
+		row.focus_neighbor_bottom = row.get_path_to(date_rows[mini(index + 1, date_rows.size() - 1)])
+
+	var tab_order := headers + season_tabs + date_rows
+	var above := active_season
+	for index in detail_rows.size():
+		var row: Array[Control] = detail_rows[index]
+		var below: Control = detail_rows[index + 1][0] if index + 1 < detail_rows.size() else null
+		_focus_row(row, above, below, active_date)
+		tab_order.append_array(row)
+		above = row[0]
+	for index in tab_order.size():
+		var control := tab_order[index]
+		control.focus_next = control.get_path_to(tab_order[(index + 1) % tab_order.size()])
+		control.focus_previous = control.get_path_to(tab_order[posmod(index - 1, tab_order.size())])
+
+func _visible_controls(items: Array[Control]) -> Array[Control]:
+	var visible_items: Array[Control] = []
+	for item in items:
+		if item.is_visible_in_tree() and (not item is Button or not item.disabled):
+			visible_items.append(item)
+	return visible_items
+
+func _focus_row(items: Array[Control], above: Control, below: Control, left: Control = null) -> void:
+	for index in items.size():
+		var item := items[index]
+		var previous := items[index - 1] if index > 0 else left
+		item.focus_neighbor_left = item.get_path_to(previous) if previous else ^"."
+		item.focus_neighbor_right = item.get_path_to(items[mini(index + 1, items.size() - 1)])
+		item.focus_neighbor_top = item.get_path_to(above) if above else ^"."
+		item.focus_neighbor_bottom = item.get_path_to(below) if below else ^"."
 
 func _show_order(day: int) -> void:
 	var schedule := Global.season_order(day)
@@ -257,7 +336,6 @@ func _show_event(day: int) -> void:
 		else:
 			event_note.text = "冬至围炉 · 这席已散。" if past else _winter_plan(day)
 	_refresh_festival_pantry(day)
-	guide.get_parent().visible = guide.visible or fish_guide.visible
 
 func _refresh_festival_pantry(day: int) -> void:
 	var can_set := Global.can_set_festival_pantry(day)
@@ -274,6 +352,9 @@ func _refresh_festival_pantry(day: int) -> void:
 	pantry_note.visible = active
 	if active:
 		pantry_note.text = NightRations.describe_festival_pantry(Global.night_rations_plan().festival_pantry)
+	routes.visible = guide.visible or fish_guide.visible
+	pantry_actions.visible = keep_samples.visible or winter
+	actions.visible = routes.visible or pantry_actions.visible
 
 func _set_pantry(enabled: bool, recipe := "") -> void:
 	var day := _day(focus)
