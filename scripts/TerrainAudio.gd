@@ -5,6 +5,7 @@ enum Surface { GRASS, TRACK, PLANK, SHALLOWS, SNOW, STONE }
 const CREEK := preload("res://assets/audio/creek.wav")
 const RAIN := preload("res://assets/audio/rain.wav")
 const BIRDS := preload("res://assets/audio/woodland-birds.wav")
+const WIND := preload("res://assets/audio/estate-wind.res")
 const CRICKETS_PATH := "res://assets/audio/night-crickets.wav"
 const RAIN_BUS := &"Rain"
 const OPEN_AIR_CUTOFF := 20000.0
@@ -23,6 +24,7 @@ var creek: AudioStreamPlayer
 var rain: AudioStreamPlayer
 var birds: AudioStreamPlayer
 var crickets: AudioStreamPlayer
+var wind: AudioStreamPlayer
 var footsteps: AudioStreamPlayer
 var step_variant := 0
 var play_audio := DisplayServer.get_name() != "headless"
@@ -31,6 +33,7 @@ var _creek_gain := 0.0
 var _rain_gain := 0.0
 var _bird_gain := 0.0
 var _cricket_gain := 0.0
+var _wind_gain := 0.0
 var _sheltered := false
 var _shelter_mix := 0.0
 var _rain_filter := AudioEffectLowPassFilter.new()
@@ -48,6 +51,9 @@ func _ready() -> void:
 	rain.bus = RAIN_BUS
 	birds = _add_loop("WoodlandBirds", BIRDS)
 	crickets = _add_loop("NightCrickets", load(CRICKETS_PATH))
+	wind = _add_loop("Wind", WIND)
+	# Wind and rain share the same shelter filter and volume control.
+	wind.bus = RAIN_BUS
 	footsteps = AudioStreamPlayer.new()
 	footsteps.name = "Footsteps"
 	footsteps.bus = &"SFX"
@@ -55,12 +61,13 @@ func _ready() -> void:
 	add_child(footsteps)
 
 func set_ambience(creek_distance: float, raining: bool, birds_distance: float,
-	cricket_distance: float, dusk: float, sheltered: bool) -> void:
+		cricket_distance: float, dusk: float, sheltered: bool, wind_gain := 0.0) -> void:
 	_sheltered = sheltered
 	_creek_gain = (1.0 - smoothstep(20.0, 145.0, creek_distance)) * 0.50
 	_rain_gain = (0.12 if sheltered else 0.39) if raining else 0.0
 	_bird_gain = 0.0 if raining else (1.0 - smoothstep(28.0, 134.0, birds_distance)) * 0.28 * (1.0 - dusk)
 	_cricket_gain = 0.0 if raining else (1.0 - smoothstep(24.0, 127.0, cricket_distance)) * 0.34 * dusk
+	_wind_gain = wind_gain * (0.24 if sheltered else 1.0)
 
 func fade_out() -> void:
 	set_ambience(INF, false, INF, INF, 0.0, false)
@@ -70,6 +77,7 @@ func _process(delta: float) -> void:
 	_fade_loop(rain, _rain_gain, delta)
 	_fade_loop(birds, _bird_gain, delta)
 	_fade_loop(crickets, _cricket_gain, delta)
+	_fade_loop(wind, _wind_gain, delta, 0.27)
 	var mix := move_toward(_shelter_mix, float(_sheltered), delta / SHELTER_FADE_SECONDS)
 	if mix != _shelter_mix:
 		_shelter_mix = mix
@@ -93,8 +101,8 @@ func _add_loop(player_name: StringName, stream: AudioStreamWAV) -> AudioStreamPl
 	add_child(loop)
 	return loop
 
-func _fade_loop(loop: AudioStreamPlayer, target: float, delta: float) -> void:
-	var gain := move_toward(loop.volume_linear, target, delta * 0.85)
+func _fade_loop(loop: AudioStreamPlayer, target: float, delta: float, speed := 0.85) -> void:
+	var gain := move_toward(loop.volume_linear, target, delta * speed)
 	loop.volume_linear = gain
 	if not play_audio:
 		return
