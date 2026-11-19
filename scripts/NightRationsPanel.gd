@@ -15,6 +15,7 @@ signal tomorrow_calendar_requested
 const GOOD := Color("#c7dcaf")
 const SHORT := Color("#efbf8a")
 const WINDOW_MARGIN := 16.0
+const PANEL_FOCUS := preload("res://scripts/PanelFocus.gd")
 
 @onready var window: PanelContainer = $Center/Window
 @onready var content: VBoxContainer = $Center/Window/Content
@@ -187,8 +188,7 @@ func _ready() -> void:
 	_refresh()
 	_show_page(show_previous)
 	close_button.grab_focus()
-	if focus_shortage:
-		_focus_meal_options.call_deferred()
+	_finish_opening_focus()
 
 func show_pavilion_story(story_id: String, appointment_id: String, place: String) -> void:
 	var ready_to_hear := not story_id.is_empty()
@@ -201,10 +201,14 @@ func show_pavilion_story(story_id: String, appointment_id: String, place: String
 		pavilion_people.text = "%s已入席 · %s" % [people, place] if ready_to_hear else "%s起 · %s · %s" % [PavilionRest.rest_watch(), people, place]
 		find_pavilion.text = "指路去席案" if ready_to_hear else "指路去候席"
 
-func _focus_meal_options() -> void:
+func _finish_opening_focus() -> void:
 	await get_tree().process_frame
-	if not show_previous and not is_queued_for_deletion():
+	if is_queued_for_deletion() or not close_button.has_focus():
+		return
+	if focus_shortage and not show_previous:
 		_show_meals()
+	if close_button.has_focus():
+		GamepadInput.snap_pointer_to_focus()
 
 func _show_meals() -> void:
 	var action: BaseButton = delegate
@@ -748,6 +752,12 @@ func _describe_exchange(plan: Dictionary) -> String:
 	if plan.bought > 0:
 		details.append("购粮 %d 份（%d 铜钱）" % [plan.bought, plan.copper])
 	return " · ".join(details)
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey:
+		var focus := PANEL_FOCUS.input_owner(self)
+		if focus:
+			PANEL_FOCUS.keep_navigation_inside(self, focus, event)
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):

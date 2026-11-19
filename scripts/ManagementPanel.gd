@@ -17,6 +17,7 @@ const RAVINE_JOURNAL := preload("res://scenes/RavineJournalPanel.tscn")
 const FISH_LEDGER := preload("res://scenes/FishLedger.tscn")
 const MAP_GRID_ITEM := preload("res://scripts/MapGridItem.gd")
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
+const PANEL_FOCUS := preload("res://scripts/PanelFocus.gd")
 const DEFER_SOWING := "defer_sowing"
 const RESUME_SOWING := "resume_sowing"
 
@@ -220,8 +221,23 @@ func _refresh_section(index: int) -> void:
 		_refresh_water_technology()
 		_refresh_bow_technology()
 		_refresh_rank_progress()
-	if is_visible_in_tree() and (focus == null or focus in section_buttons):
+	if is_visible_in_tree() and (focus == null or sections.is_ancestor_of(focus) or not focus.is_visible_in_tree()):
 		section_buttons[index].grab_focus()
+		GamepadInput.snap_pointer_to_focus.call_deferred()
+
+func _input(event: InputEvent) -> void:
+	if not event is InputEventKey:
+		return
+	var focus := PANEL_FOCUS.input_owner(self)
+	if not focus:
+		return
+	if sections.is_ancestor_of(focus) and event.is_action_pressed(&"ui_down", true):
+		var action := PANEL_FOCUS.edge(tabs.get_current_tab_control())
+		if action:
+			action.grab_focus()
+			get_viewport().set_input_as_handled()
+			return
+	PANEL_FOCUS.keep_navigation_inside(self, focus, event)
 
 func _cycle_section(step: int) -> void:
 	if not is_visible_in_tree() or get_tree().paused:
@@ -230,7 +246,7 @@ func _cycle_section(step: int) -> void:
 	var focus := viewport.gui_get_focus_owner()
 	if focus != null and not is_ancestor_of(focus):
 		return
-	if viewport.get_embedded_subwindows().any(func(window: Window): return not window.unfocusable):
+	if PANEL_FOCUS.has_popup(viewport):
 		return
 	tabs.current_tab = posmod(tabs.current_tab + step, section_buttons.size())
 	section_buttons[tabs.current_tab].grab_focus()
@@ -299,6 +315,7 @@ func _announce_visibility() -> void:
 		GamepadInput.snap_pointer_to_focus.call_deferred()
 	elif is_instance_valid(previous_focus) and previous_focus.is_visible_in_tree():
 		previous_focus.grab_focus()
+		GamepadInput.snap_pointer_to_focus.call_deferred()
 
 func setup_tech() -> void:
 	var bar := technology_page.get_v_scroll_bar()
@@ -353,9 +370,6 @@ func _refresh_water_technology() -> void:
 	else:
 		water_status.text = "书艺 %d/%d 级 · 还差 %d 级" % [literacy, needed, needed - literacy]
 	var action := irrigation_button if can_unlock else water_next
-	if not section_buttons.is_empty():
-		var section := section_buttons[tabs.get_tab_idx_from_control(technology_page)]
-		section.focus_neighbor_bottom = section.get_path_to(action)
 	if transfer_focus and not action.has_focus():
 		action.grab_focus()
 		GamepadInput.snap_pointer_to_focus.call_deferred()
