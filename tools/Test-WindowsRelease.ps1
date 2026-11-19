@@ -153,7 +153,7 @@ function Start-VerifiedGame {
         '--fixed-fps', '60'
     }
     if ($Resolution) {
-        $screens = (New-Item -ItemType Directory -Force -Path (Join-Path $evidence $Resolution)).FullName
+        if ($Replay) { $screens = (New-Item -ItemType Directory -Force -Path (Join-Path $evidence $Resolution)).FullName }
         $arguments += @('--windowed', '--disable-vsync', '--resolution', $Resolution)
     } else {
         $arguments += '--headless'
@@ -185,8 +185,9 @@ function Start-VerifiedGame {
     }
     $lines = Get-Content -LiteralPath $log -Encoding utf8
     $marker = if ($Replay) { 'SCENARIO_OK' } else { 'Fiefdom title ready' }
+    if ($Compatibility) { $lines -cmatch '^OpenGL API .* - Compatibility - ' | Out-Host }
     $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|CALENDAR_|LEDGER_AUDIO_|HARVEST_SCOPE_|RESEARCH_RATIONS_|GAMEPAD_|DRIVING_|BOW_AIM_|WINTER_|AUTUMN_|BINDING_|RAFT_|TITLE_|BACKPACK_|HALL_|DECOR_|ROUTE_|COUNCIL_PREP_|COUNCIL_SILK_|DIRECTION_|PLAN_|TRIBUTE_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|CANAL_DOOR_|SPRING_|ESTATE_PROGRESS_|ESTATE_PROVISIONS|RECRUITMENT_|FIELD_ACCESS_|FIELD_STROKE_|WORKSITE_|FIELD_ROUTE_|FIELD_NIGHT_|FIELD_BEDTIME|MORNING_|PAVILION_EVENING_|FISH_MARKET_|RAVINE_MAP_|SHORTCUT_|TRAP_|MARKET_WAYFINDING_|ORDER_AHEAD_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
-    if ($exitCode -ne 0 -or $lines -cnotcontains $marker -or $lines -cmatch '^\s*(?:SCRIPT ERROR|USER ERROR|ERROR|WARNING):' -or
+    if ($exitCode -ne 0 -or $lines -cnotcontains $marker -or $lines -cmatch '^\s*(?:SCRIPT ERROR|SHADER ERROR|USER ERROR|ERROR|WARNING):' -or
         ($Compatibility -and -not ($lines -cmatch '^OpenGL API .* - Compatibility - '))) {
         throw "$Name failed (exit $exitCode). See $log"
     }

@@ -15,6 +15,12 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## Windows 候选包与启动校验
+
+`build/Fiefdom-1.0.0-Windows-x64.zip` 已更新为当前候选包。包内 `SHA256SUMS.txt` 覆盖程序、资源、兼容入口、说明与授权共八个文件。可用 `-PackageOnly` 核对文件并启动标题。混入旧 PCK 或缺少必需文件时，在启动前报告错误。
+
+从 `24cc0f9` 独立构建两次，ZIP 的 SHA-256 均为 `6f31259f7613c4efeb7fb5916af1012e702634f06b3f337bb72a52a50ad10a88`。EXE 和 PCK 与上一轮加载核对所用的版本一致。解压到含中文和空格的路径后，无窗口启动、1920×1080 Vulkan 和 1024×768 OpenGL 标题均通过。包内兼容入口也在隔离桌面实跑到标题并正常退出。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/Fiefdom-1.0.0-Windows-x64-package-verification/release-proof.txt)
+
 ## 标题新建与读档的加载反馈
 
 标题新建、继续和选档在冷态下先显示加载提示。目的地图及关口相邻场景分批读入。已备好的目的地可直接打开。选档时记录失效会留在选档页，焦点回到返回按钮。
