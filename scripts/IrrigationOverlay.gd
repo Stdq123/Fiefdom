@@ -15,6 +15,7 @@ const RIPPLE_SPACING := 23.0
 const RIPPLE_SPEED := 11.0
 const FERTILITY_HIGHLIGHT_SECONDS := 12.0
 const RICE_MARK := Color("#abdcc8")
+const MARK_LIGHT := preload("res://resources/world_hint_material.tres")
 const WATERWORKS := "res://assets/world/field-waterworks.png"
 # Tight atlas regions preserve the fixed light direction on both canal axes.
 const GATE_NS := Rect2(1, 4, 30, 24)
@@ -60,9 +61,11 @@ func _ready() -> void:
 	flow_ink.draw.connect(_draw_flow)
 	add_child(flow_ink)
 	crop_icons.z_index = 2
+	crop_icons.material = MARK_LIGHT
 	crop_icons.draw.connect(_draw_crop_icons)
 	add_child(crop_icons)
 	plan_ink.z_index = 3
+	plan_ink.material = MARK_LIGHT
 	plan_ink.draw.connect(_draw_plan)
 	add_child(plan_ink)
 	_refresh_network()
@@ -370,9 +373,9 @@ func _preview_dig() -> void:
 	blocked_cell = plan["blocked_cell"]
 	planned_additions.assign(plan["additions"])
 	if preview_site == Global.ChannelSite.FOUNDATION:
-		preview_changed.emit("红框处是屋基，请从屋外引渠")
+		preview_changed.emit("叉号处是屋基，请从屋外引渠")
 	elif preview_site == Global.ChannelSite.BLOCKED:
-		preview_changed.emit("红框处是井田，请绕开")
+		preview_changed.emit("叉号处是井田，请绕开")
 	elif planned_additions.is_empty():
 		preview_changed.emit("可从水源或已有水渠起步" if survey_start == null else "这段已有水渠")
 	else:
@@ -465,12 +468,16 @@ func _draw_plan() -> void:
 		plan_ink.draw_rect(cover, Color("#ad9b7650"))
 		plan_ink.draw_rect(cover, Color("#c9b78c"), false, 1.0)
 	for cell in affected_fields:
-		var ink := gain if affected_fields[cell] else loss
+		var supplied := affected_fields[cell]
+		var ink := gain if supplied else loss
 		plan_ink.draw_rect(_cell_rect(cell).grow(-1), Color(ink, 0.24))
 		plan_ink.draw_rect(_cell_rect(cell).grow(-1), ink, false, 1.0)
+		_draw_supply_change(cell, supplied, ink)
 	for cell in affected_channels:
-		var ink := gain if affected_channels[cell] else loss
+		var supplied := affected_channels[cell]
+		var ink := gain if supplied else loss
 		plan_ink.draw_rect(_cell_rect(cell).grow(-3), Color(ink, 0.42))
+		_draw_supply_change(cell, supplied, ink)
 	for cell in repair_cells:
 		plan_ink.draw_rect(_cell_rect(cell).grow(-2), Color("#f2cc78"), false, 1.5)
 	for cell in planned_additions:
@@ -482,8 +489,16 @@ func _draw_plan() -> void:
 		plan_ink.draw_rect(_cell_rect(cursor).grow(-1), outline, false, 1.3)
 		if preview_site in [Global.ChannelSite.BLOCKED, Global.ChannelSite.FOUNDATION]:
 			plan_ink.draw_rect(_cell_rect(blocked_cell).grow(-1), Color("#ee9073"), false, 1.5)
+			FieldPlotArt.draw_task_mark(plan_ink, tile_map.map_to_local(blocked_cell), Global.NightGrowth.BLOCKED, 9.0)
 	if survey_mode and survey_start != null:
 		plan_ink.draw_rect(_cell_rect(survey_start).grow(-1), Color("#f2cc78"), false, 1.5)
+
+func _draw_supply_change(cell: Vector2i, supplied: bool, ink: Color) -> void:
+	var at := tile_map.map_to_local(cell)
+	plan_ink.draw_rect(Rect2(at - Vector2(4, 4), Vector2(8, 8)), FieldPlotArt.TASK_EDGE)
+	plan_ink.draw_line(at + Vector2.LEFT * 3.0, at + Vector2.RIGHT * 3.0, ink, 1.5)
+	if supplied:
+		plan_ink.draw_line(at + Vector2.UP * 3.0, at + Vector2.DOWN * 3.0, ink, 1.5)
 
 func highlight_fertile_cells() -> void:
 	if editing or Global.fertile_cells.is_empty():
@@ -521,10 +536,8 @@ func _draw_crop_icons() -> void:
 		if not Global.active_crops.has(cell) and Global.irrigation.supplies(cell):
 			crop_icons.draw_rect(_cell_rect(cell).grow(-1.5), RICE_MARK, false, 1.25)
 	for cell in Global.active_crops:
-		var at := tile_map.map_to_local(cell) + tile_size * 0.5 - Vector2(3.5, 3.5)
-		crop_icons.draw_set_transform(at)
-		FieldPlotArt.draw_crop_mark(crop_icons, Global.crop_night_status(cell))
-	crop_icons.draw_set_transform(Vector2.ZERO)
+		var at := tile_map.map_to_local(cell) + tile_size * 0.5 - Vector2(4, 4)
+		FieldPlotArt.draw_task_mark(crop_icons, at, Global.crop_night_status(cell), FieldPlotArt.FARM_MARK_WIDTH)
 
 func _draw() -> void:
 	var network := Global.irrigation

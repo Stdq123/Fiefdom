@@ -11,7 +11,6 @@ const WINTER_RATIONS := preload("res://scripts/WinterRoadRations.gd")
 const PAPER := Color("#ded2ac")
 const INK := Color("#3e3c2a")
 const GOLD := Color("#f2ce78")
-const SEED_GREEN := Color("#c5dfa6")
 const WATER := Color("#386f74")
 const DRY := Color("#865b42")
 const PERSON := Color("#475e73")
@@ -804,24 +803,7 @@ func _draw_field_entrance(mouth: Vector2, normal: Vector2, width: float) -> void
 	chart.draw_polyline(PackedVector2Array([step[0], step[3], step[2], step[1]]), Color("#755d42"), 1.4, true)
 
 func _draw_field_task(cell: Vector2i, task: int) -> void:
-	var at := _map_point(_cell_point(cell))
-	match task:
-		Global.NightGrowth.READY:
-			var square := Rect2(at - Vector2(4, 4), Vector2(8, 8))
-			chart.draw_rect(square, INK)
-			chart.draw_rect(square.grow(-1.5), GOLD)
-		Global.NightGrowth.DRY:
-			var diamond := PackedVector2Array([at + Vector2(0, -4), at + Vector2(4, 0),
-				at + Vector2(0, 4), at + Vector2(-4, 0), at + Vector2(0, -4)])
-			chart.draw_polyline(diamond, INK, 3.5, true)
-			chart.draw_polyline(diamond, Color("#b7e1ef"), 1.5, true)
-		Global.NightGrowth.BLOCKED:
-			for diagonal in [Vector2(3, 3), Vector2(3, -3)]:
-				chart.draw_line(at - diagonal, at + diagonal, INK, 3.5, true)
-				chart.draw_line(at - diagonal, at + diagonal, Color("#ffb38f"), 1.5, true)
-		Global.SowingRoute.READY:
-			chart.draw_circle(at, 4.0, INK, true, -1.0, true)
-			chart.draw_circle(at, 2.6, SEED_GREEN, true, -1.0, true)
+	FieldPlotArt.draw_task_mark(chart, _map_point(_cell_point(cell)), task, 10.0)
 
 func _draw_place(place: Dictionary) -> void:
 	var at := _map_point(place.point)

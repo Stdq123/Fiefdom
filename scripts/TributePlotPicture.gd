@@ -56,5 +56,4 @@ func _draw() -> void:
 	if not crop_region.has_area():
 		return
 	draw_texture_rect_region(ItemManager.crop_atlas.texture, TILE, crop_region)
-	draw_set_transform(origin + Vector2(12.5, 12.5) * scale_factor, 0.0, zoom)
-	FieldPlotArt.draw_crop_mark(self, status)
+	FieldPlotArt.draw_task_mark(self, Vector2(12, 12), status, FieldPlotArt.FARM_MARK_WIDTH)
