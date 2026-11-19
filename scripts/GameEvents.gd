@@ -4,6 +4,7 @@ extends Node
 signal crop_harvested(is_public: bool)
 signal harvest_receipt(harvest: Dictionary, worker: String)
 signal farm_state_changed()
+signal council_tribute_rows_changed()
 signal seed_cycle_requested(step: int)
 signal day_advanced(new_day: int)
 signal daylight_changed()

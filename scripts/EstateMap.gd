@@ -775,9 +775,13 @@ func _draw_field(field: Dictionary) -> void:
 			chart.draw_line(area.position + Vector2(0, cell.y * offset),
 				area.position + Vector2(area.size.x, cell.y * offset), Color("#6e7859"))
 		if field.public:
-			chart.draw_rect(Rect2(at - cell * 0.5, cell).grow(-1.2), Color("#745529"), false, 2.4)
-			if _can_draw_plots():
-				chart.draw_rect(Rect2(at - cell * 0.5, cell).grow(-2.6), GOLD, false, 1.4)
+			var show_plots := _can_draw_plots()
+			for offset in Global.public_field_offsets():
+				if show_plots or offset == Vector2i.ZERO:
+					var plot_area := Rect2(at + Vector2(offset) * cell - cell * 0.5, cell)
+					chart.draw_rect(plot_area.grow(-1.2), Color("#745529"), false, 2.4)
+					if show_plots:
+						chart.draw_rect(plot_area.grow(-2.6), GOLD, false, 1.4)
 		var boundary := EstateLayout.field_boundary(area, entrance, cell.x)
 		chart.draw_polyline(boundary, Color("#576345"), 1.6, true)
 		if _can_draw_plots() and entrance != Vector2.ZERO:

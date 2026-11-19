@@ -33,6 +33,7 @@ const PENDING := Color("#f2bc85")
 @onready var harvest_policy: HBoxContainer = %HarvestPolicy
 @onready var harvest_policy_note: Label = %HarvestPolicyNote
 @onready var harvest_policy_button: Button = %HarvestPolicyButton
+@onready var tribute_rows_button: Button = %TributeRowsButton
 @onready var public_plan_card: PanelContainer = %PublicPlanCard
 @onready var public_plan_title: Label = %PublicPlanTitle
 @onready var public_plan_detail: Label = %PublicPlanDetail
@@ -61,6 +62,9 @@ func _ready() -> void:
 	harvest_policy_button.pressed.connect(func():
 		Global.set_private_harvest_hold(not Global.hold_private_harvest)
 		_refresh_harvest_policy())
+	tribute_rows_button.pressed.connect(func():
+		Global.set_council_tribute_rows(not Global.council_tribute_rows)
+		_refresh_on_open())
 	arts_button.pressed.connect(func():
 		close_map()
 		six_arts_requested.emit())
@@ -136,13 +140,24 @@ func _refresh_on_open() -> void:
 
 func _refresh_harvest_policy() -> void:
 	var held := Global.hold_private_harvest
-	harvest_policy.visible = held or (Global.can_hold_private_harvest()
+	var rows := Global.council_tribute_rows
+	tribute_rows_button.visible = Global.can_arrange_council_tribute_rows()
+	harvest_policy_button.visible = held or (Global.can_hold_private_harvest()
 		and Global.retainers.any(func(worker: RetainerData) -> bool:
 			return worker.duty in [RetainerData.Duty.STEWARD, RetainerData.Duty.HARVEST]))
+	harvest_policy.visible = harvest_policy_button.visible or tribute_rows_button.visible
+	tribute_rows_button.text = "北排恢复私收" if rows else "北排三格纳贡"
 	harvest_policy_button.text = "恢复门客收私田" if held else "暂留熟私田"
-	harvest_policy_note.modulate = READY if held else Color.WHITE
-	harvest_policy_note.text = ("门客暂留熟私田，仍可亲手收。定案后恢复代收。" if held else
-		"想先收公田时，可请门客把熟私田留给你。")
+	harvest_policy_note.modulate = READY if held or rows else Color.WHITE
+	if rows:
+		harvest_policy_note.text = ("每块井田北排已纳贡，余田仍暂留。" if held
+			else "每块井田北排纳贡，余田照收。议税选定后复原。")
+	elif held:
+		harvest_policy_note.text = "门客暂留熟私田，仍可亲手收。定案后恢复代收。"
+	elif tribute_rows_button.visible:
+		harvest_policy_note.text = "暂划每块井田北排三格纳贡，另外五格照收。"
+	else:
+		harvest_policy_note.text = "想先收公田时，可请门客把熟私田留给你。"
 
 func _refresh_public_plan(needs_crop: bool) -> void:
 	var plan := Global.tribute_field_plan() if needs_crop else {}
@@ -177,7 +192,7 @@ func _refresh_sowing_plans(gap: int) -> void:
 			for y in range(-1, 2):
 				for x in range(-1, 2):
 					var cell := center + Vector2i(x, y)
-					if cell != center and Global.field_seed_plans.has(cell) and not Global.deferred_field_sowing.has(cell):
+					if not Global.is_public_plot(cell) and Global.field_seed_plans.has(cell) and not Global.deferred_field_sowing.has(cell):
 						count += 1
 			private_plans += count
 			if count > most_in_one_field:

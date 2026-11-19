@@ -207,6 +207,7 @@ func _on_tax_reform_choice(choice: Global.TaxReformChoice) -> void:
 			for retainer in Global.retainers:
 				if retainer.school in [RetainerData.School.CONFUCIAN, RetainerData.School.MOHIST]:
 					retainer.loyalty = _loyalty_after_choice(retainer, choice)
+	Global.set_council_tribute_rows(false)
 	if choice != Global.TaxReformChoice.DELAYED:
 		Global.set_private_harvest_hold(false)
 	GameEvents.tax_reform_choice_made.emit(choice)

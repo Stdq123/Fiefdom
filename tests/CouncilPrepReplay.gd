@@ -31,6 +31,7 @@ var legacy := false
 var petition := false
 var single_field := false
 var blocked_rice := false
+var tribute_rows := false
 
 func _continue() -> void:
 	tree.change_scene_to_file(state.TITLE_SCENE)
@@ -424,6 +425,58 @@ func _early_petition() -> void:
 	print("COUNCIL_PREP_PETITION day=", state.tax_reform_day, " regular=", state.tax_council_start_day(),
 		" receipts=", state.tax_council_petition_order_count(), " tribute=", state.king_storage)
 
+func _check_tribute_rows() -> void:
+	var north := Vector2i(5, 4)
+	var other_north := SECOND + Vector2i.UP
+	var save := SNAPSHOT.duplicate(true)
+	save.merge({"current_day": 48, "current_rank": 3, "private_harvest_total": 69, "retainers": [],
+		"active_crops": {
+			"5,4": {"id": "millet", "age": 2, "growth_nights": 2},
+			"12,4": {"id": "millet", "age": 1, "growth_nights": 2, "watered": true},
+			"5,6": {"id": "millet", "age": 2, "growth_nights": 2},
+		}}, true)
+	var fixture := FileAccess.open("user://savegame.json", FileAccess.WRITE)
+	fixture.store_string(JSON.stringify(save))
+	fixture.close()
+	await _continue()
+	await _open_book()
+	if not _expect(book.tribute_rows_button.visible and not state.is_public_plot(north),
+			"An existing save starts with its ordinary private row."):
+		return
+	await _button(book.tribute_rows_button)
+	var totals: Dictionary = world.council_harvest_forecast(state.TaxReformChoice.NONE)
+	var traditional: Dictionary = world.council_harvest_forecast(state.TaxReformChoice.TRADITIONAL)
+	_expect(totals.tribute == 1 and totals.stock == 1 and traditional.tribute == 0 and traditional.stock == 2
+		and state.king_storage == 29 and state.private_harvest_total == 69,
+		"Only the current forecast allocates the north row, and no harvest is applied by the switch.")
+	_expect(state.is_public_plot(other_north) and not state.is_public_plot(PRIVATE_MILLET)
+		and world.tile_map.get_cell_tile_data(north).get_custom_data("is_public_field"), "Both wells mark the pledged plots.")
+	await _snapshot("01-tribute-row-forecast")
+	await _button(book.tribute_rows_button)
+	_expect(not state.is_public_plot(north), "The pledge can be withdrawn before the audience.")
+	await _button(book.tribute_rows_button)
+	_expect(state.save_game() == OK, "Save the allocation.")
+	await _continue()
+	_expect(state.is_public_plot(north) and state.field_night_forecast().public_ripe == 1,
+		"The pledge and the next morning's public yield category survive a restart.")
+	await _click_plot(north)
+	await _click_plot(PRIVATE_MILLET)
+	_expect(state.king_storage == 30 and state.private_harvest_total == 70 and state.money == 145,
+		"An actual north harvest goes to the treasury, and the south crop yields money and stock.")
+	await _sleep()
+	_expect(state.current_day == 49 and state.field_night_forecast().ready == 1 and state.tax_council_waiting(),
+		"The crop and the invitation advance together at dawn.")
+	var choice := await Campaign.meet_tax_envoy(tree)
+	if not _expect(choice != null, "Meet the envoy after the ordinary contribution gate."):
+		return
+	await _button(choice.option_buttons[state.TaxReformChoice.TRADITIONAL])
+	await _button(choice.confirm_button)
+	_expect(not state.council_tribute_rows and state.is_public_plot(SECOND) and not state.is_public_plot(other_north)
+		and not world.tile_map.get_cell_tile_data(other_north).get_custom_data("is_public_field")
+		and state.route_baseline.tribute == 30 and state.king_storage == 30,
+		"The first policy choice restores the old field role and adds no ending progress.")
+	await _snapshot("02-tribute-rows-restored")
+
 func run(game_tree: SceneTree) -> void:
 	tree = game_tree
 	state = tree.root.get_node("Global")
@@ -432,7 +485,9 @@ func run(game_tree: SceneTree) -> void:
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated council preparation profile."):
 		tree.quit(1)
 		return
-	if petition:
+	if tribute_rows:
+		await _check_tribute_rows()
+	elif petition:
 		await _early_petition()
 	elif legacy:
 		await _old_save()

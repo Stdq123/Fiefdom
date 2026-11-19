@@ -159,12 +159,13 @@ func _run() -> void:
 		"route-ledger", "route-ledger-legacy":
 			var replay = load("res://tests/RouteLedgerReplay.gd").new()
 			await replay.run_ledger(tree, capture_directory, arguments[0] == "route-ledger-legacy")
-		"council-prep", "council-prep-legacy", "council-petition", "council-one-field":
+		"council-prep", "council-prep-legacy", "council-petition", "council-one-field", "council-tribute-rows":
 			var replay = load("res://tests/CouncilPrepReplay.gd").new()
 			replay.capture_dir = capture_directory
 			replay.legacy = arguments[0] == "council-prep-legacy"
 			replay.petition = arguments[0] == "council-petition"
 			replay.single_field = arguments[0] == "council-one-field"
+			replay.tribute_rows = arguments[0] == "council-tribute-rows"
 			await replay.run(tree)
 		"council-harvest-research", "council-harvest-traditional", "council-harvest-before", "council-harvest-write":
 			var replay = load("res://tests/CouncilHarvestHoldReplay.gd").new()

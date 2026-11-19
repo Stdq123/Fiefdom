@@ -246,6 +246,7 @@ try {
     }
     if ($RouteGoals) {
         Start-VerifiedGame -Directory $release -Profile 'council-prep' -Name 'council-prep' -Replay 'council-prep' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'council-tribute-rows' -Name 'council-tribute-rows' -Replay 'council-tribute-rows' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'council-harvest-traditional' -Name 'council-harvest-traditional' -Replay 'council-harvest-traditional' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'council-harvest-research' -Name 'council-harvest-research' -Replay 'council-harvest-research' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'council-one-field' -Name 'council-one-field' -Replay 'council-one-field' -Resolution $fullResolution
@@ -473,6 +474,7 @@ try {
         }
         if ($RouteGoals) {
             Start-VerifiedGame -Directory $release -Profile 'council-prep-compact' -Name 'council-prep-1024x768' -Replay 'council-prep' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'council-tribute-rows-compact' -Name 'council-tribute-rows-1024x768' -Replay 'council-tribute-rows' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'council-harvest-compact' -Name 'council-harvest-1024x768' -Replay 'council-harvest-research' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'council-one-field-compact' -Name 'council-one-field-1024x768' -Replay 'council-one-field' -Resolution '1024x768'
             Start-VerifiedGame -Directory $release -Profile 'route-goals-compact' -Name 'route-goals-1024x768' -Replay 'route-goals' -Resolution '1024x768'

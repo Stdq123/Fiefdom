@@ -82,6 +82,7 @@ func _ready() -> void:
 	GameEvents.raid_defeated.connect(_update_visitor_clock)
 	GameEvents.pavilion_story_heard.connect(pavilion_rest.refresh_table)
 	GameEvents.retainer_location_changed.connect(pavilion_rest.refresh_table)
+	GameEvents.council_tribute_rows_changed.connect(_redraw_well_fields)
 	GameEvents.tax_reform_choice_made.connect(_on_tax_reform_choice_made)
 	GameEvents.management_visibility_changed.connect(_end_sweep.unbind(1))
 	GameEvents.estate_room_changed.connect(_on_estate_room_changed)
@@ -94,10 +95,7 @@ func _ready() -> void:
 		Global.well_fields[0]["is_unlocked"] = true  # First field is already ready
 		Global.well_fields[0]["reclamation_progress"] = Global.RECLAMATION_NIGHTS
 		print("Initialized first well field at (5, 5)")
-	for field in Global.well_fields:
-		if field["is_unlocked"]:
-			_draw_well_field(field["center_pos"])
-	$TileMapLayer/WellFieldMarker.refresh_markers()
+	_redraw_well_fields()
 
 	# Setup Navigation (Runtime generation for prototype)
 	setup_navigation()
@@ -326,10 +324,7 @@ func _on_channel_survey_learned() -> void:
 func _on_tax_reform_choice_made(choice: Global.TaxReformChoice) -> void:
 	match choice:
 		Global.TaxReformChoice.REFORMED:
-			for field in Global.well_fields:
-				if field["is_unlocked"]:
-					_draw_well_field(field["center_pos"])
-			$TileMapLayer/WellFieldMarker.refresh_markers()
+			_redraw_well_fields()
 			GameEvents.world_notice.emit("新税册已启用 · 收成入私仓，铜钱扣税后入账")
 		Global.TaxReformChoice.TRADITIONAL:
 			GameEvents.world_notice.emit("已定旧制 · 继续收公田纳贡，可在蚕桑页进献丝绸")
@@ -542,6 +537,7 @@ func is_crop_ripe(grid_pos: Vector2i) -> bool:
 
 func council_harvest_forecast(choice: Global.TaxReformChoice) -> Dictionary:
 	var totals := {"plots": 0, "tribute": 0, "stock": 0, "copper": 0, "leaves": 0, "levy": 0}
+	var include_council_rows := choice == Global.TaxReformChoice.NONE
 	var rate := (Global.tax_rate if Global.tax_reform_choice == Global.TaxReformChoice.REFORMED
 		else clampf(Global.balance.reformed_tax_rate, 0.0, 1.0))
 	for cell: Vector2i in active_crops:
@@ -550,7 +546,7 @@ func council_harvest_forecast(choice: Global.TaxReformChoice) -> Dictionary:
 			continue
 		var crop: Dictionary = active_crops[cell]
 		var data: CropData = crop["data"]
-		var proceeds := Global.harvest_proceeds(Global.is_public_plot(cell), data.sell_price,
+		var proceeds := Global.harvest_proceeds(Global.is_public_plot(cell, include_council_rows), data.sell_price,
 			Global.crop_rotation_bonus(cell, data), choice, rate)
 		totals["plots"] += 1
 		for resource in ["tribute", "stock", "copper", "levy"]:
@@ -593,13 +589,18 @@ func water_crop(grid_pos: Vector2i) -> bool:
 	print("Crop watered at ", grid_pos)
 	return true
 
+func _redraw_well_fields() -> void:
+	for field in Global.well_fields:
+		if field.is_unlocked:
+			_draw_well_field(field.center_pos)
+	$TileMapLayer/WellFieldMarker.refresh_markers()
+
 func _draw_well_field(center: Vector2i) -> void:
-	var public_center := Global.is_public_plot(center)
 	for x in range(-1, 2):
 		for y in range(-1, 2):
 			var coords := center + Vector2i(x, y)
 			var texture_variant := posmod(coords.x * 5 + coords.y * 7, PRIVATE_SOIL_COLUMNS.size())
-			var column: int = 1 if coords == center and public_center else PRIVATE_SOIL_COLUMNS[texture_variant]
+			var column: int = 1 if Global.is_public_plot(coords) else PRIVATE_SOIL_COLUMNS[texture_variant]
 			var soil := 1 if Global.tilled_cells.has(coords) else 0
 			tile_map.set_cell(coords, 0, Vector2i(column, soil))
 

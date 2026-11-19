@@ -25,6 +25,10 @@ const MARKET_PRODUCE := ["beans", "rice", "sorghum", "wheat"]
 const TAX_ENVOY := "召简"
 const TAX_COUNCIL_YEAR := 3
 const TAX_COUNCIL_PETITION_ORDERS := 2
+const PUBLIC_FIELD_OFFSETS: Array[Vector2i] = [Vector2i.ZERO]
+const COUNCIL_PUBLIC_FIELD_OFFSETS: Array[Vector2i] = [
+	Vector2i.ZERO, Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1),
+]
 const RECLAMATION_BOUNDS := Rect2i(-16, -10, 36, 23)
 const FIRST_FIELD_CENTER := Vector2i(5, 5)
 const RECLAMATION_NIGHTS := 4
@@ -156,6 +160,7 @@ var field_return_work: Dictionary = {}
 var field_seed_plans: Dictionary[Vector2i, String] = {}
 var deferred_field_sowing: Dictionary[Vector2i, bool] = {}
 var hold_private_harvest := false
+var council_tribute_rows := false
 var fertile_cells: Dictionary[Vector2i, bool] = {}
 var irrigation: Irrigation
 var first_channel_growth_day := 0
@@ -350,6 +355,7 @@ func _reset_campaign() -> void:
 	field_seed_plans.clear()
 	deferred_field_sowing.clear()
 	hold_private_harvest = false
+	council_tribute_rows = false
 	fertile_cells.clear()
 	irrigation = Irrigation.new()
 	first_channel_growth_day = 0
@@ -1374,11 +1380,27 @@ func take_away_field_receipt() -> Dictionary:
 	away_field_report.first_tribute = false
 	return receipt if not field_work_summary(receipt, FIELD_WORK_JOBS).is_empty() else {}
 
-func is_public_plot(cell: Vector2i) -> bool:
+func can_arrange_council_tribute_rows() -> bool:
+	return (outcome == Outcome.RUNNING and tax_reform_choice == TaxReformChoice.NONE
+		and not tax_council_invited and first_tribute_delivered()
+		and (current_rank >= Rank.SHANG_SHI or council_tribute_rows))
+
+func set_council_tribute_rows(enabled: bool) -> void:
+	if enabled == council_tribute_rows or (enabled and not can_arrange_council_tribute_rows()):
+		return
+	council_tribute_rows = enabled
+	GameEvents.council_tribute_rows_changed.emit()
+	GameEvents.farm_state_changed.emit()
+
+func public_field_offsets(include_council_rows := true) -> Array[Vector2i]:
+	return COUNCIL_PUBLIC_FIELD_OFFSETS if include_council_rows and council_tribute_rows else PUBLIC_FIELD_OFFSETS
+
+func is_public_plot(cell: Vector2i, include_council_rows := true) -> bool:
 	if tax_reform_choice == TaxReformChoice.REFORMED:
 		return false
+	var offsets := public_field_offsets(include_council_rows)
 	for field in well_fields:
-		if field["is_unlocked"] and field["center_pos"] == cell:
+		if field.is_unlocked and cell - field.center_pos in offsets:
 			return true
 	return false
 
@@ -1424,31 +1446,33 @@ func tribute_field_plan() -> Dictionary:
 	var sowing_seed := ""
 	var earliest := INF
 	var best_can_grow := false
+	var offsets := public_field_offsets()
 	for field in well_fields:
-		if not field["is_unlocked"]:
+		if not field.is_unlocked:
 			continue
-		var cell: Vector2i = field["center_pos"]
-		var crop: Dictionary = active_crops.get(cell, {})
-		var status := crop_night_status(cell)
-		var seed := ""
-		var nights: int
-		var crop_data: CropData
-		if crop.is_empty():
-			if sowing_seed.is_empty():
-				sowing_seed = tribute_seed()
-			seed = sowing_seed
-			crop_data = ItemManager.get_crop(seed)
-			nights = sowing_nights(crop_data)
-		else:
-			crop_data = crop.data
-			nights = maxi(0, int(crop.growth_nights) - int(crop.age))
-		var can_grow := status != NightGrowth.BLOCKED
-		if (plan.is_empty() or (can_grow and not best_can_grow)
-			or (can_grow == best_can_grow and nights < earliest)):
-			earliest = nights
-			best_can_grow = can_grow
-			plan = {"cell": cell, "field": int(field["field_id"]) + 1, "status": status,
-				"seed_id": seed, "crop": crop_data.crop_name, "ready_day": current_day + nights}
+		for offset in offsets:
+			var cell: Vector2i = field.center_pos + offset
+			var crop: Dictionary = active_crops.get(cell, {})
+			var status := crop_night_status(cell)
+			var seed := ""
+			var nights: int
+			var crop_data: CropData
+			if crop.is_empty():
+				if sowing_seed.is_empty():
+					sowing_seed = tribute_seed()
+				seed = sowing_seed
+				crop_data = ItemManager.get_crop(seed)
+				nights = sowing_nights(crop_data)
+			else:
+				crop_data = crop.data
+				nights = maxi(0, int(crop.growth_nights) - int(crop.age))
+			var can_grow := status != NightGrowth.BLOCKED
+			if (plan.is_empty() or (can_grow and not best_can_grow)
+				or (can_grow == best_can_grow and nights < earliest)):
+				earliest = nights
+				best_can_grow = can_grow
+				plan = {"cell": cell, "field": int(field.field_id) + 1, "status": status,
+					"seed_id": seed, "crop": crop_data.crop_name, "ready_day": current_day + nights}
 	return plan
 
 func tribute_seed() -> String:
@@ -3764,6 +3788,7 @@ func _save_snapshot(origin: String) -> Error:
 		"field_seed_plans": saved_seed_plans,
 		"deferred_field_sowing": saved_deferred_sowing,
 		"hold_private_harvest": hold_private_harvest,
+		"council_tribute_rows": council_tribute_rows,
 		"fertile_cells": saved_fertility,
 		"irrigation_channels": saved_channels,
 		"irrigation_field_gates": saved_field_gates,
@@ -4351,6 +4376,7 @@ func load_game(path := "") -> Error:
 	hall_mat_id = saved_mat if _valid_hall_decor(saved_mat, HallDecor.Slot.MAT) else HallDecor.DEFAULT_MAT
 	hall_shelf_id = saved_shelf if _valid_hall_decor(saved_shelf, HallDecor.Slot.SHELF) else HallDecor.DEFAULT_SHELF
 	field_rotation = _restore_field_rotation(data.get("field_rotation"), saved_day)
+	council_tribute_rows = false
 	field_seed_plans.clear()
 	deferred_field_sowing.clear()
 	var seed_plans: Variant = data.get("field_seed_plans")
@@ -4366,6 +4392,8 @@ func load_game(path := "") -> Error:
 			var cell = _read_save_cell(key)
 			if cell is Vector2i:
 				set_field_sowing_deferred(cell, true)
+	council_tribute_rows = (data.get("council_tribute_rows", false) == true and can_hold_private_harvest()
+		and tax_reform_choice == TaxReformChoice.NONE)
 	ending_record = _saved_ending_record(data)
 	if ending_record.is_empty() and outcome in [Outcome.TRADITIONAL, Outcome.REFORMED]:
 		ending_record = _capture_ending(outcome)
