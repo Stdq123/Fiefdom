@@ -479,6 +479,7 @@ func _ready() -> void:
 	day_lighting = DAY_LIGHTING.new()
 	day_lighting.name = "DayLighting"
 	add_child(day_lighting)
+	day_lighting.add_cloud_shadows(MAP_BACKDROP)
 	player.footstep.connect(_on_footstep)
 	props.assign(WILD_PROPS if wilderness else ESTATE_PROPS)
 	props.sort_custom(func(a: Vector3i, b: Vector3i) -> bool: return a.y < b.y)

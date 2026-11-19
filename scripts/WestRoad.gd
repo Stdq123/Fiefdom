@@ -56,7 +56,7 @@ func _ready() -> void:
 	var creek: WATER_SURFACE = $Ground/WaterSurface
 	creek.reflect_lantern(west_lamp.glow, Vector2(-23, 64))
 	creek.reflect_lantern(east_lamp.glow, Vector2(4, 63))
-	lighting.refresh()
+	lighting.add_cloud_shadows(GROUND.BACKDROP)
 	$Waypoint.draw.connect(_draw_waypoint)
 	player.footstep.connect(_step)
 	%SettingsButton.icon = HUDIcons.icon(HUDIcons.Symbol.SETTINGS)

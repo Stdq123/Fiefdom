@@ -74,7 +74,7 @@ func _ready() -> void:
 	var basin_lamp := lighting.place_lamp($Scenery, LAYOUT.BASIN.position + Vector2(32, -7), 0.69, 0.12)
 	var basin_water: WATER_SURFACE = $Ground/BasinWater
 	basin_water.reflect_lantern(basin_lamp.glow, LAYOUT.BASIN.position + Vector2(30, 6))
-	lighting.refresh()
+	lighting.add_cloud_shadows(GROUND.BACKDROP)
 	player.arrive_at($EstateRoadArrival)
 	player.restore_walking_checkpoint(LAYOUT.BOUNDS, ground.walking_fixture_footprints())
 	player.footstep.connect(_step)
