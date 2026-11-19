@@ -17,6 +17,7 @@ var _resume_scene := ""
 
 func _ready() -> void:
 	$Version.text = "Windows · %s" % ProjectSettings.get_setting("application/config/version")
+	InterfaceFont.scale_reading_text(status)
 	new_button.pressed.connect(_on_new_requested)
 	continue_button.pressed.connect(_continue_game)
 	archive_button.pressed.connect(_open_archive)
@@ -97,6 +98,7 @@ func _open_archive() -> void:
 		if is_inside_tree() and get_tree().current_scene == self:
 			menu.show()
 			archive_button.grab_focus()
+			GamepadInput.snap_pointer_to_focus.call_deferred()
 	)
 
 func _open_settings() -> void:

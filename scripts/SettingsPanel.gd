@@ -29,7 +29,7 @@ var reading_size_picker: OptionButton
 var _opening_focus: Control
 
 func _ready() -> void:
-	add_to_group("settings_panel")
+	add_to_group("gamepad_directional_menu")
 	add_theme_stylebox_override("panel", FRAME)
 	contents = VBoxContainer.new()
 	contents.add_theme_constant_override("separation", 8)

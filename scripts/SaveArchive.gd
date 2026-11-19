@@ -23,6 +23,8 @@ func _ready() -> void:
 	get_tree().paused = true
 	AudioManager.play_menu_cue(AudioManager.MenuCue.OPEN)
 	close_button.pressed.connect(_close)
+	for control: Control in [%Heading, %EstateHeading, records_heading, status, controls_hint, close_button]:
+		InterfaceFont.scale_reading_text(control)
 	GamepadInput.changed.connect(_refresh_controls_hint)
 	_refresh_controls_hint()
 	for entry in Global.saved_games():
@@ -39,19 +41,26 @@ func _ready() -> void:
 		for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
 			close_button.set_focus_neighbor(side, ^".")
 		close_button.grab_focus()
-		return
-	var preferred := preferred_campaign.md5_text()
-	var key: String = preferred if campaigns.has(preferred) else campaigns.keys()[0]
-	_show_records(key)
-	campaign_buttons[key].grab_focus()
+	else:
+		var preferred := preferred_campaign.md5_text()
+		var key: String = preferred if campaigns.has(preferred) else campaigns.keys()[0]
+		_show_records(key)
+		campaign_buttons[key].grab_focus()
+	GamepadInput.snap_pointer_to_focus.call_deferred()
 
-func _add_campaign(key: String, latest: Dictionary) -> void:
+func _add_row(column: VBoxContainer) -> Button:
 	var button := Button.new()
 	button.custom_minimum_size.y = 68
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(button)
+	InterfaceFont.scale_reading_text(button)
+	return button
+
+func _add_campaign(key: String, latest: Dictionary) -> void:
+	var button := _add_row(estates)
 	button.toggle_mode = true
-	button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	var heading: String = latest["campaign_name"]
 	var detail := "存档无法读取"
 	if latest["error"] == OK:
@@ -61,7 +70,6 @@ func _add_campaign(key: String, latest: Dictionary) -> void:
 	button.tooltip_text = button.text
 	button.focus_entered.connect(_show_records.bind(key))
 	button.pressed.connect(_show_records.bind(key))
-	estates.add_child(button)
 	campaign_buttons[key] = button
 
 func _show_records(key: String) -> void:
@@ -84,11 +92,7 @@ func _show_records(key: String) -> void:
 	status.hide()
 	var readable := false
 	for entry: Dictionary in entries:
-		var button := Button.new()
-		button.custom_minimum_size.y = 68
-		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		var button := _add_row(records)
 		button.disabled = entry["error"] != OK
 		if button.disabled:
 			button.focus_mode = Control.FOCUS_NONE
@@ -116,7 +120,6 @@ func _show_records(key: String) -> void:
 		if not button.disabled and not Global.saved_game_route(entry, false).is_empty():
 			button.tooltip_text += "\n爵位 · " + Global.rank_names[entry.rank]
 		button.pressed.connect(_load.bind(entry, button, key))
-		records.add_child(button)
 		readable = readable or not button.disabled
 	if not readable:
 		_show_unavailable()
@@ -159,7 +162,7 @@ func _show_unavailable() -> void:
 	status.show()
 
 func _refresh_controls_hint() -> void:
-	controls_hint.text = ("摇杆移动 · A 选择 · B 返回" if GamepadInput.active
+	controls_hint.text = ("十字键选条目 · 摇杆移动光标 · A 确认 · B 返回" if GamepadInput.active
 		else "↑ ↓ 选条目 · ← → 换栏 · 回车确认 · Esc 返回")
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -173,6 +176,7 @@ func _close() -> void:
 	AudioManager.play_menu_cue(AudioManager.MenuCue.CLOSE)
 	if is_instance_valid(previous_focus) and previous_focus.is_visible_in_tree():
 		previous_focus.grab_focus()
+		GamepadInput.snap_pointer_to_focus.call_deferred()
 	queue_free()
 
 func _load(entry: Dictionary, button: Button, key: String) -> void:
@@ -190,3 +194,4 @@ func _load(entry: Dictionary, button: Button, key: String) -> void:
 		button.focus_mode = Control.FOCUS_NONE
 		_link_focus(campaign_buttons[key])
 	close_button.grab_focus()
+	GamepadInput.snap_pointer_to_focus.call_deferred()

@@ -19,12 +19,21 @@ func _key(code: Key) -> void:
 		root.push_input(event, true)
 	await process_frame
 
+func _pad(button: JoyButton) -> void:
+	for down in [true, false]:
+		var event := InputEventJoypadButton.new()
+		event.button_index = button
+		event.pressed = down
+		root.window_input.emit(event)
+		await process_frame
+
 func _run() -> void:
 	if not ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"):
 		push_error("Run front-menu-focus with Test-GodotSmoke.ps1 to isolate its archive.")
 		quit(1)
 		return
 	var state := root.get_node("Global")
+	var preferences := root.get_node("Preferences")
 	var entries := [
 		{"campaign_id": "front-menu", "campaign_name": "柳湾", "file": "autosave-1.json",
 			"save_origin": "ending", "current_day": 65, "outcome": state.Outcome.TRADITIONAL, "save_sequence": 2},
@@ -59,6 +68,11 @@ func _run() -> void:
 	var estate: Button = archive.campaign_buttons["front-menu".md5_text()]
 	var first: Button = archive.records.get_child(0)
 	var second: Button = archive.records.get_child(1)
+	var standard := first.get_theme_font_size(&"font_size")
+	_expect(preferences.set_reading_size(2) == OK and first.get_theme_font_size(&"font_size") == standard + 6,
+		"The archive must react to a larger reading size while visible.")
+	_expect(estate.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and first.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART,
+		"Long names and record metadata must wrap instead of clipping.")
 	_expect("税亩富民" in first.text and "守礼安邦" in second.text and first.icon != null and second.icon != null,
 		"Each checkpoint must identify its own ending inside the same estate.")
 	var reform_volume := first.icon as AtlasTexture
@@ -77,6 +91,8 @@ func _run() -> void:
 	var next_record: Button = archive.records.get_child(0)
 	_expect(next_record.has_focus() and "第 21 天" in next_record.text,
 		"Right enters the focused estate's records.")
+	_expect(next_record.get_theme_font_size(&"font_size") == standard + 6,
+		"Records rebuilt after changing estates keep the selected reading size.")
 	await _key(KEY_LEFT)
 	_expect(next_estate.has_focus(), "Left returns to the same estate.")
 	await _key(KEY_TAB)
@@ -86,7 +102,10 @@ func _run() -> void:
 		var focus := root.gui_get_focus_owner()
 		_expect(focus != null and archive.is_ancestor_of(focus), "Tab must stay inside the archive.")
 		_expect(next_estate.button_pressed, "Tab keeps the selected estate while browsing records.")
-	archive.close_button.pressed.emit()
+	next_estate.grab_focus()
+	await _pad(JOY_BUTTON_DPAD_RIGHT)
+	_expect(next_record.has_focus(), "D-pad Right enters the active estate's records.")
+	await _pad(JOY_BUTTON_B)
 	await process_frame
 	await process_frame
 	_expect(title.archive_button.has_focus(), "Closing the archive must restore the title action.")

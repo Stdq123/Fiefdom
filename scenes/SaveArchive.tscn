@@ -4,7 +4,7 @@
 [ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="2_hud"]
 [ext_resource type="StyleBox" path="res://resources/estate_archive_frame.tres" id="3_frame"]
 
-[node name="SaveArchive" type="ColorRect"]
+[node name="SaveArchive" type="ColorRect" groups=["gamepad_directional_menu"]]
 process_mode = 3
 layout_mode = 3
 anchors_preset = 15
@@ -36,6 +36,7 @@ layout_mode = 2
 theme_override_constants/separation = 15
 
 [node name="Heading" type="Label" parent="Center/Panel/Stack"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 theme_override_colors/font_color = Color(0.94, 0.82, 0.57, 1)
@@ -51,6 +52,7 @@ layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="EstateHeading" type="Label" parent="Center/Panel/Stack/Columns/EstateColumn"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.73, 0.79, 0.66, 1)
 text = "封地"
@@ -76,6 +78,7 @@ theme_override_constants/separation = 8
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.94, 0.82, 0.57, 1)
+autowrap_mode = 3
 
 [node name="RecordScroll" type="ScrollContainer" parent="Center/Panel/Stack/Columns/RecordColumn"]
 unique_name_in_owner = true
@@ -106,6 +109,7 @@ unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.91, 0.66, 0.48, 1)
+autowrap_mode = 3
 
 [node name="ControlsHint" type="Label" parent="Center/Panel/Stack/Footer/Notes"]
 unique_name_in_owner = true
