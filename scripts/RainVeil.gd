@@ -30,7 +30,7 @@ class Contact:
 var elapsed := 0.0
 var roofs: Array[Roof] = []
 var contacts: Array[Contact] = []
-var splashes := Node2D.new()
+@onready var splashes := Node2D.new()
 
 func _ready() -> void:
 	splashes.name = "RainSplashes"

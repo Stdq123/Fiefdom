@@ -126,12 +126,13 @@ var _displays: Array[YARD_DISPLAY] = []
 var _stall_feet: Array[Vector2] = []
 var _dye_vats: Array[DYE_VAT] = []
 var main_path: PackedVector2Array
-var weather := ROAD_WEATHER.new(RAIN_PUDDLES, SNOW_DRIFTS)
-var held_fish := Sprite2D.new()
-var fish_shadow := Sprite2D.new()
 var swimming_frame := AtlasTexture.new()
 var fish_swim := 0.0
 var basin_art: Texture2D = load(BASIN_ART)
+
+@onready var weather := ROAD_WEATHER.new(RAIN_PUDDLES, SNOW_DRIFTS)
+@onready var held_fish := Sprite2D.new()
+@onready var fish_shadow := Sprite2D.new()
 
 func _ready() -> void:
 	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED

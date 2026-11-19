@@ -89,7 +89,8 @@ var pavement := Geometry2D.intersect_polygons(track, PackedVector2Array(PAVING_L
 var pavement_art := STONE_PAVING.new(
 	Geometry2D.intersect_polygons(_material_outline(0.0, true), PackedVector2Array(PAVING_LIMIT))[0],
 	LAYOUT.MARKET_GATE.x)
-var weather := ROAD_WEATHER.new(RAIN_PUDDLES, SNOW_DRIFTS)
+
+@onready var weather := ROAD_WEATHER.new(RAIN_PUDDLES, SNOW_DRIFTS)
 
 func _ready() -> void:
 	_build_creek_banks()

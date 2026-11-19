@@ -14,13 +14,13 @@ const BOWL_TIMES := [0.0, 0.85, 1.55]
 @onready var fire_sound: AudioStreamPlayer2D = $FireSound
 @onready var bowl_art: Texture2D = load("res://assets/characters/festival-supper.png")
 @onready var hearth_art: Texture2D = load("res://assets/world/winter-hearth.png")
+@onready var table := Node2D.new()
+@onready var steam_layer := Node2D.new()
 
 var actors: Array[Node2D] = []
 var motions: Array[NeighborMotion] = []
 var serving_poses: Array[Sprite2D] = []
 var routes: Array[Curve2D] = []
-var table := Node2D.new()
-var steam_layer := Node2D.new()
 var focused := false
 var recipe := ""
 var steam := 0.0

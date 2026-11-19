@@ -14,9 +14,8 @@ const OUTLINE := [
 var cover := TERRAIN_AUDIO.Surface.GRASS
 var bounds: Array[Rect2] = []
 var patches: Array[PackedVector2Array] = []
-var footstep_effects := FOOTSTEP_EFFECTS.new()
-
 @onready var audio: TERRAIN_AUDIO = AudioManager.terrain_audio
+@onready var footstep_effects := FOOTSTEP_EFFECTS.new()
 
 func _init(puddles: Array[Rect2], drifts: Array[Rect2]) -> void:
 	if Global.has_rain():

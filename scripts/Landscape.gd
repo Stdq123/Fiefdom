@@ -433,6 +433,7 @@ const WILD_PROPS := [
 @onready var hall_rest := get_parent().get_node_or_null("HallRest")
 @onready var silk_shed := get_parent().get_node_or_null("SilkShed")
 @onready var pond_landing := get_parent().get_node_or_null("Scenery/PondLanding") as Node2D
+@onready var footstep_effects := FOOTSTEP_EFFECTS.new()
 
 var props: Array[Vector3i] = []
 var scenery: Dictionary[Sprite2D, int] = {}
@@ -445,7 +446,6 @@ var forked_oak_texture: AtlasTexture
 var ground_cover: SEASONAL_GROUND
 var estate_terrain: ESTATE_TERRAIN
 var ravine_relief: RAVINE_RELIEF
-var footstep_effects := FOOTSTEP_EFFECTS.new()
 var water_surface: WATER_SURFACE
 var south_pond: SOUTH_POND
 var terrain_audio: TERRAIN_AUDIO

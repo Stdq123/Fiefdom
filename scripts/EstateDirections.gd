@@ -31,7 +31,7 @@ var outline := Rect2()
 var plaque := Rect2()
 var edge_direction := Vector2.ZERO
 var road_network: ROAD_NETWORK
-var road_guide := Node2D.new()
+var road_guide: Node2D
 var road_path := PackedVector2Array()
 var road_origin := Vector2.INF
 var road_target := Vector2.INF
@@ -57,6 +57,7 @@ func setup(estate_world: Node2D, estate_hud: Control) -> void:
 	GameEvents.retainer_departed.connect(_dirty_order_work.unbind(1))
 	GameEvents.well_field_reclaimed.connect(_dirty_order_work.unbind(2))
 	GameEvents.tax_reform_choice_made.connect(_dirty_order_work.unbind(1))
+	road_guide = Node2D.new()
 	road_guide.z_index = -2
 	road_guide.hide()
 	world.add_child(road_guide)

@@ -27,7 +27,7 @@ class StepMark:
 		duration = DUST_SECONDS if water.is_empty() else SPLASH_SECONDS
 
 var _marks: Array[StepMark] = []
-var snow_footprints := SNOW_FOOTPRINTS.new()
+@onready var snow_footprints := SNOW_FOOTPRINTS.new()
 
 func _init() -> void:
 	name = "FootstepEffects"
