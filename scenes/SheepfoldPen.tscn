@@ -4,10 +4,16 @@
 [ext_resource type="Texture2D" path="res://assets/world/estate-site-art.png" id="2_art"]
 [ext_resource type="Material" path="res://resources/world_hint_material.tres" id="3_hint"]
 [ext_resource type="Texture2D" path="res://assets/characters/sheep.png" id="4_sheep"]
+[ext_resource type="Texture2D" path="res://assets/world/pasture-details.png" id="5_weather"]
 
 [sub_resource type="AtlasTexture" id="Shed"]
 atlas = ExtResource("2_art")
 region = Rect2(576, 0, 78, 52)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="RoofFrost"]
+atlas = ExtResource("5_weather")
+region = Rect2(0, 168, 78, 52)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="RearFence"]
@@ -64,6 +70,7 @@ y_sort_enabled = true
 
 [node name="Yard" type="Node2D" parent="Paddock"]
 z_index = -2
+texture_repeat = 2
 
 [node name="RearFence" type="Sprite2D" parent="Paddock"]
 texture = SubResource("RearFence")
@@ -73,6 +80,12 @@ offset = Vector2(-47, -7)
 [node name="Shed" type="Sprite2D" parent="Paddock"]
 position = Vector2(0, 1)
 texture = SubResource("Shed")
+centered = false
+offset = Vector2(-39, -50)
+
+[node name="RoofFrost" type="Sprite2D" parent="Paddock/Shed"]
+visible = false
+texture = SubResource("RoofFrost")
 centered = false
 offset = Vector2(-39, -50)
 

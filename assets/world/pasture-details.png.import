@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://cpcydfhg4cr8k"
+path="res://.godot/imported/pasture-details.png-c6995b60b1b7f11a3ff0759daca9c13d.res"
+
+[deps]
+
+source_file="res://assets/world/pasture-details.png"
+dest_files=["res://.godot/imported/pasture-details.png-c6995b60b1b7f11a3ff0759daca9c13d.res"]
+
+[params]
+
+authored_at_2x=true

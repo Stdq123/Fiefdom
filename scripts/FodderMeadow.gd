@@ -1,26 +1,34 @@
 extends Node2D
 
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
+const WIND := preload("res://scripts/FoliageWind.gd")
+const GRASS := preload("res://assets/world/pasture-details.png")
+const GRASS_CELL := Vector2(28, 28)
 const TOOL_STONE_ART := LANDSCAPE.ESTATE_SITE_REGIONS[LANDSCAPE.Prop.MOSS_STONE]
 const TUFTS := [
 	Vector2(-34, -15), Vector2(-21, -23), Vector2(-6, -17), Vector2(10, -24),
 	Vector2(29, -18), Vector2(38, -4), Vector2(25, 14), Vector2(41, 13),
 	Vector2(9, 20), Vector2(-9, 17), Vector2(-26, 13), Vector2(-39, 9),
 ]
-const LEAF_COLORS := [Color("#79864c"), Color("#98aa61"), Color("#b29755"), Color("#8f9e8a")]
-const SEED_COLORS := [Color("#bac27a"), Color("#d5cb89"), Color("#dac08a"), Color("#bac6b9")]
-
 var focused := false
-var tufts: Array[Node2D] = []
+var tufts: Array[Sprite2D] = []
 @onready var hint: Label = $Hint
 
 func _ready() -> void:
 	y_sort_enabled = true
+	var wind := WIND.new()
+	add_child(wind)
 	for index in TUFTS.size():
-		var tuft := Node2D.new()
+		var tuft := Sprite2D.new()
 		tuft.position = TUFTS[index]
-		tuft.draw.connect(_draw_tuft.bind(tuft, index))
+		tuft.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		tuft.texture = GRASS
+		tuft.region_enabled = true
+		tuft.region_filter_clip_enabled = true
+		tuft.centered = false
+		tuft.offset = Vector2(-14, -25.5)
 		add_child(tuft)
+		wind.attach(tuft, WIND.STEM)
 		tufts.append(tuft)
 	var tool_stone := StaticBody2D.new()
 	tool_stone.name = "ToolStone"
@@ -34,6 +42,7 @@ func _ready() -> void:
 	tool_stone.draw.connect(_draw_tool_stone.bind(tool_stone))
 	add_child(tool_stone)
 	GameEvents.sheepfold_changed.connect(_refresh)
+	GameEvents.day_advanced.connect(_refresh.unbind(1))
 	GamepadInput.changed.connect(_refresh)
 	_refresh()
 
@@ -49,8 +58,14 @@ func _refresh() -> void:
 	if focused:
 		var action := GamepadInput.interact_hint("割草") if Global.can_cut_meadow_grass() else Sheepfold.MEADOW
 		hint.text = action + "\n" + Global.meadow_status()
-	for tuft in tufts:
-		tuft.queue_redraw()
+	var season := Global.season_index()
+	var row := season + 3 if season in [Global.Season.SUMMER, Global.Season.AUTUMN] and not Global.meadow_has_grass() else season
+	var tint := Color("#bec9ba") if Global.has_rain() else Color.WHITE
+	for index in tufts.size():
+		var tuft := tufts[index]
+		var variant := (index + floori(index / 4.0)) % 3
+		tuft.region_rect = Rect2(Vector2(variant, row) * GRASS_CELL, GRASS_CELL)
+		tuft.self_modulate = tint
 
 func interact() -> void:
 	var road := get_parent()
@@ -59,38 +74,6 @@ func interact() -> void:
 	else:
 		GameEvents.world_notice.emit(Global.meadow_status())
 	road.finish_meadow_route()
-
-func _draw_tuft(tuft: Node2D, index: int) -> void:
-	var season := Global.season_index()
-	var uncut := Global.meadow_has_grass()
-	var cut := not uncut and season in [Global.Season.SUMMER, Global.Season.AUTUMN]
-	var leaf: Color = LEAF_COLORS[season]
-	var seed_color: Color = SEED_COLORS[season]
-	if Global.has_rain():
-		leaf = leaf.darkened(0.12)
-		seed_color = seed_color.darkened(0.10)
-	tuft.draw_colored_polygon(PackedVector2Array([
-		Vector2(-11, 0), Vector2(-7, -3), Vector2(5, -4), Vector2(13, -1), Vector2(11, 3), Vector2(-1, 5),
-	]), Color("#2c402e66"))
-	for stem in range(7):
-		var seed := posmod(index * 17 + stem * 11, 19)
-		var base := Vector2(-9 + stem * 3, seed % 5 - 2)
-		if uncut:
-			var tip := base + Vector2(stem - 3, -(11 + seed % 12))
-			var side := base.lerp(tip, 0.58).round()
-			tuft.draw_colored_polygon(PackedVector2Array([base + Vector2(-1, 0), side + Vector2(-2, -1), tip,
-				side + Vector2(1, 1), base + Vector2(1, 1)]), leaf.darkened(0.13 + (seed % 3) * 0.09))
-			tuft.draw_line(base, side + Vector2(0, -1), leaf, 1.0)
-			if seed % 3 != 1:
-				tuft.draw_rect(Rect2(tip - Vector2(1, 2), Vector2(2, 5)), seed_color.darkened((seed % 4) * 0.07))
-				tuft.draw_rect(Rect2(tip - Vector2(1, 2), Vector2(1, 2)), seed_color)
-		else:
-			var top := base - Vector2(0, 2 + seed % 4)
-			tuft.draw_line(base, top, leaf.darkened(0.19), 1.0)
-			if cut or season == Global.Season.WINTER:
-				tuft.draw_rect(Rect2(top, Vector2(2, 1)), seed_color)
-			else:
-				tuft.draw_line(top, top + Vector2(-2, -1), leaf, 1.0)
 
 func _draw_tool_stone(stone: Node2D) -> void:
 	stone.draw_colored_polygon(PackedVector2Array([Vector2(-12, 0), Vector2(-5, -5), Vector2(12, -3),

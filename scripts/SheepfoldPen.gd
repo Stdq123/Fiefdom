@@ -1,6 +1,7 @@
 extends Node2D
 
 const BLEAT := preload("res://assets/world/sheepfold/sheep-bleat.ogg")
+const TERRAIN := preload("res://scripts/EstateTerrain.gd")
 const SHELTER := Vector2(-12, 7)
 const FEEDING_SPOT := Vector2(3, 18)
 const WALK_TO_FEED := 0.18
@@ -8,10 +9,20 @@ const AT_TROUGH := 0.23
 const LEAVE_TROUGH := 0.43
 const BACK_IN_SHELTER := 0.48
 const ROUTE := [SHELTER, Vector2(-23, 30), Vector2(8, 40), Vector2(28, 27), Vector2(12, 20), SHELTER]
-const YARD_COLORS := [Color("#57724c"), Color("#5d7248"), Color("#77714b"), Color("#8c8871")]
 const PADDOCK := [Vector2(-43, 1), Vector2(42, 1), Vector2(44, 48),
 	Vector2(37, 54), Vector2(13, 52), Vector2(9, 59), Vector2(-11, 59),
 	Vector2(-15, 53), Vector2(-36, 55), Vector2(-44, 48)]
+const LANE_WEST := [Vector2(-7, 65), Vector2(-7, 53), Vector2(-4, 44),
+	Vector2(-1, 36), Vector2(3, 28), Vector2(10, 17)]
+const LANE_EAST := [Vector2(7, 65), Vector2(8, 52), Vector2(9, 44),
+	Vector2(11, 36), Vector2(16, 28), Vector2(22, 18)]
+const SCUFFED_GROUND := [Vector2(-28, 2), Vector2(-15, 2), Vector2(-8, 7), Vector2(14, 9),
+	Vector2(31, 9), Vector2(32, 17), Vector2(22, 22), Vector2(10, 19), Vector2(-4, 17),
+	Vector2(-16, 16), Vector2(-25, 11)]
+const YARD_SPRIGS := [Vector2(-36, 19), Vector2(-36, 43), Vector2(-25, 48), Vector2(-20, 34),
+	Vector2(32, 34), Vector2(37, 24), Vector2(35, 48), Vector2(18, 47)]
+const GRAVEL := [Vector2(-3, 57), Vector2(3, 52), Vector2(-2, 46), Vector2(4, 41),
+	Vector2(6, 34), Vector2(12, 28)]
 
 @onready var animal: Sprite2D = $Paddock/Sheep
 @onready var landscape: Node2D = $"../Landscape"
@@ -29,7 +40,16 @@ func _ready() -> void:
 	landscape.day_lighting.place_lamp($Paddock, Vector2(-32, 4), 0.70)
 	GameEvents.sheepfold_changed.connect(_refresh)
 	GameEvents.sheep_sheared.connect(_on_sheared)
+	GameEvents.day_advanced.connect(_refresh_weather.unbind(1))
+	_refresh_weather()
 	_refresh()
+
+func _refresh_weather() -> void:
+	var timber := Color("#bdc8bf") if Global.has_rain() else Color.WHITE
+	for fixture: Sprite2D in [$Paddock/Shed, $Paddock/RearFence, $Paddock/FrontFence, $Paddock/Trough]:
+		fixture.self_modulate = timber
+	$Paddock/Shed/RoofFrost.visible = Global.season_index() == Global.Season.WINTER
+	ground.queue_redraw()
 
 func _refresh() -> void:
 	var flock := Global.sheepfold
@@ -47,7 +67,6 @@ func _refresh() -> void:
 	var ready := Global.can_use_sheepfold(Sheepfold.Action.SHEAR)
 	$Paddock/Wool.visible = ready
 	_refresh_hint()
-	ground.queue_redraw()
 	_update_sheep(0.0)
 
 func _process(delta: float) -> void:
@@ -85,15 +104,49 @@ func _update_sheep(delta: float) -> void:
 	animal.offset.y = lift - 8.0
 
 func _draw_yard() -> void:
-	ground.draw_colored_polygon(PackedVector2Array(PADDOCK), YARD_COLORS[Global.season_index()])
-	var gravel: Color = landscape._track_dust()
-	ground.draw_colored_polygon(PackedVector2Array([Vector2(-7, 65), Vector2(7, 65), Vector2(5, 48),
-		Vector2(9, 37), Vector2(20, 18), Vector2(11, 17), Vector2(2, 31), Vector2(-3, 46)]), gravel)
-	for stone: Vector2 in [Vector2(-3, 56), Vector2(2, 50), Vector2(1, 42), Vector2(8, 33), Vector2(12, 26)]:
-		ground.draw_rect(Rect2(stone, Vector2(3, 1)), gravel.darkened(0.16))
-	for spot: Vector2 in [Vector2(-32, 19), Vector2(-23, 36), Vector2(25, 40), Vector2(34, 21), Vector2(-12, 26)]:
-		ground.draw_rect(Rect2(spot, Vector2(5, 1)), Color("#abb17b80"))
-		ground.draw_rect(Rect2(spot + Vector2(2, -2), Vector2(1, 3)), Color("#abb17b80"))
+	var season := Global.season_index()
+	var wet := Global.has_rain()
+	var grass := Color("#a8b7a7") if wet else Color("#d7ded1")
+	var meadow := TERRAIN.meadow_texture(season)
+	var boundary := PackedVector2Array(PADDOCK)
+	var turf_edge := boundary.duplicate()
+	turf_edge.append(boundary[0])
+	var verge := PackedVector2Array()
+	for point in turf_edge:
+		verge.append(point + Vector2(0, 26).direction_to(point) * 6.0)
+	TERRAIN.draw_tiled_band(ground, turf_edge, verge, grass, Color(grass, 0.0), meadow)
+	TERRAIN.draw_loam(ground, boundary, grass, meadow)
+	var dust: Color = landscape._track_dust()
+	TERRAIN.draw_loam(ground, PackedVector2Array(SCUFFED_GROUND), Color(dust.darkened(0.27), 0.82), TERRAIN.TRACK_GRAIN)
+	var west := PackedVector2Array(LANE_WEST)
+	var east := PackedVector2Array(LANE_EAST)
+	var shoulder := Color(dust.darkened(0.18), 0.55)
+	for side in [-1, 1]:
+		var rim := west if side < 0 else east
+		var outer := rim.duplicate()
+		for index in outer.size():
+			outer[index].x += side * 3.0
+		TERRAIN.draw_tiled_band(ground, rim, outer, shoulder, Color(dust, 0.0), TERRAIN.TRACK_GRAIN)
+	TERRAIN.draw_tiled_band(ground, west, east, dust, dust.darkened(0.10), TERRAIN.TRACK_GRAIN)
+
+	var shale := dust.lerp(Color("#a8afa5"), 0.47)
+	for index in GRAVEL.size():
+		var at: Vector2 = GRAVEL[index]
+		var span := 3.0 + index % 3
+		ground.draw_colored_polygon(PackedVector2Array([
+			at, at + Vector2(span, -0.5), at + Vector2(span + 1, 1.5), at + Vector2(1, 2),
+		]), shale.darkened(0.33))
+		ground.draw_line(at, at + Vector2(span, -0.5), shale.lightened(0.10), 0.85)
+	for index in YARD_SPRIGS.size():
+		TERRAIN.draw_sprig(ground, YARD_SPRIGS[index], index * 17, season, wet)
+	if season == Global.Season.WINTER:
+		TERRAIN.draw_snow(ground, Rect2(-44, 37, 29, 17), 2)
+		TERRAIN.draw_snow(ground, Rect2(13, 40, 31, 15), 1)
+	elif wet:
+		ground.draw_colored_polygon(PackedVector2Array([
+			Vector2(13, 20), Vector2(25, 19), Vector2(30, 22), Vector2(21, 24), Vector2(11, 23),
+		]), Color("#536c60a0"))
+		ground.draw_line(Vector2(17, 21), Vector2(24, 20.5), Color("#adc0ab91"), 0.75)
 
 func can_interact_from(foot: Vector2) -> bool:
 	return visible and global_position.distance_squared_to(foot) <= 26.0 * 26.0
