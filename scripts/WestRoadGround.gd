@@ -9,6 +9,7 @@ const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
 const ROAD_WEATHER := preload("res://scripts/RoadWeather.gd")
 const RAVINE_RELIEF := preload("res://scripts/RavineRelief.gd")
 const RAVINE_BANKS := preload("res://scripts/RavineBanks.gd")
+const FOLIAGE_WIND := preload("res://scripts/FoliageWind.gd")
 const BACKDROP := Rect2(-800, -460, 1600, 960)
 const ROAD_HALF_WIDTH := 20.0
 const WATER_HALF_WIDTH := 23.0
@@ -326,6 +327,8 @@ func _draw_meadow(grass: Color, loam: Color, season: int) -> void:
 func place_scenery(layer: Node2D) -> void:
 	var season := Global.season_index()
 	var winter := season == Global.Season.WINTER
+	var wind := FOLIAGE_WIND.new()
+	add_child(wind)
 	var tree_art := {}
 	for variety in [LANDSCAPE.Prop.OAK, LANDSCAPE.Prop.BLOSSOM_TREE, LANDSCAPE.Prop.PINE]:
 		tree_art[variety] = LANDSCAPE.painted_tree_texture(variety, season)
@@ -334,13 +337,16 @@ func place_scenery(layer: Node2D) -> void:
 	for index in TREES.size():
 		var variety := _tree_variety(index)
 		var texture: AtlasTexture = forked_oak if variety == LANDSCAPE.Prop.OAK and index % 2 == 1 else tree_art[variety]
-		_prop(layer, TREES[index], texture).self_modulate = wet_tint
+		var tree := _prop(layer, TREES[index], texture)
+		tree.self_modulate = wet_tint
+		wind.attach(tree, LANDSCAPE.WIND_FLEXIBILITY[variety])
 	var willow := LANDSCAPE.painted_riverside_texture(LANDSCAPE.Prop.WILLOW, season)
 	var plant_tint := LANDSCAPE.riverside_tint(season, Global.has_rain())
 	for placement: Vector3 in WILLOWS:
 		var tree := _prop(layer, Vector2(placement.x, placement.y), willow)
 		tree.scale = Vector2.ONE * placement.z
 		tree.self_modulate = plant_tint
+		wind.attach(tree, FOLIAGE_WIND.WILLOW)
 	for mark: Vector3i in BANK_PROPS:
 		if winter and mark.z == LANDSCAPE.Prop.FLOWERS:
 			continue
@@ -349,6 +355,8 @@ func place_scenery(layer: Node2D) -> void:
 			else LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, LANDSCAPE.ESTATE_SITE_REGIONS[mark.z])
 		var sprite := _prop(layer, Vector2(mark.x, mark.y), texture)
 		sprite.self_modulate = plant_tint if riverside else wet_tint
+		if mark.z in [LANDSCAPE.Prop.REEDS, LANDSCAPE.Prop.BANK_GRASS]:
+			wind.attach(sprite, FOLIAGE_WIND.STEM)
 		if winter and mark.z in LANDSCAPE.ROCK_PROPS:
 			sprite.self_modulate *= LANDSCAPE.WINTER_ROCK_TINT
 	LANDSCAPE.place_waypost(layer, MARKET_SIGN, Vector2.LEFT, "西市", true).modulate = wet_tint

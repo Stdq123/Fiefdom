@@ -21,6 +21,7 @@ const SILK_SAMPLE := preload("res://assets/world/west-court-sample.svg")
 const SILK_SAMPLE_BOUNDS := Rect2(EstateLayout.WEST_COURT + Vector2(-37, -4), Vector2(28, 24))
 const RAVINE_ART := preload("res://assets/world/ravine-art.png")
 const RAIN_VEIL := preload("res://scripts/RainVeil.gd")
+const FOLIAGE_WIND := preload("res://scripts/FoliageWind.gd")
 const TERRAIN_AUDIO := preload("res://scripts/TerrainAudio.gd")
 const DAY_LIGHTING := preload("res://scripts/DayLighting.gd")
 const NINJA_SCENERY := preload("res://assets/world/ninja-adventure/tileset_village_abandoned.png")
@@ -186,6 +187,12 @@ const ROADSIDE_PROPS := [Prop.SIGNPOST, Prop.FENCE, Prop.LOGS]
 const SORTED_PROPS := [Prop.HALL, Prop.SILK_SHED, Prop.OAK, Prop.BLOSSOM_TREE, Prop.PINE, Prop.GATE, Prop.GATE_FAR, Prop.BAMBOO,
 	Prop.GROVE_TREE, Prop.GROVE_CLUSTER, Prop.WILLOW, Prop.TALL_BAMBOO,
 	Prop.GRAIN_SACK, Prop.OPEN_SACK, Prop.JAR, Prop.LIDDED_JAR] + ROCK_PROPS + ROADSIDE_PROPS
+const WIND_FLEXIBILITY := {
+	Prop.OAK: FOLIAGE_WIND.CROWN, Prop.BLOSSOM_TREE: FOLIAGE_WIND.CROWN,
+	Prop.GROVE_TREE: FOLIAGE_WIND.CROWN, Prop.GROVE_CLUSTER: FOLIAGE_WIND.CROWN,
+	Prop.PINE: FOLIAGE_WIND.NEEDLES, Prop.WILLOW: FOLIAGE_WIND.WILLOW,
+	Prop.BAMBOO: FOLIAGE_WIND.STEM, Prop.TALL_BAMBOO: FOLIAGE_WIND.STEM,
+}
 const LEAFY_PROPS := [Prop.OAK, Prop.BLOSSOM_TREE, Prop.GROVE_TREE, Prop.GROVE_CLUSTER, Prop.SHRUB, Prop.FERN,
 	Prop.FLOWERS, Prop.WILLOW, Prop.BANK_GRASS, Prop.TALL_BAMBOO, Prop.RAVINE_SHOOT, Prop.RAVINE_RUSH,
 	Prop.WHITE_BLOOM, Prop.PINK_BLOOM]
@@ -559,6 +566,8 @@ func _prepare_map() -> void:
 	if not is_inside_tree():
 		return
 	var props_layer := get_parent().get_node("Scenery") as Node2D
+	var wind := FOLIAGE_WIND.new()
+	add_child(wind)
 	for placement in props:
 		if placement.z not in SORTED_PROPS:
 			continue
@@ -566,6 +575,8 @@ func _prepare_map() -> void:
 		var sprite := _place_sprite(props_layer, foot,
 			_prop_bounds(Vector2.ZERO, placement.z).position, _prop_texture(placement.z, foot))
 		scenery[sprite] = placement.z
+		if WIND_FLEXIBILITY.has(placement.z):
+			wind.attach(sprite, WIND_FLEXIBILITY[placement.z])
 	if wilderness:
 		var lookout := atlas_texture(RAVINE_ART, Rect2(146, 0, 48, 40))
 		scenery[_place_sprite(props_layer, RavineLayout.LOOKOUT, Vector2(-24, -38), lookout)] = SCENE_LANDMARK
@@ -574,7 +585,7 @@ func _prepare_map() -> void:
 		_place_ravine_wayposts(props_layer)
 	else:
 		_place_estate_wayposts(props_layer)
-		south_pond.place_bank_plants(props_layer)
+		south_pond.place_bank_plants(props_layer, wind)
 		var pavilion_texture := atlas_texture(ESTATE_ART, PAVILION_REGION)
 		var pavilion := _place_sprite(props_layer, SOUTH_PAVILION, _building_offset(PAVILION_REGION.size), pavilion_texture)
 		scenery[pavilion] = SCENE_LANDMARK

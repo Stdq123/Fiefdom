@@ -2,6 +2,7 @@ extends "res://scripts/WaterSurface.gd"
 
 const BED := "res://assets/world/south-pond.png"
 const PLANTS := "res://assets/world/pond-margin-plants.png"
+const FOLIAGE_WIND := preload("res://scripts/FoliageWind.gd")
 const BANK := Rect2(158, 624, 200, 152)
 const LOTUS := Rect2(0, 0, 32, 25)
 const CATTAIL := Rect2(32, 0, 24, 32)
@@ -40,13 +41,15 @@ func draw_bed(ground: CanvasItem) -> void:
 		tint *= Color("#d4e3df")
 	ground.draw_texture_rect_region(bed, BANK, bed_cell, tint)
 
-func place_bank_plants(layer: Node2D) -> void:
+func place_bank_plants(layer: Node2D, wind: FOLIAGE_WIND) -> void:
 	for foot: Vector2 in LOTUS_FEET:
 		lotus_plants.append(_plant(layer, foot, LOTUS))
 	lotus_plants[1].scale = Vector2(0.74, 0.74)
 	lotus_plants[1].flip_h = true
 	for foot: Vector2 in CATTAIL_FEET:
-		cattails.append(_plant(layer, foot, CATTAIL))
+		var clump := _plant(layer, foot, CATTAIL)
+		wind.attach(clump, FOLIAGE_WIND.STEM)
+		cattails.append(clump)
 	cattails[0].scale = Vector2(0.84, 0.84)
 	cattails[1].flip_h = true
 	_dress_plants()

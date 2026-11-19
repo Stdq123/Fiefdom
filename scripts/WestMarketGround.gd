@@ -8,6 +8,7 @@ const YARD_DISPLAY := preload("res://scripts/MarketYardDisplay.gd")
 const DYE_VAT := preload("res://scripts/MarketDyeVat.gd")
 const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
 const ROAD_WEATHER := preload("res://scripts/RoadWeather.gd")
+const FOLIAGE_WIND := preload("res://scripts/FoliageWind.gd")
 const FIXTURE_ART := preload("res://assets/world/west-market-fixtures.png")
 const BACKDROP := Rect2(-1600, -1300, 3200, 2600)
 const BASIN_INNER := Rect2(LAYOUT.BASIN.position + Vector2(6, 6), LAYOUT.BASIN.size - Vector2(12, 12))
@@ -362,6 +363,8 @@ func _draw_basin_piece(canvas: CanvasItem, at: Vector2, region: Rect2) -> void:
 	canvas.draw_texture_rect_region(basin_art, Rect2(at, region.size), region, tint)
 
 func place_scenery(layer: Node2D) -> void:
+	var wind := FOLIAGE_WIND.new()
+	add_child(wind)
 	var rim := Node2D.new()
 	rim.name = "BasinFront"
 	rim.position = Vector2(LAYOUT.BASIN.position.x, LAYOUT.BASIN.end.y)
@@ -376,7 +379,9 @@ func place_scenery(layer: Node2D) -> void:
 	]
 	var wet_tint := Color(0.88, 0.94, 0.99) if Global.has_rain() else Color.WHITE
 	for index in TREE_FEET.size():
-		_prop(layer, TREE_FEET[index], tree_art[index % tree_art.size()], 45.0, wet_tint)
+		var variant := index % tree_art.size()
+		var tree := _prop(layer, TREE_FEET[index], tree_art[variant], 45.0, wet_tint)
+		wind.attach(tree, LANDSCAPE.WIND_FLEXIBILITY[TREE_PATTERN[variant]])
 	var fence := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, LANDSCAPE.ESTATE_SITE_REGIONS[LANDSCAPE.Prop.FENCE])
 	for foot: Vector2 in FENCE_FEET:
 		_prop(layer, foot, fence, 45.0, wet_tint)
@@ -385,7 +390,7 @@ func place_scenery(layer: Node2D) -> void:
 	for detail: Vector3i in PROP_DETAILS:
 		var foot := Vector2(detail.x, detail.y)
 		if detail.z == LANDSCAPE.Prop.REEDS:
-			_prop(layer, foot, reedbed, 26.0, plant_tint)
+			wind.attach(_prop(layer, foot, reedbed, 26.0, plant_tint), FOLIAGE_WIND.STEM)
 		else:
 			var prop := LANDSCAPE.Prop.BOULDER if detail.z == LANDSCAPE.Prop.ROCK else detail.z
 			var texture := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, LANDSCAPE.ESTATE_SITE_REGIONS[prop])
@@ -414,7 +419,7 @@ func _place_dye_vat(layer: Node2D, vat_name: StringName, foot: Vector2, vat_scal
 	layer.add_child(vat)
 	_dye_vats.append(vat)
 
-func _prop(layer: Node2D, foot: Vector2, texture: AtlasTexture, baseline: float, tint: Color) -> void:
+func _prop(layer: Node2D, foot: Vector2, texture: AtlasTexture, baseline: float, tint: Color) -> Sprite2D:
 	var sprite := Sprite2D.new()
 	sprite.centered = false
 	sprite.texture = texture
@@ -422,3 +427,4 @@ func _prop(layer: Node2D, foot: Vector2, texture: AtlasTexture, baseline: float,
 	sprite.offset = Vector2(-texture.get_width() * 0.5, -baseline)
 	sprite.self_modulate = tint
 	layer.add_child(sprite)
+	return sprite
