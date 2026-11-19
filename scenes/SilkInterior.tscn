@@ -142,7 +142,7 @@ centered = false
 position = Vector2(0, -12)
 shape = SubResource("Shape_tray")
 
-[node name="Hint" type="Label" parent="SilkwormTray"]
+[node name="Hint" type="Label" parent="SilkwormTray" groups=["interaction_prompt"]]
 texture_filter = 2
 visible = false
 z_index = 7
@@ -176,7 +176,7 @@ centered = false
 position = Vector2(-1, -8)
 shape = SubResource("Shape_reel")
 
-[node name="Hint" type="Label" parent="Reel"]
+[node name="Hint" type="Label" parent="Reel" groups=["interaction_prompt"]]
 texture_filter = 2
 visible = false
 z_index = 7
@@ -210,7 +210,7 @@ centered = false
 position = Vector2(0, -14)
 shape = SubResource("Shape_loom")
 
-[node name="Hint" type="Label" parent="Loom"]
+[node name="Hint" type="Label" parent="Loom" groups=["interaction_prompt"]]
 texture_filter = 2
 visible = false
 z_index = 7

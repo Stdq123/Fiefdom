@@ -244,6 +244,9 @@ func _place_caption(cell: Vector2i, text: String, tone: Color, plots: Array[Vect
 	area = Rect2(area.position - margin, area.size + margin * 2.0)
 	var occupied: Array[Rect2] = hud.map_obstacles()
 	occupied.append(area)
+	var prompt: Control = world.player.interaction_prompt
+	if prompt.is_visible_in_tree():
+		occupied.append(prompt.get_global_rect().grow(4.0))
 	var player_body: Sprite2D = world.player.sprite
 	if player_body.is_visible_in_tree():
 		occupied.append((player_body.get_global_transform_with_canvas() * player_body.get_rect()).grow(2.0))
@@ -253,52 +256,12 @@ func _place_caption(cell: Vector2i, text: String, tone: Color, plots: Array[Vect
 			has_worker = true
 			var body := worker.sprite
 			occupied.append((body.get_global_transform_with_canvas() * body.get_rect()).grow(2.0))
-	var screen_position := _fit_caption(at, area, bounds, occupied, has_worker)
+	var screen_position := HintPlacement.around(at, area, caption.size, bounds, occupied, has_worker)
 	caption.scale = Vector2.ONE / scale_in_view
 	show()
 	caption.visible = screen_position != Vector2.INF
 	if caption.visible:
 		caption.position = transform.affine_inverse() * screen_position - position
-
-func _fit_caption(at: Vector2, field: Rect2, bounds: Rect2, occupied: Array[Rect2], below_first: bool) -> Vector2:
-	var minimum := bounds.position.ceil()
-	var maximum := (bounds.end - caption.size).floor()
-	if maximum.x < minimum.x or maximum.y < minimum.y:
-		return Vector2.INF
-	var center := (at - caption.size * 0.5).round().clamp(minimum, maximum)
-	var above := Vector2(center.x, floorf(field.position.y - caption.size.y))
-	var below := Vector2(center.x, ceilf(field.end.y))
-	var right := Vector2(ceilf(field.end.x), center.y)
-	var left := Vector2(floorf(field.position.x - caption.size.x), center.y)
-	for anchor: Vector2 in [below if below_first else above, above if below_first else below, right, left]:
-		if bounds.encloses(Rect2(anchor, caption.size)) and _caption_clear(anchor, occupied):
-			return anchor
-
-	# A free rectangle starts at its preferred alignment, the window edge, or a blocker edge.
-	var columns := PackedFloat32Array([center.x, minimum.x, maximum.x])
-	var rows := PackedFloat32Array([center.y, minimum.y, maximum.y])
-	for blocker in occupied:
-		columns.append(clampf(floorf(blocker.position.x - caption.size.x), minimum.x, maximum.x))
-		columns.append(clampf(ceilf(blocker.end.x), minimum.x, maximum.x))
-		rows.append(clampf(floorf(blocker.position.y - caption.size.y), minimum.y, maximum.y))
-		rows.append(clampf(ceilf(blocker.end.y), minimum.y, maximum.y))
-	var best := Vector2.INF
-	var distance := INF
-	for y in rows:
-		for x in columns:
-			var candidate := Vector2(x, y)
-			var gap := at.distance_squared_to(candidate + caption.size * 0.5)
-			if gap < distance and _caption_clear(candidate, occupied):
-				best = candidate
-				distance = gap
-	return best
-
-func _caption_clear(at: Vector2, occupied: Array[Rect2]) -> bool:
-	var rect := Rect2(at, caption.size)
-	for blocker in occupied:
-		if blocker.intersects(rect):
-			return false
-	return true
 
 func _draw() -> void:
 	var half_cell := Vector2(tile_map.tile_set.tile_size) / 2 - Vector2.ONE

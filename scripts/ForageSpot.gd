@@ -17,6 +17,7 @@ var focused := false
 
 func _ready() -> void:
 	hint = Label.new()
+	hint.add_to_group(&"interaction_prompt")
 	hint.material = preload("res://resources/world_hint_material.tres")
 	hint.position.x = -41.0
 	hint.size.x = 82
@@ -31,6 +32,7 @@ func _ready() -> void:
 	GameEvents.day_advanced.connect(_refresh.unbind(1))
 	GameEvents.health_changed.connect(_refresh.unbind(1))
 	if medicinal:
+		pack_button.add_to_group(&"interaction_prompt_obstacle")
 		pack_button.pressed.connect(_pack_herbs)
 		GameEvents.wild_herbs_changed.connect(_refresh)
 	_refresh()

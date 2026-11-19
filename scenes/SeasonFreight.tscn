@@ -28,7 +28,7 @@ position = Vector2(-2, -6)
 shape = SubResource("ParkedCart")
 disabled = true
 
-[node name="Sign" type="Label" parent="."]
+[node name="Sign" type="Label" parent="." groups=["interaction_prompt"]]
 material = ExtResource("3_hint")
 z_index = 6
 offset_right = 68.0

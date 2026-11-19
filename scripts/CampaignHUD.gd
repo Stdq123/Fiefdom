@@ -79,6 +79,7 @@ func add_field_return(walker: Player, choose_trip: Callable) -> void:
 	_return_player = walker
 	field_return_button = Button.new()
 	field_return_button.name = "FieldReturn"
+	field_return_button.add_to_group(&"interaction_prompt_obstacle")
 	var work := Global.field_return_caption()
 	field_return_button.text = "回井田" if work.is_empty() else "接着田务"
 	field_return_button.tooltip_text = "沿路指引回第一块井田的田口" if work.is_empty() else "回封地后查看先前的田务 · " + work
@@ -111,6 +112,7 @@ func _setup_backpack_button() -> void:
 	if backpack_trigger.is_empty():
 		backpack_button = Button.new()
 		backpack_button.name = "BackpackButton"
+		backpack_button.add_to_group(&"interaction_prompt_obstacle")
 		view.add_child(backpack_button)
 		backpack_button.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 		backpack_button.offset_left = 92.0
@@ -172,6 +174,7 @@ func _refresh_notice_visibility() -> void:
 
 func _build_status() -> void:
 	var trail_note := PanelContainer.new()
+	trail_note.add_to_group(&"interaction_prompt_obstacle")
 	trail_note.theme = HUD_THEME
 	trail_note.theme_type_variation = &"HudCalendar"
 	trail_note.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -210,6 +213,7 @@ func _build_status() -> void:
 	trail_text.add_child(trail_route_sign)
 
 	trail_vitals = VITALS.instantiate()
+	trail_vitals.add_to_group(&"interaction_prompt_obstacle")
 	view.add_child(trail_vitals)
 	trail_vitals.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
 	trail_vitals.offset_left = 16.0

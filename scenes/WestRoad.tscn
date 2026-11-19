@@ -45,7 +45,7 @@ y_sort_enabled = true
 [node name="FodderMeadow" type="Node2D" parent="." groups=["interactable"]]
 script = ExtResource("13_meadow")
 
-[node name="Hint" type="Label" parent="FodderMeadow"]
+[node name="Hint" type="Label" parent="FodderMeadow" groups=["interaction_prompt"]]
 z_index = 5
 material = ExtResource("14_hint")
 offset_left = -66.0
@@ -144,7 +144,7 @@ grow_vertical = 2
 mouse_filter = 2
 theme = ExtResource("8_theme")
 
-[node name="RoadName" type="PanelContainer" parent="UI/Control"]
+[node name="RoadName" type="PanelContainer" parent="UI/Control" groups=["interaction_prompt_obstacle"]]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -176,7 +176,7 @@ theme_type_variation = &"HudBronzeInk"
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="SettingsButton" type="Button" parent="UI/Control"]
+[node name="SettingsButton" type="Button" parent="UI/Control" groups=["interaction_prompt_obstacle"]]
 unique_name_in_owner = true
 layout_mode = 1
 anchor_left = 0.5

@@ -20,7 +20,7 @@ texture_filter = 1
 position = Vector2(0, -6)
 script = ExtResource("2_motion")
 
-[node name="InteractionHint" type="Label" parent="."]
+[node name="InteractionHint" type="Label" parent="." groups=["interaction_prompt"]]
 z_index = 2
 material = ExtResource("3_world_hint")
 offset_left = -58.0

@@ -27,7 +27,7 @@ position = Vector2(0, -1)
 shape = SubResource("TableFootprint")
 disabled = true
 
-[node name="Hint" type="Label" parent="Table"]
+[node name="Hint" type="Label" parent="Table" groups=["interaction_prompt"]]
 visible = false
 z_index = 6
 material = ExtResource("3_hint")

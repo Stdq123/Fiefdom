@@ -141,7 +141,7 @@ centered = false
 position = Vector2(-1, -7)
 shape = SubResource("Shape_shelf")
 
-[node name="Hint" type="Label" parent="DecorShelf"]
+[node name="Hint" type="Label" parent="DecorShelf" groups=["interaction_prompt"]]
 texture_filter = 2
 visible = false
 z_index = 7
@@ -194,7 +194,7 @@ centered = false
 position = Vector2(0, -5)
 shape = SubResource("Shape_desk")
 
-[node name="Hint" type="Label" parent="StudyDesk"]
+[node name="Hint" type="Label" parent="StudyDesk" groups=["interaction_prompt"]]
 texture_filter = 2
 visible = false
 z_index = 7
@@ -225,7 +225,7 @@ centered = false
 position = Vector2(0, -15)
 shape = SubResource("Shape_bed")
 
-[node name="Hint" type="Label" parent="Bed"]
+[node name="Hint" type="Label" parent="Bed" groups=["interaction_prompt"]]
 texture_filter = 2
 visible = false
 z_index = 7
@@ -256,7 +256,7 @@ centered = false
 position = Vector2(0, -5)
 shape = SubResource("Shape_clothes")
 
-[node name="Hint" type="Label" parent="ClothesRack"]
+[node name="Hint" type="Label" parent="ClothesRack" groups=["interaction_prompt"]]
 texture_filter = 2
 visible = false
 z_index = 7

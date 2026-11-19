@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://player_scene_uid"]
+[gd_scene load_steps=9 format=3 uid="uid://player_scene_uid"]
 
 [ext_resource type="Script" path="res://scripts/Player.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/characters/player.png" id="2_sprite"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/ToolGesture.gd" id="4_tool"]
 [ext_resource type="Theme" path="res://resources/game_theme.tres" id="5_theme"]
 [ext_resource type="Material" path="res://resources/world_hint_material.tres" id="6_world_hint"]
+[ext_resource type="PackedScene" path="res://scenes/InteractionPrompt.tscn" id="7_prompt"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(14, 14)
@@ -39,7 +40,7 @@ zoom = Vector2(2, 2)
 
 [node name="MealUI" type="CanvasLayer" parent="."]
 
-[node name="MealButton" type="Button" parent="MealUI"]
+[node name="MealButton" type="Button" parent="MealUI" groups=["interaction_prompt_obstacle"]]
 visible = false
 anchor_top = 1.0
 anchor_bottom = 1.0
@@ -53,3 +54,7 @@ texture_filter = 1
 theme = ExtResource("5_theme")
 theme_override_font_sizes/font_size = 15
 theme_override_constants/icon_max_width = 26
+
+[node name="InteractionLayer" type="CanvasLayer" parent="."]
+
+[node name="InteractionPrompt" parent="InteractionLayer" instance=ExtResource("7_prompt")]

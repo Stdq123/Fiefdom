@@ -59,6 +59,7 @@ func _ready() -> void:
 	Preferences.bindings_changed.connect(_refresh_control_hints)
 	hud.refresh_farm_status()
 	world.tile_map.get_node("FieldCursor").hud = hud
+	world.player.interaction_prompt.estate_obstacles = hud.map_obstacles
 	directions.setup(world, hud)
 	if not Global.ravine_trip_target.is_empty():
 		directions.follow_ravine(Global.ravine_trip_target)

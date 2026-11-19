@@ -68,7 +68,7 @@ position = Vector2(0, -21)
 [node name="Right" type="Sprite2D" parent="Samples"]
 position = Vector2(26, -21)
 
-[node name="Hint" type="Label" parent="."]
+[node name="Hint" type="Label" parent="." groups=["interaction_prompt"]]
 visible = false
 z_index = 6
 material = ExtResource("4_hint")

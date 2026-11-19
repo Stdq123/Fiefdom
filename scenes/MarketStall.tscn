@@ -31,7 +31,7 @@ shape = SubResource("CounterBase")
 [node name="SideFoot" type="CollisionPolygon2D" parent="Stand"]
 polygon = PackedVector2Array(33, -24, 44, -29, 44, -9, 33, -3)
 
-[node name="Sign" type="Label" parent="."]
+[node name="Sign" type="Label" parent="." groups=["interaction_prompt"]]
 material = ExtResource("2_hint")
 z_index = 4
 offset_left = -45.0

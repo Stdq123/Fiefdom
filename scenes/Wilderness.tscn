@@ -134,7 +134,7 @@ water_offset = Vector2(-45, -7)
 [node name="RaftLanding" type="Node2D" parent="." groups=["interactable"]]
 script = ExtResource("14_raft_landing")
 
-[node name="Hint" type="Label" parent="RaftLanding"]
+[node name="Hint" type="Label" parent="RaftLanding" groups=["interaction_prompt"]]
 z_index = 6
 material = ExtResource("15_hint")
 offset_left = -47.0

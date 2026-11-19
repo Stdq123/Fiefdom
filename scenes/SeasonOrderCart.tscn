@@ -16,7 +16,7 @@ script = ExtResource("1_cart")
 texture = SubResource("BoardArt")
 position = Vector2(-35, -21)
 
-[node name="Sign" type="Label" parent="."]
+[node name="Sign" type="Label" parent="." groups=["interaction_prompt"]]
 material = ExtResource("3_hint")
 z_index = 4
 offset_left = -89.0

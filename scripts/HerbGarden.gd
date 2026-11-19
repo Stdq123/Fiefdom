@@ -9,6 +9,7 @@ var wait_days := 0
 
 func _ready() -> void:
 	hint = Label.new()
+	hint.add_to_group(&"interaction_prompt")
 	hint.material = preload("res://resources/world_hint_material.tres")
 	hint.position = Vector2(-74, -35)
 	hint.size.x = 148

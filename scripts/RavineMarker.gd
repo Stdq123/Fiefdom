@@ -9,6 +9,7 @@ var focused := false
 func _ready() -> void:
 	INSCRIPTION.place(self, Vector2(0, -3), INSCRIPTION.Form.SURVEY, "今日水迹")
 	hint = Label.new()
+	hint.add_to_group(&"interaction_prompt")
 	hint.material = preload("res://resources/world_hint_material.tres")
 	hint.position = Vector2(-72, -38)
 	hint.size.x = 144

@@ -33,7 +33,7 @@ mouse_filter = 2
 script = ExtResource("1_region")
 keep_focus_in_map = true
 
-[node name="RoadMap" type="Button" parent="."]
+[node name="RoadMap" type="Button" parent="." groups=["interaction_prompt_obstacle"]]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1

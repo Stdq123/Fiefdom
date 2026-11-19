@@ -108,7 +108,7 @@ visible = false
 position = Vector2(-43, 51)
 script = ExtResource("hall_rank_book")
 
-[node name="Hint" type="Label" parent="World/Scenery/HallRankBook"]
+[node name="Hint" type="Label" parent="World/Scenery/HallRankBook" groups=["interaction_prompt"]]
 visible = false
 z_index = 6
 material = ExtResource("24_world_hint")
@@ -129,7 +129,7 @@ position = Vector2(42, 42)
 texture_filter = 1
 script = ExtResource("first_tribute_stand")
 
-[node name="Hint" type="Label" parent="World/Scenery/FirstTributeStand"]
+[node name="Hint" type="Label" parent="World/Scenery/FirstTributeStand" groups=["interaction_prompt"]]
 visible = false
 z_index = 6
 material = ExtResource("24_world_hint")
@@ -173,7 +173,7 @@ position = Vector2(8, -9)
 visible = false
 y_sort_enabled = true
 
-[node name="Hint" type="Label" parent="World/Scenery/SeedGarden"]
+[node name="Hint" type="Label" parent="World/Scenery/SeedGarden" groups=["interaction_prompt"]]
 visible = false
 z_index = 6
 material = ExtResource("24_world_hint")
@@ -198,7 +198,7 @@ visible = false
 texture_filter = 1
 script = ExtResource("36_estate_record")
 
-[node name="Hint" type="Label" parent="World/Scenery/EndingRecord"]
+[node name="Hint" type="Label" parent="World/Scenery/EndingRecord" groups=["interaction_prompt"]]
 visible = false
 z_index = 6
 material = ExtResource("24_world_hint")
@@ -230,7 +230,7 @@ polygon = PackedVector2Array(-6, -13, 6, -13, 8, -10, 8, -3, 6, 0, -6, 0, -8, -3
 [node name="Runoff" type="Node2D" parent="World/WaterSource"]
 z_index = -1
 
-[node name="Hint" type="Label" parent="World/WaterSource"]
+[node name="Hint" type="Label" parent="World/WaterSource" groups=["interaction_prompt"]]
 z_index = 1
 material = ExtResource("24_world_hint")
 offset_left = -64.0
@@ -317,7 +317,7 @@ script = ExtResource("13_herb_garden")
 position = Vector2(-12, 44)
 script = ExtResource("23_hall_rest")
 
-[node name="InteractionHint" type="Label" parent="World/HallRest"]
+[node name="InteractionHint" type="Label" parent="World/HallRest" groups=["interaction_prompt"]]
 visible = false
 z_index = 7
 material = ExtResource("24_world_hint")
@@ -370,7 +370,7 @@ texture_filter = 1
 position = Vector2(0, -13)
 script = ExtResource("35_neighbor_motion")
 
-[node name="InteractionHint" type="Label" parent="World/TaxEnvoy"]
+[node name="InteractionHint" type="Label" parent="World/TaxEnvoy" groups=["interaction_prompt"]]
 visible = false
 z_index = 7
 material = ExtResource("24_world_hint")
@@ -447,7 +447,7 @@ script = ExtResource("15_season_board")
 [node name="Approach" type="Marker2D" parent="World/SeasonBoard"]
 position = Vector2(0, 21)
 
-[node name="Hint" type="Label" parent="World/SeasonBoard"]
+[node name="Hint" type="Label" parent="World/SeasonBoard" groups=["interaction_prompt"]]
 z_index = 6
 material = ExtResource("24_world_hint")
 offset_left = -43.0
@@ -465,7 +465,7 @@ horizontal_alignment = 1
 [node name="FreightBench" type="Node2D" parent="World" groups=["interactable"]]
 script = ExtResource("freight_bench")
 
-[node name="Hint" type="Label" parent="World/FreightBench"]
+[node name="Hint" type="Label" parent="World/FreightBench" groups=["interaction_prompt"]]
 visible = false
 z_index = 6
 material = ExtResource("24_world_hint")
@@ -528,7 +528,7 @@ position = Vector2(101, 421)
 position = Vector2(-25, 446)
 script = ExtResource("18_road_rest")
 
-[node name="Hint" type="Label" parent="World/RoadRest"]
+[node name="Hint" type="Label" parent="World/RoadRest" groups=["interaction_prompt"]]
 z_index = 6
 material = ExtResource("24_world_hint")
 offset_left = -56.0
@@ -567,7 +567,7 @@ z_index = -1
 
 [node name="RainLamps" type="Node2D" parent="World/PavilionRest"]
 
-[node name="Hint" type="Label" parent="World/PavilionRest"]
+[node name="Hint" type="Label" parent="World/PavilionRest" groups=["interaction_prompt"]]
 visible = false
 z_index = 6
 material = ExtResource("24_world_hint")
@@ -586,7 +586,7 @@ horizontal_alignment = 1
 position = Vector2(-52, 238)
 script = ExtResource("19_rotation_book")
 
-[node name="Hint" type="Label" parent="World/FieldRotationBook"]
+[node name="Hint" type="Label" parent="World/FieldRotationBook" groups=["interaction_prompt"]]
 z_index = 6
 material = ExtResource("24_world_hint")
 offset_left = -48.0
@@ -609,7 +609,7 @@ script = ExtResource("9_drive")
 [node name="LaneMarks" type="Node2D" parent="World/DrivingPractice"]
 z_index = -1
 
-[node name="Hint" type="Label" parent="World/DrivingPractice"]
+[node name="Hint" type="Label" parent="World/DrivingPractice" groups=["interaction_prompt"]]
 z_index = 6
 material = ExtResource("24_world_hint")
 offset_left = -63.0
@@ -654,7 +654,7 @@ theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
 
-[node name="BookHint" type="Label" parent="World/SpringGathering"]
+[node name="BookHint" type="Label" parent="World/SpringGathering" groups=["interaction_prompt"]]
 material = ExtResource("24_world_hint")
 z_index = 6
 offset_left = -34.0

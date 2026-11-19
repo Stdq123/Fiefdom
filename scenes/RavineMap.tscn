@@ -33,7 +33,7 @@ mouse_filter = 2
 script = ExtResource("1_map")
 keep_focus_in_map = true
 
-[node name="OpenMap" type="Button" parent="."]
+[node name="OpenMap" type="Button" parent="." groups=["interaction_prompt_obstacle"]]
 unique_name_in_owner = true
 layout_mode = 1
 anchor_left = 0.5

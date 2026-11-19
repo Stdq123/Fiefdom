@@ -101,7 +101,7 @@ visible = false
 position = Vector2(8, -9)
 texture = ExtResource("27_bundle")
 
-[node name="Hint" type="Label" parent="Dyer"]
+[node name="Hint" type="Label" parent="Dyer" groups=["interaction_prompt"]]
 visible = false
 z_index = 4
 material = ExtResource("9_hint")
@@ -258,7 +258,7 @@ grow_vertical = 2
 mouse_filter = 2
 theme = ExtResource("10_theme")
 
-[node name="MarketName" type="PanelContainer" parent="UI/Control"]
+[node name="MarketName" type="PanelContainer" parent="UI/Control" groups=["interaction_prompt_obstacle"]]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -319,7 +319,7 @@ offset_right = 294.0
 offset_bottom = 56.0
 mouse_filter = 2
 
-[node name="SettingsButton" type="Button" parent="UI/Control/Wallet"]
+[node name="SettingsButton" type="Button" parent="UI/Control/Wallet" groups=["interaction_prompt_obstacle"]]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3

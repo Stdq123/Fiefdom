@@ -80,6 +80,7 @@ func resume_from_south_trail() -> bool:
 func _setup_settings(view: Control) -> void:
 	var button := Button.new()
 	button.name = "SettingsButton"
+	button.add_to_group(&"interaction_prompt_obstacle")
 	button.text = "设置"
 	button.icon = HUDIcons.icon(HUDIcons.Symbol.SETTINGS)
 	button.theme = HUD_THEME

@@ -50,7 +50,7 @@ texture = SubResource("Texture_hearth")
 color = Color(1, 0.68, 0.38, 1)
 range_z_max = 4
 
-[node name="Hint" type="Label" parent="."]
+[node name="Hint" type="Label" parent="." groups=["interaction_prompt"]]
 visible = false
 z_index = 6
 material = ExtResource("3_hint")

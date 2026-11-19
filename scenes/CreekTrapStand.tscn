@@ -8,7 +8,7 @@ visible = false
 texture_filter = 1
 script = ExtResource("1_stand")
 
-[node name="Hint" type="Label" parent="."]
+[node name="Hint" type="Label" parent="." groups=["interaction_prompt"]]
 visible = false
 z_index = 6
 material = ExtResource("2_hint")

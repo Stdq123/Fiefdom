@@ -21,7 +21,7 @@ scale = Vector2(0.87, 0.87)
 position = Vector2(1, -3)
 scale = Vector2(0.42, 0.42)
 
-[node name="Hint" type="Label" parent="."]
+[node name="Hint" type="Label" parent="." groups=["interaction_prompt"]]
 visible = false
 z_index = 6
 material = ExtResource("3_hint")

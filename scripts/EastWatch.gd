@@ -15,6 +15,7 @@ var wind := 0.0
 
 func _ready() -> void:
 	hint = Label.new()
+	hint.add_to_group(&"interaction_prompt")
 	hint.material = preload("res://resources/world_hint_material.tres")
 	hint.position = Vector2(-64, -47)
 	hint.size.x = 128

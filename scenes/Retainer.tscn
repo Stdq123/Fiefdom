@@ -21,7 +21,7 @@ script = ExtResource("3_motion")
 [node name="ToolGesture" type="Sprite2D" parent="."]
 script = ExtResource("2_tool")
 
-[node name="InteractionHint" type="Label" parent="."]
+[node name="InteractionHint" type="Label" parent="." groups=["interaction_prompt"]]
 visible = false
 z_index = 2
 material = ExtResource("4_world_hint")

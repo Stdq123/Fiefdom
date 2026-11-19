@@ -23,6 +23,7 @@ var current_state = State.IDLE
 @onready var bow_target: Node2D = $BowTarget
 @onready var camera: Camera2D = $Camera2D
 @onready var meal_button: Button = $MealUI/MealButton
+@onready var interaction_prompt: Control = $InteractionLayer/InteractionPrompt
 
 var shake_strength: float = 0.0
 var shake_decay: float = 5.0
@@ -42,6 +43,7 @@ var arrow_scene = preload("res://scenes/Arrow.tscn")
 
 func _ready() -> void:
 	add_to_group("player")
+	interaction_prompt.walker = self
 	_apply_camera_zoom()
 	bow_target.draw.connect(_draw_bow_target)
 	get_window().mouse_exited.connect(_clear_bow_pointer)
@@ -109,13 +111,17 @@ func _physics_process(delta: float) -> void:
 		_update_driver(distance)
 	else:
 		_update_walk_sprite(direction, distance)
-	var next_target := _nearest_interactable()
-	if next_target != interaction_target:
-		if is_instance_valid(interaction_target) and interaction_target.has_method("set_interaction_focused"):
-			interaction_target.set_interaction_focused(false)
-		interaction_target = next_target
-		if next_target and next_target.has_method("set_interaction_focused"):
-			next_target.set_interaction_focused(true)
+	_set_interaction_target(_nearest_interactable())
+
+func _set_interaction_target(next_target: Node2D) -> void:
+	if next_target == interaction_target:
+		return
+	if is_instance_valid(interaction_target) and interaction_target.has_method("set_interaction_focused"):
+		interaction_target.set_interaction_focused(false)
+	interaction_target = next_target
+	if next_target and next_target.has_method("set_interaction_focused"):
+		next_target.set_interaction_focused(true)
+	interaction_prompt.set_target(next_target)
 
 func set_training_cart(mounted: bool) -> void:
 	training_cart.visible = mounted
