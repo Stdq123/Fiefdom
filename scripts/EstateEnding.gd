@@ -26,18 +26,28 @@ const FAREWELL_WALK := 1.15
 const FAREWELL_HOLD := 4.25
 const SCORE_FADE := 0.8
 const SCORE_DB := -6.0
+const REPORT_MARGIN := 16.0
 
 @onready var film: Control = %Film
 @onready var place: Label = %ShotPlace
 @onready var caption: Label = %ShotCaption
 @onready var skip_button: Button = %SkipEnding
 @onready var report: Control = %Report
+@onready var report_panel: PanelContainer = $Report/Panel
+@onready var report_stack: VBoxContainer = $Report/Panel/Stack
+@onready var report_header: VBoxContainer = %HeadingStack
+@onready var report_scroll: ScrollContainer = %Read
+@onready var report_body: VBoxContainer = %Body
+@onready var report_footer: VBoxContainer = %Footer
 @onready var shade: ColorRect = %ReportShade
+@onready var estate_name: Label = %EndingEstate
 @onready var date: Label = %EndingDate
 @onready var heading: Label = %EndingHeading
 @onready var volume_icon: TextureRect = %EndingVolume
 @onready var epilogue: Label = %Epilogue
 @onready var results: VBoxContainer = %Results
+@onready var account_title: Label = %AccountTitle
+@onready var account_key: Label = %AccountKey
 @onready var memories: VBoxContainer = %Memories
 @onready var farewell_row: PanelContainer = %Farewell
 @onready var farewell_portrait: TextureRect = %FarewellPortrait
@@ -83,6 +93,15 @@ var ending_saved := false
 var shot := Shot.RECORD
 
 func _ready() -> void:
+	for label: Label in [caption, estate_name, date, epilogue, farewell_line, restore_detail]:
+		InterfaceFont.scale_reading_text(label)
+	var bar := report_scroll.get_v_scroll_bar()
+	bar.theme = HUD_THEME
+	bar.theme_type_variation = &"HudJournalBar"
+	bar.focus_mode = Control.FOCUS_ALL
+	for section: Control in [report_header, report_body, report_footer]:
+		section.minimum_size_changed.connect(_fit_report_body, CONNECT_DEFERRED)
+	resized.connect(_fit_report_body, CONNECT_DEFERRED)
 	for button in [skip_button, continue_button, replay_button, restore_button, save_button, title_button]:
 		button.theme = HUD_THEME
 		button.theme_type_variation = &"HudButton"
@@ -160,6 +179,12 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			close_requested.emit()
 		else:
 			_show_record()
+	elif report.visible and event is InputEventKey and event.pressed and event.keycode in [KEY_PAGEUP, KEY_PAGEDOWN]:
+		var bar := report_scroll.get_v_scroll_bar()
+		if bar.visible:
+			var step := 1 if event.keycode == KEY_PAGEDOWN else -1
+			report_scroll.scroll_vertical += step * maxi(1, roundi(bar.page) - 24)
+			get_viewport().set_input_as_handled()
 
 func _exit_tree() -> void:
 	if is_instance_valid(stage):
@@ -417,20 +442,33 @@ func _show_record() -> void:
 	film.hide()
 	shade.show()
 	report.show()
+	report_scroll.set_deferred("scroll_vertical", 0)
+	_fit_report_body.call_deferred()
 	_focus_action(title_button if archive_open else continue_button)
 	film_finished.emit()
+
+func _fit_report_body() -> void:
+	var fixed_height := report_panel.get_theme_stylebox("panel").get_minimum_size().y
+	fixed_height += report_header.get_combined_minimum_size().y + report_footer.get_combined_minimum_size().y
+	fixed_height += report_stack.get_theme_constant("separation") * 2.0
+	var available := maxf(0.0, get_viewport_rect().size.y - REPORT_MARGIN * 2.0 - fixed_height)
+	report_scroll.custom_minimum_size.y = minf(available, report_body.get_combined_minimum_size().y)
 
 func _populate_record() -> void:
 	var record := Global.ending_record
 	traditional = record["outcome"] == Global.Outcome.TRADITIONAL
 	accounts = record["accounts"]
 	has_route_totals = accounts.front().has("target")
+	account_title.text = "路线结算" if has_route_totals else "封地账目"
+	account_key.visible = has_route_totals
+	estate_name.text = Global.campaign_name
 	heading.text = "守礼安邦" if traditional else "税亩富民"
 	var choice := Global.TaxReformChoice.TRADITIONAL if traditional else Global.TaxReformChoice.REFORMED
 	volume_icon.texture = COUNCIL_IMPLEMENTS.plate(choice)
 	var accent := Color("#edca83") if traditional else Color("#b4d7c5")
 	heading.add_theme_color_override("font_color", accent)
 	date.text = record["date"]
+	%Notes.visible = not record["memories"].is_empty()
 	epilogue.text = ("公田与私田的旧约仍在。王庭收下贡簿，准这片封地继续行井田之制。" if traditional else
 		"各户的田亩与收成有了新册。王庭准行新制，封地由此按亩纳税。")
 	for account: Dictionary in accounts:
@@ -443,6 +481,7 @@ func _populate_record() -> void:
 		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		line.add_theme_font_size_override("font_size", 17)
 		memories.add_child(line)
+		InterfaceFont.scale_reading_text(line)
 	var note: Variant = record.get("farewell")
 	if (note is Dictionary and note.get("speaker") in VisitorData.NEIGHBORS
 		and note.get("line") is String and not note.line.is_empty()):
@@ -456,12 +495,17 @@ func _add_result(label: String, count: String, accent: Color) -> void:
 	var row := HBoxContainer.new()
 	var name_label := Label.new()
 	name_label.text = label
-	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	name_label.add_theme_font_size_override("font_size", 17)
 	row.add_child(name_label)
 	var value := Label.new()
 	value.text = count
+	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	value.add_theme_font_size_override("font_size", 18)
 	value.add_theme_color_override("font_color", accent)
 	row.add_child(value)
 	results.add_child(row)
+	InterfaceFont.scale_reading_text(name_label)
+	InterfaceFont.scale_reading_text(value)

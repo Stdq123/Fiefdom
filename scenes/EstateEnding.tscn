@@ -173,9 +173,10 @@ theme_override_styles/panel = SubResource("RecordPanel")
 
 [node name="Stack" type="VBoxContainer" parent="Report/Panel"]
 layout_mode = 2
-theme_override_constants/separation = 13
+theme_override_constants/separation = 11
 
 [node name="HeadingStack" type="VBoxContainer" parent="Report/Panel/Stack"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 2
 
@@ -187,9 +188,21 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 2
 
-[node name="EndingDate" type="Label" parent="Report/Panel/Stack/HeadingStack/Masthead/Title"]
+[node name="Identity" type="HFlowContainer" parent="Report/Panel/Stack/HeadingStack/Masthead/Title"]
+layout_mode = 2
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 2
+
+[node name="EndingEstate" type="Label" parent="Report/Panel/Stack/HeadingStack/Masthead/Title/Identity"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_colors/font_color = Color(0.97, 0.878, 0.672, 1)
+theme_override_font_sizes/font_size = 21
+
+[node name="EndingDate" type="Label" parent="Report/Panel/Stack/HeadingStack/Masthead/Title/Identity"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.754, 0.805, 0.673, 1)
 theme_override_font_sizes/font_size = 15
 
@@ -202,73 +215,101 @@ theme_override_font_sizes/font_size = 46
 unique_name_in_owner = true
 custom_minimum_size = Vector2(160, 72)
 layout_mode = 2
+size_flags_vertical = 4
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Epilogue" type="Label" parent="Report/Panel/Stack/HeadingStack"]
+[node name="Read" type="ScrollContainer" parent="Report/Panel/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_scroll_mode = 0
+follow_focus = true
+accessibility_name = "结算明细"
+
+[node name="Body" type="VBoxContainer" parent="Report/Panel/Stack/Read"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Epilogue" type="Label" parent="Report/Panel/Stack/Read/Body"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 autowrap_mode = 3
 
-[node name="Columns" type="HBoxContainer" parent="Report/Panel/Stack"]
+[node name="Columns" type="HBoxContainer" parent="Report/Panel/Stack/Read/Body"]
 layout_mode = 2
 theme_override_constants/separation = 13
 
-[node name="Accounts" type="PanelContainer" parent="Report/Panel/Stack/Columns"]
+[node name="Accounts" type="PanelContainer" parent="Report/Panel/Stack/Read/Body/Columns"]
 custom_minimum_size = Vector2(340, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("RecordInset")
 
-[node name="Stack" type="VBoxContainer" parent="Report/Panel/Stack/Columns/Accounts"]
+[node name="Stack" type="VBoxContainer" parent="Report/Panel/Stack/Read/Body/Columns/Accounts"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="Report/Panel/Stack/Columns/Accounts/Stack"]
+[node name="AccountHeading" type="HBoxContainer" parent="Report/Panel/Stack/Read/Body/Columns/Accounts/Stack"]
 layout_mode = 2
+
+[node name="AccountTitle" type="Label" parent="Report/Panel/Stack/Read/Body/Columns/Accounts/Stack/AccountHeading"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.886, 0.794, 0.558, 1)
 theme_override_font_sizes/font_size = 20
 text = "路线结算"
 
-[node name="Results" type="VBoxContainer" parent="Report/Panel/Stack/Columns/Accounts/Stack"]
+[node name="AccountKey" type="Label" parent="Report/Panel/Stack/Read/Body/Columns/Accounts/Stack/AccountHeading"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.824, 0.695, 1)
+theme_override_font_sizes/font_size = 14
+text = "实绩 / 门槛"
+vertical_alignment = 1
+
+[node name="Results" type="VBoxContainer" parent="Report/Panel/Stack/Read/Body/Columns/Accounts/Stack"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="Notes" type="PanelContainer" parent="Report/Panel/Stack/Columns"]
+[node name="Notes" type="PanelContainer" parent="Report/Panel/Stack/Read/Body/Columns"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(356, 0)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("RecordInset")
 
-[node name="Stack" type="VBoxContainer" parent="Report/Panel/Stack/Columns/Notes"]
+[node name="Stack" type="VBoxContainer" parent="Report/Panel/Stack/Read/Body/Columns/Notes"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="Report/Panel/Stack/Columns/Notes/Stack"]
+[node name="Title" type="Label" parent="Report/Panel/Stack/Read/Body/Columns/Notes/Stack"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.886, 0.794, 0.558, 1)
 theme_override_font_sizes/font_size = 20
 text = "封地记事"
 
-[node name="Memories" type="VBoxContainer" parent="Report/Panel/Stack/Columns/Notes/Stack"]
+[node name="Memories" type="VBoxContainer" parent="Report/Panel/Stack/Read/Body/Columns/Notes/Stack"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Farewell" type="PanelContainer" parent="Report/Panel/Stack"]
+[node name="Farewell" type="PanelContainer" parent="Report/Panel/Stack/Read/Body"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_styles/panel = SubResource("RecordInset")
 
-[node name="Lineup" type="HBoxContainer" parent="Report/Panel/Stack/Farewell"]
+[node name="Lineup" type="HBoxContainer" parent="Report/Panel/Stack/Read/Body/Farewell"]
 layout_mode = 2
 theme_override_constants/separation = 13
 
-[node name="FarewellPortrait" type="TextureRect" parent="Report/Panel/Stack/Farewell/Lineup"]
+[node name="FarewellPortrait" type="TextureRect" parent="Report/Panel/Stack/Read/Body/Farewell/Lineup"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
@@ -276,29 +317,34 @@ size_flags_vertical = 4
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Words" type="VBoxContainer" parent="Report/Panel/Stack/Farewell/Lineup"]
+[node name="Words" type="VBoxContainer" parent="Report/Panel/Stack/Read/Body/Farewell/Lineup"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 theme_override_constants/separation = 4
 
-[node name="FarewellSpeaker" type="Label" parent="Report/Panel/Stack/Farewell/Lineup/Words"]
+[node name="FarewellSpeaker" type="Label" parent="Report/Panel/Stack/Read/Body/Farewell/Lineup/Words"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.886, 0.794, 0.558, 1)
 theme_override_font_sizes/font_size = 19
 
-[node name="FarewellLine" type="Label" parent="Report/Panel/Stack/Farewell/Lineup/Words"]
+[node name="FarewellLine" type="Label" parent="Report/Panel/Stack/Read/Body/Farewell/Lineup/Words"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 17
 autowrap_mode = 3
 
-[node name="Actions" type="HBoxContainer" parent="Report/Panel/Stack"]
+[node name="Footer" type="VBoxContainer" parent="Report/Panel/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Actions" type="HBoxContainer" parent="Report/Panel/Stack/Footer"]
 layout_mode = 2
 theme_override_constants/separation = 9
 
-[node name="ContinueEstate" type="Button" parent="Report/Panel/Stack/Actions"]
+[node name="ContinueEstate" type="Button" parent="Report/Panel/Stack/Footer/Actions"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 43)
 layout_mode = 2
@@ -307,7 +353,7 @@ size_flags_stretch_ratio = 1.35
 mouse_default_cursor_shape = 2
 text = "继续经营"
 
-[node name="ReplayEnding" type="Button" parent="Report/Panel/Stack/Actions"]
+[node name="ReplayEnding" type="Button" parent="Report/Panel/Stack/Footer/Actions"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 43)
 layout_mode = 2
@@ -315,7 +361,7 @@ size_flags_horizontal = 3
 mouse_default_cursor_shape = 2
 text = "重看结尾"
 
-[node name="RestoreCampaign" type="Button" parent="Report/Panel/Stack/Actions"]
+[node name="RestoreCampaign" type="Button" parent="Report/Panel/Stack/Footer/Actions"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 43)
 layout_mode = 2
@@ -323,7 +369,7 @@ size_flags_horizontal = 3
 mouse_default_cursor_shape = 2
 text = "读取通关前存档"
 
-[node name="SaveEnding" type="Button" parent="Report/Panel/Stack/Actions"]
+[node name="SaveEnding" type="Button" parent="Report/Panel/Stack/Footer/Actions"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 43)
 layout_mode = 2
@@ -331,7 +377,7 @@ size_flags_horizontal = 3
 mouse_default_cursor_shape = 2
 text = "保存结局"
 
-[node name="ReturnToTitle" type="Button" parent="Report/Panel/Stack/Actions"]
+[node name="ReturnToTitle" type="Button" parent="Report/Panel/Stack/Footer/Actions"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 43)
 layout_mode = 2
@@ -339,7 +385,7 @@ size_flags_horizontal = 3
 mouse_default_cursor_shape = 2
 text = "返回标题"
 
-[node name="EndingStatus" type="Label" parent="Report/Panel/Stack"]
+[node name="EndingStatus" type="Label" parent="Report/Panel/Stack/Footer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 21)
 layout_mode = 2
