@@ -253,6 +253,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme = ExtResource("3_hud")
 horizontal_scroll_mode = 0
+vertical_scroll_mode = 4
 
 [node name="TextLabel" type="RichTextLabel" parent="Panel/Content/Body/Speech"]
 unique_name_in_owner = true
@@ -273,10 +274,53 @@ theme = SubResource("DialogueChoices")
 theme_override_constants/h_separation = 9
 theme_override_constants/v_separation = 7
 
-[node name="ControlsHint" type="Label" parent="Panel/Content/Body"]
+[node name="ReadFooter" type="HBoxContainer" parent="Panel/Content/Body"]
 unique_name_in_owner = true
 layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="ControlsHint" type="Label" parent="Panel/Content/Body/ReadFooter"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.32, 0.20, 0.13, 1)
 theme_override_font_sizes/font_size = 14
 horizontal_alignment = 2
+autowrap_mode = 3
+
+[node name="PageControls" type="HBoxContainer" parent="Panel/Content/Body/ReadFooter"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme = SubResource("DialogueChoices")
+theme_override_constants/separation = 6
+
+[node name="PageBack" type="Button" parent="Panel/Content/Body/ReadFooter/PageControls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(86, 34)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 14
+text = "上一页"
+
+[node name="PageCount" type="Label" parent="Panel/Content/Body/ReadFooter/PageControls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(58, 0)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.32, 0.20, 0.13, 1)
+theme_override_font_sizes/font_size = 14
+horizontal_alignment = 1
+
+[node name="PageForward" type="Button" parent="Panel/Content/Body/ReadFooter/PageControls"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(86, 34)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 14
+text = "下一页"

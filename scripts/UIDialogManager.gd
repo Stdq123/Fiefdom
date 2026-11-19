@@ -44,6 +44,8 @@ const COUNCIL_HARVEST_REACTIONS := {
 
 var parent_node: Control
 var player: Player
+var _active_dialog: Control
+var _focus_before_dialog: Control
 
 func setup(host: Control, estate_player: Player) -> void:
 	parent_node = host
@@ -829,12 +831,31 @@ func _open(speaker: String, context: String, speech: String, options: Array[Stri
 
 func _present(speaker: String, context: String, speech: String, options: Array[String], disabled: Array[int], portrait: Texture2D) -> Control:
 	Global.meet_neighbor(speaker)
+	var previous := _active_dialog
+	if not is_instance_valid(previous):
+		_focus_before_dialog = parent_node.get_viewport().gui_get_focus_owner()
 	var dialog := DIALOGUE.instantiate()
-	parent_node.add_child(dialog)
-	dialog.setup(speaker, context, speech, options, disabled, portrait)
+	_active_dialog = dialog
 	player.conversation_open = true
-	dialog.tree_exited.connect(func():
-		if is_instance_valid(player):
-			player.conversation_open = false
-	)
+	if is_instance_valid(previous):
+		previous.name = "ClosingDialoguePanel"
+		previous.dismiss()
+	parent_node.add_child(dialog)
+	dialog.tree_exited.connect(_on_dialog_exited.bind(dialog))
+	dialog.setup(speaker, context, speech, options, disabled, portrait)
 	return dialog
+
+func _on_dialog_exited(dialog: Control) -> void:
+	if _active_dialog != dialog:
+		return
+	_active_dialog = null
+	if is_instance_valid(player):
+		player.conversation_open = false
+	var focus := _focus_before_dialog
+	_focus_before_dialog = null
+	if not is_instance_valid(focus) or not focus.is_visible_in_tree() or focus.focus_mode == Control.FOCUS_NONE:
+		return
+	if (focus is BaseButton and focus.disabled) or focus.get_viewport().gui_get_focus_owner() != null:
+		return
+	focus.grab_focus()
+	GamepadInput.snap_pointer_to_focus()

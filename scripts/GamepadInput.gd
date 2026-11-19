@@ -209,11 +209,13 @@ func _pad_button(id: int, button: JoyButton, pressed: bool) -> void:
 		JOY_BUTTON_LEFT_SHOULDER, JOY_BUTTON_RIGHT_SHOULDER:
 			if pressed:
 				var step := -1 if button == JOY_BUTTON_LEFT_SHOULDER else 1
-				if not _menu_controls():
+				if dialogue:
+					if not left_down:
+						dialogue.page_speech(step)
+				elif not _menu_controls():
 					GameEvents.seed_cycle_requested.emit(step)
 				elif not left_down:
-					if not dialogue or not dialogue.page_speech(step):
-						GameEvents.management_section_requested.emit(step)
+					GameEvents.management_section_requested.emit(step)
 		JOY_BUTTON_LEFT_STICK, JOY_BUTTON_RIGHT_STICK:
 			if pressed:
 				var wheel := MOUSE_BUTTON_WHEEL_UP if button == JOY_BUTTON_RIGHT_STICK else MOUSE_BUTTON_WHEEL_DOWN
