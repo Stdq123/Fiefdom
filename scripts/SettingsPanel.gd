@@ -7,12 +7,16 @@ const FRAME := preload("res://resources/estate_archive_frame.tres")
 const TITLE_CONFIRMATION := preload("res://scripts/ReturnToTitleDialog.gd")
 const VOLUME_THEME := preload("res://resources/estate_volume_theme.tres")
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
+const PANEL_FOCUS := preload("res://scripts/PanelFocus.gd")
+const VIEW_INSET := 16.0
+const LABEL_WIDTH := 124.0
 
 var session_controls := true
 var save_status: Label
 var save_button: Button
 var preferences_status: Label
 var contents: VBoxContainer
+var body_scroll: ScrollContainer
 var heading: Label
 var general: VBoxContainer
 var bindings_page: BINDINGS_PANEL
@@ -22,8 +26,10 @@ var master_slider: HSlider
 var fullscreen_button: CheckButton
 var window_size_picker: OptionButton
 var reading_size_picker: OptionButton
+var _opening_focus: Control
 
 func _ready() -> void:
+	add_to_group("settings_panel")
 	add_theme_stylebox_override("panel", FRAME)
 	contents = VBoxContainer.new()
 	contents.add_theme_constant_override("separation", 8)
@@ -34,9 +40,18 @@ func _ready() -> void:
 	heading.add_theme_font_size_override("font_size", 26)
 	heading.add_theme_color_override("font_color", Color("#ebce95"))
 	contents.add_child(heading)
+	body_scroll = ScrollContainer.new()
+	body_scroll.name = "SettingsScroll"
+	body_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	body_scroll.follow_focus = true
+	body_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	contents.add_child(body_scroll)
+	var pages := VBoxContainer.new()
+	pages.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body_scroll.add_child(pages)
 	general = VBoxContainer.new()
 	general.add_theme_constant_override("separation", 8)
-	contents.add_child(general)
+	pages.add_child(general)
 	
 	if session_controls:
 		_add_session_controls(general)
@@ -56,8 +71,10 @@ func _ready() -> void:
 	autosave_button.toggled.connect(func(enabled: bool): _show_preference_result(Preferences.set_autosave(enabled)))
 	general.add_child(autosave_button)
 	preferences_status = Label.new()
+	preferences_status.text = " "
 	preferences_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	general.add_child(preferences_status)
+	preferences_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	contents.add_child(preferences_status)
 
 	shortcuts = Button.new()
 	shortcuts.name = "KeyboardBindings"
@@ -70,12 +87,15 @@ func _ready() -> void:
 		+ "A 确认或耕作 · X 互动或节奏操作 · B 返回\n"
 		+ "LB/RB 换种 · Y 舆图 · View 历书 · RT 射箭")
 	gamepad_help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	gamepad_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	gamepad_help.add_theme_font_size_override("font_size", 16)
 	general.add_child(gamepad_help)
 
 	bindings_page = BINDINGS_PANEL.new()
 	bindings_page.hide()
-	contents.add_child(bindings_page)
+	pages.add_child(bindings_page)
+	bindings_page.status.reparent(contents, false)
+	bindings_page.status.hide()
 	close_button = Button.new()
 	close_button.name = "Close"
 	close_button.text = "关闭"
@@ -87,20 +107,40 @@ func _ready() -> void:
 		if button is not CheckButton:
 			button.theme = HUD_THEME
 			button.theme_type_variation = &"HudButton"
+	for control: Control in contents.find_children("*", "Control", true, false):
+		if control is Label or control is BaseButton:
+			InterfaceFont.scale_reading_text(control)
 	visibility_changed.connect(_on_visibility_changed)
 	_set_focus_edges()
 	contents.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, PADDING)
 	contents.minimum_size_changed.connect(_fit_contents)
+	general.minimum_size_changed.connect(_fit_contents, CONNECT_DEFERRED)
+	bindings_page.minimum_size_changed.connect(_fit_contents, CONNECT_DEFERRED)
+	get_viewport().size_changed.connect(_fit_contents, CONNECT_DEFERRED)
 	_fit_contents()
 
 func _on_visibility_changed() -> void:
 	if is_visible_in_tree():
 		AudioManager.play_menu_cue(AudioManager.MenuCue.OPEN)
 		_sync_display_controls()
+		var previous := get_viewport().gui_get_focus_owner()
+		_opening_focus = previous if previous and not is_ancestor_of(previous) else null
 		var first: Control = bindings_page.keys[KeyBindings.UP] if bindings_page.visible else master_slider
 		first.grab_focus()
 	elif not visible:
 		AudioManager.play_menu_cue(AudioManager.MenuCue.CLOSE)
+		_restore_opening_focus.call_deferred()
+
+func _restore_opening_focus() -> void:
+	if visible:
+		return
+	var viewport := get_viewport()
+	if not PANEL_FOCUS.has_popup(viewport):
+		if viewport.gui_get_focus_owner() == null and is_instance_valid(_opening_focus) and _opening_focus.is_visible_in_tree():
+			_opening_focus.grab_focus()
+		if viewport.gui_get_focus_owner():
+			GamepadInput.snap_pointer_to_focus()
+	_opening_focus = null
 
 func _set_focus_edges() -> void:
 	var first: Control = save_button if session_controls else master_slider
@@ -114,6 +154,16 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_back_or_close()
 		get_viewport().set_input_as_handled()
 
+func _input(event: InputEvent) -> void:
+	if bindings_page.visible and bindings_page.pending != &"":
+		return
+	var focused := PANEL_FOCUS.input_owner(self)
+	if focused == null:
+		return
+	if focused is HSlider and (event.is_action_pressed(&"ui_left", true) or event.is_action_pressed(&"ui_right", true)):
+		return
+	PANEL_FOCUS.keep_navigation_inside(self, focused, event)
+
 func _back_or_close() -> void:
 	if bindings_page.visible:
 		_show_bindings(false)
@@ -124,7 +174,10 @@ func _show_bindings(show_page: bool) -> void:
 	if bindings_page.visible != show_page:
 		AudioManager.play_menu_cue(AudioManager.MenuCue.PAGE)
 	general.visible = not show_page
+	preferences_status.visible = not show_page
 	bindings_page.visible = show_page
+	bindings_page.status.visible = show_page
+	body_scroll.set_deferred("scroll_vertical", 0)
 	heading.text = "键盘键位" if show_page else "系统设置"
 	close_button.text = "返回设置" if show_page else "关闭"
 	_set_focus_edges()
@@ -135,8 +188,15 @@ func _show_bindings(show_page: bool) -> void:
 		shortcuts.grab_focus()
 
 func _fit_contents() -> void:
-	var content := contents.get_combined_minimum_size() + Vector2.ONE * PADDING * 2
-	custom_minimum_size = Vector2(maxf(452.0, content.x), content.y)
+	var page: Control = bindings_page if bindings_page.visible else general
+	var feedback: Label = bindings_page.status if bindings_page.visible else preferences_status
+	var body := page.get_combined_minimum_size()
+	var fixed_height := heading.get_combined_minimum_size().y + close_button.get_combined_minimum_size().y \
+		+ feedback.get_combined_minimum_size().y + contents.get_theme_constant(&"separation") * 3 + PADDING * 2
+	var available := maxf(0.0, get_viewport_rect().size.y - VIEW_INSET * 2 - fixed_height)
+	body_scroll.custom_minimum_size.y = minf(body.y, available)
+	var scrollbar_width := body_scroll.get_v_scroll_bar().get_combined_minimum_size().x if body.y > available else 0.0
+	custom_minimum_size = Vector2(maxf(520.0, body.x + PADDING * 2 + scrollbar_width), fixed_height + body_scroll.custom_minimum_size.y)
 	size = custom_minimum_size
 	set_anchors_and_offsets_preset(Control.PRESET_CENTER, Control.PRESET_MODE_KEEP_SIZE)
 
@@ -146,7 +206,7 @@ func _add_volume_control(vbox: VBoxContainer, control_name: StringName, text: St
 	vbox.add_child(row)
 	var label := Label.new()
 	label.text = text
-	label.custom_minimum_size.x = 86
+	label.custom_minimum_size.x = LABEL_WIDTH
 	row.add_child(label)
 	var slider := HSlider.new()
 	slider.name = control_name
@@ -161,7 +221,7 @@ func _add_volume_control(vbox: VBoxContainer, control_name: StringName, text: St
 	slider.value = value
 	row.add_child(slider)
 	var amount := Label.new()
-	amount.custom_minimum_size.x = 46
+	amount.custom_minimum_size.x = 56
 	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	amount.text = "%d%%" % roundi(slider.value * 100)
 	row.add_child(amount)
@@ -177,7 +237,7 @@ func _add_display_controls(vbox: VBoxContainer) -> void:
 	vbox.add_child(row)
 	var label := Label.new()
 	label.text = "窗口尺寸"
-	label.custom_minimum_size.x = 86
+	label.custom_minimum_size.x = LABEL_WIDTH
 	row.add_child(label)
 	window_size_picker = OptionButton.new()
 	window_size_picker.name = "WindowSize"
@@ -204,12 +264,12 @@ func _add_reading_control(vbox: VBoxContainer) -> void:
 	vbox.add_child(row)
 	var label := Label.new()
 	label.text = "阅读字号"
-	label.custom_minimum_size.x = 86
+	label.custom_minimum_size.x = LABEL_WIDTH
 	row.add_child(label)
 	reading_size_picker = OptionButton.new()
 	reading_size_picker.name = "ReadingSize"
 	reading_size_picker.accessibility_name = label.text
-	reading_size_picker.tooltip_text = "调整对白、封地手记和邻里手记的文字大小。"
+	reading_size_picker.tooltip_text = "调整设置、对白和手记等界面的文字大小。"
 	reading_size_picker.custom_minimum_size.y = 34
 	reading_size_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for option in ["标准", "较大", "最大"]:
@@ -227,6 +287,7 @@ func _style_picker(picker: OptionButton) -> void:
 	var popup := picker.get_popup()
 	popup.add_theme_stylebox_override("panel", FRAME)
 	popup.add_theme_stylebox_override("hover", HUD_THEME.get_stylebox("hover", "HudButton"))
+	InterfaceFont.scale_reading_text(popup)
 
 func _sync_reading_size() -> void:
 	reading_size_picker.select(Preferences.reading_size)
@@ -287,7 +348,9 @@ func _add_session_controls(vbox: VBoxContainer) -> void:
 		actions.add_child(button)
 
 	save_status = Label.new()
+	save_status.text = " "
 	save_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	save_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vbox.add_child(save_status)
 
 func _return_to_title() -> void:

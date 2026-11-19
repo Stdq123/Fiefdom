@@ -111,14 +111,70 @@ func _settle() -> void:
 func _check_session_settings() -> bool:
 	var script := load("res://scripts/SettingsPanel.gd") as GDScript
 	var settings: Panel = script.new()
+	settings.hide()
 	current_scene.add_child(settings)
+	var entry := current_scene.get_node("Center/Menu/Settings") as Button
+	entry.grab_focus()
+	settings.show()
 	await _settle()
 	var area := root.get_visible_rect()
 	var picker := settings.find_child("ReadingSize", true, false) as OptionButton
 	var close := settings.find_child("Close", true, false) as Button
+	var volume_label := settings.master_slider.get_parent().get_child(0) as Label
+	var before := volume_label.get_theme_font_size(&"font_size")
+	var menu_font := picker.get_popup().get_theme_font_size(&"font_size")
+	picker.item_selected.emit(2)
+	await _settle()
 	if not area.encloses(settings.get_global_rect()) or not area.encloses(close.get_global_rect()) \
 			or not area.encloses(picker.get_global_rect()):
 		push_error("Session settings and the reading size picker must stay within the viewport.")
 		return false
+	if volume_label.get_theme_font_size(&"font_size") != before + 6 \
+			or picker.get_popup().get_theme_font_size(&"font_size") != menu_font + 6:
+		push_error("The setting and its popup must apply the maximum reading size immediately.")
+		return false
+	close.grab_focus()
+	for key: Key in [KEY_RIGHT, KEY_DOWN, KEY_TAB, KEY_UP, KEY_TAB]:
+		await _send_key(key)
+		var focus := root.gui_get_focus_owner()
+		if focus == null or not settings.is_ancestor_of(focus):
+			push_error("Keyboard focus escaped the settings panel.")
+			return false
+	settings.shortcuts.pressed.emit()
+	await _settle()
+	var bindings: VBoxContainer = settings.bindings_page
+	var binding: Button = bindings.keys[&"walk_up"]
+	var max_font := binding.get_theme_font_size(&"font_size")
+	var restore := bindings.find_child("RestoreBindings", true, false) as Button
+	restore.grab_focus()
+	await _settle()
+	if not settings.body_scroll.get_global_rect().encloses(restore.get_global_rect()) \
+			or settings.body_scroll.is_ancestor_of(bindings.status) \
+			or not area.encloses(bindings.status.get_global_rect()):
+		push_error("Scroll to the last key control while the status remains visible.")
+		return false
+	root.get_node("Preferences").set_reading_size(0)
+	await _settle()
+	if max_font != binding.get_theme_font_size(&"font_size") + 6:
+		push_error("Key labels must shrink again when the reading size changes.")
+		return false
+	await _send_key(KEY_ESCAPE)
+	if not settings.shortcuts.has_focus():
+		push_error("Closing the key page should focus the keyboard settings shortcut.")
+		return false
+	await _send_key(KEY_ESCAPE)
+	if not entry.has_focus() or settings.visible:
+		push_error("Closing settings should focus its opening button.")
+		return false
+	print("SETTINGS_READING labels=", before, "/", before + 6, " keyboard_follow_focus=true")
 	settings.free()
 	return true
+
+func _send_key(code: Key) -> void:
+	for pressed in [true, false]:
+		var key := InputEventKey.new()
+		key.keycode = code
+		key.physical_keycode = code
+		key.pressed = pressed
+		root.push_input(key, true)
+	await _settle()

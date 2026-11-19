@@ -12,11 +12,12 @@ var pending: StringName = &""
 var status: Label
 
 func _ready() -> void:
-	custom_minimum_size.x = 586.0
+	custom_minimum_size.x = 674.0
 	add_theme_constant_override("separation", 10)
 	var intro := Label.new()
 	intro.text = INSTRUCTIONS
 	intro.add_theme_font_size_override("font_size", 16)
+	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(intro)
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 18)
@@ -27,21 +28,20 @@ func _ready() -> void:
 	field_actions.append(KeyBindings.FILL)
 	field_actions.append(KeyBindings.ROTATE)
 	_add_column(columns, "田务", field_actions)
-	var footer := HBoxContainer.new()
-	footer.add_theme_constant_override("separation", 12)
-	add_child(footer)
 	status = Label.new()
 	status.name = "BindingStatus"
 	status.text = MENU_NOTE
 	status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	status.add_theme_font_size_override("font_size", 15)
 	status.add_theme_color_override("font_color", Color("#d4dfb7"))
-	footer.add_child(status)
+	add_child(status)
 	var restore := Button.new()
 	restore.name = "RestoreBindings"
 	restore.text = "恢复默认"
+	restore.size_flags_horizontal = Control.SIZE_SHRINK_END
 	restore.pressed.connect(_restore_defaults)
-	footer.add_child(restore)
+	add_child(restore)
 	visibility_changed.connect(_visibility_changed)
 	Preferences.bindings_changed.connect(_refresh_keys)
 	_refresh_keys()
@@ -62,10 +62,12 @@ func _add_column(columns: HBoxContainer, title: String, actions: Array[StringNam
 		var name_label := Label.new()
 		name_label.text = KeyBindings.label(action)
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		row.add_child(name_label)
 		var button := Button.new()
 		button.name = action
-		button.custom_minimum_size = Vector2(102.0, 34.0)
+		button.custom_minimum_size = Vector2(134.0, 34.0)
 		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		button.pressed.connect(_begin.bind(action))
 		row.add_child(button)

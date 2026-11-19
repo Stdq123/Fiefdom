@@ -164,7 +164,7 @@ func _process(delta: float) -> void:
 		return
 	var direction := _stick(JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y)
 	if direction.is_zero_approx() and _menu_controls():
-		direction = _stick(JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y) if _active_dialogue() or _active_backpack() else _left_direction()
+		direction = _stick(JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y) if _active_dialogue() or _active_backpack() or _settings_has_focus() else _left_direction()
 	if direction.is_zero_approx():
 		return
 	var previous := cursor.position
@@ -207,6 +207,12 @@ func _active_backpack() -> Control:
 		return backpack
 	return null
 
+func _settings_has_focus() -> bool:
+	for panel: Control in get_tree().get_nodes_in_group("settings_panel"):
+		if PANEL_FOCUS.input_owner(panel):
+			return true
+	return false
+
 func _pad_button(id: int, button: JoyButton, pressed: bool) -> void:
 	if id != device_id or (pointer_suspended and button != JOY_BUTTON_B):
 		return
@@ -217,7 +223,7 @@ func _pad_button(id: int, button: JoyButton, pressed: bool) -> void:
 			snap_pointer_to_focus()
 		return
 	var backpack := _active_backpack()
-	if backpack and UI_DIRECTIONS.has(button):
+	if UI_DIRECTIONS.has(button) and (backpack or _settings_has_focus()):
 		_action(UI_DIRECTIONS[button], pressed)
 		if pressed:
 			snap_pointer_to_focus()
