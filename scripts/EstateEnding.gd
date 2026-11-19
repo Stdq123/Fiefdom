@@ -448,6 +448,8 @@ func _show_record() -> void:
 	film_finished.emit()
 
 func _fit_report_body() -> void:
+	if not is_inside_tree():
+		return
 	var fixed_height := report_panel.get_theme_stylebox("panel").get_minimum_size().y
 	fixed_height += report_header.get_combined_minimum_size().y + report_footer.get_combined_minimum_size().y
 	fixed_height += report_stack.get_theme_constant("separation") * 2.0

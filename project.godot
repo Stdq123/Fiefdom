@@ -34,6 +34,7 @@ AudioManager="*res://scripts/AudioManager.gd"
 MapTravel="*res://scripts/MapTravel.gd"
 EventManager="*res://scripts/EventManager.gd"
 GamepadInput="*res://scripts/GamepadInput.gd"
+WindowExit="*res://scripts/WindowExit.gd"
 
 [display]
 

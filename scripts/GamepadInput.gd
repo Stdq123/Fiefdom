@@ -2,6 +2,7 @@ extends CanvasLayer
 
 signal changed
 
+const PANEL_FOCUS := preload("res://scripts/PanelFocus.gd")
 const DEADZONE := 0.22
 const TRIGGER_POINT := 0.45
 const POINTER_SPEED := 740.0
@@ -159,7 +160,7 @@ func _process(delta: float) -> void:
 		return
 	var direction := _stick(JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y)
 	if direction.is_zero_approx() and _menu_controls():
-		direction = _stick(JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y) if get_tree().has_group("dialogue_panel") else _left_direction()
+		direction = _stick(JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y) if _active_dialogue() else _left_direction()
 	if direction.is_zero_approx():
 		return
 	var previous := cursor.position
@@ -175,21 +176,31 @@ func _clamp_pointer() -> void:
 func snap_pointer_to_focus(use_focus := true) -> void:
 	if not active or pointer_suspended:
 		return
-	var focus := window.gui_get_focus_owner() if use_focus else null
+	var focus_window := window
+	for subwindow in window.get_embedded_subwindows():
+		if subwindow.has_focus():
+			focus_window = subwindow
+			break
+	var offset := Vector2(focus_window.position) if focus_window != window else Vector2.ZERO
+	var focus := focus_window.gui_get_focus_owner() if use_focus else null
 	if focus:
 		var bounds := focus.get_global_rect()
-		cursor.position = bounds.get_center()
-		if get_tree().has_group("dialogue_panel"):
+		cursor.position = bounds.get_center() + offset
+		if focus_window == window and _active_dialogue():
 			cursor.position.x = bounds.position.x + 10.0
 	else:
-		cursor.position = window.get_visible_rect().get_center()
+		cursor.position = focus_window.get_visible_rect().get_center() + offset
 	_clamp_pointer()
 	_motion(Vector2.ZERO)
+
+func _active_dialogue() -> Node:
+	var dialogue := get_tree().get_first_node_in_group("dialogue_panel")
+	return null if dialogue and PANEL_FOCUS.has_popup(window) else dialogue
 
 func _pad_button(id: int, button: JoyButton, pressed: bool) -> void:
 	if id != device_id or (pointer_suspended and button != JOY_BUTTON_B):
 		return
-	var dialogue := get_tree().get_first_node_in_group("dialogue_panel")
+	var dialogue := _active_dialogue()
 	if dialogue and DIALOGUE_MOVES.has(button):
 		if pressed:
 			dialogue.move_choice(DIALOGUE_MOVES[button])
