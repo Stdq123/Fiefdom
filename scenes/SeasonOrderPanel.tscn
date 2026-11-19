@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/SeasonOrderPanel.gd" id="1_orders"]
+[ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="2_theme"]
 
 [sub_resource type="StyleBoxFlat" id="Card"]
 content_margin_left = 18.0
@@ -19,13 +20,63 @@ corner_radius_bottom_left = 6
 corner_radius_bottom_right = 6
 
 [node name="时令单" type="VBoxContainer"]
+theme = ExtResource("2_theme")
 theme_override_constants/separation = 14
 script = ExtResource("1_orders")
 
-[node name="Title" type="Label" parent="."]
+[node name="Header" type="PanelContainer" parent="."]
 layout_mode = 2
-theme_override_font_sizes/font_size = 26
-text = "南路亭交货簿"
+theme_type_variation = &"HudLacquerTray"
+
+[node name="Row" type="HBoxContainer" parent="Header"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Heading" type="VBoxContainer" parent="Header/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 1
+
+[node name="Name" type="Label" parent="Header/Row/Heading"]
+layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 23
+autowrap_mode = 3
+
+[node name="Deadline" type="Label" parent="Header/Row/Heading"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 3
+
+[node name="OrderRoute" type="Button" parent="Header/Row"]
+visible = false
+custom_minimum_size = Vector2(0, 39)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+theme_type_variation = &"HudPrimary"
+theme_override_font_sizes/font_size = 16
+text = "指路去收货牌"
+
+[node name="CurrentPage" type="Button" parent="Header/Row"]
+custom_minimum_size = Vector2(62, 39)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+theme_type_variation = &"HudButton"
+theme_override_font_sizes/font_size = 16
+text = "本季"
+accessibility_name = "翻到本季"
+
+[node name="NextPage" type="Button" parent="Header/Row"]
+custom_minimum_size = Vector2(62, 39)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+theme_type_variation = &"HudButton"
+theme_override_font_sizes/font_size = 16
+text = "下季"
+accessibility_name = "翻到下季备货"
 
 [node name="Scroll" type="ScrollContainer" parent="."]
 layout_mode = 2
@@ -38,12 +89,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 14
 
-[node name="Lead" type="Label" parent="Scroll/Pages"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.73, 0.8, 0.66, 1)
-text = "每季可交一单。跟踪下季备货后，夜间备粮也会留出下季所需的作物。"
-autowrap_mode = 3
-
 [node name="Current" type="PanelContainer" parent="Scroll/Pages"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("Card")
@@ -51,20 +96,6 @@ theme_override_styles/panel = SubResource("Card")
 [node name="Content" type="VBoxContainer" parent="Scroll/Pages/Current"]
 layout_mode = 2
 theme_override_constants/separation = 9
-
-[node name="Heading" type="HBoxContainer" parent="Scroll/Pages/Current/Content"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="Name" type="Label" parent="Scroll/Pages/Current/Content/Heading"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.96, 0.85, 0.62, 1)
-theme_override_font_sizes/font_size = 23
-
-[node name="Deadline" type="Label" parent="Scroll/Pages/Current/Content/Heading"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 17
 
 [node name="Request" type="Label" parent="Scroll/Pages/Current/Content"]
 layout_mode = 2
@@ -89,6 +120,7 @@ custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_default_cursor_shape = 2
+theme_type_variation = &"HudButton"
 theme_override_constants/icon_max_width = 20
 
 [node name="Food" type="Button" parent="Scroll/Pages/Current/Content/Rewards"]
@@ -96,23 +128,25 @@ custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_default_cursor_shape = 2
+theme_type_variation = &"HudButton"
 theme_override_constants/icon_max_width = 20
 
-[node name="Actions" type="HBoxContainer" parent="Scroll/Pages/Current/Content"]
+[node name="Actions" type="HFlowContainer" parent="Scroll/Pages/Current/Content"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 6
 
 [node name="Pin" type="Button" parent="Scroll/Pages/Current/Content/Actions"]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
-size_flags_horizontal = 3
 mouse_default_cursor_shape = 2
 toggle_mode = true
 text = "在田边跟踪此单"
 
-[node name="FieldActions" type="HBoxContainer" parent="Scroll/Pages/Current/Content"]
+[node name="FieldActions" type="HFlowContainer" parent="Scroll/Pages/Current/Content"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 6
 
 [node name="FieldWork" type="Button" parent="Scroll/Pages/Current/Content/FieldActions"]
 visible = false
@@ -168,31 +202,42 @@ theme_override_styles/panel = SubResource("Card")
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="HeadingRow" type="HBoxContainer" parent="Scroll/Pages/Next/Content"]
+[node name="Heading" type="Label" parent="Scroll/Pages/Next/Content"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
 
-[node name="Heading" type="Label" parent="Scroll/Pages/Next/Content/HeadingRow"]
+[node name="Details" type="Label" parent="Scroll/Pages/Next/Content"]
 layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.76, 0.84, 0.65, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 3
 
-[node name="Silk" type="Button" parent="Scroll/Pages/Next/Content/HeadingRow"]
+[node name="Cargo" type="HBoxContainer" parent="Scroll/Pages/Next/Content"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Actions" type="HFlowContainer" parent="Scroll/Pages/Next/Content"]
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 6
+
+[node name="Plan" type="Button" parent="Scroll/Pages/Next/Content/Actions"]
+custom_minimum_size = Vector2(124, 36)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+toggle_mode = true
+text = "跟踪下季备货"
+tooltip_text = "跟踪后，夜间备粮会为下季留出所需作物。"
+
+[node name="Silk" type="Button" parent="Scroll/Pages/Next/Content/Actions"]
 visible = false
 custom_minimum_size = Vector2(120, 36)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 text = "去蚕桑备绸"
 
-[node name="Plan" type="Button" parent="Scroll/Pages/Next/Content/HeadingRow"]
-custom_minimum_size = Vector2(124, 36)
-layout_mode = 2
-mouse_default_cursor_shape = 2
-toggle_mode = true
-text = "跟踪下季备货"
-
-[node name="WaterRoute" type="Button" parent="Scroll/Pages/Next/Content/HeadingRow"]
+[node name="WaterRoute" type="Button" parent="Scroll/Pages/Next/Content/Actions"]
 visible = false
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
@@ -200,15 +245,10 @@ tooltip_text = "跟踪下季备货并指路去封地水源。"
 mouse_default_cursor_shape = 2
 text = "备稻 · 去水源"
 
-[node name="Details" type="Label" parent="Scroll/Pages/Next/Content"]
+[node name="FieldActions" type="HFlowContainer" parent="Scroll/Pages/Next/Content"]
 layout_mode = 2
-tooltip_text = "可留的数量已扣除本季尚未交付的货物。"
-mouse_filter = 1
-autowrap_mode = 3
-
-[node name="FieldActions" type="HBoxContainer" parent="Scroll/Pages/Next/Content"]
-layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 6
 
 [node name="FieldWork" type="Button" parent="Scroll/Pages/Next/Content/FieldActions"]
 visible = false

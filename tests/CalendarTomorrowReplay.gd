@@ -74,7 +74,7 @@ func _winter_to_spring() -> void:
 	if not _expect(management != null and not book.modal.visible and not tree.paused, "Switch to the delivery ledger."):
 		return
 	var orders: Control = management.season_order_panel
-	_expect(orders.is_visible_in_tree() and "南路续种" in orders.next_details.text and orders.next_plan_button.has_focus()
+	_expect(orders.is_visible_in_tree() and "南路续种" in orders.next_heading.text and orders.next_plan_button.has_focus()
 		and tree.root.get_visible_rect().encloses(orders.next_plan_button.get_global_rect()),
 		"The focus lands on the real next-season preparation control.")
 	await _capture("04-next-order")

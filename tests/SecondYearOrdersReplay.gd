@@ -156,6 +156,12 @@ func _catalog() -> void:
 	_expect(SeasonOrders.window(48, 2).order.id == "winter"
 		and SeasonOrders.window(49, 2).order.id == "spring_seed_share", "The change follows the configured calendar length.")
 
+func _forecast_amount(book: Control, item: String) -> String:
+	for slip in book.next_cargo.get_children():
+		if slip.get_node("Goods/Counts/ItemName").text == item:
+			return slip.get_node("Goods/Counts/Quantity").text
+	return ""
+
 func _spring() -> void:
 	if not await _fixture(24, {"food_storage": 0, "player_inventory": 4, "crop_stock": {"millet": 2, "beans": 2},
 		"night_rations": {"enabled": true, "copper_limit": 0},
@@ -165,7 +171,8 @@ func _spring() -> void:
 	for cell: Vector2i in PLOTS:
 		await _plot(cell)
 	var book := await _orders()
-	_expect("冬路粮与麻" in book.order_title.text and "南路续种" in book.next_details.text and "麦 0/1" in book.next_details.text,
+	_expect("冬路粮与麻" in book.order_title.text and "南路续种" in book.next_heading.text
+		and "0/1" in _forecast_amount(book, "麦"),
 		"The first winter previews keeping wheat for the next spring.")
 	await _capture("01-next-spring")
 	await _close_management()
@@ -264,7 +271,7 @@ func _summer() -> void:
 	await _key(KEY_ESCAPE)
 	var book := await _orders()
 	_expect("柳湾夏鲜" in book.order_title.text and "白鲦 缺 1 尾" in book.status.text and "柳湾" in book.status.text
-		and "东岗换防" in book.next_details.text and "麻 0/1" in book.next_details.text and book.food_button.disabled,
+		and "东岗换防" in book.next_heading.text and "0/1" in _forecast_amount(book, "麻") and book.food_button.disabled,
 		"The book names the fishing place and previews autumn's hemp.")
 	_expect(not state.deliver_season_order(31, true) and state.crop_stock.count("rice") == 2,
 		"An incomplete mixed order leaves the harvested rice in stock.")

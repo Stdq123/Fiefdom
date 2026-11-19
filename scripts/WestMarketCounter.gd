@@ -70,7 +70,10 @@ func _fit_body() -> void:
 		+ rule.get_combined_minimum_size().y + inset.get_theme_constant(&"margin_top") \
 		+ inset.get_theme_constant(&"margin_bottom") + 2.0 * body.get_theme_constant(&"separation")
 	var available := maxf(0.0, get_viewport_rect().size.y - 2.0 * COUNTER_MARGIN - chrome)
-	scroll.custom_minimum_size.y = minf(available, counter_layout.get_combined_minimum_size().y)
+	if orders.visible:
+		orders.fit_market_book(available)
+	else:
+		scroll.custom_minimum_size.y = minf(available, counter_layout.get_combined_minimum_size().y)
 
 func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree() or not event is InputEventKey:
@@ -125,6 +128,7 @@ func _open_view(heading: String, active_view: Control, speaker := "") -> void:
 		card.custom_minimum_size.x += keeper_card.custom_minimum_size.x + counter_layout.get_theme_constant("separation")
 	for view: Control in [grain, fish, silk, orders, sheep]:
 		view.visible = view == active_view
+	scroll.visible = active_view != orders
 	_refresh_market_produce()
 	_refresh_order_route()
 	show()

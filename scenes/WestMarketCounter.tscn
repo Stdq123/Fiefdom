@@ -300,7 +300,7 @@ size_flags_horizontal = 0
 mouse_default_cursor_shape = 2
 text = "← 丝绸交易"
 
-[node name="Orders" parent="Center/Card/Inset/Body/CounterScroll/CounterLayout/Views" instance=ExtResource("5_orders")]
+[node name="Orders" parent="Center/Card/Inset/Body" instance=ExtResource("5_orders")]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2

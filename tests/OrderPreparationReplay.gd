@@ -176,7 +176,8 @@ func _prepare_winter() -> void:
 	_expect(state.current_day == AUTUMN_DAY and not ui.hud.pinned_order.visible and state.crop_stock.count("wheat") == 2,
 		"The autumn checkpoint starts with two wheat and no preparation plan.")
 	var book := await _open_order_section()
-	_expect("岁末麦帛" in book.next_details.text and "麦 2/2" in book.next_details.text and "丝绸 0/1" in book.next_details.text,
+	_expect("岁末麦帛" in book.next_heading.text and "2/2" in _forecast_amount(book, "麦")
+		and "0/1" in _forecast_amount(book, "丝绸"),
 		"See which winter supplies are ready while still in autumn.")
 	await _button(book.next_plan_button)
 	_expect(book.next_plan_button.button_pressed and not book.pin_button.button_pressed,
@@ -248,12 +249,12 @@ func _shared_wheat() -> void:
 		return
 	var book := await _open_order_section()
 	await _button(book.next_plan_button)
-	_expect("麦 0/1" in book.next_details.text and state.season_order_crops_to_keep().get("wheat") == 3,
+	_expect("0/1" in _forecast_amount(book, "麦") and state.season_order_crops_to_keep().get("wheat") == 3,
 		"Wheat promised to winter is not counted toward the next spring order.")
 	state.crop_stock.add("wheat", 1)
 	state.crop_stock.add("hemp", 1)
 	tree.root.get_node("GameEvents").inventory_changed.emit(state.player_inventory)
-	_expect("麦 1/1" in book.next_details.text and state.market_crop_plan(1) == {"hemp": 1},
+	_expect("1/1" in _forecast_amount(book, "麦") and state.market_crop_plan(1) == {"hemp": 1},
 		"The third wheat counts toward spring, and bulk trade uses other crops first.")
 	var night: Dictionary = state.night_rations_plan()
 	_expect(night.current_reserved.get("wheat", 0) == 2 and night.upcoming_reserved.get("wheat", 0) == 1,

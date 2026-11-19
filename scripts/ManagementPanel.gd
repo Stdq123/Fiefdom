@@ -201,7 +201,7 @@ func _build_sections() -> void:
 func _refresh_section(index: int) -> void:
 	var focus := get_viewport().gui_get_focus_owner()
 	var page := tabs.get_tab_control(index)
-	var show_roster := page not in [neighbor_journal, fish_ledger, ravine_panel]
+	var show_roster := page not in [neighbor_journal, fish_ledger, ravine_panel, season_order_panel]
 	if show_roster != retainer_panel.visible:
 		retainer_panel.visible = show_roster
 		if show_roster:
@@ -231,9 +231,8 @@ func _refresh_input_hints() -> void:
 
 func show_season_orders(upcoming := false) -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(season_order_panel)
-	if upcoming and season_order_panel.next_plan_button.is_visible_in_tree():
-		season_order_panel.next_plan_button.grab_focus()
-		GamepadInput.snap_pointer_to_focus()
+	if upcoming:
+		season_order_panel.open_forecast()
 
 func show_market() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(market_panel)
