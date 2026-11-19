@@ -15,11 +15,17 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 设置和键位页的阅读字号
+
+设置标签、音量数值、下拉选项和键位跟随阅读字号。内容超出时正文滚动，反馈与关闭按钮固定在下方。方向键和 Tab 留在当前面板，手柄十字键可移动焦点或微调音量。键位录入可以先取消再返回，关闭设置后回到入口按钮。
+
+从 `c7a86aa` 独立构建两次，ZIP 的 SHA-256 均为 `6d8fb1f451276d9faae58377f96b63d122a157c56697be1327b667dafea45b86`。六项无窗口检查通过。1920×1080 Vulkan、Direct3D 12 和 1024×768 OpenGL 在隔离桌面核对标题、封地和竹涧。样例字号由 16 放大到 22，封地的同组五次键盘操作中，焦点走到背景的次数从三次降到零。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-settings-reading/release-c7a86aa/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-settings-reading/release-c7a86aa/release-proof.txt)
+
 ## Windows 候选包与启动校验
 
-`build/Fiefdom-1.0.0-Windows-x64.zip` 已更新为当前候选包。包内 `SHA256SUMS.txt` 覆盖程序、资源、兼容入口、说明与授权共八个文件。可用 `-PackageOnly` 核对文件并启动标题。混入旧 PCK 或缺少必需文件时，在启动前报告错误。
+Windows 候选包内的 `SHA256SUMS.txt` 覆盖程序、资源、兼容入口、说明与授权共八个文件。可用 `-PackageOnly` 核对文件并启动标题。混入旧 PCK 或缺少必需文件时，在启动前报告错误。
 
-从 `24cc0f9` 独立构建两次，ZIP 的 SHA-256 均为 `6f31259f7613c4efeb7fb5916af1012e702634f06b3f337bb72a52a50ad10a88`。EXE 和 PCK 与上一轮加载核对所用的版本一致。解压到含中文和空格的路径后，无窗口启动、1920×1080 Vulkan 和 1024×768 OpenGL 标题均通过。包内兼容入口也在隔离桌面实跑到标题并正常退出。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/Fiefdom-1.0.0-Windows-x64-package-verification/release-proof.txt)
+从 `24cc0f9` 独立构建两次，ZIP 的 SHA-256 均为 `6f31259f7613c4efeb7fb5916af1012e702634f06b3f337bb72a52a50ad10a88`。EXE 和 PCK 与上一轮加载核对所用的版本一致。解压到含中文和空格的路径后，无窗口启动、1920×1080 Vulkan 和 1024×768 OpenGL 标题均通过。包内兼容入口也在隔离桌面实跑到标题并正常退出。新档到双结局的玩法验收继续暂缓。 [该轮 Windows 候选包](../build/polish-package-verification/build-24cc0f9-a/build/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-package-verification/verified-24cc0f9/release-proof.txt)
 
 ## 标题新建与读档的加载反馈
 
