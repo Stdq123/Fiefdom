@@ -5,25 +5,33 @@ const SEASON_ORDER_PANEL := preload("res://scenes/SeasonOrderPanel.tscn")
 const NEIGHBOR_JOURNAL := preload("res://scenes/NeighborJournal.tscn")
 const FISH_LEDGER := preload("res://scripts/FishLedger.gd")
 const MAP_GRID_ITEM := preload("res://scripts/MapGridItem.gd")
+const DEFER_SOWING := "defer_sowing"
+const RESUME_SOWING := "resume_sowing"
 
 @onready var sections: HBoxContainer = %Sections
 @onready var section_hint: Label = %SectionHint
 @onready var close_button: Button = $CloseButton
 @onready var retainer_panel: VBoxContainer = $HBoxContainer/LeftPanel
 @onready var retainer_count: Label = %RetainerCount
+@onready var roster_meal: HBoxContainer = %RosterMeal
+@onready var roster_meal_summary: Label = %RosterMealSummary
+@onready var roster_night_rations: Button = %RosterNightRations
 @onready var empty_roster: Label = %EmptyRoster
 @onready var retainer_list_container: VBoxContainer = $HBoxContainer/LeftPanel/ScrollContainer/VBoxContainer
 @onready var map_grid_container: GridContainer = $HBoxContainer/RightPanel/封地概览/GridContainer
 @onready var well_field_selector: OptionButton = $HBoxContainer/RightPanel/封地概览/WellFieldSelector
 @onready var steward_note: Label = %StewardNote
 @onready var steward_picker: OptionButton = %StewardPicker
+@onready var fill_steward_plans: CheckBox = %FillStewardPlans
 @onready var apply_steward: Button = %ApplySteward
 @onready var steward_preview: Label = %StewardPreview
 @onready var seed_plan_picker: OptionButton = $HBoxContainer/RightPanel/封地概览/SeedPlan/SeedPicker
 @onready var rotate_seed: CheckBox = $HBoxContainer/RightPanel/封地概览/SeedPlan/RotateSeed
 @onready var apply_private_plan: Button = $HBoxContainer/RightPanel/封地概览/SeedPlan/ApplyPrivate
 @onready var seed_timing: Label = $HBoxContainer/RightPanel/封地概览/SeedTiming
-@onready var seed_plan_note: Label = $HBoxContainer/RightPanel/封地概览/SeedPlanNote
+@onready var seed_plan_note: Label = $HBoxContainer/RightPanel/封地概览/SeedPlanDetails/SeedPlanNote
+@onready var include_untilled: CheckBox = %IncludeUntilled
+@onready var sowing_rations: Button = $HBoxContainer/RightPanel/封地概览/SeedPlanDetails/SowingRations
 @onready var market_panel: VBoxContainer = $HBoxContainer/RightPanel/市场
 @onready var food_label: Label = $HBoxContainer/RightPanel/市场/FoodLabel
 @onready var irrigation_button: Button = $HBoxContainer/RightPanel/科技/TechContainer/IrrigationButton
@@ -37,6 +45,8 @@ var neighbor_journal: Control
 var fish_ledger: Control
 var silk_panel: VBoxContainer
 var steward_field_id := -1
+var defer_sowing_index := -1
+var resume_sowing_index := -1
 
 var retainer_item_scene = preload("res://scenes/RetainerItem.tscn")
 var silk_panel_script = preload("res://scripts/SilkPanel.gd")
@@ -53,6 +63,12 @@ var music_practice_script = preload("res://scripts/MusicPractice.gd")
 
 func _ready() -> void:
 	refresh_retainers()
+	roster_night_rations.pressed.connect(GameEvents.night_rations_requested.emit)
+	for changed: Signal in [GameEvents.food_changed, GameEvents.money_changed, GameEvents.inventory_changed]:
+		changed.connect(_refresh_ration_previews.unbind(1))
+	for changed: Signal in [GameEvents.retainer_duty_changed, GameEvents.retainer_recruited, GameEvents.retainer_departed]:
+		changed.connect(_refresh_roster_meals.unbind(1))
+	GameEvents.night_rations_changed.connect(_refresh_ration_previews)
 	well_field_selector.item_selected.connect(_show_well_field)
 	seed_plan_picker.add_item("选择续播方式")
 	for seed_id: String in CropData.IDS:
@@ -61,6 +77,12 @@ func _ready() -> void:
 		seed_plan_picker.set_item_metadata(seed_plan_picker.item_count - 1, seed_id)
 	seed_plan_picker.add_item("按时令续播")
 	seed_plan_picker.set_item_metadata(seed_plan_picker.item_count - 1, FieldSeedPlan.SEASONAL)
+	defer_sowing_index = seed_plan_picker.item_count
+	seed_plan_picker.add_item("暂缓到议税定案")
+	seed_plan_picker.set_item_metadata(defer_sowing_index, DEFER_SOWING)
+	resume_sowing_index = seed_plan_picker.item_count
+	seed_plan_picker.add_item("现在恢复续播")
+	seed_plan_picker.set_item_metadata(resume_sowing_index, RESUME_SOWING)
 	seed_plan_picker.add_item("取消续播")
 	seed_plan_picker.set_item_metadata(seed_plan_picker.item_count - 1, "")
 	for picker in [seed_plan_picker, steward_picker]:
@@ -70,9 +92,13 @@ func _ready() -> void:
 		menu.add_theme_color_override("font_color", picker.get_theme_color("font_color", "Button"))
 	seed_plan_picker.item_selected.connect(_refresh_seed_plan_preview.unbind(1))
 	rotate_seed.toggled.connect(_refresh_seed_plan_preview.unbind(1))
+	include_untilled.toggled.connect(_update_soil_previews.unbind(1))
 	GameEvents.field_rotation_changed.connect(_refresh_seed_plan_preview)
+	GameEvents.field_rotation_changed.connect(_refresh_steward_choices)
 	apply_private_plan.pressed.connect(_apply_private_seed_plan)
+	sowing_rations.pressed.connect(GameEvents.night_rations_requested.emit)
 	steward_picker.item_selected.connect(_refresh_steward_preview.unbind(1))
+	fill_steward_plans.toggled.connect(func(_enabled: bool): _refresh_steward_preview.call_deferred())
 	apply_steward.pressed.connect(_apply_steward_handover)
 	_refresh_seed_choices()
 	refresh_well_fields()
@@ -179,8 +205,11 @@ func _refresh_input_hints() -> void:
 	section_hint.visible = GamepadInput.active
 	close_button.text = "返回  B" if GamepadInput.active else "返回  Esc"
 
-func show_season_orders() -> void:
+func show_season_orders(upcoming := false) -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(season_order_panel)
+	if upcoming and season_order_panel.next_plan_button.is_visible_in_tree():
+		season_order_panel.next_plan_button.grab_focus()
+		GamepadInput.snap_pointer_to_focus()
 
 func show_market() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(market_panel)
@@ -194,8 +223,31 @@ func show_technology() -> void:
 func show_silk() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(silk_panel)
 
-func show_estate() -> void:
+func show_estate(field_id := -1) -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(map_grid_container.get_parent())
+	if field_id < 0:
+		return
+	var index := well_field_selector.get_item_index(field_id)
+	if index < 0:
+		return
+	if well_field_selector.selected != index:
+		well_field_selector.select(index)
+		_show_well_field(index)
+	var focus: Control = steward_picker if steward_picker.is_visible_in_tree() and not steward_picker.disabled else well_field_selector
+	focus.grab_focus()
+	GamepadInput.snap_pointer_to_focus.call_deferred()
+
+func focus_sowing_plans(for_council := false) -> void:
+	var cancel_index := seed_plan_picker.item_count - 1
+	seed_plan_picker.select(defer_sowing_index if for_council else cancel_index)
+	_refresh_seed_plan_preview()
+	var focus: Control = seed_plan_picker if apply_private_plan.disabled else apply_private_plan
+	focus.grab_focus()
+	GamepadInput.snap_pointer_to_focus.call_deferred()
+
+func focus_seed_picker() -> void:
+	seed_plan_picker.grab_focus()
+	GamepadInput.snap_pointer_to_focus.call_deferred()
 
 func show_neighbors() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(neighbor_journal)
@@ -207,6 +259,7 @@ func _announce_visibility() -> void:
 	var opened := is_visible_in_tree()
 	GameEvents.management_visibility_changed.emit(opened)
 	if opened:
+		_refresh_roster_meals()
 		previous_focus = get_viewport().gui_get_focus_owner()
 		section_buttons[tabs.current_tab].grab_focus()
 		GamepadInput.snap_pointer_to_focus.call_deferred()
@@ -369,6 +422,23 @@ func refresh_retainers() -> void:
 		var item = retainer_item_scene.instantiate()
 		retainer_list_container.add_child(item)
 		item.setup(r)
+	_refresh_roster_meals()
+
+func _refresh_ration_previews() -> void:
+	_refresh_roster_meals()
+	if map_grid_container.is_visible_in_tree():
+		_refresh_steward_preview()
+
+func _refresh_roster_meals() -> void:
+	roster_meal.visible = not Global.retainers.is_empty()
+	if not roster_meal.is_visible_in_tree():
+		return
+	var meal := Global.night_rations_plan()
+	var short: bool = meal.served < meal.need
+	roster_meal_summary.text = ("今夜可供 %d/%d 份" % [meal.served, meal.need] if short else "今夜口粮齐 · %d 份" % meal.need)
+	if not meal.departing.is_empty():
+		roster_meal_summary.text += "\n预计离任 · " + "、".join(meal.departing)
+	roster_meal_summary.add_theme_color_override("font_color", Color("#f0b591") if short else Color("#c5d2b7"))
 
 func refresh_well_fields() -> void:
 	var previous_id := well_field_selector.get_selected_id()
@@ -385,6 +455,8 @@ func refresh_well_fields() -> void:
 		_show_well_field(selected)
 
 func _show_well_field(index: int) -> void:
+	if steward_field_id != well_field_selector.get_item_id(index):
+		include_untilled.set_pressed_no_signal(false)
 	for child in map_grid_container.get_children():
 		map_grid_container.remove_child(child)
 		child.queue_free()
@@ -404,6 +476,8 @@ func _refresh_steward_choices() -> void:
 	var field_id := well_field_selector.get_selected_id()
 	var previous := steward_picker.get_selected_metadata() as RetainerData
 	var same_field := steward_field_id == field_id
+	if not same_field:
+		fill_steward_plans.set_pressed_no_signal(true)
 	steward_field_id = field_id
 	steward_picker.get_parent().visible = Global.field_steward_unlocked()
 	steward_picker.clear()
@@ -433,32 +507,61 @@ func _manages_selected_field(data: RetainerData) -> bool:
 	return (data.duty == RetainerData.Duty.STEWARD
 		and Global.stewarded_field(data).field_id == well_field_selector.get_selected_id())
 
+func _selected_steward() -> RetainerData:
+	var index := steward_picker.get_selected_id()
+	return Global.retainers[index] if index >= 0 and index < Global.retainers.size() else null
+
 func _steward_fill_targets() -> Array[Vector2i]:
 	var targets: Array[Vector2i] = []
 	for item: MAP_GRID_ITEM in map_grid_container.get_children():
 		var cell := item.grid_pos
-		if Global.can_plan_field_seed(cell) and not Global.field_seed_plans.has(cell):
+		if (Global.can_plan_field_seed(cell) and not Global.field_seed_plans.has(cell)
+				and (Global.tilled_cells.has(cell) or include_untilled.button_pressed)):
 			targets.append(cell)
 	return targets
 
+func _update_soil_previews() -> void:
+	_refresh_seed_plan_preview()
+	_refresh_stewards()
+
 func _refresh_steward_preview() -> void:
 	steward_preview.visible = Global.field_steward_unlocked()
-	var data := steward_picker.get_selected_metadata() as RetainerData
+	var data := _selected_steward()
+	var targets := _steward_fill_targets()
+	var already_assigned := data != null and _manages_selected_field(data)
+	fill_steward_plans.visible = data != null and not already_assigned and not targets.is_empty()
+	var has_tilled_plot := map_grid_container.get_children().any(
+		func(tile: MAP_GRID_ITEM) -> bool: return Global.tilled_cells.has(tile.grid_pos))
+	var till_hint := ("勾选「包括未翻地」，即可安排门客先翻地。" if include_untilled.visible
+		else "先翻田，再安排续播。")
 	apply_steward.disabled = data == null
 	apply_steward.text = "交给管事"
 	if data == null:
 		steward_preview.text = ("留任门客后可安排井田管事。" if steward_picker.disabled else
-			"选择门客，交接时可补齐已翻田格的续播安排。")
+			"管事负责收割、浇水和按计划续播。")
+		if not has_tilled_plot:
+			steward_preview.text += " " + till_hint
 		return
-	var already_assigned := _manages_selected_field(data)
-	var targets := _steward_fill_targets()
+	var keep_plans := fill_steward_plans.visible and not fill_steward_plans.button_pressed
+	if keep_plans:
+		targets.clear()
 	var public_count := 0
+	var untilled_count := 0
 	for cell in targets:
 		public_count += int(Global.is_public_plot(cell))
+		untilled_count += int(not Global.tilled_cells.has(cell))
 	var private_count := targets.size() - public_count
-	var ration := Global.night_ration_for_duty(RetainerData.Duty.STEWARD)
-	var change := ration - Global.retainer_night_ration(data)
-	var ration_note := "每夜 %d 份粮（%s）" % [ration, "+%d" % change if change > 0 else "不变"]
+	var meal := Global.night_rations_after_duty(data, RetainerData.Duty.STEWARD)
+	var household := Global.retainer_food_cost()
+	var ration_note := "全员每夜用粮 %d 份" % household
+	if meal.need != household:
+		ration_note = "全员每夜用粮 %d → %d 份" % [household, meal.need]
+	if meal.served < meal.need:
+		ration_note += " · 今夜可供 %d/%d 份" % [meal.served, meal.need]
+		if not meal.departing.is_empty():
+			ration_note += " · 离任 " + "、".join(meal.departing)
+	elif meal.copper > 0:
+		ration_note += " · 今夜购粮 %d 铜钱" % meal.copper
 	var field_number := well_field_selector.get_selected_id() + 1
 	var assignment := "井田 %d" % field_number
 	if already_assigned:
@@ -473,14 +576,25 @@ func _refresh_steward_preview() -> void:
 		plans.append("公田 %d 格续播%s" % [public_count, ItemManager.crop_label(Global.tribute_seed())])
 	if private_count > 0:
 		plans.append("私田 %d 格按时令续播" % private_count)
-	var plan_note := "无可补齐的续播" if plans.is_empty() else "，".join(plans)
-	steward_preview.text = "%s · %s · %s" % [assignment, ration_note, plan_note]
+	if untilled_count > 0:
+		plans.append("其中 %d 格待门客翻地" % untilled_count)
+	var plan_note := "，".join(plans)
+	if keep_plans:
+		plan_note = "沿用当前的作物和续播安排。"
+	elif plan_note.is_empty():
+		plan_note = "无可补齐的续播" if has_tilled_plot else till_hint
+	steward_preview.text = "%s · %s · 粮仓 %d 份\n%s" % [assignment, ration_note, Global.food_storage, plan_note]
 
 func _apply_steward_handover() -> void:
-	var data := steward_picker.get_selected_metadata() as RetainerData
+	var data := _selected_steward()
+	if data == null:
+		return
 	var field := Global.get_well_field(well_field_selector.get_selected_id())
+	var already_assigned := _manages_selected_field(data)
 	var targets := _steward_fill_targets()
-	if not _manages_selected_field(data):
+	if not already_assigned and not fill_steward_plans.button_pressed:
+		targets.clear()
+	if not already_assigned:
 		if not Global.assign_duty(data, RetainerData.Duty.STEWARD):
 			return
 		Global.assign_retainer_plot(data, field.center_pos)
@@ -526,7 +640,7 @@ func _refresh_field_tiles() -> void:
 func _apply_seed_plan(item: MAP_GRID_ITEM) -> void:
 	if seed_plan_picker.selected == 0:
 		return
-	Global.set_field_seed_plan(item.grid_pos, _selected_seed_plan())
+	_apply_sowing_choice(item.grid_pos, _selected_seed_plan())
 	item.refresh_plot()
 	_refresh_stewards()
 	_refresh_seed_plan_preview()
@@ -545,17 +659,50 @@ func _refresh_seed_choices() -> void:
 			label += " · 需渠水"
 		seed_plan_picker.set_item_text(index, label)
 
+func _apply_sowing_choice(cell: Vector2i, plan: String) -> void:
+	match plan:
+		DEFER_SOWING: Global.set_field_sowing_deferred(cell, true)
+		RESUME_SOWING: Global.set_field_sowing_deferred(cell, false)
+		_: Global.set_field_seed_plan(cell, plan)
+
 func _private_plan_targets(plan: String) -> Array[Vector2i]:
 	var targets: Array[Vector2i] = []
 	for item: MAP_GRID_ITEM in map_grid_container.get_children():
 		var cell := item.grid_pos
-		if not Global.is_public_plot(cell) and Global.can_plan_field_seed(cell) and Global.field_seed_plans.get(cell, "") != plan:
-			targets.append(cell)
+		if Global.is_public_plot(cell) or not Global.can_plan_field_seed(cell):
+			continue
+		var deferred := Global.deferred_field_sowing.has(cell)
+		match plan:
+			DEFER_SOWING:
+				if not deferred and Global.can_defer_field_sowing(cell):
+					targets.append(cell)
+			RESUME_SOWING:
+				if deferred:
+					targets.append(cell)
+			_:
+				if FieldSeedPlan.is_order(Global.field_seed_plans.get(cell, "")):
+					continue
+				if not plan.is_empty() and not include_untilled.button_pressed and not Global.tilled_cells.has(cell):
+					continue
+				if Global.field_seed_plans.get(cell, "") != plan:
+					targets.append(cell)
 	return targets
 
 func _refresh_seed_plan_preview() -> void:
+	var had_soil_focus := include_untilled.has_focus()
+	include_untilled.visible = map_grid_container.get_children().any(func(item: MAP_GRID_ITEM) -> bool:
+		return not Global.tilled_cells.has(item.grid_pos) and Global.can_plan_field_seed(item.grid_pos))
+	if not include_untilled.visible:
+		include_untilled.set_pressed_no_signal(false)
+		if had_soil_focus:
+			focus_seed_picker()
+	seed_plan_picker.set_item_disabled(defer_sowing_index, not Global.field_sowing_can_defer())
+	seed_plan_picker.set_item_disabled(resume_sowing_index, Global.deferred_field_sowing.is_empty())
+	if seed_plan_picker.is_item_disabled(seed_plan_picker.selected):
+		seed_plan_picker.select(0)
 	var seed_id: String = "" if seed_plan_picker.selected == 0 else seed_plan_picker.get_selected_metadata()
 	var crop := ItemManager.get_crop(seed_id)
+	sowing_rations.visible = seed_plan_picker.selected > 0 and seed_id in ["", DEFER_SOWING]
 	rotate_seed.visible = Global.field_rotation.signed_day > 0
 	rotate_seed.disabled = not rotate_seed.visible or crop == null or not FieldSeedPlan.supports_rotation(crop)
 	if rotate_seed.disabled:
@@ -565,35 +712,51 @@ func _refresh_seed_plan_preview() -> void:
 		apply_private_plan.disabled = true
 		apply_private_plan.text = "安排私田"
 		seed_plan_note.text = "可选固定作物或按时令续播，再点田格或批量安排私田。"
+		if include_untilled.visible:
+			seed_plan_note.text += " 生地由门客先翻。"
 		return
 	var plan := _selected_seed_plan()
 	var targets := _private_plan_targets(plan)
 	apply_private_plan.disabled = targets.is_empty()
+	if seed_id == DEFER_SOWING:
+		apply_private_plan.text = "暂缓私田 · %d 格" % targets.size()
+		seed_plan_note.text = "可点单格。照料、收获和手播照常。门客口粮照旧，定案后恢复续播。"
+		return
+	if seed_id == RESUME_SOWING:
+		apply_private_plan.text = "恢复私田 · %d 格" % targets.size()
+		seed_plan_note.text = "可点单格。空畦可照原安排补播，在田作物收完再接续。"
+		return
 	if seed_id.is_empty():
 		apply_private_plan.text = "取消私田 · %d 格" % targets.size()
-		seed_plan_note.text = "清除后续的播种安排，田里的作物继续生长。"
+		seed_plan_note.text = "清除后续的播种安排，田里的作物继续生长。门客仍按原定份额用粮。"
 		return
 	apply_private_plan.text = "安排私田 · %d 格" % targets.size()
 	_show_seed_timing(plan, crop)
 	if targets.is_empty():
-		seed_plan_note.text = "点田格可调整单格。批量范围为当前井田的已翻私田。"
+		seed_plan_note.text = ("可点单格安排翻地和下茬。" if include_untilled.visible else
+			"点田格可调整单格。批量安排当前井田的私田。")
 		return
 	var open_plots := 0
+	var untilled := 0
 	var after_harvest := 0
 	var waiting_for_water := 0
 	var changed_seed := 0
 	var needs_canal := crop != null and crop.is_water_crop
 	for cell in targets:
 		var occupied := Global.active_crops.has(cell)
+		var prepared := Global.tilled_cells.has(cell)
+		untilled += int(not prepared)
 		if occupied:
 			after_harvest += 1
 		if needs_canal and Global.next_seed_for_plan(cell, plan) == seed_id and not Global.irrigation.supplies(cell):
 			waiting_for_water += 1
-		elif not occupied:
+		elif not occupied and prepared:
 			open_plots += 1
 		if Global.field_seed_plans.has(cell):
 			changed_seed += 1
 	var details := PackedStringArray()
+	if untilled > 0:
+		details.append("%d 格先翻地" % untilled)
 	if open_plots > 0:
 		details.append("%d 格空畦可播" % open_plots)
 	if after_harvest > 0:
@@ -626,9 +789,13 @@ func _apply_private_seed_plan() -> void:
 	var plan := _selected_seed_plan()
 	var targets := _private_plan_targets(plan)
 	for cell in targets:
-		Global.set_field_seed_plan(cell, plan)
+		_apply_sowing_choice(cell, plan)
 	_refresh_field_tiles()
-	if FieldSeedPlan.is_rotation(plan):
+	if plan == DEFER_SOWING:
+		seed_plan_note.text = "已暂缓 %d 格私田。现有作物和今夜口粮照常。" % targets.size()
+	elif plan == RESUME_SOWING:
+		seed_plan_note.text = "已恢复 %d 格私田原来的续播。" % targets.size()
+	elif FieldSeedPlan.is_rotation(plan):
 		seed_plan_note.text = "已安排 %d 格私田轮作" % targets.size()
 	elif plan == FieldSeedPlan.SEASONAL:
 		seed_plan_note.text = "已安排 %d 格私田按时令续播" % targets.size()

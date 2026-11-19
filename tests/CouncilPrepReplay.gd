@@ -21,6 +21,7 @@ const SNAPSHOT := {
 		"4,5": {"id": "wheat", "age": 2, "growth_nights": 2},
 	},
 	"fertile_cells": ["6,5", "4,5"],
+	"field_seed_plans": {"5,5": "millet", "5,6": "beans", "6,5": "seasonal"},
 }
 
 var world: Node2D
@@ -28,6 +29,9 @@ var ui: CanvasLayer
 var book: Control
 var legacy := false
 var petition := false
+var single_field := false
+var blocked_rice := false
+var tribute_rows := false
 
 func _continue() -> void:
 	tree.change_scene_to_file(state.TITLE_SCENE)
@@ -44,9 +48,11 @@ func _continue() -> void:
 
 func _open_book() -> void:
 	await _button(ui.hud.council_prep_button)
+	await tree.process_frame
 	var ledger: Control = book.modal.get_node("Center/Ledger")
 	_expect(tree.paused and book.modal.visible and tree.root.get_visible_rect().encloses(ledger.get_global_rect()),
-		"The preparation ledger opens and fits the viewport.")
+		"The preparation ledger opens and fits the viewport (%s in %s, visible %s, paused %s)." % [
+			ledger.get_global_rect(), tree.root.get_visible_rect(), book.modal.visible, tree.paused])
 
 func _click_plot(cell: Vector2i) -> void:
 	var layer: TileMapLayer = world.tile_map
@@ -67,17 +73,8 @@ func _promote_through_study() -> void:
 		"Before the third year the ledger shows the date and the missing rank qualification.")
 	await _snapshot("01-study-needed")
 	await _button(book.close_button)
-	_expect(ui.hud.guide.heading.text == "晋升上士" and "当前最高 2 级" in ui.hud.guide.text,
-		"The journal points from the finished field to the missing art level.")
-	await _button(ui.hud.guide.six_arts)
-	var management: Control = ui.panel_manager.management_panel_instance
-	_expect(not tree.paused and management.stats_container.is_visible_in_tree(), "The arts shortcut reaches the actual arts tab.")
-	await _button(management.read_button)
-	_expect(state.player_stats.get_level(PlayerStats.Art.LITERACY) == 3 and state.eligible_for_promotion(),
-		"Ordinary study reaches the art level needed for promotion.")
-	await _button(management.get_node("CloseButton"))
-	_expect(not ui.hud.guide.six_arts.visible and "过夜核定" in ui.hud.guide.text,
-		"The journal switches to nightly confirmation as soon as the requirement is met.")
+	if not await _study_from_journal():
+		return
 	await _sleep()
 	_expect(state.current_day == 48 and state.current_rank == state.Rank.SHANG_SHI and not state.tax_council_waiting(),
 		"Nightly promotion takes the player to the next rank.")
@@ -93,6 +90,22 @@ func _promote_through_study() -> void:
 		"The first eligible date and rank still require one more tribute.")
 	print("COUNCIL_PREP_RANK day=", state.current_day, " rank=", state.rank_names[state.current_rank], " study=", state.player_stats.get_level(PlayerStats.Art.LITERACY))
 
+func _study_from_journal() -> bool:
+	if not _expect(ui.hud.guide.heading.text == "晋升上士" and "当前最高 2 级" in ui.hud.guide.text,
+		"The journal points to the missing art level for promotion."):
+		return false
+	await _button(ui.hud.guide.six_arts)
+	var management: Control = ui.panel_manager.management_panel_instance
+	if not _expect(management != null and not tree.paused and management.stats_container.is_visible_in_tree(),
+		"The arts shortcut reaches the actual arts tab."):
+		return false
+	await _button(management.read_button)
+	_expect(state.player_stats.get_level(PlayerStats.Art.LITERACY) == 3 and state.eligible_for_promotion(),
+		"Ordinary study reaches the art level needed for promotion.")
+	await _button(management.get_node("CloseButton"))
+	return _expect(not ui.hud.guide.six_arts.visible and "过夜核定" in ui.hud.guide.text,
+		"The journal switches to nightly confirmation as soon as the requirement is met.")
+
 func _save_route() -> void:
 	await _button(ui.settings_button)
 	var settings: Control = ui.panel_manager.settings_panel_instance
@@ -102,6 +115,107 @@ func _save_route() -> void:
 			break
 	_expect(settings.save_status.text == "游戏已保存", "Save the chosen route using the normal settings button.")
 	await _continue()
+
+func _prepare_with_one_field() -> void:
+	var save := SNAPSHOT.duplicate(true)
+	save.well_fields.resize(1)
+	save.active_crops.erase("12,5")
+	save.active_crops.erase("5,5")
+	save.field_seed_plans.erase("5,5")
+	save.selected_seed = "rice"
+	var fixture := FileAccess.open("user://savegame.json", FileAccess.WRITE)
+	fixture.store_string(JSON.stringify(save))
+	fixture.close()
+	await _continue()
+	if not _expect(state.well_fields.size() == 1 and ui.hud.guide.heading.text == "晋升上士"
+		and ui.hud.guide.six_arts.visible and ui.hud.council_prep_button.visible
+		and ui.hud.opening_action.visible and ui.hud.opening_action.text == "查看开垦筹备",
+		"The first field's journal shows study, council preparation and optional expansion together."):
+		return
+	await _snapshot("01-one-field-promotion")
+	await _open_book()
+	if not _expect(book.public_plan_card.visible and book.public_plan_title.text == "井田 1 · 公田"
+		and "播黍后供水" in book.public_plan_detail.text and "第 49 天" in book.public_plan_detail.text
+		and book.public_plan_button.text == "选种并标出公田" and not book.public_card.visible
+		and book.mixed_card.visible and book.arts_button.visible and book.sowing_button.visible,
+		"The ledger identifies a usable seed and the expected day alongside private crops and sowing plans."):
+		return
+	await _snapshot("02-one-field-seed-plan")
+	await _button(book.public_plan_button)
+	_expect(not tree.paused and state.selected_seed_id == "millet" and state.field_route_status == state.TributeRoute.TEND
+		and ui.directions.tracked_plot == PUBLIC and not state.active_crops.has(PUBLIC),
+		"Choosing the recommendation selects the seed and marks the plot for manual fieldwork.")
+	await _save_route()
+	_expect(state.selected_seed_id == "millet" and ui.directions.tracked_plot == PUBLIC,
+		"Continuing the save restores the selected seed and marked plot.")
+	await _click_plot(PUBLIC)
+	await _click_plot(PUBLIC)
+	await _open_book()
+	_expect(book.public_plan_button.text == "标出公田" and "黍待浇" in book.public_plan_detail.text,
+		"The newly planted crop now needs water.")
+	await _button(book.public_plan_button)
+	await _click_plot(PUBLIC)
+	await _open_book()
+	_expect("黍今夜有水" in book.public_plan_detail.text and "第 49 天" in book.public_plan_detail.text,
+		"Water updates the current night's contribution to ripening.")
+	await _button(book.close_button)
+	if not await _study_from_journal():
+		return
+	await _sleep()
+	_expect(state.current_rank == state.Rank.SHANG_SHI and ui.hud.guide.heading.text == "晋升大夫",
+		"An ordinary night updates the single-field journal to the next rank.")
+	await _open_book()
+	await _button(book.public_plan_button)
+	await _click_plot(PUBLIC)
+	await _sleep()
+	await _open_book()
+	_expect(state.current_day == 49 and state.current_rank == state.Rank.DA_FU and not book.public_plan_card.visible
+		and "30.61% · 纳贡已达标" in book.public_result.text and book.field_button.text == "指路收公田",
+		"After the next night the mature crop shows the actual harvest projection.")
+	await _button(book.field_button)
+	await _click_plot(PUBLIC)
+	if not _expect(state.tax_council_waiting() and state.king_storage == 30 and state.private_harvest_total == 68
+		and ui.directions.tracked_plot == null and state.well_fields.size() == 1,
+		"Harvesting the marked public crop alone summons the envoy with one field."):
+		return
+	await _button(ui.hud.opening_action)
+	var decision := await Campaign.meet_tax_envoy(tree)
+	if not _expect(decision != null and tree.paused, "The marked envoy opens the normal council."):
+		return
+	await _button(decision.option_buttons[state.TaxReformChoice.REFORMED])
+	await _button(decision.confirm_button)
+	await _continue()
+	_expect(state.tax_reform_choice == state.TaxReformChoice.REFORMED and state.tax_reform_day == 49
+		and state.well_fields.size() == 1 and ui.hud.route_progress.visible,
+		"The council save restores the chosen route and its ending goals on the single field.")
+	print("COUNCIL_PREP_ONE_FIELD day=", state.tax_reform_day, " rank=", state.rank_names[state.current_rank],
+		" public=", state.king_storage, " private=", state.private_harvest_total, " route=reformed")
+
+func _check_blocked_rice() -> void:
+	var save := SNAPSHOT.duplicate(true)
+	save.active_crops["5,5"] = {"id": "rice", "age": 3, "growth_nights": 4, "requires_channel": true}
+	var fixture := FileAccess.open("user://savegame.json", FileAccess.WRITE)
+	fixture.store_string(JSON.stringify(save))
+	fixture.close()
+	await _continue()
+	await _open_book()
+	_expect(not book.public_card.visible and book.public_plan_title.text == "井田 2 · 公田"
+		and "第 50 天" in book.public_plan_detail.text and state.crop_night_status(PUBLIC) == state.NightGrowth.BLOCKED,
+		"A public crop that can grow takes precedence over the earlier blocked rice.")
+	await _button(book.public_plan_button)
+	_expect(ui.directions.tracked_plot == SECOND, "The action marks the same public plot the book describes.")
+	var no_other_field: Dictionary = save.duplicate(true)
+	no_other_field.well_fields.resize(1)
+	no_other_field.active_crops.erase("12,5")
+	fixture = FileAccess.open("user://savegame.json", FileAccess.WRITE)
+	fixture.store_string(JSON.stringify(no_other_field))
+	fixture.close()
+	await _continue()
+	await _open_book()
+	_expect(book.public_plan_title.text == "井田 1 · 公田" and "接通水渠" in book.public_plan_detail.text
+		and "最早" not in book.public_plan_detail.text, "When the only public crop is blocked, name the missing canal without a ripening date.")
+	await _button(book.close_button)
+	print("COUNCIL_PREP_BLOCKED_RICE suggested=2 fallback=1")
 
 func _choose_what_to_harvest() -> void:
 	await _open_book()
@@ -113,7 +227,8 @@ func _choose_what_to_harvest() -> void:
 		"The real harvest forecast includes fertile wheat and counts exactly 30 percent as enough.")
 	print("COUNCIL_PREP_FORECAST tribute=29 private=68 gap=1 public_only=30.61 mixed=29.13")
 	await _snapshot("03-first-third-year")
-	await _key(KEY_ESCAPE)
+	if not await _adjust_private_sowing():
+		return
 	var copper: int = state.money
 	await _click_plot(PRIVATE_WHEAT)
 	await _click_plot(PRIVATE_MILLET)
@@ -124,15 +239,17 @@ func _choose_what_to_harvest() -> void:
 	_expect("还差 2 份纳贡" in book.contribution_status.text and "29.70% · 还差 1 份纳贡" in book.public_result.text,
 		"The book accounts for the two private harvests before the public crop.")
 	await _button(book.field_button)
-	_expect(state.field_route_public_only and ui.directions.tracked_plot == PUBLIC and not tree.paused,
+	_expect(state.field_route_scope == state.FieldScope.PUBLIC and ui.directions.tracked_plot == PUBLIC and not tree.paused,
 		"Only the mature public plot is marked by the preparation action.")
 	await _save_route()
-	_expect(state.current_day == 49 and state.field_route_public_only and ui.directions.tracked_plot == PUBLIC
-		and state.private_harvest_total == 71, "Continue restores the public-only field route and current ledger.")
+	_expect(state.current_day == 49 and state.field_route_scope == state.FieldScope.PUBLIC and ui.directions.tracked_plot == PUBLIC
+		and state.private_harvest_total == 71 and state.deferred_field_sowing.has(PRIVATE_WHEAT)
+		and state.deferred_field_sowing.has(PRIVATE_MILLET) and state.planned_field_seed(PRIVATE_WHEAT).is_empty(),
+		"Continue restores the public route, ledger, and temporary hold on the two now empty plots.")
 	await _snapshot("04-public-route-reloaded")
 	await _click_plot(PUBLIC)
 	_expect(state.king_storage == 30 and state.private_harvest_total == 71 and not state.tax_council_waiting()
-		and not state.field_route_public_only and ui.directions.tracked_plot == null and world.is_crop_ripe(LEFTOVER_WHEAT),
+		and state.field_route_scope == state.FieldScope.ALL and ui.directions.tracked_plot == null and world.is_crop_ripe(LEFTOVER_WHEAT),
 		"After the public harvest the route clears even with ripe private wheat nearby.")
 	await _open_book()
 	_expect(not book.public_card.visible and book.field_button.text == "查看井田", "Without ripe public crops the ledger opens the field map.")
@@ -146,6 +263,55 @@ func _choose_what_to_harvest() -> void:
 		and state.king_storage == 30 and not state.tax_council_waiting(), "The next dawn feeds the household and ripens the second public field.")
 	print("COUNCIL_PREP_DELAY day=50 tribute=30 private=71 still_needed=1 served=", state.night_rations.last.served)
 
+func _adjust_private_sowing() -> bool:
+	if not _expect(book.sowing_button.is_visible_in_tree() and "2 格私田仍在续播" in book.sowing_note.text,
+		"The ledger warns about the prepared private plots while the tribute is short."):
+		return false
+	await _button(book.sowing_button)
+	var panel: Control = ui.panel_manager.management_panel_instance
+	if not _expect(panel.visible and not book.modal.visible and not tree.paused and panel.apply_private_plan.has_focus()
+		and panel.apply_private_plan.text == "暂缓私田 · 2 格" and state.field_seed_plans.size() == 3
+		and state.deferred_field_sowing.is_empty(),
+		"Open a focused preview for the affected field and leave the plans alone until confirmation."):
+		return false
+	await _snapshot("03b-private-sowing-preview")
+	await _button(panel.sowing_rations)
+	var rations: Control = ui.get_node_or_null("Control/NightRationsPanel")
+	if not _expect(rations != null and "1 份" in rations.need.text and state.field_seed_plans.size() == 3,
+		"Check tonight's ration need without applying the seed plan preview."):
+		return false
+	await _snapshot("03c-sowing-rations")
+	await _key(KEY_ESCAPE)
+	await tree.process_frame
+	_expect(panel.visible and panel.sowing_rations.has_focus() and state.field_seed_plans.size() == 3,
+		"Closing the ration ledger returns focus to the sowing plan.")
+	if DisplayServer.get_name() != "headless" and tree.root.size.x < 1280:
+		var controller = load("res://tests/GamepadReplay.gd").new()
+		controller.tree = tree
+		controller.pad = tree.root.get_node("GamepadInput")
+		tree.root.notify_mouse_exited()
+		await controller._click(panel.apply_private_plan, true)
+		_expect(controller.failures == 0, "Use the controller to confirm a hold in the compact window.")
+	else:
+		panel.apply_private_plan.grab_focus()
+		await _key(KEY_ENTER)
+	await tree.process_frame
+	var changed: bool = state.field_seed_plans.size() == 3 and state.field_seed_plans.get(PUBLIC) == "millet" \
+		and state.field_seed_plans.get(PRIVATE_WHEAT) == "seasonal" and state.field_seed_plans.get(PRIVATE_MILLET) == "beans"
+	_expect(changed and world.is_crop_ripe(PRIVATE_WHEAT) and world.is_crop_ripe(PRIVATE_MILLET)
+		and state.deferred_field_sowing.size() == 2 and not state.deferred_field_sowing.has(PUBLIC),
+		"Defer both private plans without clearing them, changing the public plan, or removing standing crops.")
+	await _snapshot("03d-private-sowing-held")
+	await _button(panel.close_button)
+	await _open_book()
+	_expect(not book.sowing_button.visible and "2 格已暂缓" in book.sowing_note.text
+		and "还差 1 份纳贡" in book.contribution_status.text,
+		"The ledger records both holds while the public contribution is still short.")
+	await _key(KEY_ESCAPE)
+	print("COUNCIL_PREP_SOWING public=", state.field_seed_plans.get(PUBLIC), " private_plans=", state.field_seed_plans.size() - 1,
+		" deferred=", state.deferred_field_sowing.size())
+	return not failed
+
 func _meet_and_choose() -> void:
 	await _open_book()
 	_expect("30.39% · 纳贡已达标" in book.public_result.text and "29.81% · 还差 1 份纳贡" in book.mixed_result.text,
@@ -156,11 +322,11 @@ func _meet_and_choose() -> void:
 	controller.pad = tree.root.get_node("GamepadInput")
 	tree.root.notify_mouse_exited()
 	await controller._click(book.field_button, true)
-	_expect(controller.failures == 0 and state.field_route_public_only and ui.directions.tracked_plot == SECOND,
+	_expect(controller.failures == 0 and state.field_route_scope == state.FieldScope.PUBLIC and ui.directions.tracked_plot == SECOND,
 		"A controller can follow the public crop on the second field.")
 	await _click_plot(SECOND)
 	_expect(state.king_storage == 31 and state.private_harvest_total == 71 and state.tax_council_waiting()
-		and not ui.hud.council_prep_button.visible and not state.field_route_public_only,
+		and not ui.hud.council_prep_button.visible and state.field_route_scope == state.FieldScope.ALL,
 		"The predicted harvest summons the envoy and closes the preparation step.")
 	await _button(ui.hud.opening_action)
 	_expect(ui.directions.tracked_neighbor == state.TAX_ENVOY, "The journal now leads to the envoy.")
@@ -168,11 +334,15 @@ func _meet_and_choose() -> void:
 	var decision := await Campaign.meet_tax_envoy(tree)
 	if not _expect(decision != null and tree.paused, "Walk to the envoy and open the real council."):
 		return
+	_expect("2 格私田会恢复续播" in decision.text_label.text, "The envoy explains how the deferred plans will resume.")
+	await _snapshot("06a-resume-preview")
 	await _button(decision.option_buttons[state.TaxReformChoice.TRADITIONAL])
 	await _button(decision.confirm_button)
 	await _continue()
 	_expect(state.tax_reform_choice == state.TaxReformChoice.TRADITIONAL and state.tax_reform_day == 50
 		and state.king_storage == 31 and state.private_harvest_total == 71 and world.is_crop_ripe(LEFTOVER_WHEAT)
+		and state.deferred_field_sowing.is_empty() and state.field_seed_plans.get(PRIVATE_WHEAT) == "seasonal"
+		and state.field_seed_plans.get(PRIVATE_MILLET) == "beans"
 		and ui.hud.route_progress.visible and not ui.hud.council_prep_button.visible,
 		"Continue from the council save and proceed to the ending goals.")
 	await _button(ui.hud.route_progress)
@@ -182,7 +352,7 @@ func _meet_and_choose() -> void:
 
 func _old_save() -> void:
 	await _continue()
-	_expect(state.current_day == 49 and state.current_rank == state.Rank.DA_FU and not state.field_route_public_only
+	_expect(state.current_day == 49 and state.current_rank == state.Rank.DA_FU and state.field_route_scope == state.FieldScope.ALL
 		and state.king_storage == 29 and state.private_harvest_total == 68, "A genuine previous save can open the new ledger.")
 	await _open_book()
 	_expect("还差 1 份纳贡" in book.contribution_status.text, "The old record calculates the same remaining contribution.")
@@ -255,17 +425,76 @@ func _early_petition() -> void:
 	print("COUNCIL_PREP_PETITION day=", state.tax_reform_day, " regular=", state.tax_council_start_day(),
 		" receipts=", state.tax_council_petition_order_count(), " tribute=", state.king_storage)
 
+func _check_tribute_rows() -> void:
+	var north := Vector2i(5, 4)
+	var other_north := SECOND + Vector2i.UP
+	var save := SNAPSHOT.duplicate(true)
+	save.merge({"current_day": 48, "current_rank": 3, "private_harvest_total": 69, "retainers": [],
+		"active_crops": {
+			"5,4": {"id": "millet", "age": 2, "growth_nights": 2},
+			"12,4": {"id": "millet", "age": 1, "growth_nights": 2, "watered": true},
+			"5,6": {"id": "millet", "age": 2, "growth_nights": 2},
+		}}, true)
+	var fixture := FileAccess.open("user://savegame.json", FileAccess.WRITE)
+	fixture.store_string(JSON.stringify(save))
+	fixture.close()
+	await _continue()
+	await _open_book()
+	if not _expect(book.tribute_rows_button.visible and not state.is_public_plot(north),
+			"An existing save starts with its ordinary private row."):
+		return
+	await _button(book.tribute_rows_button)
+	var totals: Dictionary = world.council_harvest_forecast(state.TaxReformChoice.NONE)
+	var traditional: Dictionary = world.council_harvest_forecast(state.TaxReformChoice.TRADITIONAL)
+	_expect(totals.tribute == 1 and totals.stock == 1 and traditional.tribute == 0 and traditional.stock == 2
+		and state.king_storage == 29 and state.private_harvest_total == 69,
+		"Only the current forecast allocates the north row, and no harvest is applied by the switch.")
+	_expect(state.is_public_plot(other_north) and not state.is_public_plot(PRIVATE_MILLET)
+		and world.tile_map.get_cell_tile_data(north).get_custom_data("is_public_field"), "Both wells mark the pledged plots.")
+	await _snapshot("01-tribute-row-forecast")
+	await _button(book.tribute_rows_button)
+	_expect(not state.is_public_plot(north), "The pledge can be withdrawn before the audience.")
+	await _button(book.tribute_rows_button)
+	_expect(state.save_game() == OK, "Save the allocation.")
+	await _continue()
+	_expect(state.is_public_plot(north) and state.field_night_forecast().public_ripe == 1,
+		"The pledge and the next morning's public yield category survive a restart.")
+	await _click_plot(north)
+	await _click_plot(PRIVATE_MILLET)
+	_expect(state.king_storage == 30 and state.private_harvest_total == 70 and state.money == 145,
+		"An actual north harvest goes to the treasury, and the south crop yields money and stock.")
+	await _sleep()
+	_expect(state.current_day == 49 and state.field_night_forecast().ready == 1 and state.tax_council_waiting(),
+		"The crop and the invitation advance together at dawn.")
+	var choice := await Campaign.meet_tax_envoy(tree)
+	if not _expect(choice != null, "Meet the envoy after the ordinary contribution gate."):
+		return
+	await _button(choice.option_buttons[state.TaxReformChoice.TRADITIONAL])
+	await _button(choice.confirm_button)
+	_expect(not state.council_tribute_rows and state.is_public_plot(SECOND) and not state.is_public_plot(other_north)
+		and not world.tile_map.get_cell_tile_data(other_north).get_custom_data("is_public_field")
+		and state.route_baseline.tribute == 30 and state.king_storage == 30,
+		"The first policy choice restores the old field role and adds no ending progress.")
+	await _snapshot("02-tribute-rows-restored")
+
 func run(game_tree: SceneTree) -> void:
 	tree = game_tree
 	state = tree.root.get_node("Global")
-	capture_dir = OS.get_environment("FIEFDOM_COUNCIL_PREP_CAPTURES")
+	if capture_dir.is_empty():
+		capture_dir = OS.get_environment("FIEFDOM_COUNCIL_PREP_CAPTURES")
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated council preparation profile."):
 		tree.quit(1)
 		return
-	if petition:
+	if tribute_rows:
+		await _check_tribute_rows()
+	elif petition:
 		await _early_petition()
 	elif legacy:
 		await _old_save()
+	elif blocked_rice:
+		await _check_blocked_rice()
+	elif single_field:
+		await _prepare_with_one_field()
 	else:
 		var fixture := FileAccess.open("user://savegame.json", FileAccess.WRITE)
 		fixture.store_string(JSON.stringify(SNAPSHOT))

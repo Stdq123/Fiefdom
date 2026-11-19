@@ -7,6 +7,7 @@ const FISHING_PANEL := preload("res://scripts/FishingPanel.gd")
 
 @onready var world = $"../World"
 @onready var hud = $Control/EstateHUD
+@onready var campaign_hud = $"../CampaignHUD"
 @onready var sleep_button: Button = hud.sleep_button
 @onready var manage_button: Button = hud.manage_button
 @onready var reclaim_button: Button = hud.reclaim_button
@@ -14,6 +15,8 @@ const FISHING_PANEL := preload("res://scripts/FishingPanel.gd")
 @onready var channel_button: Button = hud.channel_button
 @onready var help_label: Label = hud.help_label
 @onready var fader: ColorRect = $Control/Fader
+@onready var freight_wait := $Control/FreightWait
+@onready var freight_bench: FreightBench = $"../World/FreightBench"
 @onready var dawn_caption: Label = $Control/Fader/DawnCaption
 @onready var directions = $Control/EstateDirections
 @onready var estate_map = $Control/EstateMap
@@ -28,12 +31,13 @@ var state_manager: UIStateManager
 var panel_manager: UIPanelManager
 var dialog_manager: UIDialogManager
 var sleep_tween: Tween
+var opening_action: Callable
 
 func _ready() -> void:
 	state_manager = UIStateManager.new()
 	add_child(state_manager)
-	state_manager.setup(hud.day_label, hud.inventory_label, hud.king_label, hud.stamina_label,
-		hud.rank_label, hud.money_label, hud.well_field_label, hud.stamina_bar)
+	state_manager.setup(hud.day_label, hud.inventory_label, hud.king_label,
+		hud.rank_label, hud.money_label, hud.well_field_label)
 
 	panel_manager = UIPanelManager.new()
 	add_child(panel_manager)
@@ -46,7 +50,10 @@ func _ready() -> void:
 	dialog_manager.setup($Control, world.player)
 
 	hud.setup_seeds(world.SEED_ORDER, world.select_seed)
-	hud.show_seed(world.current_seed_id)
+	hud.sow_from_plan.toggled.connect(world.set_sow_from_plan)
+	hud.prepare_empty_plots.toggled.connect(world.set_prepare_empty_plots)
+	hud.replant_after_harvest.toggled.connect(world.set_replant_after_harvest)
+	_refresh_seed_belt()
 	hud.guide.setup(world)
 	GamepadInput.changed.connect(_refresh_control_hints)
 	Preferences.bindings_changed.connect(_refresh_control_hints)
@@ -57,38 +64,59 @@ func _ready() -> void:
 		directions.follow_ravine(Global.ravine_trip_target)
 	elif Global.market_trip_target == Global.MARKET_RETURN:
 		Global.market_trip_target = ""
+	elif Global.market_trip_target == Global.FIELD_RETURN:
+		directions.follow_field_return()
 	elif Global.market_trip_target == Global.WATER_SOURCE:
 		directions.follow_water_source()
+	elif Global.market_trip_target == Global.FREIGHT_YARD:
+		directions.follow_freight_yard()
+	elif Global.market_trip_target == Global.POND_LANDING:
+		if not directions.follow_pond_landing():
+			Global.market_trip_target = ""
+	elif Global.market_trip_target == WinterSupper.PLACE:
+		directions.follow_winter_supper()
 	elif Global.market_trip_target == VisitorData.SILK_MERCHANT:
 		if not directions.follow_neighbor(VisitorData.SILK_MERCHANT):
 			Global.market_trip_target = ""
 	elif not Global.market_trip_target.is_empty():
 		directions.follow_market(Global.market_trip_target)
+	elif Global.field_route_status >= 0 and not Global.field_return_work.is_empty():
+		directions.resume_field_work()
 	estate_map.setup(world, directions, _map_controls_blocked)
+	estate_map.field_management_requested.connect(_show_estate_management)
 	hud.map_button.pressed.connect(estate_map.open_map)
 	hud.farm_status.pressed.connect(estate_map.open_fields)
 	hud.leave_cart.pressed.connect(world.get_node("DrivingPractice").dismount)
 	hud.handover_button.pressed.connect(_open_handover)
 	handover.find_keeper_requested.connect(_on_neighbor_directions_requested.bind(VisitorData.FIELD_KEEPER))
+	route_goals.world = world
 	hud.route_progress.pressed.connect(_open_route_goals)
 	route_goals.action_requested.connect(_on_route_goal_action)
-	world.get_node("Scenery/EndingRecord").visibility_changed.connect(_refresh_ledger_route)
+	world.get_node("Scenery/EndingRecord").readiness_changed.connect(_refresh_ledger_route)
+	GameEvents.route_ledger_read_requested.connect(_open_route_goals)
+	GameEvents.first_tribute_ledger_requested.connect(_on_first_tribute_ledger_requested)
+	GameEvents.rank_book_requested.connect(_on_rank_book_requested)
 	council_preparation.world = world
 	hud.council_prep_button.pressed.connect(_open_council_preparation)
 	hud.guide.six_arts.pressed.connect(_show_six_arts)
-	council_preparation.fields_requested.connect(_guide_public_harvest)
+	council_preparation.fields_requested.connect(_guide_ripe_harvest.bind(true))
+	council_preparation.public_plot_requested.connect(_follow_tribute_plot.bind(Global.TributeRoute.TEND))
+	council_preparation.sowing_plans_requested.connect(_show_sowing_plans)
 	council_preparation.six_arts_requested.connect(_show_six_arts)
 	council_preparation.silk_requested.connect(_show_silk)
 	council_preparation.orders_requested.connect(_on_season_board_interacted)
 	calendar.controls_blocked = _map_controls_blocked
 	hud.calendar_button.pressed.connect(calendar.open_map)
+	hud.season_event_button.pressed.connect(calendar.open_noticed_event)
 	calendar.directions_requested.connect(_guide_calendar_event)
+	calendar.order_requested.connect(_on_season_board_interacted)
 	hud.pinned_order.pressed.connect(_on_pinned_order_pressed)
 	_connect_signals()
 	_refresh_worksite_button()
 	_refresh_channel_button()
 	hud.refresh_survey_button()
 	update_ui()
+	_refresh_season_event()
 	if not Global.restore_notice.is_empty():
 		hud.show_save_notice(Global.restore_notice, true)
 		Global.restore_notice = ""
@@ -98,16 +126,18 @@ func _ready() -> void:
 		_show_away_field_report.call_deferred()
 
 func _show_away_field_report() -> void:
-	if not Global.acknowledge_away_field_work():
+	var report := Global.take_away_field_receipt()
+	if report.is_empty():
 		return
-	var report := Global.away_field_report
-	var notice := "今日外出田务 · " + Global.away_field_summary(Global.AWAY_FIELD_JOBS)
+	var heading := "今日外出田务" if report.whole_day else "本趟外出田务"
+	var lines := PackedStringArray([heading + " · " + Global.field_work_summary(report, Global.FIELD_WORK_JOBS)])
+	var yields := Global.field_work_summary(report, Global.FIELD_WORK_YIELDS)
+	if not yields.is_empty():
+		lines.append(yields)
 	if report.first_tribute:
-		report.first_tribute = false
 		AudioManager.play_event_sound("first_tribute")
-		if Global.rotation_offer_ready() and world.neighbor_actor(VisitorData.FIELD_KEEPER):
-			notice += " · 可找渠伯谈轮作"
-	GameEvents.world_notice.emit(notice)
+		lines.append(world.first_tribute_notice())
+	campaign_hud.show_world_notice("\n".join(lines), 5.0)
 
 func _process(_delta: float) -> void:
 	world.player.menu_open = _estate_panel_open()
@@ -117,15 +147,20 @@ func _process(_delta: float) -> void:
 	hud.map_button.disabled = blocked or world.player.training_cart.visible or Global.outcome != Global.Outcome.RUNNING
 	hud.farm_status.disabled = hud.map_button.disabled
 	hud.calendar_button.disabled = hud.map_button.disabled
+	hud.season_event_button.disabled = hud.map_button.disabled
 	hud.route_progress.disabled = hud.map_button.disabled
 	hud.council_prep_button.disabled = hud.map_button.disabled
 	hud.guide.six_arts.disabled = hud.map_button.disabled
 	hud.handover_button.disabled = hud.map_button.disabled
 	hud.first_private_button.disabled = hud.map_button.disabled
+	hud.opening_action.disabled = hud.map_button.disabled
+	hud.rotation_guide_button.disabled = hud.map_button.disabled
 	hud.tribute_button.disabled = hud.map_button.disabled
 	hud.raid_alert.disabled = blocked
+	hud.defense_report.disabled = hud.map_button.disabled
 	var following_canal := (Global.field_route_status == Global.NightGrowth.BLOCKED
-		or (Global.field_route_status == Global.TributeRoute.TEND and directions.tracked_plot != null
+		or ((Global.field_route_status == Global.TributeRoute.TEND or Global.field_route_status in Global.ROTATION_ROUTES)
+			and directions.tracked_plot != null
 			and Global.crop_night_status(directions.tracked_plot) == Global.NightGrowth.BLOCKED))
 	directions.update_marker(busy or world.player.training_cart.visible
 		or (world.channel_mode and not following_canal) or Global.is_indoors())
@@ -134,7 +169,7 @@ func _estate_controls_blocked() -> bool:
 	return world.channel_mode or _estate_controls_busy()
 
 func _estate_controls_busy() -> bool:
-	return (MapTravel.active or world.player.conversation_open
+	return (MapTravel.active or world.player.conversation_open or freight_wait.visible
 		or (sleep_tween and sleep_tween.is_running())
 		or _estate_panel_open())
 
@@ -157,17 +192,18 @@ func _open_route_goals() -> void:
 	else:
 		route_goals.open_map()
 
-func _refresh_ledger_route() -> void:
+func _refresh_ledger_route(ready: bool) -> void:
 	var stand := world.get_node("Scenery/EndingRecord") as Sprite2D
-	if not stand.visible and not stand.record_name.is_empty() and directions.tracked_place == stand.record_name:
+	if not ready and directions.tracked_place == stand.record_name:
 		directions.clear_tracking()
 
 func _open_council_preparation() -> void:
 	if not _map_controls_blocked():
 		council_preparation.open_map()
 
-func _guide_public_harvest() -> void:
-	if not directions.follow_field_route(Global.NightGrowth.READY, true):
+func _guide_ripe_harvest(public_only: bool) -> void:
+	var scope := Global.FieldScope.PUBLIC if public_only else Global.FieldScope.ALL
+	if not directions.follow_field_route(Global.NightGrowth.READY, scope):
 		estate_map.open_fields()
 
 func _show_six_arts() -> void:
@@ -184,24 +220,32 @@ func _open_handover() -> void:
 
 func _on_route_goal_action(kind: Global.RouteGoal) -> void:
 	match kind:
-		Global.RouteGoal.TRIBUTE, Global.RouteGoal.TAXED_HARVEST:
-			estate_map.open_fields()
+		Global.RouteGoal.TRIBUTE:
+			_guide_ripe_harvest(true)
+		Global.RouteGoal.TAXED_HARVEST:
+			_guide_ripe_harvest(false)
 		Global.RouteGoal.OFFER_SILK, Global.RouteGoal.SELL_SILK:
 			_show_silk()
 		Global.RouteGoal.COPPER:
 			_show_market()
+			panel_manager.management_panel_instance.market_panel.focus_reform_sale()
 		Global.RouteGoal.RAIDS:
 			if Global.raid_day > 0 or Global.is_raid_day(Global.current_day + 1):
 				_on_raid_alert_pressed()
 			else:
 				_show_estate_management()
 
-func _show_estate_management() -> void:
+func _show_estate_management(field_id := -1) -> void:
 	panel_manager.show_management_panel()
-	panel_manager.management_panel_instance.show_estate()
+	panel_manager.management_panel_instance.show_estate(field_id)
+
+func _show_sowing_plans(field_id: int) -> void:
+	_show_estate_management(field_id)
+	panel_manager.management_panel_instance.focus_sowing_plans(true)
 
 func _connect_signals() -> void:
 	GameEvents.day_advanced.connect(update_ui.unbind(1))
+	GameEvents.day_advanced.connect(_refresh_season_event.unbind(1))
 	GameEvents.day_advanced.connect(_refresh_farm_calendar.unbind(1))
 	GameEvents.save_finished.connect(_on_save_finished)
 	GameEvents.farm_state_changed.connect(hud.refresh_farm_status)
@@ -211,18 +255,23 @@ func _connect_signals() -> void:
 	GameEvents.channels_changed.connect(hud.refresh_farm_status)
 	GameEvents.channels_changed.connect(_refresh_opening_action)
 	GameEvents.crop_harvested.connect(update_ui.unbind(1))
+	GameEvents.crop_harvested.connect(_refresh_season_event.unbind(1))
 	GameEvents.stamina_changed.connect(update_ui.unbind(1))
 	GameEvents.visitor_interacted.connect(_on_visitor_interacted)
 	GameEvents.gathering_guest_interacted.connect(_on_gathering_guest_interacted)
 	GameEvents.gathering_book_requested.connect(_on_gathering_book_requested)
 	GameEvents.neighbor_directions_requested.connect(_on_neighbor_directions_requested)
 	GameEvents.gathering_recital_recorded.connect(update_ui)
+	GameEvents.gathering_recital_recorded.connect(_refresh_season_event)
 	GameEvents.autumn_exhibit_requested.connect(_on_autumn_exhibit_requested)
 	GameEvents.autumn_exhibit_completed.connect(update_ui)
+	GameEvents.autumn_exhibit_completed.connect(_refresh_season_event)
 	GameEvents.autumn_guest_interacted.connect(_on_autumn_guest_interacted)
 	GameEvents.sheepfold_requested.connect(_on_sheepfold_requested)
 	GameEvents.retainer_interacted.connect(_on_retainer_interacted)
 	GameEvents.season_board_interacted.connect(_on_season_board_interacted)
+	GameEvents.season_order_work_requested.connect(_on_season_order_work_requested)
+	GameEvents.freight_bench_interacted.connect(_on_freight_bench_interacted)
 	GameEvents.freight_arrival_interacted.connect(_on_freight_arrival_interacted)
 	GameEvents.seed_garden_requested.connect(_on_seed_garden_requested)
 	GameEvents.fishing_requested.connect(_on_fishing_requested)
@@ -230,6 +279,7 @@ func _connect_signals() -> void:
 	GameEvents.winter_road_rations_interacted.connect(_on_winter_road_rations_interacted)
 	GameEvents.winter_supper_requested.connect(_on_winter_supper_requested)
 	GameEvents.winter_supper_prepared.connect(update_ui)
+	GameEvents.winter_supper_prepared.connect(_refresh_season_event)
 	GameEvents.road_rest_interacted.connect(_on_road_rest_interacted)
 	GameEvents.rotation_book_interacted.connect(_on_rotation_book_interacted)
 	GameEvents.water_source_interacted.connect(_on_water_source_interacted)
@@ -239,20 +289,25 @@ func _connect_signals() -> void:
 	GameEvents.tax_reform_triggered.connect(_on_council_invitation)
 	GameEvents.tax_reform_choice_made.connect(_refresh_opening_action.unbind(1))
 	GameEvents.tax_reform_choice_made.connect(update_ui.unbind(1))
+	GameEvents.campaign_ended.connect(_refresh_opening_action.unbind(1))
 	GameEvents.tax_envoy_interacted.connect(_on_tax_envoy_interacted)
 	GameEvents.channel_survey_learned.connect(hud.refresh_survey_button)
 	GameEvents.channel_survey_learned.connect(update_ui)
 	GameEvents.raid_defeated.connect(update_ui)
 	GameEvents.retainer_duty_changed.connect(update_ui.unbind(1))
+	GameEvents.retainer_assigned.connect(_refresh_opening_action.unbind(2))
 	GameEvents.retainer_location_changed.connect(_refresh_visitor_note)
 	GameEvents.retainer_recruited.connect(update_ui.unbind(1))
 	GameEvents.retainer_departed.connect(update_ui.unbind(1))
 	GameEvents.reputation_changed.connect(update_ui.unbind(1))
 	GameEvents.money_changed.connect(update_ui.unbind(1))
 	GameEvents.inventory_changed.connect(update_ui.unbind(1))
+	GameEvents.inventory_changed.connect(_refresh_season_event.unbind(1))
+	GameEvents.fish_changed.connect(_refresh_season_event)
 	GameEvents.food_changed.connect(update_ui.unbind(1))
 	GameEvents.night_rations_changed.connect(update_ui)
 	GameEvents.night_rations_requested.connect(_show_night_rations)
+	GameEvents.pavilion_table_requested.connect(_on_pavilion_table_requested)
 	GameEvents.silk_changed.connect(update_ui)
 	GameEvents.ravine_journal_changed.connect(update_ui)
 	GameEvents.rank_changed.connect(update_ui.unbind(1))
@@ -271,7 +326,9 @@ func _connect_signals() -> void:
 	GameEvents.west_market_directions_requested.connect(_on_west_market_directions_requested)
 	GameEvents.ravine_trip_requested.connect(_on_ravine_trip_requested)
 
-	world.seed_selected.connect(hud.show_seed)
+	world.seed_selected.connect(_refresh_seed_belt.unbind(1))
+	world.pavilion_rest.story_changed.connect(_refresh_pavilion_story.unbind(1))
+	_refresh_pavilion_story(world.pavilion_rest.story_id, world.pavilion_rest.appointment_id)
 	world.channel_mode_changed.connect(_on_channel_mode_changed)
 	world.channel_feedback.connect(hud.show_channel_help)
 	world.irrigation_overlay.preview_changed.connect(func(message: String): hud.canal_preview.text = message)
@@ -284,11 +341,13 @@ func _connect_signals() -> void:
 	world.visitor_changed.connect(_update_visitor_note)
 	hud.cancel_directions.visibility_changed.connect(_refresh_opening_action)
 	hud.opening_action.pressed.connect(_on_opening_action)
-	sleep_button.pressed.connect(_on_sleep_pressed)
+	hud.rotation_guide_button.pressed.connect(_open_rotation_guide)
+	sleep_button.pressed.connect(_request_sleep)
 	hud.rations_button.pressed.connect(_show_night_rations)
 	hud.tribute_button.pressed.connect(_show_night_rations)
 	hud.morning_button.pressed.connect(_show_night_rations.bind(true))
 	hud.raid_alert.pressed.connect(_on_raid_alert_pressed)
+	hud.defense_report.pressed.connect(_on_defense_report_pressed)
 	manage_button.pressed.connect(_on_manage_pressed)
 	hud.neighbors_button.pressed.connect(_on_neighbors_pressed)
 	reclaim_button.pressed.connect(_on_reclaim_pressed)
@@ -304,34 +363,21 @@ func update_ui() -> void:
 	hud.calendar_label.text = "第 %d 年 · %s · %s" % [
 		Global.get_current_year(), Global.get_current_solar_term(),
 		"雨" if Global.has_rain() else "晴"]
-	hud.gathering_label.text = ""
-	if Global.is_gathering_day():
-		hud.gathering_label.text = "今日谷雨亭集 · 迎客曲已入簿" if Global.gathering_score() > 0 else "今日谷雨亭集 · 南路亭东"
-	elif Global.is_gathering_day(Global.current_day + 1):
-		hud.gathering_label.text = "明日谷雨亭集 · 南路亭东"
-	elif Global.is_summer_raft_day():
-		hud.gathering_label.text = ("今日夏至试筏 · 竹涧西岸" if not Global.summer_raft_results.has(Global.current_day)
-			else "夏至试筏 · 成绩已入簿")
-	elif Global.is_summer_raft_day(Global.current_day + 1):
-		hud.gathering_label.text = "明日夏至试筏 · 竹涧西岸"
-	elif Global.is_autumn_exhibit_day():
-		hud.gathering_label.text = ("今日秋社 · " + EstateLayout.FESTIVAL_SITE_NAME
-			if Global.autumn_exhibit_record(Global.current_day).is_empty() else "今日秋社 · 已入簿")
-	elif Global.is_autumn_exhibit_day(Global.current_day + 1):
-		hud.gathering_label.text = "明日秋社 · 备三种私田收成"
-	elif Global.is_winter_supper_day():
-		hud.gathering_label.text = ("今日冬至围炉 · " + EstateLayout.FESTIVAL_SITE_NAME if Global.winter_supper_record().is_empty()
-			else "冬至围炉 · 今夜已备饭")
-	elif Global.is_winter_supper_day(Global.current_day + 1):
-		hud.gathering_label.text = "明日冬至围炉 · 备麦和菽或鱼"
-	hud.gathering_label.visible = not hud.gathering_label.text.is_empty()
 	_update_visitor_note(world.current_visitor())
+
+func _refresh_season_event() -> void:
+	var caption: String = calendar.event_notice()
+	hud.season_event_button.text = caption
+	hud.season_event_button.visible = not caption.is_empty()
 
 func _refresh_farm_calendar() -> void:
 	hud.refresh_seed_calendar()
 	hud.refresh_farm_status()
+	_refresh_seed_belt()
+
+func _refresh_seed_belt() -> void:
 	if not world.channel_mode:
-		hud.show_seed(world.current_seed_id)
+		hud.show_seed(world.current_seed_id, world.sow_from_plan, world.prepare_empty_plots, world.replant_after_harvest)
 
 func _refresh_channel_button() -> void:
 	channel_button.disabled = not Global.tech_unlocked["irrigation"]
@@ -346,13 +392,13 @@ func _on_channel_mode_changed(enabled: bool) -> void:
 		if world.irrigation_overlay.rice_plot_highlight.any(
 				func(cell: Vector2i) -> bool: return Global.irrigation.supplies(cell)):
 			world.select_seed("rice")
-		hud.show_seed(world.current_seed_id)
+		_refresh_seed_belt()
 
 func _refresh_control_hints() -> void:
 	if world.channel_mode:
 		hud.refresh_channel_help()
 	else:
-		hud.show_seed(world.current_seed_id)
+		_refresh_seed_belt()
 	_update_visitor_note(world.current_visitor())
 
 func _on_visitor_interacted(data: VisitorData) -> void:
@@ -371,14 +417,47 @@ func _on_gathering_book_requested() -> void:
 	world.set_channel_mode(false)
 	dialog_manager.show_gathering_book()
 
+func _on_pavilion_table_requested() -> void:
+	world.set_channel_mode(false)
+	var table: PavilionRest = world.pavilion_rest
+	if directions.tracked_place in [table.gathering_name(), PavilionRest.STORY_LABEL, PavilionRest.WAIT_LABEL]:
+		directions.clear_tracking()
+	if not table.story_id.is_empty():
+		dialog_manager.show_pavilion_story(table.story_id, table.gathering_name(), _show_night_rations)
+	elif not table.appointment_id.is_empty():
+		dialog_manager.show_pavilion_appointment(table.appointment_id, table.gathering_name(),
+			_wait_at_pavilion.bind(table.appointment_id), _show_night_rations)
+	else:
+		_show_night_rations()
+
+func _wait_at_pavilion(id: String) -> void:
+	var table: PavilionRest = world.pavilion_rest
+	if not _estate_controls_busy() and table.appointment_id == id and table.can_interact_from(world.player.global_position):
+		freight_wait.wait_for_pavilion(world.player, table, id)
+
+func _refresh_pavilion_story(story_id: String, appointment_id: String) -> void:
+	hud.pavilion_story_available = not story_id.is_empty()
+	hud.pavilion_story_expected = not appointment_id.is_empty()
+	hud.refresh_rations()
+	if story_id.is_empty() and directions.tracked_place == PavilionRest.STORY_LABEL:
+		directions.clear_tracking()
+	if appointment_id.is_empty() and directions.tracked_place == PavilionRest.WAIT_LABEL:
+		if story_id.is_empty():
+			directions.clear_tracking()
+		else:
+			directions.follow_place(PavilionRest.STORY_LABEL, world.pavilion_rest.gathering_approach())
+
 func _on_retainer_interacted(data: RetainerData) -> void:
 	directions.arrive_at(data.name)
 	world.set_channel_mode(false)
 	var actor := world.retainer_instances.get(data) as Retainer
-	dialog_manager.show_retainer_dialog(data, actor != null and actor.resting_at_pavilion())
+	var rest := actor.pavilion_note() if actor and actor.resting_at_pavilion() else ""
+	dialog_manager.show_retainer_dialog(data, rest)
 
 func _on_rotation_book_interacted() -> void:
 	world.set_channel_mode(false)
+	if directions.tracked_place == "轮作簿":
+		directions.clear_tracking()
 	dialog_manager.show_rotation_book(world.irrigation_overlay.highlight_fertile_cells, _show_estate_management)
 
 func _on_water_source_interacted() -> void:
@@ -389,6 +468,18 @@ func _on_water_source_interacted() -> void:
 	var rice_plots: int = world.irrigation_overlay.starter_rice_plots(starter).size()
 	dialog_manager.show_water_source(starter.size(), rice_plots,
 		_show_six_arts, _show_water_technology, _dig_from_water_source.bind(starter))
+
+func _on_first_tribute_ledger_requested() -> void:
+	if world.player.conversation_open or Global.outcome != Global.Outcome.RUNNING or not Global.first_tribute_delivered():
+		return
+	world.set_channel_mode(false)
+	dialog_manager.show_first_tribute_ledger(_follow_tribute_plot.bind(Global.TributeRoute.TEND))
+
+func _on_rank_book_requested() -> void:
+	if world.player.conversation_open or Global.is_indoors() or not Global.has_rank_book():
+		return
+	world.set_channel_mode(false)
+	dialog_manager.show_rank_book(_on_reclaim_pressed)
 
 func _guide_water_source() -> void:
 	world.set_channel_mode(false)
@@ -414,15 +505,12 @@ func _on_tax_envoy_interacted() -> void:
 	EventManager.open_tax_council(world, $Control)
 
 func _on_council_invitation() -> void:
-	if Global.field_route_public_only:
+	if (Global.field_route_scope == Global.FieldScope.PUBLIC or Global.field_route_status == Global.TributeRoute.TEND
+		or Global.field_route_status in Global.ROTATION_ROUTES):
 		directions.clear_tracking()
 	_refresh_opening_action()
 
-func _opening_neighbor() -> String:
-	if Global.tax_council_waiting():
-		return Global.TAX_ENVOY
-	if Global.private_harvest_total == 0 and Global.rotation_offer_ready() and world.neighbor_actor(VisitorData.FIELD_KEEPER):
-		return VisitorData.FIELD_KEEPER
+func _first_tribute_neighbor() -> String:
 	if not hud.guide.waiting_for_tribute_crop:
 		return ""
 	var visitor: VisitorData = world.current_visitor()
@@ -431,45 +519,219 @@ func _opening_neighbor() -> String:
 	return VisitorData.FIELD_KEEPER if is_instance_valid(world.neighbor_actor(VisitorData.FIELD_KEEPER)) else ""
 
 func _refresh_opening_action() -> void:
-	var speaker := _opening_neighbor()
-	var can_discuss_rotation := speaker == VisitorData.FIELD_KEEPER and Global.rotation_offer_ready()
-	var can_review_harvest := (not Global.first_harvest_reviewed and Global.get_current_year() == 1
-		and Global.current_rank == Global.Rank.XIA_SHI and Global.first_tribute_delivered()
-		and Global.private_harvest_total > 0 and Global.player_inventory > 0)
-	var action: Button = hud.opening_action
-	hud.handover_button.visible = Global.outcome == Global.Outcome.RUNNING and not Global.first_tribute_delivered()
-	action.visible = (Global.outcome == Global.Outcome.RUNNING and not hud.cancel_directions.visible
-		and (not speaker.is_empty() or can_review_harvest))
-	if not action.visible:
+	var running := Global.outcome == Global.Outcome.RUNNING
+	var first_tribute := Global.first_tribute_delivered()
+	hud.handover_button.visible = running and not first_tribute
+	var rotation := Global.field_rotation
+	var has_second_field: bool = Global.well_fields.size() > 1 and Global.well_fields[1].is_unlocked
+	var pending: bool = (rotation.waiting_for_harvest() or rotation.ready_to_sign()
+		or (rotation.signed_day == 0 and not has_second_field))
+	var signed_field := Global.get_well_field(rotation.field_number - 1)
+	var can_hand_off: bool = (rotation.signed_day > 0 and not signed_field.is_empty() and signed_field.is_unlocked
+		and not Global.retainers.any(func(worker: RetainerData) -> bool:
+			return worker.duty == RetainerData.Duty.STEWARD and Global.stewarded_field(worker).field_id == signed_field.field_id))
+	hud.rotation_guide_button.visible = running and first_tribute and not Global.tax_council_waiting() and (pending or can_hand_off)
+	if hud.rotation_guide_button.visible:
+		hud.rotation_guide_button.text = "轮作试种"
+		if can_hand_off:
+			hud.rotation_guide_button.text = "找轮作簿"
+		elif rotation.ready_to_sign():
+			hud.rotation_guide_button.text = "轮作试种 · 待记簿"
+		hud.rotation_guide_button.tooltip_text = ("标出田南的轮作簿，可安排续播与井田管事。" if can_hand_off
+			else "查看渠伯的约定、试种田格和下一步。")
+	if not running or hud.cancel_directions.visible:
+		hud.opening_action.hide()
 		return
-	if speaker.is_empty():
-		action.text = "首茬收成 · 安排去处"
-		action.tooltip_text = "查看今夜用粮与时令交货。"
-	elif speaker == Global.TAX_ENVOY:
-		action.text = "去见召简 · 堂前"
-		action.tooltip_text = "走到堂前，按 %s 议税。" % GamepadInput.interact_key()
-	elif can_discuss_rotation:
-		action.text = "找渠伯谈轮作"
-		action.tooltip_text = "沿标记走到渠伯身边，按 %s 交谈。" % GamepadInput.interact_key()
+	if Global.tax_council_waiting():
+		_show_opening_neighbor(Global.TAX_ENVOY)
+		return
+	if not first_tribute:
+		var speaker := _first_tribute_neighbor()
+		if speaker.is_empty():
+			hud.opening_action.hide()
+		else:
+			_show_opening_neighbor(speaker)
+		return
+	var early_estate := Global.tax_reform_choice == Global.TaxReformChoice.NONE and Global.well_fields.size() == 1
+	if early_estate and Global.last_recruit_day == Global.current_day and Global.food_storage < Global.retainer_food_cost():
+		var rations := Global.night_rations_plan()
+		if rations.served < rations.need:
+			_set_opening_action("为新门客备粮", "今夜口粮尚未供齐。打开今夜安排补粮。", _show_night_rations)
+			return
+	if (Global.private_harvest_total == 0 and Global.rotation_offer_ready()
+		and is_instance_valid(world.neighbor_actor(VisitorData.FIELD_KEEPER))):
+		hud.rotation_guide_button.hide()
+		_show_opening_neighbor(VisitorData.FIELD_KEEPER)
+		return
+	if Global.field_rotation.signed_day == Global.current_day:
+		if can_hand_off:
+			hud.rotation_guide_button.hide()
+			_set_opening_action("找轮作簿", "田南的轮作簿可以安排下茬和井田管事。", _guide_rotation_book)
+			return
+	if Global.field_rotation.ready_to_sign() and is_instance_valid(world.neighbor_actor(VisitorData.FIELD_KEEPER)):
+		hud.rotation_guide_button.hide()
+		_set_opening_action("找渠伯记轮作", "请渠伯把两茬收成记进轮作簿。", _on_neighbor_directions_requested.bind(VisitorData.FIELD_KEEPER))
+		return
+	if not early_estate:
+		hud.opening_action.hide()
+		return
+	if (Global.current_rank == Global.Rank.XIA_SHI and not Global.first_harvest_reviewed
+		and Global.get_current_year() == 1 and Global.private_harvest_total > 0 and Global.player_inventory > 0):
+		_set_opening_action("首茬收成 · 安排去处", "查看今夜用粮与时令交货。", _review_first_harvest)
+		return
+	if Global.current_rank == Global.Rank.XIA_SHI and _show_promotion_action():
+		return
+	if Global.current_rank in [Global.Rank.ZHONG_SHI, Global.Rank.SHANG_SHI]:
+		_set_opening_action("查看开垦筹备", "查看第二块井田所需的门客、铜钱和粮食。", _on_reclaim_pressed)
+		return
+	hud.opening_action.hide()
+
+func _open_rotation_guide() -> void:
+	if _map_controls_blocked() or not hud.rotation_guide_button.is_visible_in_tree():
+		return
+	var story := Global.field_rotation
+	if story.signed_day > 0:
+		_guide_rotation_book()
+		return
+	if story.ready_to_sign():
+		var note := "井田 %d · 私田收下%s，多收一份。" % [story.field_number, Global.rotation_crop_name()]
+		_show_rotation_visit("两茬已收", note + "\n请渠伯记进轮作簿，随后可任命管事照料整块井田。", "指路去记簿")
+		return
+	if Global.rotation_offer_ready():
+		_show_rotation_visit("与渠伯约定",
+			"先在一格私田收菽，再在留肥的原格收下别的作物。\n记入轮作簿后，就可以托门客管一整块井田。", "指路去找渠伯")
+		return
+	var target: Dictionary = world.rotation_site()
+	if target.is_empty():
+		dialog_manager.show_rotation_guide("等待空畦", "留一格私田种菽，收成后这格就会留肥。\n眼下没有可试种的私田。开垦后的新井田也能试种。", "", Callable())
+		return
+	var cell: Vector2i = target.cell
+	var heading := "井田 %d · 私田" % target.field
+	var detail := _rotation_plot_detail(cell, target.route)
+	var label := "标出这格私田"
+	if not target.seed.is_empty():
+		label += " · 换%s种" % ItemManager.get_crop(target.seed).crop_name
+	dialog_manager.show_rotation_guide(heading, detail, label, _follow_rotation_plot.bind(cell, target.route, target.seed))
+
+func _show_rotation_visit(context: String, text: String, action: String) -> void:
+	var locate := Callable()
+	if is_instance_valid(world.neighbor_actor(VisitorData.FIELD_KEEPER)):
+		locate = _on_neighbor_directions_requested.bind(VisitorData.FIELD_KEEPER)
 	else:
-		var actor: Node2D = world.neighbor_actor(speaker)
-		var place := "田边"
-		if actor is Visitor:
-			place = actor.visit_note()
-		elif actor is Retainer:
-			place = world.duty_place(actor.data)
-		action.text = "去见%s · %s" % [speaker, place]
-		action.tooltip_text = "按地图标记走到近处，按 %s 交谈。" % GamepadInput.interact_key()
+		var visit := Global.next_field_keeper_visit()
+		if visit <= Global.current_day:
+			visit += FieldRotation.VISIT_INTERVAL
+		text += "\n渠伯第 %d 天回井田西南。" % visit
+	dialog_manager.show_rotation_guide(context, text, action, locate)
+
+func _rotation_plot_detail(cell: Vector2i, route: int) -> String:
+	var crop: Dictionary = Global.active_crops.get(cell, {})
+	var detail := "收下菽后，这一格会留肥。"
+	if route == Global.RotationRoute.FOLLOWUP:
+		detail = "这格留着豆茬的肥。下一茬种黍或别的作物，收成会多一份。收后找渠伯记簿。"
+	elif route == Global.RotationRoute.CLEAR:
+		detail = "收完这茬就能腾出私田种菽。"
+	if crop.is_empty():
+		var seed := "黍" if route == Global.RotationRoute.FOLLOWUP else "菽"
+		var next := "先在标记的私田翻地，再播%s。" % seed if not Global.tilled_cells.has(cell) else "在标记的私田播%s。" % seed
+		var planned := Global.planned_field_seed(cell)
+		if not planned.is_empty():
+			detail += "\n这格已有续播安排。门客会播%s。" % ItemManager.get_crop(planned).crop_name
+		return detail + "\n" + next
+	var name: String = crop.data.crop_name
+	var nights: int = crop.growth_nights - crop.age
+	match Global.crop_night_status(cell):
+		Global.NightGrowth.READY: return detail + "\n这格%s已经可以收割。" % name
+		Global.NightGrowth.BLOCKED: return detail + "\n这格稻田断水，先把渠水接到田边。"
+		Global.NightGrowth.DRY: return detail + "\n%s还需供水 %d 夜。今天先浇水。" % [name, nights]
+	return detail + "\n今天的水已到田。%s还需供水 %d 夜。" % [name, nights]
+
+func _follow_rotation_plot(cell: Vector2i, route: int, seed: String) -> void:
+	if directions.follow_rotation_plot(cell, route) and not seed.is_empty():
+		world.select_seed(seed)
+
+func _guide_rotation_book() -> void:
+	var book := world.get_node("FieldRotationBook") as Node2D
+	directions.follow_place("轮作簿", world.to_local(book.global_position))
+	if Global.is_indoors():
+		hud.practice_label.text = "已标出轮作簿 · 从南门回田边"
+
+func _show_promotion_action() -> bool:
+	var qualified := Global.eligible_for_promotion()
+	if Global.private_harvest_total == 0 and not qualified:
+		return false
+	var plan := Global.tribute_field_plan()
+	var status: int = plan.get("status", -1)
+	var penalty := Global.tribute_penalty_tonight()
+	var can_promote_tonight := qualified and Global.reputation - penalty >= Global.promotion_reputation()
+	var ripe := status == Global.NightGrowth.READY
+	var can_tend: bool = (not plan.is_empty() and status not in [Global.NightGrowth.GROW, Global.NightGrowth.RIPEN]
+		and world.field_cost(world.field_action(plan.cell)) <= Global.current_stamina)
+	if can_tend and (ripe or penalty > 0):
+		_show_next_tribute(status)
+		return true
+	if can_promote_tonight:
+		_set_opening_action("查看今夜安排", "过夜核定爵位。先查看今夜的田务和口粮。", _show_night_rations)
+		return true
+	var guest: VisitorData = world.current_visitor()
+	if not guest or guest.talked_today():
+		guest = world.scheduled_visitor if not world.silk_trip_note().is_empty() else null
+	if guest and not guest.talked_today():
+		_show_opening_neighbor(guest.name, Global.balance.interaction_reputation_gain)
+		return true
+	if can_tend:
+		_show_next_tribute(status)
+		return true
+	return false
+
+func _show_next_tribute(status: int) -> void:
+	var label := "备下次纳贡 · 找公田"
+	match status:
+		Global.NightGrowth.READY: label = "收公田纳贡"
+		Global.NightGrowth.DRY: label = "给公田浇水"
+		Global.NightGrowth.BLOCKED: label = "查看断水公田"
+	var route := Global.TributeRoute.TEND if status < 0 else status
+	_set_opening_action(label, "标出井田中央的公田。收成入国库，并增加声望。", _follow_tribute_plot.bind(route))
+
+func _show_opening_neighbor(speaker: String, reputation_gain := 0) -> void:
+	var interact_key := GamepadInput.interact_key()
+	var guide_to_neighbor := _on_neighbor_directions_requested.bind(speaker)
+	if speaker == Global.TAX_ENVOY:
+		_set_opening_action("去见召简 · 堂前", "走到堂前，按 %s 议税。" % interact_key, guide_to_neighbor)
+		return
+	if speaker == VisitorData.FIELD_KEEPER and Global.rotation_offer_ready():
+		_set_opening_action("找渠伯谈轮作", "沿标记走到渠伯身边，按 %s 交谈。" % interact_key, guide_to_neighbor)
+		return
+	var actor: Node2D = world.neighbor_actor(speaker)
+	var place := "田边"
+	if actor is Visitor:
+		place = actor.visit_note()
+	elif actor is Retainer:
+		place = world.duty_place(actor.data)
+	elif speaker == VisitorData.SILK_MERCHANT:
+		place = world.silk_trip_stop().get("place", "西市")
+	var tip := "按地图标记走到近处，按 %s 交谈。" % interact_key
+	if reputation_gain > 0:
+		tip += "今日交谈可得 %d 声望。" % reputation_gain
+	_set_opening_action("去见%s · %s" % [speaker, place], tip, guide_to_neighbor)
+
+func _set_opening_action(label: String, tip: String, handler: Callable) -> void:
+	opening_action = handler
+	hud.opening_action.text = label
+	hud.opening_action.tooltip_text = tip
+	hud.opening_action.show()
+
+func _review_first_harvest() -> void:
+	var dialog := dialog_manager.show_first_harvest(_on_season_board_interacted, _plan_first_field)
+	dialog.option_selected.connect(_refresh_opening_action.unbind(1))
+
+func _plan_first_field() -> void:
+	_show_estate_management(0)
+	panel_manager.management_panel_instance.focus_seed_picker()
 
 func _on_opening_action() -> void:
-	if _estate_controls_blocked():
-		return
-	var speaker := _opening_neighbor()
-	if speaker.is_empty():
-		var dialog := dialog_manager.show_first_harvest(_on_season_board_interacted)
-		dialog.option_selected.connect(_refresh_opening_action.unbind(1))
-	else:
-		_on_neighbor_directions_requested(speaker)
+	if hud.opening_action.is_visible_in_tree() and not _map_controls_blocked():
+		opening_action.call()
 
 func _refresh_visitor_note() -> void:
 	_update_visitor_note(world.current_visitor())
@@ -503,6 +765,13 @@ func _update_visitor_note(data: VisitorData) -> void:
 		hud.visitor_label.text = "%s已留下，可到%s找他。" % [resident.name, world.duty_place(resident)]
 	else:
 		hud.visitor_label.text = "今日无客来访。"
+	if world.pavilion_rest.is_rain_shelter() and Global.current_day != 1:
+		var sheltered: PackedStringArray = []
+		for resident: Retainer in world.retainer_instances.values():
+			if resident.resting_at_pavilion():
+				sheltered.append(resident.data.name)
+		if not sheltered.is_empty():
+			hud.visitor_label.text += "\n%s在南路亭避雨。" % "、".join(sheltered)
 	if Global.defense_review_ready():
 		if data and data.name == VisitorData.EAST_WATCHER:
 			hud.visitor_label.text += " 可复盘守备。"
@@ -560,32 +829,76 @@ func _on_raid_alert_pressed() -> void:
 	else:
 		_show_night_rations()
 
-func _show_night_rations(show_previous := false) -> void:
+func _on_defense_report_pressed() -> void:
+	if _estate_controls_blocked() or not Global.defense_review_ready():
+		return
+	var watcher: Node2D = world.neighbor_actor(VisitorData.EAST_WATCHER)
+	var visit := ""
+	if watcher is Visitor:
+		visit = _visitor_line(watcher)
+	elif watcher is Retainer:
+		var rest: String = watcher.pavilion_note()
+		visit = "弋戎在%s。" % world.duty_place(watcher.data) if rest.is_empty() else "弋戎 · %s。" % rest
+	var next_day := Global.next_visitor_day(VisitorData.EAST_WATCHER) if visit.is_empty() else 0
+	dialog_manager.show_defense_report(visit, next_day, directions.follow_neighbor.bind(VisitorData.EAST_WATCHER))
+
+func _show_night_rations(show_previous := false, focus_shortage := false) -> void:
 	if Global.outcome != Global.Outcome.RUNNING or world.player.conversation_open or (sleep_tween and sleep_tween.is_running()):
 		return
 	world.set_channel_mode(false)
 	panel_manager.hide_settings_panel()
 	var panel := NIGHT_RATIONS_PANEL.instantiate()
 	panel.show_previous = show_previous
+	panel.focus_shortage = focus_shortage
+	panel.wait_for_retainers = world.wait_for_retainers
+	var previous_focus := get_viewport().gui_get_focus_owner()
 	var player: Player = world.player
 	player.conversation_open = true
 	$Control.add_child(panel)
+	var table: PavilionRest = world.pavilion_rest
+	table.story_changed.connect(panel.show_pavilion_story)
+	panel.show_pavilion_story(table.story_id, table.appointment_id, table.gathering_name())
 	GameEvents.modal_visibility_changed.emit(true)
 	panel.market_requested.connect(_show_market)
-	panel.duties_requested.connect(panel_manager.show_management_panel)
+	panel.silk_requested.connect(_show_silk)
+	panel.duties_requested.connect(_show_estate_management)
+	panel.field_management_requested.connect(func(field_id: int):
+		panel.tree_exited.connect(_show_estate_management.bind(field_id), CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+	)
 	panel.dry_plot_requested.connect(_on_night_plot_requested.bind(panel, Global.NightGrowth.DRY))
 	panel.harvest_requested.connect(_on_night_plot_requested.bind(panel, Global.NightGrowth.READY))
 	panel.tribute_field_requested.connect(_on_tribute_field_requested.bind(panel))
+	panel.pavilion_story_requested.connect(_guide_pavilion_story.bind(panel))
 	panel.east_watch_requested.connect(_guide_east_watch)
+	panel.tomorrow_calendar_requested.connect(func():
+		panel_manager.hide_management_panel()
+		panel.tree_exited.connect(calendar.open_day.bind(Global.current_day + 1), CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+		panel.queue_free()
+	)
 	panel.sleep_requested.connect(func():
 		panel_manager.hide_management_panel()
-		_on_sleep_pressed()
+		# The night sheet releases the player's conversation lock on exit.
+		panel.tree_exited.connect(_request_sleep, CONNECT_DEFERRED | CONNECT_ONE_SHOT)
 	)
 	panel.tree_exited.connect(func():
 		GameEvents.modal_visibility_changed.emit(false)
 		if is_instance_valid(player):
 			player.conversation_open = false
+		if is_instance_valid(previous_focus) and previous_focus.is_visible_in_tree() and get_viewport().gui_get_focus_owner() == null:
+			previous_focus.grab_focus()
+			GamepadInput.snap_pointer_to_focus.call_deferred()
 	)
+
+func _guide_pavilion_story(panel: Control) -> void:
+	var table: PavilionRest = world.pavilion_rest
+	if table.story_id.is_empty() and table.appointment_id.is_empty():
+		return
+	var label := PavilionRest.WAIT_LABEL if table.story_id.is_empty() else PavilionRest.STORY_LABEL
+	directions.follow_place(label, table.gathering_approach())
+	panel_manager.hide_management_panel()
+	panel.queue_free()
+	if Global.is_indoors():
+		hud.practice_label.text = "从南门出去，循标记去席案。"
 
 func _on_night_plot_requested(panel: Control, status: Global.NightGrowth) -> void:
 	if directions.follow_field_route(status):
@@ -596,14 +909,20 @@ func _on_night_plot_requested(panel: Control, status: Global.NightGrowth) -> voi
 			hud.practice_label.text = "已标出%s · 从南门回田边" % plot
 
 func _on_tribute_field_requested(panel: Control) -> void:
-	if not directions.follow_field_route(Global.TributeRoute.TEND):
-		return
-	var seed: String = Global.tribute_field_plan().seed_id
-	if not seed.is_empty():
-		world.select_seed(seed)
-	panel.queue_free()
+	if _follow_tribute_plot(Global.TributeRoute.TEND):
+		panel.queue_free()
+
+func _follow_tribute_plot(route: int) -> bool:
+	var scope := Global.FieldScope.ALL if route == Global.TributeRoute.TEND else Global.FieldScope.PUBLIC
+	if not directions.follow_field_route(route, scope):
+		return false
+	if route == Global.TributeRoute.TEND:
+		var seed: String = Global.tribute_field_plan().seed_id
+		if not seed.is_empty():
+			world.select_seed(seed)
 	if Global.is_indoors():
-		hud.practice_label.text = "已标出公田 · 从门口回田边"
+		hud.practice_label.text = "已标出公田 · 从南门回田边"
+	return true
 
 func _guide_driving_practice() -> void:
 	if world.player.training_cart.visible:
@@ -646,10 +965,13 @@ func _show_reclamation_market(site: Variant) -> void:
 
 func _on_west_market_directions_requested(place: String) -> void:
 	world.set_channel_mode(false)
-	directions.follow_market(place)
+	if place == Global.FREIGHT_YARD:
+		directions.follow_freight_yard()
+	else:
+		directions.follow_market(place)
 	panel_manager.hide_management_panel()
 	if Global.is_indoors():
-		var destination := place if place == Sheepfold.MEADOW else "西市" + place
+		var destination := place if place in [Sheepfold.MEADOW, Global.FREIGHT_YARD] else "西市" + place
 		hud.practice_label.text = "已标出%s · 从南门回封地" % destination
 
 func _on_ravine_trip_requested(place: String) -> void:
@@ -660,9 +982,16 @@ func _on_ravine_trip_requested(place: String) -> void:
 		hud.practice_label.text = "已标出东关 · 从南门回封地"
 
 func _on_pinned_order_pressed() -> void:
+	if _estate_controls_busy() or world.player.training_cart.visible:
+		return
 	var order := Global.pinned_season_order()
 	if not order.is_empty() and Global.can_deliver_season_order(order):
 		_on_west_market_directions_requested(Global.MARKET_ORDERS)
+		return
+	var plan := Global.season_order_work(order)
+	if not plan.is_empty() and (plan.action != Global.OrderWork.WAIT
+		or Global.field_route_status == Global.OrderFieldRoute.PREPARE or order.start > Global.current_day):
+		_follow_order_work(plan)
 		return
 	if directions.follow_field_route(Global.OrderFieldRoute.HARVEST):
 		panel_manager.hide_management_panel()
@@ -671,17 +1000,55 @@ func _on_pinned_order_pressed() -> void:
 		return
 	_on_season_board_interacted()
 
-func _on_season_board_interacted() -> void:
+func _on_season_order_work_requested(upcoming: bool) -> void:
+	var order := Global.season_order()
+	if upcoming:
+		order = Global.season_order(order.end + 1)
+	var plan := Global.season_order_work(order)
+	if plan.is_empty():
+		return
+	if not Global.is_season_order_pinned(order):
+		Global.pin_season_order(true, upcoming)
+	_follow_order_work(plan)
+
+func _follow_order_work(plan: Dictionary) -> void:
+	world.set_channel_mode(false)
+	directions.follow_order_work(plan)
+	panel_manager.hide_management_panel()
+	if Global.is_indoors():
+		hud.practice_label.text = "已标出备货私田 · 从南门回田边"
+
+func _on_season_board_interacted(upcoming := false) -> void:
 	world.set_channel_mode(false)
 	panel_manager.show_management_panel()
-	panel_manager.management_panel_instance.show_season_orders()
+	panel_manager.management_panel_instance.show_season_orders(upcoming)
 
 func _on_road_rest_interacted() -> void:
 	world.set_channel_mode(false)
 	dialog_manager.show_road_rest()
 
+func _on_freight_bench_interacted() -> void:
+	if _estate_controls_busy():
+		return
+	var receipt := freight_bench.pending_arrival()
+	if not receipt.is_empty():
+		world.set_channel_mode(false)
+		var can_wait: bool = receipt.dispatch_day == Global.current_day and Global.raid_day == 0
+		dialog_manager.show_freight_wait(receipt, can_wait, _wait_for_freight)
+
+func _wait_for_freight() -> void:
+	var receipt := freight_bench.pending_arrival()
+	if not _estate_controls_busy() and not receipt.is_empty() and receipt.dispatch_day == Global.current_day \
+			and Global.raid_day == 0 and freight_bench.can_interact_from(world.player.global_position):
+		freight_wait.wait_for(world.player, SeasonOrders.arrival_progress(receipt), SeasonOrders.arrival_watch(receipt),
+			freight_bench.to_global(FreightBench.SEAT_OFFSET))
+
 func _on_freight_arrival_interacted(speech: String, portrait: Texture2D, order_id: String) -> void:
 	world.set_channel_mode(false)
+	if campaign_hud.notice.text.begins_with(freight_wait.ARRIVAL_NOTICE):
+		campaign_hud.show_world_notice("")
+	if Global.market_trip_target == Global.FREIGHT_YARD and Global.season_order_receipts.get(order_id) == directions.freight_receipt:
+		directions.clear_tracking()
 	var destination := ""
 	var guide := Callable()
 	if order_id == SeasonOrders.WATCH_RELIEF:
@@ -691,8 +1058,8 @@ func _on_freight_arrival_interacted(speech: String, portrait: Texture2D, order_i
 		destination = SEED_GARDEN.PLACE
 		guide = directions.follow_place.bind(destination, EstateLayout.SEED_GARDEN_APPROACH)
 	elif order_id in SeasonOrders.POND_ORDERS:
-		destination = CreekFish.PLACES[CreekFish.Site.POND]
-		guide = directions.follow_place.bind(destination, EstateLayout.POND_LANDING)
+		destination = Global.POND_LANDING
+		guide = directions.follow_pond_landing
 	elif order_id == SeasonOrders.WINTER_WOVEN_GOODS:
 		destination = WINTER_RATIONS.PLACE
 		guide = directions.follow_place.bind(destination, EstateLayout.WINTER_RATIONS_APPROACH)
@@ -707,7 +1074,7 @@ func _on_winter_road_rations_interacted() -> void:
 func _on_fishing_requested(spot: Node2D) -> void:
 	if _estate_controls_blocked() or not Global.cast_fishing_line(spot.site):
 		return
-	if directions.tracked_place == CreekFish.PLACES[CreekFish.Site.POND]:
+	if directions.tracked_place == Global.POND_LANDING:
 		directions.clear_tracking()
 	var panel := FISHING_PANEL.new()
 	panel.name = "FishingPanel"
@@ -717,10 +1084,10 @@ func _on_fishing_requested(spot: Node2D) -> void:
 	$Control.add_child(panel)
 
 func _follow_pond_route(place: String) -> bool:
-	if place == TravelHearth.PLACE:
-		_guide_travel_hearth()
-	else:
-		_on_west_market_directions_requested(place)
+	match place:
+		TravelHearth.PLACE: _guide_travel_hearth()
+		WinterSupper.PLACE: directions.follow_winter_supper()
+		_: _on_west_market_directions_requested(place)
 	return true
 
 func _on_seed_garden_requested() -> void:
@@ -744,21 +1111,26 @@ func _guide_travel_hearth() -> void:
 	directions.follow_place(TravelHearth.PLACE, world.to_local(approach.global_position))
 
 func _guide_calendar_event(place: String) -> void:
-	if place == SummerRaft.PLACE:
-		directions.follow_ravine(place)
+	if place == SummerRaft.PLACE or place == CreekFish.PLACES[CreekFish.Site.POOL]:
+		_on_ravine_trip_requested(place)
 		return
-	var path := "SpringGathering"
-	match place:
-		"秋社展台": path = "AutumnExhibit/Approach"
-		WinterSupper.PLACE: path = "WinterSupper/Approach"
-	var destination := world.get_node(path) as Node2D
-	directions.follow_place(place, world.to_local(destination.global_position))
+	world.set_channel_mode(false)
+	if place == Global.POND_LANDING:
+		directions.follow_pond_landing()
+	elif place == WinterSupper.PLACE:
+		directions.follow_winter_supper()
+	else:
+		var path := "AutumnExhibit/Approach" if place == "秋社展台" else "SpringGathering"
+		var destination := world.get_node(path) as Node2D
+		directions.follow_place(place, world.to_local(destination.global_position))
+	if Global.is_indoors() and place in [Global.POND_LANDING, WinterSupper.PLACE]:
+		hud.practice_label.text = "已标出%s · 从南门回封地" % place
 
 func _on_winter_supper_requested() -> void:
 	world.set_channel_mode(false)
 	if directions.tracked_place == WinterSupper.PLACE:
 		directions.clear_tracking()
-	dialog_manager.show_winter_supper()
+	dialog_manager.show_winter_supper(_guide_calendar_event)
 
 func _on_autumn_exhibit_requested() -> void:
 	world.set_channel_mode(false)
@@ -782,7 +1154,7 @@ func _on_travel_hearth_interacted() -> void:
 	if directions.tracked_place == TravelHearth.PLACE:
 		directions.clear_tracking()
 	dialog_manager.show_travel_hearth(_on_west_market_directions_requested.bind(Global.MARKET_ORDERS),
-		directions.follow_place.bind(CreekFish.PLACES[CreekFish.Site.POND], EstateLayout.POND_LANDING))
+		directions.follow_pond_landing)
 
 func _on_neighbors_pressed() -> void:
 	world.set_channel_mode(false)
@@ -837,6 +1209,65 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			panel_manager.hide_management_panel()
 			get_viewport().set_input_as_handled()
 
+func _request_sleep() -> void:
+	if _estate_controls_busy() or Global.outcome != Global.Outcome.RUNNING:
+		return
+	if Global.tax_council_waiting():
+		_on_sleep_pressed()
+		return
+	var field_work_settled := false
+	if Global.wait_for_fields_before_sleep and Global.first_tribute_delivered():
+		field_work_settled = not world.wait_for_retainers().is_empty()
+	var plan := Global.night_rations_plan()
+	var ration_warning := ""
+	if not plan.departing.is_empty():
+		ration_warning = "今晚预计分出 %d/%d 份口粮。\n%s缺餐后将离任。" % [plan.served, plan.need, "、".join(plan.departing)]
+	if not Global.first_tribute_delivered() and _warn_before_first_tribute(ration_warning):
+		return
+	if not ration_warning.is_empty():
+		if field_work_settled:
+			ration_warning = "门客已收工。\n" + ration_warning
+		world.set_channel_mode(false)
+		dialog_manager.show_bedtime_warning("门客口粮", ration_warning,
+			{"查看今夜安排": _show_night_rations.bind(false, true)}, _on_sleep_pressed)
+		return
+	_on_sleep_pressed()
+
+func _warn_before_first_tribute(ration_warning: String) -> bool:
+	var plan := Global.tribute_field_plan()
+	if plan.is_empty():
+		return false
+	var penalty := Global.tribute_penalty_tonight()
+	var route: int = plan.status
+	var action: int = world.field_action(plan.cell)
+	var cost: int = world.field_cost(action)
+	if penalty == 0 and cost > Global.current_stamina:
+		return false
+	var message: String
+	match route:
+		Global.NightGrowth.DRY:
+			message = "公田待浇。现在过夜，这一茬今晚不会生长。"
+		Global.NightGrowth.BLOCKED:
+			message = "公田断水。接通水渠前，稻苗过夜也不会生长。"
+		Global.NightGrowth.READY:
+			message = "公田已熟。收割后，收成直接入国库。"
+		_:
+			if penalty == 0:
+				return false
+			route = Global.TributeRoute.TEND
+			message = "公田还没播种。" if not plan.seed_id.is_empty() else "公田尚未成熟，今天还不能收割。"
+	if cost > Global.current_stamina:
+		message += "\n当前体力不足，田务需要 %d 点。" % cost
+	if penalty > 0:
+		message += "\n若今夜仍无纳贡，声望 −%d。" % penalty
+	var alternatives: Dictionary[String, Callable] = {"标出公田": _follow_tribute_plot.bind(route)}
+	if not ration_warning.is_empty():
+		message += "\n\n" + ration_warning
+		alternatives["查看今夜安排"] = _show_night_rations.bind(false, true)
+	world.set_channel_mode(false)
+	dialog_manager.show_bedtime_warning("第一次纳贡", message, alternatives, _on_sleep_pressed, plan)
+	return true
+
 func _on_sleep_pressed() -> void:
 	if MapTravel.active or (sleep_tween and sleep_tween.is_running()):
 		return
@@ -859,6 +1290,8 @@ func _on_sleep_pressed() -> void:
 			return
 		var previous_rank := Global.current_rank
 		var research_fee := Global.research_fee_due(Global.current_day + 1)
+		var field_work := Global.field_wait_report.duplicate()
+		var away_work := Global.away_field_report.duplicate()
 		Global.begin_next_day()
 		var tribute_penalty := Global.restore_stamina()
 		if Global.outcome != Global.Outcome.RUNNING:
@@ -871,7 +1304,7 @@ func _on_sleep_pressed() -> void:
 		for field in unfinished:
 			if field["is_unlocked"]:
 				completed.append(field["field_id"] + 1)
-		Global.record_dawn(previous_rank, completed, research_fee, tribute_penalty)
+		Global.record_dawn(previous_rank, completed, research_fee, tribute_penalty, field_work, away_work)
 		hud.refresh_morning_record()
 		Global.save_automatically("dawn")
 		dawn_caption.text = "第 %d 天 · %s · %s" % [Global.current_day, Global.get_current_solar_term(), Global.day_watch_label()]

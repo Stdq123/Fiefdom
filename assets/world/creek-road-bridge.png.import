@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://dvwr30sa6lmbk"
+path="res://.godot/imported/creek-road-bridge.png-0caeb58f4ad055329f2cd867f49f6a2b.res"
+
+[deps]
+
+source_file="res://assets/world/creek-road-bridge.png"
+dest_files=["res://.godot/imported/creek-road-bridge.png-0caeb58f4ad055329f2cd867f49f6a2b.res"]
+
+[params]
+
+authored_at_2x=true

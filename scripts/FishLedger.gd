@@ -117,3 +117,4 @@ func _exchange(id: String, for_food: bool) -> void:
 	receipt.text = ("%s留作口粮 · 粮食 +%d" % [fish.name, fish.food] if for_food
 		else "已售一尾%s · 铜钱 +%d" % [fish.name, fish.copper])
 	receipt.show()
+	AudioManager.play_trade_cue(AudioManager.TradeCue.STORE_FOOD if for_food else AudioManager.TradeCue.SALE)

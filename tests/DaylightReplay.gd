@@ -49,6 +49,17 @@ func _key(code: Key) -> void:
 	await tree.process_frame
 	await tree.process_frame
 
+func _request_sleep(button: Button) -> bool:
+	var penalty: int = state.tribute_penalty_tonight()
+	await _button(button)
+	if penalty > 0 and not state.first_tribute_delivered():
+		var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
+		if not _expect(warning != null and ("声望 −%d" % penalty) in warning.text_label.text,
+			"The first tribute warning shows the actual penalty before the test advances."):
+			return false
+		await _button(warning.choices.back())
+	return true
+
 func _move(action: StringName, frames: int) -> void:
 	Input.action_press(action)
 	for frame in frames:
@@ -84,7 +95,7 @@ func _wait_for_progress(progress: float) -> void:
 func _lamps_on(lighting: CanvasModulate) -> int:
 	var count := 0
 	for lamp in lighting.lamps:
-		if lamp.visible and lamp.glow.enabled:
+		if lamp.is_visible_in_tree() and lamp.glow.enabled:
 			count += 1
 	return count
 
@@ -125,12 +136,14 @@ func _check_field_layout() -> void:
 		_expect(Geometry2D.intersect_polygons(track.shoulder, soil).is_empty(), "Road shoulders clear all nine starter plots.")
 		_expect(Geometry2D.intersect_polygons(track.shoulder, ditch).is_empty(), "The road leaves space from water source to field.")
 	var entry := Vector2(field.get_center().x, field.end.y)
-	_expect(landscape._surface_at(entry + Vector2(0, 1)) == Terrain.Surface.TRACK
+	_expect(landscape._surface_at(entry + Vector2(0, 1)) == Terrain.Surface.STONE
 		and landscape._surface_at(entry + Vector2(0, 12)) == Terrain.Surface.TRACK
-		and landscape._surface_at(entry + Vector2(0, -1)) == Terrain.Surface.GRASS
-		and landscape._surface_at(entry + Vector2(11, 10)) == Terrain.Surface.GRASS
-		and landscape._surface_at(water + Vector2(16, 0)) == Terrain.Surface.GRASS,
-		"The farm approach meets the opening, with grass on either side and along the canal strip.")
+		and landscape._surface_at(entry + Vector2(0, -1)) == Terrain.Surface.TRACK
+		and landscape._surface_at(entry + Vector2(11, 10)) == Terrain.Surface.GRASS,
+		"The stone threshold meets the dirt approach and the field soil.")
+	_expect(landscape._surface_at(water + Vector2(16, 0)) == Terrain.Surface.STONE
+		and landscape._surface_at(water + Vector2(32, 0)) == Terrain.Surface.GRASS,
+		"The stone apron leads out to grass before the first field.")
 	print("DAYLIGHT_FIELD_LAYOUT field=", field, " water=", water, " tracks=", landscape.track_shapes.size())
 
 func _save_dusk() -> Dictionary:
@@ -191,7 +204,8 @@ func _cross_at_dusk() -> bool:
 	_expect(is_zero_approx(terrain.birds.volume_linear) and terrain.crickets.volume_linear > 0.24
 		and terrain.crickets.bus == &"Ambience" and is_zero_approx(terrain.creek.volume_linear),
 		"Summer nights replace birds with nearby insects by the dry grove.")
-	_expect(_lamps_on(landscape.day_lighting) == 4, "The west gate, both bridge ends and the south trail carry lit lamps.")
+	_expect(landscape.day_lighting.lamps.size() == 6 and _lamps_on(landscape.day_lighting) == 6,
+		"The west approach, grove, bridge, lookout and south trail carry lit lamps.")
 	await _capture("03-ravine-night")
 	await _capture_insects(terrain)
 	print("DAYLIGHT_RAVINE day=", state.current_day, " watch=", state.day_watch_label(), " insects=", snappedf(terrain.crickets.volume_linear, 0.01))
@@ -203,8 +217,10 @@ func _rest_at_hall() -> bool:
 	var hall := world.get_node("HallRest") as Node2D
 	var lighting: CanvasModulate = world.get_node("Landscape/DayLighting")
 	await Campaign.walk_to(tree, world.player, hall.global_position + Vector2(4, 14))
+	var visible_lamps: Array = lighting.lamps.filter(func(lamp: Node2D) -> bool: return lamp.is_visible_in_tree())
 	_expect(hall.get_node("InteractionHint").visible and ui.hud.watch_label.text == "亥时"
-		and _lamps_on(lighting) == lighting.lamps.size(), "The estate remains lit at night and the hall offers its evening action.")
+		and not visible_lamps.is_empty() and _lamps_on(lighting) == visible_lamps.size(),
+		"The estate remains lit at night and the hall offers its evening action.")
 	await _capture("04-hall-night")
 	await _key(KEY_E)
 	var plan := ui.get_node_or_null("Control/NightRationsPanel") as Control
@@ -217,7 +233,8 @@ func _rest_at_hall() -> bool:
 	await _capture("05-hall-plan")
 	var grain: int = state.food_storage
 	state.balance.daylight_seconds = 150.0
-	await _button(sleep)
+	if not await _request_sleep(sleep):
+		return false
 	await _wait(0.55)
 	_expect("卯时" in ui.dawn_caption.text and state.current_day == 8, "Rest shows the next morning and its first watch.")
 	await _wait(0.57)
@@ -266,7 +283,8 @@ func _play_day() -> void:
 	_expect(state.current_day == 1 and state.day_progress > 0.004 and ui.hud.watch_label.text == "卯时",
 		"Real gameplay time begins advancing on the first morning.")
 	for day in range(2, 8):
-		await _button(ui.sleep_button)
+		if not await _request_sleep(ui.sleep_button):
+			return
 		await _wait(1.07)
 		if not _expect(state.current_day == day, "Reach summer through normal nights."):
 			return

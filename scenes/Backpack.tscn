@@ -343,3 +343,59 @@ visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.89, 0.79, 0.64, 1)
 autowrap_mode = 3
+
+[node name="HerbPouch" type="PanelContainer" parent="Center/Window/Body/Contents/Carry"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_styles/panel = SubResource("Tray")
+
+[node name="HerbDetails" type="VBoxContainer" parent="Center/Window/Body/Contents/Carry/HerbPouch"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="HerbRow" type="HBoxContainer" parent="Center/Window/Body/Contents/Carry/HerbPouch/HerbDetails"]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="HerbIcon" type="TextureRect" parent="Center/Window/Body/Contents/Carry/HerbPouch/HerbDetails/HerbRow"]
+unique_name_in_owner = true
+texture_filter = 1
+custom_minimum_size = Vector2(30, 32)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HerbText" type="VBoxContainer" parent="Center/Window/Body/Contents/Carry/HerbPouch/HerbDetails/HerbRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
+[node name="HerbName" type="Label" parent="Center/Window/Body/Contents/Carry/HerbPouch/HerbDetails/HerbRow/HerbText"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.82, 0.57, 1)
+theme_override_font_sizes/font_size = 18
+text = "野药 · 一份"
+
+[node name="HerbEffect" type="Label" parent="Center/Window/Body/Contents/Carry/HerbPouch/HerbDetails/HerbRow/HerbText"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.89, 0.79, 0.64, 1)
+theme_override_font_sizes/font_size = 14
+
+[node name="UseHerbs" type="Button" parent="Center/Window/Body/Contents/Carry/HerbPouch/HerbDetails"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_type_variation = &"HudPrimary"
+mouse_default_cursor_shape = 2
+text = "敷药"
+
+[node name="HerbNotice" type="Label" parent="Center/Window/Body/Contents/Carry"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.89, 0.79, 0.64, 1)
+autowrap_mode = 3

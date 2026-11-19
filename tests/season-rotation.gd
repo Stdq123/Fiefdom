@@ -1,5 +1,7 @@
 extends SceneTree
 
+const Campaign := preload("res://tests/CampaignReplay.gd")
+
 var failed := false
 
 func _initialize() -> void:
@@ -12,6 +14,7 @@ func _expect(condition: bool, detail: String) -> void:
 
 func _sleep(ui: Node) -> void:
 	ui.sleep_button.pressed.emit()
+	Campaign.confirm_optional_tribute_warning(ui)
 	await create_timer(1.1).timeout
 
 func _run() -> void:

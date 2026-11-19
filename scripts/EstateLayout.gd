@@ -14,6 +14,7 @@ const SILK_SHED_FOOT := Vector2(-291, 169)
 const SILK_SHED_YARD := SILK_SHED_FOOT + Vector2(8, 15)
 const SILK_SHED_BASE := Rect2(-31, -14, 62, 14)
 const WEST_GATE := Vector2(-308, -24)
+const EAST_GATE := Vector2(400, 8)
 const WEST_FORK := Vector2(-273, -21)
 const WEST_COURT_TURN := Vector2(-261, 62)
 const WEST_COURT := Vector2(-282, 68)
@@ -22,6 +23,10 @@ const WEST_COURT_SHELTER := WEST_COURT + Vector2(-22, -14)
 const SOUTH_PAVILION := Vector2(77, 391)
 const PAVILION_SIZE := Vector2(72, 60)
 const PAVILION_BOUNDS := Rect2(SOUTH_PAVILION + Vector2(-36, -56), PAVILION_SIZE)
+const PAVILION_SHELTER := Vector2(260, 397)
+const PAVILION_SHELTER_BOUNDS := Rect2(PAVILION_SHELTER + Vector2(-46, -45), Vector2(92, 64))
+const PAVILION_SHELTER_FLOOR := Rect2(PAVILION_SHELTER + Vector2(-41, -20), Vector2(82, 34))
+const PAVILION_SHELTER_APPROACH := PAVILION_SHELTER + Vector2(0, 20)
 const DRIVING_START := Vector2(392, 229)
 const DRIVING_BAY := Rect2(DRIVING_START - Vector2(28, 19), Vector2(41, 57))
 const DRIVING_FINISH := Vector2(481, 464)
@@ -33,6 +38,7 @@ const BUILDING_GROUND := [
 ]
 const LANDMARKS := BUILDING_GROUND + [
 	PAVILION_BOUNDS,
+	PAVILION_SHELTER_BOUNDS,
 	DRIVING_BAY,
 	DRIVING_PARKING,
 ]
@@ -49,8 +55,9 @@ const PAVILION_TURN := Vector2(44, 385)
 const PAVILION_JUNCTION := Vector2(23, 432)
 const SEED_GARDEN := Vector2(-91, 443)
 const SEED_GARDEN_APPROACH := SEED_GARDEN + Vector2(0, 17)
-const SEED_GARDEN_TRACK := [PAVILION_JUNCTION, Vector2(9, 432), Vector2(-7, 442),
-	Vector2(-9, 464), Vector2(-36, 467), Vector2(-63, 468), SEED_GARDEN_APPROACH]
+const ROAD_REST_TRACK := [PAVILION_JUNCTION, Vector2(9, 432), Vector2(-7, 442)]
+const SEED_GARDEN_TRACK := ROAD_REST_TRACK + [Vector2(-9, 464), Vector2(-36, 467),
+	Vector2(-63, 468), SEED_GARDEN_APPROACH]
 const SOUTH_FORK := Vector2(29, 536)
 const FREIGHT_STOP := Vector2(-94, 574)
 const FREIGHT_JUNCTION := Vector2(-41, 574)
@@ -58,9 +65,11 @@ const FREIGHT_APPROACH := FREIGHT_STOP + Vector2(0, 23)
 const HEARTH_APPROACH := Vector2(215, 571)
 const FESTIVAL_FORK := Vector2(257, 586)
 const FESTIVAL_BANK_BEND := Vector2(146, 704)
-const POND_LANDING := Vector2(162, 713)
-const POND_TRACK := [FESTIVAL_BANK_BEND, Vector2(152, 709), POND_LANDING]
+const POND_DECK := Rect2(151, 701, 49, 26)
+const POND_LANDING := Vector2(183, 714)
+const POND_TRACK := [FESTIVAL_BANK_BEND, Vector2(153, 714), POND_LANDING]
 const FESTIVAL_GROUND := Vector2(338, 873)
+const FESTIVAL_APPROACH := FESTIVAL_GROUND + Vector2(0, 18)
 const FESTIVAL_SITE_NAME := "南池畔"
 const FESTIVAL_POND := [
 	Vector2(183, 677), Vector2(196, 658), Vector2(222, 651), Vector2(247, 652),
@@ -68,6 +77,12 @@ const FESTIVAL_POND := [
 	Vector2(342, 705), Vector2(327, 729), Vector2(309, 736), Vector2(295, 749),
 	Vector2(265, 763), Vector2(233, 764), Vector2(209, 756), Vector2(195, 745),
 	Vector2(182, 725), Vector2(175, 703),
+]
+const FESTIVAL_PAVING := [
+	Vector2(274, 870), Vector2(302, 854), Vector2(356, 852), Vector2(409, 856),
+	Vector2(442, 867), Vector2(457, 889), Vector2(458, 933), Vector2(444, 954),
+	Vector2(407, 963), Vector2(351, 960), Vector2(306, 949), Vector2(283, 930),
+	Vector2(270, 900), Vector2(271, 882),
 ]
 const RAVINE_TRAIL_GATE := Vector2(477, 568)
 const RAVINE_TRAIL_ARRIVAL := Vector2(437, 574)
@@ -107,19 +122,22 @@ const ROADS := [
 	[Vector2(-504, -33), Vector2(-397, -31), Vector2(-343, -28), WEST_GATE, WEST_FORK, Vector2(-249, -19),
 		Vector2(-205, 0), Vector2(-140, 16), Vector2(-90, 28), Vector2(-40, 41),
 		Vector2(4, 43), Vector2(39, 38), Vector2(91, 32), Vector2(148, 27), Vector2(213, 20),
-		Vector2(283, 12), DRIVING_FORK, Vector2(400, 8), Vector2(460, 0), Vector2(516, 0),
+		Vector2(283, 12), DRIVING_FORK, EAST_GATE, Vector2(460, 0), Vector2(516, 0),
 		Vector2(579, -3), Vector2(676, 6)],
 	SOUTH_LANE,
 	EAST_LANE,
 	[Vector2(HALL_FOOT) + Vector2(0, 17), Vector2(HALL_FOOT) + Vector2(0, 9)],
-] + WEST_ROADS
-const ROAD_WIDTHS := [32.0, 22.0, 18.0, 30.0, 13.0, 21.0]
+] + WEST_ROADS + [SEED_GARDEN_TRACK]
+const ROAD_WIDTHS := [32.0, 22.0, 18.0, 30.0, 13.0, 21.0, 11.0]
 const ROAD_SHOULDER := 2.5
 const PAVILION_APPROACH := [
 	PAVILION_JUNCTION, Vector2(48, 430), Vector2(68, 426), Vector2(77, 411), SOUTH_PAVILION + Vector2(0, 6),
 ]
 const PAVILION_COURT := [
 	PAVILION_APPROACH[1], Vector2(82, 438), Vector2(116, 448), PAVILION_SEATS + Vector2(0, 15),
+]
+const PAVILION_SHELTER_PATH := [
+	PAVILION_COURT[-1], Vector2(185, 462), Vector2(228, 460), Vector2(259, 445), PAVILION_SHELTER_APPROACH,
 ]
 const UNLOADING_LANE := [SOUTH_FORK, Vector2(4, 555), FREIGHT_JUNCTION, FREIGHT_STOP]
 const FREIGHT_AISLE := [FREIGHT_JUNCTION, Vector2(-55, 591), FREIGHT_APPROACH]
@@ -130,7 +148,7 @@ const FESTIVAL_LANE := [
 	FESTIVAL_FORK, Vector2(241, 614), Vector2(206, 633), Vector2(172, 652), Vector2(150, 675),
 	FESTIVAL_BANK_BEND, Vector2(151, 736), Vector2(173, 766), Vector2(204, 789), Vector2(242, 809),
 	Vector2(273, 833), Vector2(280, 867), Vector2(287, 899), FESTIVAL_GROUND + Vector2(-23, 34),
-	FESTIVAL_GROUND + Vector2(0, 18),
+	FESTIVAL_APPROACH,
 ]
 const RAVINE_TRAIL := [
 	FESTIVAL_FORK, Vector2(292, 580), Vector2(331, 566), Vector2(375, 560),
@@ -142,7 +160,7 @@ const SHEEP_LANE := [
 ]
 const SOUTH_ROADS := [
 	PAVILION_APPROACH, PAVILION_COURT, UNLOADING_LANE, FREIGHT_AISLE,
-	HEARTH_LANE, FESTIVAL_LANE, SHEEP_LANE, RAVINE_TRAIL,
+	HEARTH_LANE, FESTIVAL_LANE, SHEEP_LANE, RAVINE_TRAIL, PAVILION_SHELTER_PATH,
 ]
 
 static var road_lines: Array[PackedVector2Array] = _bake_roads()

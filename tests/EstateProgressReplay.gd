@@ -1,8 +1,12 @@
 extends RefCounted
 
+const Campaign := preload("res://tests/CampaignReplay.gd")
 const PUBLIC := Vector2i(5, 5)
 const EXPANSION := Vector2i(9, 5)
+const EXPANSION_PRIVATE := EXPANSION + Vector2i.DOWN
 const HOME := Vector2(42, 98)
+const HALL_BOOK := "World/Scenery/HallRankBook"
+const HALL_BOOK_APPROACH := Vector2(-43, 65)
 const MOVEMENT := [&"ui_left", &"ui_right", &"ui_up", &"ui_down"]
 
 var tree: SceneTree
@@ -10,10 +14,12 @@ var state: Node
 var world: Node2D
 var ui: CanvasLayer
 var capture_dir := ""
+var rank_book_baseline := false
 var failures := 0
 var promoted_day := 0
 var commissioned_day := 0
 var checked_shortage := false
+var used_promotion_action := false
 var used_market_shortcut := false
 var construction_provision_clicks := 0
 var used_construction_reserve := false
@@ -109,6 +115,10 @@ func _open_survey() -> Control:
 	return ui.get_node_or_null("Control/ReclamationPanel")
 
 func _check_opening() -> bool:
+	var book := tree.current_scene.get_node_or_null(HALL_BOOK) as Node2D
+	if not rank_book_baseline and not _expect(book != null and not book.visible and not book.is_in_group("interactable"),
+		"The rank book has yet to be posted when the player starts as a lower officer."):
+		return false
 	var sheet := await _open_survey()
 	if not _expect(sheet != null, "Open the same reclamation ledger available to the player."):
 		return false
@@ -133,11 +143,11 @@ func _check_opening() -> bool:
 	return true
 
 func _visit() -> void:
-	var visitor: VisitorData = world.current_visitor()
+	var visitor = world.current_visitor()
 	if visitor == null:
 		return
 	var actor: Node2D = world.neighbor_actor(visitor.name)
-	var speaker := visitor.name
+	var speaker: String = visitor.name
 	if state.current_day == 2:
 		var sheet := await _open_survey()
 		if not _expect(sheet != null and sheet.visitor_button.visible and "季青" in sheet.visitor_button.text,
@@ -145,7 +155,7 @@ func _visit() -> void:
 			return
 		await _button(sheet.visitor_button)
 		_expect(not is_instance_valid(sheet) and ui.directions.tracked_neighbor == speaker, "Follow the visitor from the ledger.")
-	await _walk_to(actor.position + Vector2(0, -14))
+	await Campaign.walk_estate_road_to(tree, world, actor.global_position + Vector2(0, -14))
 	_key(KEY_E)
 	await tree.process_frame
 	var dialog := ui.get_node_or_null("Control/DialoguePanel")
@@ -282,7 +292,19 @@ func _use_construction_reserve(market: Control) -> void:
 func _night() -> void:
 	var yesterday: int = state.current_day
 	var rank: int = state.current_rank
-	await _button(ui.sleep_button)
+	var action: Button = ui.hud.opening_action
+	if rank == state.Rank.XIA_SHI and state.eligible_for_promotion():
+		if not _expect(action.visible and action.text == "查看今夜安排", "The first promotion has a shortcut to the night's plan."):
+			return
+		await _capture("02a-promotion-action")
+		await _button(action)
+		var night := ui.get_node_or_null("Control/NightRationsPanel") as Control
+		if not _expect(night != null and not night.show_previous, "The promotion action opens the current plan before advancing."):
+			return
+		await _button(night.get_node("%Sleep"))
+		used_promotion_action = true
+	else:
+		await _button(ui.sleep_button)
 	await tree.create_timer(0.56).timeout
 	var caption: String = ui.dawn_caption.text
 	var promoted: bool = promoted_day == 0 and rank < state.current_rank
@@ -301,10 +323,62 @@ func _night() -> void:
 		if _expect(record != null and "晋升中士" in record.milestones.text and "井田上限 2 块" in record.milestones.text,
 			"The new title and field allowance remain readable after the fade."):
 			await _button(record.close_button)
+			await _check_rank_book(promoted_day, "02e-rank-book-first-reading", true)
+
+func _check_rank_book(day: int, frame: String, open_survey := false) -> void:
+	var previous_position: Vector2 = world.player.position
+	await _walk_to(HALL_BOOK_APPROACH)
+	if rank_book_baseline:
+		await _capture("02c-hall-before-rank-book")
+		await _walk_to(previous_position)
+		return
+	var book := tree.current_scene.get_node_or_null(HALL_BOOK) as Node2D
+	if not _expect(book != null and book.visible and book.is_in_group("interactable")
+		and book.get_parent().y_sort_enabled and world.player.interaction_target == book and book.get_node("Hint").visible,
+		"Walk up to the posted rank book at the hall."):
+		return
+	if open_survey:
+		await _capture("02c-rank-book-posted")
+		await _walk_to(HALL_BOOK_APPROACH + Vector2(0, -23))
+		await tree.create_timer(0.14).timeout
+		_expect(book.self_modulate.a < 0.65 and book.get_node("Hint").visible,
+			"The stand fades when it covers the actor and the prompt stays visible.")
+		await _capture("02d-walk-behind-rank-book")
+		await _walk_to(HALL_BOOK_APPROACH)
+		await tree.create_timer(0.14).timeout
+		_expect(is_equal_approx(book.self_modulate.a, 1.0), "The stand becomes opaque again in front of the actor.")
+	_key(KEY_E, 101)
+	await tree.process_frame
+	var dialog := ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(dialog != null and dialog.name_label.text == "爵册", "E at the stand opens the rank book."):
+		return
+	var expected := "第 %d 天 · %s · 由下士晋为中士" % [day, state.get_current_solar_term(day)] if day > 0 else "现爵 · 中士"
+	_expect(expected in dialog.text_label.text and "井田上限 2 块 · 已有 %d 块" % state.well_fields.size() in dialog.text_label.text
+		and (day > 0 or "第 " not in dialog.text_label.text), "The book reports the known title, allowance and the actual date if present.")
+	await _capture(frame)
+	if open_survey:
+		var resources := Vector3i(state.money, state.food_storage, state.well_fields.size())
+		await _button(_find_button(dialog, "查看开垦簿"))
+		var survey := ui.get_node_or_null("Control/ReclamationPanel") as Control
+		if _expect(survey != null and survey.plan.has_space and not world.player.conversation_open
+			and resources == Vector3i(state.money, state.food_storage, state.well_fields.size()),
+			"The book hands off to the actual survey without staking or spending."):
+			await _capture("02f-survey-from-rank-book")
+			_key(KEY_ESCAPE)
+			await tree.process_frame
+	else:
+		await _button(_find_button(dialog, "合上爵册"))
+	await _walk_to(previous_position)
+	print("ESTATE_RANK_BOOK day=", state.current_day, " record_day=", day, " fields=", state.well_fields.size())
 
 func _check_shortage() -> void:
-	var sheet := await _open_survey()
-	if not _expect(sheet != null, "Open the survey after a natural promotion."):
+	var action: Button = ui.hud.opening_action
+	if not _expect(action.visible and action.text == "查看开垦筹备", "The promoted estate's journal links to the new survey."):
+		return
+	await _capture("02b-first-expansion-action")
+	await _button(action)
+	var sheet := ui.get_node_or_null("Control/ReclamationPanel") as Control
+	if not _expect(sheet != null, "Open the survey from the journal after a natural promotion."):
 		return
 	await _click(_cell_point(EXPANSION))
 	_expect(sheet.plan.has_space and sheet.has_selection and sheet.reclaim_button.disabled and "0/9" in sheet.validity_label.text,
@@ -361,35 +435,155 @@ func _complete_expansion() -> void:
 	var tiles: TileMapLayer = world.tile_map
 	_expect(state.current_day == day and state.get_well_field(1).is_unlocked
 		and tiles.get_cell_tile_data(EXPANSION).get_custom_data("is_public_field"), "The dawn checkpoint restores the finished field.")
+	_expect(not ui.hud.opening_action.visible, "The opening shortcut clears after the second well is established.")
 	_expect("井田完工" in ui.hud.morning_button.text, "The calendar signals the opened field after Continue.")
 	await _button(ui.hud.morning_button)
 	var record: Control = ui.get_node_or_null("Control/NightRationsPanel")
 	if not _expect(record != null and "井田 2 已完工" in record.milestones.text, "The finished field stays in the morning record after Continue."):
 		return
-	await _button(record.close_button)
+	await _capture("08-morning-field-handover")
+	await _button(record.plan_field)
+	var management: Control = ui.panel_manager.management_panel_instance
+	if not _expect(not is_instance_valid(record) and is_instance_valid(management) and management.visible and not world.player.conversation_open
+		and management.well_field_selector.get_selected_id() == 1 and management.steward_picker.has_focus()
+		and management.include_untilled.is_visible_in_tree() and not management.include_untilled.button_pressed
+		and "包括未翻地" in management.steward_preview.text,
+		"The morning record selects the new field, focuses its steward picker and explains the optional soil plan."):
+		return
+	await _button(management.close_button)
 	_key(KEY_1)
 	await _tend(EXPANSION)
+	await _click(_cell_point(EXPANSION_PRIVATE))
 	_expect(state.active_crops.has(EXPANSION), "The completed field can be cultivated after reloading.")
 	await _capture("05-first-crop-on-the-new-field")
 	print("ESTATE_PROGRESS_FINISHED day=", day, " raids_defeated=", state.raids_defeated, " tribute=", state.king_storage)
+	await _try_stewardship()
 
-func run(game_tree: SceneTree) -> void:
+func _try_stewardship() -> void:
+	await _button(ui.hud.farm_status)
+	var map: Control = ui.estate_map
+	var field_row: Button
+	for row: Button in map.row_buttons:
+		if map.row_buttons[row].get("field_id") == 1:
+			field_row = row
+			break
+	if not _expect(map.modal.visible and field_row != null, "Find the finished field in the normal map."):
+		return
+	await _button(field_row)
+	if not _expect(map.manage_field.is_visible_in_tree(), "The selected field offers a management action."):
+		return
+	await _capture("08b-map-field-handover")
+	await _button(map.manage_field)
+	var panel: Control = ui.panel_manager.management_panel_instance
+	if not _expect(panel.visible and not tree.paused and not map.modal.visible
+		and panel.well_field_selector.get_selected_id() == 1, "The map opens the same field after the morning record."):
+		return
+	var keeper = state.retainers.front()
+	var before_need: int = state.retainer_food_cost()
+	var after_need: int = before_need + state.balance.specialist_food_per_night
+	await _button(panel.steward_picker)
+	var popup: PopupMenu = panel.steward_picker.get_popup()
+	if not _expect(popup.visible, "Open the ordinary steward selection menu."):
+		return
+	_key(KEY_DOWN)
+	await tree.process_frame
+	if popup.get_focused_item() == 0:
+		_key(KEY_DOWN)
+		await tree.process_frame
+	_key(KEY_ENTER)
+	await tree.process_frame
+	if not _expect(panel.steward_picker.get_selected_metadata() == keeper and not popup.visible
+		and "全员每夜用粮 %d → %d 份" % [before_need, after_need] in panel.steward_preview.text
+		and "粮仓 0 份" in panel.steward_preview.text and "公田 1 格" in panel.steward_preview.text
+		and "私田 1 格" in panel.steward_preview.text and not state.field_seed_plans.has(EXPANSION_PRIVATE),
+		"Caretaker quote after keyboard selection (index %d, open %s): %s" % [
+			panel.steward_picker.selected, popup.visible, panel.steward_preview.text]):
+		return
+	await _capture("09-steward-quote")
+	var public_plan: String = state.tribute_seed()
+	await _button(panel.apply_steward)
+	_expect(state.field_seed_plans.get(EXPANSION) == public_plan and state.field_seed_plans.get(EXPANSION_PRIVATE) == "seasonal"
+		and state.retainer_food_cost() == after_need and state.stewarded_field(keeper).field_id == 1,
+		"Applying keeps the standing public crop and sets only the two prepared plots to be resown.")
+	await _button(panel.close_button)
+	await _defend()
+	await _walk_to(HOME)
+	for y in range(4, 7):
+		for x in range(4, 7):
+			var cell := Vector2i(x, y)
+			if cell != PUBLIC and world.field_action(cell) == world.FieldAction.HARVEST:
+				await _click(_cell_point(cell))
+	await _button(ui.hud.rations_button)
+	var night: Control = ui.get_node_or_null("Control/NightRationsPanel")
+	if not _expect(night != null and "缺 %d 份" % after_need in night.forecast.text,
+		"Today's night forecast shows the full household shortage after appointment."):
+		return
+	await _button(night.get_node("%Market"))
+	var market: Control = panel.market_panel
+	var reserve: Dictionary = state.food_reserve_plan(3)
+	if not _expect(market.is_visible_in_tree() and reserve.copper <= state.money and not market.reserve_button.disabled,
+		"Three-night reserve (visible %s, food %d, copper %d/%d, mode %d): %s" % [
+			market.is_visible_in_tree(), reserve.food, reserve.copper, state.money, market.reserve_kind.selected, market.reserve_label.text]):
+		return
+	await _button(market.reserve_button)
+	await _button(panel.close_button)
+	var tribute: int = state.king_storage
+	var private_yield: int = state.private_harvest_total
+	var day: int = state.current_day
+	for _night_index in 3:
+		await tree.create_timer(8.0).timeout
+		await _defend()
+		await _night()
+	await _button(ui.hud.farm_status)
+	map = ui.estate_map
+	_expect(map.modal.visible and "管事 " + keeper.name in map.fields[1].needs,
+		"The field page names the appointed caretaker after the growing trial.")
+	await _button(map.close_button)
+	if not await _load_title(true):
+		return
+	keeper = state.retainers.front()
+	_expect(state.current_day == day + 3 and state.king_storage > tribute and state.private_harvest_total > private_yield
+		and state.stewarded_field(keeper).field_id == 1 and state.field_seed_plans.has(EXPANSION_PRIVATE)
+		and state.night_rations.last.served == after_need and state.food_storage == 0,
+		"Three ordinary nights produce both kinds of harvest with no player field clicks and preserve the appointment on Continue.")
+	print("ESTATE_PROGRESS_STEWARD day=", state.current_day, " tribute=", state.king_storage - tribute,
+		" private=", state.private_harvest_total - private_yield, " ration=", after_need, " manual_field_clicks=0")
+	if not rank_book_baseline:
+		_expect(state.last_dawn.get("rank_change", 0) == 0 and state.rank_record.get("day", 0) == promoted_day,
+			"The rank record outlives the settlement where the promotion happened.")
+		await _check_rank_book(promoted_day, "10-rank-book-on-continue")
+
+func run(game_tree: SceneTree, legacy_rank_book := false) -> void:
 	tree = game_tree
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated profile."):
 		tree.quit(1)
 		return
 	state = tree.root.get_node("Global")
-	capture_dir = OS.get_environment("FIEFDOM_RECLAMATION_CAPTURES")
+	if capture_dir.is_empty():
+		capture_dir = OS.get_environment("FIEFDOM_RECLAMATION_CAPTURES")
 	seed(520)
 	if tree.root.size.x < 900:
 		tree.root.size = Vector2i(1280, 720)
 	tree.root.notify_mouse_entered()
+	if legacy_rank_book:
+		if await _load_title(true) and _expect(state.current_rank == state.Rank.ZHONG_SHI and state.rank_record.is_empty(),
+			"A promoted save predating the rank book can stand without a recorded date."):
+			await _check_rank_book(0, "10-rank-book-on-legacy-continue")
+		await _end()
+		return
 	if await _load_title(false) and await _check_opening():
 		while state.current_day < 36 and failures == 0:
 			await _defend()
 			if state.retainers.size() < state.RECLAMATION_RETAINERS:
 				await _visit()
 			await _farm()
+			var action: Button = ui.hud.opening_action
+			if action.visible and action.text == "首茬收成 · 安排去处":
+				await _button(action)
+				var harvest := ui.get_node_or_null("Control/DialoguePanel") as Control
+				if not _expect(harvest != null, "The natural first private harvest offers its storage choice."):
+					break
+				await _button(_find_button(harvest, "用 1 份"))
 			var plan: Dictionary = state.reclamation_plan()
 			if plan.has_space and not plan.ready and not checked_shortage:
 				await _check_shortage()
@@ -400,11 +594,14 @@ func run(game_tree: SceneTree) -> void:
 					await _complete_expansion()
 				break
 			await _night()
-	_expect(promoted_day > 0 and commissioned_day > promoted_day and checked_shortage and used_market_shortcut,
+	_expect(promoted_day > 0 and used_promotion_action and commissioned_day > promoted_day and checked_shortage and used_market_shortcut,
 		"Complete promotion, recruiting, provisioning and the first expansion from the original new game.")
 	if state.has_method("reclamation_food_plan"):
 		_expect(used_construction_reserve and construction_provision_clicks == 1,
 			"Reserve construction provisions in one market action during the natural first expansion.")
+	await _end()
+
+func _end() -> void:
 	tree.unload_current_scene()
 	for node in tree.root.get_node("AudioManager").get_children():
 		if node is AudioStreamPlayer:

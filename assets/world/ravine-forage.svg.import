@@ -1,0 +1,13 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://cohvtkr0qnxq1"
+path="res://.godot/imported/ravine-forage.svg-e8c9444286c17bfa619cfd9516df3fbb.res"
+
+[deps]
+
+source_file="res://assets/world/ravine-forage.svg"
+dest_files=["res://.godot/imported/ravine-forage.svg-e8c9444286c17bfa619cfd9516df3fbb.res"]
+
+[params]

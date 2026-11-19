@@ -66,6 +66,12 @@ func _run() -> void:
 	for retainer in state.retainers:
 		retainer.loyalty = 10
 	ui.sleep_button.pressed.emit()
+	var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
+	var confirms_departure: bool = warning != null and warning.context_label.text == "门客口粮" \
+		and "渠伯、季青缺餐后将离任" in warning.text_label.text
+	_expect(confirms_departure, "Both unfed specialists are named before bedtime.")
+	if confirms_departure:
+		warning.choices.back().pressed.emit()
 	await create_timer(1.1).timeout
 	_expect(state.retainers.is_empty() and state.silk_thread_yield() == 2, "When unfed retainers leave, their work bonuses stop.")
 	_expect(state.silk_workshop.cocoons == 1 and state.silk_workshop.raw_silk == 6 and state.silk_workshop.last_reeled == 0,

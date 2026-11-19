@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://b5n3ckauibyc0"
+path="res://.godot/imported/creek-fish.png-297ad0504cc891514ce00fee7dba68be.res"
+
+[deps]
+
+source_file="res://assets/world/creek-fish.png"
+dest_files=["res://.godot/imported/creek-fish.png-297ad0504cc891514ce00fee7dba68be.res"]
+
+[params]
+
+authored_at_2x=true

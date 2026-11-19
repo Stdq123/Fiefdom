@@ -1,0 +1,73 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/FreightWaitPanel.gd" id="1_wait"]
+[ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="2_theme"]
+
+[node name="FreightWait" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+theme = ExtResource("2_theme")
+script = ExtResource("1_wait")
+
+[node name="Shade" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.095, 0.13, 0.101, 0)
+
+[node name="Card" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -174.0
+offset_top = -211.0
+offset_right = 174.0
+offset_bottom = -114.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_type_variation = &"HudRail"
+
+[node name="Stack" type="VBoxContainer" parent="Card"]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="Status" type="Label" parent="Card/Stack"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.86, 0.64, 1)
+theme_override_font_sizes/font_size = 17
+text = "候货中 · 申禾沿南路赶来"
+
+[node name="Row" type="HBoxContainer" parent="Card/Stack"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Progress" type="ProgressBar" parent="Card/Stack/Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 1.0
+step = 0.001
+show_percentage = false
+
+[node name="Stand" type="Button" parent="Card/Stack/Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(108, 34)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_type_variation = &"HudButton"
+text = "起身 · Esc"

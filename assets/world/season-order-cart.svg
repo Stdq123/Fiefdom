@@ -1,57 +1,383 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="212" height="48" viewBox="0 0 212 48" shape-rendering="crispEdges">
-  <!-- Side of the cart, with the shaft at the right. -->
-  <g>
-    <path fill="#354235" d="M5 39h12v-3h49v3h11v4H5z"/>
-    <path fill="#423830" d="M11 30h4v-3h13v3h4v10h-3v4H15v-3h-4zM46 29h4v-3h12v3h4v10h-3v4H50v-3h-4z"/>
-    <path fill="#765939" d="M15 32h3v-2h8v2h3v7h-3v2h-8v-2h-3zM50 31h3v-2h7v2h3v7h-3v2h-7v-2h-3z"/>
-    <path fill="#b28a56" d="M17 34h5v-3h2v3h3v2h-3v4h-2v-4h-5zM51 33h4v-3h2v3h4v2h-4v4h-2v-4h-4z"/>
-    <path fill="#655239" d="M56 27h7l12 5h5v3h-7l-14-5h-3z"/>
-    <path fill="#ba935f" d="M63 28h3l9 4h5v1h-6z"/>
-    <path fill="#554333" d="M7 15h4v-3h56v16H7z"/>
-    <path fill="#a58359" d="M12 14h53v7H12z"/>
-    <path fill="#c0a176" d="M13 14h50v1H13zM15 17h42v1H15zM10 21h56v2H10z"/>
-    <path fill="#694f37" d="M6 20h62v3h-3v10H9V23H6z"/>
-    <path fill="#946a43" d="M11 24h52v6H11z"/>
-    <path fill="#ba8b57" d="M12 25h22v1H12zM39 25h21v1H39zM13 28h13v1H13zM44 28h15v1H44z"/>
-    <path fill="#4c3e30" d="M11 23h3v10h-3zM60 23h3v10h-3zM34 22h3v11h-3z"/>
-    <path fill="#d3b47c" d="M12 25h1v3h-1zM35 24h1v3h-1zM61 25h1v3h-1z"/>
-    <path fill="#caad7d" d="M16 15h16v.5H16zm22 0h19v.5H38zm-9 4h13v.5H29zm16 8h11v.5H45zM16.5 27h12v.5h-12z"/>
-    <path fill="#cf9d66" d="M17 34.5h6v.5h-6zm6 2.5h.5v2H23zm28.5-3.5h4v.5h-4zm4.5 2.5h.5v3H56z"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="352" viewBox="0 0 192 352">
+  <!-- East bed and far wheel -->
+  <g transform="translate(0 0)">
+    <polygon fill="#29352c" points="13,35.2 21,31.4 59,30.8 71,34.5 71,50.9 59,56.6 18,56 14,53.5" opacity="0.32"/>
+    <polygon fill="#303326" points="18,35.2 61,34.5 65,39 64,51.6 21,54.1 17,49.7" opacity="0.48"/>
+    <polygon fill="#473327" points="55,26.1 74,25.1 81,24.9 81,28.2 75,29.3 53,31"/>
+    <polyline points="56,26.1 74,25.1 79,25.9" fill="none" stroke="#b38956" stroke-width="1"/>
+    <polyline points="77,26.5 77,29" fill="none" stroke="#c0a375" stroke-width="1.3"/>
+    <polygon fill="#473327" points="55,39.9 74,38.9 81,35.1 81,38.3 75,43.2 53,44.8"/>
+    <polyline points="56,39.9 74,38.9 79,36.1" fill="none" stroke="#b38956" stroke-width="1"/>
+    <polyline points="77,38.9 77,41.5" fill="none" stroke="#c0a375" stroke-width="1.3"/>
+    <polygon fill="#463426" points="28.9,24.2 32.176,20.7 36.635,19.7 43.46,20.7 47.1,23.2 47.1,31.2 42.368,34.7 33.723,34.7 28.9,31.2"/>
+    <polygon fill="#84684b" points="30.9,23.2 33.814,21.7 42.459,21.7 46.1,23.2 46.1,30.2 42.095,32.7 34.269,32.7 29.9,30.2"/>
+    <polyline points="30.9,23.2 33.632,21.7 41.458,21.7" fill="none" stroke="#a68959" stroke-width="1"/>
+    <polygon fill="#543a2b" points="32.449,25.2 38,22.2 42.914,24.2 44.097,30.2 41.094,33.2 33.268,33.2"/>
+    <polyline points="38,22.2 38,33.2" fill="none" stroke="#ac8557" stroke-width="1"/>
+    <polyline points="32.085,25.2 43.278,30.2" fill="none" stroke="#ab8050" stroke-width="1"/>
+    <polyline points="32.995,30.2 38,27.2 42.55,24.2" fill="none" stroke="#745536" stroke-width="1"/>
+    <polygon fill="#6d6453" points="36,26.2 38,25.2 40,26.2 40,28.2 38,29.2 36,28.2"/>
+    <polygon fill="#c0a781" points="37,26.2 38,25.2 39,26.2 38,27.2"/>
+    <polygon fill="#6d4c34" points="18,24.1 62,24.1 63,38.6 17,38.6"/>
+    <polygon fill="#9a7049" points="21,23.7 60,23.7 60,36.3 21,36.3"/>
+    <polyline points="23,26.2 58,26.2" fill="none" stroke="#bd905c" stroke-width="1.1"/>
+    <polyline points="23,30 58,30" fill="none" stroke="#765235" stroke-width="1"/>
+    <polyline points="22,34.4 58,34.4" fill="none" stroke="#ba8f5b" stroke-width="0.8"/>
+    <polygon fill="#473327" points="16,13.2 63,13.2 64,14.2 63,23.2 16,24.2"/>
+    <polygon fill="#937149" points="17,14.4 62,14.5 62,22.2 17.7,22.4"/>
+    <polyline points="17,14.2 62,14.2" fill="none" stroke="#b79865" stroke-width="1.5"/>
+    <polyline points="18,20.2 62,20.2" fill="none" stroke="#795135" stroke-width="1.1"/>
+    <polyline points="23,16.7 35,16.7 40,17.2 42,17.2" fill="none" stroke="#d9b580" stroke-width="0.85" opacity="0.68"/>
+    <polyline points="46,18.2 54,18.2 59,18.4" fill="none" stroke="#d9b580" stroke-width="0.8" opacity="0.55"/>
+    <polyline points="22,14.2 22,23.2" fill="none" stroke="#473327" stroke-width="2.8"/>
+    <polyline points="56,14.2 56,23.2" fill="none" stroke="#473327" stroke-width="2.8"/>
+    <polyline points="22,14.2 22,20.2" fill="none" stroke="#b38956" stroke-width="1.25"/>
+    <polyline points="56,14.2 56,20.2" fill="none" stroke="#b38956" stroke-width="1.25"/>
+    <polygon fill="#473327" points="17,13.2 17,30.8 17,40.3 17,22.7"/>
+    <polygon fill="#906644" points="17,15.8 17,32.2 17,38.2 17,21.8"/>
+    <polyline points="17,15 17,31.4" fill="none" stroke="#d9b580" stroke-width="1.5"/>
+    <polyline points="17,20.4 17,35.6" fill="none" stroke="#795135" stroke-width="0.95"/>
+    <polyline points="17,20.3 17,24.8" fill="none" stroke="#9b7148" stroke-width="1.5"/>
+    <polyline points="17,29.7 17,34.2" fill="none" stroke="#9b7148" stroke-width="1.5"/>
+    <polyline points="17,24.7 17,27.2" fill="none" stroke="#dcc09a" stroke-width="0.7"/>
   </g>
-  <!-- Tied sacks and a tray for the current season's produce. -->
-  <g transform="translate(84)">
-    <path fill="#69533c" d="M2 20h6v-6h3v-5h4V6h9v4h3v4h3v5h9v-5h3v-4h6v3h3v5h3v5H2z"/>
-    <path fill="#b39263" d="M9 19v-4h3v-4h4V9h6v3h4v3h2v6H9zM40 19v-4h3v-3h4v3h4v4h2v2H40z"/>
-    <path fill="#d0b078" d="M13 14h3v-3h6v2h-3v2h-3v4h-3zM43 15h4v-2h1v3h-3v3h-2z"/>
-    <path fill="#77593d" d="M15 9h8v2h-8zM43 12h5v1h-5zM13 19h13v1H13z"/>
-    <path fill="#624c37" d="M26 18h17v5H26z"/>
-    <path fill="#a17c52" d="M27 19h15v2H27z"/>
-    <path fill="#caa36a" d="M28 19h12v1H28z"/>
-    <path fill="#e3c388" d="M16 11.5h4v.5h-4zM13.5 15h.5v3h-.5zm2 2.5h3v.5h-3zm6-4h3v.5h-3zm22 1h3v.5h-3zM44.5 16h.5v2h-.5z"/>
+  <!-- East near rim and wheel -->
+  <g transform="translate(96 0)">
+    <polygon fill="#473327" points="16,30.8 63,30.8 64,31.8 63,40.8 16,41.8"/>
+    <polygon fill="#a67549" points="17,32 62,32.1 62,39.8 17.7,40"/>
+    <polyline points="17,31.8 62,31.8" fill="none" stroke="#d9b580" stroke-width="1.5"/>
+    <polyline points="18,37.8 62,37.8" fill="none" stroke="#795135" stroke-width="1.1"/>
+    <polyline points="23,34.3 35,34.3 40,34.8 42,34.8" fill="none" stroke="#d9b580" stroke-width="0.85" opacity="0.68"/>
+    <polyline points="46,35.8 54,35.8 59,36" fill="none" stroke="#d9b580" stroke-width="0.8" opacity="0.55"/>
+    <polyline points="22,31.8 22,40.8" fill="none" stroke="#473327" stroke-width="2.8"/>
+    <polyline points="56,31.8 56,40.8" fill="none" stroke="#473327" stroke-width="2.8"/>
+    <polyline points="22,31.8 22,37.8" fill="none" stroke="#b38956" stroke-width="1.25"/>
+    <polyline points="56,31.8 56,37.8" fill="none" stroke="#b38956" stroke-width="1.25"/>
+    <polygon fill="#473327" points="63,13.2 63,30.8 63,40.3 63,22.7"/>
+    <polygon fill="#ba8a54" points="63,15.8 63,32.2 63,38.2 63,21.8"/>
+    <polyline points="63,15 63,31.4" fill="none" stroke="#d9b580" stroke-width="1.5"/>
+    <polyline points="63,20.4 63,35.6" fill="none" stroke="#795135" stroke-width="0.95"/>
+    <polyline points="63,20.3 63,24.8" fill="none" stroke="#9b7148" stroke-width="1.5"/>
+    <polyline points="63,29.7 63,34.2" fill="none" stroke="#9b7148" stroke-width="1.5"/>
+    <polyline points="63,24.7 63,27.2" fill="none" stroke="#dcc09a" stroke-width="0.7"/>
+    <polygon fill="#463426" points="28,41.8 31.6,37.3 36.5,36.3 44,37.3 48,40.8 48,48.8 42.8,53.3 33.3,53.3 28,48.8"/>
+    <polygon fill="#8b643f" points="30,40.8 33.4,38.3 42.9,38.3 47,40.8 47,47.8 42.5,51.3 33.9,51.3 29,47.8"/>
+    <polyline points="30,40.8 33.2,38.3 41.8,38.3" fill="none" stroke="#c39a64" stroke-width="1"/>
+    <polygon fill="#65472e" points="31.9,42.8 38,39.8 43.4,41.8 44.7,47.8 41.4,50.8 32.8,50.8"/>
+    <polyline points="38,39.8 38,50.8" fill="none" stroke="#a77e4d" stroke-width="1"/>
+    <polyline points="31.5,42.8 43.8,47.8" fill="none" stroke="#a67a4e" stroke-width="1"/>
+    <polyline points="32.5,47.8 38,44.8 43,41.8" fill="none" stroke="#c39a64" stroke-width="1"/>
+    <polygon fill="#6d6453" points="36,43.8 38,42.8 40,43.8 40,45.8 38,46.8 36,45.8"/>
+    <polygon fill="#c0a781" points="37,43.8 38,42.8 39,43.8 38,44.8"/>
   </g>
-  <!-- View along the shafts, used on the south road. -->
-  <g transform="translate(140)">
-    <path fill="#344132" d="M3 36h38v7H3z"/>
-    <path fill="#47392e" d="M5 19h7v23H5zM32 19h7v23h-7z"/>
-    <path fill="#856641" d="M6 24h4v15H6zM34 24h4v15h-4z"/>
-    <path fill="#574332" d="M7 8h30v25H7z"/>
-    <path fill="#aa8659" d="M9 10h26v17H9z"/>
-    <path fill="#c4a476" d="M9 10h26v2H9zM11 16h23v1H11zM11 21h22v1H11z"/>
-    <path fill="#6a4f36" d="M6 25h32v8H6z"/>
-    <path fill="#a57c50" d="M7 26h30v4H7zM11 31h22v1H11z"/>
-    <path fill="#533d2e" d="M9 13h3v17H9zM32 13h3v17h-3zM13 31h4v13h-4zM27 31h4v13h-4z"/>
-    <path fill="#b48d5d" d="M14 32h2v10h-2zM28 32h2v10h-2zM14 41h16v2H14z"/>
-    <path fill="#d1ae79" d="M13 13h7v.5h-7zm8 4h8v.5h-8zm-5 6h8v.5h-8zm-1.5 10h.5v7h-.5zm14 1h.5v7h-.5z"/>
+  <!-- Northeast bed and far wheel -->
+  <g transform="translate(0 64)">
+    <polygon fill="#29352c" points="12.6,51.2 14.6,45.8 42.1,31.4 55.1,29.4 72.5,40 69.6,48.1 38.4,62.8 32.8,62.6" opacity="0.32"/>
+    <polygon fill="#303326" points="16.3,49.3 47.6,33.1 55.3,34.5 67.9,43 38.6,60.5 31,59.1" opacity="0.48"/>
+    <polygon fill="#473327" points="45.8,25.9 60,17.9 67.2,14.6 68.5,17.4 62,21.4 46.4,30.9"/>
+    <polyline points="46.6,25.6 60,17.9 65.7,16.3" fill="none" stroke="#b38956" stroke-width="1"/>
+    <polyline points="62.9,18 64.3,20.1" fill="none" stroke="#c0a375" stroke-width="1.3"/>
+    <polygon fill="#473327" points="60.6,34.9 74.7,26.9 77.9,21.1 79.2,24 76.8,30.4 61.1,39.9"/>
+    <polyline points="61.3,34.6 74.7,26.9 76.4,22.9" fill="none" stroke="#b38956" stroke-width="1"/>
+    <polyline points="76.2,26.1 77.5,28.2" fill="none" stroke="#c0a375" stroke-width="1.3"/>
+    <polygon fill="#463426" points="23.9,31 26.528,27.5 30.105,26.5 35.58,27.5 38.5,30 38.5,38 34.704,41.5 27.769,41.5 23.9,38"/>
+    <polygon fill="#84684b" points="25.9,30 27.842,28.5 34.777,28.5 37.5,30 37.5,37 34.485,39.5 28.207,39.5 24.9,37"/>
+    <polyline points="25.9,30 27.696,28.5 33.974,28.5" fill="none" stroke="#a68959" stroke-width="1"/>
+    <polygon fill="#543a2b" points="26.747,32 31.2,29 35.142,31 36.091,37 33.682,40 27.404,40"/>
+    <polyline points="31.2,29 31.2,40" fill="none" stroke="#ac8557" stroke-width="1"/>
+    <polyline points="26.455,32 35.434,37" fill="none" stroke="#ab8050" stroke-width="1"/>
+    <polyline points="27.185,37 31.2,34 34.85,31" fill="none" stroke="#745536" stroke-width="1"/>
+    <polygon fill="#6d6453" points="29.2,33 31.2,32 33.2,33 33.2,35 31.2,36 29.2,35"/>
+    <polygon fill="#c0a781" points="30.2,33 31.2,32 32.2,33 31.2,34"/>
+    <polygon fill="#6d4c34" points="18.3,37.5 51,21.4 67.2,30.4 33,47.3"/>
+    <polygon fill="#9a7049" points="21.2,35.8 50.2,21.5 63.6,29.7 34.6,44"/>
+    <polyline points="25.4,36.7 51.4,23.9" fill="none" stroke="#bd905c" stroke-width="1.1"/>
+    <polyline points="29.4,39.2 55.4,26.3" fill="none" stroke="#765235" stroke-width="1"/>
+    <polyline points="33.4,42.4 60.1,29.2" fill="none" stroke="#ba8f5b" stroke-width="0.8"/>
+    <polygon fill="#473327" points="14.9,28.1 49.8,10.8 50.5,11.4 49.8,20.8 14.9,39.1"/>
+    <polygon fill="#937149" points="15.6,28.9 49,12.4 49,20.1 16.1,36.6"/>
+    <polyline points="15.6,28.7 49,12.1" fill="none" stroke="#b79865" stroke-width="1.5"/>
+    <polyline points="16.3,34.3 49,18.1" fill="none" stroke="#795135" stroke-width="1.1"/>
+    <polyline points="20.1,29 29,24.6 32.7,23.2 34.2,22.5" fill="none" stroke="#d9b580" stroke-width="0.85" opacity="0.68"/>
+    <polyline points="37.1,22 43.1,19.1 46.8,17.4" fill="none" stroke="#d9b580" stroke-width="0.8" opacity="0.55"/>
+    <polyline points="19.3,26.8 19.3,35.8" fill="none" stroke="#473327" stroke-width="2.8"/>
+    <polyline points="44.6,14.3 44.6,23.3" fill="none" stroke="#473327" stroke-width="2.8"/>
+    <polyline points="19.3,26.8 19.3,32.8" fill="none" stroke="#b38956" stroke-width="1.25"/>
+    <polyline points="44.6,14.3 44.6,20.3" fill="none" stroke="#b38956" stroke-width="1.25"/>
+    <polygon fill="#473327" points="49.8,10.8 68.5,22.2 68.5,31.7 49.8,20.3"/>
+    <polygon fill="#906644" points="50.4,13.2 67.8,23.8 67.8,29.8 50.4,19.2"/>
+    <polyline points="50.4,12.4 67.8,23" fill="none" stroke="#d9b580" stroke-width="1.5"/>
+    <polyline points="51.1,17.6 67.2,27.4" fill="none" stroke="#795135" stroke-width="0.95"/>
+    <polyline points="54.1,16.4 54.1,20.9" fill="none" stroke="#9b7148" stroke-width="1.5"/>
+    <polyline points="64.2,22.5 64.2,27" fill="none" stroke="#9b7148" stroke-width="1.5"/>
+    <polyline points="58.8,19.3 61.5,20.9" fill="none" stroke="#dcc09a" stroke-width="0.7"/>
   </g>
-  <!-- The order board stays in the market when the cart goes out. -->
-  <g transform="translate(184)">
-    <path fill="#364235" d="M4 40h20v4H4z"/>
-    <path fill="#483a2c" d="M11 7h6v36h-6zM3 7h22v17H3z"/>
-    <path fill="#9e7850" d="M12 24h3v16h-3zM5 9h18v13H5z"/>
-    <path fill="#d8bb81" d="M6 10h16v10H6z"/>
-    <path fill="#91734f" d="M8 12h11v1H8zM8 15h8v1H8z"/>
-    <path fill="#a5604b" d="M18 16h2v2h-2z"/>
-    <path fill="#f0d598" d="M7 10.5h13v.5H7zm1.5 3h7v.5h-7zm0 3h4v.5h-4z"/>
-    <path fill="#c17b5a" d="M18.5 16.5h.5v1h-.5z"/>
+  <!-- Northeast near rim and wheel -->
+  <g transform="translate(96 64)">
+    <polygon fill="#473327" points="15.6,27.7 34.3,39.1 34.3,48.6 15.6,37.2"/>
+    <polygon fill="#906644" points="16.3,30.1 33.7,40.7 33.7,46.7 16.3,36.1"/>
+    <polyline points="16.3,29.3 33.7,39.9" fill="none" stroke="#d9b580" stroke-width="1.5"/>
+    <polyline points="16.9,34.5 33,44.3" fill="none" stroke="#795135" stroke-width="0.95"/>
+    <polyline points="19.9,33.3 19.9,37.8" fill="none" stroke="#9b7148" stroke-width="1.5"/>
+    <polyline points="30,39.5 30,44" fill="none" stroke="#9b7148" stroke-width="1.5"/>
+    <polyline points="24.6,36.2 27.3,37.8" fill="none" stroke="#dcc09a" stroke-width="0.7"/>
+    <polygon fill="#473327" points="33.6,39.5 68.5,22.2 69.3,22.8 68.5,32.2 33.6,50.5"/>
+    <polygon fill="#a67549" points="34.3,40.3 67.8,23.9 67.8,31.6 34.9,48.1"/>
+    <polyline points="34.3,40.1 67.8,23.6" fill="none" stroke="#d9b580" stroke-width="1.5"/>
+    <polyline points="35.1,45.8 67.8,29.6" fill="none" stroke="#795135" stroke-width="1.1"/>
+    <polyline points="38.8,40.4 47.7,36 51.4,34.7 52.9,33.9" fill="none" stroke="#d9b580" stroke-width="0.85" opacity="0.68"/>
+    <polyline points="55.9,33.5 61.8,30.5 65.5,28.9" fill="none" stroke="#d9b580" stroke-width="0.8" opacity="0.55"/>
+    <polyline points="38,38.3 38,47.3" fill="none" stroke="#473327" stroke-width="2.8"/>
+    <polyline points="63.3,25.8 63.3,34.8" fill="none" stroke="#473327" stroke-width="2.8"/>
+    <polyline points="38,38.3 38,44.3" fill="none" stroke="#b38956" stroke-width="1.25"/>
+    <polyline points="63.3,25.8 63.3,31.8" fill="none" stroke="#b38956" stroke-width="1.25"/>
+    <polygon fill="#463426" points="41.7,42.4 44.652,37.9 48.67,36.9 54.82,37.9 58.1,41.4 58.1,49.4 53.836,53.9 46.046,53.9 41.7,49.4"/>
+    <polygon fill="#8b643f" points="43.7,41.4 46.128,38.9 53.918,38.9 57.1,41.4 57.1,48.4 53.59,51.9 46.538,51.9 42.7,48.4"/>
+    <polyline points="43.7,41.4 45.964,38.9 53.016,38.9" fill="none" stroke="#c39a64" stroke-width="1"/>
+    <polygon fill="#65472e" points="44.898,43.4 49.9,40.4 54.328,42.4 55.394,48.4 52.688,51.4 45.636,51.4"/>
+    <polyline points="49.9,40.4 49.9,51.4" fill="none" stroke="#a77e4d" stroke-width="1"/>
+    <polyline points="44.57,43.4 54.656,48.4" fill="none" stroke="#a67a4e" stroke-width="1"/>
+    <polyline points="45.39,48.4 49.9,45.4 54,42.4" fill="none" stroke="#c39a64" stroke-width="1"/>
+    <polygon fill="#6d6453" points="47.9,44.4 49.9,43.4 51.9,44.4 51.9,46.4 49.9,47.4 47.9,46.4"/>
+    <polygon fill="#c0a781" points="48.9,44.4 49.9,43.4 50.9,44.4 49.9,45.4"/>
+  </g>
+  <!-- Southeast bed and far wheel -->
+  <g transform="translate(0 128)">
+    <polygon fill="#29352c" points="31.4,25.4 41.3,25.9 70.2,39.5 75.1,46.3 57.7,57 42.8,56.2 13,40.7 12.7,37.6" opacity="0.32"/>
+    <polygon fill="#303326" points="35.1,27.2 67.7,42.7 66,47 51.9,54.8 17.2,40.6 18.9,36.3" opacity="0.48"/>
+    <polygon fill="#463426" points="42.6,23.6 45.228,20.1 48.805,19.1 54.28,20.1 57.2,22.6 57.2,30.6 53.404,34.1 46.469,34.1 42.6,30.6"/>
+    <polygon fill="#84684b" points="44.6,22.6 46.542,21.1 53.477,21.1 56.2,22.6 56.2,29.6 53.185,32.1 46.907,32.1 43.6,29.6"/>
+    <polyline points="44.6,22.6 46.396,21.1 52.674,21.1" fill="none" stroke="#a68959" stroke-width="1"/>
+    <polygon fill="#543a2b" points="45.447,24.6 49.9,21.6 53.842,23.6 54.791,29.6 52.382,32.6 46.104,32.6"/>
+    <polyline points="49.9,21.6 49.9,32.6" fill="none" stroke="#ac8557" stroke-width="1"/>
+    <polyline points="45.155,24.6 54.134,29.6" fill="none" stroke="#ab8050" stroke-width="1"/>
+    <polyline points="45.885,29.6 49.9,26.6 53.55,23.6" fill="none" stroke="#745536" stroke-width="1"/>
+    <polygon fill="#6d6453" points="47.9,25.6 49.9,24.6 51.9,25.6 51.9,27.6 49.9,28.6 47.9,27.6"/>
+    <polygon fill="#c0a781" points="48.9,25.6 49.9,24.6 50.9,25.6 49.9,26.6"/>
+    <polygon fill="#6d4c34" points="33.1,15.5 65.8,31.7 51.1,41.4 16.9,24.5"/>
+    <polygon fill="#9a7049" points="34.6,16 63.6,30.3 50.2,38.5 21.2,24.2"/>
+    <polyline points="33.4,18.4 59.4,31.2" fill="none" stroke="#bd905c" stroke-width="1.1"/>
+    <polyline points="29.4,20.8 55.4,33.7" fill="none" stroke="#765235" stroke-width="1"/>
+    <polyline points="24,23.3 50.7,36.5" fill="none" stroke="#ba8f5b" stroke-width="0.8"/>
+    <polygon fill="#473327" points="33.6,4.5 68.5,21.8 69.3,23.2 68.5,31.8 33.6,15.5"/>
+    <polygon fill="#937149" points="34.3,6.1 67.8,22.7 67.8,30.4 34.9,14.3"/>
+    <polyline points="34.3,5.9 67.8,22.4" fill="none" stroke="#b79865" stroke-width="1.5"/>
+    <polyline points="35.1,12.2 67.8,28.4" fill="none" stroke="#795135" stroke-width="1.1"/>
+    <polyline points="38.8,10.6 47.7,15 51.4,17.3 52.9,18.1" fill="none" stroke="#d9b580" stroke-width="0.85" opacity="0.68"/>
+    <polyline points="55.9,20.5 61.8,23.5 65.5,25.5" fill="none" stroke="#d9b580" stroke-width="0.8" opacity="0.55"/>
+    <polyline points="38,7.7 38,16.7" fill="none" stroke="#473327" stroke-width="2.8"/>
+    <polyline points="63.3,20.2 63.3,29.2" fill="none" stroke="#473327" stroke-width="2.8"/>
+    <polyline points="38,7.7 38,13.7" fill="none" stroke="#b38956" stroke-width="1.25"/>
+    <polyline points="63.3,20.2 63.3,26.2" fill="none" stroke="#b38956" stroke-width="1.25"/>
+    <polygon fill="#473327" points="34.3,4.9 15.6,16.3 15.6,25.8 34.3,14.4"/>
+    <polygon fill="#906644" points="33.7,7.3 16.3,17.9 16.3,23.9 33.7,13.3"/>
+    <polyline points="33.7,6.5 16.3,17.1" fill="none" stroke="#d9b580" stroke-width="1.5"/>
+    <polyline points="33,11.7 16.9,21.5" fill="none" stroke="#795135" stroke-width="0.95"/>
+    <polyline points="30,10.5 30,15" fill="none" stroke="#9b7148" stroke-width="1.5"/>
+    <polyline points="19.9,16.7 19.9,21.2" fill="none" stroke="#9b7148" stroke-width="1.5"/>
+    <polyline points="25.3,13.4 22.6,15" fill="none" stroke="#dcc09a" stroke-width="0.7"/>
+    <polygon fill="#473327" points="60.6,31.1 74.7,37.1 77.9,38.9 76.6,41.7 74.1,41.3 57.1,34.6"/>
+    <polyline points="61.3,31.4 74.7,37.1 76.4,39.1" fill="none" stroke="#b38956" stroke-width="1"/>
+    <polyline points="76.2,39.3 74.8,41.4" fill="none" stroke="#c0a375" stroke-width="1.3"/>
+    <polygon fill="#473327" points="45.8,40.1 60,46.1 67.2,45.4 65.8,48.2 59.4,50.2 42.3,43.6"/>
+    <polyline points="46.6,40.4 60,46.1 65.7,45.7" fill="none" stroke="#b38956" stroke-width="1"/>
+    <polyline points="62.9,47.4 61.6,49.5" fill="none" stroke="#c0a375" stroke-width="1.3"/>
+  </g>
+  <!-- Southeast near rim and wheel -->
+  <g transform="translate(96 128)">
+    <polygon fill="#473327" points="14.9,15.9 49.8,33.2 50.5,34.6 49.8,43.2 14.9,26.9"/>
+    <polygon fill="#a67549" points="15.6,17.5 49,34.2 49,41.9 16.1,25.8"/>
+    <polyline points="15.6,17.3 49,33.9" fill="none" stroke="#d9b580" stroke-width="1.5"/>
+    <polyline points="16.3,23.7 49,39.9" fill="none" stroke="#795135" stroke-width="1.1"/>
+    <polyline points="20.1,22 29,26.4 32.7,28.8 34.2,29.5" fill="none" stroke="#d9b580" stroke-width="0.85" opacity="0.68"/>
+    <polyline points="37.1,32 43.1,34.9 46.8,37" fill="none" stroke="#d9b580" stroke-width="0.8" opacity="0.55"/>
+    <polyline points="19.3,19.2 19.3,28.2" fill="none" stroke="#473327" stroke-width="2.8"/>
+    <polyline points="44.6,31.7 44.6,40.7" fill="none" stroke="#473327" stroke-width="2.8"/>
+    <polyline points="19.3,19.2 19.3,25.2" fill="none" stroke="#b38956" stroke-width="1.25"/>
+    <polyline points="44.6,31.7 44.6,37.7" fill="none" stroke="#b38956" stroke-width="1.25"/>
+    <polygon fill="#473327" points="68.5,21.8 49.8,33.2 49.8,42.7 68.5,31.3"/>
+    <polygon fill="#ba8a54" points="67.8,24.2 50.4,34.8 50.4,40.8 67.8,30.2"/>
+    <polyline points="67.8,23.4 50.4,34" fill="none" stroke="#d9b580" stroke-width="1.5"/>
+    <polyline points="67.2,28.6 51.1,38.4" fill="none" stroke="#795135" stroke-width="0.95"/>
+    <polyline points="64.2,27.5 64.2,32" fill="none" stroke="#9b7148" stroke-width="1.5"/>
+    <polyline points="54.1,33.6 54.1,38.1" fill="none" stroke="#9b7148" stroke-width="1.5"/>
+    <polyline points="59.5,30.3 56.8,31.9" fill="none" stroke="#dcc09a" stroke-width="0.7"/>
+    <polygon fill="#463426" points="23,35 25.952,30.5 29.97,29.5 36.12,30.5 39.4,34 39.4,42 35.136,46.5 27.346,46.5 23,42"/>
+    <polygon fill="#8b643f" points="25,34 27.428,31.5 35.218,31.5 38.4,34 38.4,41 34.89,44.5 27.838,44.5 24,41"/>
+    <polyline points="25,34 27.264,31.5 34.316,31.5" fill="none" stroke="#c39a64" stroke-width="1"/>
+    <polygon fill="#65472e" points="26.198,36 31.2,33 35.628,35 36.694,41 33.988,44 26.936,44"/>
+    <polyline points="31.2,33 31.2,44" fill="none" stroke="#a77e4d" stroke-width="1"/>
+    <polyline points="25.87,36 35.956,41" fill="none" stroke="#a67a4e" stroke-width="1"/>
+    <polyline points="26.69,41 31.2,38 35.3,35" fill="none" stroke="#c39a64" stroke-width="1"/>
+    <polygon fill="#6d6453" points="29.2,37 31.2,36 33.2,37 33.2,39 31.2,40 29.2,39"/>
+    <polygon fill="#c0a781" points="30.2,37 31.2,36 32.2,37 31.2,38"/>
+  </g>
+  <!-- North bed and far wheel -->
+  <g transform="translate(0 192)">
+    <polygon fill="#29352c" points="34,61.9 28,57.8 27,38.4 33,32.3 59,32.3 68,38.4 67,59.3 63,61.3" opacity="0.32"/>
+    <polygon fill="#303326" points="34,59.3 33,37.4 40,35.3 60,35.8 64,57.8 57,59.8" opacity="0.48"/>
+    <polygon fill="#473327" points="37,29.4 37,18.7 40,13.2 42,15.2 39,21.2 40,33.5"/>
+    <polyline points="37,28.9 37,18.7 40,15.2" fill="none" stroke="#b38956" stroke-width="1"/>
+    <polyline points="38.1,17.9 40.1,19.2" fill="none" stroke="#c0a375" stroke-width="1.3"/>
+    <polygon fill="#473327" points="59,29.4 59,18.7 56,13.2 58,15.2 61,21.2 62,33.5"/>
+    <polyline points="59,28.9 59,18.7 56,15.2" fill="none" stroke="#b38956" stroke-width="1"/>
+    <polyline points="57.9,17.9 59.9,19.2" fill="none" stroke="#c0a375" stroke-width="1.3"/>
+    <polygon fill="#463426" points="31.9,38.1 32.656,34.6 33.685,33.6 35.26,34.6 36.1,37.1 36.1,45.1 35.008,48.6 33.013,48.6 31.9,45.1"/>
+    <polygon fill="#84684b" points="33.9,37.1 33.034,35.6 35.029,35.6 35.1,37.1 35.1,44.1 34.945,46.6 33.139,46.6 32.9,44.1"/>
+    <polyline points="33.9,37.1 32.992,35.6 34.798,35.6" fill="none" stroke="#a68959" stroke-width="1"/>
+    <polygon fill="#543a2b" points="32.719,39.1 34,36.1 35.134,38.1 35.407,44.1 34.714,47.1 32.908,47.1"/>
+    <polyline points="34,36.1 34,47.1" fill="none" stroke="#ac8557" stroke-width="1"/>
+    <polyline points="32.635,39.1 35.218,44.1" fill="none" stroke="#ab8050" stroke-width="1"/>
+    <polyline points="32.845,44.1 34,41.1 35.05,38.1" fill="none" stroke="#745536" stroke-width="1"/>
+    <polygon fill="#6d6453" points="32,40.1 34,39.1 36,40.1 36,42.1 34,43.1 32,42.1"/>
+    <polygon fill="#c0a781" points="33,40.1 34,39.1 35,40.1 34,41.1"/>
+    <polygon fill="#6d4c34" points="37,46.3 37,23.9 60,23.4 60,46.8"/>
+    <polygon fill="#9a7049" points="38,43.8 38,23.9 58,23.9 58,43.8"/>
+    <polyline points="42,42.8 42,24.9" fill="none" stroke="#bd905c" stroke-width="1.1"/>
+    <polyline points="48,42.8 48,24.9" fill="none" stroke="#765235" stroke-width="1"/>
+    <polyline points="55,43.3 55,24.9" fill="none" stroke="#ba8f5b" stroke-width="0.8"/>
+    <polygon fill="#473327" points="34,38.3 34,14.4 34,14.8 34,24.4 34,49.3"/>
+    <polygon fill="#937149" points="34,39 34,16.2 34,23.9 34,46.7"/>
+    <polyline points="34,38.8 34,15.9" fill="none" stroke="#b79865" stroke-width="1.5"/>
+    <polyline points="34,44.3 34,21.9" fill="none" stroke="#795135" stroke-width="1.1"/>
+    <polyline points="34,38.2 34,32.1 34,30.1 34,29.1" fill="none" stroke="#d9b580" stroke-width="0.85" opacity="0.68"/>
+    <polyline points="34,28 34,23.9 34,21.6" fill="none" stroke="#d9b580" stroke-width="0.8" opacity="0.55"/>
+    <polyline points="34,36.3 34,45.3" fill="none" stroke="#473327" stroke-width="2.8"/>
+    <polyline points="34,18.9 34,27.9" fill="none" stroke="#473327" stroke-width="2.8"/>
+    <polyline points="34,36.3 34,42.3" fill="none" stroke="#b38956" stroke-width="1.25"/>
+    <polyline points="34,18.9 34,24.9" fill="none" stroke="#b38956" stroke-width="1.25"/>
+    <polygon fill="#473327" points="34,14.4 62,14.4 62,23.9 34,23.9"/>
+    <polygon fill="#906644" points="35,16.4 61,16.4 61,22.4 35,22.4"/>
+    <polyline points="35,15.6 61,15.6" fill="none" stroke="#d9b580" stroke-width="1.5"/>
+    <polyline points="36,20.4 60,20.4" fill="none" stroke="#795135" stroke-width="0.95"/>
+    <polyline points="40.5,17.4 40.5,21.9" fill="none" stroke="#9b7148" stroke-width="1.5"/>
+    <polyline points="55.5,17.4 55.5,21.9" fill="none" stroke="#9b7148" stroke-width="1.5"/>
+    <polyline points="47.5,17.4 51.5,17.4" fill="none" stroke="#dcc09a" stroke-width="0.7"/>
+  </g>
+  <!-- North near rim and wheel -->
+  <g transform="translate(96 192)">
+    <polygon fill="#473327" points="34,37.8 62,37.8 62,47.3 34,47.3"/>
+    <polygon fill="#906644" points="35,39.8 61,39.8 61,45.8 35,45.8"/>
+    <polyline points="35,39 61,39" fill="none" stroke="#d9b580" stroke-width="1.5"/>
+    <polyline points="36,43.8 60,43.8" fill="none" stroke="#795135" stroke-width="0.95"/>
+    <polyline points="40.5,40.8 40.5,45.3" fill="none" stroke="#9b7148" stroke-width="1.5"/>
+    <polyline points="55.5,40.8 55.5,45.3" fill="none" stroke="#9b7148" stroke-width="1.5"/>
+    <polyline points="47.5,40.8 51.5,40.8" fill="none" stroke="#dcc09a" stroke-width="0.7"/>
+    <polygon fill="#473327" points="62,38.3 62,14.4 62,14.8 62,24.4 62,49.3"/>
+    <polygon fill="#a67549" points="62,39 62,16.2 62,23.9 62,46.7"/>
+    <polyline points="62,38.8 62,15.9" fill="none" stroke="#d9b580" stroke-width="1.5"/>
+    <polyline points="62,44.3 62,21.9" fill="none" stroke="#795135" stroke-width="1.1"/>
+    <polyline points="62,38.2 62,32.1 62,30.1 62,29.1" fill="none" stroke="#d9b580" stroke-width="0.85" opacity="0.68"/>
+    <polyline points="62,28 62,23.9 62,21.6" fill="none" stroke="#d9b580" stroke-width="0.8" opacity="0.55"/>
+    <polyline points="62,36.3 62,45.3" fill="none" stroke="#473327" stroke-width="2.8"/>
+    <polyline points="62,18.9 62,27.9" fill="none" stroke="#473327" stroke-width="2.8"/>
+    <polyline points="62,36.3 62,42.3" fill="none" stroke="#b38956" stroke-width="1.25"/>
+    <polyline points="62,18.9 62,24.9" fill="none" stroke="#b38956" stroke-width="1.25"/>
+    <polygon fill="#463426" points="59,38.1 60.08,33.6 61.55,32.6 63.8,33.6 65,37.1 65,45.1 63.44,49.6 60.59,49.6 59,45.1"/>
+    <polygon fill="#8b643f" points="61,37.1 60.62,34.6 63.47,34.6 64,37.1 64,44.1 63.35,47.6 60.77,47.6 60,44.1"/>
+    <polyline points="61,37.1 60.56,34.6 63.14,34.6" fill="none" stroke="#c39a64" stroke-width="1"/>
+    <polygon fill="#65472e" points="60.17,39.1 62,36.1 63.62,38.1 64.01,44.1 63.02,47.1 60.44,47.1"/>
+    <polyline points="62,36.1 62,47.1" fill="none" stroke="#a77e4d" stroke-width="1"/>
+    <polyline points="60.05,39.1 63.74,44.1" fill="none" stroke="#a67a4e" stroke-width="1"/>
+    <polyline points="60.35,44.1 62,41.1 63.5,38.1" fill="none" stroke="#c39a64" stroke-width="1"/>
+    <polygon fill="#6d6453" points="60,40.1 62,39.1 64,40.1 64,42.1 62,43.1 60,42.1"/>
+    <polygon fill="#c0a781" points="61,40.1 62,39.1 63,40.1 62,41.1"/>
+  </g>
+  <!-- South bed and far wheel -->
+  <g transform="translate(0 256)">
+    <polygon fill="#29352c" points="62,26.1 68,30.2 69,49.6 63,55.7 37,55.7 28,49.6 29,28.7 33,26.7" opacity="0.32"/>
+    <polygon fill="#303326" points="62,28.7 63,50.6 56,52.7 36,52.2 32,30.2 39,28.2" opacity="0.48"/>
+    <polygon fill="#463426" points="59.9,27.9 60.656,24.4 61.685,23.4 63.26,24.4 64.1,26.9 64.1,34.9 63.008,38.4 61.013,38.4 59.9,34.9"/>
+    <polygon fill="#84684b" points="61.9,26.9 61.034,25.4 63.029,25.4 63.1,26.9 63.1,33.9 62.945,36.4 61.139,36.4 60.9,33.9"/>
+    <polyline points="61.9,26.9 60.992,25.4 62.798,25.4" fill="none" stroke="#a68959" stroke-width="1"/>
+    <polygon fill="#543a2b" points="60.719,28.9 62,25.9 63.134,27.9 63.407,33.9 62.714,36.9 60.908,36.9"/>
+    <polyline points="62,25.9 62,36.9" fill="none" stroke="#ac8557" stroke-width="1"/>
+    <polyline points="60.635,28.9 63.218,33.9" fill="none" stroke="#ab8050" stroke-width="1"/>
+    <polyline points="60.845,33.9 62,30.9 63.05,27.9" fill="none" stroke="#745536" stroke-width="1"/>
+    <polygon fill="#6d6453" points="60,29.9 62,28.9 64,29.9 64,31.9 62,32.9 60,31.9"/>
+    <polygon fill="#c0a781" points="61,29.9 62,28.9 63,29.9 62,30.9"/>
+    <polygon fill="#6d4c34" points="59,15.7 59,38.1 36,38.6 36,15.2"/>
+    <polygon fill="#9a7049" points="58,16.2 58,36.1 38,36.1 38,16.2"/>
+    <polyline points="54,17.2 54,35.1" fill="none" stroke="#bd905c" stroke-width="1.1"/>
+    <polyline points="48,17.2 48,35.1" fill="none" stroke="#765235" stroke-width="1"/>
+    <polyline points="41,16.7 41,35.1" fill="none" stroke="#ba8f5b" stroke-width="0.8"/>
+    <polygon fill="#473327" points="62,5.7 62,29.6 62,31.2 62,39.6 62,16.7"/>
+    <polygon fill="#937149" points="62,7.4 62,30.4 62,38.1 62,15.7"/>
+    <polyline points="62,7.2 62,30.1" fill="none" stroke="#b79865" stroke-width="1.5"/>
+    <polyline points="62,13.7 62,36.1" fill="none" stroke="#795135" stroke-width="1.1"/>
+    <polyline points="62,12.8 62,18.9 62,21.9 62,22.9" fill="none" stroke="#d9b580" stroke-width="0.85" opacity="0.68"/>
+    <polyline points="62,26 62,30.1 62,32.8" fill="none" stroke="#d9b580" stroke-width="0.8" opacity="0.55"/>
+    <polyline points="62,9.7 62,18.7" fill="none" stroke="#473327" stroke-width="2.8"/>
+    <polyline points="62,27.1 62,36.1" fill="none" stroke="#473327" stroke-width="2.8"/>
+    <polyline points="62,9.7 62,15.7" fill="none" stroke="#b38956" stroke-width="1.25"/>
+    <polyline points="62,27.1 62,33.1" fill="none" stroke="#b38956" stroke-width="1.25"/>
+    <polygon fill="#473327" points="62,6.2 34,6.2 34,15.7 62,15.7"/>
+    <polygon fill="#906644" points="61,8.2 35,8.2 35,14.2 61,14.2"/>
+    <polyline points="61,7.4 35,7.4" fill="none" stroke="#d9b580" stroke-width="1.5"/>
+    <polyline points="60,12.2 36,12.2" fill="none" stroke="#795135" stroke-width="0.95"/>
+    <polyline points="55.5,9.2 55.5,13.7" fill="none" stroke="#9b7148" stroke-width="1.5"/>
+    <polyline points="40.5,9.2 40.5,13.7" fill="none" stroke="#9b7148" stroke-width="1.5"/>
+    <polyline points="48.5,9.2 44.5,9.2" fill="none" stroke="#dcc09a" stroke-width="0.7"/>
+    <polygon fill="#473327" points="59,36.6 59,45.3 56,46.8 54,48.8 57,48.8 56,38.5"/>
+    <polyline points="59,37.1 59,45.3 56,46.8" fill="none" stroke="#b38956" stroke-width="1"/>
+    <polyline points="57.9,47.5 55.9,48.8" fill="none" stroke="#c0a375" stroke-width="1.3"/>
+    <polygon fill="#473327" points="37,36.6 37,45.3 40,46.8 38,48.8 35,48.8 34,38.5"/>
+    <polyline points="37,37.1 37,45.3 40,46.8" fill="none" stroke="#b38956" stroke-width="1"/>
+    <polyline points="38.1,47.5 36.1,48.8" fill="none" stroke="#c0a375" stroke-width="1.3"/>
+  </g>
+  <!-- South near rim and wheel -->
+  <g transform="translate(96 256)">
+    <polygon fill="#473327" points="34,5.7 34,29.6 34,31.2 34,39.6 34,16.7"/>
+    <polygon fill="#a67549" points="34,7.4 34,30.4 34,38.1 34,15.7"/>
+    <polyline points="34,7.2 34,30.1" fill="none" stroke="#d9b580" stroke-width="1.5"/>
+    <polyline points="34,13.7 34,36.1" fill="none" stroke="#795135" stroke-width="1.1"/>
+    <polyline points="34,12.8 34,18.9 34,21.9 34,22.9" fill="none" stroke="#d9b580" stroke-width="0.85" opacity="0.68"/>
+    <polyline points="34,26 34,30.1 34,32.8" fill="none" stroke="#d9b580" stroke-width="0.8" opacity="0.55"/>
+    <polyline points="34,9.7 34,18.7" fill="none" stroke="#473327" stroke-width="2.8"/>
+    <polyline points="34,27.1 34,36.1" fill="none" stroke="#473327" stroke-width="2.8"/>
+    <polyline points="34,9.7 34,15.7" fill="none" stroke="#b38956" stroke-width="1.25"/>
+    <polyline points="34,27.1 34,33.1" fill="none" stroke="#b38956" stroke-width="1.25"/>
+    <polygon fill="#473327" points="62,29.6 34,29.6 34,39.1 62,39.1"/>
+    <polygon fill="#ba8a54" points="61,31.6 35,31.6 35,37.6 61,37.6"/>
+    <polyline points="61,30.8 35,30.8" fill="none" stroke="#d9b580" stroke-width="1.5"/>
+    <polyline points="60,35.6 36,35.6" fill="none" stroke="#795135" stroke-width="0.95"/>
+    <polyline points="55.5,32.6 55.5,37.1" fill="none" stroke="#9b7148" stroke-width="1.5"/>
+    <polyline points="40.5,32.6 40.5,37.1" fill="none" stroke="#9b7148" stroke-width="1.5"/>
+    <polyline points="48.5,32.6 44.5,32.6" fill="none" stroke="#dcc09a" stroke-width="0.7"/>
+    <polygon fill="#463426" points="31,27.9 32.08,23.4 33.55,22.4 35.8,23.4 37,26.9 37,34.9 35.44,39.4 32.59,39.4 31,34.9"/>
+    <polygon fill="#8b643f" points="33,26.9 32.62,24.4 35.47,24.4 36,26.9 36,33.9 35.35,37.4 32.77,37.4 32,33.9"/>
+    <polyline points="33,26.9 32.56,24.4 35.14,24.4" fill="none" stroke="#c39a64" stroke-width="1"/>
+    <polygon fill="#65472e" points="32.17,28.9 34,25.9 35.62,27.9 36.01,33.9 35.02,36.9 32.44,36.9"/>
+    <polyline points="34,25.9 34,36.9" fill="none" stroke="#a77e4d" stroke-width="1"/>
+    <polyline points="32.05,28.9 35.74,33.9" fill="none" stroke="#a67a4e" stroke-width="1"/>
+    <polyline points="32.35,33.9 34,30.9 35.5,27.9" fill="none" stroke="#c39a64" stroke-width="1"/>
+    <polygon fill="#6d6453" points="32,29.9 34,28.9 36,29.9 36,31.9 34,32.9 32,31.9"/>
+    <polygon fill="#c0a781" points="33,29.9 34,28.9 35,29.9 34,30.9"/>
+  </g>
+  <!-- Tied cargo sacks and folded cloth, side -->
+  <g transform="translate(0 320)">
+    <path fill="#57422f" d="M10 21l2-6 3-3 2-6 6-2 4 1 1 3-2 3 4 4 2 7-4 3-15-1z"/>
+    <path fill="#b19163" d="M12 21l3-6 4-4 1-4 5-2 2 2-2 4 4 5 2 5-4 3-13-1z"/>
+    <path fill="#d2b17a" d="M15 20l3-5 2-3h4l-2 4 2 4-2 1-4-1-2 2z"/>
+    <path fill="#8c6948" d="M23 13l3 3 1 4-2 4-5-1 3-2 1-3z"/>
+    <path fill="#6b4933" d="M18 9h9v2h-9zM14 21l5 1h5l1 1H14z"/>
+    <path fill="#dbc399" d="M19 9h7v1h-7zM18 16h1v2h-1z"/>
+    <path fill="#685038" d="M28 20l5-4 7-1 8 4-1 4-16 2-3-1z"/>
+    <path fill="#b58d5c" d="M30 19l6-2h5l5 2-2 2-13 2-2-1z"/>
+    <path fill="#d2ad71" d="M32 19l5-1h4l3 1-11 2-2 1z"/>
+    <path fill="#806744" d="M36 18h2l1 5h-2zM41 17h1l1 4-1 1z"/>
+    <path fill="#ddc18d" d="M36 18h1l1 4h-1z"/>
+  </g>
+  <!-- Tied cargo sacks and folded cloth, end -->
+  <g transform="translate(48 320)">
+    <path fill="#634c35" d="M8 20l3-8 4-2 2-5 5-2 6 2-1 4-2 2 4 3 2 8-4 3H10z"/>
+    <path fill="#bb9a67" d="M10 20l4-7 5-2 1-5 3-2 3 3-3 4 5 4 1 6-4 2H13z"/>
+    <path fill="#d3b688" d="M12 20l3-5 6-3 2 1-4 4-2 5h-4z"/>
+    <path fill="#816341" d="M24 14l3 3-1 4-5 1 2-3zM18 8h8v2h-8z"/>
+    <path fill="#d0b780" d="M19 8h6v1h-6z"/>
+    <path fill="#6b5138" d="M23 20l4-3 7-1 6 3-1 4-13 2-3-2z"/>
+    <path fill="#b89464" d="M25 20l5-2h5l3 2-12 3z"/>
+    <path fill="#d2b47e" d="M27 20l4-1h5l-2 1-7 2z"/>
+    <path fill="#785e41" d="M31 18h1l1 5h-1z"/>
   </g>
 </svg>

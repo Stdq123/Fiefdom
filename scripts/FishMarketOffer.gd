@@ -73,4 +73,4 @@ func _follow_offer() -> void:
 
 func _deliver(for_food: bool) -> void:
 	if Global.deliver_fish_order(start_day, for_food):
-		AudioManager.play_ui_sfx(1.12)
+		AudioManager.play_trade_cue(AudioManager.TradeCue.STORE_FOOD if for_food else AudioManager.TradeCue.SALE)

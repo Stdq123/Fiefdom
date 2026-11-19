@@ -28,7 +28,7 @@ func _night() -> void:
 	await create_timer(1.1).timeout
 
 func _open_at(target: Node2D, offset := Vector2(0, 18)) -> Control:
-	await Campaign.walk_to(self, world.player, target.global_position + offset)
+	await Campaign.walk_estate_road_to(self, world, target.global_position + offset)
 	var key := InputEventKey.new()
 	key.pressed = true
 	key.keycode = KEY_E

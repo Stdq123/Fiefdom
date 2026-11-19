@@ -22,15 +22,20 @@ const CROP_PROGRESS := {
 @onready var copper_button: Button = $Current/Content/Rewards/Copper
 @onready var food_button: Button = $Current/Content/Rewards/Food
 @onready var pin_button: Button = $Current/Content/Actions/Pin
+@onready var field_work_button: Button = $Current/Content/FieldActions/FieldWork
+@onready var steward_work: Button = $Current/Content/FieldActions/StewardWork
 @onready var fish_route_button: Button = $Current/Content/Actions/FishRoute
 @onready var produce_route_button: Button = $Current/Content/Actions/ProduceRoute
 @onready var water_route_button: Button = $Current/Content/Actions/WaterRoute
 @onready var silk_button: Button = $Current/Content/Actions/Silk
+@onready var freight_route: Button = $Current/Content/Actions/FreightRoute
 @onready var next_heading: Label = $Next/Content/HeadingRow/Heading
 @onready var next_plan_button: Button = $Next/Content/HeadingRow/Plan
 @onready var next_silk_button: Button = $Next/Content/HeadingRow/Silk
 @onready var next_water_button: Button = $Next/Content/HeadingRow/WaterRoute
 @onready var next_details: Label = $Next/Content/Details
+@onready var next_field_work_button: Button = $Next/Content/FieldActions/FieldWork
+@onready var next_steward_work: Button = $Next/Content/FieldActions/StewardWork
 @onready var last_receipt: Label = $LastReceipt
 
 var start_day := 0
@@ -41,12 +46,17 @@ func _ready() -> void:
 	copper_button.pressed.connect(_deliver.bind(false))
 	food_button.pressed.connect(_deliver.bind(true))
 	pin_button.toggled.connect(Global.pin_season_order)
+	field_work_button.pressed.connect(GameEvents.season_order_work_requested.emit.bind(false))
+	next_field_work_button.pressed.connect(GameEvents.season_order_work_requested.emit.bind(true))
+	steward_work.pressed.connect(_assign_steward_work.bind(false))
+	next_steward_work.pressed.connect(_assign_steward_work.bind(true))
 	next_plan_button.toggled.connect(Global.pin_season_order.bind(true))
 	fish_route_button.pressed.connect(func(): GameEvents.ravine_trip_requested.emit(fish_route_target))
 	produce_route_button.pressed.connect(GameEvents.west_market_directions_requested.emit.bind(MarketStall.TITLES[MarketStall.Kind.GRAIN]))
 	water_route_button.pressed.connect(_follow_water_source)
 	next_water_button.pressed.connect(_follow_water_source.bind(true))
 	silk_button.pressed.connect(silk_requested.emit)
+	freight_route.pressed.connect(GameEvents.west_market_directions_requested.emit.bind(Global.FREIGHT_YARD))
 	next_silk_button.pressed.connect(silk_requested.emit)
 	visibility_changed.connect(_refresh)
 	GameEvents.season_order_pin_changed.connect(_refresh)
@@ -61,6 +71,9 @@ func _ready() -> void:
 	GameEvents.fish_changed.connect(_refresh)
 	GameEvents.stamina_changed.connect(_refresh.unbind(1))
 	GameEvents.silk_changed.connect(_refresh)
+	GameEvents.retainer_assigned.connect(_refresh.unbind(2))
+	GameEvents.retainer_duty_changed.connect(_refresh.unbind(1))
+	GameEvents.retainer_departed.connect(_refresh.unbind(1))
 	GameEvents.campaign_ended.connect(_refresh.unbind(1))
 	_refresh()
 
@@ -86,6 +99,7 @@ func _refresh() -> void:
 	var pinned := Global.is_season_order_pinned(schedule)
 	pin_button.set_pressed_no_signal(pinned)
 	pin_button.text = "取消田边跟踪" if pinned else "在田边跟踪此单"
+	_refresh_field_work(field_work_button, schedule)
 	_refresh_produce_route(order)
 	var rice_water_gap := Global.rice_order_water_gap(schedule) if pin_button.visible else 0
 	water_route_button.visible = rice_water_gap > 0
@@ -103,6 +117,16 @@ func _refresh() -> void:
 	_show_cargo(SeasonOrders.cargo(order), delivered_on > 0)
 
 	var receipt: Dictionary = Global.season_order_receipts.get(order.id, {})
+	var freight: Dictionary = receipt if delivered_on > 0 and int(receipt.dispatch_day) >= Global.current_day else {}
+	if freight.is_empty() and schedule.start == Global.current_day:
+		freight = Global.pending_freight_receipt()
+	freight_route.visible = Global.outcome == Global.Outcome.RUNNING and not freight.is_empty()
+	if freight_route.visible:
+		var arrived := SeasonOrders.transit_progress(freight, Global.current_day, Global.day_progress) >= 1.0
+		freight_route.text = "货已到 · 去卸货场" if arrived else "指路去卸货场"
+		freight_route.tooltip_text = "到卸货场找申禾" if arrived else SeasonOrders.arrival_caption(freight)
+		if delivered_on == 0:
+			freight_route.text = "上一季货车 · 去卸货场"
 	if delivered_on > 0:
 		var travel := SeasonOrders.transit_progress(receipt, Global.current_day, Global.day_progress)
 		var delivery := SeasonOrders.dispatch_caption(receipt) if travel < 0.0 else (
@@ -115,6 +139,8 @@ func _refresh() -> void:
 			delivery = "阿绥 · 正送往南路亭" if Global.winter_road_rations_progress() < 1.0 else "亭前路粮案 · 麦与帛已到"
 		else:
 			delivery = "申禾 · " + delivery
+		if travel < 1.0:
+			delivery += " · " + SeasonOrders.arrival_caption(receipt)
 		status.text = "第 %d 天已交 · 已领%s\n%s" % [
 			delivered_on, "口粮" if receipt.paid_in_food else "铜钱", delivery]
 		if (Global.get_current_year() == Global.TAX_COUNCIL_YEAR - 1
@@ -137,6 +163,10 @@ func _refresh() -> void:
 		if offer.fish == fish and offer.receipt.is_empty():
 			var warning := "交出这尾%s后，鱼摊留鱼单会缺鱼。" % CreekFish.SPECIES[fish].name
 			status.text = warning if status.text.is_empty() else status.text + "\n" + warning
+	var steward_note := _refresh_steward_work(steward_work, schedule)
+	field_work_button.get_parent().visible = field_work_button.visible or steward_work.visible
+	if not steward_note.is_empty():
+		status.text += "\n" + steward_note
 	status.add_theme_color_override("font_color", READY_INK if ready or delivered_on > 0 else WAIT_INK)
 	var upcoming := Global.season_order(schedule.end + 1)
 	next_heading.text = "下季预告 · 第 %d–%d 天" % [upcoming.start, upcoming.end]
@@ -147,14 +177,73 @@ func _refresh() -> void:
 		next_details.text += " · 稻须接通水渠"
 	var planning := Global.is_season_order_pinned(upcoming)
 	next_plan_button.set_pressed_no_signal(planning)
-	next_plan_button.text = "取消下季备货" if planning else "跟踪下季备货"
+	next_plan_button.text = "取消下季跟踪" if planning else "跟踪下季备货"
 	next_plan_button.visible = Global.outcome == Global.Outcome.RUNNING
 	next_water_button.visible = next_plan_button.visible and needs_next_water
 	next_silk_button.visible = next_plan_button.visible and not at_market \
 		and int(upcoming.order.get("silk", 0)) > Global.season_order_stock_for(upcoming, SeasonOrders.SILK_ITEM)
+	_refresh_field_work(next_field_work_button, upcoming)
+	var next_steward_note := _refresh_steward_work(next_steward_work, upcoming)
+	next_field_work_button.get_parent().visible = next_field_work_button.visible or next_steward_work.visible
+	if not next_steward_note.is_empty():
+		next_details.text += "\n" + next_steward_note
 	last_receipt.visible = delivered_on == 0 and not receipt.is_empty()
 	if last_receipt.visible:
 		last_receipt.text = "上次这张单在第 %d 天交齐。" % receipt.day
+
+func _refresh_field_work(button: Button, schedule: Dictionary) -> void:
+	var plan := Global.season_order_work(schedule) if not at_market else {}
+	button.visible = not plan.is_empty()
+	if not button.visible:
+		return
+	var label := ItemManager.crop_label(plan.crop_id)
+	match int(plan.action):
+		Global.OrderWork.HARVEST: button.text = "标出已熟的%s" % label
+		Global.OrderWork.WATER: button.text = "标出待浇的%s" % label
+		Global.OrderWork.SOW: button.text = "标出空私田 · 换%s种" % label
+		Global.OrderWork.WAIT: button.text = "查看田里的%s" % label
+	button.tooltip_text = "在田边跟踪此单，并标出一格私田。"
+	if schedule.start > Global.current_day:
+		if plan.action != Global.OrderWork.HARVEST:
+			next_details.text += "\n%s最早第 %d 天可收。第 %d 天起可交货。" % [label, plan.day, schedule.start]
+		button.tooltip_text += "\n第 %d 天起可交货。" % schedule.start
+
+func _refresh_steward_work(button: Button, schedule: Dictionary) -> String:
+	button.visible = false
+	if at_market:
+		return ""
+	var offer := Global.steward_order_offer(schedule)
+	if offer.queued > 0:
+		button.visible = true
+		button.text = "撤回未播 · %d 格" % offer.queued
+		button.tooltip_text = "撤回本单还未播种的安排。已播的作物照常生长。"
+		return ("管事备货待播 %d 格。" % offer.queued if offer.unstaffed == 0 else
+			"备货待播 %d 格，其中 %d 格需要交接管事。" % [offer.queued, offer.unstaffed])
+	if offer.plans.is_empty():
+		return ""
+	var crops := {}
+	for id: String in offer.plans.values():
+		crops[id] = crops.get(id, 0) + 1
+	var items := PackedStringArray()
+	for id: String in crops:
+		items.append("%s %d 格" % [ItemManager.crop_label(id), crops[id]])
+	button.visible = true
+	button.text = "安排管事备货 · %d 格" % offer.plans.size()
+	button.tooltip_text = "用管事白天的工时，只在可用私田种一茬。可在封地概览查看田格。"
+	return "管事可备%s。若今天播种，预计第 %d 天可收完。" % ["、".join(items), offer.latest]
+
+func _assign_steward_work(upcoming: bool) -> void:
+	if at_market:
+		return
+	var schedule := Global.season_order()
+	if upcoming:
+		schedule = Global.season_order(schedule.end + 1)
+	if Global.steward_order_offer(schedule).queued > 0:
+		Global.cancel_order_sowing(schedule.start)
+	else:
+		Global.queue_steward_order_sowing(schedule)
+	_refresh()
+	GamepadInput.snap_pointer_to_focus.call_deferred()
 
 func _refresh_produce_route(order: Dictionary) -> void:
 	var crop := Global.market_produce_crop()
@@ -246,6 +335,6 @@ func _show_cargo(needs: Dictionary, delivered: bool) -> void:
 
 func _deliver(paid_in_food: bool) -> void:
 	if Global.deliver_season_order(start_day, paid_in_food):
-		AudioManager.play_ui_sfx(1.12)
+		AudioManager.play_sfx(preload("res://assets/audio/freight/receipt.wav"), -10.0)
 	else:
 		_refresh()

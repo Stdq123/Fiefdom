@@ -1,0 +1,13 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://bmdm6ik4ep8rr"
+path="res://.godot/imported/pavilion-rain-shelter.svg-1250a36fdf45a4282ec5e1e44a3f6883.res"
+
+[deps]
+
+source_file="res://assets/world/pavilion-rain-shelter.svg"
+dest_files=["res://.godot/imported/pavilion-rain-shelter.svg-1250a36fdf45a4282ec5e1e44a3f6883.res"]
+
+[params]

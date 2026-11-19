@@ -2,9 +2,22 @@
 
 [ext_resource type="Script" path="res://scripts/WinterSupperTable.gd" id="1_supper"]
 [ext_resource type="Material" path="res://resources/world_hint_material.tres" id="2_hint"]
+[ext_resource type="AudioStream" path="res://assets/audio/festival/hearth-crackle.wav" id="3_fire"]
 
 [sub_resource type="RectangleShape2D" id="TableFootprint"]
 size = Vector2(65, 12)
+
+[sub_resource type="Gradient" id="HearthFalloff"]
+offsets = PackedFloat32Array(0, 0.35, 1)
+colors = PackedColorArray(1, 1, 1, 0.92, 1, 1, 1, 0.34, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="HearthGlow"]
+gradient = SubResource("HearthFalloff")
+width = 104
+height = 76
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
 
 [node name="WinterSupper" type="Node2D" groups=["interactable"]]
 visible = false
@@ -19,6 +32,21 @@ y_sort_enabled = true
 
 [node name="Lanterns" type="Node2D" parent="."]
 y_sort_enabled = true
+
+[node name="HearthGlow" type="PointLight2D" parent="."]
+enabled = false
+position = Vector2(0, -4)
+color = Color(1, 0.66, 0.38, 1)
+energy = 0.44
+range_z_max = 4
+texture = SubResource("HearthGlow")
+
+[node name="FireSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("3_fire")
+position = Vector2(0, -4)
+volume_db = -12.0
+max_distance = 144.0
+bus = &"Ambience"
 
 [node name="Footprint" type="StaticBody2D" parent="."]
 collision_mask = 0

@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://bcigfoaha5qu"
+path="res://.godot/imported/first-tribute.png-1af1e160d2e9886720d3d377e7ae75a6.res"
+
+[deps]
+
+source_file="res://assets/ui/first-tribute.png"
+dest_files=["res://.godot/imported/first-tribute.png-1af1e160d2e9886720d3d377e7ae75a6.res"]
+
+[params]
+
+authored_at_2x=true

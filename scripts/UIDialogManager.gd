@@ -9,7 +9,8 @@ const ROTATION_BOOK := preload("res://scripts/FieldRotationBook.gd")
 const WATER_SOURCE := preload("res://scripts/WaterSource.gd")
 const SEED_GARDEN := preload("res://scripts/SeedGarden.gd")
 const WINTER_RATIONS := preload("res://scripts/WinterRoadRations.gd")
-const ESTATE_STORAGE := preload("res://assets/world/estate-storage.svg")
+const TRIBUTE_RECEIPT := "res://assets/ui/first-tribute.png"
+const PRIVATE_HARVEST := "res://assets/ui/first-harvest.png"
 const HUNGER_RETURN_LINES := {
 	VisitorData.FIELD_KEEPER: "那夜没分到饭，我只好去南边借住。今早路过，还是想看看咱们那块田。",
 	VisitorData.ROAD_KEEPER: "那晚我拎着空碗出了门，是过路人分了我一把炒菽。我记得这份情，也惦记亭西的人。",
@@ -30,6 +31,17 @@ const COUNCIL_REACTIONS := {
 	],
 }
 
+const COUNCIL_HARVEST_REACTIONS := {
+	VisitorData.ROAD_KEEPER: [
+		"刚从堂前过来，公筐在案边，头一笔收成也写上了。有人问这筐送哪儿，我就打开贡簿给他看。",
+		"亭里那册已经写了第一笔收成。早先有人问谷归谁、扣了几文，我请他自己翻开来看。",
+	],
+	VisitorData.SILK_MERCHANT: [
+		"贡簿已有头一笔谷了。我给案边留了块干净地方，呈交时好把绸和谷分开放。",
+		"我翻过亭里的新税册。成价扣完还剩几文，写在一处就看明白了。回西市我也照着记一回账。",
+	],
+}
+
 var parent_node: Control
 var player: Player
 
@@ -37,7 +49,114 @@ func setup(host: Control, estate_player: Player) -> void:
 	parent_node = host
 	player = estate_player
 
-func show_first_harvest(open_orders: Callable) -> Control:
+func show_bedtime_warning(context: String, message: String, alternatives: Dictionary[String, Callable],
+		sleep: Callable, field: Dictionary = {}) -> void:
+	var options: Array[String] = []
+	options.assign(alternatives.keys())
+	options.append("仍然过夜")
+	var portrait := HUDIcons.icon(HUDIcons.Symbol.RATIONS) if field.is_empty() else null
+	var dialog := _open("过夜前", context, message, options, [], portrait)
+	if not field.is_empty():
+		dialog.show_tribute_plot(field)
+	dialog.choices[0].grab_focus()
+	dialog.option_selected.connect(func(index: int):
+		if index == options.size() - 1:
+			sleep.call()
+		else:
+			dialog.tree_exited.connect(alternatives[options[index]], CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+	)
+
+func show_pavilion_story(id: String, place: String, open_rations: Callable) -> void:
+	if parent_node.has_node("DialoguePanel"):
+		return
+	var story: Dictionary = PavilionStories.STORIES[id]
+	var dialog := _open("南路亭", place, "席上正说起「%s」。" % story.title,
+		["坐下听一会", "今夜安排", "离开"], [], null)
+	dialog.choices[0].grab_focus()
+	dialog.option_selected.connect(func(index: int):
+		if index == 0:
+			dialog.tree_exited.connect(_pavilion_story_line.bind(id, place, Global.current_day, 0), CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+		elif index == 1:
+			dialog.tree_exited.connect(open_rations, CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+	)
+
+func show_pavilion_appointment(id: String, place: String, wait: Callable, open_rations: Callable) -> void:
+	if parent_node.has_node("DialoguePanel"):
+		return
+	var story: Dictionary = PavilionStories.STORIES[id]
+	var text := "%s起，%s会到这里歇脚。等两人入席，就能听他们说「%s」。" % [
+		PavilionRest.rest_watch(), "和".join(story.speakers), story.title]
+	var dialog := _open("南路亭", place, text, ["坐下候席", "今夜安排", "离开"], [], null)
+	dialog.choices[0].grab_focus()
+	dialog.option_selected.connect(func(index: int):
+		if index in [0, 1]:
+			dialog.tree_exited.connect(wait if index == 0 else open_rations, CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+	)
+
+func _pavilion_story_line(id: String, place: String, day: int, index: int) -> void:
+	if day != Global.current_day or parent_node.has_node("DialoguePanel"):
+		return
+	var story: Dictionary = PavilionStories.STORIES[id]
+	var last: bool = index == story.lines.size() - 1
+	var speaker: String = story.speakers[index % story.speakers.size()]
+	var dialog := _open(speaker, place, story.lines[index], ["听完起身" if last else "接着听"], [], null)
+	dialog.option_selected.connect(func(_choice: int):
+		if last:
+			Global.hear_pavilion_story(id, day)
+		else:
+			dialog.tree_exited.connect(_pavilion_story_line.bind(id, place, day, index + 1), CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+	)
+
+func show_first_tribute_ledger(follow_field: Callable) -> void:
+	var note := Global.first_tribute_note()
+	var lines := PackedStringArray()
+	if not note.is_empty():
+		lines.append("首份纳贡 · " + note)
+	lines.append("国库累计收贡 %d 份。" % Global.king_storage)
+	var due := Global.tribute_deadline()
+	if due > 0:
+		if Global.tribute_overdue():
+			lines.append("本期纳贡 1 份 · 已逾期。")
+		elif due == Global.current_day:
+			lines.append("本期纳贡 1 份 · 今夜到期。")
+		else:
+			lines.append("下次纳贡 · 第 %d 天过夜前收下 1 份公田作物。" % due)
+	var options: Array[String] = ["合上账册"]
+	var can_follow := due > 0 and not Global.tribute_field_plan().is_empty()
+	if can_follow:
+		options.push_front("标出公田")
+	AudioManager.play_event_sound("present_ledger")
+	var dialog := _open("贡粮账", "堂前", "\n".join(lines), options, [], load(TRIBUTE_RECEIPT))
+	if can_follow:
+		dialog.option_selected.connect(func(index: int):
+			if index == 0:
+				dialog.tree_exited.connect(follow_field, CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+		)
+
+func show_rank_book(open_survey: Callable) -> void:
+	var rank: String = Global.rank_names[Global.current_rank]
+	var lines := PackedStringArray()
+	var record := Global.rank_record
+	if not record.is_empty():
+		var day: int = record.day
+		var previous: String = Global.rank_names[record.previous]
+		var change := "由%s晋为%s" if record.previous < Global.current_rank else "由%s降为%s"
+		lines.append("第 %d 天 · %s · %s。" % [day, Global.get_current_solar_term(day), change % [previous, rank]])
+	else:
+		lines.append("现爵 · %s" % rank)
+	lines.append("井田上限 %d 块 · 已有 %d 块。" % [Global.max_well_fields, Global.well_fields.size()])
+	if not record.is_empty() and record.previous < Global.current_rank:
+		lines.append("堂屋衣架添了新装。")
+	if Global.well_fields.size() < Global.max_well_fields:
+		lines.append("若要添田，可先翻开垦簿核对人手和粮钱。")
+	AudioManager.play_event_sound("present_ledger")
+	var dialog := _open("爵册", "堂前 · " + rank, "\n".join(lines), ["查看开垦簿", "合上爵册"], [], null)
+	dialog.option_selected.connect(func(index: int):
+		if index == 0:
+			dialog.tree_exited.connect(open_survey, CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+	)
+
+func show_first_harvest(open_orders: Callable, arrange_fields: Callable) -> Control:
 	var use := Global.market_crop_plan(1)
 	var crop: String = use.keys()[0]
 	var crop_name := ItemManager.crop_label(crop)
@@ -60,21 +179,44 @@ func show_first_harvest(open_orders: Callable) -> Control:
 	if int(Global.season_order_crops_to_keep().get(crop, 0)) >= Global.crop_stock.count(crop):
 		lines.append("转粮会用掉一份可交货的%s。" % crop_name)
 
-	var sack := AtlasTexture.new()
-	sack.atlas = ESTATE_STORAGE
-	sack.region = Rect2(0, 0, 16, 16)
-	sack.filter_clip = true
-	var dialog := _open("首茬收成", "私仓", "\n".join(lines),
-		["留作物 · 看时令单", "用 1 份%s换口粮" % crop_name, "稍后再说"], [], sack)
+	var choices: Array[String] = ["留作物 · 看时令单", "用 1 份%s换口粮" % crop_name, "稍后再说"]
+	var has_keeper := Global.retainers.any(func(worker: RetainerData) -> bool:
+		return worker.duty in [RetainerData.Duty.FIELD, RetainerData.Duty.STEWARD])
+	if has_keeper:
+		choices.insert(1, "安排门客种下茬")
+	var dialog := _open("首茬收成", "私仓", "\n".join(lines), choices, [], load(PRIVATE_HARVEST))
 	dialog.option_selected.connect(func(index: int):
 		if index == 0:
 			Global.first_harvest_reviewed = true
 			open_orders.call()
-		elif index == 1 and Global.convert_inventory_to_food(1, crop):
+		elif has_keeper and index == 1:
+			Global.first_harvest_reviewed = true
+			arrange_fields.call()
+		elif index == (2 if has_keeper else 1) and Global.convert_inventory_to_food(1, crop):
 			Global.first_harvest_reviewed = true
 			GameEvents.world_notice.emit("%s转粮 · 口粮 +1" % crop_name)
 	)
 	return dialog
+
+func show_freight_wait(receipt: Dictionary, can_wait: bool, take_seat: Callable) -> void:
+	if parent_node.has_node("DialoguePanel"):
+		return
+	var text := "申禾预计第 %d 天%s到。" % [receipt.dispatch_day, SeasonOrders.arrival_watch(receipt)]
+	var choices: Array[String] = ["离开"]
+	if can_wait:
+		var dispatched := SeasonOrders.transit_progress(receipt, Global.current_day, Global.day_progress) >= 0.0
+		text += "货车已经从西市发出。" if dispatched else "货车还在西市等发车。"
+		choices.push_front("坐等到货")
+	elif receipt.dispatch_day > Global.current_day:
+		text += "今晚可先回去休息，明早再来。"
+	else:
+		text += "东路有来敌。守住封地后可以坐等。"
+	var dialog := _open("候货座", Global.FREIGHT_YARD, text, choices, [], null)
+	if can_wait:
+		dialog.option_selected.connect(func(index: int):
+			if index == 0:
+				dialog.tree_exited.connect(take_seat, CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+		)
 
 func show_freight_arrival(speech: String, portrait: Texture2D, guide_hearth: Callable,
 		destination: String, guide_destination: Callable) -> void:
@@ -135,7 +277,7 @@ func show_winter_road_rations(host_present: bool) -> void:
 		if index == 0:
 			Global.pack_travel_meal(meal, ""))
 
-func show_winter_supper() -> void:
+func show_winter_supper(guide_fishing: Callable) -> void:
 	var record := Global.winter_supper_record()
 	var need := Global.retainer_food_cost()
 	if not record.is_empty():
@@ -168,10 +310,20 @@ func show_winter_supper() -> void:
 	for index in WinterSupper.MENU.size():
 		if not Global.can_prepare_winter_supper(WinterSupper.MENU[index], fish):
 			disabled.append(index)
-	var dialog := _open(WinterSupper.HOST, context, speech, ["备麦菽粥", "备鱼麦羹", "坐一会"], disabled, null)
+	var choices: Array[String] = ["备麦菽粥", "备鱼麦羹"]
+	var fishing_place := ""
+	if fish.is_empty():
+		var site := Global.winter_supper_fishing_site()
+		if site >= 0 and Global.fishing_block_reason(false, site).is_empty():
+			fishing_place = CreekFish.PLACES[site]
+			choices.append("指路去" + fishing_place)
+	choices.append("坐一会")
+	var dialog := _open(WinterSupper.HOST, context, speech, choices, disabled, null)
 	dialog.option_selected.connect(func(index: int):
 		if index < WinterSupper.MENU.size():
 			Global.prepare_winter_supper(WinterSupper.MENU[index], fish)
+		elif not fishing_place.is_empty() and index == WinterSupper.MENU.size():
+			guide_fishing.call(fishing_place)
 	)
 
 func show_travel_hearth(guide_market: Callable, guide_pond: Callable) -> void:
@@ -216,12 +368,21 @@ func show_travel_hearth(guide_market: Callable, guide_pond: Callable) -> void:
 			guide_pond.call()
 	)
 
+func show_market_dyer(speaker: String, speech: String, portrait: Texture2D, guide_silk: Callable) -> void:
+	if parent_node.has_node("DialoguePanel"):
+		return
+	var dialog := _open(speaker, "西市 · 染工", speech, ["指路去绸摊", "离开"], [], portrait)
+	dialog.option_selected.connect(func(index: int):
+		if index == 0:
+			guide_silk.call()
+	)
+
 func show_visitor_dialog(data: VisitorData, place: String, at_pavilion := false) -> void:
 	if data.is_recruited or parent_node.has_node("DialoguePanel"):
 		return
 	if data.name == VisitorData.FIELD_KEEPER:
 		if Global.field_keeper_visiting():
-			_show_field_keeper("回访 · " + data.meeting_place, data.get_appearance_texture(),
+			_show_field_keeper("回访 · " + data.meeting_place, data.get_portrait(),
 				"我从南边回来看看这片地。记得先收井田中央那格，那一份要送进国库。", "", data)
 		return
 	var balance := Global.balance
@@ -252,8 +413,7 @@ func show_visitor_dialog(data: VisitorData, place: String, at_pavilion := false)
 	elif not favor.is_valid() and place not in [VisitorData.SILK_MARKET_PLACE, VisitorData.SILK_BRIDGE_PLACE]:
 		speech = _council_reaction(data.name, speech)
 	var context := _recruitment_context(data.get_school_name() + " · " + place, block)
-	var dialog = _open(data.name, context,
-		speech, options, disabled, data.get_appearance_texture())
+	var dialog = _present(data.name, context, speech, options, disabled, data.get_portrait())
 	dialog.option_selected.connect(_on_visitor_choice.bind(data, favor_index, favor))
 
 func _on_visitor_choice(index: int, data: VisitorData, favor_index: int, favor: Callable) -> void:
@@ -282,6 +442,10 @@ func _recruit_option(guest: VisitorData, block: Global.RecruitmentBlock, returni
 	return "%s（%s）" % [action, detail]
 
 func _recruitment_context(context: String, block: Global.RecruitmentBlock) -> String:
+	if block not in [Global.RecruitmentBlock.NONE, Global.RecruitmentBlock.FOOD]:
+		return context
+	context += "\n每夜用粮 %d → %d 份 · 粮仓 %d 份" % [
+		Global.retainer_food_cost(), Global.recruitment_nightly_food(), Global.food_storage]
 	if block == Global.RecruitmentBlock.NONE and Global.current_rank == Global.Rank.XIA_SHI and Global.eligible_for_promotion():
 		var remaining := Global.reputation - Global.balance.recruit_reputation_requirement
 		if remaining < Global.promotion_reputation():
@@ -303,25 +467,29 @@ func _return_speech(speaker: String, following: String) -> String:
 		speech += "\n" + following
 	return speech
 
-func show_retainer_dialog(data: RetainerData, at_pavilion := false) -> void:
+func show_retainer_dialog(data: RetainerData, pavilion_note: String) -> void:
 	if parent_node.has_node("DialoguePanel") or not Global.retainers.has(data):
 		return
-	var context := "门客 · 南路亭" if at_pavilion else "门客 · " + data.duty_name()
-	var evening := data.evening_line() if at_pavilion else ""
+	var at_pavilion := not pavilion_note.is_empty()
+	var context := pavilion_note if at_pavilion else "门客 · " + data.duty_name()
+	var evening := data.evening_line(Global.has_rain()) if at_pavilion else ""
 	if data.name == VisitorData.FIELD_KEEPER:
-		_show_field_keeper(context, data.get_appearance_texture(), data.resident_line(), evening)
+		_show_field_keeper(context, data.get_portrait(), data.resident_line(), evening)
 		return
 	var options: Array[String] = []
 	var disabled: Array[int] = []
 	var favor := _add_favor_option(data.name, options, disabled)
 	options.append("离开")
-	var speech := data.resident_line()
-	if at_pavilion:
-		speech = evening + "\n" + speech if favor.is_valid() else evening
+	var usual := data.resident_line()
+	var speech := usual
 	if not favor.is_valid():
-		speech = _council_reaction(data.name, speech)
-	var dialog = _open(data.name, context, speech,
-		options, disabled, data.get_appearance_texture())
+		speech = _route_worker_line(data.name)
+		if speech.is_empty():
+			speech = _council_reaction(data.name, usual)
+	if at_pavilion:
+		var has_follow_up := favor.is_valid() or speech != usual
+		speech = evening + "\n" + speech if has_follow_up else evening
+	var dialog = _present(data.name, context, speech, options, disabled, data.get_portrait())
 	if favor.is_valid():
 		dialog.option_selected.connect(func(index: int):
 			if index == 0 and Global.retainers.has(data):
@@ -346,11 +514,18 @@ func _show_field_keeper(context: String, appearance: Texture2D, usual_line: Stri
 			text = "豆茬的肥还在地里。找有金角标的私田，种点别的。\n若赶上谷雨，旱苗还能省一回浇水。等收了咱们再记。"
 	elif Global.rotation_offer_ready():
 		text = "荒年我只敢种黍。邻人分我一把菽种，说这地也该喘口气。\n你肯留一格私田，先收菽，再在原地收一茬吗？"
+		var tribute := Global.first_tribute_entry
+		if tribute.get("day", 0) == Global.current_day:
+			text = "堂前的竹筹记下了头一笔%s。\n" % ItemManager.crop_label(tribute.crop) + text
 		var schedule := Global.season_order()
 		if schedule.start == 1 and Global.season_order_delivered_at(schedule) == 0:
 			text += "\n西市春单也收两份菽、一份黍，第 %d 天收簿。想交货的话，这两样可以一块下种。" % schedule.end
 		options.push_front("约定试一回轮作")
 		follow_up = Global.agree_to_rotation
+	if not guest and not follow_up.is_valid() and not story.waiting_for_harvest():
+		var report := _route_worker_line(VisitorData.FIELD_KEEPER)
+		if not report.is_empty():
+			text = report
 	if not evening.is_empty() and text != evening:
 		text = evening + "\n" + text
 	var return_index := -1
@@ -363,7 +538,7 @@ func _show_field_keeper(context: String, appearance: Texture2D, usual_line: Stri
 			disabled.append(return_index)
 		context = _recruitment_context(context, block)
 		text = _return_speech(guest.name, text if text != usual_line else "")
-	var dialog := _open(VisitorData.FIELD_KEEPER, context, text, options, disabled, appearance)
+	var dialog := _present(VisitorData.FIELD_KEEPER, context, text, options, disabled, appearance)
 	if follow_up.is_valid() or guest:
 		var day := Global.current_day
 		dialog.option_selected.connect(func(index: int):
@@ -379,16 +554,26 @@ func _council_reaction(speaker: String, usual_line: String) -> String:
 	var days := Global.current_day - Global.tax_reform_day
 	if not COUNCIL_REACTIONS.has(speaker) or days >= SeasonOrders.TERMS_PER_SEASON * maxi(1, Global.balance.days_per_solar_term):
 		return usual_line
+	var lines: Array = COUNCIL_REACTIONS[speaker] if Global.route_harvest.is_empty() else COUNCIL_HARVEST_REACTIONS[speaker]
 	match Global.tax_reform_choice:
 		Global.TaxReformChoice.TRADITIONAL:
-			return COUNCIL_REACTIONS[speaker][0]
+			return lines[0]
 		Global.TaxReformChoice.REFORMED:
-			return COUNCIL_REACTIONS[speaker][1]
+			return lines[1]
 	return usual_line
+
+func _route_worker_line(speaker: String) -> String:
+	var entry := Global.route_harvest
+	if entry.is_empty() or entry.worker != speaker or entry.day != Global.current_day:
+		return ""
+	var crop := ItemManager.get_crop(entry.crop)
+	if Global.tax_reform_choice == Global.TaxReformChoice.TRADITIONAL:
+		return "井田 %d 的%s我收好了。公筐在堂前，竹筹也搁到贡簿旁。明早我再去看田。" % [entry.field + 1, crop.crop_name]
+	return "井田 %d 的%s已收进私仓。这趟实收和税钱，我一块写进南路亭的册子里了。" % [entry.field + 1, crop.crop_name]
 
 func _field_keeper_season_line() -> String:
 	if Global.field_rotation.signed_day == Global.current_day:
-		return "我把咱们的两茬收成记在田南。往后哪一畦想这么种，翻开簿子指给我看，我照着接茬。"
+		return "我把咱们的两茬收成记在田南。翻开簿子，可以定下茬，也可以托留任的门客管这块井田。"
 	if Global.has_rain():
 		return "今早雨落下来，我就把轮作簿往架里推了推。等雨小了，咱们再看豆茬里长了什么。"
 	match Global.season_index():
@@ -400,25 +585,36 @@ func _field_keeper_season_line() -> String:
 			return "霜沾在木架上，我今早用袖子抹了抹。冬麦还会长，留肥的格子都能从簿里查到。"
 	return "春土一松，我又想起那把菽种。去田南翻翻吧，地里哪一格有肥，簿上现在看得见。"
 
+func show_rotation_guide(context: String, details: String, action: String, follow: Callable) -> void:
+	var options: Array[String] = ["合上"]
+	if follow.is_valid():
+		options.push_front(action)
+	var dialog := _open("轮作试种", context, details, options, [], ROTATION_BOOK.ART)
+	if follow.is_valid():
+		dialog.option_selected.connect(func(index: int):
+			if index == 0:
+				follow.call()
+		)
+
 func show_rotation_book(highlight_soil: Callable, open_plans: Callable) -> void:
 	if parent_node.has_node("DialoguePanel") or Global.field_rotation.signed_day == 0:
 		return
 	var story := Global.field_rotation
 	var note := "渠伯记 · 井田 %d" % story.field_number
 	var count := Global.fertile_cells.size()
-	var summary := "第 %d 天，先前种过菽的私田收下%s，多收一份。\n现在有 %d 格地留着豆茬的肥。可让照料门客交替播种菽和所选作物。" % [
+	var summary := "第 %d 天，先前种过菽的私田收下%s，多收一份。\n现在有 %d 格地留着豆茬的肥。照料门客可按簿子续播。任命管事后，这块井田的收割和浇水也可交给他。" % [
 		story.harvest_day, Global.rotation_crop_name(), count]
 	var action := "标出肥地（%d 格）" % count if count > 0 else "标出肥地"
 	var disabled: Array[int] = []
 	if count == 0:
 		disabled.append(0)
-	var dialog := _open("轮作簿", note, summary, [action, "安排轮作", "合上"], disabled, ROTATION_BOOK.ART)
+	var dialog := _open("轮作簿", note, summary, [action, "安排轮作与管事", "合上"], disabled, ROTATION_BOOK.ART)
 	AudioManager.play_sfx(ROTATION_BOOK.TAP)
 	dialog.option_selected.connect(func(index: int):
 		if index == 0 and not Global.fertile_cells.is_empty():
 			highlight_soil.call()
 		elif index == 1:
-			open_plans.call()
+			open_plans.call(story.field_number - 1)
 	)
 
 func show_water_source(starter_tiles: int, rice_plots: int, open_study: Callable,
@@ -456,11 +652,42 @@ func show_water_source(starter_tiles: int, rice_plots: int, open_study: Callable
 			action = open_technology
 		else:
 			text += "\n书艺 %d/%d 级。每天可研读一次。" % [level, needed]
-	var dialog := _open(Global.WATER_SOURCE, context, text, [choice, "离开"], [], WATER_SOURCE.ART)
+	var dialog := _open(Global.WATER_SOURCE, context, text, [choice, "离开"], [], WATER_SOURCE.portrait())
 	dialog.option_selected.connect(func(index: int):
 		if index == 0:
 			action.call()
 	)
+
+func show_defense_report(visit: String, next_day: int, guide: Callable) -> void:
+	if parent_node.has_node("DialoguePanel"):
+		return
+	var day: int = Global.last_defense.day
+	var context := "第 %d 天 · %s" % [day, Global.get_current_solar_term(day)]
+	var lines := _defense_result_lines()
+	var options: Array[String] = ["合上"]
+	if not visit.is_empty():
+		lines.append(visit + "可和他复盘守备。")
+		options.push_front("指路找弋戎")
+	elif next_day > 0:
+		lines.append("弋戎今天在外。第 %d 天他会到东路岗，届时可找他复盘守备。" % next_day)
+	else:
+		lines.append("弋戎今天在外。等他再来，可找他复盘守备。")
+	var dialog := _open("守备战报", context, "\n\n".join(lines), options, [], null)
+	if options.size() > 1:
+		dialog.option_selected.connect(func(index: int):
+			if index == 0:
+				guide.call()
+		)
+
+func _defense_result_lines() -> PackedStringArray:
+	var note := Global.last_defense
+	var guard: String = note["guard"]
+	var defender := "你放了末一箭" if guard.is_empty() else "%s放了末一箭" % guard
+	var lines := PackedStringArray(["击退%s，%s。%s。\n封地至今击退 %d 次敌袭。" % [
+		Global.raid_name(note["kind"]), defender, Global.defense_loss_note(), Global.raids_defeated]])
+	if note.get("snare", false):
+		lines.append("东路拦索绊住了来敌，给守田的人留出了放箭的工夫。")
+	return lines
 
 func show_east_watch() -> void:
 	if parent_node.has_node("DialoguePanel"):
@@ -469,15 +696,10 @@ func show_east_watch() -> void:
 	var context := "南路来货"
 	var lines := PackedStringArray()
 	if Global.east_watch_day > 0:
-		var note := Global.last_defense
-		var guard: String = note["guard"]
-		var defender := "你放了末一箭" if guard.is_empty() else "%s放了末一箭" % guard
+		var day: int = Global.last_defense.day
 		title = "东岗守备牌"
-		context = "第 %d 天 · %s" % [note["day"], Global.get_current_solar_term(note["day"])]
-		lines.append("击退%s，%s。%s。\n封地至今击退 %d 次敌袭。" % [
-			Global.raid_name(note["kind"]), defender, Global.defense_loss_note(), Global.raids_defeated])
-		if note.get("snare", false):
-			lines.append("东路拦索绊住了来敌，给守田的人留出了放箭的工夫。")
+		context = "第 %d 天 · %s" % [day, Global.get_current_solar_term(day)]
+		lines = _defense_result_lines()
 	var relief := Global.watch_relief_day()
 	if relief > 0:
 		lines.append("第 %d 天，南路送到两份稷、一份菽和一束麻。巡粮已分袋，新麻绳系上了岗旗。" % relief)
@@ -524,7 +746,7 @@ func show_gathering_guest(data: VisitorData) -> void:
 		_:
 			speech = "我沿竹径过来的。打这儿经过的人说，亭边那本曲簿可以翻到往年的迎客曲。"
 	var context := "乐师 · 谷雨亭集" if speaker == SPRING_GATHERING.HOST else "亭东来客 · 谷雨亭集"
-	var dialog := _open(speaker, context, speech, options, [], data.get_appearance_texture())
+	var dialog := _present(speaker, context, speech, options, [], data.get_portrait())
 	if options.size() > 1:
 		dialog.option_selected.connect(_on_gathering_choice.bind(Global.current_day))
 
@@ -602,11 +824,14 @@ func _add_favor_option(speaker: String, options: Array[String], disabled: Array[
 	return Callable()
 
 func _open(speaker: String, context: String, speech: String, options: Array[String], disabled: Array[int], portrait: Texture2D) -> Control:
+	return _present(speaker, context, speech, options, disabled,
+		CharacterArt.dialogue_portrait(speaker, portrait, VisitorData.favor_completed(speaker)))
+
+func _present(speaker: String, context: String, speech: String, options: Array[String], disabled: Array[int], portrait: Texture2D) -> Control:
 	Global.meet_neighbor(speaker)
 	var dialog := DIALOGUE.instantiate()
 	parent_node.add_child(dialog)
-	dialog.setup(speaker, context, speech, options, disabled,
-		CharacterArt.dialogue_portrait(speaker, portrait, VisitorData.favor_completed(speaker)))
+	dialog.setup(speaker, context, speech, options, disabled, portrait)
 	player.conversation_open = true
 	dialog.tree_exited.connect(func():
 		if is_instance_valid(player):

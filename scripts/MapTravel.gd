@@ -77,7 +77,11 @@ func _open_destination(path: String, arrival_path: NodePath, player_path: NodePa
 	var marker := destination.get_node_or_null(arrival_path) as Marker2D
 	var player := destination.get_node_or_null(player_path) as Player
 	var tree := get_tree()
-	if marker == null or player == null or tree.change_scene_to_node(destination) != OK:
+	if marker == null or player == null:
+		destination.free()
+		return false
+	GameEvents.map_departing.emit()
+	if tree.change_scene_to_node(destination) != OK:
 		destination.free()
 		return false
 	await tree.scene_changed

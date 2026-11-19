@@ -1,0 +1,13 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://bl6ecjdsfad1m"
+path="res://.godot/imported/enemy-motion.svg-eadabb12dad60da92145c163bd9d1421.res"
+
+[deps]
+
+source_file="res://assets/characters/enemy-motion.svg"
+dest_files=["res://.godot/imported/enemy-motion.svg-eadabb12dad60da92145c163bd9d1421.res"]
+
+[params]

@@ -12,16 +12,21 @@ param(
     [switch]$ManagementNavigation,
     [switch]$SixArts,
     [switch]$BowAim,
+    [switch]$RaidFeedback,
     [switch]$WinterSupper,
     [switch]$WinterRoadRations,
     [switch]$KeyBindings,
     [switch]$SummerRaft,
     [switch]$TitlePresentation,
+    [switch]$ProcessRestart,
     [switch]$Backpack,
     [switch]$HallDecor,
     [switch]$RouteGoals,
     [switch]$Opening,
+    [switch]$RotationGuide,
     [switch]$FieldPlanning,
+    [switch]$StewardCampaign,
+    [switch]$OrderCampaign,
     [switch]$FieldRotationPlans,
     [switch]$SilkMarket,
     [switch]$SilkInterior,
@@ -34,17 +39,23 @@ param(
     [switch]$FieldStroke,
     [switch]$FieldRoutes,
     [switch]$MorningRecord,
+    [switch]$FieldWorkWait,
     [switch]$PavilionEvening,
     [switch]$SouthRoad,
     [switch]$WatchRelief,
     [switch]$RavineLayout,
     [switch]$FishMarketOrders,
-    [switch]$MarketWayfinding
+    [switch]$MarketWayfinding,
+    [switch]$MarketDyeYard,
+    [switch]$SowingHold
 )
 
 $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).ProviderPath
 $packagePath = (Resolve-Path -LiteralPath $Package).ProviderPath
+if ($Capture -and -not ('Fiefdom.Tools.IsolatedDesktop' -as [type])) {
+    Add-Type -Path (Join-Path $PSScriptRoot 'IsolatedDesktop.cs')
+}
 if (-not $EvidenceDirectory) {
     $name = [IO.Path]::GetFileNameWithoutExtension($packagePath)
     $EvidenceDirectory = Join-Path $repo "build/$name-verification"
@@ -59,17 +70,30 @@ function Start-VerifiedGame {
         [string]$Profile,
         [string]$Name,
         [string]$Replay,
-        [string]$Resolution
+        [string]$Resolution,
+        [switch]$ResumeProfile
     )
 
-    $env:APPDATA = (New-Item -ItemType Directory -Force -Path (Join-Path $scratch.FullName $Profile)).FullName
+    $profilePath = Join-Path $scratch.FullName $Profile
+    $env:APPDATA = if ($ResumeProfile) {
+        (Resolve-Path -LiteralPath $profilePath).ProviderPath
+    } else {
+        (New-Item -ItemType Directory -Path $profilePath).FullName
+    }
     $log = Join-Path $evidence "$Name.log"
-    $frameLimit = if ($Replay) { '12000' } else { '180' }
+    $frameLimit = if ($Replay -like '*-steward' -or $Replay -in 'reformed-orders', 'reformed-order-ahead', 'reformed-field-work-wait') { '42000' } elseif ($Replay) { '12000' } else { '180' }
     $arguments = @('--quit-after', $frameLimit, '--log-file', ('"' + $log + '"'))
-    $arguments += if ($Replay -eq 'soak') { '--max-fps', '60', '--audio-driver', 'Dummy' } else { '--fixed-fps', '60' }
+    $arguments += if ($Replay -eq 'soak' -or ($Resolution -and $Replay -eq 'market-audio')) {
+        '--max-fps', '60', '--audio-driver', 'Dummy'
+    } elseif ($Resolution -and $Replay -in 'ambience-travel', 'raid-feedback', 'west-market', 'freight-wait', 'ledger-audio') {
+        # Audio playback and recordings follow wall time.
+        '--max-fps', '60'
+    } else {
+        '--fixed-fps', '60'
+    }
     if ($Resolution) {
         $screens = (New-Item -ItemType Directory -Force -Path (Join-Path $evidence $Resolution)).FullName
-        $arguments += @('--windowed', '--position', '-16000,-16000', '--resolution', $Resolution)
+        $arguments += @('--windowed', '--disable-vsync', '--resolution', $Resolution)
     } else {
         $arguments += '--headless'
     }
@@ -78,17 +102,29 @@ function Start-VerifiedGame {
         if ($Resolution) { $arguments += ('"' + $screens + '"') }
     }
     Write-Host "== $Name =="
-    $process = Start-Process -FilePath (Join-Path $Directory 'Fiefdom.exe') -WorkingDirectory $Directory -WindowStyle Hidden -PassThru -ArgumentList $arguments
-    if (-not $process.WaitForExit(180000)) {
-        $process.Kill()
-        $process.WaitForExit()
-        throw "$Name timed out. See $log"
+    $executable = Join-Path $Directory 'Fiefdom.exe'
+    if ($Resolution) {
+        $isolation = ''
+        $exitCode = [Fiefdom.Tools.IsolatedDesktop]::Run($executable, ($arguments -join ' '), $Directory, 180000, [ref]$isolation)
+        Write-Host $isolation
+    } else {
+        $process = Start-Process -FilePath $executable -WorkingDirectory $Directory -WindowStyle Hidden -PassThru -ArgumentList $arguments
+        try {
+            if (-not $process.WaitForExit(180000)) {
+                $process.Kill()
+                $process.WaitForExit()
+                throw "$Name timed out. See $log"
+            }
+            $exitCode = $process.ExitCode
+        } finally {
+            $process.Dispose()
+        }
     }
     $lines = Get-Content -LiteralPath $log -Encoding utf8
     $marker = if ($Replay) { 'SCENARIO_OK' } else { 'Fiefdom title ready' }
-    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|RESEARCH_RATIONS_|GAMEPAD_|DRIVING_|BOW_AIM_|WINTER_|BINDING_|RAFT_|TITLE_|BACKPACK_|DECOR_|ROUTE_|COUNCIL_PREP_|COUNCIL_SILK_|DIRECTION_|PLAN_|TRIBUTE_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|CANAL_DOOR_|SPRING_|ESTATE_PROGRESS_|ESTATE_PROVISIONS|FIELD_ACCESS_|FIELD_STROKE_|WORKSITE_|FIELD_ROUTE_|FIELD_NIGHT_|MORNING_|PAVILION_EVENING_|FISH_MARKET_|RAVINE_MAP_|SHORTCUT_|TRAP_|MARKET_WAYFINDING_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
-    if ($process.ExitCode -ne 0 -or $lines -cnotcontains $marker -or $lines -cmatch '^\s*(?:SCRIPT ERROR|USER ERROR|ERROR|WARNING):') {
-        throw "$Name failed (exit $($process.ExitCode)). See $log"
+    $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|CALENDAR_|LEDGER_AUDIO_|HARVEST_SCOPE_|RESEARCH_RATIONS_|GAMEPAD_|DRIVING_|BOW_AIM_|WINTER_|AUTUMN_|BINDING_|RAFT_|TITLE_|BACKPACK_|HALL_|DECOR_|ROUTE_|COUNCIL_PREP_|COUNCIL_SILK_|DIRECTION_|PLAN_|TRIBUTE_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|CANAL_DOOR_|SPRING_|ESTATE_PROGRESS_|ESTATE_PROVISIONS|RECRUITMENT_|FIELD_ACCESS_|FIELD_STROKE_|WORKSITE_|FIELD_ROUTE_|FIELD_NIGHT_|FIELD_BEDTIME|MORNING_|PAVILION_EVENING_|FISH_MARKET_|RAVINE_MAP_|SHORTCUT_|TRAP_|MARKET_WAYFINDING_|ORDER_AHEAD_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
+    if ($exitCode -ne 0 -or $lines -cnotcontains $marker -or $lines -cmatch '^\s*(?:SCRIPT ERROR|USER ERROR|ERROR|WARNING):') {
+        throw "$Name failed (exit $exitCode). See $log"
     }
 }
 
@@ -98,20 +134,46 @@ function Install-Replay([string]$Directory) {
         Copy-Item -LiteralPath (Join-Path $repo "tests/$file") -Destination $testDirectory
     }
     Copy-Item -LiteralPath (Join-Path $repo 'tests/CanalDoorReplay.gd'), (Join-Path $repo 'tests/CanalFlowReplay.gd'), (Join-Path $repo 'tests/EstateProgressReplay.gd'), (Join-Path $repo 'tests/SilkInteriorReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/RouteLedgerReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/IrrigationFlowReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/TributePlanReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/BackpackReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/WestRoadReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/OrderPreparationReplay.gd'), (Join-Path $repo 'tests/SecondYearOrdersReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/OrderStewardReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/WatchReliefReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/SeedGardenReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ResearchRationsReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/DutyRationsReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/MarketReserveReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldSoilReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/FestivalPantryReplay.gd'), (Join-Path $repo 'tests/CalendarTomorrowReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/LedgerAudioReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/MarketAudioReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/WinterPondReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldStrokeReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/WalkingCheckpointReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/HarvestScopeReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/PlannedSowingReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldPreparationReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/HarvestReplantReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/FieldJourneyReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/SowingRouteReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/EstateMapReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/ManagementNavigationReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/EndingFilmReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/RaidReadinessReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/PavilionVisitReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/PavilionAppointmentReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RecruitmentLedgerReplay.gd') -Destination $testDirectory
     Copy-Item -LiteralPath (Join-Path $repo 'tests/RavineShortcutReplay.gd') -Destination $testDirectory
-    foreach ($file in 'MarketOrderReplay.gd', 'AutumnExhibitReplay.gd', 'SheepfoldReplay.gd', 'RavineMapReplay.gd', 'CreekTrapReplay.gd', 'FieldNightReplay.gd', 'CouncilSilkReplay.gd') {
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/RotationGuideReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/OpeningOrderReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/MarketDyeYardReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/MarketStreetReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/SowingHoldReplay.gd') -Destination $testDirectory
+    Copy-Item -LiteralPath (Join-Path $repo 'tests/CouncilHarvestHoldReplay.gd') -Destination $testDirectory
+    foreach ($file in 'MarketOrderReplay.gd', 'AutumnExhibitReplay.gd', 'SheepfoldReplay.gd', 'RavineMapReplay.gd', 'CreekTrapReplay.gd', 'FieldNightReplay.gd', 'FieldWorkWaitReplay.gd', 'AwayFieldWorkReplay.gd', 'CouncilSilkReplay.gd') {
         Copy-Item -LiteralPath (Join-Path $repo "tests/$file") -Destination $testDirectory
     }
     @'
@@ -120,8 +182,6 @@ run/main_scene="res://tests/ReleaseReplay.tscn"
 
 [display]
 window/size/no_focus=true
-window/size/initial_position_type=0
-window/size/initial_position=Vector2i(-16000, -16000)
 '@ | Set-Content -LiteralPath (Join-Path $Directory 'override.cfg') -Encoding utf8
 }
 
@@ -141,7 +201,7 @@ try {
     }
     Start-VerifiedGame -Directory $release -Profile 'research' -Name 'research' -Replay 'research'
     if ($Gamepad) {
-        Start-VerifiedGame -Directory $release -Profile 'gamepad' -Name 'gamepad' -Replay 'gamepad'
+        Start-VerifiedGame -Directory $release -Profile 'gamepad' -Name 'gamepad' -Replay 'gamepad' -Resolution $fullResolution
     }
     if ($ManagementNavigation) {
         Start-VerifiedGame -Directory $release -Profile 'management-navigation' -Name 'management-navigation' -Replay 'management-navigation'
@@ -152,8 +212,12 @@ try {
     if ($BowAim) {
         Start-VerifiedGame -Directory $release -Profile 'bow-aim' -Name 'bow-aim' -Replay 'bow-aim'
     }
+    if ($RaidFeedback) {
+        Start-VerifiedGame -Directory $release -Profile 'raid-feedback' -Name 'raid-feedback' -Replay 'raid-feedback' -Resolution $fullResolution
+    }
     if ($WinterSupper) {
-        Start-VerifiedGame -Directory $release -Profile 'winter-supper' -Name 'winter-supper' -Replay 'winter-supper'
+        Start-VerifiedGame -Directory $release -Profile 'winter-supper' -Name 'winter-supper' -Replay 'winter-supper' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'winter-pond' -Name 'winter-pond' -Replay 'winter-pond' -Resolution $fullResolution
     }
     if ($WinterRoadRations) {
         Start-VerifiedGame -Directory $release -Profile 'winter-road-rations' -Name 'winter-road-rations' -Replay 'winter-road-rations'
@@ -162,30 +226,67 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'summer-raft' -Name 'summer-raft' -Replay 'summer-raft'
     }
     if ($TitlePresentation) {
-        Start-VerifiedGame -Directory $release -Profile 'title-presentation' -Name 'title-presentation' -Replay 'title-presentation'
+        Start-VerifiedGame -Directory $release -Profile 'title-presentation' -Name 'title-presentation' -Replay 'title-presentation' -Resolution $fullResolution
+    }
+    if ($ProcessRestart) {
+        Start-VerifiedGame -Directory $release -Profile 'walking-checkpoint' -Name 'walking-checkpoint-write' -Replay 'walking-checkpoint-write'
+        Start-VerifiedGame -Directory $release -Profile 'walking-checkpoint' -Name 'walking-checkpoint-restart' -Replay 'walking-checkpoint-restart' -ResumeProfile
+        foreach ($route in 'traditional', 'reformed') {
+            $profile = "restart-$route"
+            Start-VerifiedGame -Directory $release -Profile $profile -Name "ending-write-$route" -Replay "save-ending-$route"
+            Start-VerifiedGame -Directory $release -Profile $profile -Name "ending-restart-$route" -Replay "resume-ending-$route" -ResumeProfile
+        }
     }
     if ($Backpack) {
         Start-VerifiedGame -Directory $release -Profile 'backpack' -Name 'backpack' -Replay 'backpack'
     }
     if ($HallDecor) {
-        Start-VerifiedGame -Directory $release -Profile 'hall-decor' -Name 'hall-decor' -Replay 'hall-decor'
+        Start-VerifiedGame -Directory $release -Profile 'hall-interior' -Name 'hall-interior' -Replay 'hall-interior' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'hall-decor' -Name 'hall-decor' -Replay 'hall-decor' -Resolution $fullResolution
     }
     if ($RouteGoals) {
-        Start-VerifiedGame -Directory $release -Profile 'council-prep' -Name 'council-prep' -Replay 'council-prep'
+        Start-VerifiedGame -Directory $release -Profile 'council-prep' -Name 'council-prep' -Replay 'council-prep' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'council-tribute-rows' -Name 'council-tribute-rows' -Replay 'council-tribute-rows' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'council-harvest-traditional' -Name 'council-harvest-traditional' -Replay 'council-harvest-traditional' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'council-harvest-research' -Name 'council-harvest-research' -Replay 'council-harvest-research' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'council-one-field' -Name 'council-one-field' -Replay 'council-one-field' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'council-petition' -Name 'council-petition' -Replay 'council-petition'
         Start-VerifiedGame -Directory $release -Profile 'council-silk' -Name 'council-silk' -Replay 'council-silk'
-        Start-VerifiedGame -Directory $release -Profile 'route-goals' -Name 'route-goals' -Replay 'route-goals'
+        Start-VerifiedGame -Directory $release -Profile 'route-goals' -Name 'route-goals' -Replay 'route-goals' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'route-ledger' -Name 'route-ledger' -Replay 'route-ledger' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'reformed-market-sale' -Name 'reformed-market-sale' -Replay 'reformed-market-sale'
         Start-VerifiedGame -Directory $release -Profile 'ending-film' -Name 'ending-film' -Replay 'ending-film'
     }
+    if ($SowingHold) {
+        Start-VerifiedGame -Directory $release -Profile 'sowing-hold' -Name 'sowing-hold' -Replay 'sowing-hold' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'reformed-sowing-hold' -Name 'reformed-sowing-hold' -Replay 'reformed-sowing-hold'
+    }
     if ($Opening) {
-        Start-VerifiedGame -Directory $release -Profile 'opening' -Name 'opening' -Replay 'estate-directions'
+        Start-VerifiedGame -Directory $release -Profile 'opening' -Name 'opening' -Replay 'estate-directions' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'tribute-plan' -Name 'tribute-plan' -Replay 'tribute-plan'
-        Start-VerifiedGame -Directory $release -Profile 'estate-progress' -Name 'estate-progress' -Replay 'estate-progress'
-        Start-VerifiedGame -Directory $release -Profile 'recruitment-ledger' -Name 'recruitment-ledger' -Replay 'recruitment-ledger'
+        Start-VerifiedGame -Directory $release -Profile 'estate-progress' -Name 'estate-progress' -Replay 'estate-progress' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'recruitment-ledger' -Name 'recruitment-ledger' -Replay 'recruitment-ledger' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'opening-order' -Name 'opening-order' -Replay 'opening-order' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'ledger-audio' -Name 'ledger-audio' -Replay 'ledger-audio' -Resolution $fullResolution
+    }
+    if ($RotationGuide) {
+        Start-VerifiedGame -Directory $release -Profile 'rotation-guide' -Name 'rotation-guide' -Replay 'rotation-guide' -Resolution $fullResolution
     }
     if ($FieldPlanning) {
         Start-VerifiedGame -Directory $release -Profile 'field-planning' -Name 'field-planning' -Replay 'field-planning'
         Start-VerifiedGame -Directory $release -Profile 'field-steward' -Name 'field-steward' -Replay 'field-steward'
+    }
+    if ($StewardCampaign) {
+        foreach ($name in 'traditional-steward', 'reformed-steward') {
+            Start-VerifiedGame -Directory $release -Profile $name -Name $name -Replay $name
+        }
+        Start-VerifiedGame -Directory $release -Profile 'reformed-first-steward' -Name 'reformed-first-steward' -Replay 'reformed-first-steward' -Resolution $fullResolution
+    }
+    if ($OrderCampaign) {
+        Start-VerifiedGame -Directory $release -Profile 'freight-wait' -Name 'freight-wait' -Replay 'freight-wait' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'reformed-orders' -Name 'reformed-orders' -Replay 'reformed-orders' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'reformed-order-ahead' -Name 'reformed-order-ahead' -Replay 'reformed-order-ahead'
+        Start-VerifiedGame -Directory $release -Profile 'order-steward' -Name 'order-steward' -Replay 'order-steward' -Resolution $fullResolution
     }
     if ($FieldRotationPlans) {
         Start-VerifiedGame -Directory $release -Profile 'field-rotation-plans' -Name 'field-rotation-plans' -Replay 'field-rotation-plans'
@@ -201,61 +302,110 @@ try {
         Start-VerifiedGame -Directory $release -Profile 'neighbor-handoff' -Name 'neighbor-handoff' -Replay 'neighbor-handoff'
     }
     if ($AmbienceTravel) {
-        Start-VerifiedGame -Directory $release -Profile 'ambience-travel' -Name 'ambience-travel' -Replay 'ambience-travel'
+        Start-VerifiedGame -Directory $release -Profile 'ambience-travel' -Name 'ambience-travel' -Replay 'ambience-travel' -Resolution $fullResolution
     }
     if ($EstateTerrain) {
-        Start-VerifiedGame -Directory $release -Profile 'estate-terrain' -Name 'estate-terrain' -Replay 'estate-terrain'
+        Start-VerifiedGame -Directory $release -Profile 'estate-terrain' -Name 'estate-terrain' -Replay 'estate-terrain' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'building-scale' -Name 'building-scale' -Replay 'building-scale' -Resolution $fullResolution
     }
     if ($CanalFlow) {
-        Start-VerifiedGame -Directory $release -Profile 'canal-flow' -Name 'canal-flow' -Replay 'canal-flow'
+        Start-VerifiedGame -Directory $release -Profile 'canal-flow' -Name 'canal-flow' -Replay 'canal-flow' -Resolution $fullResolution
     }
     if ($CanalDoors) {
         Start-VerifiedGame -Directory $release -Profile 'canal-doors' -Name 'canal-doors' -Replay 'canal-doors'
-        Start-VerifiedGame -Directory $release -Profile 'irrigation-flow' -Name 'irrigation-flow' -Replay 'irrigation-flow'
+        Start-VerifiedGame -Directory $release -Profile 'irrigation-flow' -Name 'irrigation-flow' -Replay 'irrigation-flow' -Resolution $fullResolution
     }
     if ($FieldWorksites) {
         Start-VerifiedGame -Directory $release -Profile 'field-worksites' -Name 'field-worksites' -Replay 'field-worksites'
     }
     if ($FieldStroke) {
-        Start-VerifiedGame -Directory $release -Profile 'field-stroke' -Name 'field-stroke' -Replay 'field-stroke'
+        Start-VerifiedGame -Directory $release -Profile 'field-stroke' -Name 'field-stroke' -Replay 'field-stroke' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'field-batch' -Name 'field-batch' -Replay 'field-batch' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'field-batch-mixed' -Name 'field-batch-mixed' -Replay 'field-batch-mixed'
+        Start-VerifiedGame -Directory $release -Profile 'planned-sowing' -Name 'planned-sowing' -Replay 'planned-sowing' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'field-preparation' -Name 'field-preparation' -Replay 'field-preparation' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'field-preparation-rain' -Name 'field-preparation-rain' -Replay 'field-preparation-rain'
     }
     if ($FieldRoutes) {
         Start-VerifiedGame -Directory $release -Profile 'field-routes' -Name 'field-routes' -Replay 'field-routes'
+        Start-VerifiedGame -Directory $release -Profile 'field-journey' -Name 'field-journey' -Replay 'field-journey' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'field-journey-worker' -Name 'field-journey-worker' -Replay 'field-journey-worker'
+        Start-VerifiedGame -Directory $release -Profile 'field-journey-rotation' -Name 'field-journey-rotation' -Replay 'field-journey-rotation' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'harvest-scope' -Name 'harvest-scope' -Replay 'harvest-scope' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'harvest-replant' -Name 'harvest-replant' -Replay 'harvest-replant' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'harvest-replant-rain' -Name 'harvest-replant-rain' -Replay 'harvest-replant-rain'
+        Start-VerifiedGame -Directory $release -Profile 'harvest-replant-reform' -Name 'harvest-replant-reform' -Replay 'harvest-replant-reform'
+        Start-VerifiedGame -Directory $release -Profile 'sowing-route' -Name 'sowing-route' -Replay 'sowing-route' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'estate-map' -Name 'estate-map' -Replay 'estate-map' -Resolution $fullResolution
     }
     if ($MorningRecord) {
         Start-VerifiedGame -Directory $release -Profile 'field-nights' -Name 'field-nights' -Replay 'field-nights' -Resolution $fullResolution
     }
+    if ($FieldWorkWait) {
+        Start-VerifiedGame -Directory $release -Profile 'field-soil-plans' -Name 'field-soil-plans' -Replay 'field-soil-plans' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'away-field-work' -Name 'away-field-work' -Replay 'away-field-work' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'field-work-wait' -Name 'field-work-wait' -Replay 'field-work-wait' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'reformed-field-work-wait' -Name 'reformed-field-work-wait' -Replay 'reformed-field-work-wait'
+        Start-VerifiedGame -Directory $release -Profile 'field-bedtime' -Name 'field-bedtime' -Replay 'field-bedtime' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'reformed-bedtime-steward' -Name 'reformed-bedtime-steward' -Replay 'reformed-bedtime-steward'
+    }
     if ($PavilionEvening) {
         Start-VerifiedGame -Directory $release -Profile 'pavilion-evening' -Name 'pavilion-evening' -Replay 'pavilion-evening'
+        Start-VerifiedGame -Directory $release -Profile 'pavilion-stories' -Name 'pavilion-stories' -Replay 'pavilion-stories' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'pavilion-appointment' -Name 'pavilion-appointment' -Replay 'pavilion-appointment' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'pavilion-appointment-rain' -Name 'pavilion-appointment-rain' -Replay 'pavilion-appointment-rain'
+        Start-VerifiedGame -Directory $release -Profile 'pavilion-appointment-market' -Name 'pavilion-appointment-market' -Replay 'pavilion-appointment-market'
     }
     if ($WatchRelief) {
         Start-VerifiedGame -Directory $release -Profile 'watch-relief' -Name 'watch-relief' -Replay 'watch-relief'
     }
     if ($SouthRoad) {
-        foreach ($name in 'market-orders', 'summer-rice', 'order-preparation', 'watch-relief', 'seed-garden', 'autumn-exhibit', 'sheepfold', 'meadow-fodder') {
+        Start-VerifiedGame -Directory $release -Profile 'market-orders' -Name 'market-orders' -Replay 'market-orders' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'autumn-exhibit' -Name 'autumn-exhibit' -Replay 'autumn-exhibit' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'summer-rice' -Name 'summer-rice' -Replay 'summer-rice' -Resolution $fullResolution
+        foreach ($name in 'order-preparation', 'watch-relief', 'seed-garden', 'sheepfold', 'meadow-fodder') {
             Start-VerifiedGame -Directory $release -Profile $name -Name $name -Replay $name
         }
+        Start-VerifiedGame -Directory $release -Profile 'order-ahead' -Name 'order-ahead' -Replay 'order-ahead' -Resolution $fullResolution
     }
     if ($RavineLayout) {
         Start-VerifiedGame -Directory $release -Profile 'ravine-map' -Name 'ravine-map' -Replay 'ravine-map' -Resolution $fullResolution
-        Start-VerifiedGame -Directory $release -Profile 'creek-traps' -Name 'creek-traps' -Replay 'creek-traps'
-        Start-VerifiedGame -Directory $release -Profile 'ravine-shortcut' -Name 'ravine-shortcut' -Replay 'ravine-shortcut'
+        Start-VerifiedGame -Directory $release -Profile 'creek-traps' -Name 'creek-traps' -Replay 'creek-traps' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'ravine-shortcut' -Name 'ravine-shortcut' -Replay 'ravine-shortcut' -Resolution $fullResolution
     }
     if ($FishMarketOrders) {
-        Start-VerifiedGame -Directory $release -Profile 'fish-market-orders' -Name 'fish-market-orders' -Replay 'fish-market-orders'
+        Start-VerifiedGame -Directory $release -Profile 'fish-market-orders' -Name 'fish-market-orders' -Replay 'fish-market-orders' -Resolution $fullResolution
     }
     if ($MarketWayfinding) {
-        Start-VerifiedGame -Directory $release -Profile 'west-market' -Name 'west-market' -Replay 'west-market'
-        Start-VerifiedGame -Directory $release -Profile 'west-road' -Name 'west-road' -Replay 'west-road'
-        Start-VerifiedGame -Directory $release -Profile 'market-wayfinding' -Name 'market-wayfinding' -Replay 'market-wayfinding'
+        Start-VerifiedGame -Directory $release -Profile 'west-market' -Name 'west-market' -Replay 'west-market' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'market-street' -Name 'market-street' -Replay 'market-street' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'market-street-winter' -Name 'market-street-winter' -Replay 'market-street-winter'
+        if ($Capture) {
+            Start-VerifiedGame -Directory $release -Profile 'market-audio' -Name 'market-audio' -Replay 'market-audio' -Resolution $fullResolution
+        }
+        Start-VerifiedGame -Directory $release -Profile 'west-road' -Name 'west-road' -Replay 'west-road' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'west-road-bank-rain' -Name 'west-road-bank-rain' -Replay 'west-road-bank-rain'
+        Start-VerifiedGame -Directory $release -Profile 'west-road-bank-winter' -Name 'west-road-bank-winter' -Replay 'west-road-bank-winter'
+        Start-VerifiedGame -Directory $release -Profile 'market-wayfinding' -Name 'market-wayfinding' -Replay 'market-wayfinding' -Resolution $fullResolution
         Start-VerifiedGame -Directory $release -Profile 'fishing-journey' -Name 'fishing-journey' -Replay 'fishing-journey'
+    }
+    if ($MarketDyeYard) {
+        Start-VerifiedGame -Directory $release -Profile 'market-dye-yard' -Name 'market-dye-yard' -Replay 'market-dye-yard' -Resolution $fullResolution
     }
     if ($KeyBindings) {
         Start-VerifiedGame -Directory $release -Profile 'key-bindings' -Name 'key-bindings' -Replay 'key-bindings'
-        Start-VerifiedGame -Directory $release -Profile 'key-bindings' -Name 'key-bindings-reload' -Replay 'key-bindings-reload'
+        Start-VerifiedGame -Directory $release -Profile 'key-bindings' -Name 'key-bindings-reload' -Replay 'key-bindings-reload' -ResumeProfile
     }
     if ($Rations) {
-        foreach ($name in 'night-rations', 'research-rations', 'ration-priority', 'retainer-return', 'traditional-rations', 'reformed-rations') {
+        Start-VerifiedGame -Directory $release -Profile 'night-rations' -Name 'night-rations' -Replay 'night-rations' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'calendar-tomorrow' -Name 'calendar-tomorrow' -Replay 'calendar-tomorrow' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'festival-pantry' -Name 'festival-pantry' -Replay 'festival-pantry' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'market-reserve' -Name 'market-reserve' -Replay 'market-reserve' -Resolution $fullResolution
+        Start-VerifiedGame -Directory $release -Profile 'ration-priority' -Name 'ration-priority' -Replay 'ration-priority' -Resolution $fullResolution
+        if ($Capture) {
+            Start-VerifiedGame -Directory $release -Profile 'ration-priority-compact' -Name 'ration-priority-1024x768' -Replay 'ration-priority' -Resolution '1024x768'
+        }
+        foreach ($name in 'research-rations', 'duty-rations', 'retainer-return', 'traditional-rations', 'reformed-rations') {
             Start-VerifiedGame -Directory $release -Profile $name -Name $name -Replay $name
         }
     }
@@ -266,10 +416,108 @@ try {
         Expand-Archive -LiteralPath $oldPackage -DestinationPath $legacy
         Install-Replay $legacy
         Start-VerifiedGame -Directory $legacy -Profile "legacy-$oldName" -Name "legacy-create-$oldName" -Replay 'legacy-create'
-        Start-VerifiedGame -Directory $release -Profile "legacy-$oldName" -Name "legacy-continue-$oldName" -Replay 'legacy-continue'
+        Start-VerifiedGame -Directory $release -Profile "legacy-$oldName" -Name "legacy-continue-$oldName" -Replay 'legacy-continue' -ResumeProfile
     }
     if ($Capture) {
-        Start-VerifiedGame -Directory $release -Profile "render-$fullResolution" -Name "render-$fullResolution" -Replay 'visual' -Resolution $fullResolution
+        foreach ($size in $fullResolution, '1024x768') {
+            Start-VerifiedGame -Directory $release -Profile "render-$size" -Name "render-$size" -Replay 'visual' -Resolution $size
+        }
+        if ($FieldRoutes) {
+            Start-VerifiedGame -Directory $release -Profile 'harvest-scope-compact' -Name 'harvest-scope-1024x768' -Replay 'harvest-scope-pad' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'field-journey-compact' -Name 'field-journey-1024x768' -Replay 'field-journey-pad' -Resolution '1024x768'
+        }
+        if ($HallDecor) {
+            Start-VerifiedGame -Directory $release -Profile 'hall-interior-compact' -Name 'hall-interior-1024x768' -Replay 'hall-interior' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'hall-decor-compact' -Name 'hall-decor-1024x768' -Replay 'hall-decor' -Resolution '1024x768'
+        }
+        if ($StewardCampaign) {
+            Start-VerifiedGame -Directory $release -Profile 'first-steward-compact' -Name 'reformed-first-steward-1024x768' -Replay 'reformed-first-steward' -Resolution '1024x768'
+        }
+        if ($FieldWorkWait) {
+            Start-VerifiedGame -Directory $release -Profile 'field-bedtime-compact' -Name 'field-bedtime-1024x768' -Replay 'field-bedtime' -Resolution '1024x768'
+        }
+        if ($OrderCampaign) {
+            Start-VerifiedGame -Directory $release -Profile 'freight-wait-compact' -Name 'freight-wait-1024x768' -Replay 'freight-wait' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'order-steward-compact' -Name 'order-steward-1024x768' -Replay 'order-steward' -Resolution '1024x768'
+        }
+        if ($RavineLayout) {
+            Start-VerifiedGame -Directory $release -Profile 'ravine-map-compact' -Name 'ravine-map-1024x768' -Replay 'ravine-map' -Resolution '1024x768'
+        }
+        if ($MarketWayfinding) {
+            Start-VerifiedGame -Directory $release -Profile 'market-wayfinding-compact' -Name 'market-wayfinding-1024x768' -Replay 'market-wayfinding' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'market-audio-compact' -Name 'market-audio-1024x768' -Replay 'market-audio' -Resolution '1024x768'
+        }
+        if ($MarketDyeYard) {
+            Start-VerifiedGame -Directory $release -Profile 'market-dye-yard-compact' -Name 'market-dye-yard-1024x768' -Replay 'market-dye-yard' -Resolution '1024x768'
+        }
+        if ($FishMarketOrders) {
+            Start-VerifiedGame -Directory $release -Profile 'fish-market-orders-compact' -Name 'fish-market-orders-1024x768' -Replay 'fish-market-orders' -Resolution '1024x768'
+        }
+        if ($AmbienceTravel) {
+            Start-VerifiedGame -Directory $release -Profile 'ambience-travel-compact' -Name 'ambience-travel-1024x768' -Replay 'ambience-travel' -Resolution '1024x768'
+        }
+        if ($EstateTerrain) {
+            Start-VerifiedGame -Directory $release -Profile 'estate-terrain-compact' -Name 'estate-terrain-1024x768' -Replay 'estate-terrain' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'building-scale-compact' -Name 'building-scale-1024x768' -Replay 'building-scale' -Resolution '1024x768'
+        }
+        if ($CanalDoors) {
+            Start-VerifiedGame -Directory $release -Profile 'irrigation-flow-compact' -Name 'irrigation-flow-1024x768' -Replay 'irrigation-flow' -Resolution '1024x768'
+        }
+        if ($RaidFeedback) {
+            Start-VerifiedGame -Directory $release -Profile 'raid-feedback-compact' -Name 'raid-feedback-1024x768' -Replay 'raid-feedback' -Resolution '1024x768'
+        }
+        if ($PavilionEvening) {
+            Start-VerifiedGame -Directory $release -Profile 'pavilion-stories-compact' -Name 'pavilion-stories-1024x768' -Replay 'pavilion-stories-pad' -Resolution '1024x768'
+        }
+        if ($SowingHold) {
+            Start-VerifiedGame -Directory $release -Profile 'sowing-hold-compact' -Name 'sowing-hold-1024x768' -Replay 'sowing-hold' -Resolution '1024x768'
+        }
+        if ($RouteGoals) {
+            Start-VerifiedGame -Directory $release -Profile 'council-prep-compact' -Name 'council-prep-1024x768' -Replay 'council-prep' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'council-tribute-rows-compact' -Name 'council-tribute-rows-1024x768' -Replay 'council-tribute-rows' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'council-harvest-compact' -Name 'council-harvest-1024x768' -Replay 'council-harvest-research' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'council-one-field-compact' -Name 'council-one-field-1024x768' -Replay 'council-one-field' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'route-goals-compact' -Name 'route-goals-1024x768' -Replay 'route-goals' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'route-ledger-compact' -Name 'route-ledger-1024x768' -Replay 'route-ledger' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'ending-film-compact' -Name 'ending-film-1024x768' -Replay 'ending-film' -Resolution '1024x768'
+        }
+        if ($Rations) {
+            Start-VerifiedGame -Directory $release -Profile 'night-rations-compact' -Name 'night-rations-1024x768' -Replay 'night-rations' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'calendar-tomorrow-compact' -Name 'calendar-tomorrow-1024x768' -Replay 'calendar-tomorrow' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'festival-pantry-compact' -Name 'festival-pantry-1024x768' -Replay 'festival-pantry' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'market-reserve-compact' -Name 'market-reserve-1024x768' -Replay 'market-reserve' -Resolution '1024x768'
+        }
+        if ($WinterSupper) {
+            Start-VerifiedGame -Directory $release -Profile 'winter-pond-compact' -Name 'winter-pond-1024x768' -Replay 'winter-pond' -Resolution '1024x768'
+        }
+        if ($SouthRoad) {
+            Start-VerifiedGame -Directory $release -Profile 'market-orders-compact' -Name 'market-orders-1024x768' -Replay 'market-orders' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'autumn-exhibit-compact' -Name 'autumn-exhibit-1024x768' -Replay 'autumn-exhibit' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'order-ahead-compact' -Name 'order-ahead-1024x768' -Replay 'order-ahead' -Resolution '1024x768'
+        }
+        if ($Opening) {
+            Start-VerifiedGame -Directory $release -Profile 'opening-compact' -Name 'opening-1024x768' -Replay 'estate-directions' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'estate-progress-compact' -Name 'estate-progress-1024x768' -Replay 'estate-progress' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'recruitment-compact' -Name 'recruitment-ledger-1024x768' -Replay 'recruitment-ledger' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'opening-order-compact' -Name 'opening-order-1024x768' -Replay 'opening-order-pad' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'ledger-audio-compact' -Name 'ledger-audio-1024x768' -Replay 'ledger-audio' -Resolution '1024x768'
+        }
+        if ($RotationGuide) {
+            Start-VerifiedGame -Directory $release -Profile 'rotation-guide-compact' -Name 'rotation-guide-1024x768' -Replay 'rotation-guide' -Resolution '1024x768'
+        }
+        if ($FieldStroke) {
+            Start-VerifiedGame -Directory $release -Profile 'field-stroke-compact' -Name 'field-stroke-1024x768' -Replay 'field-stroke' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'field-batch-compact' -Name 'field-batch-1024x768' -Replay 'field-batch' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'planned-sowing-compact' -Name 'planned-sowing-1024x768' -Replay 'planned-sowing-pad' -Resolution '1024x768'
+        }
+        if ($FieldRoutes) {
+            Start-VerifiedGame -Directory $release -Profile 'sowing-route-compact' -Name 'sowing-route-1024x768' -Replay 'sowing-route-pad' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'estate-map-compact' -Name 'estate-map-1024x768' -Replay 'estate-map' -Resolution '1024x768'
+        }
+        if ($FieldWorkWait) {
+            Start-VerifiedGame -Directory $release -Profile 'field-soil-plans-compact' -Name 'field-soil-plans-1024x768' -Replay 'field-soil-plans' -Resolution '1024x768'
+            Start-VerifiedGame -Directory $release -Profile 'field-work-wait-compact' -Name 'field-work-wait-1024x768' -Replay 'field-work-wait' -Resolution '1024x768'
+        }
     }
     if ($Soak) {
         Start-VerifiedGame -Directory $release -Profile 'soak' -Name 'soak' -Replay 'soak'

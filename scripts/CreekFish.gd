@@ -4,7 +4,7 @@ class_name CreekFish
 enum Site { POOL, SHOAL, POND }
 
 const ORDER_PICKUP := 11.0 / 16.0
-const ATLAS := preload("res://assets/world/creek-fish.svg")
+const ATLAS_PATH := "res://assets/world/creek-fish.png"
 const PLACES := ["柳湾", "砾滩", "南池钓台"]
 const IDS := ["crucian", "minnow", "carp", "perch"]
 const SPECIES := {
@@ -42,7 +42,7 @@ static func at(site: int, season: int, raining: bool) -> String:
 
 static func portrait(id: String) -> AtlasTexture:
 	var icon := AtlasTexture.new()
-	icon.atlas = ATLAS
+	icon.atlas = load(ATLAS_PATH)
 	icon.region = Rect2(IDS.find(id) * 16, 0, 16, 16)
 	icon.filter_clip = true
 	return icon

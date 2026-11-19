@@ -28,22 +28,81 @@ func _run() -> void:
 		"traditional", "reformed":
 			var replay = load("res://tests/CampaignReplay.gd").new()
 			await replay.run(tree, arguments[0], true, capture_directory)
+		"reformed-market-sale":
+			var replay = load("res://tests/CampaignReplay.gd").new()
+			replay.use_reform_sale = true
+			await replay.run(tree, "reformed", true, capture_directory)
+		"save-ending-traditional", "save-ending-reformed", "resume-ending-traditional", "resume-ending-reformed":
+			var replay = load("res://tests/EndingFilmReplay.gd").new()
+			await replay.run_process_restart(tree, arguments[0].ends_with("traditional"), arguments[0].begins_with("resume-"))
 		"traditional-rations", "reformed-rations":
 			var replay = load("res://tests/CampaignReplay.gd").new()
 			await replay.run(tree, arguments[0].trim_suffix("-rations"), true, capture_directory, true)
+		"traditional-steward", "reformed-steward":
+			var replay = load("res://tests/CampaignReplay.gd").new()
+			await replay.run(tree, arguments[0].trim_suffix("-steward"), true, capture_directory, true, true)
+		"reformed-orders", "reformed-order-ahead":
+			var replay = load("res://tests/CampaignReplay.gd").new()
+			replay.use_early_order_guide = arguments[0] == "reformed-order-ahead"
+			await replay.run(tree, "reformed", true, capture_directory, true, false, true)
+		"reformed-first-steward", "reformed-field-work-wait":
+			var replay = load("res://tests/CampaignReplay.gd").new()
+			await replay.run(tree, "reformed", true, capture_directory, true, false, false, true,
+				arguments[0] == "reformed-field-work-wait")
+		"reformed-bedtime-steward":
+			var replay = load("res://tests/CampaignReplay.gd").new()
+			replay.use_bedtime_work = true
+			await replay.run(tree, "reformed", true, capture_directory, true, false, false, true)
+		"reformed-sowing-hold", "reformed-sowing-rebuild":
+			var replay = load("res://tests/CampaignReplay.gd").new()
+			replay.use_bedtime_work = true
+			replay.compare_private_sowing = true
+			replay.use_reversible_sowing = arguments[0] == "reformed-sowing-hold"
+			await replay.run(tree, "reformed", true, capture_directory, true, false, false, true)
+		"field-bedtime":
+			await load("res://tests/FieldWorkWaitReplay.gd").new().run_bedtime(tree, capture_directory)
+		"field-journey", "field-journey-before", "field-journey-previous", "field-journey-pad", "field-journey-rotation", "field-journey-worker":
+			await load("res://tests/FieldJourneyReplay.gd").new().run_journey(tree, capture_directory, arguments[0])
+		"sowing-hold", "sowing-previous-write", "sowing-previous-resume":
+			var replay = load("res://tests/SowingHoldReplay.gd").new()
+			replay.capture_dir = capture_directory
+			replay.previous_mode = arguments[0].trim_prefix("sowing-previous-") if arguments[0] != "sowing-hold" else ""
+			await replay.run(tree)
 		"ending-film":
 			var replay = load("res://tests/EndingFilmReplay.gd").new()
 			await replay.run(tree, capture_directory)
 		"night-rations":
 			var replay = load("res://tests/NightRationsReplay.gd").new()
+			replay.capture_dir = capture_directory
 			await replay.run(tree)
+		"calendar-tomorrow":
+			var replay = load("res://tests/CalendarTomorrowReplay.gd").new()
+			replay.capture_dir = capture_directory
+			await replay.run(tree)
+		"ledger-audio":
+			await load("res://tests/LedgerAudioReplay.gd").new().run_ledger_audio(tree, capture_directory)
+		"festival-pantry":
+			var replay = load("res://tests/FestivalPantryReplay.gd").new()
+			replay.capture_dir = capture_directory
+			await replay.run(tree)
+		"market-reserve", "market-reserve-baseline", "market-reserve-resume":
+			var replay = load("res://tests/MarketReserveReplay.gd").new()
+			await replay.run_market_reserve(tree, arguments[0], capture_directory)
+		"field-soil-plans", "field-soil-baseline", "field-soil-resume":
+			var replay = load("res://tests/FieldSoilReplay.gd").new()
+			await replay.run_soil(tree, arguments[0], capture_directory)
 		"research-rations", "research-rations-legacy":
 			var replay = load("res://tests/ResearchRationsReplay.gd").new()
 			replay.legacy = arguments[0] == "research-rations-legacy"
 			await replay.run_research_rations(tree, false, capture_directory)
+		"duty-rations", "duty-rations-before", "duty-rations-resume", "duty-rations-pad":
+			await load("res://tests/DutyRationsReplay.gd").new().run_duty_rations(tree, capture_directory, arguments[0])
+		"walking-checkpoint", "walking-checkpoint-write", "walking-checkpoint-restart":
+			await load("res://tests/WalkingCheckpointReplay.gd").new().run_walking_checkpoint(tree, capture_directory, arguments[0])
 		"ration-priority", "ration-priority-legacy":
 			var replay = load("res://tests/RationPriorityReplay.gd").new()
 			replay.legacy = arguments[0] == "ration-priority-legacy"
+			replay.capture_dir = capture_directory
 			await replay.run(tree)
 		"retainer-return", "retainer-return-legacy":
 			var replay = load("res://tests/RetainerReturnReplay.gd").new()
@@ -63,8 +122,14 @@ func _run() -> void:
 		"bow-aim":
 			var replay = load("res://tests/BowAimReplay.gd").new()
 			await replay.run(tree, capture_directory)
+		"raid-feedback", "raid-readiness":
+			var replay = load("res://tests/RaidReadinessReplay.gd").new()
+			await replay.run(tree, capture_directory, arguments[0] == "raid-feedback")
 		"winter-supper":
 			var replay = load("res://tests/WinterSupperReplay.gd").new()
+			await replay.run(tree, capture_directory)
+		"winter-pond":
+			var replay = load("res://tests/WinterPondReplay.gd").new()
 			await replay.run(tree, capture_directory)
 		"winter-road-rations":
 			var replay = load("res://tests/SecondYearOrdersReplay.gd").new()
@@ -80,18 +145,32 @@ func _run() -> void:
 		"backpack":
 			var replay = load("res://tests/BackpackReplay.gd").new()
 			await replay.run(tree, capture_directory)
+		"hall-interior":
+			await load("res://tests/HallInteriorReplay.gd").new().run(tree, capture_directory)
 		"hall-decor", "hall-decor-legacy":
 			var replay = load("res://tests/HallDecorReplay.gd").new()
 			replay.legacy = arguments[0] == "hall-decor-legacy"
-			await replay.run(tree)
+			await replay.run(tree, capture_directory)
 		"route-goals", "route-goals-legacy":
 			var replay = load("res://tests/RouteGoalsReplay.gd").new()
+			replay.capture_dir = capture_directory
 			replay.legacy = arguments[0] == "route-goals-legacy"
 			await replay.run(tree)
-		"council-prep", "council-prep-legacy", "council-petition":
+		"route-ledger", "route-ledger-legacy":
+			var replay = load("res://tests/RouteLedgerReplay.gd").new()
+			await replay.run_ledger(tree, capture_directory, arguments[0] == "route-ledger-legacy")
+		"council-prep", "council-prep-legacy", "council-petition", "council-one-field", "council-tribute-rows":
 			var replay = load("res://tests/CouncilPrepReplay.gd").new()
+			replay.capture_dir = capture_directory
 			replay.legacy = arguments[0] == "council-prep-legacy"
 			replay.petition = arguments[0] == "council-petition"
+			replay.single_field = arguments[0] == "council-one-field"
+			replay.tribute_rows = arguments[0] == "council-tribute-rows"
+			await replay.run(tree)
+		"council-harvest-research", "council-harvest-traditional", "council-harvest-before", "council-harvest-write":
+			var replay = load("res://tests/CouncilHarvestHoldReplay.gd").new()
+			replay.capture_dir = capture_directory
+			replay.harvest_mode = arguments[0].trim_prefix("council-harvest-")
 			await replay.run(tree)
 		"council-silk":
 			var replay = load("res://tests/CouncilSilkReplay.gd").new()
@@ -100,6 +179,7 @@ func _run() -> void:
 		"estate-directions", "estate-directions-legacy":
 			var replay = load("res://tests/EstateDirectionsReplay.gd").new()
 			replay.legacy = arguments[0] == "estate-directions-legacy"
+			replay.capture_dir = capture_directory
 			await replay.run(tree)
 		"tribute-plan", "tribute-plan-baseline", "tribute-plan-legacy":
 			var replay = load("res://tests/TributePlanReplay.gd").new()
@@ -141,14 +221,22 @@ func _run() -> void:
 			var replay = load("res://tests/AmbienceTravelReplay.gd").new()
 			replay.capture_path = capture_directory
 			await replay.run(tree)
+		"building-scale":
+			OS.set_environment("FIEFDOM_SCALE_CAPTURES", capture_directory)
+			await load("res://tests/BuildingScaleReplay.gd").new().run(tree)
+		"rotation-guide", "rotation-guide-baseline":
+			var replay = load("res://tests/RotationGuideReplay.gd").new()
+			replay.baseline = arguments[0] == "rotation-guide-baseline"
+			replay.capture_dir = capture_directory
+			await replay.run(tree)
 		"estate-terrain", "estate-terrain-art":
 			var replay = load("res://tests/EstateTerrainReplay.gd").new()
 			replay.title_art = arguments[0] == "estate-terrain-art"
 			replay.capture_path = capture_directory
 			await replay.run(tree)
-		"canal-flow":
+		"canal-flow", "canal-flow-legacy":
 			var replay = load("res://tests/CanalFlowReplay.gd").new()
-			await replay.run(tree, false, capture_directory)
+			await replay.run(tree, false, capture_directory, arguments[0] == "canal-flow-legacy")
 		"canal-doors", "canal-doors-legacy":
 			var replay = load("res://tests/CanalDoorReplay.gd").new()
 			replay.legacy = arguments[0] == "canal-doors-legacy"
@@ -158,9 +246,11 @@ func _run() -> void:
 			replay.baseline = arguments[0] == "irrigation-flow-baseline"
 			replay.legacy = arguments[0] == "irrigation-flow-legacy"
 			await replay.run_irrigation(tree, capture_directory)
-		"estate-progress":
+		"estate-progress", "estate-progress-before-rank-book", "rank-book-legacy":
 			var replay = load("res://tests/EstateProgressReplay.gd").new()
-			await replay.run(tree)
+			replay.capture_dir = capture_directory
+			replay.rank_book_baseline = arguments[0] == "estate-progress-before-rank-book"
+			await replay.run(tree, arguments[0] == "rank-book-legacy")
 		"recruitment-ledger", "recruitment-ledger-legacy":
 			var replay = load("res://tests/RecruitmentLedgerReplay.gd").new()
 			replay.legacy = arguments[0] == "recruitment-ledger-legacy"
@@ -174,28 +264,72 @@ func _run() -> void:
 			var replay = load("res://tests/FieldStrokeReplay.gd").new()
 			replay.legacy = arguments[0] == "field-stroke-legacy"
 			await replay.run_field_stroke(tree, false, capture_directory)
+		"field-batch", "field-batch-mixed":
+			var replay = load("res://tests/FieldStrokeReplay.gd").new()
+			await replay.run_field_batch(tree, capture_directory, arguments[0] == "field-batch-mixed")
+		"planned-sowing", "planned-sowing-before", "planned-sowing-legacy", "planned-sowing-pad":
+			var replay = load("res://tests/PlannedSowingReplay.gd").new()
+			await replay.run_planned_sowing(tree, capture_directory, arguments[0])
+		"field-preparation", "field-preparation-before", "field-preparation-resume", "field-preparation-pad", "field-preparation-rain":
+			await load("res://tests/FieldPreparationReplay.gd").new().run_preparation(tree, capture_directory, arguments[0])
+		"harvest-replant", "harvest-replant-before", "harvest-replant-pad", "harvest-replant-rain", "harvest-replant-reform":
+			await load("res://tests/HarvestReplantReplay.gd").new().run_replanting(tree, capture_directory, arguments[0])
+		"sowing-route", "sowing-route-pad", "sowing-route-before", "sowing-route-legacy":
+			var replay = load("res://tests/SowingRouteReplay.gd").new()
+			await replay.run_guided_sowing(tree, capture_directory, arguments[0])
+		"harvest-scope", "harvest-scope-pad", "harvest-scope-before", "harvest-scope-resume":
+			await load("res://tests/HarvestScopeReplay.gd").new().run_harvest_scope(tree, capture_directory, arguments[0])
 		"field-routes", "field-routes-legacy":
 			var replay = load("res://tests/FieldRoutesReplay.gd").new()
 			replay.legacy = arguments[0] == "field-routes-legacy"
 			replay.capture_path = capture_directory
 			await replay.run(tree)
+		"estate-map", "estate-map-legacy":
+			await load("res://tests/EstateMapReplay.gd").new().run(tree, capture_directory, arguments[0] == "estate-map-legacy")
 		"field-nights":
 			var replay = load("res://tests/FieldNightReplay.gd").new()
+			await replay.run(tree, capture_directory)
+		"field-work-wait":
+			var replay = load("res://tests/FieldWorkWaitReplay.gd").new()
+			await replay.run(tree, capture_directory)
+		"away-field-work", "away-field-before", "away-field-previous-return":
+			var replay = load("res://tests/AwayFieldWorkReplay.gd").new()
+			replay.baseline = arguments[0] == "away-field-before"
+			replay.previous_return = arguments[0] == "away-field-previous-return"
 			await replay.run(tree, capture_directory)
 		"pavilion-evening", "pavilion-evening-legacy":
 			var replay = load("res://tests/PavilionEveningReplay.gd").new()
 			replay.legacy = arguments[0] == "pavilion-evening-legacy"
 			replay.capture_path = capture_directory
 			await replay.run(tree)
-		"market-orders", "summer-rice":
+		"pavilion-appointment-before", "pavilion-appointment", "pavilion-appointment-pad", "pavilion-appointment-rain", "pavilion-appointment-market":
+			await load("res://tests/PavilionAppointmentReplay.gd").new().run_appointment(tree, capture_directory, arguments[0])
+		"pavilion-stories", "pavilion-stories-before", "pavilion-stories-legacy", "pavilion-stories-pad":
+			var replay = load("res://tests/PavilionVisitReplay.gd").new()
+			replay.story_variant = arguments[0]
+			await replay.run(tree, capture_directory, true)
+		"market-orders", "summer-rice", "freight-wait":
 			var replay = load("res://tests/MarketOrderReplay.gd").new()
 			replay.summer = arguments[0] == "summer-rice"
+			replay.waiting_shipment = arguments[0] == "freight-wait"
+			replay.capture_dir = capture_directory
 			await replay.run(tree)
-		"order-preparation", "order-preparation-baseline", "order-preparation-old-save":
+		"order-preparation", "order-preparation-baseline", "order-preparation-old-save", "order-ahead":
 			var replay = load("res://tests/OrderPreparationReplay.gd").new()
 			replay.baseline = arguments[0] == "order-preparation-baseline"
 			replay.from_older_save = arguments[0] == "order-preparation-old-save"
+			replay.start_planting_early = arguments[0] == "order-ahead"
 			replay.capture_path = capture_directory
+			await replay.run(tree)
+		"order-steward", "order-steward-baseline", "order-steward-resume":
+			var replay = load("res://tests/OrderStewardReplay.gd").new()
+			await replay.run_steward(tree, arguments[0], capture_directory)
+		"opening-order", "opening-order-pad", "opening-order-write-old", "opening-order-resume-old":
+			var replay = load("res://tests/OpeningOrderReplay.gd").new()
+			replay.use_gamepad = arguments[0] == "opening-order-pad"
+			replay.write_old_checkpoint = arguments[0] == "opening-order-write-old"
+			replay.from_older_save = arguments[0] == "opening-order-resume-old"
+			replay.capture_dir = capture_directory
 			await replay.run(tree)
 		"watch-relief", "watch-relief-baseline", "watch-relief-old-save":
 			var replay = load("res://tests/WatchReliefReplay.gd").new()
@@ -208,10 +342,11 @@ func _run() -> void:
 			await replay.run(tree)
 		"autumn-exhibit":
 			var replay = load("res://tests/AutumnExhibitReplay.gd").new()
-			await replay.run(tree)
-		"sheepfold", "meadow-fodder":
+			await replay.run(tree, capture_directory)
+		"sheepfold", "meadow-fodder", "meadow-previous-cut":
 			var replay = load("res://tests/SheepfoldReplay.gd").new()
 			replay.meadow_only = arguments[0] == "meadow-fodder"
+			replay.previous_cut = arguments[0] == "meadow-previous-cut"
 			if not capture_directory.is_empty():
 				OS.set_environment("FIEFDOM_SHEEP_CAPTURES", capture_directory)
 			await replay.run(tree)
@@ -236,14 +371,35 @@ func _run() -> void:
 			await replay.run(tree)
 		"creek-traps":
 			var replay = load("res://tests/CreekTrapReplay.gd").new()
+			if not capture_directory.is_empty():
+				var trap_captures := capture_directory.path_join("creek-traps")
+				DirAccess.make_dir_recursive_absolute(trap_captures)
+				OS.set_environment("FIEFDOM_TRAP_CAPTURES", trap_captures)
 			await replay.run(tree)
 		"west-market":
 			var replay = load("res://tests/WestMarketReplay.gd").new()
+			replay.capture_dir = capture_directory
 			await replay.run(tree)
-		"west-road", "west-road-baseline", "west-road-older-save":
+		"market-street", "market-street-before", "market-street-resume", "market-street-rain", "market-street-winter":
+			await load("res://tests/MarketStreetReplay.gd").new().run_street(tree, capture_directory, arguments[0])
+		"market-audio", "market-audio-before":
+			var replay = load("res://tests/MarketAudioReplay.gd").new()
+			replay.capture_dir = capture_directory
+			replay.previous_release = arguments[0] == "market-audio-before"
+			await replay.run(tree)
+		"market-dye-yard", "market-dye-old-write", "market-dye-old-resume", "market-dye-vat-write", "market-dye-vat-resume":
+			var replay = load("res://tests/MarketDyeYardReplay.gd").new()
+			replay.capture_dir = capture_directory
+			replay.write_previous = arguments[0] in ["market-dye-old-write", "market-dye-vat-write"]
+			replay.resume_previous = arguments[0] in ["market-dye-old-resume", "market-dye-vat-resume"]
+			replay.vat_checkpoint = String(arguments[0]).begins_with("market-dye-vat-")
+			await replay.run(tree)
+		"west-road", "west-road-baseline", "west-road-older-save", "west-road-bank-rain", "west-road-bank-winter", "west-road-bank-resume":
 			var replay = load("res://tests/WestRoadReplay.gd").new()
 			replay.baseline = arguments[0] == "west-road-baseline"
 			replay.from_older_save = arguments[0] == "west-road-older-save"
+			if arguments[0].begins_with("west-road-bank-"):
+				replay.bank_check = arguments[0]
 			replay.capture_path = capture_directory
 			await replay.run(tree)
 		"market-wayfinding", "market-wayfinding-legacy", "market-wayfinding-old-save":
@@ -402,8 +558,16 @@ func _research() -> void:
 	var interval: int = state.research_payment_interval()
 	var initial_money: int = state.money
 	while state.current_day < first_day + duration and not tree.paused:
+		var evening: int = state.current_day
 		ui.sleep_button.pressed.emit()
+		var bedtime := ui.get_node_or_null("Control/DialoguePanel") as Control
+		if bedtime != null and bedtime.context_label.text == "门客口粮":
+			# Keep the existing research-only budget even when the retainer leaves.
+			bedtime.choices.back().pressed.emit()
 		await tree.create_timer(1.1).timeout
+		if state.current_day != evening + 1:
+			_fail("A funded research night must advance after confirming bedtime.")
+			return
 		if state.current_day == first_day + interval:
 			var paid: int = state.money
 			if paid != initial_money - state.balance.research_monthly_cost or state.save_game() != OK or state.load_game() != OK:
@@ -454,6 +618,9 @@ func _legacy_continue() -> void:
 		return
 	if state.retainers.size() != legacy_save["retainers"].size() or state.retainers[0].name != original_retainer["name"] or state.retainers[0].school != int(original_retainer["school"]):
 		_fail("Loading the old save must preserve the retainer identity and school.")
+		return
+	if not legacy_save.has("wait_for_fields_before_sleep") and state.wait_for_fields_before_sleep:
+		_fail("A save made before the sleep policy was added must keep the shortcut off.")
 		return
 	var ui := tree.current_scene.get_node("UI")
 	ui.sleep_button.pressed.emit()

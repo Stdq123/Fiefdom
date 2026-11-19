@@ -124,6 +124,7 @@ func _arrange() -> bool:
 
 func _save_and_continue() -> void:
 	await _press(ui.settings_button)
+	var saved_foot := player.global_position
 	var settings: Control = ui.panel_manager.settings_panel_instance
 	for button: Button in settings.find_children("*", "Button", true, false):
 		if button.text == "保存游戏":
@@ -139,8 +140,8 @@ func _save_and_continue() -> void:
 		return
 	_expect(state.estate_room == state.EstateRoom.HALL and state.hall_mat_id == "blue_mat"
 		and state.hall_shelf_id == "tribute_sheaf" and room.room_camera.is_current()
-		and player.global_position.is_equal_approx(room.get_node("Wake").global_position),
-		"Title Continue restores both decor choices and the bed spawn in the hall.")
+		and player.global_position.is_equal_approx(saved_foot),
+		"Title Continue restores both decor choices and the saved spot in the hall.")
 	_check_art("blue_mat", "tribute_sheaf")
 	await _walk_in_room(Vector2(40, 42))
 	await _snapshot("05-return-to-hall")

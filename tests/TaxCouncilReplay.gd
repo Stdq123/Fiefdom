@@ -169,7 +169,7 @@ func _initial_choice() -> bool:
 	_expect("公田 2 格" in panel.ledger.text and "粮仓 28 份" in panel.ledger.text and "铜钱 87" in panel.ledger.text,
 		"The opening ledger uses the loaded estate's current resources.")
 	_expect("收齐已熟 3 格" in reform_card.harvest and "国库 +0 · 私仓 +4" in reform_card.harvest
-		and "铜钱 +28 · 桑叶 +4" in reform_card.harvest and "20%" in reform_card.levy
+		and "铜钱 +28（税 8） · 桑叶 +4" in reform_card.harvest and "20%" in reform_card.levy
 		and "季青将离开" in reform_card.household and "每夜用粮 2 份" in reform_card.household
 		and "现有铜钱 87/180" in reform_card.detail,
 		"The reform card forecasts this harvest, the leaving teacher, and the configured targets.")

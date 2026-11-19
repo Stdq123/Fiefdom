@@ -2,11 +2,20 @@ extends Node2D
 class_name SeasonFreight
 
 enum RouteSection { MARKET, WEST_ROAD, ESTATE }
+enum CartView { SIDE, AWAY_CORNER, NEAR_CORNER, AWAY, NEAR }
 
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
-const CART_ART := preload("res://assets/world/season-order-cart.svg")
-const DRIVER_ART := preload("res://assets/characters/freight-driver.svg")
-const ROAD_STEP := preload("res://assets/audio/plank-1.wav")
+const CART_PATH := "res://assets/world/freight-wagon.png"
+const DRIVER_ART := "res://assets/characters/freight-driver.png"
+const DRIVER_VIEW := Vector2(CharacterArt.STREET_COLUMNS, CharacterArt.MOTION_ROWS) * CharacterArt.CELL_SIZE
+const WHEEL_SOUNDS := [preload("res://assets/audio/freight/wheel-1.wav"), preload("res://assets/audio/freight/wheel-2.wav")]
+const ARRIVAL_SOUND := preload("res://assets/audio/freight/wagon-stop.wav")
+const WHEEL_SPACING := 46.0
+const HEARING_RANGE := 230.0
+const CART_FRAME := Vector2(96, 64)
+const SHAFT_ENDS := [Vector2(33, -12.5), Vector2(31.5, -32), Vector2(20.5, 1), Vector2(0, -36.5), Vector2(0, 3.5)]
+const LOAD_CENTERS := [Vector2(-10, -29), Vector2(-7, -26), Vector2(-1, -33), Vector2(0, -27), Vector2(0, -32)]
+const WHEEL_PHASE_DISTANCE := 1.8
 const WEST_MARKET := preload("res://scripts/WestMarketLayout.gd")
 const WEST_ROAD := preload("res://scripts/WestRoadLayout.gd")
 
@@ -22,9 +31,15 @@ static var route_length := estate_start + estate_road.get_baked_length()
 
 @onready var cart: Sprite2D = $Cart
 @onready var cargo: Sprite2D = $Cargo
+@onready var rim: Sprite2D = $Rim
 @onready var driver: NeighborMotion = $Driver
 @onready var sign: Label = $Sign
 @onready var parked_shape: CollisionShape2D = $Stand/Shape
+@onready var portrait := CharacterArt.dialogue_portrait("申禾", null, false)
+@onready var cart_art: Texture2D = load(CART_PATH)
+@onready var cart_views := _cart_frames(0.0)
+@onready var side_cargo := _frame(cart_art, Rect2(0, 320, 48, 32))
+@onready var end_cargo := _frame(cart_art, Rect2(48, 320, 48, 32))
 
 var current_lot: Dictionary
 var previous_lot: Dictionary
@@ -35,11 +50,9 @@ var focused := false
 var shown_order := ""
 var arrival_line := ""
 var parked := false
-var side_cart := _frame(CART_ART, Rect2(0, 0, 84, 48))
-var front_cart := _frame(CART_ART, Rect2(140, 0, 44, 48))
-var side_cargo := _frame(CART_ART, Rect2(84, 0, 56, 26))
-var front_cargo := _frame(CART_ART, Rect2(92, 0, 40, 26))
-var portrait := _frame(DRIVER_ART, Rect2(0, 96, 48, 48))
+var rim_phases: Array[Array] = []
+var standing_driver: AtlasTexture
+var hauling_driver: AtlasTexture
 
 static func _estate_curve() -> Curve2D:
 	var approach: Array = LANDSCAPE.ESTATE_TRACKS[0].slice(0, 9)
@@ -65,8 +78,28 @@ static func _frame(texture: Texture2D, region: Rect2) -> AtlasTexture:
 	atlas.filter_clip = true
 	return atlas
 
+func _cart_frames(column: float) -> Array[AtlasTexture]:
+	var frames: Array[AtlasTexture] = []
+	for view in CartView.size():
+		frames.append(_frame(cart_art, Rect2(Vector2(column, view * CART_FRAME.y), CART_FRAME)))
+	return frames
+
+static func _cart_view(heading: Vector2) -> CartView:
+	var x := absf(heading.x)
+	var y := absf(heading.y)
+	if y <= x * 0.42:
+		return CartView.SIDE
+	if x <= y * 0.42:
+		return CartView.AWAY if heading.y < 0.0 else CartView.NEAR
+	return CartView.AWAY_CORNER if heading.y < 0.0 else CartView.NEAR_CORNER
+
 func _ready() -> void:
-	driver.set_motion_sheet(_frame(DRIVER_ART, Rect2(0, 0, 128, 96)))
+	for phase in 4:
+		rim_phases.append(_cart_frames((phase + 1) * CART_FRAME.x))
+	var bodies := load(DRIVER_ART) as Texture2D
+	standing_driver = _frame(bodies, Rect2(Vector2.ZERO, DRIVER_VIEW))
+	hauling_driver = _frame(bodies, Rect2(Vector2(0, DRIVER_VIEW.y), DRIVER_VIEW))
+	driver.set_motion_sheet(standing_driver, CharacterArt.STREET_COLUMNS, "申禾")
 	GameEvents.inventory_changed.connect(_refresh_lots.unbind(1))
 	GameEvents.day_advanced.connect(_refresh_lots.unbind(1))
 	_refresh_lots()
@@ -94,8 +127,11 @@ func _process(_delta: float) -> void:
 
 func _sync_position() -> void:
 	var lot := current_lot
-	if not previous_lot.is_empty() and (lot.is_empty() or _progress(previous_lot) < 1.0):
-		lot = previous_lot
+	if not previous_lot.is_empty():
+		var previous_in_transit := _progress(previous_lot) < 1.0
+		var current_reached_estate := _progress(lot) * route_length >= estate_start
+		if lot.is_empty() or previous_in_transit or (route_section == RouteSection.ESTATE and not current_reached_estate):
+			lot = previous_lot
 	var progress := _progress(lot)
 	var delivery_day: int = lot.receipt.dispatch_day if not lot.is_empty() else -1
 	var distance := clampf(progress, 0.0, 1.0) * route_length
@@ -113,13 +149,14 @@ func _sync_position() -> void:
 		travelling = false
 		return
 	var has_cargo := not lot.is_empty() and delivery_day >= Global.current_day
+	var same_trip: bool = travelling and has_cargo and shown_order == lot.order.id
 	if has_cargo and shown_order != lot.order.id:
 		_load_cargo(lot.order)
 	var relayed := (shown_order == SeasonOrders.WATCH_RELIEF or shown_order == SeasonOrders.WINTER_WOVEN_GOODS
 		or shown_order in SeasonOrders.SEED_ORDERS)
 	cargo.visible = has_cargo and not (arrived and relayed)
 	var start: float = [0.0, west_road_start, estate_start][route_section]
-	_pose(roads[route_section], 0.0 if at_origin else distance - start, not parked)
+	_pose(roads[route_section], 0.0 if at_origin else distance - start, not parked, same_trip)
 
 func _set_parked(active: bool) -> void:
 	if parked != active:
@@ -140,34 +177,57 @@ func _load_cargo(order: Dictionary) -> void:
 		var produce := Sprite2D.new()
 		produce.texture = picture.texture
 		produce.self_modulate = picture.tint
-		produce.position = Vector2((index - middle) * 14.0, -2)
+		produce.position = Vector2((index - middle) * 10.5, -3)
+		produce.scale = Vector2(0.68, 0.68)
 		cargo.add_child(produce)
 		index += 1
 
-func _pose(road: Curve2D, offset: float, moving: bool) -> void:
+func _pose(road: Curve2D, offset: float, moving: bool, same_trip: bool) -> void:
 	var previous_offset := route_offset
 	var moved := maxf(0.0, offset - previous_offset) if travelling else 0.0
 	route_offset = offset
 	travelling = moving
 	position = road.sample_baked(offset)
 	var heading := road.sample_baked(offset + 4.0) - road.sample_baked(offset - 4.0)
-	var horizontal := absf(heading.x) >= absf(heading.y)
+	var posture := hauling_driver if moving else standing_driver
+	if driver.texture != posture:
+		driver.set_motion_sheet(posture, CharacterArt.STREET_COLUMNS, "申禾")
 	var bob := 0.0
 	if moved > 0.04 and moving:
 		bob = driver.walk(heading.normalized() * moved)
-		if floori(offset / 33.0) != floori(previous_offset / 33.0):
-			AudioManager.play_world_sfx(ROAD_STEP, self, -18.0, 110.0)
 	else:
 		driver.stand()
-		driver.face(Vector2.LEFT if route_section == RouteSection.MARKET else Vector2.DOWN)
-	cart.texture = side_cart if horizontal else front_cart
-	cart.position.y = -19.0 + bob
-	cargo.texture = side_cargo if horizontal else front_cargo
-	cargo.position = Vector2(-6, -28 + bob) if horizontal else Vector2(0, -32 + bob)
-	driver.position = Vector2(40, -6) if horizontal else Vector2(0, 9)
+		driver.face((Vector2.LEFT if route_section == RouteSection.MARKET else Vector2.DOWN) if parked else heading)
+	var view := _cart_view(heading)
+	var end_on := view == CartView.AWAY or view == CartView.NEAR
+	cart.texture = cart_views[view]
+	var route_start: float = [0.0, west_road_start, estate_start][route_section]
+	var phase := posmod(floori((route_start + offset) / WHEEL_PHASE_DISTANCE), rim_phases.size())
+	rim.texture = rim_phases[phase][view]
+	cart.flip_h = heading.x < 0.0 and not end_on
+	rim.flip_h = cart.flip_h
+	cart.position.y = -17.0 + bob
+	rim.position.y = cart.position.y
+	cargo.texture = end_cargo if end_on else side_cargo
+	var mirror := Vector2(-1 if cart.flip_h else 1, 1)
+	cargo.position = LOAD_CENTERS[view] * mirror + Vector2(0, bob)
+	# Place the carter's fist on the near shaft. End-on, the grip lies between his two hands.
+	var grip := Vector2(0, 1.5)
+	if driver.facing == NeighborMotion.Facing.PROFILE:
+		grip.x = 7 if driver.flip_h else -7
+	driver.position = SHAFT_ENDS[view] * mirror - grip + Vector2(0, bob) if moving else Vector2(40, -6)
+	driver.z_index = -1 if moving and (view == CartView.AWAY_CORNER or view == CartView.AWAY) else 0
 	sign.position = driver.position + Vector2(-34, -35)
 	sign.visible = parked
 	sign.text = GamepadInput.interact_hint("申禾") if focused else "申禾"
+	if not same_trip or Global.is_indoors():
+		return
+	if arrived and moved < WHEEL_SPACING:
+		AudioManager.play_world_sfx(ARRIVAL_SOUND, self, -12.0, HEARING_RANGE)
+	elif moving and moved > 0.04 and moved < 12.0:
+		var wheel := floori(offset / WHEEL_SPACING)
+		if wheel > floori(previous_offset / WHEEL_SPACING):
+			AudioManager.play_world_sfx(WHEEL_SOUNDS[wheel % WHEEL_SOUNDS.size()], self, -14.0, HEARING_RANGE)
 
 func can_interact_from(foot: Vector2) -> bool:
 	return arrived and not Global.is_indoors() and global_position.distance_squared_to(foot) < 40.0 * 40.0

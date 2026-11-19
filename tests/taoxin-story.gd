@@ -185,8 +185,16 @@ func _run() -> void:
 	_refresh_estate()
 	_expect(state.silk_sample_day == 9 and state.silk_bolts_sold == 1 and state.silk_workshop.night_reeling,
 		"Loading preserves the sample date, actual sale and night order.")
-	dialog = await _approach(world.retainer_instances[state.retainers.back()])
+	var merchant: Node2D = world.retainer_instances[state.retainers.back()]
+	await Campaign.walk_estate_road_to(self, world, merchant.global_position + Vector2(0, 16))
+	for step in 3:
+		if world.player.interaction_target == merchant:
+			break
+		await Campaign.walk_straight(self, world.player, merchant.global_position + Vector2(0, 16))
+	dialog = await _open_dialog()
 	if dialog == null:
+		_expect(false, "Reach the recruited merchant at %s by road, currently at %s."
+			% [merchant.global_position, world.player.global_position])
 		quit(1)
 		return
 	_expect("门客" in dialog.context_label.text and "绸样还在" in dialog.text_label.text and _option(dialog, "交样绸") == null,

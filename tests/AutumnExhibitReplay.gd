@@ -16,6 +16,11 @@ var world: Node2D
 var ui: CanvasLayer
 var capture_dir := ""
 var failed := false
+var parcel_sounds := 0
+
+func _track_parcel_sound(node: Node) -> void:
+	if node is AudioStreamPlayer2D and node.stream != null and node.stream.resource_path.get_file() == "grain-parcel.wav":
+		parcel_sounds += 1
 
 func _expect(ok: bool, message: String) -> bool:
 	if not ok:
@@ -116,13 +121,15 @@ func _deliver_spring() -> bool:
 
 func _defend() -> void:
 	await _walk(world.player, [Vector2(137, 121)])
+	var previous: int = state.raids_defeated
 	for shot in 9:
 		var enemy := tree.get_first_node_in_group("estate_raiders") as Node2D
 		if not enemy:
 			break
 		world.player.shoot_arrow(enemy.global_position)
 		await tree.create_timer(0.48).timeout
-	_expect(state.raids_defeated == 1 and state.outcome == state.Outcome.RUNNING, "Defend the estate with normal arrows on the way to autumn.")
+	_expect(state.raids_defeated == previous + 1 and state.outcome == state.Outcome.RUNNING,
+		"Defend the estate with normal arrows during seasonal preparations.")
 	await _walk(world.player, [Vector2(66, 98)])
 
 func _tend_public_plot() -> void:
@@ -152,9 +159,72 @@ func _calendar_preview() -> void:
 		"Before the festival the almanac guides players to the same clearing.")
 	ui.directions.clear_tracking()
 
+func _buy_grain_buffer() -> void:
+	await _button(ui.manage_button)
+	var management: Control = ui.panel_manager.management_panel_instance
+	management.show_market()
+	var market: Control = management.market_panel
+	var grain: int = state.food_storage
+	var copper: int = state.money
+	var samples: int = state.player_inventory
+	market.quantity.value = 5
+	await _button(market.buy_button)
+	_expect(state.food_storage == grain + 5 and state.money == copper - 5 * state.balance.market_food_price
+		and state.player_inventory == samples, "Buy five grain rather than eating the stored samples before winter.")
+	await _button(management.close_button)
+
+func _prepare_autumn() -> void:
+	var notice: Button = ui.hud.season_event_button
+	_expect(notice.visible and "3 天后 秋社 · 谷样 2/3" in notice.text,
+		"The stock shortage appears three nights early on the ordinary calendar.")
+	await _snapshot("01d-autumn-notice")
+	await _button(notice)
+	var book: Control = ui.calendar
+	_expect(tree.paused and book.modal.visible and "秋分" in book.title.text
+		and "仓中有 黍、菽 · 还差 1 种" in book.event_note.text
+		and "今日播 稷、麦" in book.event_note.text and not "可收私田" in book.event_note.text,
+		"The reminder opens on the event date and includes missing crops that can ripen in time.")
+	_expect(tree.root.gui_get_focus_owner() == book.close_button and ui.directions.tracked_place.is_empty(),
+		"Opening the notice puts focus in the almanac without setting a route.")
+	await _snapshot("01e-autumn-plan")
+	await _button(book.keep_samples)
+	_expect(book.pantry_note.visible and state.night_rations.festival_day == 16
+		and state.night_rations_plan().festival_pantry.held == {"millet": 1},
+		"Opt in from the autumn notice before the third variety ripens.")
+	await _key(KEY_ESCAPE)
+	await _key(KEY_C)
+	_expect(book.modal.visible and "秋分" in book.title.text, "The keyboard shortcut opens the advertised event too.")
+	await _key(KEY_ESCAPE)
+	print("AUTUMN_PREP day=", state.current_day, " shortage=1 sown=稷")
+
 func _walk_to_exhibit() -> void:
 	var approach := world.get_node("AutumnExhibit/Approach") as Marker2D
 	await Campaign.walk_estate_road_to(tree, world, approach.global_position)
+
+func _visit_clearing() -> void:
+	await _key(KEY_M)
+	var map: Control = ui.estate_map
+	var south_pond: Button
+	for row: Button in map.row_buttons:
+		if map.row_buttons[row].title == EstateLayout.FESTIVAL_SITE_NAME:
+			south_pond = row
+			break
+	if not _expect(south_pond != null, "The regular estate map offers the South Pond clearing before the fair."):
+		return
+	map.scroll.ensure_control_visible(south_pond)
+	await _button(south_pond)
+	_expect(map.target.point == EstateLayout.FESTIVAL_APPROACH and map.road_path.has(EstateLayout.FESTIVAL_BANK_BEND),
+		"The ordinary map guides around the pond to the same stone clearing used by the fair.")
+	await _key(KEY_ESCAPE)
+	await _walk_to_exhibit()
+	var landscape: Node2D = world.get_node("Landscape")
+	_expect(world.player.position.distance_to(EstateLayout.FESTIVAL_APPROACH) < 4.0
+		and ui.directions.tracked_place.is_empty() and not world.get_node("AutumnExhibit").visible
+		and not world.get_node("WinterSupper").visible, "The clearing remains walkable between festivities.")
+	_expect(landscape._surface_at(world.player.position) == landscape.TERRAIN_AUDIO.Surface.STONE,
+		"The square returns stone footfalls even before the market stand is installed.")
+	await _snapshot("01f-ordinary-clearing")
+	await Campaign.walk_estate_road_to(tree, world, world.to_global(Vector2(66, 98)))
 
 func _verify_south_route() -> void:
 	var stand := world.get_node("AutumnExhibit") as Node2D
@@ -195,9 +265,10 @@ func _verify_south_route() -> void:
 		start = Engine.get_physics_frames()
 		await Campaign.walk_straight(tree, world.player, point)
 		walking_frames += Engine.get_physics_frames() - start
+		var surface: int = landscape._surface_at(world.player.position)
 		_expect(world.player.position.distance_to(point) < 3.0
-			and landscape._surface_at(world.player.position) == landscape.TERRAIN_AUDIO.Surface.TRACK,
-			"Reach the successive road turns on foot before arriving at the exhibition table.")
+			and surface in [landscape.TERRAIN_AUDIO.Surface.STONE, landscape.TERRAIN_AUDIO.Surface.TRACK],
+			"The route follows dirt or stone at each turn.")
 		if point == EstateLayout.FESTIVAL_BANK_BEND:
 			await _snapshot("01c-south-pond")
 			await Campaign.walk_straight(tree, world.player, point + Vector2(74, 0))
@@ -208,6 +279,8 @@ func _verify_south_route() -> void:
 			print("SOUTH_POND_SHORE ", shore)
 	_expect(travelled > 650.0 and world.player.interaction_target == stand,
 		"The pond separates the festival ground from the fork, and the path reaches the table.")
+	_expect(landscape._surface_at(world.player.position) == landscape.TERRAIN_AUDIO.Surface.STONE,
+		"Arrival at the autumn stand uses the paved surface for footsteps.")
 	print("SOUTH_FESTIVAL_WALK fork_to_stand=", roundi(travelled),
 		" seconds=", walking_frames / float(Engine.physics_ticks_per_second), " arrival=", world.player.position)
 
@@ -267,9 +340,10 @@ func _follow_harvester(guest: Node2D) -> void:
 func _festival() -> void:
 	var stand := world.get_node("AutumnExhibit") as Node2D
 	var first: Node2D = stand.guests.get_child(0)
-	_expect(stand.visible and "今日秋社" in ui.hud.gathering_label.text, "The table and neighbors appear at the Autumn Equinox.")
+	_expect(stand.visible and "今日秋社 · 谷样 3/3" in ui.hud.season_event_button.text,
+		"The table and the stocked notice appear at the Autumn Equinox.")
 	_expect(not first.visible, "The first guest starts the day offsite.")
-	await _button(ui.hud.calendar_button)
+	await _button(ui.hud.season_event_button)
 	await _button(ui.calendar.guide)
 	_expect(ui.directions.tracked_place == "秋社展台", "The current event points to the actual approach.")
 	await _verify_south_route()
@@ -310,7 +384,8 @@ func _festival() -> void:
 		"Taking samples home keeps the crops and grants rites experience without promising a winter gift.")
 	_expect(_samples_visible(stand) == 3, "Taking crops home still shows the three samples.")
 	await tree.create_timer(AutumnExhibit.DISPLAY_SECONDS + 0.12).timeout
-	_expect(_samples_visible(stand) == 0 and _parcel_count(stand) == 0, "Only the shared crops go to neighbors.")
+	_expect(_samples_visible(stand) == 0 and _parcel_count(stand) == 0 and parcel_sounds == 0,
+		"Taking the display home has no neighbor pickup or pickup sound.")
 	print("AUTUMN_TAKE day=", state.current_day, " crops=", state.player_inventory, " rites=", state.player_stats.stats["RITES"]["xp"])
 	await _continue()
 	await _walk_to_exhibit()
@@ -327,7 +402,7 @@ func _festival() -> void:
 	for sample: Sprite2D in stand.get_node("Samples").get_children():
 		_expect(sample.visible and sample.texture != null, "The chosen crop art appears on each tray.")
 	await tree.create_timer(0.35).timeout
-	_expect(stand.display_time == 0.0 and _samples_visible(stand) == 3 and _parcel_count(stand) == 0,
+	_expect(stand.display_time == 0.0 and _samples_visible(stand) == 3 and _parcel_count(stand) == 0 and parcel_sounds == 0,
 		"Samples wait on the table when the player shares them before all neighbors arrive.")
 	_set_clock(0.30)
 	await tree.create_timer(0.1).timeout
@@ -335,12 +410,14 @@ func _festival() -> void:
 	var spot := first_guest.position
 	await _snapshot("03-autumn-exhibit")
 	await tree.create_timer(1.68 - stand.display_time).timeout
-	_expect(first_guest.position.x > spot.x + 10.0 and _parcel_count(stand) == 1 and _samples_visible(stand) == 2,
-		"The first neighbor approaches and removes one sample before the other two.")
+	var audible := int(DisplayServer.get_name() != "headless")
+	_expect(first_guest.position.x > spot.x + 10.0 and _parcel_count(stand) == 1 and _samples_visible(stand) == 2
+		and parcel_sounds == audible, "The first neighbor approaches and takes a sample with one audible pickup.")
 	_expect(stand.hint.visible, "At the table's approach the exhibit remains in focus during handoff.")
 	await _snapshot("05-first-handoff")
 	await tree.create_timer(AutumnExhibit.HANDOFF_SECONDS - stand.display_time + 0.12).timeout
-	_expect(_samples_visible(stand) == 0 and _parcel_count(stand) == 3, "All three shared crops leave the trays.")
+	_expect(_samples_visible(stand) == 0 and _parcel_count(stand) == 3 and parcel_sounds == 3 * audible,
+		"The three parcels leave the trays with one cue per recipient.")
 	print("AUTUMN_SHARE day=", state.current_day, " crops=", state.player_inventory, " reputation=", state.reputation - reputation,
 		" tribute=", state.king_storage)
 	await _key(KEY_E)
@@ -362,11 +439,12 @@ func _festival() -> void:
 	stand = world.get_node("AutumnExhibit")
 	_expect(state.autumn_exhibit_record(state.current_day) == receipt and state.player_inventory == stock - 3,
 		"Continue restores the ledger and settled stock.")
-	_expect(_samples_visible(stand) == 0 and _parcel_count(stand) == 3 and state.day_progress >= 0.88,
-		"Continue shows the settled handoff at the saved time.")
+	_expect(_samples_visible(stand) == 0 and _parcel_count(stand) == 3 and state.day_progress >= 0.88 and parcel_sounds == 3 * audible,
+		"Continue restores the finished ceremony without replaying the pickups.")
+	print("AUTUMN_PARCEL_AUDIO recipients=3 cues=", parcel_sounds)
 	print("AUTUMN_GATHERING attendees=", stand.guests.get_child_count(), " parcels=", _parcel_count(stand), " dusk=", state.day_progress)
 	await _night()
-	_expect(not world.get_node("AutumnExhibit").visible and not ui.hud.gathering_label.visible,
+	_expect(not world.get_node("AutumnExhibit").visible and not ui.hud.season_event_button.visible,
 		"The stage closes after its solar term.")
 	await _key(KEY_C)
 	await _button(ui.calendar.dates.get_child(3))
@@ -388,6 +466,15 @@ func _play() -> void:
 	await _grow(SPRING_PLOTS, 2)
 	if failed or not await _deliver_spring():
 		return
+	await _button(ui.manage_button)
+	var management: Control = ui.panel_manager.management_panel_instance
+	management.show_market()
+	var market: Control = management.market_panel
+	market.crop_choice.select(CropStock.IDS.find("hemp") + 1)
+	market.crop_choice.item_selected.emit(market.crop_choice.selected)
+	await _button(market.convert_button)
+	_expect(state.crop_stock.count("hemp") == 0, "Use the early hemp as a meal, leaving two autumn varieties.")
+	await _button(management.close_button)
 	while state.current_day < 13 and not failed:
 		await _tend_public_plot()
 		await _night()
@@ -395,14 +482,17 @@ func _play() -> void:
 			await _defend()
 	if failed:
 		return
-	await _grow({KEY_2: FALL_PLOTS}, 2)
-	_expect("明日秋社" in ui.hud.gathering_label.text, "The eve of autumn exhibit has a preparation reminder.")
+	await _prepare_autumn()
+	await _visit_clearing()
+	await _grow({KEY_2: FALL_PLOTS, KEY_7: [Vector2i(6, 5)]}, 2)
+	_expect("明日秋社 · 谷样 3/3" in ui.hud.season_event_button.text,
+		"Stock readiness updates after the new crop is harvested.")
 	await _night()
 	await _festival()
 
 func _second_year() -> void:
 	var checkpoint: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(state.manual_save_path()))
-	var previous_day: int = checkpoint.current_day
+	var previous_day := 16
 	checkpoint.current_day = previous_day + state.SOLAR_TERMS.size() * state.balance.days_per_solar_term
 	var path := "user://second-autumn.json"
 	var file := FileAccess.open(path, FileAccess.WRITE)
@@ -424,27 +514,47 @@ func _second_year() -> void:
 	print("AUTUMN_RETURN day=", state.current_day, " prior_receipt=", previous_day)
 
 func _winter_return() -> void:
-	var checkpoint: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(state.manual_save_path()))
-	checkpoint.current_day = 22
-	checkpoint.crop_stock["wheat"] = 1
-	checkpoint.player_inventory += 1
-	var path := "user://autumn-to-winter.json"
-	var file := FileAccess.open(path, FileAccess.WRITE)
-	file.store_string(JSON.stringify(checkpoint))
-	file.close()
-	if not _expect(state.load_game(path) == OK, "Bring the actual autumn receipt to a winter checkpoint."):
+	if not _expect(state.current_day == 17 and state.night_rations.last.get("missed", []).is_empty(),
+		"Continue to winter the day after the actual fair, with dinner supplied."):
 		return
-	await tree.scene_changed
-	_estate()
+	await Campaign.walk_estate_road_to(tree, world, world.to_global(Vector2(66, 98)))
+	await _defend()
+	await _buy_grain_buffer()
+	while not failed and state.current_day < 19:
+		await _night()
+	var notice: Button = ui.hud.season_event_button
+	_expect(notice.visible and "3 天后 冬至围炉 · 缺麦" in notice.text,
+		"The winter notice accounts for He Bo's beans and leaves time to sow wheat.")
+	await _button(notice)
+	_expect("禾伯出菽" in ui.calendar.event_note.text and "今日播私田麦，2 夜可收" in ui.calendar.event_note.text
+		and "仓中 麦 0 · 菽 0" in ui.calendar.event_note.text and tree.paused,
+		"The winter detail opens directly with the actual gift, missing wheat and preparation time.")
+	await _snapshot("08-winter-plan")
+	await _button(ui.calendar.keep_porridge)
+	_expect(state.night_rations.festival_recipe == WinterSupper.BEAN and "等作物入仓" in ui.calendar.pantry_note.text,
+		"The porridge plan can start before the wheat is even planted.")
+	await _key(KEY_ESCAPE)
+	await _grow({KEY_4: [FALL_PLOTS[1]]}, 2)
+	_expect("明日冬至围炉 · 可备麦菽粥" in notice.text and state.crop_stock.count("wheat") == 1,
+		"The wheat harvest makes the meal ready before the solstice.")
+	var pantry: Dictionary = state.night_rations_plan().festival_pantry
+	_expect(pantry.held == {} and pantry.shared == {"wheat": 1}, "A winter order and the porridge share one wheat. He Bo covers the beans.")
+	await _snapshot("09-winter-ready")
+	await _night()
+	await _button(notice)
+	await _button(ui.calendar.guide)
+	_expect(not tree.paused and ui.directions.tracked_place == WinterSupper.PLACE,
+		"The day-of notice gives a route to the winter table.")
 	var approach := world.get_node("WinterSupper/Approach") as Marker2D
 	await Campaign.walk_estate_road_to(tree, world, approach.global_position)
+	_set_clock(0.76)
 	await _key(KEY_E)
 	var dialog := ui.get_node_or_null("Control/DialoguePanel") as Control
 	if not _expect(dialog != null and dialog.name_label.text == WinterSupper.HOST
 		and "禾伯出菽" in dialog.text_label.text and state.crop_stock.count("beans") == 0,
 		"He Bo can prepare the bean supper with wheat and no beans in the player's store."):
 		return
-	await _snapshot("08-he-bo-winter-gift")
+	await _snapshot("10-he-bo-winter-gift")
 	var tribute: int = state.king_storage
 	await _button(dialog.options_container.get_child(0))
 	var receipt: Dictionary = state.winter_supper_record()
@@ -454,25 +564,31 @@ func _winter_return() -> void:
 		"Cooking uses one private wheat and records He Bo's contribution without adding beans to stock.")
 	_expect(state.save_game() == OK, "Save the winter supper with the contribution recorded.")
 	await _continue()
-	_expect(state.winter_supper_record() == receipt, "The supper receipt preserves the contribution on reload.")
+	_expect(state.winter_supper_record() == receipt and "已备饭" in ui.hud.season_event_button.text,
+		"The supper receipt and notice preserve the contribution on reload.")
 	print("AUTUMN_WINTER_GIFT day=", state.current_day, " receipt=", state.winter_supper_record())
+	await _night()
+	_expect(state.night_rations.last.get("supper") == 1 and state.retainers.size() == 1,
+		"One actual retainer supper replaces grain after cooking from the calendar plan.")
 
-func run(game_tree: SceneTree) -> void:
+func run(game_tree: SceneTree, captures := "") -> void:
 	tree = game_tree
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated exhibit profile."):
 		tree.quit(1)
 		return
 	state = tree.root.get_node("Global")
-	capture_dir = OS.get_environment("FIEFDOM_AUTUMN_CAPTURES")
+	capture_dir = captures if not captures.is_empty() else OS.get_environment("FIEFDOM_AUTUMN_CAPTURES")
+	tree.node_added.connect(_track_parcel_sound)
 	tree.root.notify_mouse_entered()
 	seed(325)
 	tree.change_scene_to_file(state.TITLE_SCENE)
 	await tree.scene_changed
 	await _play()
-	if not failed and DisplayServer.get_name() == "headless":
-		await _second_year()
 	if not failed:
 		await _winter_return()
+	if not failed and DisplayServer.get_name() == "headless":
+		await _second_year()
+	tree.node_added.disconnect(_track_parcel_sound)
 	if not failed:
 		print("SCENARIO_OK")
 	tree.quit(1 if failed else 0)

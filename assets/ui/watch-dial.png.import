@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://1fjf4qdqad4g"
+path="res://.godot/imported/watch-dial.png-42f6675c4d738b6fbd05da73c09bdc70.res"
+
+[deps]
+
+source_file="res://assets/ui/watch-dial.png"
+dest_files=["res://.godot/imported/watch-dial.png-42f6675c4d738b6fbd05da73c09bdc70.res"]
+
+[params]
+
+authored_at_2x=true

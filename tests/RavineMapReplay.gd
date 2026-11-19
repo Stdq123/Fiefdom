@@ -2,6 +2,8 @@ extends RefCounted
 
 const Campaign := preload("res://tests/CampaignReplay.gd")
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
+const RELIEF := preload("res://scripts/RavineRelief.gd")
+const TERRAIN_AUDIO := preload("res://scripts/TerrainAudio.gd")
 const MOVEMENT := [&"ui_left", &"ui_right", &"ui_up", &"ui_down"]
 
 var tree: SceneTree
@@ -12,6 +14,7 @@ var map: Control
 var guide: Node2D
 var failures := 0
 var map_capture_dir := ""
+var bridge_captured := false
 
 func _expect(condition: bool, detail: String) -> bool:
 	if not condition:
@@ -47,13 +50,14 @@ func _move(action: StringName, frames: int) -> void:
 	await Campaign.wait_for_map_change(tree)
 
 func _capture_map_frame(name: String) -> void:
-	if map_capture_dir.is_empty():
+	if map_capture_dir.is_empty() or DisplayServer.get_name() == "headless":
 		return
 	await tree.create_timer(0.2).timeout
 	await RenderingServer.frame_post_draw
 	var image := tree.root.get_texture().get_image()
 	_expect(image != null and not image.is_empty() and image.save_png(map_capture_dir.path_join(name + ".png")) == OK,
 		"Save the rendered ravine frame %s." % name)
+	print("RAVINE_FRAME ", name, " window=", tree.root.size, " image=", image.get_size())
 
 func _plan_from_estate() -> bool:
 	var ui: CanvasLayer = tree.current_scene.get_node("UI")
@@ -102,6 +106,26 @@ func _bind_ravine() -> bool:
 		enemy.set_physics_process(false)
 	return true
 
+func _check_junction_posts() -> void:
+	var scenery := ravine.get_node("Scenery")
+	var names := ["野果坳", "浅滩", "望溪台", "南路小径"]
+	var headings := [Vector2.UP, Vector2(1, 1), Vector2(1, -1), Vector2.DOWN]
+	for index in names.size():
+		var post := scenery.get_node_or_null(names[index] + "路牌") as VillageInscription
+		if not _expect(post != null, "The %s fork has a physical sign." % names[index]):
+			continue
+		var visible: bool = index != 3 or state.ravine_shortcut_open()
+		_expect(post.is_visible_in_tree() == visible and post.get_node("Caption").text == names[index],
+			"The %s caption belongs to the sign and the gated route is only signed when open." % names[index])
+		var arrow := post.get_node_or_null("Arrow") as Polygon2D
+		if not _expect(arrow != null and arrow.polygon.size() == 7, "The fork has an engraved arrow."):
+			continue
+		var tail := arrow.to_global((arrow.polygon[0] + arrow.polygon[-1]) * 0.5)
+		var tip := arrow.to_global(arrow.polygon[3])
+		_expect(tail.direction_to(tip).dot(headings[index].normalized()) > 0.999,
+			"The %s sign points into its lane." % names[index])
+	print("RAVINE_MAP_JUNCTIONS fruit=north ford=southeast lookout=northeast south=down")
+
 func _layout_fits() -> bool:
 	var panel: Control = map.modal.get_node("Center/Panel")
 	if not tree.root.get_visible_rect().encloses(panel.get_global_rect()):
@@ -127,7 +151,7 @@ func _select_place(place: String) -> bool:
 	await _click(map.markers[place])
 	return _expect(guide.destination_name == place and guide.route.size() >= 2, "Choose %s with the map button." % place)
 
-func _walk_route(allow_exit := false) -> bool:
+func _walk_route(allow_exit := false, climb_frame := "01b-lookout-steps") -> bool:
 	var path: PackedVector2Array = guide.route.duplicate()
 	var refreshed := false
 	var travel := tree.root.get_node_or_null("MapTravel")
@@ -153,6 +177,28 @@ func _walk_route(allow_exit := false) -> bool:
 			return _expect(allow_exit and tree.current_scene.name == "Main", "Only a route to West Gate should leave the ravine.")
 		if not _expect(player.position.distance_to(point) <= 3.0, "The player should reach %s from %s along the marked path." % [point, player.position]):
 			return false
+		if point == RavineLayout.BRIDGE:
+			var landscape: Node2D = ravine.get_node("Landscape")
+			_expect(landscape._surface_at(player.position) == TERRAIN_AUDIO.Surface.PLANK,
+				"The crossing still sounds like wood under the player's feet.")
+			print("RAVINE_BRIDGE_DEPTH crossing=", player.position, " deck=", LANDSCAPE.BRIDGE_DECK)
+			if not bridge_captured:
+				await _capture_map_frame("01a-on-wooden-bridge")
+				bridge_captured = true
+		if point == RavineLayout.FORD:
+			var landscape: Node2D = ravine.get_node("Landscape")
+			_expect(landscape._surface_at(player.position) == TERRAIN_AUDIO.Surface.SHALLOWS,
+				"The shallow steps stay inside the wadeable strip.")
+			await _capture_map_frame("03a-ford-stepping-stones")
+		if point == RavineLayout.RIDGE_FORK and not climb_frame.ends_with("frost") and guide.destination_name == "望溪台":
+			await _capture_map_frame("01d-bridge-to-lookout")
+		if point == RavineLayout.RIDGE_LANE[2] and guide.destination_name == "望溪台":
+			var landscape: Node2D = ravine.get_node("Landscape")
+			_expect(landscape._surface_at(player.position) == TERRAIN_AUDIO.Surface.STONE
+				and landscape.terrain_audio.footsteps.stream.resource_path.get_file().begins_with("stone-"),
+				"Walking up the marked steps plays stone footfalls.")
+			print("RAVINE_MAP_CLIMB foot=", player.position)
+			await _capture_map_frame(climb_frame)
 		if not guide.route.is_empty() and guide.route[0].distance_to(path[0]) >= 16.0:
 			refreshed = true
 	if path.size() > 2 and path[0].distance_to(path[-1]) >= 32.0:
@@ -165,6 +211,16 @@ func _cross_the_ravine() -> bool:
 		"The forest continues the planned route without selecting it again."):
 		return false
 	await _capture_map_frame("00-west-woods")
+	var landscape: Node2D = ravine.get_node("Landscape")
+	_expect(landscape._surface_at(RavineLayout.WEST_GATE) == TERRAIN_AUDIO.Surface.STONE,
+		"The west gate's stone sill spans the path through the rocks.")
+	_check_approach_surfaces(landscape)
+	if not map_capture_dir.is_empty():
+		var daytime: float = state.day_progress
+		state.advance_daylight((0.96 - daytime) * state.balance.daylight_seconds)
+		await _capture_map_frame("00b-west-gate-lamp")
+		state.day_progress = daytime
+		tree.root.get_node("GameEvents").daylight_changed.emit()
 	await _key(KEY_M)
 	_expect(guide.route[0].is_equal_approx(player.position) and guide.destination == ravine.get_node("WildHerbs").position,
 		"The chart joins the actual player location to the herb spot.")
@@ -190,15 +246,38 @@ func _cross_the_ravine() -> bool:
 	_expect(state.ravine_trip_target.is_empty(), "Reaching the herbs clears the persisted route.")
 	await _key(KEY_E)
 	_expect(state.last_forage_day != state.current_day, "Full health leaves the daily outing available.")
+	_expect(landscape._surface_at(player.position) == TERRAIN_AUDIO.Surface.STONE
+		and player.interaction_target == ravine.get_node("WildHerbs"), "The landing still gives access to the herbs.")
 	print("RAVINE_TRIP_HERBS arrival=", player.position, " used=", state.last_forage_day == state.current_day)
 	print("RAVINE_MAP_BRIDGE arrival=", player.position)
 	await _capture_map_frame("02-east-lookout")
+	if not map_capture_dir.is_empty():
+		var roadside := RavineLayout.HERBS + Vector2(-19, 9)
+		await Campaign.walk_straight(tree, player, roadside)
+		_expect(player.position.x < RavineLayout.HERBS.x - 12.0 and player.interaction_target == ravine.get_node("WildHerbs"),
+			"The herbs remain reachable from the open side of the terrace.")
+		await _capture_map_frame("02a-herbs-on-ledge")
+		await Campaign.walk_straight(tree, player, RavineLayout.HERBS)
+	await _check_lookout_face(landscape)
+	var shoulder: Vector2 = RavineLayout.MAIN_TRAIL[-2]
+	var below := shoulder + Vector2(-2, 45)
+	await Campaign.walk_straight(tree, player, shoulder)
+	await Campaign.walk_straight(tree, player, below)
+	_expect(player.position.distance_to(below) < 4.0 and guide.route.is_empty()
+		and landscape._surface_at(player.position) == TERRAIN_AUDIO.Surface.GRASS,
+		"The low bridge verge can be crossed into the grass with ordinary movement and without a route.")
+	await _capture_map_frame("01e-bridge-verge")
+	await Campaign.walk_straight(tree, player, shoulder)
+	await Campaign.walk_straight(tree, player, RavineLayout.RIDGE_FORK)
 
 	if not await _select_place("砾滩"):
 		return false
 	await _click(map.close_button)
 	if not await _walk_route():
 		return false
+	_expect(Geometry2D.is_point_in_polygon(player.position, PackedVector2Array(RavineLayout.GRAVEL_BAR)),
+		"The chart leads onto the dry shelf at the gravel fishing spot.")
+	await _capture_map_frame("03b-gravel-shoal")
 	if not await _select_place("西门回封地"):
 		return false
 	_expect(guide.route.has(LANDSCAPE.FORD) and not guide.route.has(LANDSCAPE.BRIDGE) and map.route_status.text.contains("浅滩"),
@@ -210,7 +289,181 @@ func _cross_the_ravine() -> bool:
 	var home: Vector2 = tree.current_scene.get_node("World/Player").position
 	_expect(home.x > 310.0 and home.x < 381.0, "The marked way home returns inside the estate's East Gate.")
 	print("RAVINE_MAP_FORD home=", home)
-	return true
+	if _expect(await Campaign.walk_through_gates(tree, &"ui_right", state.WILDERNESS_SCENE),
+		"Cross the stone sill back into the ravine after the return walk.") and _bind_ravine():
+		await _check_gate_rock()
+		await Campaign.walk_straight(tree, player, Vector2(RavineLayout.WEST_ARRIVAL.x - 1.0, RavineLayout.WEST_ARRIVAL.y))
+		return _expect(await Campaign.walk_through_gates(tree, &"ui_left", state.ESTATE_SCENE),
+			"Return through the open pass after checking the edge.")
+	return false
+
+func _check_approach_surfaces(landscape: Node2D) -> void:
+	var deck := RavineLayout.BRIDGE_DECK
+	var center := deck.get_center()
+	var offset := Vector2(deck.size.x * 0.5 + 14.0, 0)
+	var west := center - offset - Vector2(0, 2)
+	var east := center + offset - Vector2(0, 2)
+	var first_step: Vector2 = RavineLayout.RIDGE_LANE[1]
+	var stair_foot := first_step.lerp(RavineLayout.RIDGE_FORK, 0.32)
+	for at: Vector2 in [west, east, stair_foot]:
+		_expect(landscape._surface_at(at) == TERRAIN_AUDIO.Surface.STONE,
+			"Only the actual approach stone should sound like stone at %s." % at)
+	var landing: Vector2 = RavineLayout.RIDGE_LANE[2] + Vector2(-9, 9)
+	var grass: Vector2 = RavineLayout.RIDGE_LANE[2] + Vector2(-36, 8)
+	_expect(landscape._surface_at(landing) == TERRAIN_AUDIO.Surface.STONE
+		and landscape._surface_at(grass) == TERRAIN_AUDIO.Surface.GRASS,
+		"The broad tread sounds like stone while the grass alongside it remains soft ground.")
+	_expect(landscape._surface_at(center) == TERRAIN_AUDIO.Surface.PLANK
+		and landscape._surface_at(RavineLayout.MAIN_TRAIL[-3]) == TERRAIN_AUDIO.Surface.TRACK,
+		"The bridge planks and the earth lane keep distinct footsteps next to the stone aprons.")
+	print("RAVINE_APPROACH_SURFACES west=", west, " east=", east, " stairs=", stair_foot)
+
+func _check_lookout_face(landscape: Node2D) -> void:
+	var side := Vector2(379, -58)
+	await Campaign.walk_ravine_to(tree, ravine, RavineLayout.RIDGE_FORK)
+	await Campaign.walk_straight(tree, player, Vector2(313, -23))
+	await Campaign.walk_straight(tree, player, Vector2(330, -52))
+	await Campaign.walk_straight(tree, player, Vector2(370, side.y))
+	await Campaign.walk_straight(tree, player, side)
+	if not _expect(player.position.distance_to(side) < 4.0, "Reach the foot of the lookout below the stair landing at %s." % player.position):
+		return
+	var face := landscape.get_node("TerrainEdges/LookoutWestFace") as CollisionPolygon2D
+	var beyond := Vector2(386, -84)
+	_expect(Geometry2D.is_point_in_polygon(face.to_local(beyond), face.polygon), "The visible rock foot covers the attempted approach.")
+	await Campaign.walk_straight(tree, player, beyond)
+	var stopped := Vector2(player.position)
+	_expect(stopped.distance_to(beyond) > 9.0 and Rect2(365, -80, 23, 18).has_point(stopped)
+		and not Geometry2D.is_point_in_polygon(face.to_local(stopped), face.polygon)
+		and landscape._surface_at(stopped) != TERRAIN_AUDIO.Surface.STONE,
+		"The rocky approach stops the player off the stone path below the lip.")
+	print("RAVINE_LOOKOUT_FOOT start=", side, " stopped=", stopped)
+	await _capture_map_frame("01c-lookout-foot")
+	await Campaign.walk_straight(tree, player, side)
+	await Campaign.walk_straight(tree, player, Vector2(330, -52))
+	await Campaign.walk_straight(tree, player, Vector2(313, -23))
+	await Campaign.walk_straight(tree, player, RavineLayout.RIDGE_FORK)
+	_expect(player.position.distance_to(RavineLayout.RIDGE_FORK) < 4.0,
+		"The path continues around the toe of the bluff back to the stair junction.")
+
+func _check_gate_rock() -> void:
+	var gate_start := player.position
+	await Campaign.walk_straight(tree, player, gate_start + Vector2(0, -58))
+	_expect(player.position.y > gate_start.y - 28.0 and player.position.y < gate_start.y - 8.0,
+		"Walking toward the rocks stops at their feet alongside the gate.")
+	print("RAVINE_MAP_GATE_EDGE arrived=", gate_start, " stopped=", player.position)
+	await Campaign.walk_straight(tree, player, gate_start)
+	# Approach the freestanding boulder beside the fork from the open meadow.
+	await Campaign.walk_straight(tree, player, Vector2(21, 92))
+	await Campaign.walk_straight(tree, player, Vector2(43, 89))
+	_expect(player.position.x > 23.0 and player.position.x < 29.0,
+		"The tall boulder stops the player beside its base, at %s." % player.position)
+	await _capture_map_frame("00f-trail-boulder")
+	await Campaign.walk_straight(tree, player, Vector2(21, 92))
+	await Campaign.walk_straight(tree, player, gate_start)
+
+func _check_fruit() -> void:
+	if not await _select_place("野果坳"):
+		return
+	await _key(KEY_ESCAPE)
+	if not await _walk_route():
+		return
+	var available_grain: int = state.food_storage
+	if not map_capture_dir.is_empty():
+		await Campaign.walk_straight(tree, player, RavineLayout.FRUIT + Vector2(-17, 11))
+	await _capture_map_frame("10-berries-on-bush")
+	await _key(KEY_E)
+	_expect(state.food_storage == available_grain + state.balance.wild_food_yield
+		and state.last_forage_day == state.current_day, "Picking the visible berries still deposits the day's forage in the granary.")
+	await _capture_map_frame("11-berries-picked")
+	print("RAVINE_MAP_FRUIT day=", state.current_day, " grain=", available_grain, "->", state.food_storage)
+
+func _check_courtyard_storage(estate_player: CharacterBody2D, landscape: Node2D) -> void:
+	var jar: Sprite2D
+	for sprite: Sprite2D in landscape.scenery:
+		if landscape.scenery[sprite] == LANDSCAPE.Prop.JAR and sprite.position == Vector2(15, 35):
+			jar = sprite
+			break
+	if not _expect(jar != null and jar.is_visible_in_tree() and jar.get_parent().y_sort_enabled,
+		"The courtyard jar is on the same foot-sorted scenery layer as the hall."):
+		return
+	await Campaign.walk_to(tree, estate_player, Vector2(61, 35))
+	await _capture_map_frame("00c-hall-storage")
+	await Campaign.walk_straight(tree, estate_player, Vector2(53, 49))
+	await Campaign.walk_straight(tree, estate_player, Vector2(15, 49))
+	await Campaign.walk_straight(tree, estate_player, jar.position + Vector2(0, -2))
+	await _capture_map_frame("00d-behind-jar")
+	_expect(estate_player.position.distance_to(jar.position + Vector2(0, -2)) < 2.0
+		and estate_player.position.y < jar.position.y and is_equal_approx(jar.modulate.a, 1.0),
+		"Passing behind the solid jar keeps its mouth and front opaque.")
+	await Campaign.walk_straight(tree, estate_player, jar.position + Vector2(0, 8))
+	await _capture_map_frame("00e-in-front-of-jar")
+	_expect(absf(estate_player.position.x - jar.position.x) < 2.0 and estate_player.position.y >= jar.position.y + 4.0,
+		"The player can keep walking past the front of the jar.")
+	print("RAVINE_MAP_STORAGE jar=", jar.position, " alpha=", jar.modulate.a, " front=", estate_player.position)
+	await Campaign.walk_straight(tree, estate_player, Vector2(61, 48))
+
+func _lamp_at_lights(landscape: Node2D, foot: Vector2) -> bool:
+	for lamp in landscape.day_lighting.lamps:
+		if lamp.position == foot:
+			return lamp.glow.enabled
+	return false
+
+func _check_ravine_weather() -> void:
+	var bridge := ravine.get_node_or_null("CreekBridge") as Node2D
+	if bridge == null:
+		return
+	var railing := bridge.get_node("NearRail") as Node2D
+	var deck := bridge.get_node("Deck") as Node2D
+	var sprite := player.get_node("Sprite2D") as Sprite2D
+	var cascade: Node2D = ravine.get_node("Landscape/BridgeCascade")
+	var frame: int = cascade.frame
+	await _capture_map_frame("05a-cascade-flow")
+	await tree.create_timer(0.18).timeout
+	_expect(cascade.frame != frame, "Foam moves down the cascade while the water above and below it remains visible.")
+	await _capture_map_frame("05b-cascade-flow")
+	_expect(bridge.position == RavineLayout.BRIDGE and bridge.y_sort_enabled and deck.z_index < sprite.z_index
+		and railing.z_index == sprite.z_index and railing.global_position.y > player.position.y,
+		"The walkway sorts below the player and its near rail sorts in front while crossing.")
+	await Campaign.walk_straight(tree, player, Vector2(104, RavineLayout.BRIDGE.y))
+	await Campaign.walk_straight(tree, player, Vector2(104, -43))
+	var upstream := player.position
+	await Campaign.walk_straight(tree, player, upstream + Vector2(60, 0))
+	_expect(player.position.x < RavineLayout.BRIDGE.x and player.position.y < RavineLayout.BRIDGE.y - 30.0,
+		"The deep water next to the cascade still stops the player.")
+	await Campaign.walk_ravine_to(tree, ravine, RavineLayout.BRIDGE)
+	for day in [6, 19]:
+		while state.current_day < day:
+			state.begin_next_day()
+		tree.root.get_node("GameEvents").day_advanced.emit(day)
+		_expect(bridge.season == state.season_index() and bridge.wet == (day == 6)
+			and LANDSCAPE.BRIDGE_DECK.has_point(player.position), "The same working bridge updates its rain and winter art.")
+		await _capture_map_frame("06-bridge-rain" if day == 6 else "07-bridge-frost")
+		print("RAVINE_BRIDGE_WEATHER day=", day, " wet=", bridge.wet, " season=", bridge.season)
+		if day == 6:
+			await Campaign.walk_ravine_to(tree, ravine, RavineLayout.RIDGE_FORK)
+			_expect(player.position.distance_to(RavineLayout.RIDGE_FORK) < 4.0,
+				"The rainy approach remains open between the bridge and the stone steps.")
+			await _capture_map_frame("06a-east-bank-rain")
+		await Campaign.walk_ravine_to(tree, ravine, RavineLayout.GRAVEL_SHOAL + Vector2(0, 12))
+		_expect(Geometry2D.is_point_in_polygon(player.position, PackedVector2Array(RavineLayout.GRAVEL_BAR)),
+			"The fishing platform still has dry standing room in the rain and frost.")
+		await _capture_map_frame("07a-shoal-rain" if day == 6 else "07b-shoal-frost")
+		await Campaign.walk_ravine_to(tree, ravine, RavineLayout.BRIDGE)
+	var landscape: Node2D = ravine.get_node("Landscape")
+	if not await _select_place("望溪台"):
+		return
+	await _click(map.close_button)
+	if not await _walk_route(false, "08a-lookout-steps-frost"):
+		return
+	_expect(RavineLayout.HERBS.distance_to(player.position) < 4.0 and landscape._surface_at(player.position) == TERRAIN_AUDIO.Surface.STONE,
+		"The steps and the landing remain usable in winter.")
+	await _capture_map_frame("08-lookout-frost")
+	state.advance_daylight((0.96 - state.day_progress) * state.balance.daylight_seconds)
+	await tree.create_timer(0.05).timeout
+	_expect(_lamp_at_lights(landscape, RELIEF.WEST_GATE_LAMP) and _lamp_at_lights(landscape, RELIEF.LOOKOUT_LAMP),
+		"The gate and the top of the steps both light up by night.")
+	print("RAVINE_MAP_LOOKOUT_NIGHT day=", state.current_day, " foot=", player.position)
+	await _capture_map_frame("09-lookout-lamp")
 
 func _load_journal_waypoint(location: Dictionary) -> bool:
 	await _click(map.journal_button)
@@ -290,6 +543,10 @@ func _check_journal() -> void:
 	var trap := ravine.get_node("PoolTrap") as Node2D
 	_expect(pool.position == RavineLayout.WILLOW_POOL and trap.position == RavineLayout.POOL_TRAP,
 		"The two upstream interactions sit at the ends of their marked lanes.")
+	var bank := PackedVector2Array(RavineLayout.WILLOW_BANK)
+	_expect(Geometry2D.is_point_in_polygon(player.position, bank)
+		and Geometry2D.is_point_in_polygon(trap.position + trap.stake_offset, bank),
+		"The fishing stand and upstream stake both sit on the drawn shelf.")
 	var float_point: Vector2 = pool.position + pool.water
 	var basket_point: Vector2 = trap.position + trap.water_offset
 	for point in [float_point, basket_point]:
@@ -321,10 +578,26 @@ func run(game_tree: SceneTree) -> void:
 	tree.current_scene.new_button.pressed.emit()
 	await tree.scene_changed
 	if await _plan_from_estate():
+		var estate_player: CharacterBody2D = tree.current_scene.get_node("World/Player")
+		var landscape: Node2D = tree.current_scene.get_node("World/Landscape")
 		await _move(&"ui_up", 48)
-		await _move(&"ui_right", 213)
-		if _bind_ravine() and await _cross_the_ravine():
-			await _check_journal()
+		if not map_capture_dir.is_empty():
+			await _check_courtyard_storage(estate_player, landscape)
+		await Campaign.walk_to(tree, estate_player, Vector2(359, 8))
+		_expect(landscape._surface_at(EstateLayout.EAST_GATE) == TERRAIN_AUDIO.Surface.STONE,
+			"The estate approach has a matching stone sill.")
+		await _capture_map_frame("00a-east-gate")
+		await _move(&"ui_right", 38)
+		if _bind_ravine():
+			await tree.process_frame
+			_check_junction_posts()
+			if await _cross_the_ravine():
+				await _check_journal()
+				if not tree.paused:
+					await _check_fruit()
+				if not map_capture_dir.is_empty() and not tree.paused:
+					await Campaign.walk_ravine_to(tree, ravine, RavineLayout.BRIDGE)
+					await _check_ravine_weather()
 	tree.paused = false
 	tree.unload_current_scene()
 	for node in tree.root.get_node("AudioManager").get_children():

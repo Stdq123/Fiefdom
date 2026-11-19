@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://bpxxmvu1g6joe"
+path="res://.godot/imported/fieldwork-tools.png-2b7df48043a1cae6da2723db53e64811.res"
+
+[deps]
+
+source_file="res://assets/world/fieldwork-tools.png"
+dest_files=["res://.godot/imported/fieldwork-tools.png-2b7df48043a1cae6da2723db53e64811.res"]
+
+[params]
+
+authored_at_2x=true

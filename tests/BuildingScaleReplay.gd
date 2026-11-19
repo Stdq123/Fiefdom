@@ -105,7 +105,7 @@ func _field_entry(terrain: Node2D) -> void:
 			"The player's feet fit across the painted approach.")
 	print("SCALE_FIELD bounds=", field.size, " approach=", approach.width)
 
-func _gate_passage(terrain: Node2D, gate: Area2D) -> void:
+func _gate_passage(terrain: Node2D, gate: Area2D, surface := TerrainAudio.Surface.STONE) -> void:
 	var near_base := Rect2()
 	var far_base := Rect2()
 	for sprite: Sprite2D in terrain.gate_bases:
@@ -125,7 +125,7 @@ func _gate_passage(terrain: Node2D, gate: Area2D) -> void:
 		and trigger.x == 8.0 and trigger.y + 14.0 <= gap,
 		"The gateway spans the road with room for feet on either side of its trigger.")
 	for y in [-7.0, 0.0, 7.0]:
-		_expect(terrain._surface_at(gate.position + Vector2(0.0, y)) == TerrainAudio.Surface.TRACK,
+		_expect(terrain._surface_at(gate.position + Vector2(0.0, y)) == surface,
 			"The road continues beneath the gateway across the player's foot span.")
 	print("SCALE_GATE map=", tree.current_scene.name, " gap=", gap, " trigger=", trigger)
 
@@ -163,12 +163,23 @@ func _opening() -> void:
 	await _snapshot("02-hall-door")
 	if not baseline:
 		var landing := hall.position + Vector2(0, -8)
-		for at: Vector2 in [hall.position + Vector2(0, 10), landing,
-			EstateLayout.PAVILION_APPROACH[1], EstateLayout.SOUTH_PAVILION + Vector2(0, 13)]:
+		for at: Vector2 in [Vector2(4, 73), EstateLayout.PAVILION_APPROACH[1], EstateLayout.SOUTH_PAVILION + Vector2(0, 13)]:
 			_expect(terrain._surface_at(at) == TerrainAudio.Surface.TRACK,
-				"The hall and pavilion approaches connect their entrances to walkable paths at %s." % at)
+				"The south road and pavilion approach remain dirt track at %s." % at)
+		var courtyard := hall.position + Vector2(0, 8)
+		_expect(terrain._surface_at(courtyard) == TerrainAudio.Surface.STONE
+			and terrain._surface_at(landing) == TerrainAudio.Surface.STONE, "The hall paving and treads are both stone.")
+		await _walk(Vector2(4, 73))
+		var steps: Array[AudioStream] = []
+		var audio: Node = terrain.terrain_audio
+		var record := func(_point: Vector2): steps.append(audio.footsteps.stream)
+		world.player.footstep.connect(record)
 		await _walk(landing)
-		_expect(world.player.position.distance_to(landing) < 5.0, "The player can stand at the hall steps.")
+		world.player.footstep.disconnect(record)
+		_expect(world.player.position.distance_to(landing) < 5.0
+			and steps.any(func(step: AudioStream) -> bool: return step in audio.STEPS[TerrainAudio.Surface.STONE]),
+			"Walking from the south road onto the hall steps uses an actual stone footstep.")
+		print("HALL_COURT_WALK courtyard=", courtyard, " stairs=", world.player.position, " steps=", steps.size())
 		await _snapshot("02b-hall-landing")
 	await _key(KEY_E)
 	var plan := ui.get_node_or_null("Control/NightRationsPanel") as Control

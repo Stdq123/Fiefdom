@@ -1,6 +1,7 @@
 extends Control
 
 const SEED_BUTTON := preload("res://scripts/SeedButton.gd")
+const VISITOR_NOTES_MAX_HEIGHT := 116.0
 
 @onready var day_label: Label = %DayLabel
 @onready var watch_label: Label = %WatchLabel
@@ -12,7 +13,7 @@ const SEED_BUTTON := preload("res://scripts/SeedButton.gd")
 @onready var ledger_toggle: Button = %LedgerToggle
 @onready var ledger_details: VBoxContainer = %LedgerDetails
 @onready var journal_details: Button = %JournalDetails
-@onready var gathering_label: Label = %GatheringLabel
+@onready var season_event_button: Button = %SeasonEventButton
 @onready var rank_label: Label = %RankLabel
 @onready var reputation_label: Label = %ReputationLabel
 @onready var money_label: Label = %MoneyLabel
@@ -20,8 +21,10 @@ const SEED_BUTTON := preload("res://scripts/SeedButton.gd")
 @onready var inventory_label: Label = %InventoryLabel
 @onready var well_field_label: Label = %WellFieldLabel
 @onready var tribute_button: Button = %TributeButton
+@onready var visitor_notes: ScrollContainer = %VisitorNotes
 @onready var visitor_label: Label = %VisitorLabel
 @onready var opening_action: Button = %OpeningAction
+@onready var rotation_guide_button: Button = %RotationGuideButton
 @onready var first_private_button: Button = %FirstPrivateButton
 @onready var handover_button: Button = %HandoverButton
 @onready var arrival: Label = %Arrival
@@ -29,10 +32,7 @@ const SEED_BUTTON := preload("res://scripts/SeedButton.gd")
 @onready var council_prep_button: Button = %CouncilPrepButton
 @onready var neighbors_button: Button = %NeighborsButton
 @onready var raid_alert: Button = %RaidAlert
-@onready var stamina_label: Label = %StaminaLabel
-@onready var stamina_bar: ProgressBar = %StaminaBar
-@onready var health_label: Label = %HealthLabel
-@onready var health_bar: ProgressBar = %HealthBar
+@onready var defense_report: Button = %DefenseReport
 @onready var practice_label: Label = %PracticeLabel
 @onready var driving_panel: PanelContainer = %DrivingPanel
 @onready var driving_status: Label = %DrivingStatus
@@ -40,6 +40,10 @@ const SEED_BUTTON := preload("res://scripts/SeedButton.gd")
 @onready var leave_cart: Button = %LeaveCart
 @onready var help_label: Label = %HelpLabel
 @onready var farm_status: Button = %FarmStatus
+@onready var sow_from_plan: Button = %SowFromPlan
+@onready var plan_actions: HBoxContainer = %PlanActions
+@onready var prepare_empty_plots: Button = %PrepareEmptyPlots
+@onready var replant_after_harvest: Button = %ReplantAfterHarvest
 @onready var pinned_order: Button = %PinnedOrder
 @onready var canal_controls: HBoxContainer = %CanalControls
 @onready var canal_preview: Label = %CanalPreview
@@ -63,6 +67,8 @@ const SEED_BUTTON := preload("res://scripts/SeedButton.gd")
 var seed_buttons: Dictionary = {}
 var save_notice_tween: Tween
 var fields_needing_water := 0
+var pavilion_story_available := false
+var pavilion_story_expected := false
 var reclamation_mode := false
 var indoors := false
 var driving := false
@@ -117,13 +123,21 @@ func _ready() -> void:
 		card.minimum_size_changed.connect(_fit_top_card.bind(card), CONNECT_DEFERRED)
 		_fit_top_card.call_deferred(card)
 	journal_details.toggled.connect(_toggle_journal_details)
+	var notes_bar := visitor_notes.get_v_scroll_bar()
+	notes_bar.theme_type_variation = &"HudJournalBar"
+	notes_bar.focus_mode = Control.FOCUS_ALL
+	visitor_label.minimum_size_changed.connect(_fit_visitor_notes, CONNECT_DEFERRED)
+	_toggle_journal_details(journal_details.button_pressed)
 	ledger_toggle.pressed.connect(_toggle_ledger_details)
 	%CoinIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
-	%HealthIcon.texture = HUDIcons.icon(HUDIcons.Symbol.HEALTH)
-	%StaminaIcon.texture = HUDIcons.icon(HUDIcons.Symbol.STAMINA)
+	%GrainIcon.texture = HUDIcons.icon(HUDIcons.Symbol.GRAIN)
 	calendar_button.icon = HUDIcons.icon(HUDIcons.Symbol.CALENDAR)
+	reclaim_button.icon = HUDIcons.icon(HUDIcons.Symbol.HOE)
+	channel_button.icon = HUDIcons.icon(HUDIcons.Symbol.WATER)
 	map_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
 	settings_button.icon = HUDIcons.icon(HUDIcons.Symbol.SETTINGS)
+	manage_button.icon = HUDIcons.icon(HUDIcons.Symbol.LEDGER)
+	rations_button.icon = HUDIcons.icon(HUDIcons.Symbol.RATIONS)
 	sleep_button.icon = HUDIcons.icon(HUDIcons.Symbol.MOON)
 	GameEvents.estate_arrived.connect(_show_arrival)
 	GameEvents.day_advanced.connect(arrival.hide.unbind(1))
@@ -133,12 +147,20 @@ func _ready() -> void:
 	_refresh_shortcuts()
 	GameEvents.silk_changed.connect(_refresh_silk_stock)
 	GameEvents.daylight_changed.connect(_refresh_watch)
+	GameEvents.field_wait_policy_changed.connect(_refresh_sleep_tooltip)
 	_refresh_watch()
-	GameEvents.health_changed.connect(_update_health)
 	GameEvents.season_order_pin_changed.connect(_refresh_pinned_order)
 	GameEvents.day_advanced.connect(_refresh_pinned_order.unbind(1))
 	GameEvents.inventory_changed.connect(_refresh_pinned_order.unbind(1))
+	GameEvents.management_visibility_changed.connect(_refresh_pinned_order.unbind(1))
+	GameEvents.management_visibility_changed.connect(_refresh_plan_seed_button.unbind(1))
+	GameEvents.farm_state_changed.connect(_refresh_plan_seed_button)
 	GameEvents.crop_harvested.connect(_refresh_pinned_order.unbind(1))
+	GameEvents.farm_state_changed.connect(_refresh_pinned_order)
+	GameEvents.channels_changed.connect(_refresh_pinned_order)
+	GameEvents.well_field_reclaimed.connect(_refresh_pinned_order.unbind(2))
+	GameEvents.retainer_recruited.connect(_refresh_pinned_order.unbind(1))
+	GameEvents.retainer_departed.connect(_refresh_pinned_order.unbind(1))
 	GameEvents.fish_changed.connect(_refresh_pinned_order)
 	GameEvents.silk_changed.connect(_refresh_pinned_order)
 	GameEvents.tax_reform_choice_made.connect(_refresh_pinned_order.unbind(1))
@@ -148,14 +170,20 @@ func _ready() -> void:
 	GameEvents.raid_defeated.connect(_refresh_raid_alert)
 	GameEvents.east_watch_built.connect(_refresh_raid_alert)
 	GameEvents.campaign_ended.connect(_refresh_raid_alert.unbind(1))
-	_update_health(Global.health)
 	_refresh_pinned_order()
 	_refresh_raid_alert()
 	refresh_morning_record()
 
 func _toggle_journal_details(expanded: bool) -> void:
-	visitor_label.visible = expanded
+	visitor_notes.visible = expanded
+	if expanded:
+		visitor_notes.scroll_vertical = 0
+		_fit_visitor_notes()
 	journal_details.text = "收起来客" if expanded else "封地手记"
+	journal_details.icon = journal_details.get_theme_icon(&"arrow" if expanded else &"arrow_collapsed", &"Tree")
+
+func _fit_visitor_notes() -> void:
+	visitor_notes.custom_minimum_size.y = minf(visitor_label.get_combined_minimum_size().y, VISITOR_NOTES_MAX_HEIGHT)
 
 func _toggle_ledger_details() -> void:
 	ledger_details.visible = not ledger_details.visible
@@ -173,12 +201,14 @@ func _show_arrival() -> void:
 
 func _refresh_raid_alert() -> void:
 	var tomorrow := Global.current_day + 1
-	raid_alert.visible = Global.outcome == Global.Outcome.RUNNING and (Global.raid_day > 0 or Global.is_raid_day(tomorrow))
+	var running := Global.outcome == Global.Outcome.RUNNING
+	defense_report.visible = running and Global.defense_review_ready()
+	raid_alert.visible = running and (Global.raid_day > 0 or Global.is_raid_day(tomorrow))
 	if not raid_alert.visible:
 		return
 	if Global.raid_day > 0:
 		raid_alert.text = "%s来袭 · 标出位置" % Global.raid_name(Global.raid_kind)
-		raid_alert.tooltip_text = "右键朝来敌射箭，侧走避开地面标记。"
+		raid_alert.tooltip_text = GamepadInput.bow_instruction() + "。侧走避开地面标记。"
 	else:
 		var threat := "明日有敌袭"
 		if Global.east_watch_day > 0:
@@ -192,20 +222,22 @@ func _refresh_pinned_order() -> void:
 	if not pinned_order.visible:
 		return
 	var amounts := ItemManager.describe_season_order_progress(schedule)
-	var harvest := Global.has_season_order_harvest(schedule)
-	if schedule.start > Global.current_day:
-		var next_action := "第 %d 天开收" % schedule.start
-		if harvest:
-			next_action = "收备货私田 · " + next_action
-		pinned_order.text = "下季备货   %s   ·   %s" % [amounts, next_action]
-		pinned_order.tooltip_text = pinned_order.text
-		return
-	var action := "第 %d 天截止" % schedule.end
+	var upcoming: bool = schedule.start > Global.current_day
+	var action := "第 %d 天开收" % schedule.start if upcoming else "第 %d 天截止" % schedule.end
 	if Global.can_deliver_season_order(schedule):
 		action = "去西市交货"
-	elif harvest:
-		action = "收备货私田"
-	pinned_order.text = "时令单   %s   ·   %s" % [amounts, action]
+	else:
+		var plan := Global.season_order_work(schedule)
+		if not plan.is_empty():
+			var label := ItemManager.crop_label(plan.crop_id)
+			match int(plan.action):
+				Global.OrderWork.HARVEST: action = "收备货私田"
+				Global.OrderWork.WATER: action = "给%s浇水" % label
+				Global.OrderWork.SOW:
+					action = "种%s · 第 %d 天开收" % [label, schedule.start] if upcoming else "种%s · 第 %d 天截止" % [label, schedule.end]
+				Global.OrderWork.WAIT: action = "%s最早第 %d 天收" % [label, plan.day]
+	var heading := "下季备货" if upcoming else "时令单"
+	pinned_order.text = "%s   %s   ·   %s" % [heading, amounts, action]
 	pinned_order.tooltip_text = pinned_order.text
 
 func _refresh_silk_stock() -> void:
@@ -236,6 +268,7 @@ func _refresh_shortcuts() -> void:
 		var shortcut := seed_buttons[id].get_node("Shortcut") as Label
 		shortcut.text = Preferences.seed_label(id)
 		shortcut.visible = not pad
+	_refresh_raid_alert()
 	refresh_seed_calendar()
 
 func _refresh_watch() -> void:
@@ -281,16 +314,26 @@ func refresh_rations() -> void:
 	elif Global.tribute_penalty_tonight() > 0:
 		rations_button.text = "今夜安排 · 纳贡到期"
 		tone = Color("#efbf8a")
+	elif pavilion_story_available:
+		rations_button.text = "今夜安排 · " + PavilionRest.STORY_LABEL
+		tone = Color("#f1d38d")
 	elif plan.missing > 0:
 		rations_button.text = "今夜安排 · 口粮可补足"
 		tone = Color("#c7dcaf")
 	elif fields_needing_water > 0:
 		rations_button.text = "今夜安排 · %d 格缺水" % fields_needing_water
 		tone = Color("#efbf8a")
+	elif pavilion_story_expected:
+		rations_button.text = "今夜安排 · 亭中有约"
+		tone = Color("#f1d38d")
 	else:
 		rations_button.text = "今夜安排"
 	rations_button.add_theme_color_override("font_color", tone)
 	rations_button.tooltip_text = "查看田务和用粮\n粮仓 %d 份 · 今夜所需 %d 份" % [Global.food_storage, plan.need]
+	if pavilion_story_available:
+		rations_button.tooltip_text += "\n邻居已入席，可指路去听灯下小谈。"
+	elif pavilion_story_expected:
+		rations_button.tooltip_text += "\n%s起有小谈，可先去亭边候席。" % PavilionRest.rest_watch()
 
 func refresh_tribute() -> void:
 	var due := Global.tribute_deadline()
@@ -307,6 +350,8 @@ func refresh_tribute() -> void:
 
 func _refresh_sleep_tooltip() -> void:
 	sleep_button.tooltip_text = "结束今天，恢复体力"
+	if Global.wait_for_fields_before_sleep:
+		sleep_button.tooltip_text += "\n已安排门客在剩余时辰先收工。"
 	if fields_needing_water > 0:
 		sleep_button.tooltip_text += "\n%d 格作物缺水会停长。查看「今夜安排」。" % fields_needing_water
 	var penalty := Global.tribute_penalty_tonight()
@@ -335,6 +380,9 @@ func setup_seeds(ids: Array, select_seed: Callable) -> void:
 		var icon := TextureRect.new()
 		icon.texture = picture.texture
 		icon.self_modulate = picture.tint
+		if HUDIcons.CROPS.has(id):
+			icon.texture = HUDIcons.icon(HUDIcons.CROPS[id])
+			icon.self_modulate = Color.WHITE
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -362,20 +410,41 @@ func _slot_label(slot: Button, text: String, at: Vector2, font_size: int, ink: C
 	slot.add_child(label)
 	return label
 
-func show_seed(seed_id: String) -> void:
+func show_seed(seed_id: String, from_plan: bool, prepare: bool, replant: bool) -> void:
 	var crop := ItemManager.get_crop(seed_id)
 	if not crop:
 		return
 	seed_slots.show()
 	farm_status.show()
 	canal_controls.hide()
+	sow_from_plan.set_pressed_no_signal(from_plan)
+	prepare_empty_plots.set_pressed_no_signal(prepare)
+	replant_after_harvest.set_pressed_no_signal(replant)
+	_refresh_plan_seed_button()
 	for id in seed_buttons:
-		seed_buttons[id].set_pressed_no_signal(id == seed_id)
+		seed_buttons[id].set_pressed_no_signal(not from_plan and id == seed_id)
+	if from_plan:
+		var batch_key := "LT" if GamepadInput.active else Preferences.key_label(KeyBindings.FILL)
+		if replant:
+			help_label.text = "按住 %s 预览批量田务" % batch_key
+		else:
+			help_label.text = "按住 %s 预览整备" % batch_key if prepare else "空畦按各格安排选种"
+		return
 	var nights := Global.sowing_nights(crop)
 	var seasonal := "当令 " if nights < crop.days_to_grow else ""
 	var water := " · 需通水" if crop.is_water_crop else ""
 	var name_in_belt := SEED_BUTTON.display_name(seed_id, crop.crop_name)
 	help_label.text = "%s · %s%d 夜%s" % [name_in_belt, seasonal, nights, water]
+
+func _refresh_plan_seed_button() -> void:
+	sow_from_plan.visible = not canal_controls.visible and (sow_from_plan.button_pressed or not Global.field_seed_plans.is_empty())
+	plan_actions.visible = sow_from_plan.visible and sow_from_plan.button_pressed
+	if sow_from_plan.visible:
+		var batch_key := "LT" if GamepadInput.active else Preferences.key_label(KeyBindings.FILL)
+		var batch_task := "整备" if prepare_empty_plots.button_pressed else "整田播种"
+		sow_from_plan.tooltip_text = "依各格续播安排选种。按住 %s 预览%s。" % [batch_key, batch_task]
+		prepare_empty_plots.tooltip_text = "按住 %s 预览翻地、播种和浇水。空的计划田才整备，缺水才浇。" % batch_key
+		replant_after_harvest.tooltip_text = "按住 %s 指向成熟作物，预览批收、下茬和耗体力。只给本次收下且可播的计划田续播。" % batch_key
 
 func refresh_seed_calendar() -> void:
 	var tomorrow := Global.current_day + 1
@@ -413,6 +482,8 @@ func refresh_farm_status() -> void:
 func show_channel_help(message: String) -> void:
 	seed_slots.hide()
 	farm_status.hide()
+	sow_from_plan.hide()
+	plan_actions.hide()
 	canal_controls.show()
 	channel_message = message
 	refresh_channel_help()
@@ -443,9 +514,3 @@ func show_survey_mode(active: bool) -> void:
 func show_field_gate_mode(active: bool) -> void:
 	field_gate_button.text = "取消装闸" if active else "装田口闸"
 	show_channel_help("选通水一侧的田边中格 · 每块井田一闸" if active else "把水渠接到水源")
-
-func _update_health(health: int) -> void:
-	health_label.text = "气血 %d / %d" % [health, Global.balance.player_max_health]
-	health_label.add_theme_color_override("font_color", Color("#8d3529") if health * 3 < Global.balance.player_max_health else Color("#37291c"))
-	health_bar.max_value = Global.balance.player_max_health
-	health_bar.value = health

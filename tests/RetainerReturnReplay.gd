@@ -45,9 +45,7 @@ func _talk_to(speaker: String) -> Control:
 	var visitor: Node2D = world.neighbor_actor(speaker)
 	if not _expect(visitor != null, speaker + " returns on the scheduled morning."):
 		return null
-	if speaker == KEEPER and world.player.global_position.y < 140.0:
-		await Campaign.walk_to(tree, world.player, Vector2(16, 159))
-	await Campaign.walk_to(tree, world.player, visitor.global_position + Vector2(0, 16))
+	await Campaign.walk_estate_road_to(tree, world, visitor.global_position + Vector2(0, 16))
 	_key(KEY_E)
 	await tree.process_frame
 	var dialog := ui.get_node_or_null("Control/DialoguePanel") as Control
@@ -73,7 +71,7 @@ func _reach_keeper_visit() -> void:
 			"field_number": 1, "crop_id": "wheat", "signed_day": 10},
 	})
 	await _continue()
-	await _sleep()
+	await _sleep("", true)
 	_expect(state.current_day == 50 and state.retainers.size() == 1 and state.retainers[0].name == TEACHER
 		and state.night_rations.last.departed == PackedStringArray([KEEPER, REELER]),
 		"The shortage sends the unfed keeper and reeler away while the teacher stays.")

@@ -26,6 +26,7 @@ func _continue_from_title() -> void:
 
 func _check_closed_gate() -> bool:
 	var gate := world.get_node("RavineTrailGate") as Node2D
+	await _look_at_fork(false)
 	await Campaign.walk_estate_road_to(tree, world, gate.global_position + Vector2(-18, 3))
 	Input.action_press(&"ui_right")
 	for frame in 22:
@@ -34,9 +35,16 @@ func _check_closed_gate() -> bool:
 	await tree.process_frame
 	var blocked := _expect(tree.current_scene.scene_file_path == state.ESTATE_SCENE
 		and world.player.position.x < gate.position.x and not gate.get_node("Barrier/Shape").disabled
-		and "未开" in gate.get_node("Caption").text, "The bamboo bar blocks the route before handing in the three notes.")
+		and "向蒲宁交还三处水迹" in gate.get_node("Caption").text,
+		"The bamboo bar blocks the route and names the requirement at the gate.")
 	await _snapshot("01-closed-gate")
 	return blocked
+
+func _look_at_fork(open: bool) -> void:
+	await Campaign.walk_estate_road_to(tree, world, EstateLayout.FESTIVAL_FORK)
+	var post := world.get_node_or_null("Scenery/竹涧小径路牌") as Sprite2D
+	_expect(post != null and post.is_visible_in_tree() == open, "The path sign appears at the fork only when the gate is open.")
+	await _snapshot("02a-open-fork" if open else "00-closed-fork")
 
 func _hand_in_survey() -> bool:
 	var guide: Node2D = world.neighbor_actor(VisitorData.RAVINE_GUIDE)
@@ -105,7 +113,7 @@ func _reach_shoal(use_shortcut: bool) -> Node2D:
 	print("SHORTCUT_WALK gate=", "south" if use_shortcut else "east", " seconds=", snappedf(seconds, 0.01))
 	return ravine
 
-func _save_in_ravine(ravine: Node2D, hint: String) -> bool:
+func _save_in_ravine(ravine: Node2D) -> bool:
 	await _key(KEY_ESCAPE)
 	var panel: Control = ravine.settings
 	if not _expect(panel.visible and tree.paused, "Open the normal settings panel in the ravine."):
@@ -114,8 +122,9 @@ func _save_in_ravine(ravine: Node2D, hint: String) -> bool:
 		if button.text == "保存游戏":
 			await _button(button)
 			break
-	_expect(panel.save_status.text == "游戏已保存 · " + hint and state.latest_saved_game().get("location") == "竹涧",
-		"Saving names the resume point and keeps the ravine in the save archive.")
+	var message := "游戏已保存 · 从竹涧西门继续" if baseline else "游戏已保存"
+	_expect(panel.save_status.text == message and state.latest_saved_game().get("location") == "竹涧",
+		"Saving keeps the ravine in the save archive.")
 	await _snapshot("05-save")
 	await _button(panel.close_button)
 	return not failed
@@ -129,17 +138,38 @@ func _choose_south_exit(ravine: Node2D) -> void:
 	await _snapshot("04-ravine-route")
 	await _key(KEY_ESCAPE)
 
+func _choose_field_return(ravine: Node2D) -> void:
+	await _key(KEY_M)
+	var chart: Control = ravine.ravine_map
+	await _button(chart.get_node("%RegionMap"))
+	var overview: Control = chart.region_map
+	await _button(overview.region_buttons.get_node("Estate"))
+	await _button(overview.destination_buttons[state.FIELD_RETURN])
+	_expect(overview.route_label.text == "竹涧 → 封地 · 经南路小径 → 井田 1",
+		"From the shoal, the preview picks the shorter ravine leg through the open south gate.")
+	await _snapshot("return-shoal-region")
+	await _button(overview.route_button)
+	_expect(not tree.paused and ravine.active_waypoint() == SOUTH_PATH and state.market_trip_target == state.FIELD_RETURN,
+		"Confirming the regional trip directs the player through the shortcut.")
+	await _snapshot("return-shoal-south-route")
+
 func _walk_back(ravine: Node2D) -> void:
 	await Campaign.walk_ravine_to(tree, ravine, ravine.get_node("SouthTrailArrival").position)
 	if not await _cross(&"ui_down", state.ESTATE_SCENE):
 		return
 	await _estate()
+	await tree.create_timer(0.05).timeout
 	var player := world.player as Player
 	_expect(player.position.distance_to(world.get_node("RavineTrailArrival").position) < 3.0
 		and player.facing_direction() == Vector2.LEFT and state.king_storage == 2 and state.food_storage == 14
 		and state.active_crops.get(CROP, {}).get("watered", false),
 		"The return lands beside the south road and keeps the estate's tribute, food and watered crop.")
 	await _snapshot("07-south-estate-return")
+	if not legacy:
+		var route: PackedVector2Array = ui.directions.road_path
+		var entrance: Vector2 = world.get_node("Landscape").field_approaches[0][-1]
+		_expect(state.market_trip_target == state.FIELD_RETURN and route.has(EstateLayout.FESTIVAL_FORK) and not route.is_empty()
+			and route[-1] == entrance, "The south gate also hands off to the marked field.")
 
 func _legacy_route() -> void:
 	await _continue_from_title()
@@ -166,33 +196,41 @@ func _play() -> void:
 		return
 	world.player.arrive_at_position(EstateLayout.SOUTH_PAVILION + Vector2(0, 21), Vector2.DOWN)
 	if not baseline:
+		await _look_at_fork(true)
 		await _choose_shoal_from_estate()
 	var ravine := await _reach_shoal(not baseline)
 	if ravine == null:
 		return
+	if not baseline:
+		var return_post := ravine.get_node_or_null("Scenery/南路小径路牌") as Sprite2D
+		_expect(return_post != null and return_post.is_visible_in_tree(), "The unlocked trail is signed on the ravine side too.")
 	var fish_id: String = state.fish_at_today(CreekFish.Site.SHOAL)
 	if not await _catch_at(ravine.get_node("GravelShoal"), fish_id, ""):
 		return
 	if baseline:
 		ravine.ravine_map.follow_place("柳湾")
-		await _save_in_ravine(ravine, "从竹涧西门继续")
+		await _save_in_ravine(ravine)
 		return
-	await _choose_south_exit(ravine)
+	await _choose_field_return(ravine)
 	var stamina: int = state.current_stamina
 	var health: int = state.health
 	var time: float = state.day_progress
-	if not await _save_in_ravine(ravine, "从竹涧南路小径继续"):
+	var walker := ravine.get_node("Player") as Player
+	var saved_foot := walker.global_position
+	var saved_facing := walker.facing_direction()
+	if not await _save_in_ravine(ravine):
 		return
 	await _continue_from_title()
 	ravine = tree.current_scene
 	if not _expect(ravine.scene_file_path == state.WILDERNESS_SCENE
-		and ravine.get_node("Player").position.distance_to(ravine.get_node("SouthTrailArrival").position) < 3.0,
-		"The new save continues at the south entrance."):
+		and ravine.get_node("Player").global_position.is_equal_approx(saved_foot)
+		and ravine.get_node("Player").facing_direction() == saved_facing,
+		"The new save continues beside the shallows."):
 		return
 	_expect(state.current_stamina == stamina and state.health == health and absf(state.day_progress - time) < 0.01
 		and state.fish_count(fish_id) == 1 and state.last_fishing_day == 7 and state.last_forage_day != 7
-		and ravine.active_waypoint() == SOUTH_PATH,
-		"Continue preserves clock, vitals, catch and the selected exit.")
+		and ravine.active_waypoint() == SOUTH_PATH and state.market_trip_target == state.FIELD_RETURN,
+		"Continue preserves clock, vitals, catch, the selected exit and the field beyond it.")
 	await _snapshot("06-south-resume")
 	await _walk_back(ravine)
 	print("SHORTCUT_ROUND_TRIP day=", state.current_day, " fish=", fish_id, " food=", state.food_storage)

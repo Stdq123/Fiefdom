@@ -44,40 +44,48 @@ func place_lamp(layer: Node2D, foot: Vector2, radius_scale := 1.0, ignition := -
 
 func refresh(delta := 0.0) -> void:
 	var dusk := Global.dusk_amount()
+	var winter := Global.season_index() == Global.Season.WINTER
 	color = Color("#efe0c6").lerp(Color("#be9b88"), dusk) if Global.is_indoors() else _sky.sample(Global.day_progress)
 	_flicker = fposmod(_flicker + delta, TAU * 4.0)
 	for index in lamps.size():
 		var phase := _flicker * 4.0 + float(index) * 2.1
 		var flicker := 0.72 + 0.045 * sin(phase) + 0.025 * sin(phase * 2.75)
 		var ignition := lamps[index].ignition
-		lamps[index].set_glow(smoothstep(ignition, ignition + LAMP_RISE, dusk) * flicker)
+		lamps[index].set_glow(smoothstep(ignition, ignition + LAMP_RISE, dusk) * flicker, winter)
 
 class Lantern extends Node2D:
+	const ART := preload("res://assets/world/bronze-path-lamps.png")
+	const CELL := Vector2(16, 24)
+	const AT := Vector2(-8, -22)
+	const WINDOW := Rect2(3, 5, 10, 9)
 	var glow := PointLight2D.new()
 	var ignition := 0.0
-	var _lit := false
+	var _ember := 0
+	var _frost := false
 
 	func _init() -> void:
-		glow.position = Vector2(0, -11)
+		glow.position = AT + WINDOW.get_center()
 		glow.color = Color("#ffbc75")
 		glow.range_z_max = 4
 		glow.enabled = false
 		add_child(glow)
 
-	func set_glow(strength: float) -> void:
+	func set_glow(strength: float, winter: bool) -> void:
 		glow.enabled = strength > 0.005
 		glow.energy = strength
-		if glow.enabled != _lit:
-			_lit = glow.enabled
+		var ember := clampi(roundi(strength * 10.0), 0, 7)
+		if ember != _ember or _frost != winter:
+			_ember = ember
+			_frost = winter
 			queue_redraw()
 
 	func _draw() -> void:
-		draw_rect(Rect2(-5, -1, 10, 2), Color("#26333088"))
-		draw_rect(Rect2(-3, -3, 6, 3), Color("#777460"))
-		draw_rect(Rect2(-1, -10, 2, 8), Color("#78583d"))
-		draw_rect(Rect2(-4, -16, 8, 7), Color("#493a2c"))
-		draw_rect(Rect2(-3, -15, 6, 4), Color("#edac5c") if _lit else Color("#8a7756"))
-		if _lit:
-			draw_rect(Rect2(-1, -14, 2, 3), Color("#ffe0a1"))
-		draw_rect(Rect2(-5, -17, 10, 2), Color("#624b38"))
-		draw_rect(Rect2(-3, -18, 6, 1), Color("#907454"))
+		var source := Vector2(0, CELL.y if _frost else 0.0)
+		draw_set_transform(Vector2(1, 0.5), 0.0, Vector2(1.0, 0.31))
+		draw_circle(Vector2.ZERO, 4.8, Color("#26333060"))
+		draw_set_transform(Vector2.ZERO)
+		draw_texture_rect_region(ART, Rect2(AT, CELL), Rect2(source, CELL))
+		if _ember > 0:
+			var flame := Rect2(source + Vector2(CELL.x, 0) + WINDOW.position, WINDOW.size)
+			draw_texture_rect_region(ART, Rect2(AT + WINDOW.position, WINDOW.size),
+				flame, Color(1, 1, 1, _ember / 7.0))

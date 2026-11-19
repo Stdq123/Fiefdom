@@ -1,5 +1,7 @@
 extends Node
 
+enum TradeCue { SALE, PURCHASE, STORE_FOOD }
+
 const SFX_SAMPLE_RATE := 22050
 # Indexed by Player.Action from TILL through HARVEST.
 const FIELD_SOUND_PATHS := [
@@ -11,8 +13,19 @@ const FIELD_SOUND_PATHS := [
 const FIELD_REPEAT_SECONDS := 0.09
 const CEREMONY_BELL := preload("res://assets/audio/music/bronze-bell.wav")
 const BAMBOO_SLIPS := preload("res://assets/audio/rotation-slip.wav")
+const FIRST_TRIBUTE_CUE := preload("res://assets/audio/ledger/first-tribute.wav")
+const TRADITION_CUE := preload("res://assets/audio/ledger/council-tribute.wav")
+const REFORM_CUE := preload("res://assets/audio/ledger/council-tax.wav")
+const RESEARCH_CUE := preload("res://assets/audio/ledger/council-research.wav")
+const LEDGER_MUSIC_GAIN := 0.70
+const TRADE_CUES := [
+	preload("res://assets/audio/market/coins-received.wav"),
+	preload("res://assets/audio/market/purchase.wav"),
+	preload("res://assets/audio/market/grain-stored.wav"),
+]
 const TITLE_SCORE := "res://assets/audio/music/score-title.ogg"
 const RAVINE_SCORE := "res://assets/audio/music/score-ravine.ogg"
+const WEST_MARKET_SCORE := "res://assets/audio/music/score-west-market.ogg"
 const SEASON_SCORES := [
 	"res://assets/audio/music/score-spring.ogg",
 	"res://assets/audio/music/score-summer.ogg",
@@ -82,12 +95,13 @@ func _ready() -> void:
 			field_sounds.append(load(path))
 	_sync_score.call_deferred()
 
-func set_world_ambience(creek_distance: float, birds_distance: float, cricket_distance: float) -> void:
+func set_world_ambience(creek_distance: float, birds_distance: float, cricket_distance: float,
+		under_roof := false) -> void:
 	var season := Global.season_index()
 	var birds := birds_distance if season != Global.Season.WINTER else INF
 	var crickets := cricket_distance if season in [Global.Season.SUMMER, Global.Season.AUTUMN] else INF
 	terrain_audio.set_ambience(creek_distance, Global.has_rain(), birds, crickets,
-		Global.dusk_amount(), Global.is_indoors())
+		Global.dusk_amount(), under_roof or Global.is_indoors())
 
 func _sync_score() -> void:
 	var scene := get_tree().current_scene
@@ -98,8 +112,10 @@ func _sync_score() -> void:
 		Global.TITLE_SCENE:
 			terrain_audio.fade_out()
 			path = TITLE_SCORE
-		Global.ESTATE_SCENE, Global.WEST_ROAD_SCENE, Global.WEST_MARKET_SCENE:
+		Global.ESTATE_SCENE, Global.WEST_ROAD_SCENE:
 			path = SEASON_SCORES[Global.season_index()]
+		Global.WEST_MARKET_SCENE:
+			path = WEST_MARKET_SCORE
 		Global.WILDERNESS_SCENE:
 			path = RAVINE_SCORE
 		_:
@@ -167,7 +183,10 @@ func play_field_action(action: int) -> void:
 	sfx_player.stream = sound
 	sfx_player.play()
 
-func play_sfx(stream: AudioStream, volume := 0.0, pitch := 1.0) -> void:
+func play_trade_cue(cue: TradeCue) -> void:
+	play_sfx(TRADE_CUES[cue], -9.0)
+
+func play_sfx(stream: AudioStream, volume := 0.0, pitch := 1.0, music_gain := 1.0) -> void:
 	if DisplayServer.get_name() == "headless":
 		return
 	var player := AudioStreamPlayer.new()
@@ -177,6 +196,8 @@ func play_sfx(stream: AudioStream, volume := 0.0, pitch := 1.0) -> void:
 	player.pitch_scale = pitch
 	player.finished.connect(player.queue_free)
 	add_child(player)
+	if music_gain < 1.0:
+		duck_music_for(player, music_gain)
 	player.play()
 
 func play_world_sfx(stream: AudioStream, source: Node2D, volume := 0.0, hearing_range := 450.0) -> void:
@@ -211,7 +232,7 @@ func play_event_sound(event_type: String) -> void:
 			# Pleasant notification
 			_play_tone_sequence([523, 659], 0.15)  # C5, E5
 		"first_tribute":
-			play_sfx(CEREMONY_BELL, -12.0, 1.26)
+			play_sfx(FIRST_TRIBUTE_CUE, -7.0, 1.0, LEDGER_MUSIC_GAIN)
 		"present_ledger":
 			play_sfx(BAMBOO_SLIPS, -10.0)
 		"hurt":
@@ -240,14 +261,23 @@ func _make_tone_sequence(frequencies: Array, duration: float) -> AudioStreamWAV:
 
 # Event handlers
 func _on_rank_changed(new_rank: Global.Rank) -> void:
-	print("Audio: Playing rank up sound!")
-	play_event_sound("rank_up")
+	var record := Global.rank_record
+	if record.get("day") == Global.current_day and record.get("rank") == new_rank and record.previous > new_rank:
+		play_sfx(BAMBOO_SLIPS, -11.0, 0.82)
+	else:
+		play_event_sound("rank_up")
 
 func _on_tax_reform_triggered() -> void:
 	play_sfx(CEREMONY_BELL, -12.0, 0.78)
 
-func _on_tax_reform_choice(_choice: Global.TaxReformChoice) -> void:
-	play_sfx(BAMBOO_SLIPS, -8.0)
+func _on_tax_reform_choice(choice: Global.TaxReformChoice) -> void:
+	match choice:
+		Global.TaxReformChoice.TRADITIONAL:
+			play_sfx(TRADITION_CUE, -7.0, 1.0, LEDGER_MUSIC_GAIN)
+		Global.TaxReformChoice.REFORMED:
+			play_sfx(REFORM_CUE, -7.0, 1.0, LEDGER_MUSIC_GAIN)
+		Global.TaxReformChoice.DELAYED:
+			play_sfx(RESEARCH_CUE, -7.0)
 
 func _on_well_field_added(field_id: int) -> void:
 	print("Audio: Playing well field added sound!")

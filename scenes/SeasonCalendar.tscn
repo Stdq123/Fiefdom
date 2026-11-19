@@ -36,7 +36,7 @@ theme_override_constants/separation = 15
 
 [node name="Header" type="HBoxContainer" parent="MapModal/Center/Book/Stack"]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 14
 
 [node name="Title" type="Label" parent="MapModal/Center/Book/Stack/Header"]
 layout_mode = 2
@@ -49,6 +49,27 @@ unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.72, 0.81, 0.68, 1)
+
+[node name="PreviousYear" type="Button" parent="MapModal/Center/Book/Stack/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "上一年"
+
+[node name="NextYear" type="Button" parent="MapModal/Center/Book/Stack/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(96, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "下一年"
+
+[node name="Today" type="Button" parent="MapModal/Center/Book/Stack/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(104, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "回到今日"
 
 [node name="CloseMap" type="Button" parent="MapModal/Center/Book/Stack/Header"]
 unique_name_in_owner = true
@@ -131,10 +152,24 @@ layout_mode = 2
 [node name="Rule" type="HSeparator" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
 layout_mode = 2
 
-[node name="Order" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+[node name="OrderRow" type="HBoxContainer" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Order" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column/OrderRow"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/line_spacing = 5
+autowrap_mode = 3
+
+[node name="OrderBook" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/OrderRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+text = "查看交货簿"
 
 [node name="Event" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
 unique_name_in_owner = true
@@ -144,9 +179,56 @@ theme_override_colors/font_color = Color(0.95, 0.82, 0.57, 1)
 theme_override_constants/line_spacing = 5
 autowrap_mode = 3
 
-[node name="Guide" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+[node name="PantryNote" type="Label" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.84, 0.68, 1)
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+
+[node name="Routes" type="HBoxContainer" parent="MapModal/Center/Book/Stack/Pages/Details/Column"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Guide" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Routes"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
-size_flags_horizontal = 0
 mouse_default_cursor_shape = 2
+
+[node name="FishGuide" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Routes"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+
+[node name="KeepSamples" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Routes"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+toggle_mode = true
+tooltip_text = "夜间备粮为秋社各留一份谷样，最多三种。"
+
+[node name="KeepPorridge" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Routes"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+toggle_mode = true
+text = "留麦菽粥料"
+tooltip_text = "夜间备粮会给麦菽粥留料。再按一次取消。"
+
+[node name="KeepSoup" type="Button" parent="MapModal/Center/Book/Stack/Pages/Details/Column/Routes"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+toggle_mode = true
+text = "留鱼麦羹用麦"
+tooltip_text = "夜间备粮会给鱼麦羹留一份麦。再按一次取消。"

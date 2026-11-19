@@ -1,6 +1,5 @@
 extends Node2D
 
-const FLEECE := preload("res://assets/world/sheepfold/farm-sheep.webp")
 const BLEAT := preload("res://assets/world/sheepfold/sheep-bleat.ogg")
 const SHELTER := Vector2(-12, 7)
 const FEEDING_SPOT := Vector2(3, 18)
@@ -15,7 +14,6 @@ const PADDOCK := [Vector2(-43, 1), Vector2(42, 1), Vector2(44, 48),
 	Vector2(-15, 53), Vector2(-36, 55), Vector2(-44, 48)]
 
 @onready var animal: Sprite2D = $Paddock/Sheep
-@onready var short_coat: Texture2D = $Paddock/Sheep.texture
 @onready var landscape: Node2D = $"../Landscape"
 @onready var ground: Node2D = $Paddock/Yard
 @onready var hay: Sprite2D = $Paddock/Trough/Fodder
@@ -42,8 +40,7 @@ func _refresh() -> void:
 	if not visible:
 		return
 	var grown := flock.wool_nights >= mini(3, Global.balance.sheep_wool_nights)
-	animal.texture = FLEECE if grown else short_coat
-	animal.scale = Vector2.ONE * (0.25 if grown else 1.0)
+	animal.frame = int(grown)
 	hay.visible = flock.fodder > 0
 	for bale: Sprite2D in haystack.get_children():
 		bale.visible = bale.get_index() < flock.fodder
@@ -85,7 +82,7 @@ func _update_sheep(delta: float) -> void:
 	elif grazing and not moving and pose_time > 2.8:
 		tilt = 0.09
 	animal.rotation = -tilt if animal.flip_h else tilt
-	animal.offset.y = (lift - 6.0) / animal.scale.y
+	animal.offset.y = lift - 8.0
 
 func _draw_yard() -> void:
 	ground.draw_colored_polygon(PackedVector2Array(PADDOCK), YARD_COLORS[Global.season_index()])

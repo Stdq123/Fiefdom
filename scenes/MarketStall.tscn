@@ -10,14 +10,16 @@ size = Vector2(72, 26)
 script = ExtResource("1_stall")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-offset = Vector2(0, -28)
+centered = false
+offset = Vector2(-49, -61)
 
 [node name="Keeper" type="Sprite2D" parent="."]
-position = Vector2(0, -26)
-hframes = 3
+position = Vector2(0, -28)
+texture_filter = 1
 
 [node name="CounterFront" type="Sprite2D" parent="."]
-offset = Vector2(0, -28)
+centered = false
+offset = Vector2(-49, -61)
 
 [node name="Stand" type="StaticBody2D" parent="."]
 collision_mask = 0
@@ -25,6 +27,9 @@ collision_mask = 0
 [node name="CounterBase" type="CollisionShape2D" parent="Stand"]
 position = Vector2(0, -14)
 shape = SubResource("CounterBase")
+
+[node name="SideFoot" type="CollisionPolygon2D" parent="Stand"]
+polygon = PackedVector2Array(33, -24, 44, -29, 44, -9, 33, -3)
 
 [node name="Sign" type="Label" parent="."]
 material = ExtResource("2_hint")

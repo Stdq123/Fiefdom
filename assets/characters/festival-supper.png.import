@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://c4apm6tqj5vne"
+path="res://.godot/imported/festival-supper.png-138cb26fb316a79a15ed49a51d0a5653.res"
+
+[deps]
+
+source_file="res://assets/characters/festival-supper.png"
+dest_files=["res://.godot/imported/festival-supper.png-138cb26fb316a79a15ed49a51d0a5653.res"]
+
+[params]
+
+authored_at_2x=true

@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://cxjwvvh6of6ds"
+path="res://.godot/imported/market-porter.png-80c994dcb6752c5d64e7916c7ce3f90d.res"
+
+[deps]
+
+source_file="res://assets/characters/market-porter.png"
+dest_files=["res://.godot/imported/market-porter.png-80c994dcb6752c5d64e7916c7ce3f90d.res"]
+
+[params]
+
+authored_at_2x=true

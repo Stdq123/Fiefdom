@@ -28,6 +28,7 @@ const BUILDINGS := preload("res://assets/world/estate-buildings.svg")
 const LOOKOUT := preload("res://assets/world/stone-lookout.svg")
 const TREES := preload("res://assets/world/seasonal-trees.svg")
 const MARKET_CHOICES := MarketStall.TITLES + [Global.MARKET_ORDERS]
+const ESTATE_CHOICES := [Global.MARKET_RETURN] + Global.ESTATE_REGIONAL_STOPS
 const SEAL_RADIUS := 11.0
 const HERE_RADIUS := 23.0
 
@@ -41,6 +42,7 @@ const HERE_RADIUS := 23.0
 @onready var route_button: Button = %Follow
 @onready var clear_button: Button = %ClearDirections
 @onready var region_buttons: HBoxContainer = %Regions
+@onready var stall_art: Texture2D = load(MarketStall.ART_PATH)
 
 var region := Region.ESTATE
 var selected := Region.ESTATE
@@ -105,7 +107,7 @@ func _refresh_on_open() -> void:
 	_refresh_selection()
 
 func _region_for(place: String) -> Region:
-	if place in [Global.MARKET_RETURN, Global.WATER_SOURCE]:
+	if place in ESTATE_CHOICES:
 		return Region.ESTATE
 	if place == Sheepfold.MEADOW:
 		return Region.ROAD
@@ -113,7 +115,7 @@ func _region_for(place: String) -> Region:
 
 func _active_destination() -> String:
 	var place: String = active_trip.call()
-	var listed := (place in [Global.MARKET_RETURN, Global.WATER_SOURCE, Sheepfold.MEADOW]
+	var listed := (place in ESTATE_CHOICES or place == Sheepfold.MEADOW
 		or place in MARKET_CHOICES or place in Global.ravine_trip_places())
 	return place if listed else ""
 
@@ -153,7 +155,18 @@ func _refresh_selection() -> void:
 		Region.ESTATE:
 			if region != Region.ESTATE:
 				_add_destination(Global.MARKET_RETURN, "回封地")
+			var work := Global.field_return_caption()
+			if work.is_empty():
+				_add_destination(Global.FIELD_RETURN, Global.FIELD_RETURN, "沿路走到第一块井田的田口")
+			else:
+				_add_destination(Global.FIELD_RETURN, "接着田务", work)
 			_add_destination(Global.WATER_SOURCE, "水源", "到泉边查看引水与水利研习")
+			if not Global.pending_freight_receipt().is_empty() or Global.market_trip_target == Global.FREIGHT_YARD:
+				_add_destination(Global.FREIGHT_YARD, Global.FREIGHT_YARD, "货到后可和申禾交谈")
+			if Global.pond_landing_day() > 0:
+				_add_destination(Global.POND_LANDING, Global.POND_LANDING, "从南池西岸走上木台")
+			if Global.winter_supper_route_open():
+				_add_destination(WinterSupper.PLACE, WinterSupper.PLACE, "沿南池西岸去围炉石坪")
 		Region.RAVINE:
 			for place: String in Global.ravine_trip_places():
 				_add_destination(place, place, Global.ravine_place_detail(place))
@@ -184,6 +197,10 @@ func _refresh_route() -> void:
 	route_button.text = "开始指路" if selected_place.is_empty() else "指路去" + selected_place
 	if selected_place == Global.MARKET_RETURN:
 		route_button.text = "指路回封地"
+	elif selected_place == Global.FIELD_RETURN:
+		var work := Global.field_return_caption()
+		route_button.text = "指路回井田" if work.is_empty() else "接着田务"
+		place_detail.text = work
 	if not selected_place.is_empty() and selected_place == active:
 		route_button.text = "正在指路"
 	if selected_place.is_empty():
@@ -200,13 +217,14 @@ func _refresh_route() -> void:
 		if _region_for(selected_place) == Region.RAVINE and region != Region.RAVINE:
 			route_label.text += " · 经" + (EstateLayout.RAVINE_TRAIL_NAME if south else "东关")
 		elif region == Region.RAVINE and _region_for(selected_place) != Region.RAVINE:
-			route_label.text += " · 经西门"
+			route_label.text += " · 经南路小径" if south else " · 经西门"
+		var place := Global.field_return_place_name() if selected_place == Global.FIELD_RETURN else selected_place
 		if names.size() == 1:
-			route_label.text = "在%s内前往%s" % [names[0], selected_place]
+			route_label.text = "在%s内前往%s" % [names[0], place]
 		elif selected_place == Sheepfold.MEADOW:
 			route_label.text += " → " + Sheepfold.MEADOW
-		elif selected_place == Global.WATER_SOURCE:
-			route_label.text += " → " + Global.WATER_SOURCE
+		elif selected_place in Global.ESTATE_REGIONAL_STOPS:
+			route_label.text += " → " + place
 		if selected_place == active:
 			route_label.text += " · 正在指路"
 	paper.queue_redraw()
@@ -229,7 +247,8 @@ func _route_regions(destination: Region) -> Array[int]:
 	return stops
 
 func _uses_shortcut() -> bool:
-	return uses_south_trail.is_valid() and selected == Region.RAVINE and not selected_place.is_empty() 		and uses_south_trail.call(selected_place)
+	return uses_south_trail.is_valid() and not selected_place.is_empty() \
+		and (selected == Region.RAVINE or region == Region.RAVINE) and uses_south_trail.call(selected_place)
 
 func _draw_chart() -> void:
 	var sheet := Rect2(Vector2.ZERO, paper.size)
@@ -337,8 +356,8 @@ func _draw_bridge() -> void:
 
 func _draw_landmarks() -> void:
 	var stall := Rect2(59, 102, 76, 54)
-	paper.draw_texture_rect_region(MarketStall.ART, stall, Rect2(Vector2.ZERO, MarketStall.FRAME))
-	paper.draw_texture_rect_region(MarketStall.ART, stall, Rect2(Vector2(0, MarketStall.FRAME.y), MarketStall.FRAME))
+	paper.draw_texture_rect_region(stall_art, stall, Rect2(Vector2.ZERO, MarketStall.FRAME))
+	paper.draw_texture_rect_region(stall_art, stall, Rect2(Vector2(0, MarketStall.FRAME.y), MarketStall.FRAME))
 	paper.draw_texture_rect_region(BUILDINGS, Rect2(406, 91, 86, 59), Rect2(0, 0, 128, 88))
 	paper.draw_texture_rect(LOOKOUT, Rect2(602, 97, 47, 42), false)
 	for at: Vector2 in [Vector2(170, 119), Vector2(204, 110), Vector2(309, 153), Vector2(346, 147),

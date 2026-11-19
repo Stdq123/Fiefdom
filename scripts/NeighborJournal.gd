@@ -25,14 +25,19 @@ var selected := ""
 
 func _ready() -> void:
 	var group := ButtonGroup.new()
+	var normal := get_theme_stylebox("normal", "Button")
+	var chosen := get_theme_stylebox("pressed", "Button").duplicate() as StyleBox
+	for side: Side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+		chosen.set_content_margin(side, normal.get_content_margin(side))
 	for speaker: String in VisitorData.NEIGHBORS:
 		var button := Button.new()
 		button.name = speaker
 		button.text = speaker
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.custom_minimum_size.y = 41
-		button.expand_icon = true
-		button.add_theme_constant_override("icon_max_width", 35)
+		button.add_theme_stylebox_override("pressed", chosen)
+		button.add_theme_stylebox_override("hover_pressed", chosen)
+		button.add_theme_constant_override("icon_max_width", 32)
 		button.add_theme_constant_override("h_separation", 10)
 		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		button.toggle_mode = true
@@ -50,6 +55,7 @@ func _ready() -> void:
 	GameEvents.retainer_departed.connect(refresh.unbind(1))
 	GameEvents.food_changed.connect(refresh.unbind(1))
 	GameEvents.road_rest_changed.connect(refresh)
+	GameEvents.pavilion_story_heard.connect(refresh)
 	GameEvents.seed_garden_arrived.connect(refresh)
 	GameEvents.field_rotation_changed.connect(refresh)
 	locate_button.pressed.connect(func(): GameEvents.neighbor_directions_requested.emit(selected))
@@ -74,7 +80,8 @@ func refresh() -> void:
 
 func _show_neighbor(speaker: String) -> void:
 	selected = speaker
-	roster.get_node(speaker).set_pressed_no_signal(true)
+	var button := roster.get_node(speaker) as Button
+	button.button_pressed = true
 	portrait.texture = CharacterArt.dialogue_portrait(speaker, null, VisitorData.favor_completed(speaker))
 	person_name.text = speaker
 	var day: int = Global.neighbor_met_days.get(speaker, 0)
@@ -91,6 +98,8 @@ func _show_neighbor(speaker: String) -> void:
 	var garden_day := Global.seed_garden_day()
 	if speaker == VisitorData.ROAD_KEEPER and garden_day > 0:
 		memory.text += "\n第 %d 天 · 林蓼把春单的菽和黍种在亭西种圃。" % garden_day
+	for note: String in PavilionStories.heard_notes(speaker):
+		memory.text += "\n" + note
 	next_step.text = story[1]
 	var departure: Dictionary = Global.neighbor_departures.get(speaker, {})
 	if not departure.is_empty():
@@ -193,7 +202,7 @@ func _field_keeper_story() -> Array[String]:
 			story.harvest_day, story.field_number, Global.rotation_crop_name()]
 	if story.signed_day > 0:
 		note += "\n第 %d 天 · 把这次收成记进轮作簿。" % story.signed_day
-		return [note, "沿井田西南的岔路翻看轮作簿，可以标出现在留肥的田格。"]
+		return [note, "沿井田西南的岔路翻看轮作簿，可以标出肥地、安排轮作和管事。"]
 	if story.ready_to_sign():
 		return [note, "再找渠伯，把这一格田的两茬收成记下来。"]
 	if story.beans_day > 0:

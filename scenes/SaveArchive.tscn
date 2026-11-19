@@ -1,24 +1,8 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/SaveArchive.gd" id="1_script"]
-
-[sub_resource type="StyleBoxFlat" id="Archive"]
-content_margin_left = 24.0
-content_margin_top = 20.0
-content_margin_right = 24.0
-content_margin_bottom = 20.0
-bg_color = Color(0.123, 0.174, 0.139, 1)
-border_width_left = 1
-border_width_top = 2
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.633, 0.549, 0.355, 1)
-corner_radius_top_left = 7
-corner_radius_top_right = 7
-corner_radius_bottom_left = 7
-corner_radius_bottom_right = 7
-shadow_color = Color(0.045, 0.064, 0.049, 0.5)
-shadow_size = 8
+[ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="2_hud"]
+[ext_resource type="StyleBox" path="res://resources/estate_archive_frame.tres" id="3_frame"]
 
 [node name="SaveArchive" type="ColorRect"]
 process_mode = 3
@@ -28,6 +12,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+texture_filter = 1
+theme = ExtResource("2_hud")
 color = Color(0.057, 0.079, 0.06, 0.71)
 script = ExtResource("1_script")
 
@@ -41,17 +27,17 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="Panel" type="PanelContainer" parent="Center"]
-custom_minimum_size = Vector2(876, 0)
+custom_minimum_size = Vector2(966, 0)
 layout_mode = 2
-theme_override_styles/panel = SubResource("Archive")
+theme_override_styles/panel = ExtResource("3_frame")
 
 [node name="Stack" type="VBoxContainer" parent="Center/Panel"]
 layout_mode = 2
-theme_override_constants/separation = 13
+theme_override_constants/separation = 15
 
 [node name="Heading" type="Label" parent="Center/Panel/Stack"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 30
 theme_override_colors/font_color = Color(0.94, 0.82, 0.57, 1)
 text = "选择封地存档"
 
@@ -60,7 +46,7 @@ layout_mode = 2
 theme_override_constants/separation = 22
 
 [node name="EstateColumn" type="VBoxContainer" parent="Center/Panel/Stack/Columns"]
-custom_minimum_size = Vector2(256, 0)
+custom_minimum_size = Vector2(310, 0)
 layout_mode = 2
 theme_override_constants/separation = 8
 
@@ -70,7 +56,7 @@ theme_override_colors/font_color = Color(0.73, 0.79, 0.66, 1)
 text = "封地"
 
 [node name="EstateScroll" type="ScrollContainer" parent="Center/Panel/Stack/Columns/EstateColumn"]
-custom_minimum_size = Vector2(0, 278)
+custom_minimum_size = Vector2(0, 308)
 layout_mode = 2
 horizontal_scroll_mode = 0
 follow_focus = true
@@ -93,7 +79,7 @@ theme_override_colors/font_color = Color(0.73, 0.79, 0.66, 1)
 
 [node name="RecordScroll" type="ScrollContainer" parent="Center/Panel/Stack/Columns/RecordColumn"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 278)
+custom_minimum_size = Vector2(0, 308)
 layout_mode = 2
 horizontal_scroll_mode = 0
 follow_focus = true
@@ -112,8 +98,9 @@ theme_override_colors/font_color = Color(0.91, 0.66, 0.48, 1)
 
 [node name="Close" type="Button" parent="Center/Panel/Stack"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(86, 36)
+custom_minimum_size = Vector2(96, 40)
 layout_mode = 2
 size_flags_horizontal = 8
 mouse_default_cursor_shape = 2
+theme_type_variation = &"HudButton"
 text = "返回"

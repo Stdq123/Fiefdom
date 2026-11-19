@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://jheadsqdavrk"
+path="res://.godot/imported/village-inscriptions.png-52e85b3e68b97bb7a7bae848d81f0a32.res"
+
+[deps]
+
+source_file="res://assets/world/village-inscriptions.png"
+dest_files=["res://.godot/imported/village-inscriptions.png-52e85b3e68b97bb7a7bae848d81f0a32.res"]
+
+[params]
+
+authored_at_2x=true

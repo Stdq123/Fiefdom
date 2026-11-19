@@ -52,7 +52,7 @@ func _prepare_rotation() -> bool:
 		return false
 	var book := world.get_node("FieldRotationBook") as Node2D
 	return _expect(state.field_rotation.signed_day == 32 and book.visible, "Signing creates the book on the estate.") \
-		and await _interact_with(book, "安排轮作", "01-rotation-book")
+		and await _interact_with(book, "安排轮作与管事", "01-rotation-book")
 
 func _interact_with(actor: Node2D, action: String, frame := "") -> bool:
 	await Campaign.walk_to(tree, world.player, actor.global_position + Vector2(0, 15))

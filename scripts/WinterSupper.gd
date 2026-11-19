@@ -12,14 +12,6 @@ const RECIPES := {
 	BEAN: {"name": "麦菽粥", "crops": {"wheat": 1, "beans": 1}},
 	FISH: {"name": "鱼麦羹", "crops": {"wheat": 1}},
 }
-const GUESTS := preload("res://assets/characters/autumn-guests.svg")
 
 static func portions(recipe: String, balance: BalanceData) -> int:
 	return balance.winter_fish_rations if recipe == FISH else balance.winter_bean_rations
-
-static func guest_art(index: int) -> AtlasTexture:
-	var art := AtlasTexture.new()
-	art.atlas = GUESTS
-	art.region = Rect2(0, index * 96, 128, 96)
-	art.filter_clip = true
-	return art

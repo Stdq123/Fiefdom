@@ -6,6 +6,9 @@ const LAYOUT := preload("res://scripts/WestMarketLayout.gd")
 const GROUND := preload("res://scripts/WestMarketGround.gd")
 const ORDER_CART := preload("res://scripts/SeasonOrderCart.gd")
 const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
+const DYER := preload("res://scripts/MarketDyer.gd")
+const FIXTURE_ART := preload("res://assets/world/west-market-fixtures.png")
+const FISH_BOARD := Rect2(64, 64, 24, 18)
 
 @onready var player: Player = $Player
 @onready var ground: GROUND = $Ground
@@ -22,28 +25,42 @@ const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
 @onready var sample: Sprite2D = $Stalls/SilkStall/MarketSample
 @onready var fish_sign: Node2D = $Stalls/FishStall/FishOrderSign
 @onready var fish_icon: Sprite2D = $Stalls/FishStall/FishOrderSign/FishIcon
+@onready var dyer: DYER = $Dyer
+@onready var dye_house: StaticBody2D = $DyeHouse
+@onready var drying_rack: StaticBody2D = $DryingRack
 
 var silk_guest: Visitor
 var silk_trip := VisitorData.SilkTrip.NONE
 var fish_reserved := false
-var sky_icons := HUDIcons.SKY.map(HUDIcons.icon)
 
 func _ready() -> void:
 	ground.place_scenery($Scenery)
+	dye_house.position = LAYOUT.DYE_HOUSE
+	drying_rack.position = LAYOUT.DYE_RACK
+	$DyeHouse/Building.frame = int(Global.season_index() == Global.Season.WINTER)
+	if Global.has_rain():
+		dye_house.modulate = Color("#c0ced2")
+		drying_rack.modulate = Color("#c4d1d3")
+	dyer.approached.connect(_talk_to_dyer)
 	var destinations: Dictionary[String, Vector2] = {}
 	for stall: MarketStall in $Stalls.get_children():
 		stall.opened.connect(_open_stall)
-		destinations[MarketStall.TITLES[stall.kind]] = ground.to_local(stall.to_global(MarketStall.APPROACH))
+		var approach := ground.to_local(stall.to_global(MarketStall.APPROACH))
+		destinations[MarketStall.TITLES[stall.kind]] = approach
+		ground.add_stall_yard(stall.kind, approach, $Scenery)
 	destinations[Global.MARKET_ORDERS] = ground.to_local($OrderCart.to_global(ORDER_CART.APPROACH))
 	destinations[Global.MARKET_RETURN] = ground.to_local($EstateRoad.global_position)
 	$OrderCart.opened.connect(_open_orders)
 	for foot: Vector2 in [Vector2(-379, 112), Vector2(-118, -98), Vector2(208, 168),
 			Vector2(264, 55), Vector2(-163, 110), Vector2(-53, 81), Vector2(379, 56)]:
 		lighting.place_lamp($Scenery, foot, 0.82)
+	lighting.place_lamp($Scenery, LAYOUT.DYE_EAVE + Vector2(-18, 4), 0.64, 0.08)
 	player.arrive_at($EstateRoadArrival)
+	player.restore_walking_checkpoint(LAYOUT.BOUNDS, ground.walking_fixture_footprints())
 	player.footstep.connect(_step)
 	market_map.setup(self, destinations, $MarketWaypoint)
 	market_map.open_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
+	$CampaignHUD.add_field_return(player, market_map.follow_region_destination)
 	$DialogManager.setup($UI/Control, player)
 	%SettingsButton.icon = HUDIcons.icon(HUDIcons.Symbol.SETTINGS)
 	%CoinIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
@@ -53,6 +70,7 @@ func _ready() -> void:
 	GameEvents.daylight_changed.connect(_refresh_date)
 	GameEvents.daylight_changed.connect(_refresh_silk_guest)
 	GameEvents.daylight_changed.connect(_refresh_held_fish)
+	GameEvents.daylight_changed.connect(_refresh_drying_rack)
 	GameEvents.visitor_interacted.connect(_talk_to_silk_guest)
 	GameEvents.ravine_trip_requested.connect(_follow_trip)
 	GameEvents.west_market_directions_requested.connect(_follow_trip)
@@ -76,6 +94,7 @@ func _ready() -> void:
 	_refresh_silk_guest()
 	_refresh_fish_sign()
 	_refresh_held_fish()
+	_refresh_drying_rack()
 
 func _open_stall(kind: MarketStall.Kind) -> void:
 	market_map.arrive_at(MarketStall.TITLES[kind])
@@ -117,7 +136,6 @@ func _update_modal() -> void:
 	player.conversation_open = settings.visible or counter.visible
 
 func _refresh_date() -> void:
-	%WeatherIcon.texture = sky_icons[HUDIcons.sky_index()]
 	date.text = "第 %d 天 · %s · %s%s" % [Global.current_day, Global.day_watch_label(), Global.get_current_solar_term(),
 		" · 雨" if Global.has_rain() else ""]
 
@@ -144,12 +162,19 @@ func _refresh_held_fish() -> void:
 	var waiting := Global.day_progress < CreekFish.ORDER_PICKUP and Global.fish_order_for_porter()
 	ground.show_held_fish(Global.fish_order_receipt.fish if waiting else "")
 
+func _refresh_drying_rack() -> void:
+	var covered := Global.has_rain() or Global.day_progress >= DYER.CLOSE_YARD.x
+	$DryingRack/ClothLine.frame = int(covered)
+	ground.cover_dye_vats(covered)
+
+func _talk_to_dyer() -> void:
+	dyer.face_customer(player.global_position)
+	$DialogManager.show_market_dyer(dyer.SPEAKER, dyer.remark(), dyer.portrait,
+		_follow_trip.bind(MarketStall.TITLES[MarketStall.Kind.SILK]))
+
 func _draw_fish_sign() -> void:
-	fish_sign.draw_rect(Rect2(-11, -7, 22, 15), Color("#49382c"))
-	var board := Color("#d1a668") if fish_reserved else Color("#a88d65")
-	fish_sign.draw_rect(Rect2(-10, -6, 20, 12), board)
-	fish_sign.draw_rect(Rect2(-9, -5, 1, 2), Color("#5c523f"))
-	fish_sign.draw_rect(Rect2(8, -5, 1, 2), Color("#5c523f"))
+	var tint := Color.WHITE if fish_reserved else Color("#d8cfbc")
+	fish_sign.draw_texture_rect_region(FIXTURE_ART, Rect2(Vector2(-12, -9), FISH_BOARD.size), FISH_BOARD, tint)
 
 func _refresh_silk_guest() -> void:
 	if not sample.visible:

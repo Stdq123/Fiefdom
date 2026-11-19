@@ -1,47 +1,43 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/SheepfoldPen.gd" id="1_pen"]
-[ext_resource type="Texture2D" path="res://assets/world/sheepfold/yard.svg" id="2_art"]
+[ext_resource type="Texture2D" path="res://assets/world/estate-site-art.png" id="2_art"]
 [ext_resource type="Material" path="res://resources/world_hint_material.tres" id="3_hint"]
+[ext_resource type="Texture2D" path="res://assets/characters/sheep.png" id="4_sheep"]
 
 [sub_resource type="AtlasTexture" id="Shed"]
 atlas = ExtResource("2_art")
-region = Rect2(0, 0, 78, 52)
+region = Rect2(576, 0, 78, 52)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="RearFence"]
 atlas = ExtResource("2_art")
-region = Rect2(0, 56, 94, 62)
+region = Rect2(576, 56, 94, 62)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="FrontFence"]
 atlas = ExtResource("2_art")
-region = Rect2(96, 56, 94, 16)
+region = Rect2(672, 56, 94, 16)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="Trough"]
 atlas = ExtResource("2_art")
-region = Rect2(80, 0, 26, 14)
+region = Rect2(656, 0, 26, 14)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="Feed"]
 atlas = ExtResource("2_art")
-region = Rect2(108, 0, 26, 14)
-filter_clip = true
-
-[sub_resource type="AtlasTexture" id="ShortCoat"]
-atlas = ExtResource("2_art")
-region = Rect2(80, 18, 18, 14)
+region = Rect2(684, 0, 26, 14)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="Tuft"]
 atlas = ExtResource("2_art")
-region = Rect2(102, 18, 18, 16)
+region = Rect2(678, 18, 18, 16)
 filter_clip = true
 
 [sub_resource type="AtlasTexture" id="HayBundle"]
 atlas = ExtResource("2_art")
-region = Rect2(136, 0, 18, 13)
+region = Rect2(712, 0, 18, 13)
 filter_clip = true
 
 [sub_resource type="RectangleShape2D" id="ShedBase"]
@@ -82,8 +78,9 @@ offset = Vector2(-39, -50)
 
 [node name="Sheep" type="Sprite2D" parent="Paddock"]
 position = Vector2(-12, 7)
-texture = SubResource("ShortCoat")
-offset = Vector2(0, -6)
+texture = ExtResource("4_sheep")
+hframes = 2
+offset = Vector2(0, -8)
 
 [node name="Trough" type="Sprite2D" parent="Paddock"]
 position = Vector2(16, 15)

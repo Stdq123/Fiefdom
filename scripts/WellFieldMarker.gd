@@ -2,6 +2,7 @@ extends Node2D
 class_name WellFieldMarker
 
 const WORKSITE := preload("res://scripts/FieldWorksite.gd")
+const INSCRIPTION := preload("res://scripts/VillageInscription.gd")
 const ENTRANCE_WIDTH := EstateLayout.FIELD_ENTRANCE_WIDTH
 
 @onready var tile_map: TileMapLayer = get_parent()
@@ -35,31 +36,27 @@ func _update_marker(field_id: int) -> void:
 		var line := Line2D.new()
 		line.name = "Boundary"
 		line.points = EstateLayout.field_boundary(Rect2(-half_span, half_span * 2.0), entrance, ENTRANCE_WIDTH)
-		line.width = 1.0
-		line.default_color = Color("#a29467")
-		line.z_index = 50
+		line.width = 0.5
+		line.default_color = Color("#614d37")
 		marker.add_child(line)
 	else:
 		var worksite := WORKSITE.new()
 		worksite.name = "Worksite"
 		worksite.stage = field["reclamation_progress"]
+		worksite.entrance = entrance
 		worksite.scale = cell_size / 16.0
 		worksite.z_index = 1
 		marker.add_child(worksite)
-		title = "%s · 余 %d 夜" % [
-			Global.reclamation_stage(worksite.stage), Global.RECLAMATION_NIGHTS - worksite.stage]
+		title = "井田 %d · %s\n余 %d 夜" % [
+			field_id + 1, Global.reclamation_stage(worksite.stage), Global.RECLAMATION_NIGHTS - worksite.stage]
 
-	var label := Label.new()
-	label.material = preload("res://resources/world_hint_material.tres")
-	label.name = "Status"
-	label.text = title
-	label.position = -half_span + Vector2(0, -15)
+	var form := INSCRIPTION.Form.FIELD if field["is_unlocked"] else INSCRIPTION.Form.SURVEY
+	var foot := Vector2(6.0 if field["is_unlocked"] else 0.0, -half_span.y - 7.0)
 	if entrance == Vector2.UP:
-		label.position.y = half_span.y + 2.0
-	label.add_theme_font_size_override("font_size", 11)
-	label.add_theme_color_override("font_color", Color("#e1ddbb"))
-	label.add_theme_color_override("font_outline_color", Color("#263d2e"))
-	label.add_theme_constant_override("outline_size", 2)
-	label.z_index = 51
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	marker.add_child(label)
+		foot.y = half_span.y + INSCRIPTION.HEIGHTS[form] + 5.0
+	var signboard := INSCRIPTION.place(marker, foot, form, title, Vector2.ZERO, true)
+	# Both the bank and its writing sit below passing workers and their tools.
+	signboard.z_as_relative = false
+	signboard.z_index = -1
+	signboard.caption.z_as_relative = false
+	signboard.caption.z_index = -1

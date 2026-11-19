@@ -1,6 +1,5 @@
 extends Node2D
 
-const MOTION_SHEET := preload("res://assets/characters/envoy-motion.svg")
 const ROAD_OFFSET := Vector2(74, -16)
 const WALK_SPEED := 52.0
 
@@ -11,7 +10,7 @@ var waiting_place: Vector2
 
 func _ready() -> void:
 	waiting_place = position
-	motion.set_motion_sheet(MOTION_SHEET)
+	motion.set_motion_sheet(load(CharacterArt.ENVOY_MOTION), CharacterArt.STREET_COLUMNS, "召简")
 	GameEvents.tax_reform_triggered.connect(_arrive)
 	GameEvents.tax_reform_choice_made.connect(_depart.unbind(1))
 	if Global.tax_council_waiting():

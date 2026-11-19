@@ -29,19 +29,6 @@ func _seed_estate() -> void:
 	}))
 	save.close()
 
-func _continue_estate() -> bool:
-	tree.change_scene_to_file(state.TITLE_SCENE)
-	await tree.scene_changed
-	await tree.process_frame
-	await tree.process_frame
-	await _button(tree.current_scene.continue_button)
-	if tree.current_scene == null:
-		await tree.scene_changed
-	if not _expect(tree.current_scene.name == "Main", "Continue the test estate through the title."):
-		return false
-	await _estate()
-	return true
-
 func _look_at_doors() -> void:
 	await Campaign.walk_to(tree, world.player, Vector2(23, 102))
 	await tree.create_timer(0.32).timeout

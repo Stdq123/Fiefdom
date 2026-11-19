@@ -9,8 +9,6 @@ const CART_SPEED := 145.0
 const CART_ACCELERATION := 295.0
 const CART_BRAKING := 390.0
 const STEP_DISTANCE := 20.0
-const WALK_FRAMES := [1, 0, 2, 0]
-const WALK_FPS := 10.0
 const CAMERA_ZOOMS := [1.5, 2.0, 3.0]
 
 # Simple FSM
@@ -29,12 +27,13 @@ var current_state = State.IDLE
 var shake_strength: float = 0.0
 var shake_decay: float = 5.0
 var facing_row := Facing.FRONT
-var walk_phase := 0.0
+var walk_distance := 0.0
 var step_distance_left := STEP_DISTANCE * 0.5
 var hurt_tween: Tween
 var interaction_target: Node2D
 var conversation_open := false
 var resting := false
+var seated := false
 var menu_open := false
 var meal_controls_blocked := false
 var bow_pointer := Vector2.INF
@@ -73,7 +72,10 @@ static func input_direction() -> Vector2:
 	return GamepadInput.move_direction() if direction.is_zero_approx() else direction
 
 func world_controls_blocked() -> bool:
-	return conversation_open or resting or menu_open or MapTravel.active
+	return combat_paused() or resting
+
+func combat_paused() -> bool:
+	return conversation_open or menu_open or MapTravel.active
 
 func _physics_process(delta: float) -> void:
 	var direction := input_direction()
@@ -106,7 +108,7 @@ func _physics_process(delta: float) -> void:
 	if training_cart.visible:
 		_update_driver(distance)
 	else:
-		_update_walk_sprite(direction, delta)
+		_update_walk_sprite(direction, distance)
 	var next_target := _nearest_interactable()
 	if next_target != interaction_target:
 		if is_instance_valid(interaction_target) and interaction_target.has_method("set_interaction_focused"):
@@ -151,16 +153,22 @@ func show_action(action: ToolGesture.Action, target: Vector2) -> void:
 	tool_gesture.perform(action, toward)
 	AudioManager.play_field_action(action)
 
-func _update_walk_sprite(direction: Vector2, delta: float) -> void:
-	if direction.is_zero_approx():
-		walk_phase = 0.0
-		sprite.offset = tool_gesture.body_lean
-		sprite.frame_coords = Vector2i(0, facing_row)
+func _update_walk_sprite(direction: Vector2, travelled: float) -> void:
+	if not direction.is_zero_approx():
+		_face(direction)
+	if direction.is_zero_approx() or travelled < 0.04:
+		walk_distance = 0.0
+		var work := -1 if seated else tool_gesture.work_pose()
+		if work >= 0:
+			sprite.offset = Vector2.ZERO
+			sprite.frame_coords = Vector2i(PlayerAttire.WORK_COLUMN + work, facing_row)
+		else:
+			sprite.offset = Vector2(0, 3) if seated else tool_gesture.body_lean
+			sprite.frame_coords = Vector2i(0, facing_row)
 		return
 	sprite.offset = Vector2.ZERO
-	_face(direction)
-	walk_phase = fposmod(walk_phase + delta * WALK_FPS, WALK_FRAMES.size())
-	sprite.frame_coords = Vector2i(WALK_FRAMES[int(walk_phase)], facing_row)
+	walk_distance += travelled
+	sprite.frame_coords = Vector2i(NeighborMotion.walk_column(walk_distance, PlayerAttire.PASS_COLUMN), facing_row)
 
 func _update_footsteps(travelled: float) -> void:
 	if training_cart.visible or travelled < 0.05:
@@ -251,6 +259,55 @@ func _apply_camera_zoom() -> void:
 
 func arrive_at(marker: Marker2D) -> void:
 	arrive_at_position(marker.global_position, marker.global_transform.x)
+
+func restore_walking_checkpoint(bounds: Rect2, fixtures: Array[Rect2] = []) -> void:
+	var checkpoint := Global.restored_walking_checkpoint
+	Global.restored_walking_checkpoint = {}
+	if checkpoint.is_empty():
+		return
+	var feet: CollisionShape2D = $CollisionShape2D
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = feet.shape
+	query.transform = feet.global_transform.translated(checkpoint.point - global_position)
+	var footprint: Rect2 = query.transform * feet.shape.get_rect()
+	if not bounds.encloses(footprint) or _overlaps_threshold(footprint):
+		return
+	query.exclude = [get_rid()]
+	query.collision_mask = collision_mask
+	var offsets: Array[Vector2] = [Vector2.ZERO]
+	const CLEARANCE := 0.8
+	# Scene-built fixtures can take a physics tick to appear in the space query.
+	for fixture in fixtures:
+		if footprint.intersects(fixture):
+			offsets.append_array([
+				Vector2(fixture.position.x - footprint.end.x - CLEARANCE, 0),
+				Vector2(fixture.end.x - footprint.position.x + CLEARANCE, 0),
+				Vector2(0, fixture.position.y - footprint.end.y - CLEARANCE),
+				Vector2(0, fixture.end.y - footprint.position.y + CLEARANCE),
+			])
+	offsets.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.length_squared() < b.length_squared())
+	var saved_transform := query.transform
+	for offset in offsets:
+		var candidate := Rect2(footprint.position + offset, footprint.size)
+		if (not bounds.encloses(candidate) or _overlaps_threshold(candidate)
+				or fixtures.any(func(fixture: Rect2) -> bool: return candidate.intersects(fixture))):
+			continue
+		query.transform = saved_transform.translated(offset)
+		if get_world_2d().direct_space_state.intersect_shape(query, 1).is_empty():
+			arrive_at_position(checkpoint.point + offset, checkpoint.facing)
+			return
+
+func _overlaps_threshold(footprint: Rect2) -> bool:
+	for area: Area2D in get_tree().get_nodes_in_group("travel_threshold"):
+		if not area.monitoring:
+			continue
+		for child in area.get_children():
+			var sensor := child as CollisionShape2D
+			if sensor != null and not sensor.disabled and sensor.shape != null:
+				var threshold: Rect2 = sensor.global_transform * sensor.shape.get_rect()
+				if footprint.intersects(threshold):
+					return true
+	return false
 
 func facing_direction() -> Vector2:
 	match facing_row:

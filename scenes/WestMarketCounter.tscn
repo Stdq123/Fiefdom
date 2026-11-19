@@ -6,7 +6,7 @@
 [ext_resource type="Texture2D" path="res://assets/world/west-court-sample.svg" id="4_silk"]
 [ext_resource type="PackedScene" path="res://scenes/SeasonOrderPanel.tscn" id="5_orders"]
 [ext_resource type="Script" path="res://scripts/SheepTrade.gd" id="6_sheep"]
-[ext_resource type="Texture2D" path="res://assets/world/sheepfold/farm-sheep.webp" id="7_animal"]
+[ext_resource type="Texture2D" path="res://assets/characters/sheep-portrait.png" id="7_animal"]
 
 [sub_resource type="StyleBoxFlat" id="KeeperCardStyle"]
 content_margin_left = 12.0

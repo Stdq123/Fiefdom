@@ -18,11 +18,13 @@
 
 同一源码、引擎和 PowerShell 环境下，两次干净构建的 ZIP SHA-256 一致。导出保留文本场景和资源，ZIP 使用固定的条目顺序和时间戳。 [Godot 导出设置](https://docs.godotengine.org/en/stable/classes/class_projectsettings.html#class-projectsettings-property-editor-export-convert-text-resources-to-binary)
 
-以下命令在临时目录用解压出的正式程序验证两条新档路线、战败恢复和 90 秒连续运行。用 `-LegacyPackage` 传入已有的 0.1.x ZIP，还可以在旧版本中生成存档，再由 1.0 读取。日志、截图和校验清单写入 `build/Fiefdom-1.0.0-Windows-x64-verification/`。 [1.0 执行清单](tasks/todo.md)
+以下命令在临时目录用解压出的正式程序验证两条新档路线、战败恢复和 90 秒连续运行。`-Capture` 在隔离的 Windows 桌面采集 1920×1080 和 1024×768 画面，其余检查使用无窗口模式。用 `-LegacyPackage` 传入已有的 0.1.x ZIP，还可以在旧版本中生成存档，再由 1.0 读取。日志、截图和校验清单写入 `build/Fiefdom-1.0.0-Windows-x64-verification/`。 [1.0 执行清单](tasks/todo.md)
 
 ```powershell
 & ./tools/Test-WindowsRelease.ps1 -Package ./build/Fiefdom-1.0.0-Windows-x64.zip -Capture -Soak
 ```
+
+加上 `-ProcessRestart` 可分别退出并重启两个测试进程，验证标题能读到自动保存的结局。
 
 ## Codex 工作室
 
@@ -54,9 +56,10 @@
 
 信任项目后，Codex 从本地 `.codex/config.toml` 读取 `godot-ultimate` 的启动配置。换机器或目录时，将 `.codex/config.example.toml` 复制为 `.codex/config.toml`，把 `cwd` 改为包含 `project.godot` 的绝对路径。这个路径供桌面端后台进程定位项目。
 
-MCP 需要 PATH 中的 Node.js 和 `godot-mcp-ultimate/` 的本地检出。目录为空时，从 [Godot MCP Ultimate](https://github.com/Sharks820/godot-mcp-ultimate) 克隆到该目录，再检出本仓库 `git rev-parse HEAD:godot-mcp-ultimate` 显示的提交。构建命令如下。
+MCP 需要 PATH 中的 Node.js。项目将 Godot MCP Ultimate 的配套版本保存在本仓库的 `codex/godot-mcp-ultimate` 分支，子模块固定到当前游戏提交使用的版本。在项目根目录运行下面的命令即可检出并构建。[Godot MCP Ultimate 上游](https://github.com/Sharks820/godot-mcp-ultimate)
 
 ```powershell
+git submodule update --init -- godot-mcp-ultimate
 npm --prefix ./godot-mcp-ultimate ci --ignore-scripts
 npm --prefix ./godot-mcp-ultimate run build
 ```

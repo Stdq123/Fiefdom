@@ -112,10 +112,12 @@ func _run() -> void:
 	state.reputation = state.balance.rank_strip_threshold + 1
 	state.days_without_contribution = state.balance.no_contribution_threshold - 1
 	ui.sleep_button.pressed.emit()
+	Campaign.confirm_optional_tribute_warning(ui)
 	await create_timer(1.1).timeout
 	_expect(state.current_rank == state.Rank.XIA_SHI and state.outcome == state.Outcome.RUNNING, "Missed tribute first demotes an elevated rank.")
 	state.days_without_contribution = state.balance.no_contribution_threshold - 1
 	ui.sleep_button.pressed.emit()
+	Campaign.confirm_optional_tribute_warning(ui)
 	await create_timer(1.1).timeout
 	_expect(state.outcome == state.Outcome.DEFEAT_ESTATE and paused, "Continued missed tribute at the lowest rank loses the estate.")
 	hud = current_scene.get_node("CampaignHUD")

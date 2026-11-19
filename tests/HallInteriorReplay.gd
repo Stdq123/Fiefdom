@@ -108,13 +108,24 @@ func _leave() -> bool:
 	return _expect(player.camera.is_current() and player.global_position.distance_to(hall.get_node("Yard").global_position) < 3.0
 		and ui.hud.get_node("SeedBelt").visible, "The exit returns to the path and restores field controls.")
 
-func _read_desk() -> bool:
+func _check_room_layout() -> void:
 	await _walk_in_room(Vector2(0, -50))
+	var by_table := room.to_local(player.global_position)
+	_expect(by_table.y > -6.0 and by_table.y < -4.0 and player.interaction_target == room.get_node("DecorShelf"),
+		"The tabletop stops forward movement at its visible front edge, with the decor action in reach.")
+	await _snapshot("02a-at-the-display-table")
+	await _walk_in_room(Vector2(0, 18))
+	await _walk_in_room(Vector2(29, -50))
 	var floor_position := room.to_local(player.global_position)
 	var terrain := world.get_node("Landscape").terrain_audio as Node
-	_expect(floor_position.y > -23.0 and floor_position.y < -19.0
+	_expect(floor_position.x > 25.0 and floor_position.x < 33.0 and floor_position.y > -23.0 and floor_position.y < -19.0
 		and terrain.footsteps.stream.resource_path.get_file().begins_with("plank-"),
-		"The back wall is solid and indoor movement sounds like wood.")
+		"The aisle between the display table and bed leads to the solid back wall with wood footsteps.")
+	await _snapshot("02b-window-aisle")
+	await _walk_in_room(Vector2(29, 16))
+	print("HALL_FURNITURE table_stop=", by_table, " back_wall=", floor_position)
+
+func _read_desk() -> bool:
 	await _walk_in_room(Vector2(0, 16))
 	await _walk_in_room(Vector2(-54, 12))
 	var before: int = state.player_stats.get_stat(PlayerStats.Art.LITERACY).xp
@@ -139,6 +150,8 @@ func _read_desk() -> bool:
 
 func _save_and_restore() -> bool:
 	await _press(ui.settings_button)
+	var saved_foot := player.global_position
+	var saved_facing := player.facing_direction()
 	var settings: Control = ui.panel_manager.settings_panel_instance
 	var saved := false
 	for button: Button in settings.find_children("*", "Button", true, false):
@@ -153,14 +166,16 @@ func _save_and_restore() -> bool:
 	if not await _estate():
 		return false
 	return _expect(state.estate_room == state.EstateRoom.HALL and room.room_camera.is_current()
-		and player.global_position.is_equal_approx(room.get_node("Wake").global_position)
+		and player.global_position.is_equal_approx(saved_foot) and player.facing_direction() == saved_facing
 		and not state.can_practice_today(PlayerStats.Art.LITERACY)
 		and state.active_crops[PUBLIC].watered and not state.active_crops[PRIVATE].watered,
 		"The manual save retains the room, practice and both plots.")
 
 func _bed_plan() -> Control:
-	await _walk_in_room(Vector2(55, 35))
-	if not _expect(player.interaction_target == room.get_node("Bed"), "Reach the bed's foot on the floor."):
+	await _walk_in_room(Vector2(0.0, 24.0))
+	await Campaign.walk_to(tree, player, room.get_node("Wake").global_position)
+	if not _expect(player.interaction_target == room.get_node("Bed"),
+		"Reach the bed's foot on the floor from the restored position, currently %s." % room.to_local(player.global_position)):
 		return null
 	await _key(KEY_E)
 	var plan := ui.get_node_or_null("Control/NightRationsPanel") as Control
@@ -218,11 +233,33 @@ func _resume_dawn() -> bool:
 		and state.day_watch_label() == "卯时" and state.active_crops[PRIVATE].age == 1,
 		"Title Continue wakes beside the bed with the dawn crop state.")
 	await _snapshot("05-morning-inside")
+	world.retainer_instances[state.retainers.front()].set_physics_process(false)
+	if not await _mark_public_plot_from_bed():
+		return false
 	if not await _leave():
 		return false
-	_expect(player.camera.zoom.is_equal_approx(Vector2(3, 3)), "Leaving restores the preferred map zoom.")
+	_expect(player.camera.zoom.is_equal_approx(Vector2(3, 3)) and ui.directions.visible
+		and ui.directions.tracked_plot == PUBLIC and ui.hud.practice_label.text.is_empty(),
+		"Leaving restores the preferred zoom and shows the marked public field.")
 	print("HALL_RESTORE day=", state.current_day, " exterior=", player.global_position, " zoom=", player.camera.zoom)
 	return true
+
+func _mark_public_plot_from_bed() -> bool:
+	var plan := await _bed_plan()
+	if plan == null:
+		return false
+	var grain: int = state.food_storage
+	await _press(plan.get_node("%Sleep"))
+	await tree.process_frame
+	var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(not is_instance_valid(plan) and warning != null and "公田待浇" in warning.text_label.text
+		and player.conversation_open, "Sleeping from the bed replaces the night plan with the first-tribute warning."):
+		return false
+	await _snapshot("05a-bedtime-warning")
+	await _press(warning.choices.front())
+	return _expect(not player.conversation_open and state.current_day == 2 and state.food_storage == grain
+		and ui.directions.tracked_plot == PUBLIC and not ui.directions.visible
+		and "从南门回田边" in ui.hud.practice_label.text, "Marking the public plot stays in the room and points out the exit.")
 
 func _harvest() -> void:
 	await Campaign.walk_to(tree, player, world.to_global(Vector2(66, 98)))
@@ -297,6 +334,7 @@ func _play() -> void:
 		"The estate chart places the player at the hall.")
 	await _key(KEY_M)
 	await _snapshot("02-room-at-dusk")
+	await _check_room_layout()
 	if not await _read_desk() or not await _save_and_restore():
 		return
 	prefs.map_zoom = 3.0
@@ -305,13 +343,13 @@ func _play() -> void:
 		await _harvest()
 		await _rain()
 
-func run(game_tree: SceneTree) -> void:
+func run(game_tree: SceneTree, capture_dir := "") -> void:
 	tree = game_tree
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated indoor replay profile."):
 		tree.quit(1)
 		return
 	state = tree.root.get_node("Global")
-	captures = OS.get_environment("FIEFDOM_HALL_CAPTURES")
+	captures = OS.get_environment("FIEFDOM_HALL_CAPTURES") if capture_dir.is_empty() else capture_dir
 	tree.root.notify_mouse_entered()
 	seed(1109)
 	await _play()

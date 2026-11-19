@@ -4,6 +4,8 @@
 [ext_resource type="Script" path="res://scripts/CampaignGuide.gd" id="2_guide"]
 [ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="3_hud_theme"]
 [ext_resource type="Script" path="res://scripts/WatchDial.gd" id="4_watch_dial"]
+[ext_resource type="Script" uid="uid://d2c8b051731pv" path="res://scripts/HarvestReceipt.gd" id="5_harvest_receipt"]
+[ext_resource type="PackedScene" path="res://scenes/HUDVitals.tscn" id="6_vitals"]
 
 [node name="EstateHUD" type="Control"]
 layout_mode = 3
@@ -20,48 +22,42 @@ script = ExtResource("1_hud")
 layout_mode = 1
 offset_left = 16.0
 offset_top = 16.0
-offset_right = 332.0
+offset_right = 312.0
 offset_bottom = 16.0
 theme_type_variation = &"HudSlips"
 
 [node name="Stack" type="VBoxContainer" parent="Journal"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 4
+theme_override_constants/separation = 3
 
-[node name="JournalHeader" type="HBoxContainer" parent="Journal/Stack"]
+[node name="Heading" type="HBoxContainer" parent="Journal/Stack"]
 layout_mode = 2
 mouse_filter = 2
+theme_override_constants/separation = 6
 
-[node name="JournalDetails" type="Button" parent="Journal/Stack/JournalHeader"]
-unique_name_in_owner = true
+[node name="GuideHeading" type="Label" parent="Journal/Stack/Heading"]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
+unique_name_in_owner = true
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.27, 0.14, 0.076, 1)
+autowrap_mode = 3
+
+[node name="JournalDetails" type="Button" parent="Journal/Stack/Heading"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
+size_flags_vertical = 4
 mouse_default_cursor_shape = 2
 toggle_mode = true
-theme_type_variation = &"HudButton"
-theme_override_font_sizes/font_size = 13
+theme_type_variation = &"HudJournalTab"
+theme_override_font_sizes/font_size = 14
+theme_override_constants/icon_max_width = 9
+icon_alignment = 2
 text = "封地手记"
 tooltip_text = "展开或收起今日来客和人物近况"
-
-[node name="NeighborsButton" type="Button" parent="Journal/Stack/JournalHeader"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(82, 28)
-layout_mode = 2
-mouse_default_cursor_shape = 2
-theme_type_variation = &"HudButton"
-theme_override_font_sizes/font_size = 14
-text = "邻里手记"
-
-[node name="HandoverButton" type="Button" parent="Journal/Stack/JournalHeader"]
-unique_name_in_owner = true
-visible = false
-custom_minimum_size = Vector2(75, 28)
-layout_mode = 2
-mouse_default_cursor_shape = 2
-theme_type_variation = &"HudButton"
-theme_override_font_sizes/font_size = 14
-text = "交接简"
 
 [node name="Arrival" type="Label" parent="Journal/Stack"]
 unique_name_in_owner = true
@@ -71,8 +67,24 @@ mouse_filter = 2
 theme_override_colors/font_color = Color(0.42, 0.27, 0.13, 1)
 theme_override_font_sizes/font_size = 14
 text = "新领采邑 · 渠伯留下了交接简"
+autowrap_mode = 3
 
-[node name="RaidAlert" type="Button" parent="Journal/Stack"]
+[node name="CampaignGuide" type="Label" parent="Journal/Stack"]
+layout_mode = 2
+mouse_filter = 2
+unique_name_in_owner = true
+theme_override_font_sizes/font_size = 16
+theme_override_constants/line_spacing = 1
+autowrap_mode = 3
+script = ExtResource("2_guide")
+
+[node name="Shortcuts" type="HFlowContainer" parent="Journal/Stack"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 5
+theme_override_constants/v_separation = 3
+
+[node name="RaidAlert" type="Button" parent="Journal/Stack/Shortcuts"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(0, 30)
@@ -82,22 +94,17 @@ mouse_default_cursor_shape = 2
 theme_type_variation = &"HudPrimary"
 theme_override_font_sizes/font_size = 15
 
-[node name="GuideHeading" type="Label" parent="Journal/Stack"]
-layout_mode = 2
-mouse_filter = 2
+[node name="DefenseReport" type="Button" parent="Journal/Stack/Shortcuts"]
 unique_name_in_owner = true
-theme_override_font_sizes/font_size = 22
-theme_override_colors/font_color = Color(0.27, 0.14, 0.076, 1)
-
-[node name="CampaignGuide" type="Label" parent="Journal/Stack"]
+visible = false
+custom_minimum_size = Vector2(0, 27)
 layout_mode = 2
-mouse_filter = 2
-unique_name_in_owner = true
-theme_override_font_sizes/font_size = 16
-autowrap_mode = 3
-script = ExtResource("2_guide")
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 14
+text = "守备战报 · 待复盘"
 
-[node name="RouteProgress" type="Button" parent="Journal/Stack"]
+[node name="RouteProgress" type="Button" parent="Journal/Stack/Shortcuts"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(0, 31)
@@ -106,27 +113,62 @@ size_flags_horizontal = 0
 mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 15
 
-[node name="CouncilPrepButton" type="Button" parent="Journal/Stack"]
+[node name="PromotionArts" type="Button" parent="Journal/Stack/Shortcuts"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(0, 31)
 layout_mode = 2
-size_flags_horizontal = 0
-mouse_default_cursor_shape = 2
-theme_override_font_sizes/font_size = 15
-text = "查议税条件"
-
-[node name="PromotionArts" type="Button" parent="Journal/Stack"]
-unique_name_in_owner = true
-visible = false
-custom_minimum_size = Vector2(0, 31)
-layout_mode = 2
-size_flags_horizontal = 0
 mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 15
 text = "查看六艺"
 
-[node name="WorksiteButton" type="Button" parent="Journal/Stack"]
+[node name="CouncilPrepButton" type="Button" parent="Journal/Stack/Shortcuts"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 31)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 15
+text = "查议税条件"
+
+[node name="TributeButton" type="Button" parent="Journal/Stack/Shortcuts"]
+visible = false
+custom_minimum_size = Vector2(0, 27)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+unique_name_in_owner = true
+theme_override_font_sizes/font_size = 14
+
+[node name="OpeningAction" type="Button" parent="Journal/Stack/Shortcuts"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 27)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 14
+
+[node name="FirstPrivateButton" type="Button" parent="Journal/Stack/Shortcuts"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 27)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 14
+text = "兼种一格私田"
+
+[node name="RotationGuideButton" type="Button" parent="Journal/Stack/Shortcuts"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 27)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 14
+text = "轮作试种"
+
+[node name="WorksiteButton" type="Button" parent="Journal/Stack/Shortcuts"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(0, 27)
@@ -138,7 +180,7 @@ theme_override_font_sizes/font_size = 14
 text = "找工地"
 tooltip_text = "指向最近的未完工井田"
 
-[node name="CancelDirections" type="Button" parent="Journal/Stack"]
+[node name="CancelDirections" type="Button" parent="Journal/Stack/Shortcuts"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(0, 27)
@@ -149,38 +191,41 @@ mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 14
 text = "取消指路"
 
-[node name="TributeButton" type="Button" parent="Journal/Stack"]
-visible = false
-custom_minimum_size = Vector2(0, 27)
+[node name="Journals" type="HBoxContainer" parent="Journal/Stack/Shortcuts"]
 layout_mode = 2
-size_flags_horizontal = 0
-mouse_default_cursor_shape = 2
-unique_name_in_owner = true
-theme_override_font_sizes/font_size = 14
+mouse_filter = 2
+theme_override_constants/separation = 4
 
-[node name="OpeningAction" type="Button" parent="Journal/Stack"]
+[node name="NeighborsButton" type="Button" parent="Journal/Stack/Shortcuts/Journals"]
 unique_name_in_owner = true
-visible = false
-custom_minimum_size = Vector2(0, 27)
+custom_minimum_size = Vector2(0, 26)
 layout_mode = 2
-size_flags_horizontal = 0
 mouse_default_cursor_shape = 2
+theme_type_variation = &"HudJournalTab"
 theme_override_font_sizes/font_size = 14
+text = "邻里手记"
 
-[node name="FirstPrivateButton" type="Button" parent="Journal/Stack"]
+[node name="HandoverButton" type="Button" parent="Journal/Stack/Shortcuts/Journals"]
 unique_name_in_owner = true
 visible = false
-custom_minimum_size = Vector2(0, 27)
+custom_minimum_size = Vector2(0, 26)
 layout_mode = 2
-size_flags_horizontal = 0
 mouse_default_cursor_shape = 2
+theme_type_variation = &"HudJournalTab"
 theme_override_font_sizes/font_size = 14
-text = "兼种一格私田"
+text = "交接简"
 
-[node name="VisitorLabel" type="Label" parent="Journal/Stack"]
+[node name="VisitorNotes" type="ScrollContainer" parent="Journal/Stack"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="VisitorLabel" type="Label" parent="Journal/Stack/VisitorNotes"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.36, 0.28, 0.16, 1)
 theme_override_font_sizes/font_size = 14
@@ -244,6 +289,7 @@ offset_left = -258.0
 offset_top = 16.0
 offset_right = -16.0
 offset_bottom = 16.0
+grow_horizontal = 0
 theme_type_variation = &"HudCalendar"
 
 [node name="Stack" type="VBoxContainer" parent="Calendar"]
@@ -256,18 +302,9 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="DayLabel" type="Label" parent="Calendar/Stack/Date"]
-layout_mode = 2
-mouse_filter = 2
-unique_name_in_owner = true
-theme_override_font_sizes/font_size = 22
-theme_type_variation = &"HudBronzeInk"
-size_flags_horizontal = 3
-text = "第 1 天"
-
 [node name="WatchDial" type="Control" parent="Calendar/Stack/Date"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(44, 44)
+custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_filter = 2
@@ -284,6 +321,15 @@ theme_override_font_sizes/font_size = 13
 theme_override_colors/font_color = Color(0.99, 0.89, 0.69, 1)
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="DayLabel" type="Label" parent="Calendar/Stack/Date"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 22
+theme_type_variation = &"HudBronzeInk"
+size_flags_horizontal = 3
+text = "第 1 天"
 
 [node name="WeatherSeal" type="PanelContainer" parent="Calendar/Stack/Date"]
 custom_minimum_size = Vector2(29, 29)
@@ -346,14 +392,16 @@ theme_override_font_sizes/font_size = 13
 text = "账目"
 tooltip_text = "查看爵位、声望、国库和井田"
 
-[node name="GatheringLabel" type="Label" parent="Calendar/Stack"]
+[node name="SeasonEventButton" type="Button" parent="Calendar/Stack"]
 unique_name_in_owner = true
 visible = false
+custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
-mouse_filter = 2
+mouse_default_cursor_shape = 2
+theme_type_variation = &"HudNight"
 theme_override_font_sizes/font_size = 13
-theme_override_colors/font_color = Color(1, 0.77, 0.54, 1)
-horizontal_alignment = 2
+text_overrun_behavior = 3
+alignment = 0
 
 [node name="LedgerDetails" type="VBoxContainer" parent="Calendar/Stack"]
 unique_name_in_owner = true
@@ -385,7 +433,7 @@ horizontal_alignment = 2
 [node name="Treasury" type="HBoxContainer" parent="Calendar/Stack"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
 [node name="CoinIcon" type="TextureRect" parent="Calendar/Stack/Treasury"]
 unique_name_in_owner = true
@@ -401,14 +449,24 @@ stretch_mode = 5
 layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
+size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 16
 theme_type_variation = &"HudBronzeInk"
+
+[node name="GrainIcon" type="TextureRect" parent="Calendar/Stack/Treasury"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+texture_filter = 1
+expand_mode = 1
+stretch_mode = 5
 
 [node name="InventoryLabel" type="Label" parent="Calendar/Stack/Treasury"]
 layout_mode = 2
 mouse_filter = 2
 unique_name_in_owner = true
-size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 16
 theme_type_variation = &"HudBronzeInk"
 horizontal_alignment = 2
@@ -463,76 +521,28 @@ theme_override_colors/font_outline_color = Color(0.18, 0.10, 0.059, 1)
 theme_override_constants/outline_size = 3
 horizontal_alignment = 2
 
-[node name="Vitals" type="PanelContainer" parent="."]
+[node name="Vitals" parent="." instance=ExtResource("6_vitals")]
 layout_mode = 1
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 16.0
 offset_top = -16.0
-offset_right = 196.0
+offset_right = 202.0
 offset_bottom = -16.0
 grow_vertical = 0
-theme_type_variation = &"HudPanel"
 
-[node name="Stack" type="VBoxContainer" parent="Vitals"]
+[node name="HarvestReceipt" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 0
+mouse_filter = 2
+theme_type_variation = &"HudRail"
+script = ExtResource("5_harvest_receipt")
+
+[node name="Caption" type="Label" parent="HarvestReceipt"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 4
-
-[node name="Health" type="HBoxContainer" parent="Vitals/Stack"]
-layout_mode = 2
-mouse_filter = 2
-
-[node name="HealthIcon" type="TextureRect" parent="Vitals/Stack/Health"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(16, 16)
-layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 2
-texture_filter = 1
-expand_mode = 1
-stretch_mode = 5
-
-[node name="HealthLabel" type="Label" parent="Vitals/Stack/Health"]
-layout_mode = 2
-mouse_filter = 2
-unique_name_in_owner = true
-theme_override_font_sizes/font_size = 14
-
-[node name="HealthBar" type="ProgressBar" parent="Vitals/Stack"]
-layout_mode = 2
-unique_name_in_owner = true
-mouse_filter = 2
-custom_minimum_size = Vector2(0, 6)
-show_percentage = false
-theme_type_variation = &"HudHealth"
-
-[node name="Stamina" type="HBoxContainer" parent="Vitals/Stack"]
-layout_mode = 2
-mouse_filter = 2
-
-[node name="StaminaIcon" type="TextureRect" parent="Vitals/Stack/Stamina"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(16, 16)
-layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 2
-texture_filter = 1
-expand_mode = 1
-stretch_mode = 5
-
-[node name="StaminaLabel" type="Label" parent="Vitals/Stack/Stamina"]
-layout_mode = 2
-mouse_filter = 2
-unique_name_in_owner = true
-theme_override_font_sizes/font_size = 14
-
-[node name="StaminaBar" type="ProgressBar" parent="Vitals/Stack"]
-layout_mode = 2
-unique_name_in_owner = true
-mouse_filter = 2
-custom_minimum_size = Vector2(0, 6)
-show_percentage = false
+theme_override_font_sizes/font_size = 15
+horizontal_alignment = 1
 
 [node name="SeedBelt" type="PanelContainer" parent="."]
 layout_mode = 1
@@ -576,12 +586,47 @@ theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.99, 0.89, 0.69, 1)
 autowrap_mode = 3
 
+[node name="SowFromPlan" type="Button" parent="SeedBelt/Stack/BeltHeader"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 13
+toggle_mode = true
+text = "按安排播种"
+
 [node name="FarmStatus" type="Button" parent="SeedBelt/Stack/BeltHeader"]
 layout_mode = 2
 unique_name_in_owner = true
 mouse_default_cursor_shape = 2
 tooltip_text = "打开舆图查看田务并指路"
 theme_override_font_sizes/font_size = 13
+
+[node name="PlanActions" type="HBoxContainer" parent="SeedBelt/Stack"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="PrepareEmptyPlots" type="Button" parent="SeedBelt/Stack/PlanActions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(105, 0)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 13
+toggle_mode = true
+text = "整备空田"
+
+[node name="ReplantAfterHarvest" type="Button" parent="SeedBelt/Stack/PlanActions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(105, 0)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 13
+toggle_mode = true
+text = "收后续播"
 
 [node name="SeedSlots" type="HBoxContainer" parent="SeedBelt/Stack"]
 layout_mode = 2
@@ -749,6 +794,7 @@ offset_left = -224.0
 offset_top = -93.0
 offset_right = -16.0
 offset_bottom = -62.0
+grow_horizontal = 0
 mouse_default_cursor_shape = 2
 theme_type_variation = &"HudButton"
 theme_override_font_sizes/font_size = 16

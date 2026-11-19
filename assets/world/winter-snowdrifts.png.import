@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://d11mnpomncnfe"
+path="res://.godot/imported/winter-snowdrifts.png-f68edae92d2bfec1e2840cccf20849a4.res"
+
+[deps]
+
+source_file="res://assets/world/winter-snowdrifts.png"
+dest_files=["res://.godot/imported/winter-snowdrifts.png-f68edae92d2bfec1e2840cccf20849a4.res"]
+
+[params]
+
+authored_at_2x=true

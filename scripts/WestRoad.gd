@@ -2,12 +2,12 @@ extends Node2D
 
 const LAYOUT := preload("res://scripts/WestRoadLayout.gd")
 const GROUND := preload("res://scripts/WestRoadGround.gd")
+const WOODEN_BRIDGE := preload("res://scripts/WoodenBridge.gd")
 const TRACK_AUDIO := preload("res://scripts/TerrainAudio.gd")
 const VISITOR := preload("res://scenes/Visitor.tscn")
 const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
 const TRACK_DIRECTION := preload("res://scripts/RoadNetwork.gd")
 const SURVEY := preload("res://scripts/SurveyMap.gd")
-const SIGN_MATERIAL := preload("res://resources/world_hint_material.tres")
 const GOLD := Color("#f0cc7b")
 
 @onready var player: Player = $Player
@@ -22,7 +22,6 @@ var silk_guest: Visitor
 var network: TRACK_DIRECTION
 var route := PackedVector2Array()
 var route_origin := Vector2.INF
-var sky_icons := HUDIcons.SKY.map(HUDIcons.icon)
 
 func _ready() -> void:
 	$MarketGate.position = LAYOUT.MARKET_GATE
@@ -33,22 +32,21 @@ func _ready() -> void:
 	player.arrive_at($MarketArrival if Global.restored_west_road_from_market else $EstateArrival)
 	Global.restored_west_road_from_market = false
 	ground.place_scenery($Scenery)
+	add_child(WOODEN_BRIDGE.new(LAYOUT.BRIDGE))
+	player.restore_walking_checkpoint(LAYOUT.BOUNDS)
 	network = TRACK_DIRECTION.new([LAYOUT.ROAD, LAYOUT.MEADOW_TRACK], self, player)
 	scheduled_guest = Global.visitor_for_day(Global.current_day)
 	$DialogManager.setup($UI/Control, player)
 	for foot: Vector2 in [Vector2(-243, 59), Vector2(245, 60), Vector2(-58, 58), Vector2(54, 59)]:
 		$DayLighting.place_lamp($Scenery, foot, 0.82)
-	_place_sign(LAYOUT.MARKET_GATE + Vector2(15, -48), "← 西市")
-	_place_sign(LAYOUT.ESTATE_GATE + Vector2(-16, -48), "封地 →")
-	_place_sign(LAYOUT.MEADOW_JUNCTION + Vector2(21, 30), "↓ " + Sheepfold.MEADOW)
 	$Waypoint.draw.connect(_draw_waypoint)
 	player.footstep.connect(_step)
-	settings.save_resume_hint = "续档时从溪桥道较近的一侧路口继续。"
 	%SettingsButton.icon = HUDIcons.icon(HUDIcons.Symbol.SETTINGS)
 	%SettingsButton.pressed.connect(settings.show)
 	settings.visibility_changed.connect(_update_modal)
 	region_map.setup(SURVEY.Region.ROAD, func(): return player.conversation_open, Global.regional_destination,
 		_follow_region_destination, _clear_regional_trip, null, Callable(), _map_road_progress)
+	$CampaignHUD.add_field_return(player, _follow_region_destination)
 	region_map.road_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
 	%RouteIcon.texture = HUDIcons.icon(HUDIcons.Symbol.MAP)
 	GameEvents.daylight_changed.connect(_refresh_clock)
@@ -106,7 +104,6 @@ func resume_from_market() -> bool:
 	return player.position.distance_squared_to(LAYOUT.MARKET_GATE) < player.position.distance_squared_to(LAYOUT.ESTATE_GATE)
 
 func _refresh_clock() -> void:
-	%WeatherIcon.texture = sky_icons[HUDIcons.sky_index()]
 	%Date.text = "第 %d 天 · %s · %s%s" % [Global.current_day, Global.day_watch_label(), Global.get_current_solar_term(),
 		" · 雨" if Global.has_rain() else ""]
 
@@ -139,9 +136,10 @@ func _talk_to_silk_guest(data: VisitorData) -> void:
 func _refresh_route() -> void:
 	var target := Global.market_trip_target
 	var tracking_meadow := target == Sheepfold.MEADOW
+	var tracking_field := target == Global.FIELD_RETURN
 	var tracking_guest := target == VisitorData.SILK_MERCHANT
 	var silk_trip := scheduled_guest.silk_trip() if tracking_guest and scheduled_guest else VisitorData.SilkTrip.NONE
-	if not tracking_meadow and (not tracking_guest or not silk_guest):
+	if not tracking_meadow and not tracking_field and (not tracking_guest or not silk_guest):
 		route.clear()
 		route_origin = Vector2.INF
 	if not Global.ravine_trip_target.is_empty():
@@ -154,8 +152,12 @@ func _refresh_route() -> void:
 	elif target == Global.MARKET_RETURN:
 		%Route.text = "回封地 →"
 		route_direction = Vector2.RIGHT
-	elif target == Global.WATER_SOURCE:
-		%Route.text = "封地 · 水源 →"
+	elif tracking_field:
+		%Route.text = "封地 · %s →" % Global.field_return_place_name()
+		route_direction = Vector2.RIGHT
+		_route_to(LAYOUT.ESTATE_GATE, 8.0)
+	elif target in Global.ESTATE_REGIONAL_STOPS:
+		%Route.text = "封地 · %s →" % target
 		route_direction = Vector2.RIGHT
 	elif tracking_guest and silk_guest:
 		var foot := silk_guest.position
@@ -190,7 +192,7 @@ func _draw_waypoint() -> void:
 		return
 	if route_direction == Vector2.ZERO:
 		return
-	for point: Vector2 in LAYOUT.ROAD.slice(1, -1):
+	for point: Vector2 in LAYOUT.ROAD.slice(1, -1) + [LAYOUT.BRIDGE.get_center()]:
 		var head := point + route_direction * 3.0
 		var tail := point - route_direction * 3.0
 		$Waypoint.draw_polyline(PackedVector2Array([tail - Vector2(0, 4), head, tail + Vector2(0, 4)]), GOLD, 1.5)
@@ -199,26 +201,11 @@ func finish_meadow_route() -> void:
 	if Global.market_trip_target == Sheepfold.MEADOW:
 		_clear_regional_trip()
 
-func _place_sign(point: Vector2, caption: String) -> void:
-	var sign := Label.new()
-	sign.text = caption
-	sign.position = point - Vector2(44, 16)
-	sign.size.x = 88.0
-	sign.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	sign.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	sign.material = SIGN_MATERIAL
-	sign.z_index = 4
-	sign.add_theme_font_size_override("font_size", 10)
-	sign.add_theme_color_override("font_color", Color("#e5d9b0"))
-	sign.add_theme_color_override("font_outline_color", Color("#263827"))
-	sign.add_theme_constant_override("outline_size", 3)
-	add_child(sign)
-
 func _step(foot: Vector2) -> void:
 	var surface := TRACK_AUDIO.Surface.GRASS
 	if LAYOUT.BRIDGE.has_point(foot):
 		surface = TRACK_AUDIO.Surface.PLANK
-	elif Geometry2D.is_point_in_polygon(foot, ground.pavement):
+	elif ground.bridge_apron_at(foot) or Geometry2D.is_point_in_polygon(foot, ground.pavement):
 		surface = TRACK_AUDIO.Surface.STONE
 	elif Geometry2D.is_point_in_polygon(foot, ground.track) or Geometry2D.is_point_in_polygon(foot, ground.meadow_track):
 		surface = TRACK_AUDIO.Surface.TRACK

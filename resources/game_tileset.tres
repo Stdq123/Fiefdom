@@ -1,6 +1,6 @@
 [gd_resource type="TileSet" format=3 uid="uid://bp7kea3f521rt"]
 
-[ext_resource type="Texture2D" uid="uid://b1wysqyuawdlj" path="res://assets/tileset.svg" id="1_tex"]
+[ext_resource type="Texture2D" path="res://assets/world/estate-field-soil.png" id="1_tex"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1"]
 texture = ExtResource("1_tex")
@@ -8,9 +8,13 @@ use_texture_padding = false
 0:0/0 = 0
 1:0/0 = 0
 1:0/0/custom_data_0 = true
+2:0/0 = 0
+3:0/0 = 0
 0:1/0 = 0
 1:1/0 = 0
 1:1/0/custom_data_0 = true
+2:1/0 = 0
+3:1/0 = 0
 
 [resource]
 custom_data_layer_0/name = "is_public_field"

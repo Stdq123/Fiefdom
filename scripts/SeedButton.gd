@@ -36,6 +36,12 @@ var crop_id: String
 var crop_picture: Dictionary
 var sowing_hint: String
 
+func _draw() -> void:
+	if button_pressed:
+		var lip := Vector2(floorf(size.x / 2.0), size.y - 3.0)
+		draw_colored_polygon(PackedVector2Array([lip + Vector2(-5, 0), lip + Vector2(0, -4),
+			lip + Vector2(5, 0)]), Color("#f7d694"))
+
 static func display_name(id: String, crop_name: String) -> String:
 	return "麥" if id == "wheat" else crop_name
 

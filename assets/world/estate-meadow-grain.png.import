@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://gdp2r7cgumun"
+path="res://.godot/imported/estate-meadow-grain.png-83969007b7c37a7b490acf71160d2a3a.res"
+
+[deps]
+
+source_file="res://assets/world/estate-meadow-grain.png"
+dest_files=["res://.godot/imported/estate-meadow-grain.png-83969007b7c37a7b490acf71160d2a3a.res"]
+
+[params]
+
+authored_at_2x=true

@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://0pnkhdb5aupo"
+path="res://.godot/imported/envoy-motion.png-633d83d9fcaf5a74978e176a3d8bb516.res"
+
+[deps]
+
+source_file="res://assets/characters/envoy-motion.png"
+dest_files=["res://.godot/imported/envoy-motion.png-633d83d9fcaf5a74978e176a3d8bb516.res"]
+
+[params]
+
+authored_at_2x=true

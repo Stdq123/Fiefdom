@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://dhe4whnjp8nt5"
+path="res://.godot/imported/winter-hearth.png-95cd81e3330625fb26d338a75cdb6f77.res"
+
+[deps]
+
+source_file="res://assets/world/winter-hearth.png"
+dest_files=["res://.godot/imported/winter-hearth.png-95cd81e3330625fb26d338a75cdb6f77.res"]
+
+[params]
+
+authored_at_2x=true

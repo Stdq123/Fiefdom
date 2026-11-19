@@ -1,6 +1,6 @@
 extends Node2D
 
-const ART := preload("res://assets/characters/market-porter.svg")
+const ART := preload("res://assets/characters/market-porter.png")
 const LAYOUT := preload("res://scripts/WestMarketLayout.gd")
 const GRAIN_STOP := Vector2(-355, 134)
 const FISH_STOP := Vector2(-129, -90)
@@ -15,7 +15,7 @@ const LEAVE_MARKET := 0.845
 var route := PackedVector3Array()
 
 func _ready() -> void:
-	body.set_motion_sheet(ART)
+	body.set_motion_sheet(ART, CharacterArt.STREET_COLUMNS)
 	var fork := LAYOUT.MAIN_ROAD.find(LAYOUT.FISH_JUNCTION)
 	var fish_lane := LAYOUT.FISH_LANE.slice(1, -1)
 	_append_leg([Vector2(-396, 145), GRAIN_STOP], 0.0, 0.014)
@@ -60,4 +60,4 @@ func _follow_clock(animate: bool) -> void:
 	else:
 		body.stand()
 		body.face(Vector2.UP if from == to else to - from)
-	creel.position.x = -8.0 if body.flip_h else 8.0
+	body.carry_at(creel, 2.5)

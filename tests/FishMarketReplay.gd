@@ -128,6 +128,17 @@ func _summer_trade() -> bool:
 	await tree.create_timer(0.35).timeout
 	_expect(swimming.visible and swimming.position != before and swimming.texture.region.position.x == 16.0,
 		"The delivered minnow swims in the stall basin.")
+	var ground: Node2D = market.ground
+	var apron := Vector2(ground.LAYOUT.BASIN.get_center().x, ground.LAYOUT.BASIN.end.y + 27.0)
+	await Campaign.walk_market_to(tree, market, apron)
+	await Campaign.walk_straight(tree, market.player, Vector2(apron.x, ground.LAYOUT.BASIN.get_center().y))
+	var stop: Vector2 = market.player.position
+	var rim: Node2D = market.get_node("Scenery/BasinFront")
+	_expect(absf(stop.x - apron.x) < 3.0 and absf(stop.y - ground.LAYOUT.BASIN.end.y - 7.0) < 2.0,
+		"The player stops against the stone trough, with the fish still inside.")
+	_expect(rim.get_parent().y_sort_enabled and ground.BASIN_INNER.has_point(swimming.position)
+		and swimming.visible and rim.position.y < stop.y, "The front lip is behind the player on the apron and the fish stays in the water.")
+	print("FISH_MARKET_BASIN foot=", stop, " rim=", ground.LAYOUT.BASIN.end.y, " fish=", swimming.position)
 	_expect(not market.get_node("Porter/Creel").visible, "The porter has yet to collect the fish.")
 	await _snapshot("06-stall-plaque")
 	return true

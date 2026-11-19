@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://3nqygjcyt5p4"
+path="res://.godot/imported/ravine-cascade.png-fc2221d86c4b7d1a7a0b558ab827d470.res"
+
+[deps]
+
+source_file="res://assets/world/ravine-cascade.png"
+dest_files=["res://.godot/imported/ravine-cascade.png-fc2221d86c4b7d1a7a0b558ab827d470.res"]
+
+[params]
+
+authored_at_2x=true

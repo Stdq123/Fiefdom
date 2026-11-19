@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://dmtg27ww8bw8w"
+path="res://.godot/imported/autumn-meadow-grain.png-ab354b4b1a79bb698b2bfc53b6c5cf83.res"
+
+[deps]
+
+source_file="res://assets/world/autumn-meadow-grain.png"
+dest_files=["res://.godot/imported/autumn-meadow-grain.png-ab354b4b1a79bb698b2bfc53b6c5cf83.res"]
+
+[params]
+
+authored_at_2x=true

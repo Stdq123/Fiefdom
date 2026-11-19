@@ -36,7 +36,7 @@ func _open() -> Control:
 	return ui.get_node_or_null("Control/DialoguePanel")
 
 func _approach(actor: Node2D) -> Control:
-	await Campaign.walk_to(self, world.player, actor.global_position + Vector2(0, 23))
+	await Campaign.walk_estate_road_to(self, world, actor.global_position + Vector2(0, 23))
 	return await _open()
 
 func _option(dialog: Control, prefix: String) -> Button:
@@ -105,7 +105,7 @@ func _run() -> void:
 		and "季青" in ui.hud.visitor_label.text and "国库" in dialog.text_label.text,
 		"The first guest and the journal agree on the pavilion.")
 	var first_portrait: Rect2 = dialog.portrait.texture.region
-	_expect(dialog.portrait.texture.atlas.resource_path.ends_with("neighbor-portraits.svg")
+	_expect(dialog.portrait.texture.atlas.resource_path == CharacterArt.NEIGHBOR_PORTRAITS
 		and _option(dialog, "送路粮") == null, "Ji Qing has a portrait and the errand waits for tribute.")
 	await _choose(dialog, "交谈")
 	var before: int = state.reputation

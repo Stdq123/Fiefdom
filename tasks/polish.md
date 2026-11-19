@@ -6,12 +6,346 @@
 
 | 玩家体验 | 完成时要看到的证据 | 当前情况 |
 | --- | --- | --- |
-| 耕作清楚、有手感 | 从标题开新档，不查说明书就能找到公田、换种、判断水分和收获；窗口和镜头变化后仍能准确点田。 | 新档交接简说明公私田的收成去向。首次纳贡后标出第一茬私田，玩家可另行指路去谈轮作。拖动耕作有逐格反馈。种子栏可直达井田舆图，按成熟、待浇或断水逐格指路。「今夜安排」预览公私田新熟格数和缺水。还需初次玩家独立试玩。 |
-| 封地有人生活 | 玩家知道去哪找熟人；重复来访会遇到熟悉的角色和新的对话，交谈、帮忙及重要决定会留下可见变化。 | 七位邻居有独立服饰，手记可标出人物和晚间去处。蒲宁在竹径等手记时，其他来客按原日程赴约。五位常规来客按时辰和天气去南路亭。晴夜，收工的具名门客会到亭东席案歇脚，有各自的晚间对白。因缺餐或议税离任的门客会在回访时说起缘由，可在对话中再次邀请。蔡娘在西市陈列样绸，陶辛晴天沿西路去绸摊再回南路亭，指引随他跨关道。首次纳贡可接续渠伯轮作，季青的路粮可接续亭西歇脚处，谷雨合奏留下曲簿记录。还需完整人工试玩核对相遇节奏和对白重复感。 |
-| 地图有可记住的地方 | 封地和野外有不同的地标、捷径和探索回报；地形有前后层次，路径、资源和敌人始终可辨。 | 封地北侧的石垒标出行走边界，两条关道延伸出镜头，草地与田埂在路肩交接。封地与竹涧随四季更换树形和地表，新井田从立桩到完工能在地图看出变化。南路亭、野果坳与浅滩有随天气和季节出现的小动物。竹涧舆图可沿木桥或浅滩指路到采集点、钓点、今日水迹和返程西门。西市舆图标出石板街和五处去处，可从鱼摊或交货簿出发去钓鱼，再从竹涧指路回来交货。三处水迹可跨日记录，回封地可开药圃。还需初次玩家验证路线指引。 |
-| 多天经营仍有选择 | 开局之外，公私田、工艺、门客与探索互相带来取舍；试玩记录能指出多种有效策略以及会令人反复刷同一动作的段落。 | 夜间备粮减少双结局回放里的手动转粮与购粮，收割岗可用每夜额外一份口粮换取田间帮手。缺粮时可选优先分餐的门客，睡前看谁会缺餐或离任。照料门客可逐格或按井田安排私田续播。记完轮作簿后可让门客交替播种菽和另一种作物，田格显示下茬和缺水。去西市或竹涧时门客继续田务，回封地可查收成去向。蚕棚可按整批桑叶续养，缫丝和织绸可批量操作，过夜前后可查实耗与产出。鱼摊每季有一张留鱼单，可在铜钱、口粮和另一张时令单之间取舍。议税前可比较收获顺序对公田占比的影响，查还差几份纳贡。见召简后可对照门客粮耗、两条结局与延期经费。仍需人工长线试玩核对节奏。 |
-| 声音、美术和故事统一 | 人物、农事和地点有可辨的声音与动作，重要节点能看见人物和封地的变化；设置可调音量和画面。 | 谷雨的雨声在封地、竹涧和西市间连续播放，入室渐轻，西市虫鸣随季节变化。竹涧有溪水、晴天林鸟、近岸蛙鸣和与地表对应的脚步声。渠伯成功浇水时能在田边听见倒水声。谷雨亭集、战斗预警和四种农事有独立音效。双结局各有封地内的镜头、使者行走和筝声短曲，结算按本局经历显示邻里记事。后续仍需补齐其他关键情节的声音。 |
-| 成品可交付 | Windows 成品解压后能跑完两条路线并恢复存档；两种窗口尺寸下实际操作；根据首次试玩与长线试玩记录修正阻塞和疲劳点。 | 最新 Windows 包通过手动和委派备粮的双结局、战败恢复、初税亩研究及 0.1.x 旧档迁移。结局可保存、重看和跳过，旧通关档直接恢复结算。过夜后退出重启、选档回退和坏档恢复已有专项证据。最终打磨版尚未验收。 |
+| 耕作清楚、有手感 | 从标题开新档，不查说明书就能找到公田、换种、判断水分和收获；窗口和镜头变化后仍能准确点田。 | 新档交接简说明公私田的收成去向。首次纳贡后，手记可接着指路做轮作，在过夜和续档后仍能找回试种田格。拖动耕作有逐格反馈，也可按 Shift 或手柄 LT 成批处理同类田务。种子栏可直达井田舆图，按成熟、待浇或断水逐格指路。「今夜安排」预览公私田新熟格数和缺水。还需初次玩家独立试玩。 |
+| 封地有人生活 | 玩家知道去哪找熟人；重复来访会遇到熟悉的角色和新的对话，交谈、帮忙及重要决定会留下可见变化。 | 七位邻居有独立服饰，手记可标出人物和晚间去处。等交接的人仍在约定地点，其他来客按日程赴约。来客和收工门客晴天酉时到亭东露天席，雨天申时走东侧支路到雨棚。送路粮、勘渠、交样绸或守备复盘后，相关邻居同日能赴席时，白天的「今夜安排」会预告话题、时辰和地点，可沿路去亭边候席。听完记入两人的手记。因缺餐或议税离任的门客会在回访时说起缘由，可在对话中再次邀请。陶辛晴天沿西路去蔡娘的绸摊再回亭东，指引随他跨关道。首次纳贡后，堂前谷袋旁可查首份贡粮和期限，渠伯接着谈轮作。季青的路粮可接续亭西歇脚处，谷雨合奏留下曲簿记录。议税定案后可在堂前或南路亭实地翻账。定案后的首笔纳贡或计税收成在案边留下谷袋，簿上记明经手者，门客当天也会说起这趟活。还需完整人工试玩核对相遇节奏和对白重复感。 |
+| 地图有可记住的地方 | 封地和野外有不同的地标、捷径和探索回报；地形有前后层次，路径、资源和敌人始终可辨。 | 封地北侧的石垒标出行走边界，两条关道延伸出镜头，草地与田埂在路肩交接。封地、溪桥道、西市和竹涧用同一斜俯视，树形随四季变化。 井田有连贯畦面、近侧土壁和田口踏石，渠水低于渠沿。堂前和西市的器物露出顶面和侧面。封地和溪桥道的木牌按岔路走向刻画箭头，竹涧小径开放后才挂指路牌。桥东草甸能看见草穗、搁镰的石头和割过的短茬。新井田从立桩到完工能在地图看出变化。南路亭、野果坳与浅滩有随天气和季节出现的小动物。东关的石铺路接到竹涧西门的峡口，过木桥之后循石阶上望溪台。桥身有近侧遮挡，小水瀑从岩岸落入溪床。溪桥道草沿下有分层的石壁，浅水沿壁脚收拢，桥头片石接木板并随路面切换脚步。竹涧林木、野果和石台野药沿用同一斜俯视，摘过能看见枝叶留在原处。望溪台的岩壁接到阶侧与地面，两座木桥露出桥墩和石基。舆图可沿木桥或浅滩指路到采集点、钓点、今日水迹和返程西门。溪桥道西段与西市石街使用同样的错缝石板。西市三摊露出侧板和石脚，摊前沿各自铺面摆出谷筐、鱼盘和布案。东口的青瓦晒布院用灰青院坪接石街，染缸随雨和收工盖好。沿街可遇见送布的染工。西市舆图标出石板街和五处去处，可从鱼摊或交货簿出发去钓鱼，再从竹涧指路回来交货。三处水迹可跨日记录，回封地可开药圃。还需初次玩家验证路线指引。 |
+| 多天经营仍有选择 | 开局之外，公私田、工艺、门客与探索互相带来取舍；试玩记录能指出多种有效策略以及会令人反复刷同一动作的段落。 | 夜间备粮减少双结局回放里的手动转粮与购粮，收割岗可用每夜额外一份口粮换取田间帮手。缺粮时可选优先分餐的门客，改派前也可看今晚分餐和离任预报。若预计有人离任，点「睡觉」会列出姓名和备粮入口。照料门客可逐格或按井田安排私田续播。玩家也可按各格安排亲手批量播种，同一块井田可以同时播下不同作物。「整备空田」可在一次确认里按计划翻地、播种并给缺水的旱作浇水。「收后续播」可在一次确认里收割并补种本批计划田。记完轮作簿后可让门客交替播种菽和另一种作物，田格显示下茬和缺水。去西市或竹涧时门客继续田务。返程可接回出门前标出的田务，按到访时的田况找下一格。返程提示本趟新增，今夜可查全天累计，次日从结算查回前一天的收成。留在封地时可手动等门客收工，也可在「今夜安排」勾选睡前收工，先结算田务再检查口粮。蚕棚可按整批桑叶续养，缫丝和织绸可批量操作，过夜前后可查实耗与产出。鱼摊每季有一张留鱼单，可在铜钱、口粮和另一张时令单之间取舍。下季时令单能提前标出需要播种或照料的私田。也可从本季或下季交货簿安排井田管事补种一茬。议税前可比较收获顺序对公田占比的影响，查还差几份纳贡。私田可以保留原种法，暂缓自动续播到议税定案。见召简后可对照门客粮耗、两条结局与延期经费。仍需人工长线试玩核对节奏。 |
+| 声音、美术和故事统一 | 人物、农事和地点有可辨的声音与动作，重要节点能看见人物和封地的变化；设置可调音量和画面。 | 谷雨的雨声在封地、竹涧和西市间连续播放，入室渐轻，西市虫鸣随季节变化。溪桥道延续封地四季曲，竹涧和西市各有独立配乐，返程接回封地的乐句。竹涧有溪水、晴天林鸟、近岸蛙鸣和与地表对应的脚步声。渠伯成功浇水时能在田边听见倒水声。野狗和斥候各有步态、起手和退场，拉弓与箭击有可辨的声音。谷雨亭集和四种农事也有独立音效。首份纳贡有谷粒入袋和短铃。确认守礼、改税和暂缓研究各有对应的信号声。双结局各有封地内的镜头、使者行走和筝声短曲。一位实际参与经营的留任门客会到场，结算也能重读他的对白。秋社领谷、冬至炉火和备饭上桌各有就地的声音。炉火随距离衰减，可通过环境音调节。后续仍需补齐其他关键情节的声音。 |
+| 成品可交付 | Windows 成品解压后能跑完两条路线并恢复存档。两种窗口尺寸下实际操作。根据首次试玩与长线试玩记录修正阻塞和疲劳点。 | 此前的 Windows 流程候选包通过普通新档双结局、战败恢复、初税亩研究、上一版存档接续及 90 秒连续运行。正常键鼠回放从新建起分段接续同一局，由第 32 天接到议税并走完两条结局。1920×1080 和 1024×768 的回放均在隔离桌面核对。0.1.x 迁移有此前版本的专项记录。最新美术候选包已核对解压启动和实机界面，新档到双结局、首次独立试玩和人工长线体验仍待验收。 |
+
+用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
+
+## 溪桥道的木栏、竹涧的绳桥和南池钓台
+
+溪桥道的宽桥铺浅色木板，桥两端用石座收边。竹涧的窄桥用深色旧板，麻绳垂在三根短桩之间。走在桥上能看见远侧横栏，近侧的绳索会挡住衣摆。南池的小钓台有自己的铺板和转角短栏，木梁下能看见石脚。封地和竹涧共用两种竹丛，叶片从细竿两侧展开，寒天的叶尖泛白。[四处 Windows 实机近景](../docs/previews/creek-crossings.jpg)
+
+19 秒短片从封地竹径的默认镜头开始，经过两座木桥，再看谷雨中沿岩唇落下的水帘、南池的甩竿和冬夜桥灯。跌水有八帧循环，底下的碎沫顺水流出，岩唇的位置固定。[1920×1080 实景短片](../docs/previews/creek-crossings.mp4) · [封地默认镜头和 HUD 原图](../docs/previews/creek-estate-1080p.png)
+
+1920×1080 和 1024×768 两种窗口在隔离桌面各取 72 张画面，工程、导出资源包和 Windows 程序逐张一致。两座桥的远近两侧都核对了人物经过栏杆前后的遮挡。两次独立导出的 SHA-256 均为 `5e08d96a06277cb9e87e0ed8155a2036a8d5bca24e3a8937df7a7f751dd7373a`。本轮冻结日期和物资取景，新档至双结局仍待玩法验收。[Windows x64 美术候选包](../build/polish-creek-craft/source-final/build/Fiefdom-1.0.0-Windows-x64.zip)
+
+## 岔路上的木牌和西市的摊招
+
+出堂门往西，木牌上的箭头指向西市。西廊、南路亭各有檐下匾额，井田工地的牌上分行写着工序和余下的夜数。竹涧的水迹竹简搁在桥边，望溪台的石刻立在上山石阶旁。粮、鱼、绸三摊的招牌上各有货物图记，走近柜台才显示摊主和操作键。冬夜的溪桥两端，积霜的铜灯透出火光。[四处地图的实景近照](../docs/previews/wayside-inscriptions.jpg)
+
+封地默认镜头可以同时看到堂门、田口牌、水源和屏幕边缘的手记。21 秒短片拍到主角和渠伯下田、人物从木牌前后经过、桥头读简、堂屋陈设、蚕棚缫丝和蔡娘的绸摊，最后沿冬夜的溪桥走过两盏灯。[默认镜头与 HUD 原图](../docs/previews/wayside-estate-1080p.png) · [六处场景的 Windows 实景短片](../docs/previews/wayside-walk.mp4)
+
+在隔离桌面冻结世界时间，用默认 1920×1080 和 1024×768 窗口各取 40 张画面。开发版、导出资源包和 Windows 程序逐张一致。人物与路牌相交处分别检查了牌在前和人在前的遮挡。两次独立导出的 SHA-256 均为 `c860fba1e4ff5869428fbc428eda0b0ff47ade891ff97b065fa83b55d84880ca`。新档到结局的玩法验收继续暂缓。[Windows x64 美术候选包](../build/polish-waymarks/source-final/build/Fiefdom-1.0.0-Windows-x64.zip)
+
+## 从封地田口到西市石街的四季地表
+
+封地、溪桥道、竹涧和西市共用四季草地。春天的嫩草、盛夏的阔叶、秋日的枯叶和冬天的霜草都沿着路肩生长。封地出门是踩实的土，过溪桥后接上西市的错缝石板。竹涧的岔路上能看见碎竹叶。薄雪在路边断成几片，露出底下的石头和草。[四处地图的 Windows 实景](../docs/previews/four-seasons-lanes.jpg)
+
+井田能分辨碎土和翻过的田垄，浇过的地方在沟里留下深色湿痕。公田的金色角标留在土面上。16 秒的实景短片从春日的田边开始，经过盛夏的木桥和秋日的溪瀑，停在冬日的绸摊。[四季实景短片](../docs/previews/four-seasons-lanes.mp4)
+
+在隔离桌面冻结日期和物资，分别用默认 1920×1080 和 1024×768 窗口取景。每种尺寸各检查 44 张四季、春雨和界面画面，工程、导出资源包和 Windows 程序逐张一致。两次独立导出的 SHA-256 均为 `91753d1b737b749cbe0a8d3c9304acc7e8625dca60155de59110c98791f2bab7`。本候选包的新档至结局玩法验收仍待进行。[Windows x64 美术候选包](../build/polish-ground/source-final/build/Fiefdom-1.0.0-Windows-x64.zip)
+
+## 田边的测绳、木夯和水闸
+
+第二块井田立桩时，卷绳和木槌放在草地上，工人出入的一侧留着开口。清草后能看见翻起的草皮和装根茎的竹筐。整地时夯板落在平土上，划畦时才拉出九格测绳。完工后木桩收起，原处的田口用踏石接上土路。筹备簿上的木槌和舆图里的农具与工地共用图稿，两处工地可以各自显示不同的进度。[五个状态的同机位近景](../docs/previews/fieldwork-stages.png) · [两处工地的舆图](../docs/previews/survey-map.png)
+
+渠水从闸板下面进入田沟，断水后同一个闸座下会露出泥底。东西向和南北向的便桥分别画了木板、搭头和贴着渠沿的阴影。23.5 秒的 Windows 实景短片还收录主角与渠伯的田间动作、溪桥道、竹涧、西市、堂屋和蚕棚。[水闸与便桥近景](../docs/previews/field-waterworks.png) · [六处地图的 1080p 实景](../docs/previews/estate-fieldwork-tour.mp4)
+
+在隔离桌面用默认 1920×1080 和 1024×768 窗口各取 23 张固定状态画面，开发版、导出资源包与 Windows 程序逐张一致。两次干净导出的 SHA-256 均为 `71f970bdac182497a19ef1f4448912d7648ebd3d9d3592290309ea64d138c87b`。本候选包的新档至结局试玩仍待验收。[Windows x64 美术候选包](../build/polish-fieldcraft/source-final/build/Fiefdom-1.0.0-Windows-x64.zip)
+
+## 从首贡到议税的案头器物
+
+堂前的贡粮袋束着朱绳，木筹挂在封口。私仓用开口的竹筐盛放收成，篮里留着木勺。议税时，召简面前的三项分别用青绳税册和量尺、朱绳贡簿和谷帛、铜灯和笔砚来辨认。结算或回封地重读旧账，都能认出当时选中的册子。 [两张收成回执](../docs/previews/harvest-receipts.png) · [堂前议税原图](../docs/previews/council-table.png) · [税亩富民结算](../docs/previews/ending-tax-record.png)
+
+约 21 秒的 Windows 实景短片从主角和渠伯下田开始，经过溪桥道、竹涧瀑口、西市绸摊、堂屋和蚕棚，最后翻看两张回执和议税案。人物步态、挑水、展绸、水流与缫丝轮取自游戏里的动作。 [1920×1080 实景短片](../docs/previews/estate-to-council.mp4)
+
+在隔离桌面上以 1920×1080 和 1024×768 各取了 16 张界面图。正常会期、提前请议、门客离开预告、延期缺钱、研究期满和两条路线的新旧账页均能看全，开发版、导出资源包与 Windows 程序的对应画面逐张相同。取景时停住时间，结算画面读取此前普通档的第 65 天守礼记录和第 59 天改税记录。两次独立导出的 SHA-256 均为 `782ec9ca2fa9c40c72f7b37fd741d37a2ca415e36b7266eea7ff92c0dbd41162`。本候选包的新档至结局试玩仍待验收。 [Windows x64 候选包](../build/polish-council-art/source-final/build/Fiefdom-1.0.0-Windows-x64.zip)
+
+## 时辰铜盘、种槽和背包
+
+田边铜盘的铜尖指在当前时辰旁，中央留给时辰名。出门到西市、溪桥道和竹涧，地名旁的长针按相同的十二刻转动。气血与体力在封地和竹涧共用一块深色木牌，低于三分之一有「偏低」提示，归零显示「已尽」。选中的种槽在下缘露出浅色尖签，黍、稷、稻、麦从穗形就能分开。 [封地完整 HUD](../docs/previews/estate-hud.png) · [历书、种槽和体力近景](../docs/previews/hud-instruments.png)
+
+私仓沿用种槽的七种作物图，旧档的混存作物有自己的敞口谷袋。鱼篓以鱼身长短、背鳍、鳞色区分四种溪鱼。蚕茧、生丝、成匹丝绸和羊毛各有独立的形状。随身的菽黍饭、稻鱼羹和麦饼也能在背包和路餐快捷键上认出来。 [背包里的作物、溪鱼、工艺材料与路餐](../docs/previews/backpack-contents.png)
+
+取景时固定日期、库存和体力，在隔离桌面分别用 1920×1080、1024×768 核过封地、三张外出地图、堂屋、蚕棚和背包。每种尺寸的 42 张画面在开发版、导出资源包与 Windows 程序间逐张相同。两次干净导出的 SHA-256 均为 `53c5d33c8a851a74bcd72c367d3bfb058e0dfb5904886abb96f6487ef3864d5b`。本轮候选包的新档至双结局仍待试玩。 [Windows 美术候选包](../build/polish-hud-instruments/source-final/build/Fiefdom-1.0.0-Windows-x64.zip) · [取景及导出记录](../build/polish-hud-instruments/release-proof.txt)
+
+## 秋社领谷、冬至围炉与溪桥运种
+
+阿绥、林蓼和禾伯在秋社展台前各自拿走一份谷样。转身时，布包从身前挪到髋侧，能看见人物迈出去的那只脚。到了冬至，禾伯穿着同一条围裙在铜釜边舀粥，阿绥和林蓼在不同的时候举碗。桌上摆的是当天的饭，炉膛里能看见明灭的炭火。 [15 秒 Windows 实景短片](../docs/previews/season-cast.mp4) · [冬至炉边近景](../docs/previews/winter-hearth.gif)
+
+车夫申禾从西市往封地运种时倾身握住木辕，车轮随路程转动。货袋落在车板和近侧木栏之间。使者召简在堂前或南路亭伸手接册时，能看见衣袖、手指和册沿。竹涧的斥候与黄犬各有九种姿势。五位具名人物、五类来客和六类普通门客的对白肖像也跟上了地图上的衣色和头饰。 [十六张对白肖像](../docs/previews/season-faces.png) · [六处地图的实景](../docs/previews/six-locations.png)
+
+隔离桌面上以 1920×1080 和 1024×768 两种窗口各取 251 张人物与器物画面，开发版、导出资源包与 Windows 程序逐张相同。两次干净导出的 SHA-256 均为 `706856da75355d42482bd4851ccb780db85bf0ee6581df1862788123807d516f`。本轮按美术取景，当前候选包的新档至双结局仍待试玩。 [Windows 美术候选包](../build/polish-season-cast/source-final/build/Fiefdom-1.0.0-Windows-x64.zip) · [取景与打包记录](../build/polish-season-cast/release-proof.txt)
+
+## 西市的掌柜和送货人
+
+20 秒实景短片收录封地、竹涧、溪桥道、西市、堂屋和蚕棚。田间能看到主角与门客落脚、挥锄、撒种、浇水和收镰，进西市能看到送布的阿苓与提鱼篓的伙计。 [1080p 实景短片](../docs/previews/fiefdom-art-tour.mp4) · [六处场景全图](../docs/previews/six-locations.png) · [西市绸摊原尺寸](../docs/previews/west-market.png)
+
+谷伯从粮堆舀起一斗，渔生端起盛鱼的竹盘，蔡娘伸手把绸面展平。有人来到柜前，三人便收手招呼。三座棚各有后壁、檐布、柜面和冬霜，手上的货物留在看得见的位置。阿苓的布匹露出扎绳，伙计的编篓随脚步起落，转背时货物被衣身遮住一部分。柜台和对白沿用每个人的巾帽、衣色与手中器物。 [掌柜理货](../docs/previews/market-stalls.gif) · [街上的行人](../docs/previews/market-delivery.gif) · [柜台和对白肖像](../docs/previews/market-portraits.png)
+
+在隔离桌面用 1920×1080 和 1024×768 两种窗口取景。两种尺寸各取 174 张西市画面，开发版、导出资源包与 Windows 程序逐张相同，包括晴雨、冬霜、区域舆图和人物对白。两次独立导出的 SHA-256 均为 `abfb8c2dbabc51ec5a915be525acbe5d88bccef57937dbd66d74f1ca97ee72d6`。本包已解压启动，完整新档至双结局与初次玩家试玩待验收。 [Windows 美术候选包](../build/polish-market-people/source-final/build/Fiefdom-1.0.0-Windows-x64.zip) · [实景与导出记录](../build/polish-market-people/release-proof.txt) · [图稿来源](../build/polish-market-people/asset-manifest.json)
+
+## 路上认得出的人
+
+主角八套衣装、七位具名邻里、六类普通门客和五类来客都换上了新的正面、背面和侧身。渠伯的肩窄、背略弓，迈步时先挪脚再收步。季青转过身能看见斜挎包，蒲宁的宽草帽和商音的横簪从侧面也看得清。每套步态有两个落脚姿势和两个提脚姿势，停下来时双脚站稳。图集每格 64 × 64 纹素，落在原来的 32 × 32 逻辑图框内。 [主角与七位邻里的田间步态](../docs/previews/estate-walk.gif) · [六处实机场景](../docs/previews/six-locations.png)
+
+握锄、撒种、倾桶、收镰和执竿时，衣袖沿各自的肩线接到腕部，袖色取自人物身上的布料。访客在设施旁照料时，能看见空着的双手。堂屋衣架的八套服饰与地图共用同一套动作。 [四种农事近景](../docs/previews/farm-hands.gif) · [衣架上的纹衣](../docs/previews/wardrobe-work.png) · [田边与渠伯交谈](../docs/previews/qu-bo-field-talk.png)
+
+在隔离桌面以 1920×1080 与 1024×768 窗口取景。每种尺寸下八人各取 48 帧，另取一张全景，Windows 程序与开发版逐张一致。手持农具、衣架、三处钓点和六处地图都在固定状态下取景。两次干净导出的 SHA-256 均为 `72e7e6ae08e9a85317d5f337bd84f5ea506b39cc0232f321ef8a39e0522bbe55`。本包已解压启动，双结局与人工长线试玩待验收。 [Windows 美术候选包](../build/polish-field-cast/source-final/build/Fiefdom-1.0.0-Windows-x64.zip) · [取景和导出记录](../build/polish-field-cast/release-proof.txt) · [图稿来源和制作记录](../build/polish-field-cast/asset-manifest.json)
+
+## 田边、名册和手记里的七位邻里
+
+- 渠伯的短灰须、蒲宁的宽草帽和商音的横簪从地图小人延续到交谈与名册。七人各有初识和记事后的半身像。签好轮作簿后，渠伯把竹简托在手边。谷雨合奏后，商音手里的曲簿露出红色书带。 [七位邻里的手记近景](../docs/previews/neighbor-faces.png) · [井田边与渠伯交谈](../docs/previews/qu-bo-field-talk.png)
+- 名册里的普通来客留任后沿用来访时的肖像。翻邻里手记时，左列只标出正在读的那一位，头像和名字在点选前后对齐。两种窗口尺寸各核对了 30 张静态画面，包括七人的交谈、手记及两个阶段的门客名册。解压的 Windows 程序在隔离桌面的画面与开发版逐张相同，六处地图也与上一版同机位一致。
+- 两次干净导出的 SHA-256 均为 `afa4216f21912749a6683a18b85867e3c1e6c8d410719d779c8b08c021b7594b`。本轮固定时辰和田况取景，最新候选包的新档至双结局试玩待续。 [Windows 候选包](../build/polish-neighbor-faces/source-final/build/Fiefdom-1.0.0-Windows-x64.zip) · [画面与导出记录](../build/polish-neighbor-faces/release-proof.txt) · [肖像生成提示](../build/polish-neighbor-faces/portrait-prompt.txt) · [纪念物生成提示](../build/polish-neighbor-faces/keepsake-prompt.txt)
+
+## 田边的握锄、撒种、倾桶与收镰
+
+- 木锄由前后两只手分握，转身后锄刃仍落向面前的地。石墨将种袋靠在胯旁，从另一只手向田里撒种。渠伯提桶赶路时桶身直立，浇水才托底倾桶。蒲宁收割时一手拢穗，弯镰从穗下横过。主角和七位具名门客沿用自己的衣色和朝向。 [四种农事的实机动作近景](../docs/previews/farm-hands.gif)
+- 堂屋书案南侧的衣架可选站姿、走路和四种农事，三个方向同时预览。八套衣装使用与田里相同的帧和农具握点，选中衣物与动作各有一块浅色木牌。试穿西廊纹衣时能看见绛色衣袖托住桶底。Tab 与 Shift+Tab 可以在衣架内穿过衣服、动作与可用按钮。 [衣架上的倾桶动作](../docs/previews/wardrobe-work.png)
+- 两次干净导出的 Windows 包 SHA-256 均为 `69fa3e72f9ff9105853610aeb4b0e9f9481fbe332d9585f83665192f103b9bd3`。1920×1080 和 1024×768 均用隔离桌面取景，田况、存粮、衣装归属与时辰固定。本轮验收限于动作、界面和启动，新档到结局的玩法试玩待续。 [本次候选包](../build/polish-footwork/source-final/build/Fiefdom-1.0.0-Windows-x64.zip) · [动作与导出记录](../build/polish-footwork/release-proof.txt) · [四件农具的生成提示](../build/polish-footwork/prompt.txt)
+
+## 睡前看公田，次晨翻账
+
+- 今夜安排用铜灯和展开的竹册标出当前夜次。首贡提醒画出所指公田的土色、苗或穗，待浇的黍带蓝滴，断水的稻带红叉，成熟的稷带金菱。粮仓旁同时显示口粮缺口和预计离任的门客。第 5 夜的示例里，打开账就能看到渠伯将缺餐。 [今夜安排](../docs/previews/night-plan.png) · [三种公田提醒](../docs/previews/tribute-field-notes.png)
+- 昨夜结算用系朱绳的卷简和量斗作页首，左栏记田务，右栏记用粮。打开此前一份普通档，第 15 天白露仍可查第 14 夜处暑的原账。该夜公田 1 格、私田 8 格新熟，收工时浇了 8 格，用粮 1/1。只有用粮记录的旧档用一栏显示。 [第 14 夜原账](../docs/previews/night-receipt.png)
+- 在隔离桌面按 1920×1080、1024×768 两种窗口核对九种公田画面、四种过夜提醒和旧账换页。取景固定时辰、粮仓和体力。解压包重拍的六处地图与 96 帧田间人物动作逐帧吻合。两次独立导出的 Windows 包 SHA-256 均为 `04800a91a308749d8474a4a8eb02207a7c478c056411e0c70498a06919c5779c`。本轮核对画面、界面和解压启动，当前包从新档到双结局的玩法验收待续。 [本次候选包](../build/polish-night-book/source-final/build/Fiefdom-1.0.0-Windows-x64.zip) · [导出与实机记录](../build/polish-night-book/release-proof.txt) · [铜灯、简册和量斗的生成提示](../build/polish-night-book/prompt.txt)
+
+## 溪岸持竿与南池钓台
+
+- 柳湾朝东持竿，砾滩朝西持竿，南池钓台上也能看见双手托住竹竿。红顶浮标落水后起一圈扁水纹，咬钩时没入水下。手抬起时竹竿弯曲，松线时竿尖回落。绿段的两道浅刻线和浅金游标可直接读出张力。垂钓期间由底部面板显示地名，岸边让出看竿梢的位置。 [柳湾四秒动图](../docs/previews/willow-fishing.gif) · [默认镜头](../build/polish-angler/packed-1920x1080/frames/pool-normal.png) · [张力游标](../build/polish-angler/packed-1920x1080/frames/pool-meter.png)
+- 两处溪岸放上嵌石脚的鱼纹木牌和有背带的篾篓。水迹另记在木架上悬着的五片竹简上。南池的篓子靠后栏，前栏按柱脚遮住人物。钓台铺板、栏柱顶面和托住台面的桩石取自溪桥道木桥。雨天木色压暗，冬天栏上留霜。 [砾滩与冬日南池](../docs/previews/fishing-banks.png) · [砾滩的水迹简](../build/polish-angler/packed-1920x1080/frames/shoal-journal.png) · [雨天钓台原图](../build/polish-angler/packed-1920x1080/frames/pond-rain.png)
+- 在隔离桌面用两种窗口取景，核对了竿梢与钓线的接点、人物的落脚位置和收起钓竿后的站姿。八套衣装、四个朝向都经过了画面状态检查。取景固定了库存、体力和时辰。两次干净导出的 Windows x64 包 SHA-256 同为 `2443da9130b3d700f89545cf6b34e004180ba51dcebd9334dc0de66d6af98ef7`。本次只验画面、界面和启动，当前包的新档到双结局仍待验收。 [本次候选包](../build/polish-angler/source-final/build/Fiefdom-1.0.0-Windows-x64.zip) · [实机取景与导出记录](../build/polish-angler/release-proof.txt) · [鱼纹牌与鱼篓的生成提示](../build/polish-angler/prompt.txt)
+
+## 标题里的堂前与封地存档
+
+- 从封地用同一机位重拍堂屋、石砌泉眼和九格井田。清晨能看到瓦当、渠伯的水桶和垂下的黍穗，薄暮时门前两盏灯照亮台阶。两帧光线在标题渐变时，屋脊、人物和农具都在原位。 [清晨标题](../docs/previews/title-estate.png) · [薄暮标题](../docs/previews/title-lanterns.png)
+- 选档页在每份记录上写明日期、爵位和已定路线。守礼通关配朱绳贡簿，改税通关配摊开的青绳税册。示意图把两份已有的结局记录排在同一个演示封地下。命名、选档和设置沿用封地的漆木框，三个音量滑杆直接显示百分比。 [选档实机画面](../docs/previews/save-shelf.png) · [设置实机画面](../build/polish-title-estate/candidate-1920x1080/frames/settings.png)
+- 在 1920×1080、1024×768 两种窗口中逐行核对满 16 字的封地名、两条结局和损坏的存档。选档页连续按 17 次 Tab，焦点越出面板的次数从 9 次降至 0 次。打开设置时焦点落在主音量，离开键位页回到「键盘键位」，关掉设置回到标题。十份取景用的记录逐份校验一致。 [逐行文案](../build/polish-title-estate/candidate-1920x1080/frames/readability.json)
+- 两次干净导出的 Windows x64 候选包 SHA-256 同为 `ee217aa00be2f0475b138772510d54b5c1eb6b6f1f836672733b7a78ba1f7079`。用解压包重拍六张地图与 96 帧田间动作，与已收录的画面逐帧一致。本轮验证限于启动、菜单和画面，当前包的新档到结局仍待验收。 [本次 Windows 包](../build/polish-title-estate/source-final/build/Fiefdom-1.0.0-Windows-x64.zip) · [导出与取景记录](../build/polish-title-estate/release-proof.txt)
+
+## 堂前与南路亭的交册
+
+- 守礼时，召简从朱漆匣上接走朱绳贡簿。改税时，他在南路亭的布棚下接过摊开的青绳税册。握册和收手接在走路动作之后，简册离开案面。结算页和通关后翻账时沿用本局的册形。 [两处交册动图](../docs/previews/ending-handoff.gif) · [改税结算原画面](../docs/previews/ending-tax-record.png)
+- 用已有普通档第 65 天的守礼记录、第 59 天的改税记录固定取景。在隔离桌面检查了案边的首笔收成谷袋、交接时的位置、跳过与重看时竹册的归位，以及缺少门客送别字段的旧账页。1920×1080 与 1024×768 窗口均容纳完整的题头、正文和按钮。重拍六处地图和田间动作，6 张地图原图和 96 帧人物动作与已收录的画面逐张一致。 [六处场景](../docs/previews/six-locations.png) · [田间人物](../docs/previews/field-work.gif)
+- 两次干净导出的 Windows x64 候选包 SHA-256 同为 `4ee1fe6be8dfc31219b1d2c79a1604d1a866b96563e5da84404e6c1d348c2998`。本轮只核对美术和启动。当前包从新档到两条结局的玩法回归与首次玩家试玩待验。 [本次候选包](../build/polish-ledger-art/source-final/build/Fiefdom-1.0.0-Windows-x64.zip) · [本机导出与取景记录](../build/polish-ledger-art/release-proof.txt) · [器物素材生成提示](../build/polish-ledger-art/prompt.txt)
+
+## 封地手记与堂前路牌
+
+- 当前目标放在竹简首行，见渠伯和照料私田的木牌并排。键鼠或手柄进场时，移动、翻中央公田和首贡期限各占一行。点目标旁的「封地手记」可展开来客近况，短留言随内容收放，长留言可在简内滚动。 [默认窗口实机画面](../docs/previews/estate-journal.png) · [开局、来客与首贡到期](../docs/previews/journal-states.png)
+- 公田等水生长时，手记从 316×221 减至 296×159 逻辑像素，原占地减少 32.6%。堂前同机位的「西市」路牌字样完整露出。到期时「纳贡 · 今夜前」直接出现在行动栏。核对了折叠后让出的地图、滚轮与键盘读到末条、晋升和暂缓议税的长文案。隔离桌面分别使用 1920×1080、1024×768 和 2560×1080 的窗口。 [小窗口期限提醒](../build/polish-journal-slip/candidate-1024x768/frames/deadline.png) · [本机像素与排版记录](../build/polish-journal-slip/release-proof.txt)
+- 两份干净 Windows x64 导出均能解压到标题，ZIP 的 SHA-256 同为 `6b6f75337f9262417e57f205d2d0b9dcbf62d4b0824a6f8ba7a71e8be387d06f`。本次画面采样固定田况和时钟。 [本次 Windows 候选包](../build/polish-journal-slip/source-final/build/Fiefdom-1.0.0-Windows-x64.zip)
+
+## 井田作物与田边标识
+
+- 黍的金穗弯垂，稷的红穗直立，稻叶间垂着浅色细穗，菽的两枚黄荚露在叶丛下。七种作物都能从田里认到种子说明和背包，选种栏各有一枚 16×16 图标。 [三阶段与选种栏](../docs/previews/field-crops.png)
+- 成熟、待浇、断水的符号收在每格右下角，田号靠田埂外侧。把人物放在田号前逐像素核对，1920×1080 和 1024×768 两种窗口中，田号都没有覆盖人物上身。小窗口内的游戏画面为 1024×576。 [田边实机近景](../docs/previews/field-bank.png) · [默认镜头与 HUD](../build/polish-field-art/candidate-1920x1080/frames/hud.png) · [本机像素核对](../build/polish-field-art/art-checks.json)
+- 用同一候选包重拍六处场景。六秒田间动图中，主角在空格前挥锄，渠伯提水，石墨在田东播种。镜头内保留长苗和成熟株，能同时看清农具与田埂上的字。 [六处场景](../docs/previews/six-locations.png) · [田间动图](../docs/previews/field-work.gif) · [1920×1080 原画面视频](../build/polish-field-art/field-work-1080p.mp4)
+- 两次干净导出的 Windows x64 美术候选包 SHA-256 均为 `eee86e7bbf01f4161c711277d66a1e9ff1e7f0588741853779af7269fb8f792b`，解压启动均抵达标题。田间预览使用隔离桌面和固定时钟。该版本的新档、双结局与首次玩家体验仍待验收。 [本段对应的 Windows 包](../build/polish-field-art/source/build/Fiefdom-1.0.0-Windows-x64.zip) · [导出与画面核对记录](../build/polish-field-art/release-proof.txt)
+
+## 人物动作与六处场景的美术预览
+
+- 林蓼在南池畔戴靛青扎巾、穿赭衣，腰边挎着竹种篮。背面能看到巾结和斜背带。秋社、亭西种圃、谷雨亭集的替补来客和冬至围炉沿用同一造型。正面和侧面的站姿保留眨眼。 [秋社近景](../docs/previews/autumn-festival.png) · [对话肖像](../docs/previews/linliao-dialogue.png)
+- 从同一个 Windows 资源包在隔离桌面按默认 1920×1080 渲染。六处场景并排看路面、建筑和器具的斜俯视。六秒动作样片取自主角、渠伯和石墨的站立、行走及农具动作，采样期间固定时钟和田格。 [六处场景](../docs/previews/six-locations.png) · [井田边的动作](../docs/previews/field-work.gif)
+- Windows x64 美术候选包经两次干净导出，SHA-256 均为 `058a6afecf4bd6e89858403885feae8ab5862f1bd6ab177899c7937b6d565dad`。两次解压启动均抵达标题画面。本版的玩法与结局尚待复验。 [本段对应的 Windows 包](../build/polish-seed-courier/tree/build/Fiefdom-1.0.0-Windows-x64.zip) · [本机导出与资源包校验](../build/polish-seed-courier/package-proof.txt)
+
+## Windows 1.0 人工试玩
+
+把 [Windows 1.0 x64](../build/Fiefdom-1.0.0-Windows-x64.zip) 交给第一次玩的玩家。解压后运行 `Fiefdom.exe`，选「新建游戏」，用默认 1920×1080。请先按游戏内提示游玩，遇到卡点时记下当时想做的事和看到的提示，再翻包内的 `README.txt` 查操作。
+
+- **首次上手**。记录首日用了哪些提示、第一次纳贡是哪天、第一次去封地以外是从哪里找到路线的。遇到拿不准的操作，记下当时以为会发生什么。
+- **经营到结局**。按自己的节奏选一条路线，记下哪几天改变了经营方式、哪些操作重复得最累、哪次遇见人物或走过某处让你想再去。结算后退出，再从标题「继续游戏」读回，核对路线和结算日期。
+- **回报**。记下系统和显卡、键鼠或手柄、实际窗口尺寸、总游玩时间及停在的游戏日期。能复现的问题附上当时的截图或一段操作顺序。画面、节奏和手感直接写感受即可。
+
+本包包含封地、溪桥道、西市和竹涧的固定斜俯视地图。堂前石坪从坡口接南行土路，路肩片石通到泉眼。泉眼水面低于亮石口沿，田口有两级踏石。堂屋的书案、床榻和窗下摆件案露出桌面、侧板和脚下的影子，走到案前可布置堂屋。晋升后堂前台阶左侧可翻爵册，查看升降爵和田额，再打开开垦簿。井田的九格沿浅缝分辨，中央公田有金角。井田舆图按田区取景，点远处的井田能看清它的田口和各格状态。顺着田口踏石可下田。公私田同时成熟时可在井田舆图选分批收割。顺着木牌可去南路亭、西市和桥东草甸。走溪桥道时，可从岸沿看出草地在哪里止步，踏过片石和木桥能听见脚步切换。穿过东关后可循岔路木牌去野果坳、浅滩、南路小径和望溪台。从木桥西头沿溪向北可到柳湾，或踏过桥口片石，沿东岸缓坡和宽窄相间的石阶上望溪台。从西市东口的石街转进灰青院坪，能在染缸旁请阿苓指路去绸摊。按住 Shift 或手柄 LT 可一次处理一块井田内同类的农事。写好各格续播安排后，可从种子栏选「按安排播种」，预览本田各格会种的作物再批量确认。几块井田都有待播计划时，可从井田舆图点「待播」，播完一块再循标记去下一块。选中「按安排播种」后可开「整备空田」，预览翻、播、浇的格数和总耗体力再一次确认。开启「收后续播」后，按住批量键指向成熟作物可同时预览收成和下茬，一次确认。第一次纳贡后，堂前谷袋旁可以翻贡粮账、标出公田，也可从手记接上轮作并安排井田管事。首茬收成后，有照料门客时可把未翻地也排入下茬计划。首茬收成选择留作物后，可按交货簿标出的私田补种、浇水和收获，货齐就能循路去西市。换季前可从下季预告提前标出私田，或托管事给时令单种一茬。门客名册的职责菜单可先看选岗后的今夜口粮、购粮费用和预计离任的人，并直接打开「今夜安排」。有门客分管田务后，可在「今夜安排」勾选「过夜前让门客收工」，睡前先做剩余时辰能完成的田务。返回封地时可看到这趟外出增加的田务，睡前查当天累计，次日从「昨夜结算」重读。有赴席的小谈时，可从「今夜安排」在白天查看人物和时辰，沿指路到亭边候席，两人到齐后听小谈。「今夜安排」可直接翻到明日历书，冬末也能查立春和下季备货。右上日期栏可为秋社留谷样、为冬至按菜留料。市场批量补粮会先预留这些作物、本季和已跟踪的下季货物，以及最近一期已备足的研究费。夏单到货后可走上南池西岸的钓台，冬至缺鱼可从历书或禾伯处指路过去。议税前可从筹备账在井田页暂缓私田续播，定案后接着用各格原来的种法。门客也可暂留熟私田，定案后恢复代收。结局时，参与本局经营的一位留任门客会到场。解压版已回放两条新档路线、战败恢复、延期研究和两个结局退出重启。 [本轮试玩包](../build/polish-growth-transition/release/verified/windows/Fiefdom-1.0.0-Windows-x64.zip) · [本包校验](../build/polish-growth-transition/release/verified/hash.log)
+
+## 普通档从新建续玩到两条结局
+
+- 同一局用正常键鼠输入分段续玩，从标题新建，到第 3 天首贡、第 11 天守备复盘、第 15 天整田收割、第 29 天交接第二块井田、第 32 天升任上士。当前发行包从第 32 天续读，补齐第一块井田的管事。第 41 天织出第一匹绸，第 46 天升任大夫。 [新建回放](../build/polish-first-spring/live-fixed/replay.log) · [第 32 天接续回放](../build/polish-council-playthrough/pacing-replay/replay.log)
+- 议税筹备时暂留熟私田。第 59 天有 42 份贡粮、96 份私田收成，公田占比达到 30.43%。门客在外出期间代收，返程遇到召简。沿手记去堂前，在议税前用设置保存。 [召简到场](../build/polish-council-playthrough/to-council/frames/007.png) · [三案对照](../build/polish-council-playthrough/to-council/frames/010.png)
+- 从同一份议税前存档分两路继续。改税在当天卖出一匹绸，等门客收完计税田，到南路亭呈交新税册，第 59 天达成「税亩富民」。传统在第 59 天进献一匹绸，之后两名管事代收六份公田贡粮，第 65 天守住来袭后在堂前呈交贡簿，达成「守礼安邦」。两条路线均完整播完结局，退出程序后再从标题读回。 [改革结局](../build/polish-council-playthrough/to-council/frames/020.png) · [传统结局](../build/polish-council-playthrough/traditional/frames/011.png) · [存档与发行包校验](../build/polish-council-playthrough/campaign-evidence.log)
+- 暂留熟私田期间三名门客每夜用粮 5 份。第 40 夜发生一次缺餐，第 42 至 58 天每天都走同一趟野果坳路线，补足当晚口粮。等待议税期间重复备餐，是这次长线回放记录到的疲劳点。 [三夜口粮报价](../build/polish-council-playthrough/before/frames/015.png) · [野果坳采集](../build/polish-council-playthrough/before/frames/025.png) · [第 49 至 59 天回放](../build/polish-council-playthrough/to-council/replay.log)
+
+## 从中士到第二块井田
+
+- 默认 1920×1080 在隔离桌面从第 15 天的普通档继续。第 17 天击退斥候并保住整田，第 22 天升任中士。开垦簿在筹备时可带路找人，也可打开市场核对粮钱。第 23 天招齐三名门客。 [旧包行程](../build/polish-second-well/before/replay.log) · [晋升后打开开垦簿](../build/polish-second-well/before/frames/027.png)
+- 原先悬停曾提示超界，同一点选后才看到实际的距离冲突。现在鼠标与手柄的光标移动、点选共用一套田格定位。悬停便会标出九格范围、渠水和冲突原因。老包的回归重现了悬停偏差，新包在 1024×768 隔离桌面通过手柄光标与落点检查。 [旧包悬停](../build/polish-second-well/before/frames/045.png) · [新包同处悬停](../build/polish-second-well/after/frames/003.png) · [窄窗口回放](../build/polish-second-well/release/verified/native-compact/replay.log)
+- 第 25 天按市集报价备齐 72 份粮。私仓留出时令单要的两份粟，再回勘地时仍选中原田址。立桩扣 140 铜钱和 60 份粮，余下 12 份供三名门客用满四夜。第 29 天完工，通过晨间结算直达井田 2，当场交给石墨并补齐公私田续播。 [备粮收据](../build/polish-second-well/after/frames/005.png) · [立桩回执](../build/polish-second-well/after/frames/007.png) · [完工结算](../build/polish-second-well/after/frames/015.png)
+- 第 31 天两块井田同时熟 18 格，等门客收工后第二块井田已收割续播。第 32 天升任上士，退出程序再从标题继续，井田 2、石墨的岗位和九格续播仍可查。 [18 格同熟](../build/polish-second-well/after/frames/024.png) · [重启后井田 2](../build/polish-second-well/continue/frames/003.png) · [存档核对](../build/polish-second-well/release/verified/save-continuity.log)
+- 132 项源码回归与分批执行的 129 项 Windows 无窗口检查通过。普通新档分别在第 56 天达成「守礼安邦」和第 59 天达成「税亩富民」，均可退出后重启读回。战败恢复、延期研究、上一版存档接续和 90 秒连续运行通过。两次干净构建的 ZIP 校验值一致。 [源码回归](../build/polish-second-well/release/verified/source-scenarios.log) · [成品验证](../build/polish-second-well/release/verified/windows-checks.log) · [重建校验](../build/polish-second-well/release/verified/clean-builds.log)
+
+## 睡前收工的田务预报
+
+- 沿同一局从第 11 天回田。启用夜间备粮，用最后一份私仓黍补餐，安排渠伯给八格私田续播。第 12 天把每夜购粮上限调到 5 铜钱。旧版的今夜安排报明早私田熟 2 格，睡前收工后，次日结算为公田 1 格、私田 8 格。 [旧版过夜前](../build/polish-growth-transition/before/frames/015.png) · [第 13 天实际结算](../build/polish-growth-transition/before/frames/017.png)
+- 「过夜前让门客收工」勾选后，预报按现有岗位、续播安排、田况和剩余时辰排作业。公田预计浇好或入库时，纳贡栏写明这步。断渠和收工后仍待浇的田继续提示；查看账册时可以按当前田况指路。 [勾选收工](../build/polish-growth-transition/release/verified/native-old-final/frames/001.png) · [查看现状](../build/polish-growth-transition/release/verified/native-old-final/frames/002.png) · [新版过夜实绩](../build/polish-growth-transition/release/verified/native-old-final/frames/003.png)
+- 1920×1080 隔离桌面从旧版实存第 12 天续读，预估新熟 9 格，过夜后实际新熟 9 格，粮费 5 铜钱。1024×768 专项核对管事、收割和照料门客同时作业，包括收后补播、断水稻田、晚到时的工时限制，以及过夜前的入库和用粮。预估和晨间实绩逐字段核对。 [窄窗口田务预报](../build/polish-growth-transition/release/verified/native-compact-final/frames/05-sleep-field-policy.png) · [入夜工时限制](../build/polish-growth-transition/release/verified/native-limit-final/replay.log) · [旧档校验](../build/polish-growth-transition/release/verified/native-old-final/integrity.log)
+- 同一普通档继续到第 15 天，八格私田续播后又整田成熟。按住 Shift 点收一次，国库入一份，私仓入八份，进账 40 铜钱。用实际手动档记录下这一茬和重新下种的公田。 [第 15 天整田收割](../build/polish-growth-transition/playthrough/frames/005.png)
+- 132 项源码回归和 58 项 Windows 无窗口检查通过。普通新档于第 56 天达成「守礼安邦」，第 59 天达成「税亩富民」，均可重启读回。战败恢复、延期研究、上一版存档接续和 90 秒连续运行通过。两次干净构建的 ZIP 校验值一致。首次独立试玩和人工长线试玩待验收。 [源码回归](../build/polish-growth-transition/release/verified/source-scenarios.log) · [成品验证](../build/polish-growth-transition/release/verified/headless-final.log) · [重建校验](../build/polish-growth-transition/release/verified/clean-builds.log)
+
+## 首次守田与东岗战报
+
+- 续上交过春单的普通封地，沿第 8 天的预告查备战，从屋外空地试射，第 9 天点手记标出野狗并用一箭击退，保下两格作物。备战页现在写明空地试射、侧走地面预警，以及当前输入方式的射箭操作。 [上一版空地试射](../build/polish-first-raid/before/frames/011.png) · [第 9 天首战](../build/polish-first-raid/before/frames/015.png) · [新版窄窗口备战](../build/polish-first-raid/release/verified/native-compact-verified/frames/02-preparation.png)
+- 击退来敌后可从封地手记打开「守备战报」，查最后一箭、作物损失和弋戎下次到访的日期。这局在第 11 天可从战报直接指路，到东路岗复盘后由新立的守备牌接手记录。 [第 9 天战报](../build/polish-first-raid/release/verified/native-old-verified/frames/002.png) · [第 11 天指路](../build/polish-first-raid/release/verified/native-old-verified/frames/004.png) · [东岗守备牌](../build/polish-first-raid/release/verified/native-old-verified/frames/006.png)
+- 1920×1080 隔离桌面由上一包实际写出的第 9 天手动档继续，第 10 天在原地收下公私田，再到东岗复盘。原档与续读副本校验相同。1024×768 隔离回放从新档种田到第 9 天守备，退出重开晨间档，并接着走到东岗翻牌。 [存档校验](../build/polish-first-raid/release/verified/native-old-verified/integrity.log) · [窄窗口验证](../build/polish-first-raid/release/verified/native-compact-verified/replay.log)
+- 132 项源码回归和 43 项 Windows 无窗口检查通过。普通新档于第 56 天达成「守礼安邦」，第 59 天达成「税亩富民」，两份结局均可重启读回。战败恢复、延期研究、上一版存档接续和 90 秒连续运行通过。两次干净导出的 ZIP 校验值一致。首次独立试玩和人工长线试玩待验收。 [源码回归](../build/polish-first-raid/release/verified/source-scenarios.log) · [成品验证](../build/polish-first-raid/release/verified/headless-verified.log) · [重建校验](../build/polish-first-raid/release/verified/clean-builds.log)
+
+## 春单从西市送到亭西种圃
+
+- 默认难度下从标题开新档。西市返程接回备货私田，第 4 天补水，第 5 天带两份菽、一份黍交春单并领 21 铜钱。沿收据指路到卸货场，坐等戌时的货车，在长凳旁就能和申禾交谈。 [西市返程](../build/polish-first-spring/release/verified/guided/frames/033.png) · [西市回执](../build/polish-first-spring/release/verified/guided/frames/054.png) · [候货后交谈](../build/polish-first-spring/release/verified/guided/frames/067.png)
+- 亭西小径接入踏石、错开的两畦与木签。畦沿露出土壁，分种案露出桌面和侧板。玩家先到时能看见空畦和「林蓼送种途中」，开舆图也能重新指路。种下后在田边交谈，收起指路并得知分种日期。 [同机位对照，左旧右新](../build/polish-first-spring/release/verified/garden-comparison.png) · [种下后的对话](../build/polish-first-spring/release/verified/guided/frames/072.png)
+- 1920×1080 隔离桌面从上一版第 5 天的手动档续读，仍站在种圃，谷雨后能看见幼苗。第 8 天阿绥和禾伯来领种，玩家也领到一份菽。1024×768 的隔离回放从预备存档验证季末交春单、次日送达、途中续档和分种后从木签领种。 [续档后的谷雨](../build/polish-first-spring/release/verified/native-legacy-verified/frames/003.png) · [第 8 天分种](../build/polish-first-spring/release/verified/native-legacy-verified/frames/012.png) · [窄窗口分种](../build/polish-first-spring/release/verified/native-compact/frames/06-neighbors-collect.png) · [旧档校验](../build/polish-first-spring/release/verified/native-legacy-verified/integrity.log)
+- 132 项源码回归和 61 项 Windows 无窗口检查通过。普通新档在第 56 天达成「守礼安邦」，第 59 天达成「税亩富民」，两份结局都在退出后重新启动读回。战败恢复、研究延期、上一版存档继续及 90 秒连续运行通过。两个干净导出的 ZIP 校验值一致。首次独立试玩和人工长线试玩待验收。 [源码回归](../build/polish-first-spring/release/verified/source-scenarios.log) · [成品验证](../build/polish-first-spring/release/verified/headless-release.log) · [重建校验](../build/polish-first-spring/release/verified/clean-builds.log)
+
+## 西市东口的铺石院坪与染缸
+
+- 晒布院的石径从主街接进灰青院坪。靠草地一边露出低石脚，向街的入口收低。门前的两只染缸有釉面、口沿和沉在内壁下方的靛蓝、赭红染液。人走近会停在缸脚外，可从旁边绕到门阶。落雨和收工后可见盖好的染缸及收空的布架。 [东口同机位对照，左旧右新](../build/polish-dye-terrace/release/verified/yard-comparison.png) · [染缸近景](../build/polish-dye-terrace/release/verified/native-full/frames/04a-indigo-vat.png) · [收工后的院子](../build/polish-dye-terrace/release/verified/native-full/frames/06a-yard-closed.png)
+- 在两种隔离窗口从标题开新档，经西关和溪桥道到晒布院。问阿苓后按舆图走到绸摊，再到门阶和染缸旁核对石面脚步、绕行及遮挡。巳时中途存档后，阿苓仍在送布路上。谷雨可在檐下交谈，立冬仍能认出柜台上的样绸。 [西市舆图](../build/polish-dye-terrace/release/verified/native-full/frames/03-market-map.png) · [1024×768 谷雨画面](../build/polish-dye-terrace/release/verified/native-compact/frames/07-rain-shelter.png) · [实机记录](../build/polish-dye-terrace/release/verified/native-full/replay.log)
+- 上一版在新版靛缸将占的位置用设置菜单留手动档。新版会在约 10.5 个场景像素外的缸沿旁读回，保留面向和时辰，可走回主街。原档和续读副本校验一致。 [上版站位](../build/polish-dye-terrace/old-checkpoint/frames/01a-older-vat-position.png) · [新缸旁续读](../build/polish-dye-terrace/release/verified/native-legacy/frames/10-older-save-continued.png) · [存档校验](../build/polish-dye-terrace/release/verified/native-legacy/integrity.log)
+- 132 项源码回归和 53 项 Windows 无窗口检查通过。普通新档于第 56 天达成「守礼安邦」，第 59 天达成「税亩富民」，两份结局都可退出重启读回。战败恢复、研究延期、上一版存档续读和 90 秒连续运行通过。两次干净构建的 ZIP 校验相同。首次独立试玩和人工长线试玩待验收。 [源码回归](../build/polish-dye-terrace/release/verified/source-scenarios.log) · [成品检查](../build/polish-dye-terrace/release/verified/headless-release.log) · [重建校验](../build/polish-dye-terrace/release/verified/clean-builds.log)
+
+## 堂前到井田的高低
+
+- 堂前石坪近侧露出错缝石脚，南行土路从放低的坡口接过去。沿土路跨过路肩片石能到泉边。泉眼有亮口沿、内壁、水面和贴地石座。田口有前后高低两块踏石，靠近人物的土壁能看见碎石与草根。 [1920×1080 同机位对照，左旧右新](../build/polish-court-relief/release/verified/court-comparison.png) · [新版完整画面](../build/polish-court-relief/release/verified/native-full/frames/00a-untilled-field.png)
+- 在 1920×1080 与 1024×768 的隔离桌面，从新档下井田翻地、播种、浇水，再从南行土路走上泉边，核对脚步从土面切到石面。晴天、谷雨和冬至分别取帧，接通的渠水从石口流出，东西关道都可往返。此前版本实际写出的第 6 天手动档可继续查水，保留一份贡粮与 7 铜钱。原档与验证副本的校验一致。 [窄窗走到泉边](../build/polish-court-relief/release/verified/native-compact/frames/00e-spring-from-lane.png) · [谷雨接渠](../build/polish-court-relief/release/verified/native-full/frames/03-rain-and-second-field.png) · [冬至石沿](../build/polish-court-relief/release/verified/native-full/frames/05-winter-fields.png) · [旧档续读](../build/polish-court-relief/release/verified/native-legacy/frames/07-restored-coverage.png) · [存档校验](../build/polish-court-relief/release/verified/native-legacy/integrity.log)
+- 标题的清晨和薄暮背景由引擎从新版封地同机位渲染，保存为 2560×1440 RGB 图。成品在默认窗口可新建封地并从标题续档。 [新版标题](../build/polish-court-relief/release/verified/native-title/frames/02-dusk-title.png) · [背景像素校验](../build/polish-court-relief/release/verified/title-render.log)
+- 132 项源码场景和 59 项 Windows 无窗口检查通过。成品从普通新档在第 56 天达成「守礼安邦」，第 59 天达成「税亩富民」，两份结局均可退出重启后读回。战败恢复、研究延期、上一版存档续读及 90 秒连续运行通过。两次干净导出的 ZIP 校验值一致。首次独立试玩和人工长线试玩待验收。 [源码回归](../build/polish-court-relief/release/verified/source-scenarios.log) · [成品验证](../build/polish-court-relief/release/verified/headless-release.log) · [重建校验](../build/polish-court-relief/release/verified/clean-builds.log)
+
+## 首贡期限与长期奖励
+
+- 新档播种前，手记写明第 5 天过夜前交首份贡粮。「今夜安排」显示本期的份数和期限、最早可收的日期及长期奖励。第 3 天收下公田后，下一期须在第 7 天过夜前交一份，累计奖励进度变为 1/10。堂前贡粮账也标出应交的份数。 [上版首夜](../build/polish-opening-playthrough/before/frames/012.png) · [新版同路首夜](../build/polish-opening-playthrough/release/verified/guided/frames/012.png) · [1024×768 下一期](../build/polish-opening-playthrough/release/verified/native-compact/frames/01-next-tribute.png)
+- 1920×1080 隔离桌面用普通按键和点击从标题开新档，找渠伯、补浇公田、公私田各收一份，再按舆图经西关和溪桥道首次进西市。出门前按春季订单补种两格菽。 [缺水过夜提醒](../build/polish-opening-playthrough/release/verified/guided/frames/009.png) · [首次到西市](../build/polish-opening-playthrough/release/verified/guided/frames/030.png)
+- 在同一局回放第 7 天欠贡、扣 8 点声望、退出续档和补交。第 8 天补交后，期限移至第 12 天。旧的第 7 天手动档可在贡粮账读到「今夜到期」，并从账上找回熟田。原手动档与验证副本校验一致。 [专项回放](../build/polish-opening-playthrough/release/verified/native-full/replay.log) · [旧档贡粮账](../build/polish-opening-playthrough/release/verified/native-legacy/frames/00a-previous-tribute-ledger.png) · [存档校验](../build/polish-opening-playthrough/release/verified/native-legacy/integrity.log)
+- 132 项源码场景和 73 项 Windows 无窗口检查通过。成品从普通新档在第 56 天达成「守礼安邦」，第 59 天达成「税亩富民」，两份结局均可退出重启后读回。战败恢复、研究延期、上一版接续及 90 秒连续运行通过。两次干净导出的 ZIP 校验值一致。首次独立试玩和人工长线试玩待验收。 [源码回归](../build/polish-opening-playthrough/release/verified/source-scenarios.log) · [成品验证](../build/polish-opening-playthrough/release/verified/headless-release.log) · [重建校验](../build/polish-opening-playthrough/release/verified/clean-builds.log)
+
+## 秋社分谷与冬至炉火
+
+- 从新档到第 16 天秋社，三份谷样随阿绥、林蓼、禾伯取走各响一次。带回谷样时保留摆样铃，读回已完成的秋社可见手中谷包和原有记录。后续仍可用禾伯送来的菽办冬至粥。 [秋社第一份交接](../build/polish-festival-life/release/verified/native-autumn-exhibit/frames/05-first-handoff.png) · [秋社至冬至回放](../build/polish-festival-life/release/verified/native-autumn-exhibit/replay.log)
+- 第 22 天酉时先亮起炉火，桌上的碗仍空着。备麦菽粥或鱼麦羹时听到盛饭与碗落木案，再看到实物与锅汽。续档可回到备好的炉案，食材和供饭份数按当日记录恢复。隔夜后炉火熄灭，份数记入昨夜结算。 [上版未备饭的炉案](../build/polish-festival-life/before/winter-supper/frames/03-lanterns.png) · [新版酉时炉案](../build/polish-festival-life/release/verified/native-winter-supper/frames/03-lanterns.png) · [鱼麦羹上桌](../build/polish-festival-life/release/verified/native-winter-supper/frames/04b-served-at-the-table.png)
+- 1920×1080 回放了秋社和两种围炉饭。1024×768 从成品包录下 12.4 秒炉火，测试覆盖完整一轮循环。相机中心距炉口约 24 场景像素时，炉火输出峰值为 −26.30 dBFS。移到约 253 像素外或关闭「环境与脚步」时，输出均为静音。 [隔离桌面实录](../build/polish-festival-life/release/verified/native-results.log) · [炉火音频](../build/polish-festival-life/release/verified/native-audio-verified/frames/hearth-near.wav) · [备鱼麦羹的声音](../build/polish-festival-life/release/verified/native-audio-verified/frames/serving-fish.wav)
+- 132 项源码回归和 65 项 Windows 无窗口检查通过，覆盖同年分谷、禾伯赠菽、钓鱼备饭及冬至过夜。普通新档在第 56 天走到「守礼安邦」，第 59 天走到「税亩富民」。两个结局均能退出重启后读回。上一版存档接续和 90.67 秒连续运行通过，两次干净构建的 SHA256 一致。 [源码验证](../build/polish-festival-life/release/verified/source-scenarios.log) · [成品验证](../build/polish-festival-life/release/verified/headless-final.log) · [构建校验](../build/polish-festival-life/release/verified/clean-builds.log)
+
+## 初税亩前暂留熟私田
+
+- 筹备账在公私田收成预估旁提供「暂留熟私田」。门客仍可收公田、浇水和播种，熟私田可由玩家亲手收获。外出、候工及已经开始的收割都沿用这项安排。安排可续档，延期研究期间可去「今夜安排」恢复代收，传统或改革定案时也会恢复。 [默认窗口筹备账](../build/polish-council-forecast/release/final/native-traditional/frames/01-harvest-forecast.png) · [1024×768 同时显示晋升、续播和收成](../build/polish-council-forecast/release/final/native-research/frames/00-busy-ledger.png) · [研究期间恢复代收](../build/polish-council-forecast/release/final/native-research/frames/03-release-during-research.png)
+- 用上版 Windows 实际保存的第 48 天手动档对照。两版都收 1 份贡粮，并给 1 格私田幼苗浇水。旧版自动收走 5 份私田作物，公田贡献占 29.13%。新版保留三格熟私田，到第 49 天以 30.61% 见到召简。守礼定案后代收 5 份，入账 37 铜钱。 [旧版当日](../build/polish-council-forecast/baseline/council-prep/harvest-before.log) · [新版同档回放](../build/polish-council-forecast/release/final/native-traditional/replay.log) · [旧档校验](../build/polish-council-forecast/release/final/previous-save-integrity.log)
+- 1024×768 用手柄开启暂留后，睡前候工完成公田收割与私田浇水，次日可亲手收一格。第 49 天延期研究，续档仍留有两格熟私田。第 51 天定案改税，门客恢复代收，此次入账 30 铜钱、实扣税 10。 [紧凑窗口回放](../build/polish-council-forecast/release/final/native-research/replay.log) · [隔离桌面对照](../build/polish-council-forecast/release/final/native-comparison.log)
+- 132 项源码回归和 74 项 Windows 无窗口检查通过。普通新档在第 56 天达成「守礼安邦」，第 59 天达成「税亩富民」，两个结局均可退出重启读回。上版旧档接续、战败恢复、延期研究和 90.87 秒连续运行通过。两次干净构建的 SHA256 一致。 [源码回归](../build/polish-council-forecast/release/final/source-scenarios.log) · [分段成品回归](../build/polish-council-forecast/release/final/headless-complete.log) · [构建校验](../build/polish-council-forecast/release/final/clean-builds.log)
+
+## 西市石街与摊前摆货
+
+- 溪桥道西端接西市东口，沿途用同样的错缝石板。石沿在近侧露出薄立面，到岔巷接平。粮摊、鱼摊和绸摊各有石铺面，摊棚能看见右侧木板和石脚。摊前分别摆盛谷竹筐、邻水浅鱼盘和垂蓝布的木案。 [溪桥道西段](../build/polish-oblique-maps/release/verified/final/full/frames/00-bridge-to-market.png) · [旧版鱼摊](../build/polish-oblique-maps/baseline/street/frames/03-fish-apron.png) · [新版鱼摊](../build/polish-oblique-maps/release/verified/final/full/frames/03-fish-apron.png)
+- 在隔离桌面从新档过西关和木桥，沿原街巷分别走到三摊。新版在三处站位均听到石面脚步，可打开对应柜台。走到绸案前会停在案脚外，从侧边绕到案后时人物按脚底位置遮挡。谷雨与立冬分别核对湿石和霜边。 [柜台及脚步记录](../build/polish-oblique-maps/release/verified/final/full/replay.log) · [1024×768 谷雨](../build/polish-oblique-maps/release/verified/final/rain/frames/02-silk-apron.png) · [立冬粮摊](../build/polish-oblique-maps/release/verified/final/winter/frames/04-grain-apron.png) · [从石板走到土路的实录](../build/polish-oblique-maps/release/verified/final/walltime-market/frames/stone-and-dirt.wav)
+- 旧版 Windows 实际保存的第 1 天西市站位恰在新版绸案脚下。新版在案旁约 10 个场景像素处落脚，面向和存档内容保留，能绕到蔡娘柜台继续。正常留鱼回放仍能走到水槽近侧，伙计照常取走留鱼。 [旧档接续](../build/polish-oblique-maps/release/verified/final/previous/replay.log) · [水槽回归](../build/polish-oblique-maps/release/verified/headless-final/fish-market-orders.log)
+- 131 项源码回归和 58 项 Windows 成品检查通过。普通新档在第 56 天走到守礼结局，第 59 天走到改税结局。两个结局均可退出重启后读回。上一版存档接续、战败恢复、延期研究和 90 秒连续运行通过。两次干净构建的 SHA256 一致。 [源码回归](../build/polish-oblique-maps/release/verified/source-scenarios.log) · [成品无窗口回放](../build/polish-oblique-maps/release/verified/headless-final.log) · [构建校验](../build/polish-oblique-maps/release/verified/clean-builds.log)
+
+## 外出后接着田务
+
+- 从封地带着田务指路外出，返程按钮和区域舆图会提供「接着田务」。经西市、溪桥道或竹涧回到田口，接回原地块、公私田范围和续播设置。途中手动存档后可继续这趟返程。 [区域舆图](../build/polish-field-journey/release/verified/native-worker-final/frames/01b-regional-return.png) · [井田 2 路线](../build/polish-field-journey/release/verified/native-full-final/frames/02-approach-to-well.png)
+- 同一份第 31 天的两井田验收档，旧包回到井田 1 后清除指路，新包回到井田 2 并重新标出原来的私田。批量收后续播入私仓 2 份，两块公田仍可另收。门客在西市往返期间做完原地块时，新版改标同一井田的另一格。 [旧包回放](../build/polish-field-journey/before-v2/replay.log) · [同档续玩及门客回放](../build/polish-field-journey/release/verified/native-checks.log) · [手柄续播](../build/polish-field-journey/release/verified/native-compact-recheck/frames/03-private-replant-preview.png)
+- 从新档做完首贡和轮作约定，第 3 天出东关采野果。走回田口后，指路找回原来的轮作地块，并继续播下菽。 [回田后播种](../build/polish-field-journey/release/verified/native-rotation-final/frames/03-beans-planted-after-return.png)
+- 130 项源码回归和 54 项 Windows 成品检查通过。普通新档于第 56 天守礼、第 59 天改税，两条路线均可重启后读回结局。旧档接续和 90 秒连续运行通过。隔离桌面验过 1920×1080 键鼠和 1024×768 手柄，两次干净构建的 SHA256 一致。 [源码回归](../build/polish-field-journey/release/verified/source-scenarios.log) · [成品无窗口回放](../build/polish-field-journey/release/verified/headless-final.log) · [构建校验](../build/polish-field-journey/release/verified/clean-builds.log)
+
+## 南路亭预告与候席
+
+- 当晚有未听过的小谈，且两位邻居都能赴席时，白天的「今夜安排」会列出题目、名字、时辰和地点。沿指路到亭边可坐下候席，晴天酉时、雨天申时以后等人沿路到齐。按起身按钮、Esc 或 B 可提前离开，已经过的时辰会保留。 [白天预告](../build/polish-pavilion-appointment/release/verified/native-full/frames/01-tonight-before-arrival.png) · [手柄候席](../build/polish-pavilion-appointment/release/verified/native-compact/frames/03-seated-wait.png)
+- 上版从新档耕作、纳贡到第 7 天送出一份路粮，卯时的「今夜安排」还没有当天话题。新版接续该手动档，以 1920×1080 键鼠和 1024×768 手柄实测，沿路到席案，提前起身一次，再坐等约 9 秒，两人到齐时仍是第 7 天酉时，粮仓 4 份、体力 94。听完「路粮匣」后再次保存并重读，手记中只记了一次。 [同档改前](../build/polish-pavilion-appointment/before/frames/00-before-daytime-plan.png) · [酉时入席](../build/polish-pavilion-appointment/release/verified/native-full/frames/05-both-seated.png) · [实机对照](../build/polish-pavilion-appointment/release/verified/native-comparison.log) · [旧档校验](../build/polish-pavilion-appointment/release/verified/previous-save-integrity.log)
+- 有既往交接记录的测试档复核了第 30 天申时的雨棚，第 9 天陶辛从西市返程，以及弋戎留在东岗时席案的预告状态。现场听完「东路的一盏灯」和「绸边的结」。 [雨棚](../build/polish-pavilion-appointment/release/verified/native-rain-final/frames/05-both-seated.png) · [西市返程](../build/polish-pavilion-appointment/release/verified/native-market/replay.log)
+- 129 项源码回归及 40 项 Windows 成品检查通过，含候货、邻里交接和时令交货。普通新档在第 56 天守礼、第 59 天改税，两个结局均可退出重启读回。上一版接续、战败恢复、延期研究和 90 秒连续运行通过，两次干净构建的校验值一致。 [源码回归](../build/polish-pavilion-appointment/release/verified/source-scenarios.log) · [无窗口成品回放](../build/polish-pavilion-appointment/release/verified/headless-final.log) · [构建校验](../build/polish-pavilion-appointment/release/verified/clean-builds.log)
+
+## 井田收后续播
+
+- 种子栏选「按安排播种」后可开启「收后续播」。按住 Shift 或手柄 LT 指向成熟作物，预览公私田范围、入账、下茬、补浇和总体力。一次确认只给本次收下且可播的计划田补种，旱作缺水才浇。 [键鼠预览](../build/polish-harvest-replant/release/verified/native-full/frames/01-first-well-preview.png) · [手柄预览](../build/polish-harvest-replant/release/verified/native-compact/frames/01-first-well-preview.png)
+- 同一份第 3 天旧档中的两块井田共收 9 格、续播 6 格、补浇 5 格。成功确认由四次减到两次，同耗 44 点体力，入国库 2 份、入私仓 8 份，铜钱多 66。少 1 点体力时田格和账目保持原样。新苗次日各长一夜，继续游戏使用的原手动档校验一致。 [同档对照](../build/polish-harvest-replant/release/verified/harvest-comparison.log) · [差额提示](../build/polish-harvest-replant/release/verified/native-compact/frames/02-one-point-short.png) · [存档校验](../build/polish-harvest-replant/release/verified/previous-save-integrity.log)
+- 第 6 天谷雨沿「收私田」指路做完两田，续播 4 格、补浇 0 格。两个公田仍可另收，暂缓计划、待渠水的稻种和已有空田各按原安排处理。改革后照预览扣税，两田入私仓 10 份、实收 58 铜钱、实扣 18 铜钱。轮作按收成后的土力选种，桑树采叶后继续生长。 [雨天分收](../build/polish-harvest-replant/release/verified/native-rain/frames/01-first-well-preview.png) · [改革扣税](../build/polish-harvest-replant/release/verified/native-reform/replay.log)
+- 128 项源码回归及 44 项 Windows 成品检查通过。普通新档于第 56 天守礼、第 59 天改税，两个结局可退出重启读回。上一版旧档接续、战败恢复、延期研究和 90 秒连续运行通过，两次干净构建的 SHA256 一致。 [源码回归](../build/polish-harvest-replant/release/verified/source-scenarios.log) · [Windows 无窗口回放](../build/polish-harvest-replant/release/verified/headless-release.log) · [构建校验](../build/polish-harvest-replant/release/verified/clean-builds.log)
+
+## 竹涧瀑布与临水岩台
+
+- 竹涧木桥上游的岩台露出受光的石层，下面的湿岩落入水线阴影。瀑水经过石沿后分成几股，水花贴潭面向下游散开。岩台、木桥、埠头和路牌都能看到各自的顶面、近侧面和着地位置。 [上版同一近景](../build/polish-ravine-waterfall/before-near-bank/frames/05c-at-cascade-bank.png) · [新版同一近景](../build/polish-ravine-waterfall/release/verified/near-bank/frames/05c-at-cascade-bank.png)
+- 隔离桌面以 1920×1080 和 1024×768 回放了过桥、沿石阶上望溪台、浅滩、柳湾和返程。走向瀑布时会停在深水边，近侧桥栏按脚底位置遮住经过的角色。另在第 6 天谷雨和第 19 天立冬核对湿岩、霜线及流水。 [实机记录](../build/polish-ravine-waterfall/release/verified/native-comparison.log) · [谷雨画面](../build/polish-ravine-waterfall/release/verified/native-compact/frames/06-bridge-rain.png) · [立冬画面](../build/polish-ravine-waterfall/release/verified/native-full/frames/07-bridge-frost.png)
+- 127 项源码回归和 40 项 Windows 成品检查通过。普通新档在第 56 天守礼、第 59 天改税，两个结局均可退出重启后读回。上一版手动档接续、延期研究、战败恢复和 90 秒连续运行通过。两次干净构建的 SHA256 一致。 [源码回归](../build/polish-ravine-waterfall/release/verified/source-scenarios.log) · [Windows 无窗口回放](../build/polish-ravine-waterfall/release/verified/headless-release.log) · [构建校验](../build/polish-ravine-waterfall/release/verified/clean-builds.log)
+
+## 西市成交音
+
+- 卖出作物、鱼、丝绸或羊毛时有铜钱声。购粮和付钱领货时有轻扣与布包声，转粮或交鱼换口粮时有谷粒入仓声。封地的同类手动操作也按成交结果发声。声音走 SFX 总线并受主音量控制。 [三种声音实录](../build/polish-market-audio/release/verified/trade-preview.wav) · [音频总线检查](../build/polish-market-audio/release/verified/audio-buses.log)
+- 两版使用同一套第 3 天交易回放，耕作后到西市用准备好的鱼和丝绸核对三处柜台。新版的六笔交易各对应一次声音，SFX 实录峰值为 −13.83 至 −12.68 dBFS。再点售罄货物时铜钱和成交声次数都没增加，从标题续档也没有重复播声。 [上版实录](../build/polish-market-audio/before-verified/replay.log) · [默认窗口回放](../build/polish-market-audio/draft/replay.log) · [1024×768 实录](../build/polish-market-audio/release/verified/native-compact/replay.log) · [峰值对照](../build/polish-market-audio/release/verified/recorded-peaks.log)
+- 127 项源码回归和 42 项 Windows 无窗口检查通过。成品以手动或委派备粮从普通新档走到第 56 天「守礼安邦」与第 59 天「税亩富民」，两个结局均通过退出重开。战败恢复、研究延期、上一版存档接续与 90 秒连续运行通过。两次独立构建的 ZIP 校验值一致。 [源码回归](../build/polish-market-audio/release/verified/source-scenarios.log) · [成品验证](../build/polish-market-audio/release/verified/headless-release.log) · [构建校验](../build/polish-market-audio/release/verified/clean-builds.log)
+
+## 稻田浅水与断流
+
+- 有稻苗的田格接通渠水后，可见田沿下的浅水、入水口和错开的波纹。相邻旱作和空格接水后呈湿土。田格边缘和公田金角可见。断渠、拆闸或收割后，对应田格重新露出土面。 [上版通渠画面](../build/polish-paddy-water/before/frames/02-connected.png) · [1920×1080 通渠画面](../build/polish-paddy-water/release/verified/native-full/frames/02-connected.png) · [1024×768 稻与黍](../build/polish-paddy-water/release/verified/native-compact/frames/03a-rice-and-millet.png) · [水面取帧校验](../build/polish-paddy-water/release/verified/render-pixels.log)
+- 用第 9 天的双井田档，通过原有挖渠和接闸操作给三格稻田供水。填断缺口后，次日稻苗停在原阶段。接回渠道后过夜，三格稻苗各长一龄。第 13 天收割，公田入国库一份、私田入私仓一份。 [断渠实景](../build/polish-paddy-water/release/verified/native-full/frames/05-line-dry-again.png) · [成熟稻田](../build/polish-paddy-water/release/verified/native-full/frames/09-ripe-rice.png) · [生长和收割日志](../build/polish-paddy-water/release/verified/native-full/replay.log)
+- 从选档页读回上一版实际写出的第 10 天手动档。可看到干渠与断水田，接通后出现浅水并继续生长。原手动档和验证副本的校验值一致。 [旧档接通渠水](../build/polish-paddy-water/release/verified/native-resume/frames/01-previous-save-reconnected.png) · [旧档校验](../build/polish-paddy-water/release/verified/native-resume/integrity.log)
+- 127 项源码场景、31 项 Windows 无窗口检查通过。成品从普通新档走到第 56 天「守礼安邦」与第 59 天「税亩富民」，两份结局均可退出后续读。战败恢复、研究延期、旧档接续和 90 秒连续运行通过。两次独立构建的 ZIP 校验值一致。 [源码回归](../build/polish-paddy-water/release/verified/source-scenarios.log) · [成品验证](../build/polish-paddy-water/release/verified/headless-release.log) · [构建校验](../build/polish-paddy-water/release/verified/clean-builds.log)
+
+## 手动档恢复站位
+
+- 在封地、堂屋、蚕棚、竹涧、溪桥道和西市手动保存，可回到保存时的站位和面向。田边回放恢复已经浇水的公田和体力，过夜后作物长一龄，晨间档按原有落点起身。堂屋书案旁、蚕匾旁和西市摊前的续档都可接着操作。 [田边续档](../build/polish-walking-saves/release/verified/native-write/frames/01-field-continued.png) · [堂屋回放](../build/polish-walking-saves/release/verified/headless/hall-interior.log) · [蚕棚回放](../build/polish-walking-saves/release/verified/headless/silk-interior.log)
+- 默认 1920×1080 在溪桥道桥面保存，退出后以 1024×768 重开，仍站在桥面朝西。水中、关口触发区、地图外和格式错误的站位会落到有效的原入口，可继续行走。上一版通过设置留下的溪桥道手动档也可读回，原件和续档副本的校验值一致。 [桥上重开](../build/polish-walking-saves/release/verified/native-restart/frames/03-bridge-continued.png) · [落点检查](../build/polish-walking-saves/release/verified/native-restart/replay.log) · [旧档校验](../build/polish-walking-saves/release/verified/native-legacy/integrity.log)
+- 第 35 天钓鱼后的同一套回放，上版从竹涧西门继续，新版在柳湾原站位继续，留存一尾鱼和前往西市收货牌的指引。随后可摘野果，并拿这尾鱼完成交付。 [上版从西门继续](../build/polish-walking-saves/before-ravine/replay.log) · [新版从柳湾继续](../build/polish-walking-saves/release/verified/native-ravine/frames/06c-ravine-position-restored.png) · [采集和交付](../build/polish-walking-saves/release/verified/native-ravine/replay.log)
+- 127 项源码场景通过。成品包的无窗口回放从普通新档走到第 56 天「守礼安邦」和第 59 天「税亩富民」，两份结局档均可退出程序后续读。战败恢复、研究延期、旧档接续和 90 秒连续运行通过。两次独立构建的 ZIP 校验值一致。 [源码回归](../build/polish-walking-saves/release/verified/source-scenarios.log) · [成品验证](../build/polish-walking-saves/release/verified/headless-release.log) · [构建校验](../build/polish-walking-saves/release/verified/clean-builds.log)
+
+## 改派前看今夜口粮
+
+- 门客名册汇总今夜可供的口粮。展开职责菜单可比较每个岗位的份数、全员今晚能分到多少、预计离任者和购粮费用。「交给管事」也列出同一份试算。可从名册直接调「今夜安排」，回来继续选岗。 [1024×768 手柄预报](../build/polish-duty-rations/release/verified/native-compact/frames/00-before-assigning.png) · [购粮报价](../build/polish-duty-rations/release/verified/native-compact/frames/01-funded-role.png)
+- 上一版第 50 天存档里，改派季青教习后才发现今夜只能供 3/5 份，弋戎可能离任。新版在改派前展示结果，可取消职责菜单，先设 5 铜钱的购粮上限再改派。过夜实付 5 铜钱、供足五份。翌日实缴研究费 100 铜钱，三位门客留任，交单用菽仍在私仓，季青的教习也已结算。 [上一版改派后](../build/polish-duty-rations/before/frames/01-old-shortage-after-assignment.png) · [第 51 天实收](../build/polish-duty-rations/release/verified/native-full/frames/03-real-night.png)
+- 隔离桌面在默认 1920×1080 以键鼠、在 1024×768 以手柄完成全程。两种窗口都接续上一版的手动存档，校验值与原档一致。 [同档回放与校验](../build/polish-duty-rations/release/verified/duty-rations-comparison.log)
+- 126 项源码回归通过。Windows 解压包以手动或委派备粮从新档均能完成守礼第 56 天及改税第 59 天结局，两个结局退出重开可继续。上一版存档接续、战败恢复、研究延期和 90 秒连续运行均通过。两次干净构建的校验值一致。 [源码回归](../build/polish-duty-rations/release/verified/source-scenarios.log) · [成品验证](../build/polish-duty-rations/release/verified/headless-release.log) · [构建校验](../build/polish-duty-rations/release/verified/clean-builds.log)
+
+## 溪桥道的溪岸与桥头
+
+- 草沿贴实际碰撞线。下面是有裂纹的岩层和壁脚暗面，流水反光收在岩脚以内。木桥两端的片石铺到桥板边，沿用竹涧的固定斜俯视。 [旧版桥上画面](../build/polish-path-readability/before-road/frames/03-creek-bridge.png) · [1920×1080 新版](../build/polish-path-readability/release/verified/native-full/frames/03-creek-bridge.png)
+- 1920×1080 和 1024×768 均走完封地、西市及回程。从两岸向溪水走，会在画出的岸沿停下。过桥脚步实测依次为石面、木板、石面。沿大路穿行溪桥道的游戏内用时均为 4.75 秒。 [两种窗口及脚步记录](../build/polish-path-readability/release/verified/creek-crossings.log) · [东岸止步位置](../build/polish-path-readability/release/verified/native-compact/frames/03c-east-bank-stop.png)
+- 第 6 天谷雨复核湿岩、桥板和积水，第 19 天立冬复核岸沿霜色和桥口。上一版 Windows 写出的第 1 天溪桥道存档从西市侧继续，按原指路走回封地，原手动档与验证副本的 SHA256 一致。 [谷雨实机](../build/polish-path-readability/release/verified/native-rain/frames/00-rain-creek.png) · [立冬实机](../build/polish-path-readability/release/verified/native-winter/frames/00-frost-creek.png) · [旧档接续](../build/polish-path-readability/release/verified/native-resume/replay.log)
+- 125 项源码回归通过。Windows 解压包完成普通新档守礼第 56 天和改税第 59 天双结局、两个结局重启接续、上一版封地档接续、研究延期、战败恢复和 90 秒连续运行。两次干净构建校验值一致。 [源码回归](../build/polish-path-readability/release/verified/source-scenarios.log) · [成品验证](../build/polish-path-readability/release/verified/headless-release.log) · [构建校验](../build/polish-path-readability/release/verified/clean-builds.log)
+
+## 井田整备空田
+
+- 种子栏选「按安排播种」后可开启「整备空田」。按住 Shift 或 LT 指向可播的计划田，预览同井田的公私田格数、各格作物、翻播浇的数量和总体力，再用左键或 A 确认。井田列表标出可开种的计划生地。续档后可重新开启整备。
+- 上一版与本版接续同一份第 3 天存档。四格翻、播、浇由三次田边确认减为一次，晴天同耗 13 点体力。少 1 点体力时整田不动。雨天另回放同一组计划，四格耗 10 点体力，浇水为零。断水稻种、暂缓计划、桑树和邻田均留在原状态。晴天回放第 7 天收成，公田入库 1 份，私田入仓 3 份。
+- 隔离桌面验证 1920×1080 键鼠和 1024×768 手柄，复核田格、全额和差额提示。两份接续档的原手动存档 SHA256 与上一版一致。 [同档对照](../build/polish-field-preparation/release/verified/preparation-comparison.log) · [整备预览](../build/polish-field-preparation/release/verified/native-full/frames/01-preparation-preview.png) · [手柄体力不足提示](../build/polish-field-preparation/release/verified/native-compact/frames/02-stamina-shortfall.png)
+- 125 项源码回归通过。Windows 解压包完成新档守礼第 56 天及改税第 59 天结局、两个结局重启接续、旧档接续、研究延期、战败恢复和 90 秒稳定运行。两次干净构建哈希一致。 [源码回归](../build/polish-field-preparation/release/verified/source-scenarios.log) · [成品回放](../build/polish-field-preparation/release/verified/headless-release.log) · [构建校验](../build/polish-field-preparation/release/verified/clean-builds.log)
+
+## 井田公私分收
+
+- 公私田都有熟作时，井田舆图提供「收公田」和「收私田」。沿指路按 Shift 或手柄 LT 批收，预览入库、入仓、铜钱、税额和体力。收完本田接到另一块田。选「可收」可整田一起收，松开修饰键可单格收割。 [井田入口](../build/polish-harvest-scope/release/verified/native-default/frames/01-choose-harvest-group.png) · [窄窗手柄预览](../build/polish-harvest-scope/release/verified/native-compact/frames/02-private-batch-preview.png)
+- 同一份第 31 天旧档带着收公田指路。上版整批收割时国库入一份、私仓入四份，用了 12 点体力。新版这次国库入一份，用三点体力，三格成熟私田留在田里。原手动档与续读副本校验一致。 [旧版预览](../build/polish-harvest-scope/baseline/native-default/frames/04-public-route-preview.png) · [旧档在新版的预览](../build/polish-harvest-scope/release/verified/previous-checkpoint/frames/04-public-route-preview.png) · [存档校验](../build/polish-harvest-scope/release/verified/previous-save-integrity.log)
+- 在同一组成熟作物中，从舆图选「收私田」并继续游戏，两次批收合计四格，轮作后入私仓五份，两块公田仍可另收。另核对了改革后整田收获的入仓量、铜钱和实扣税。 [分收回放](../build/polish-harvest-scope/release/verified/native-default/replay.log) · [手柄回放](../build/polish-harvest-scope/release/verified/native-compact/replay.log)
+- 124 项源码场景通过。解压包的普通新档于第 56、59 天分别走完传统与改革，两个结局均可重启读回。首贡、战败恢复、延期研究、上一版续档和 90 秒连续运行通过，两次干净导出 SHA256 一致。 [源码回归](../build/polish-harvest-scope/release/verified/source-scenarios.log) · [Windows 无窗口回放](../build/polish-harvest-scope/release/verified/headless-release.log) · [重建校验](../build/polish-harvest-scope/release/verified/clean-builds.log)
+
+## 首贡与议税的声音反馈
+
+- 首份纳贡响起谷粒入袋与短铃。议税时，守礼用印落木案，改税用数铜钱，暂缓研究用竹简收合。三段主要音效播放时，当前背景曲压到原增益的七成，随后从已经播放的位置恢复音量。暂缓研究的收简声较短，背景曲照常播放。 [按首贡、守礼、改税、暂缓顺序排列的实机录音](../build/polish-ledger-audio/release/verified/ledger-cues-live.wav)
+- 默认 1920×1080 和 1024×768 窗口在隔离桌面从标题开新档，耕到第 3 天首贡。三种议税决定各从同一第 53 天测试档走到堂前，现场选择并确认。专项核对了触发次数、继续游戏、音乐播放位置和设置音量。两种窗口的录音主总线最高真峰为 −10.53 dBTP。 [上版同路回放](../build/polish-ledger-audio/baseline/native-default/replay.log) · [新版默认画面与录音记录](../build/polish-ledger-audio/release/verified/final-default/replay.log) · [窄窗口回放](../build/polish-ledger-audio/release/verified/final-compact/replay.log) · [真峰记录](../build/polish-ledger-audio/release/verified/live-mix-peaks.log)
+- 123 项源码场景通过。解压包从普通新档在第 56、59 天走到传统和改革结局，两个结局均可重启读回。首贡、旧档接续、战败恢复、延期研究和 90 秒连续运行检查通过，两次干净构建的 SHA256 一致。 [源码回归](../build/polish-ledger-audio/release/verified/source-scenarios.log) · [Windows 无窗口回放](../build/polish-ledger-audio/release/verified/final-headless-release.log) · [重建校验](../build/polish-ledger-audio/release/verified/clean-builds.log)
+
+## 堂屋器物与门槛的斜俯视
+
+- 书案、床榻和窗下陈设案有独立的顶面、近侧面和接地阴影。纪念品落在案上，窗右油灯的亮处收在窗边。南门两侧的矮墙参与遮挡，石阶接上屋内走道。床榻右移五个场景像素，为陈设案与床榻之间留出通道。 [家具图集](../build/polish-hall-spatial/release/verified/art/furniture-atlas.png)
+- 在默认 1920×1080 用同一段从南门直向北的操作复现穿案。上版人物穿到案身与后墙之间，新版停在案前并可打开陈设。从右侧通道可走到窗边，再回书案研读、在床边过夜。早晨公私田各收一份，分别进入国库和私仓。 [上版同路](../build/polish-hall-spatial/baseline/table-default/frames/02a-at-the-display-table.png) · [新版案前](../build/polish-hall-spatial/release/verified/native-default/frames/02a-at-the-display-table.png) · [窗边通道](../build/polish-hall-spatial/release/verified/native-default/frames/02b-window-aisle.png)
+- 1024×768 窗口在隔离桌面复核进出、过夜和陈设预览。从上版第 4 天的手动档续读，青纹苇席和首贡谷穗保留，走到案前可继续布置。旧档与接续副本的校验一致。 [窄窗陈设](../build/polish-hall-spatial/release/verified/decor-compact/frames/03-tribute-preview.png) · [旧档实景](../build/polish-hall-spatial/release/verified/previous-checkpoint/frames/01-old-save-in-the-new-hall.png) · [存档校验](../build/polish-hall-spatial/release/verified/previous-save-integrity.log)
+- 122 项源码场景通过。普通新档在第 56、59 天走到传统和改革结局，两条均可退出后读回。解压包通过首贡、战败恢复、延期研究、上版存档接续和 90 秒连续运行。两次干净构建的 SHA256 一致。 [源码回归](../build/polish-hall-spatial/release/verified/source-scenarios.log) · [Windows 无窗口回放](../build/polish-hall-spatial/release/verified/headless-release.log) · [构建校验](../build/polish-hall-spatial/release/verified/clean-builds.log)
+
+## 从今夜安排翻到明日
+
+- 「今夜安排」标题旁可看次日节气与天气，点开就到明日历书。立春前一夜可查第二年春单「南路续种」和次日敌情，从历书跳到下季备货。历书按年翻页，过去的谷雨合奏等记录留在原日期，可一键回到今日。
+- 从标题续读第 24 天测试存档，在两种窗口尺寸的隔离桌面上查春单、回看第 6 天的合奏、跟踪下季备货并睡到第 25 天。跟踪接为当季，已播作物继续按播种时的生长夜数推进。把每个节气设为两天后，同一节气里也能查到明日自己的轮访。 [1920×1080 明日历书](../build/polish-calendar-tomorrow/release/verified/native-default/frames/02-tomorrow-spring.png) · [1024×768 窗口交货簿](../build/polish-calendar-tomorrow/release/verified/native-compact/frames/04-next-order.png)
+- 122 项源码场景通过。Windows 解压包的普通新档分别在第 56、59 天达成传统和改革结局，退出重启均可恢复。上一版存档接续成功，连续运行 90 秒。两次干净构建的 SHA256 一致。 [源码回归](../build/polish-calendar-tomorrow/release/verified/source-scenarios.log) · [Windows 无窗口回放](../build/polish-calendar-tomorrow/release/verified/headless-release.log) · [构建校验](../build/polish-calendar-tomorrow/release/verified/clean-builds.log)
+
+## 井田舆图的局部视图
+
+- 井田页按实际田区取景，放大九格、田口、相连的路和水渠。田面区分翻过的土和渠水，金框随当前公田归属显示。可收、待浇、断水和待播的标记各占一格。人走出图框后，边缘的金色箭头指向当前位置。地点页可看全境。
+- 同一份第 3 天存档在两版 1024×768 窗口分别打开，图内田格宽约为原来的 5.4 倍，原先的待播方向和五格待播保留。两份验证副本与原档校验一致。 [上版画面](../build/polish-field-map/release/baseline/frames/00-previous-estate-wide-frame.png) · [新版同档](../build/polish-field-map/release/verified/previous-checkpoint/frames/10-previous-save-local-view.png) · [存档校验](../build/polish-field-map/release/verified/previous-checkpoint/save-integrity.log)
+- 在已完工和施工中的四田档里点图上的工地，两夜后从舆图选到完工的同一处。16 田布置档先能看全田，再点远田看格，右侧滚到选中的井田。专项也检查了改田归属后的图示。 [16 田总览](../build/polish-field-map/release/verified/native-compact/frames/07-spread-field-overview.png) · [远田细看](../build/polish-field-map/release/verified/native-compact/frames/08-distant-field-detail.png) · [改革后画面](../build/polish-field-map/release/verified/native-compact/frames/09-private-after-reform.png)
+- 默认 1920×1080 隔离桌面核对可收、待浇和断水，另在 1024×768 用模拟手柄完成两田播种。121 项源码场景通过。传统和改革新档分别在第 56、59 天达成结局并可重启读回。解压包验证了战败恢复、延期研究、旧档和 90 秒连续运行，两次干净构建校验值一致。 [1920×1080 井田页](../build/polish-field-map/release/verified/native-default/frames/01-field-map.png) · [源码回归](../build/polish-field-map/release/verified/source-scenarios.log) · [Windows 无窗口回放](../build/polish-field-map/release/verified/headless-release.log) · [重建校验](../build/polish-field-map/release/verified/clean-builds.log)
+
+## 从井田舆图按安排播种
+
+- 点种子栏的「田务」打开井田舆图。各井田列出待播数，绿点标出已翻、有安排且现在能播的空畦。选「待播」会切到「按安排播种」，从近处开始，先标完同一井田再接下一块。播完、过夜或换成手选种子时收起指路。
+- 专项从新档耕到第 3 天首贡，再布置一块完工井田。地图分别列出 4 格和 2 格待播。先播一格，再从标题继续，剩余空畦仍有标记。两次批量确认播完两块田，六格共耗 12 体力，私仓、铜钱、纳贡和续播安排保留。缺渠水的稻、暂缓的私田和待翻地仍按各自田情处理。
+- 1920×1080 默认窗口用键鼠回放，1024×768 用模拟手柄选择待播、预览和确认。同一包在窄窗口接续了上版生成的双井田存档。 [上版井田页](../build/polish-sowing-route/release/baseline-ready/frames/01-previous-field-map.png) · [待播清单](../build/polish-sowing-route/release/verified/native-default/frames/01-available-sowing-plots.png) · [窄窗口预览第二块井田](../build/polish-sowing-route/release/verified/native-compact/frames/04-sowing-the-second-well.png) · [上一版存档接续](../build/polish-sowing-route/release/verified/previous-checkpoint/replay.log)
+- 121 项源码场景通过。解压版的两条普通新档路线在第 56、59 天通关，退出后均可重读，并通过战败恢复、延期研究和 91 秒连续运行检查。交付包的程序、资源和运行验证包逐项校验一致，包内说明记下了待播入口。两次干净构建的 ZIP 校验值一致。 [源码回归](../build/polish-sowing-route/release/verified/source-scenarios.log) · [Windows 无窗口回放](../build/polish-sowing-route/release/verified/headless-release.log) · [包内文件校验](../build/polish-sowing-route/release/delivery/content-proof.log) · [重建校验](../build/polish-sowing-route/release/delivery/clean-builds.log)
+
+## 堂前爵册与开垦
+
+- 晨间核定升爵后，堂前台阶左侧挂出爵册。木架露出顶面、近侧和石脚，落影顺着石坪投向右侧。人物走到架后时，架身淡出，交互提示保持可读。走近按 E 可读升降爵日期、当前爵位和田额，也能打开开垦面板核对人手和粮钱。
+- 新档在第 12 天升为中士，第 13 天备齐人手和粮钱并立桩，第 17 天第二块井田完工。第 20 天从标题继续，爵册显示已有两田，并保留第 12 天的核定日期。用上一包生成的两份旧档验证了按晨间结算补记日期，以及只显示现爵和田额的情况。
+- Godot 4.7.2 导入、脚本加载、主场景启动及 120 项回归通过。解压包在隔离桌面的 1920×1080 和 1024×768 窗口完成了升爵、翻册、开垦和续档。传统和改革两条新档路线分别在第 56、59 天通关，两个结局都验证了退出后重启恢复。
+- [上一包同日画面](../build/polish-rank-book/release/baseline/frames/02c-hall-before-rank-book.png) · [堂前爵册](../build/polish-rank-book/release/verified/1920x1080/02c-rank-book-posted.png) · [走到木架后](../build/polish-rank-book/release/verified/1920x1080/02d-walk-behind-rank-book.png) · [窄窗口翻阅](../build/polish-rank-book/release/verified/1024x768/02e-rank-book-first-reading.png) · [源码回归](../build/polish-rank-book/release/verified/source-scenarios.log) · [Windows 验证](../build/polish-rank-book/release/verified/release.log)
 
 ## 从新档到第一次收获
 
@@ -977,3 +1311,397 @@
 - 封地铜盘有十二个刻点，亮点随地支时辰移动。昼夜回放核对酉时盘面与西廊灯笼，旧档继续时按存档时辰绘制。 [封地实机](../build/polish-art-resolution/hud-spring-release-1280/04-first-field.png) · [窄窗口实机](../build/polish-art-resolution/hud-spring-release-1024/04a-journal-expanded.png) · [Windows 试玩包](../build/polish-hud-spring-autumn/Fiefdom-1.0.0-Windows-x64.zip)
 - 封地手记露出上下束绳与竹片接缝，历书和外出日期牌改用暗铜底，工具栏改为系绳木牌。背包打开后显示黑漆朱绘分格匣，角色对白展开编绳简册。两处在同屏分别呈现所需的物品、回复和焦点。
 - Windows 默认窗口为 1920×1080。发行包在隔离桌面按默认尺寸启动，核对实际窗口和截图均为 1920×1080。 [封地 HUD](../build/polish-art-resolution/hud-1080-estate/04-first-field.png) · [背包](../build/polish-art-resolution/hud-1080-bag/02-private-crops.png) · [角色对话](../build/polish-art-resolution/hud-1080-dialogue/02a-reputation-needed.png) · [Windows 试玩包](../build/polish-hud-1080p/Fiefdom-1.0.0-Windows-x64.zip)
+
+## 雨夜南路亭与竹涧野药
+
+- 谷雨当天，收工的渠伯和季青走南路到亭东檐下，谷雨亭集在原处继续。檐下沿用同一场雨的音轨并降低音量。舆图标出席位，邻里手记显示实际去处。回放从晴夜到雨夜，覆盖田务优先、交谈接续轮作、存档继续、守卫留岗、来敌撤席及过夜。 [1080p 檐下](../build/polish-art-resolution/rain-east-1080/06-rain-shelter.png) · [渠伯雨夜对白](../build/polish-art-resolution/rain-east-1080/07-rain-conversation.png)
+- 望溪台可就地敷野药，也可装入背包，沿用与野果共用的每日采集机会。一份药可与路餐并存，返程、过夜、保存后继续可敷用。回放覆盖键位重绑、手柄指针和旧存档的空药格。 [望溪台](../build/polish-art-resolution/herbs-1080-final/05-wild-herb-prompt.png) · [背包](../build/polish-art-resolution/herbs-1080-final/06-packed-wild-herbs.png)
+- Windows 双路线、战败、夜间口粮、南路亭、背包和西市往返回放通过。画面按默认 1920×1080 在隔离桌面检查。 [Windows 试玩包](../build/polish-rain-and-herbs/Fiefdom-1.0.0-Windows-x64.zip) · [发行验证](../build/polish-rain-and-herbs/release.log) · [源码验证](../build/polish-rain-and-herbs/godot.log)
+
+## 第一次纳贡前的过夜提醒
+
+- 手记显示首贡期限及还需供水的夜数。首贡前若公田待浇、断水或已熟，睡觉和床榻的「今夜安排」可提示对应田务。首贡到期当天还会提示声望损失，即使公田尚未播种。默认选中「标出公田」，在堂屋会提示从南门回田边。选择「仍然过夜」按正常规则结算。
+- 新档回放覆盖按键和手柄取消、第三天公私田同收、故意漏浇及床榻指路。断水稻田的公田指引可随旧格式进度续存。用到期日存档核对扣 8 点声望并写入「昨夜结算」。默认 1920×1080 与 1024×768 画面均在隔离桌面核对。 [待浇提醒](../build/polish-art-resolution/tribute-bedtime-final-1080/04-dry-public-before-bed.png) · [到期提醒](../build/polish-art-resolution/tribute-bedtime-final-1024/04-first-tribute-due.png)
+- Windows 解压版在无窗口模式下通过 19 项检查。手动和委派备粮均在第 56 天走到传统结局、第 59 天走到改革结局。上一版生成的存档可在本版继续，90 秒连续运行到第 8 天并保留三份晨间档。 [Windows 试玩包](../build/polish-first-tribute-bedtime/Fiefdom-1.0.0-Windows-x64.zip) · [发行校验](../build/polish-first-tribute-bedtime/windows-release/manifest.txt) · [连续运行](../build/polish-first-tribute-bedtime/windows-release/soak.log) · [上一版存档](../build/polish-first-tribute-bedtime/previous-release.log)
+
+## 斥候瞄准、结局记事与隔离桌面
+
+- 鼠标和手柄瞄准斥候时，贴图透明边缘让箭矢按原方向射出，指向帽檐可锁定。箭出手后斥候仍能走开躲避。2× 贴图在逻辑分辨率下缓存透明度，供原有的瞄准判定使用。 [Godot Texture2D 文档](https://docs.godotengine.org/en/4.7/classes/class_texture2d.html#class-texture2d-private-method-is-pixel-opaque)
+- 封地记事用货物送达后带来的变化记下这笔交货。改革结局回放同屏保留季青的歇脚处、弋戎的战果和阿绥送到亭前的麦帛。
+- 101 项 Godot 场景通过。解压版无窗口验证覆盖 27 项，含两种备粮方式的双结局、弓箭、结局续营、战败恢复、研究、上一版续档与连续运行。发行脚本在隔离桌面取得默认 1920×1080 的开局和双结局，以及 1024×768 的耕作、管理、敲钟和对白。 [源码回归](../build/polish-windows-acceptance/final/source/source-matrix.txt) · [发行校验](../build/polish-windows-acceptance/final/headless/manifest.txt) · [传统结局](../build/polish-windows-acceptance/final/capture/1920x1080/ending-traditional.png) · [改革结局](../build/polish-windows-acceptance/final/capture/1920x1080/ending-reformed.png)
+
+## 呈交贡簿或税册时保存结局
+
+- 在堂前交贡簿或在南路亭交新税册后，默认写入结局自动档。结算显示保存结果。从标题继续会回到同一结算，存档列表同时保留本局可恢复的通关前进度。关闭自动存档时，仍可用结算页的「保存结局」。
+- 两条新档回放在结算页直接返回标题，再从自动档继续。续档保留路线和日期，可重看演出或继续经营。专项覆盖关闭自动存档、自动写入失败后手动保存及战败恢复。另用布置好的结局进度，在解压版完整退出并重启进程，核对两条路线都可从标题继续。 [Godot 验证](../build/polish-ending-autosave/godot.log) · [写入失败回归](../build/polish-ending-autosave/save-failure.log) · [Windows 1.0 x64](../build/polish-ending-autosave/Fiefdom-1.0.0-Windows-x64.zip) · [发行回放](../build/polish-ending-autosave/release-headless.log) · [重启进程回放](../build/polish-ending-autosave/release-restart.log) · [隔离桌面](../build/polish-ending-autosave/release-capture.log)
+
+## 结算簿与通关前存档
+
+- 结尾字幕、路线结算和封地记事采用现有漆木、暗铜边饰。结算突出「继续经营」。选「读取通关前存档」先看将载入的档位、日期和时辰。默认选中「留在结算」，按 Esc 返回原按钮。确认读取后，通关前的进度和已保存的结局都可在存档列表查到。
+- 两条新档回放验证结算、取消读档、结局自动保存和续营。专项确认回到通关前的手动档后，两份存档均可读。结算和确认在 1920×1080 和 1024×768 的隔离桌面核对。101 项源码场景、31 项无窗口发行检查和隔离桌面发行回放通过。两次干净构建的 ZIP SHA-256 一致。 [Windows 1.0 x64](../build/polish-ending-ledger/Fiefdom-1.0.0-Windows-x64.zip) · [传统结算](../build/polish-ending-ledger/final-capture/1920x1080/ending-traditional.png) · [窄窗口确认](../build/polish-ending-ledger/final-capture/1024x768/pre-victory-confirmation.png) · [源码回归](../build/polish-ending-ledger/source/source-matrix.txt) · [发行校验](../build/polish-ending-ledger/final-headless/manifest.txt) · [重复构建](../build/polish-ending-ledger/rebuild.log)
+
+## 首茬收成后继续纳贡、招募与开垦
+
+- 首茬去处选定后，封地手记可带玩家去见当日尚未交谈的来客，或标出下一次纳贡的公田。公田成熟和当夜欠贡时优先提示可处理的公田田务。已有指路时保留玩家选择。达到晋升条件可直接看今夜安排，过夜晋升后可从手记打开开垦筹备。
+- 招募对话列出留任前后的总粮耗和粮仓余量。早期招募导致当夜口粮供不齐时，手记可直达今夜安排。布置收割岗的专项从每夜 2 份增加到 3 份，补买 1 份后过夜，全员吃到口粮。
+- 默认新档回放在第 6 天读档后循手记找到弋戎，交谈获得 5 声望，再沿标记播种公田。扩建回放从手记打开今夜安排，第 12 天升中士，第 13 天立桩，第 17 天读晨间档并耕作新井田。101 项源码场景和 35 项无窗口发行检查通过，含手动与委派备粮的双结局、退出重启、上一版续档与 90 秒连续运行。10 次隔离桌面运行核对两种尺寸的实际画面。 [Windows 1.0 x64](../build/polish-opening-bridge/Fiefdom-1.0.0-Windows-x64.zip) · [手记指路](../build/polish-opening-bridge/capture/1920x1080/13-next-reputation-step.png) · [招募预估](../build/polish-opening-bridge/capture/1024x768/07-hiring-ration-preview.png) · [源码回归](../build/polish-opening-bridge/source/source-matrix.txt) · [发行校验](../build/polish-opening-bridge/headless/manifest.txt)
+
+## 连续收割的收获回执
+
+- 逐格点收、拖收和门客代收共用种子栏上方的回执。连续收割合计入库、作物、铜钱、桑叶和税金，并标出轮作增收及留肥。田格仍逐格呈现镰刀动作、断穗和音效。回执淡出后下一次收割重新计数，过夜清除当日回执。
+- 专项拖收四格私田并单点一格公田，回执合计入库 1、作物 4、铜钱 20。另核对两次独立点收、门客代收、改革后的净收入与税金，以及上一版存档接续。101 项源码场景、35 项无窗口发行检查和 13 次隔离桌面运行通过。两种备粮方式均在第 56 天达成传统结局、第 59 天达成改革结局。90 秒连续运行正常结束，两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-harvest-receipt/Fiefdom-1.0.0-Windows-x64.zip) · [1920×1080 混合收割](../build/polish-harvest-receipt/final-capture/1920x1080/01b-combined-harvest-receipt.png) · [1024×768 连续点收](../build/polish-harvest-receipt/final-capture/1024x768/01c-two-separate-harvest-clicks.png) · [源码回归](../build/polish-harvest-receipt/final-source/source-matrix.txt) · [发行校验](../build/polish-harvest-receipt/final-headless/manifest.txt)
+
+## 从完工记录交接井田管事
+
+- 「昨夜结算」直接打开刚完工的井田安排。舆图也可打开所选完工井田，并显示该田管事。交接页列出全员每夜粮耗、粮仓现量和可补齐的公私田续播，玩家选择门客后再确认。
+- 默认新档回放在第 17 天读回晨间档，从完工记录打开井田 2，翻地后再从舆图进入并任命渠伯。全员用粮从 3 份增至 4 份，以首块井田收成备齐三夜口粮。第 20 天继续游戏时，管事和续播保留，第二块井田已由管事收下一份贡粮和一份私田作物，其间玩家无需再操作该田。
+- 101 项源码场景、36 项无窗口发行检查及 14 次隔离桌面运行通过。默认 1920×1080 和 1024×768 均核对了完工记录、舆图和交接报价。同一解压包完成两种备粮方式的双结局、上一版续档、退出重启与 90 秒连续运行。 [Windows 1.0 x64](../build/polish-steward-handoff/Fiefdom-1.0.0-Windows-x64.zip) · [完工记录](../build/polish-steward-handoff/capture/1920x1080/08-morning-field-handover.png) · [交接报价](../build/polish-steward-handoff/capture/1024x768/09-steward-quote.png) · [新档回放](../build/polish-steward-handoff/headless/estate-progress.log) · [源码回归](../build/polish-steward-handoff/source/source-matrix.txt) · [发行校验](../build/polish-steward-handoff/headless/manifest.txt)
+
+## 从议税筹备调整下一茬私田
+
+- 上一版新档交给管事后持续续播私田，第 49 天公田贡献 23.89%，第 97 天为 28.03%，均低于 30% 的议税门槛。筹备账现在会列出仍在续播的私田格数，打开安排最多的井田，预览停止续播。确认后保留在田作物与公田播种，玩家也可逐格调整或在议税后恢复。
+- 两条管事回放从默认新档出发。第 23 天把第二块井田交给渠伯，第 40 天停两格私田的下一茬。经营期间卖出多余丝绸买粮，留一匹供结局。第 59 天公田贡献达到 30% 并议税，抉择后恢复按时令续播。传统第 65 天、改革第 61 天结算，均可重新读入结局并续营。两条回放在第二块井田各手动翻地三次，之后由管事耕作。备粮委派分别生效 55 夜和 51 夜，全程供足口粮。 [持续续播基线](../build/polish-steward-campaign/traditional-steward.log) · [传统管事回放](../build/polish-council-sowing/final-strategy/traditional-steward.log) · [改革管事回放](../build/polish-council-sowing/final-strategy/reformed-steward.log)
+- 101 项源码场景、38 项无窗口发行检查和 16 次隔离桌面运行通过，含两种备粮方式与管事经营的双结局、上一版续档、退出重启和 90.656 秒连续运行。1920×1080 和 1024×768 核对筹备账、取消预览及焦点。专项检查按键确认后，原有熟田与公田播种仍在，重新打开筹备账时更新剩余安排。 [Windows 1.0 x64](../build/polish-council-sowing/Fiefdom-1.0.0-Windows-x64.zip) · [1920×1080 筹备账](../build/polish-council-sowing/capture/1920x1080/03-first-third-year.png) · [1024×768 取消预览](../build/polish-council-sowing/capture/1024x768/03b-private-sowing-preview.png) · [源码回归](../build/polish-council-sowing/source/source-matrix.txt) · [发行校验](../build/polish-council-sowing/final-headless/manifest.txt)
+
+## 停播前核对口粮，缺粮时用余绸筹款
+
+- 停播预览说明门客仍按原份额用粮，可打开「今夜安排」核对当晚，关掉账页后回到原井田和按钮。今夜安排只在有实际补粮量时报委派方案。
+- 铜钱不足时，今夜安排可打开蚕桑。现成丝绸卖出一匹能增加补粮量时，先显示余量和补粮明细。快捷出售为议税、传统路线和时令单留绸。出售先收铜钱，之后可按报价调整每夜购粮上限。专项从只留一匹的缺粮档进蚕桑再织一匹，售得 35 铜钱，晚间转用一份麻、花 10 铜钱买两份粮。读回晨间档，仍有一匹丝绸和 27 铜钱，贡粮及留单的两份稻保留。 [1920×1080 停播预览](../build/polish-silk-rations/delivery-capture/1920x1080/03b-private-sowing-preview.png) · [1024×768 出售报价](../build/polish-silk-rations/delivery-capture/1024x768/07-surplus-silk-quote.png) · [1024×768 出售后](../build/polish-silk-rations/delivery-capture/1024x768/08-sale-and-funded-rations.png)
+- 两条管事新档第 40 天停播，第 54 天开始用新入口在缺粮时卖绸，第 60 天议税。传统第 65 天结算，改革第 62 天结算。两条全程供足口粮，第二块井田各手动翻三格，结算读档后可续营。改革回放定案后另在蚕桑页变现，为铜钱目标和三夜用粮备款。 [传统管事回放](../build/polish-silk-rations/delivery-headless/traditional-steward.log) · [改革管事回放](../build/polish-silk-rations/delivery-headless/reformed-steward.log)
+- 101 项源码场景通过，最终布局和续播、备粮、研究费专项复测通过。最终解压包通过 38 项无窗口发行检查和 10 次隔离桌面运行。两种窗口均核对停播入口、卖绸和报价焦点。上一版生成的存档可继续，两个结局可退出重读，连续运行 90.564 秒。 [Windows 1.0 x64](../build/polish-silk-rations/delivery/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-silk-rations/source.log) · [最终源码专项](../build/polish-silk-rations/delivery-source.log) · [发行校验](../build/polish-silk-rations/delivery-headless/manifest.txt)
+
+## 从西市收据回南路卸货场
+
+- 收据显示预计到货时辰。点「指路去卸货场」，西市和溪桥道接续返程，进封地后沿南路到停车处。读档会恢复指路，和申禾交谈后清除。最后一天晚交的订单，换季后还可在新一季交货簿查前一辆车。 [1920×1080 收据](../build/polish-order-journey/capture/1920x1080/03-delivery-receipt.png) · [1920×1080 返程](../build/polish-order-journey/capture/1920x1080/05b-unloading-yard-route.png) · [1024×768 申禾对白](../build/polish-order-journey/capture/1024x768/07-south-pavilion.png)
+- 基线新档在第 28 天和第 39 天交齐两季订单，继续扩种私田时第 49 天公田贡献仅 24.47%，第 97 天仍只有 29.28%。到请议的日子，筹备账现在会在回执旁列出所缺的纳贡或爵位。 [基线回放](../build/polish-order-journey/baseline/reformed-orders.log)
+- 解压版从标题开新档，第 28 天交春单领 7 份口粮，沿返程指路等到戌时车抵，问申禾后步行至亭西种圃见林蓼。第 39 天交秋单领 26 铜钱，收窄私田播种并优先补公田。第 43 天回执齐，筹备账显示还差 4 份纳贡。第 47 天公田占比 30.77% 时提前请议，第 57 天达成改革结局，读回结局档后在第 58 天续营。这条经营路线在第 43、45、46、48 天的晚上遇到口粮不足。 [长线回放](../build/polish-order-journey/campaign-verified/reformed-orders.log) · [林蓼接货](../build/polish-order-journey/campaign-verified/1920x1080/orders-seed-garden.png) · [尚缺纳贡](../build/polish-order-journey/campaign-verified/1920x1080/orders-petition-missing-tribute.png)
+- 101 项源码场景与 50 项无窗口发行检查通过。隔离桌面核对两种窗口的收据与返程，并以默认 1920×1080 完成上述长线回放。上一版存档可续读，双结局均可退出重读，连续运行 90.637 秒。两次干净构建的 ZIP 校验值相同。 [Windows 1.0 x64](../build/polish-order-journey/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-order-journey/source.log) · [发行回归](../build/polish-order-journey/headless/verification.txt) · [隔离桌面](../build/polish-order-journey/capture/verification.txt) · [重复构建](../build/polish-order-journey/rebuild.log)
+
+## 缺粮时指路去野果坳
+
+- 转粮、购粮和一匹余绸仍无法供齐时，今夜安排标出可采的野果和入仓量。点按钮从东关进竹涧，路标继续指向野果坳。当天已采药或采果时收起入口，采摘仍使用原有的一日一次规则。 [1920×1080 缺粮入口](../build/polish-berry-rations/final-capture/1920x1080/orders-rations-fruit-option.png) · [竹涧路标](../build/polish-berry-rations/final-capture/1920x1080/orders-rations-ravine-route.png) · [1024×768 缺粮入口](../build/polish-berry-rations/final-capture/1024x768/05-uncovered-shortage.png)
+- 同一交货路线在第 43、45、46 天各走一趟，每次采回 5 份，原先缺粮的四晚均供齐。该局第 47 天请议，第 57 天呈交新税册并达成改革结局，第 58 天读回结局后续营。田务、交货、采集与敌袭按默认规则运行。 [新档长线回放](../build/polish-berry-rations/final-capture/reformed-orders.log) · [原回放](../build/polish-order-journey/campaign-verified/reformed-orders.log)
+- 101 项源码场景、46 项无窗口发行检查和 8 次隔离桌面运行通过。两种窗口核对了缺粮入口，专项覆盖可直接补足时不显示、采药后收起和隔日重新可用。上版存档接续、两个结局退出重启和连续运行 90.557 秒通过，两次构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-berry-rations/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-berry-rations/source.log) · [发行回归](../build/polish-berry-rations/final-headless.log) · [隔离桌面](../build/polish-berry-rations/final-capture.log) · [重复构建](../build/polish-berry-rations/rebuild.log)
+
+## 从轮作簿交接第一块井田
+
+- 轮作多收一份后，手记可指路找渠伯记簿。记完当天可循手记找到井田西南的轮作簿，打开记载的井田并任命管事。交接页列出全员夜粮和可补的续播格数。取消勾选「补齐续播」后照旧收割和浇水，留空的续播由玩家日后安排。第二块井田完工也可开放管事岗位。 [轮作簿](../build/polish-first-field-steward/delivery-capture/1920x1080/first-steward-rotation-book.png) · [1024×768 交接](../build/polish-first-field-steward/delivery-capture/1024x768/first-steward-handoff.png)
+- 单井田新档第 9 天收下轮作麻，第 10 天记簿并任命渠伯，全员每夜用粮从 4 份增为 5 份。确认交接后存档并从标题继续，公田的菽黍轮作与私田原有安排保留。第 27 天暂停私田续播，靠公田轮作和两株桑备粮。第 59 天议税，第 64 天呈交新税册，第 65 天可续营。这局手动田间操作共 152 次，全部发生在交接之前，交接后的当日田务回放记到 117 份收成。全程供足口粮。 [单井田长线回放](../build/polish-first-field-steward/delivery-headless/reformed-first-steward.log)
+- 101 项源码场景、35 项无窗口发行检查和 13 次隔离桌面运行通过。两个窗口均核对轮作簿、交接确认和单井田结算。双结局、战败恢复、延期研究、上版存档接续、两个结局退出重启及 90.722 秒连续运行通过。两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-first-field-steward/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-first-field-steward/source-final.log) · [发行回归](../build/polish-first-field-steward/delivery-headless.log) · [隔离桌面](../build/polish-first-field-steward/delivery-capture.log) · [重复构建](../build/polish-first-field-steward/rebuild.log)
+
+## 西市行与谷雨往返
+
+- 《西市行》以古筝和笛子交替领奏，全长 3 分 07 秒。封地和溪桥道共用四季配乐，进西市用约 1.45 秒渐变切换，返程接回当季乐句。采样和许可随包附上。 [古筝](https://freesound.org/people/nanliu_music/sounds/847157/) · [笛子](https://freesound.org/people/CarlosCarty/sounds/339357/) · [曲目试听](../build/polish-west-market-score/West-Market-Theme.mp3)
+- 谷雨专项把档设在第 6 天，从封地走过溪桥道，踩过桥板和浅水，进入西市再沿原路返回。雨声沿途共用同一播放器，回封地接回淡出结束的春曲。冬季西市的专项档从标题读回，音乐设置可独立静音，恢复后仍能跨过循环点。1920×1080 的往返实录为 22.23 秒，测得 −25.9 LUFS 和 −11.8 dBTP。 [往返实录](../build/polish-west-market-score/West-Market-Round-Trip.mp3) · [西市谷雨](../build/polish-west-market-score/capture-final/1920x1080/02c-market-crossroads.png) · [窄窗口试听回放](../build/polish-west-market-score/capture-final/ambience-travel-1024x768.log)
+- 101 项源码场景通过。同一 Windows 解压包通过 39 项无窗口发行检查及 8 次隔离桌面运行。双结局仍可从新档走完并退出重读，上一版存档接续，连续运行 90.645 秒。交货回放第 57 天达成改革结局，第 58 天读档续营。两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-west-market-score/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-west-market-score/source-final.log) · [无窗口发行](../build/polish-west-market-score/delivery-headless.log) · [隔离桌面](../build/polish-west-market-score/capture-final.log) · [重复构建](../build/polish-west-market-score/rebuild.log)
+
+## 守田时看清来敌出招
+
+- 野狗按实际位移交替蹬地，扑咬前压低前身。斥候举弓、满弦和松弦有分开的姿势，配合地面的箭路。命中时有短促箭击声和受击动作，末一箭立即记入战报，来敌随后倒下淡出。
+- 对话和安排事务期间，来敌与守卫一起等候，箭路和蓄势时间保留。第 9 天首次野狗袭击用正常新档回放，读回晨间档后以右键击退，保住两格成熟作物。专项再从第 16 天正常过夜迎战斥候，横移避开原箭路，三箭击退。另在对话中布置一支已经贴身的箭，关窗后核对它只结算一次伤害。过夜守卫按原节奏出手。 [1920×1080 斥候满弦](../build/polish-combat-feedback/final/capture/1920x1080/05-scout-at-full-draw.png) · [1024×768 击退](../build/polish-combat-feedback/final/capture/1024x768/08-scout-falls.png) · [实机战斗音效](../build/polish-combat-feedback/final/Scout-Fight.mp3)
+- 101 项源码场景通过。同一解压版通过 36 项无窗口发行检查和 7 次隔离桌面运行。传统第 56 天、改革第 59 天通关，续营各进一天。交货路线第 57 天结算，全程供足口粮。两条路线均可退出重启，上一版生成的存档可接续，连续运行 90.675 秒。两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-combat-feedback/final/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-combat-feedback/final/source.log) · [无窗口发行](../build/polish-combat-feedback/final/headless.log) · [隔离桌面](../build/polish-combat-feedback/final/capture.log) · [重复构建](../build/polish-combat-feedback/final/rebuild.log)
+
+## 南路亭的灯下小谈
+
+- 晴天酉时，轮访来客和收工门客到亭东同一张席案。雨天申时沿东侧小路去雨棚。守卫留在东岗，等勘渠、交手记或守备复盘的人依约等候。陶辛从西市返程也走到席案。
+- 席案和舆图会提示可听的小谈。第 7 天的新档回放正常耕作、过夜并送出一份私田路粮，随后加快白天时钟，沿路走到季青和渠伯中间。可从桌边打开今夜安排，也可中途离席再听。听完后从标题重读，日期仍记在两人的手记里，也可出现在结局记事中。另用已完成前情的存档回放了勘渠、样绸和守备三段小谈，守备小谈在谷雨棚下验证。渠伯的手记按日期保留两段谈话。 [1920×1080 席案](../build/polish-pavilion-stories/delivery/capture/1920x1080/07-table-ready.png) · [1024×768 渠伯对白](../build/polish-pavilion-stories/delivery/capture/1024x768/08-qu-bo-replies.png) · [邻里手记](../build/polish-pavilion-stories/delivery/capture/1024x768/09-neighbor-journal.png) · [四段小谈回放](../build/polish-pavilion-stories/delivery/headless/pavilion-stories.log)
+- 102 项源码场景、36 项无窗口发行检查及 7 次隔离桌面运行通过。解压版从新档分别在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局均可退出后重读。上一版存档可继续，连续运行 90.677 秒，两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-pavilion-stories/delivery/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-pavilion-stories/source-delivery.log) · [无窗口发行](../build/polish-pavilion-stories/delivery/headless.log) · [隔离桌面](../build/polish-pavilion-stories/delivery/capture.log) · [重复构建](../build/polish-pavilion-stories/delivery/hashes.log)
+
+## 在南路卸货场坐等货车
+
+- 收据指向停车处的候货座。到早了按 E 可查时辰并坐等同日货车。白天时钟加快，申禾赶车进入视野后恢复原速。货到即起身，可以接着问去处。途中可用按钮、Esc 或手柄 B 起身，保留已走的时辰。出现敌袭会起身。 [1920×1080 候货](../build/polish-freight-wait/delivery/capture/1920x1080/07-waiting-for-wagon.png) · [1024×768 次日到货](../build/polish-freight-wait/delivery/capture/1024x768/09-tomorrow-delivery.png)
+- 第 3 天春单从新档真实收割、交货并沿金线返回。到场时离到货约 89 秒，短坐、取消并读档返回时还剩约 70 秒，第二次坐下约 4.5 秒到货。跨季旧档第 6 天只能查看时辰，正常过夜耗一份粮，公私两格各长一阶。第 7 天分别收到巳时春货与戌时夏货，先问春单仍保留夏单指路。 [候货回放](../build/polish-freight-wait/delivery/headless/freight-wait.log)
+- 同一交货战役在第 28 天实走收据路线。进场时按原速需等约 83 秒，坐等约 4 秒见到申禾，再沿原路去亭西见林蓼。第 57 天达成改革结局，第 58 天读档续营，全程供足口粮。 [交货战役](../build/polish-freight-wait/delivery/headless/reformed-orders.log)
+- 103 项源码场景、40 项无窗口发行检查和 8 次隔离桌面运行通过。候货在 1920×1080 和 1024×768 各走一遍，手柄输入验证了选项和起身。传统第 56 天、改革第 59 天通关，两个结局可退出重读，上一版档可继续。连续运行 90.337 秒，两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-freight-wait/delivery/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-freight-wait/source-delivery.log) · [无窗口发行](../build/polish-freight-wait/delivery/headless.log) · [隔离桌面](../build/polish-freight-wait/delivery/capture.log) · [重复构建](../build/polish-freight-wait/delivery/hashes.log)
+
+## 竹涧木桥的斜俯视层次
+
+- 先用木桥及邻近的溪岸试画这一视角。桥板、侧梁、墩脚和落在水面的影子分开绘制，近侧栏杆按脚下位置遮住过桥人物的一部分。岩岸的亮面和暗面顺着溪流画出落差，上游的小水瀑持续落水。雨天木料稍暗，冬季栏杆和岩岸挂霜。 [木桥前后对比](../build/polish-ravine-depth/delivery/bridge-before-after.png) · [雨天和落霜](../build/polish-ravine-depth/delivery/bridge-weather.png)
+- 1920×1080 和 1024×768 均在隔离桌面从新档沿舆图指引过木桥到望溪台，经浅滩回封地，再读档到柳湾。专项检查木桥脚步仍是木板声，小水瀑旁的深水挡住人物。谷雨和冬季用专项日期复查画面。 [1920×1080 过桥](../build/polish-ravine-depth/delivery/capture/1920x1080/01a-on-wooden-bridge.png) · [1024×768 过桥记录](../build/polish-ravine-depth/delivery/capture/ravine-map-1024x768.log)
+- 103 项源码场景、31 项无窗口发行检查和 7 次隔离桌面运行通过。解压版从新档分别在第 56 天和第 59 天达成传统和改革结局，重启可读回两个结局。上一版的第 4 天存档可继续。连续运行 90.411 秒，两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-ravine-depth/delivery/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-ravine-depth/source-delivery.log) · [无窗口发行](../build/polish-ravine-depth/delivery/headless.log) · [隔离桌面](../build/polish-ravine-depth/delivery/capture.log) · [重复构建](../build/polish-ravine-depth/delivery/hashes.log)
+
+## 从东关走到望溪台
+
+- 东关的石铺路与竹涧西门接成同一路口。进林径时可见两侧岩壁，过木桥后从东岸岔口循石阶去望溪台。野药仍在台上。石阶、台面和门槛用石面脚步，岩壁依轮廓阻挡行走。冬季岩沿覆霜，入夜可沿西门和石台的灯辨认去路。 [西门与望溪台前后对比](../build/polish-east-gate-depth/delivery/route-before-after.png) · [夜间灯火](../build/polish-east-gate-depth/delivery/route-at-night.png)
+- 1920×1080 和 1024×768 的独立桌面回放从新档经东关进竹涧，沿舆图过木桥上石台，走浅滩回东关。重新入谷后往北走，角色停在岩脚，再经石门返回。专题推进至冬季，仍能登台，西门和石台的灯在亥时点亮。 [1920×1080 实景记录](../build/polish-east-gate-depth/delivery/capture-final/ravine-map.log) · [1024×768 实景记录](../build/polish-east-gate-depth/delivery/capture-final/ravine-map-1024x768.log)
+- 另从新档实走三条交给渠伯管田的经营路线。第 24 天起由渠伯管理第二块田的传统与改革路线分别于第 65 天、第 62 天结算。从第一块田交接的改革路线于第 64 天结算，渠伯在外出期间收获 117 份，玩家执行 152 次田间操作，57 夜按安排备粮。三条路线没有缺餐夜，结算后各继续一天。 [管第二田的传统路线](../build/polish-east-gate-depth/delivery/steward-final/traditional-steward.log) · [管第二田的改革路线](../build/polish-east-gate-depth/delivery/steward-final/reformed-steward.log) · [交接第一块田](../build/polish-east-gate-depth/delivery/steward-final/reformed-first-steward.log)
+- 103 项源码场景、30 项无窗口发行检查和 7 次隔离桌面运行通过。传统第 56 天、改革第 59 天结算，两个结局可退出重读，上一版存档可继续，连续运行 90.606 秒。两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-east-gate-depth/delivery/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-east-gate-depth/source-final.log) · [无窗口发行](../build/polish-east-gate-depth/delivery/headless-final.log) · [隔离桌面](../build/polish-east-gate-depth/delivery/capture-final.log) · [重复构建](../build/polish-east-gate-depth/delivery/hashes.log)
+
+## 堂前器物与竹涧采集物的斜俯视
+
+- 封地的缚口谷袋、开口谷袋、陶罐和带盖罐都露出上沿和近侧面。人物在罐后时罐身遮住人物，在罐前时露出全身。保留图集的四个裁切位置，谷袋在背包、工地和差役携带画面依然可用。用原导入器的两倍比例栅格化后，四帧均为 32×32、有透明背景。 [图集预览](../build/polish-world-prop-depth/art-check/storage-atlas.png) · [实景遮挡](../build/polish-world-prop-depth/final/world-props.png)
+- 野药移到望溪台东侧的石台面，抬高采集提示给叶片留出空间。竹涧舆图随实际野药位置更新。从新档进入竹涧，在石台侧面可交互，在野果坳按 E 后果实当日消失，粮仓由 10 增至 15。用 1920×1080 和 1024×768 隔离桌面走过这两处。 [采摘前后](../build/polish-world-prop-depth/final/picking-berries.png) · [1920×1080 回放](../build/polish-world-prop-depth/final/capture-final/ravine-map.log) · [1024×768 回放](../build/polish-world-prop-depth/final/capture-final/ravine-map-1024x768.log)
+- 103 项源码场景、33 项无窗口发行检查及 7 次隔离桌面运行通过。解压版从新档在第 56 天达成传统结局、第 59 天达成改革结局，两个结局均可重启后续档。把第一块井田交给渠伯的路线第 64 天完成改革结局。上一版的第 4 天存档可继续。连续运行 90.698 秒，两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-world-prop-depth/final/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-world-prop-depth/source-delivery.log) · [无窗口发行](../build/polish-world-prop-depth/final/headless.log) · [隔离桌面](../build/polish-world-prop-depth/final/capture-final.log) · [重复构建](../build/polish-world-prop-depth/final/hashes.log)
+
+## 溪桥道木桥与西市摊位
+
+- 溪桥道和竹涧共用斜俯视木桥。桥板露出侧梁与墩脚，近侧栏杆能挡住行人的脚，指路箭头铺在板上。西市粮、鱼、绸三处柜台露出台面和棚檐的厚度，鱼槽有石沿、侧壁和低一层的水面。 [桥与鱼摊前后对比](../build/polish-market-depth/delivery/market-before-after.png) · [过桥时的栏杆遮挡](../build/polish-market-depth/delivery/bridge-crop.png)
+- 1920×1080 隔离桌面回放用默认步速约 4.75 秒走完整段溪桥道。回封地途中在西岸存档，从标题继续后经桥返程。1920×1080 和 1024×768 均从封地交货簿指路到鱼摊，交当季的鱼得 13 铜，走到槽前会被石沿挡住。继续游戏后鱼仍在水里游，酉时伙计到槽边收鱼。 [溪桥道回放](../build/polish-market-depth/delivery/capture/west-road.log) · [1920×1080 留鱼单](../build/polish-market-depth/delivery/capture/fish-market-orders.log) · [1024×768 找鱼摊](../build/polish-market-depth/delivery/capture/market-wayfinding-1024x768.log) · [1024×768 留鱼单](../build/polish-market-depth/delivery/capture/fish-market-orders-1024x768.log)
+- 103 项源码场景、39 项无窗口发行检查及 15 次隔离桌面运行通过。解压版从新档在第 56 天达成传统结局、第 59 天达成改革结局，重启可读回两个结局。上一版第 4 天的存档可继续，连续运行 90.655 秒，两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-market-depth/delivery/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-market-depth/source-delivery.log) · [无窗口发行](../build/polish-market-depth/delivery/headless.log) · [隔离桌面](../build/polish-market-depth/delivery/capture.log) · [重复构建](../build/polish-market-depth/delivery/hashes.log)
+
+## 堂前石阶、泉眼和井田田口
+
+- 堂前两级石阶有踏面和近侧立面。各块完工井田按实际下田小路露出田口，田埂上沿见光，近侧是浅土坡。石砌泉眼按原水源坐标摆放，人物能绕过石基，从泉北看时石沿盖住脚边。走到互动范围后，舆图提示退去，泉边的互动键抬到人物头顶。泉眼图形沿用项目自绘素材，在 32×26 的逻辑尺寸内重绘，用原 Godot 导入器的两倍比例检验透明边缘。 [画面前后对比](../build/polish-estate-water-depth/final/estate-before-after.png) · [泉边遮挡和提示](../build/polish-estate-water-depth/final/spring-occlusion.png) · [泉眼图形报告](../build/polish-estate-water-depth/asset-report.json)
+- 1920×1080 和 1024×768 都从标题新建游戏，走泉眼前后各一遍。按 E 到研读入口，书艺达 3 级后以手柄 X 到科技。第 5 天正常开两格渠花 8 铜，只有东侧石口出水。第 6 天从标题读回一格稻、国库的一份纳贡和 7 铜。再填渠、过夜查稻停长，补接后于第 10 天从私田收稻。还在谷雨回放第二块井田和过渠木板，在冬季看霜及田口。 [1920×1080 引渠回放](../build/polish-estate-water-depth/final/capture/irrigation-flow.log) · [1024×768 引渠回放](../build/polish-estate-water-depth/final/capture/irrigation-flow-1024x768.log) · [开渠与填渠画面](../build/polish-estate-water-depth/final/spring-outlet.png)
+- 103 项源码场景、40 项无窗口发行检查及 18 次隔离桌面运行通过。解压版从新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」。两次退出重启各读回对应结局。上一版第 4 天的存档可继续。连续运行 90.69 秒，两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-estate-water-depth/final/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-estate-water-depth/source-release.log) · [无窗口发行](../build/polish-estate-water-depth/final/headless.log) · [隔离桌面](../build/polish-estate-water-depth/final/capture.log) · [重复构建](../build/polish-estate-water-depth/final/hashes.log)
+
+## 门客离任前的口粮提醒
+
+- 缺餐会让门客的忠诚降到零时，点「睡觉」或从「今夜安排」过夜，先看到可分出的口粮份数和预计离任的人名。打开今晚安排可直达补粮选项，仍可按原安排过夜。同夜有首贡提醒时，两个去处放在同一张提醒里。 [1920×1080 离任提醒](../build/polish-ration-bedtime/final/capture/1920x1080/rations-priority-bedtime-warning.png) · [1024×768 堂屋提醒](../build/polish-ration-bedtime/final/capture/1024x768/rations-priority-tribute-and-meal.png)
+- 从第 49 天的缺粮档验证按 Esc 取消、用手柄打开粮情、经东关实走到野果坳、采回 5 份口粮并在当天内回封地。补粮后过夜供足 5/5 份，三位门客均留任。同一晚选择继续过夜时，实际离任者与预报一致。另从堂屋床榻启用夜间备粮，提醒只保留首贡待办。 [1024×768 备粮入口](../build/polish-ration-bedtime/final/capture/1024x768/rations-priority-berry-option.png) · [采摘画面](../build/polish-ration-bedtime/final/capture/1920x1080/rations-priority-berry-grove.png) · [隔离桌面回放](../build/polish-ration-bedtime/final/capture/ration-priority.log)
+- 103 项源码场景、35 项无窗口发行检查及 16 次隔离桌面运行通过。解压版从新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，均可退出重启后读回。管事和交货路线也走到结局，全程供足口粮。上一版的第 4 天进度可接续，连续运行 90.752 秒，两次构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-ration-bedtime/final/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-ration-bedtime/source-matrix.txt) · [无窗口发行](../build/polish-ration-bedtime/final/headless.log) · [隔离桌面](../build/polish-ration-bedtime/final/capture.log) · [重复构建](../build/polish-ration-bedtime/final/hashes.log)
+
+## 竹涧岩坎、落水潭与望溪台石阶
+
+- 抬高木桥上游的落水岩坎，水线沿岩面落下，水花在潭面散开。溪岸用草苔、亮岩面和近水阴影显出高度。望溪台的每级石阶露出踏面与近侧立面，山路指引沿阶面接到野药旁。谷雨压暗湿岩，入冬霜覆岩沿。 [同机位前后对比](../build/polish-ravine-stone/final/ravine-before-after.png) · [谷雨与立冬](../build/polish-ravine-stone/final/rain-and-frost.png)
+- 1920×1080 和 1024×768 隔离桌面均从新档沿舆图过木桥、登石阶、到野药旁，再经浅滩返程。实际脚步在木桥为木板，在石阶为石面。角色靠近瀑布时仍停在深水边，水迹可保存后读回。两帧实拍分别看见水线与水花变化。干净配置直接启动的窗口为 1920×1080。 [默认窗口回放](../build/polish-ravine-stone/final/native-window/native-default.log) · [1920×1080 竹涧回放](../build/polish-ravine-stone/final/capture/ravine-map.log) · [窄窗口的冬夜](../build/polish-ravine-stone/final/capture/1024x768/09-lookout-lamp.png)
+- 103 项源码场景、31 项无窗口发行检查和 20 次隔离桌面运行通过。从新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局均可退出重启后读回。另复核战败恢复、管事与交货的长线路线、上版第 4 天存档接续和 90.742 秒连续运行。两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-ravine-stone/final/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-ravine-stone/source-release.log) · [无窗口发行](../build/polish-ravine-stone/final/headless.log) · [隔离桌面](../build/polish-ravine-stone/final/capture.log) · [重复构建](../build/polish-ravine-stone/final/hashes.log)
+
+## 从竹涧和西市指路回井田
+
+- 竹涧、西市和溪桥道可点「回井田」。金线随关口切换地图，回封地后接到第一块井田南侧的田口，走到就收起。竹涧南路小径已开放且谷内走这边更近时，地图会标出南路。指路可取消，也可沿途保存后继续。 [采果后的入口](../build/polish-estate-return/final/capture/1920x1080/return-ravine-after-gathering.png) · [南路小径的预览](../build/polish-estate-return/final/capture/1920x1080/return-shoal-region.png) · [回到东关的金线](../build/polish-estate-return/final/capture/1920x1080/return-ravine-on-estate.png)
+- 1920×1080 和 1024×768 都从新档照手记收下首贡和私田作物，第 6 天进竹涧采得 5 份野果，经西门回到田口，留存的菽、时令单和公田作物继续有效。两种尺寸都用手柄从西市启动返程，在溪桥道取消再开始，保存后从标题读回，走完桥和封地道路。另从砾滩钓鱼后经南路续档返程。 [1024×768 西市回放](../build/polish-estate-return/final/capture/market-wayfinding-1024x768.log) · [溪桥道续档](../build/polish-estate-return/final/capture/1920x1080/return-market-bridge-resume.png) · [南路回放](../build/polish-estate-return/final/capture/ravine-shortcut.log)
+- 103 项源码场景、34 项无窗口发行检查和 18 次隔离桌面运行通过。解压版从新档第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，均可退出重启后读回。上版第 4 天进度可接续。连续运行 90.64 秒，两次构建的 ZIP 校验值一致。 [源码回归](../build/polish-estate-return/source-release.log) · [无窗口发行](../build/polish-estate-return/final/headless.log) · [隔离桌面](../build/polish-estate-return/final/capture-retry.log) · [重复构建](../build/polish-estate-return/final/hashes.log)
+
+## 柳湾、砾滩与浅滩踏石
+
+- 柳湾和砾滩的钓点画出了临水岩面、碎石与近水暗边。浅滩的六块踏石露出踏面和石边，水纹向下游移动。谷雨压暗湿岩，立冬的霜留在岸沿。竹涧、封地和西市用同一套斜俯视石块，竹涧的高石按石脚挡住行走。 [实机前后对比](../build/polish-ravine-shelves/release/banks-before-after.png) · [跨浅滩](../build/polish-ravine-shelves/release/capture-final/1920x1080/03a-ford-stepping-stones.png) · [立冬的砾滩](../build/polish-ravine-shelves/release/capture-final/1920x1080/07b-shoal-frost.png) · [五款散石的尺寸和透明边缘](../build/polish-ravine-shelves/final/art/asset-report.json)
+- 从新档实走木桥、浅滩、西门和柳湾，检查石脚会挡人、深水挡住横穿、钓点站在干地。1920×1080 和 1024×768 均回放砾滩放竹笼、跨季读档收两尾鳜鱼、换柳湾收鲫鱼。再沿南路小径续档回田，复核水迹、试筏和西市交鱼。 [1920×1080 竹笼画面](../build/polish-ravine-shelves/release/trap-capture/1920x1080/creek-traps/02-shoal-basket.png) · [1024×768 竹笼记录](../build/polish-ravine-shelves/release/trap-capture/1024x768/creek-traps.log) · [无尺寸参数启动的窗口记录](../build/polish-ravine-shelves/release/native/viewport.log)
+- 103 项源码场景、36 项无窗口发行检查和 21 次隔离桌面运行通过。从新档第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局均可重启后读回。上一版第 4 天存档可接续。连续运行 90.756 秒，两次构建的 ZIP 校验值一致。 [源码回归](../build/polish-ravine-shelves/source-release-final.log) · [无窗口发行](../build/polish-ravine-shelves/release/headless-final.log) · [隔离桌面](../build/polish-ravine-shelves/release/capture-final.log) · [重复构建](../build/polish-ravine-shelves/release/hashes.log)
+
+## 时令货车的斜俯视与声音
+
+- 车斗底、护栏、轮轴和车辕按侧面、斜向和端面绘制，货袋与该单的作物露在护栏内侧。过弯时申禾随车辕换方向，到站站在卸货场原来的交谈处。西市装车、溪桥道过桥、南路转弯和卸货后的对白都用解压版走过。 [西市改动前后和转弯](../build/polish-freight-audio/combined-brand/release/wagon-in-market.png) · [溪桥道](../build/polish-freight-audio/combined-brand/native/market-orders/05a-bridge-shipment.png) · [南路转弯](../build/polish-freight-audio/combined-brand/capture/1920x1080/07a-wagon-turn.png)
+- 从新档交出春单时响两下竹简。候货时两种木轮声靠近，再响一次停靠声，并出现到货提示。取消候货、遇袭起身、读回已停好的货车都未触发停靠声。第 7 天的早晚两批货各响一次，过夜消耗与公私田生长按原安排结算。音效出处写入随包说明。 [实机录音](../build/polish-freight-audio/combined-brand/release/Season-Freight.mp3) · [1920×1080 回放](../build/polish-freight-audio/combined-brand/capture/freight-wait.log) · [1024×768 回放](../build/polish-freight-audio/combined-brand/capture/freight-wait-1024x768.log)
+- 103 项源码场景、31 项无窗口发行检查和 13 次隔离桌面运行通过。从新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局均可退出重启后读回。上一版第 4 天存档可接续，连续运行 90.758 秒。版内包含井田印，标题和 Windows 程序图标均已取帧核对。干净配置不传窗口尺寸时为 1920×1080。两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-freight-audio/combined-brand/release/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-freight-audio/combined-brand/source-release.log) · [无窗口发行](../build/polish-freight-audio/combined-brand/headless.log) · [隔离桌面](../build/polish-freight-audio/combined-brand/capture.log) · [程序图标](../build/polish-freight-audio/combined-brand/native/executable-icon.png) · [重复构建](../build/polish-freight-audio/combined-brand/hashes.log)
+
+## 预览后一起处理井田农事
+
+- 指向田格时按住 Shift 或手柄 LT，会框出本井田可做相同农事的格子，并列出公田、私田和总耗力。左键或 A 确认一次。体力不足时显示差额，松开即可继续单格操作或拖动连耕。挖渠时按住同一键仍为填渠。 [整田翻地和收获回执](../build/polish-field-batch/final/field-batch-preview-and-receipt.png) · [1024×768 体力不足](../build/polish-field-batch/final/capture/1024x768/field-batch-02-insufficient-water.png) · [1024×768 手柄预览](../build/polish-field-batch/final/native/verified-gamepad/02a-field-batch-pad.png)
+- 新档种同样九格黍，从翻地到第 3 天收成，逐格点 45 次。旧版连耕可拖动 5 次，每次依次经过另外八格。新版在同一个格子点 5 次即可。三次回放均在首收获得 1 份贡粮、8 份私田黍和 40 铜钱，余 8 粮、73 体力。专项复核中途松键可只浇一格，剩下八格在体力差一份时都保持原样。另用双井田存档验证收第一块井田后，第二块的熟田仍在。第 3 天熟田可从标题重读再批量收割，回执分别列出公私田收成。 [逐格结算](../build/polish-field-batch/final/input-comparison/single.log) · [连耕结算](../build/polish-field-batch/final/input-comparison/drag.log) · [整田结算](../build/polish-field-batch/final/input-comparison/batch.log) · [双井田检查](../build/polish-field-batch/final/headless/field-batch-mixed.log)
+- 另在两条新档长线回放里，用 Shift 加左键成批浇水和收割。传统线 70 次处理 280 格，改革线 75 次处理 336 格。与同一经营安排的逐格回放相比，结局日期和结算一致，两个结局都续营了一天。 [传统整田通关](../build/polish-field-batch/final/campaign-batch-proof/traditional.log) · [改革整田通关](../build/polish-field-batch/final/campaign-batch-proof/reformed.log)
+- 104 项源码场景、34 项无窗口发行检查及 14 次隔离桌面运行通过。同一 Windows 包从新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局可退出重启，上一版的第 4 天存档可接续。回放覆盖委派备粮、管事经营、交货经营和 90.696 秒连续运行。干净配置启动为 1920×1080，另在隔离桌面核对 1024×768 的键鼠和模拟手柄输入。使用相同行尾的干净构建与验证包的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-field-batch/final/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-field-batch/source-final.log) · [无窗口发行](../build/polish-field-batch/headless-final.log) · [隔离桌面](../build/polish-field-batch/capture-final.log) · [重复构建](../build/polish-field-batch/committed-checkout/matched-icon-hashes.log)
+
+## 封地建筑与路边物件的斜俯视
+
+- 堂屋、蚕棚、南路亭和亭东雨棚露出侧墙或后排柱脚。屋瓦、门槛和石阶各有受光面和暗面。路牌、木栏和堆木加上板厚、柱顶与断面，按脚下位置排序。清晨和薄暮标题重新在封地取景。图集由项目内绘制，按原有世界尺寸切图。 [堂屋与路牌实机对照](../build/polish-building-depth/final/hall-before-after.png) · [蚕棚与南路亭实机对照](../build/polish-building-depth/final/shelter-before-after.png) · [图集尺寸和透明边缘](../build/polish-building-depth/work/art-atlas/asset-report.json)
+- 在 1920×1080 和 1024×768 的隔离桌面走过堂前、南路亭和蚕棚门前，并通过东关进出竹涧。谷雨专项走到同一根雨棚前柱的两边，分别拍到遮挡和露出，在棚下继续与弋戎交谈。堂屋与蚕棚进屋、原田格耕作和道路指引通过回归。干净配置启动时画面为 1920×1080。 [雨棚遮挡](../build/polish-building-depth/final/rain-shelter-occlusion.png) · [1024×768 雨棚回放](../build/polish-building-depth/final/rain-confirmed/pavilion-stories-1024x768.log) · [默认窗口回放](../build/polish-building-depth/final/native/native-building.log)
+- 104 项源码回归通过，解压包另通过 43 项无窗口发行检查和 20 次隔离桌面发行回放。两条新档路线在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，均可退出重启后读回。上一版第 4 天进度可接续，连续运行 91.03 秒，两次构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-building-depth/final/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-building-depth/source-final.log) · [无窗口发行](../build/polish-building-depth/final/headless.log) · [隔离桌面](../build/polish-building-depth/final/capture.log) · [重复构建](../build/polish-building-depth/final/hashes.log)
+
+## 从整田首收接上渠伯的轮作
+
+- 上一版在第 3 天整田收下 1 份贡粮与 8 份私田黍，选定私田收成去处后，手记转到找石墨。新版仍可走这条晋升线，也可从同一张手记点「轮作试种」，约好后确认要种的私田。标记可跨夜保留、存档恢复，也可取消。收菽后再次打开手记，可标出留肥的原格并换黍种。 [上一版实机](../build/polish-rotation-guide/baseline-1920/01-rotation-after-first-harvest.png) · [新版实机](../build/polish-rotation-guide/final/capture-final/1920x1080/01-rotation-after-first-harvest.png) · [留肥原格](../build/polish-rotation-guide/final/capture-final/1920x1080/05-continued-fertile-plot.png)
+- 新档回放沿手记第 3 天约定、第 5 天收菽、第 7 天在同格收下两份黍并记簿，同期公田累计纳贡两份。次日读档可从手记找轮作簿，任命渠伯为井田管事。他按续播安排播种并浇水九格，次日实扣两份口粮。专项还检查离开视野、取消标记、多块肥地时恢复同一格、用约定前留下的肥地，以及渠伯离任后的第 6 天回访。 [1920×1080 回放](../build/polish-rotation-guide/final/capture-final/rotation-guide.log) · [1024×768 交接报价](../build/polish-rotation-guide/final/capture-final/1024x768/06-appoint-first-steward.png)
+- 105 项源码回归通过，最终构建另复核在本轮变动的 7 个源码入口。解压包通过 32 项无窗口发行检查、19 次隔离桌面发行回放和 90.721 秒连续运行。干净配置不传尺寸时为 1920×1080。第 56 天的「守礼安邦」和第 59 天的「税亩富民」均可重启读回。只经营第一块井田并交给渠伯的专项升至大夫，第 64 天达成「税亩富民」，交接后管事自主完成 117 份产出，玩家未再点第一块井田。上版第 4 天可接续，两次干净构建的 ZIP 校验值一致。 [源码回归](../build/polish-rotation-guide/source-final.log) · [最终构建专项](../build/polish-rotation-guide/source-release.log) · [无窗口发行](../build/polish-rotation-guide/final/headless-final.log) · [隔离桌面](../build/polish-rotation-guide/final/capture-final.log) · [只经营第一块井田](../build/polish-rotation-guide/final/headless-final/reformed-first-steward.log) · [连续运行](../build/polish-rotation-guide/final/soak-final.log) · [重复构建](../build/polish-rotation-guide/final/hashes.log)
+
+## 从历书备谷样和冬至围炉饭
+
+- 默认提前三天在右上显示秋社或冬至备办情况。点击活动条，或按 C／手柄 View，翻到活动日期。秋社列出三种谷样还差几种、已熟私田和来得及补播的旱作。冬至可比较麦菽粥与鱼麦羹，已学垂钓时可直接标出柳湾。仍可用单独的「历书」按钮查看今日。 [日期栏](../build/polish-season-notices/final/capture/1920x1080/01d-autumn-notice.png) · [秋社备办](../build/polish-season-notices/final/capture/1920x1080/01e-autumn-plan.png) · [冬至备办](../build/polish-season-notices/final/capture/1024x768/08-winter-plan.png)
+- 在新档第 13 天从两种谷样补种到齐，第 16 天按历书指路到南池畔，验证带回和分享两种结算。接着从第 19 天的冬至提醒种麦，第 21 天收割，第 22 天带一份麦找禾伯煮粥。存读档保留秋社赠菽和围炉回执，次日的备粮记录计入一份围炉饭。另一条新档第 21 天循历书去柳湾钓得鲫鱼，选择鱼麦羹后当夜四份口粮均由羹补足。 [1920×1080 秋冬连走](../build/polish-season-notices/final/capture/autumn-exhibit.log) · [1024×768 秋冬连走](../build/polish-season-notices/final/capture/autumn-exhibit-1024x768.log) · [柳湾与鱼麦羹](../build/polish-season-notices/final/capture/winter-supper.log) · [手柄 View](../build/polish-season-notices/final/capture/1920x1080/02b-gamepad-season-notice.png)
+- 105 项源码回归通过。解压包通过 38 项无窗口发行检查、90.725 秒连续运行和 13 次隔离桌面运行。干净配置启动为 1920×1080。新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局均可退出重启后读回。上版第 4 天存档可接续。两次干净构建的 ZIP 校验值一致。 [源码回归](../build/polish-season-notices/source-final.log) · [无窗口发行](../build/polish-season-notices/final/headless.log) · [隔离桌面](../build/polish-season-notices/final/capture.log) · [默认窗口](../build/polish-season-notices/final/native/default-window.log) · [重复构建](../build/polish-season-notices/final/hashes.log)
+
+## 从南池西岸走上钓台和节庆石坪
+
+- 远岸岩面降到水线，近岸可见浅水、碎石和芦苇。沿临水小路能看到灯和石坪。秋社展台露出棚面、木梁和侧面，冬至炉桌可见锅沿、开炉后的热气和炭火。平日也可以从封地舆图指路到南池畔。 [南池与秋社前后对比](../build/polish-south-pond-depth/final/south-pond-before-after.png) · [钓台与冬至炉桌](../build/polish-south-pond-depth/final/south-pond-fishing-and-supper.png) · [平日石坪](../build/polish-south-pond-depth/final/capture/1920x1080/01f-ordinary-clearing.png)
+- 1920×1080 和 1024×768 的秋社回放从新档沿真实路线进场。第 13 天可用舆图到空石坪，秋分到台前可摆谷样，冬至可用禾伯添的菽备饭。夏单专项于第 10 天上台进入原水面范围，脚下为木板，栏杆挡住往深水方向的行走。钓得鲫鱼后从标题读回，再走上台，最后到灶台备稻鱼羹。 [1920×1080 秋冬回放](../build/polish-south-pond-depth/final/capture/autumn-exhibit.log) · [1024×768 秋冬回放](../build/polish-south-pond-depth/final/capture/autumn-exhibit-1024x768.log) · [默认窗口钓台回放](../build/polish-south-pond-depth/final/dock-reopen/1920x1080/pond-landing.log) · [1024×768 钓台回放](../build/polish-south-pond-depth/final/dock-reopen/1024x768/pond-landing.log)
+- 用上一版 Windows 包从新档走到第 10 天，保存开台与钓得鲫鱼的进度。新版加载后保留鱼获和地点，可沿路走上新木台。原存档校验值未变。105 项源码回归通过。解压包通过 32 项无窗口发行检查、90.697 秒连续运行以及 15 次隔离桌面运行。干净配置默认 1920×1080。传统线第 56 天、改革线第 59 天到结局，均可重启后读回。两次干净构建的 ZIP 校验值一致。 [旧钓台存档](../build/polish-south-pond-depth/final/legacy-dock/load-previous-dock.log) · [源码回归](../build/polish-south-pond-depth/source-final.log) · [无窗口发行](../build/polish-south-pond-depth/final/headless.log) · [隔离桌面](../build/polish-south-pond-depth/final/capture.log) · [重复构建](../build/polish-south-pond-depth/final/hashes.log)
+
+## 给秋社和冬至留出夜间备粮用料
+
+- 第 15 天用同一个缺粮存档比较两次过夜。取消留用后，门客转用最后一份黍，第 16 天仅剩两种谷样。选择留样并接受今夜报价后，实际花 5 铜钱买一份口粮，晨间三种谷样仍齐。两种过夜均保留国库和秋单需用的两份稷、一份菽。历书与「今夜安排」都会列出额外留样和与订单共用的作物。 [历书留样](../build/polish-festival-pantry/release/default/01-autumn-pantry.png) · [1024×768 睡前账目](../build/polish-festival-pantry/release/capture/1024x768/02-pantry-shortage.png) · [缺粮对照回放](../build/polish-festival-pantry/release/default/default-window.log)
+- 冬单已交时，留麦菽粥料会保留麦和菽。改留鱼麦羹用麦，门客仍可转用菽。新档中可提前预留尚未收获的作物，并从历书去柳湾钓鱼。秋社分享后禾伯出的菽计入配方。留用到节庆最后一天清早为止，取消时立即重算粮价。用第 21 天的结局测试档读回再续营时，冬单两份麦和围炉一份麦均保留。 [1024×768 鱼麦羹指路](../build/polish-festival-pantry/release/winter-compact/01a-fish-plan.png) · [秋社到围炉新档回放](../build/polish-festival-pantry/release/capture/autumn-exhibit-1024x768.log)
+- 106 项源码回归通过。补上结局续营的留用恢复后，最终构建再通过节庆、备粮、双结局与晨间存档在内的六项源码专项。解压包通过 38 项无窗口发行检查（含 90.743 秒连续运行）和 19 次隔离桌面运行。默认窗口为 1920×1080，另查 1024×768 的留样、备粮、指路与开席。新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局均可退出重启后读回。上一版实际生成的第三天存档可接续并过夜到第四天。两次干净构建的 ZIP 校验值一致。首次独立试玩和长线体验仍待验收。 [源码回归](../build/polish-festival-pantry/source-verified.log) · [最终构建专项](../build/polish-festival-pantry/source-release.log) · [无窗口发行](../build/polish-festival-pantry/release/windows-headless.log) · [隔离桌面](../build/polish-festival-pantry/release/windows-capture.log) · [重复构建](../build/polish-festival-pantry/release/hashes.log)
+
+## 从南池钓台取鱼回围炉
+
+- 夏单到货后，冬至备办可从历书或禾伯处标出南池钓台。钓台未开时，学过垂钓的玩家仍可去柳湾。钓起鱼后可点「去南池畔围炉」，也可用原有选项去灶台或交留鱼。隔离桌面实画面调整了结果框的展开方向，「收竿」位于画面底边内。 [历书](../build/polish-winter-fishing/release/default/winter-pond-01-almanac.png) · [禾伯指路](../build/polish-winter-fishing/release/default/winter-pond-02-host-directions.png) · [1024×768 钓鱼结果](../build/polish-winter-fishing/release/capture/1024x768/winter-pond-03-catch-and-return.png)
+- 夏单解锁专项从新档收稻、交货到走上木台。另从带有夏单回执的旧格式测试档开始，存档读回钓台指引，走到木板上钓得鲫鱼，从标题读回回程，在冬至石坪用一份私仓麦和实得的鱼煮羹。次晨口粮账记录门客领了一份围炉饭，国库保留四份。柳湾路线从新档走到第 21 天，钓鱼后存档退出再从竹涧西门回封地。预置南路小径已开时，另走过南路门并接回围炉。 [夏单解锁](../build/polish-winter-fishing/release/headless/summer-rice.log) · [南池钓鱼到过夜](../build/polish-winter-fishing/release/default/default-window.log) · [柳湾跨地图回程](../build/polish-winter-fishing/release/headless/winter-supper.log)
+- 107 项源码回归通过，调整结果框后复跑十个相关场景。解压包通过 45 项无窗口发行检查（含 90.757 秒连续运行）和 20 次隔离桌面运行。干净配置默认 1920×1080，也核对了 1024×768 的指路、抛竿、结果按钮和围炉。新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，均可退出重启后读回。上一版程序实际生成的第三天存档可接续，两次干净构建的 ZIP 校验值一致。 [源码回归](../build/polish-winter-fishing/source-final.log) · [最终界面专项](../build/polish-winter-fishing/source-release.log) · [无窗口检查](../build/polish-winter-fishing/release/headless.log) · [隔离桌面回放](../build/polish-winter-fishing/release/capture.log) · [重复构建](../build/polish-winter-fishing/release/hashes.log)
+
+## 竹涧林木与采集物的斜俯视
+
+- 新绘的松树、幼树和灌木有受光的枝叶、背光面和露出的树根，地面影子向右下落。谷雨压淡影子，冬霜盖住枝叶的上沿。野果用亮面和暗边区分，摘下后原处还有枝叶。望溪台的野药长在石缝，靠近时提示移到叶尖上方。两套图集按游戏导入比例栅格化并检查透明区域。 [木桥和野果前后对比](../build/polish-ravine-perspective/release/ravine-perspective.png) · [林木透明图集](../build/polish-ravine-perspective/art-check/woodland.json) · [采集物透明图集](../build/polish-ravine-perspective/art-check/forage.json)
+- 从新档经东关实走木桥、望溪台与浅滩。背包专项验证气血充足时可带走一份野药。另在野果坳采果入仓，粮食由 10 增到 15。1920×1080 和 1024×768 均复核采摘前后、岔路指引、谷雨和立冬。干净配置不传窗口尺寸时实测为 1920×1080。 [望溪台的野药](../build/polish-ravine-perspective/release/capture-final/1920x1080/02a-herbs-on-ledge.png) · [1920×1080 竹涧回放](../build/polish-ravine-perspective/release/capture-final/ravine-map.log) · [1024×768 竹涧回放](../build/polish-ravine-perspective/release/capture-final/ravine-map-1024x768.log) · [默认窗口](../build/polish-ravine-perspective/release/native/default-viewport.log)
+- 8 项源码专项、29 项无窗口发行检查和 10 次隔离桌面运行通过。新档在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局可退出重启后读回。上版实际生成的第 3 天存档可读回并过夜。连续运行 90.746 秒，两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-ravine-perspective/release/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-ravine-perspective/source.log) · [无窗口发行](../build/polish-ravine-perspective/release/headless-final.log) · [隔离桌面](../build/polish-ravine-perspective/release/capture-final.log) · [重复构建](../build/polish-ravine-perspective/release/hashes.log)
+
+## 在今夜安排里等门客收工
+
+- 田务栏列出有岗位能接手的田格。「等门客收工」按外出田务的时长推进当天时辰，做完即停，余下的时间不足时保留手动处理入口。敌袭和待议税时先处理当地事务。专项在 12 秒游戏时钟内由三人浇水 3 格、收割 3 格、补播 2 格，国库和私仓各入 2 份，粮食报价一起更新。断水的稻仍待接渠。当天存读档保留结果，另确认过夜才耗粮并推进作物生长。两种窗口复核了鼠标和模拟手柄 A，田务结算后可单独选过夜。 [等待前后](../build/polish-field-work-wait/release/field-work-wait.png) · [1024×768 手柄实机](../build/polish-field-work-wait/release/final-capture/1024x768/04-gamepad-wait.png) · [默认窗口](../build/polish-field-work-wait/release/native/default-viewport.log)
+- 同一套新档单井田经营，第 10 天交给渠伯，两组均在第 64 天达成「税亩富民」。交接后两组手动田务为零，管事均产出 117 份，无缺餐夜。普通回放让游戏按原速在田边运行约 314 秒。新回放用了 54 次等待，另花 7 秒原速让守卫处理敌袭。两组均退出续档到第 65 天。 [原速等田务](../build/polish-field-work-wait/release/final-headless/reformed-first-steward.log) · [使用等门客收工](../build/polish-field-work-wait/release/final-headless/reformed-field-work-wait.log)
+- 108 项源码场景通过，最终界面另复跑 7 项。解压包通过 27 项无窗口发行检查、9 次隔离桌面运行及 90.724 秒连续运行。从新档第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局可重启后读回。上版第 3 天的存档可接续并过夜。两次含试玩说明的干净构建校验值一致，程序和资源包与实机回放版逐字节相同。 [全量源码回归](../build/polish-field-work-wait/source-release.log) · [最终源码专项](../build/polish-field-work-wait/source-final.log) · [无窗口发行](../build/polish-field-work-wait/release/final-headless.log) · [隔离桌面](../build/polish-field-work-wait/release/final-capture.log) · [发行包核对](../build/polish-field-work-wait/release/delivery-check.log)
+
+## 单井田晋升与议税筹备
+
+- 晋升中士后，手记显示下一爵位的条件，六艺未达标时可直接研读。第二块井田可随时筹备，条件已齐或正在施工时会在晋升提示下显示进度。纳贡仍不足且公田未熟时，筹备账显示哪块公田待播、待浇或缺渠水。空田可选好种子并标出，续档能恢复。 [封地手记](../build/polish-council-one-field/release/native/01-one-field-promotion.png) · [1024×768 筹备账](../build/polish-council-one-field/release/capture-final/1024x768/02-one-field-seed-plan.png)
+- 单井田从第 47 天的中士档继续，研读升至书 3 级，标出公田并播黍。两夜后升为大夫，收下一份公田作物使占比从 29.90% 到 30.61%。第 49 天见召简、选改革，重读后可进入结局目标。断水专项也验证了有两个公田时优先标出能生长的田格。 [单井田实机](../build/polish-council-one-field/release/capture-final/council-one-field-1024x768.log) · [默认 1920×1080](../build/polish-council-one-field/release/native/default-viewport.log)
+- 110 项源码场景通过，两次干净导出校验值一致。Windows 解压包通过 25 项无窗口检查、11 次隔离桌面运行和 90.737 秒连续运行。新档两条主路线分别在第 56、59 天通关，单井田委派路线在第 64 天通关。两个主结局可重启接续，上版第 3 天存档可继续过夜。 [Windows 1.0 x64](../build/polish-council-one-field/release/delivery/Fiefdom-1.0.0-Windows-x64.zip) · [全量源码回归](../build/polish-council-one-field/source-final.log) · [无窗口发行](../build/polish-council-one-field/release/headless-final.log) · [隔离桌面](../build/polish-council-one-field/release/capture-final.log) · [包校验](../build/polish-council-one-field/release/hashes.log)
+
+## 结局目标的熟田指路与余粮报价
+
+- 「结局目标」显示当日可收份数。传统线可沿标记收公田，旁边的熟私田留给玩家决定。改革线显示税后收入，可连续指向熟田。收完后可查看井田舆图。市场在同一行展示转粮、出售和买粮。 [1024×768 结局目标](../build/polish-ending-market/release/capture-verified/1024x768/02-reform-goals.png)
+- 改革线缺铜钱时可从结局目标直达市场报价。确认前列出品种、实收和售后余额，并留出今夜所缺口粮、时令货及已留用的节庆用料。专项在换季前售出两份菽，余额从 154 增至 164。过夜用三份麻补足 4 份口粮，秋单所需 4 份仍在。取消秋社谷样的留用后，留好的黍可进入报价。两种大小均核对了模拟手柄 A 确认。西市粮摊也实际走到柜台成交。 [默认 1920×1080 市场](../build/polish-ending-market/release/native-delivery/08-reform-reserve-tomorrow.png) · [1024×768 手柄报价](../build/polish-ending-market/release/capture-verified/1024x768/06-reform-sale-quote.png) · [西市粮摊](../build/polish-ending-market/release/cross-version/west-grain/west-grain-reform-counter.png)
+- 同一解压包的两条改革新档在第 51 天议税。原经营路线第 59 天结算，使用报价的回放在第 55 天用十份私仓作物换到 50 铜钱，第 57 天呈交新税册。全程手动田务由 779 次降到 739 次。传统路线第 56 天通关，单井田委派的改革路线第 64 天通关。上版第 53 天改革存档按报价由 145 铜钱变为 180，留三份作物，原文件校验值一致。 [原经营回放](../build/polish-ending-market/release/headless-verified/reformed.log) · [售粮路线](../build/polish-ending-market/release/headless-verified/reformed-market-sale.log) · [旧议税档](../build/polish-ending-market/release/cross-version/west-grain/market-delivery.log)
+- 110 项源码回归通过，调整手柄焦点后再跑了 11 项相关场景。最终解压包通过 28 项无窗口检查、14 次隔离桌面运行和 90.674 秒连续运行。两条主结局可退出重启后读回，上版第 3 天存档可接续并过夜。两次干净导出校验值一致。 [Windows 1.0 x64](../build/polish-ending-market/release/windows/Fiefdom-1.0.0-Windows-x64.zip) · [全量源码回归](../build/polish-ending-market/source-layout.log) · [手柄焦点复测](../build/polish-ending-market/source-controller.log) · [无窗口发行](../build/polish-ending-market/release/headless-verified.log) · [隔离桌面](../build/polish-ending-market/release/capture-verified.log) · [包校验](../build/polish-ending-market/release/hashes-delivery.log)
+
+## 结尾里的留任门客
+
+- 召简接过账册后，由一位留任门客接话。改革结尾先选确实因议税离开又回来的门客，之后按井田管事与留任情况选人。管事会提到自己负责的井田，镜头随后回到那一田。结局与堂内的档案均可重读同一句话。 [传统线堂前](../build/polish-oblique-scenery/release/capture/1920x1080/ending-traditional-farewell.png) · [单井田管事](../build/polish-ending-neighbors/release/capture-final/1024x768/first-steward-ending-reformed-farewell.png)
+- 两条普通新档分别于第 56 天和第 59 天结算，单井田委派于第 64 天结算。专项从待议税档走到第 56 天议税、第 57 天邀请季青回来，再用预置收支呈交税册，季青实地入场说话。另核对了跳过、重看和档案重读。上一版 Windows 程序保存的第 59 天税亩结局由标题续入，新版保留四项账目，存档校验值一致。 [季青从回访到结尾](../build/polish-oblique-scenery/release/returned-guest/returned-guest.log) · [演出专项](../build/polish-oblique-scenery/release/headless/ending-film.log) · [单井田通关](../build/polish-oblique-scenery/release/headless/reformed-field-work-wait.log) · [旧结局](../build/polish-oblique-scenery/release/old-ending/previous-ending.log) · [旧结局校验](../build/polish-oblique-scenery/release/old-ending/verified.log)
+
+## 封地、溪桥道与西市的斜俯视
+
+- 封地、溪桥道和西市沿用竹涧的松树画法。阔叶树、花树与灌木的枝叶盖住背光面，露出的树根和投影接到地面。雨天影子变淡，落叶树冬季露出枝杈。陶罐的口沿与罐腹分开画，谷袋保留暗侧面和可辨的袋口。标题的清晨与薄暮重拍。 [同机位实机对比](../build/polish-oblique-scenery/release/oblique-map-and-props.png) · [透明图集裁切](../build/polish-oblique-scenery/art-check/slot-check.log) · [标题实机](../build/polish-oblique-scenery/release/capture/1920x1080/01-morning-title.png)
+- 从新档走过堂前陶罐的前后、竹涧木桥、望溪台和浅滩。陶罐在角色走到后方时仍保留不透明的口沿，野果入粮仓时果实在原处消失。谷雨和冬至往返溪桥道与西市，核对了树影、冬松和路口，西市指路、交易与续档通过。1024×768 窗口按原有 16:9 比例显示，背包的作物、路餐和野药可辨。 [默认 1920×1080](../build/polish-oblique-scenery/release/native/default-window.log) · [1024×768 西市雪景](../build/polish-oblique-scenery/release/capture/1024x768/05-market-snow.png) · [1024×768 背包](../build/polish-oblique-scenery/release/compact-backpack/06-packed-wild-herbs.png)
+- 110 项源码回归通过。Windows 解压包通过 31 项无窗口检查与发行脚本的 27 次隔离桌面运行，并连续运行 90.718 秒。传统和改革路线分别在第 56 天和第 59 天通关，两条结局可退出重启后读回，上一版第 3 天存档可续至第 4 天。两次干净构建的 ZIP 校验值一致。首次玩家的独立试玩与长线体验仍待验收。 [Windows 1.0 x64](../build/polish-oblique-scenery/release/windows/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-oblique-scenery/source-all-final.log) · [无窗口发行](../build/polish-oblique-scenery/release/headless.log) · [隔离桌面](../build/polish-oblique-scenery/release/capture.log) · [包校验](../build/polish-oblique-scenery/release/hashes.log)
+
+## 首茬收成接到第一张时令单
+
+- 第 3 天收下首贡与私田黍后，从「首茬收成」选择留作物，再点交货簿里的「标出空私田 · 换菽种」。标记依田格情况提示翻地、播种、浇水、最早收获日或收割。过夜和从标题续档后接着照料，货齐时跟踪条通向西市收货牌。仍可手动换种或取消指路。补播需赶得上交期，田格须满足用水与既有续播安排。 [第 3 天交货簿](../build/polish-opening-errand/release/final/native/opening-order/01-first-order-beans.png) · [隔夜后的田务](../build/polish-opening-errand/release/final/native/opening-order/04-dawn-beans.png)
+- 用默认 1920×1080 在隔离桌面从标题开新档，按提示在第 5 天于西市交货，领到 5 份口粮，首贡留在王室库房。上一版解压包生成的第 3 天存档也走完同一段。 [第 5 天收据](../build/polish-opening-errand/release/final/native/opening-order/07-spring-receipt.png) · [新档回放](../build/polish-opening-errand/release/final/native/opening-order/replay.log) · [旧档回放](../build/polish-opening-errand/release/final/native/opening-order-resume-old/replay.log)
+- 111 项源码回归通过。最终解压包通过 35 项无窗口检查和发行脚本的 27 次隔离桌面运行。1024×768 用手柄指针和 A 选中标记，随后换种和交货均通过。夏单在第 10 天用通渠后的稻交货。普通新档分别在第 56、59 天通关，单井田委派在第 64 天通关。两个结局可关闭游戏后续档。90.8 秒连续运行通过。 [源码回归](../build/polish-opening-errand/source-final-all.log) · [1024×768 回放](../build/polish-opening-errand/release/final/capture/opening-order-1024x768.log) · [发行检查](../build/polish-opening-errand/release/final/headless.log) · [隔离桌面](../build/polish-opening-errand/release/final/capture.log)
+- 本包重建后校验值一致。另用默认 1920×1080 核对堂前陶罐的前后遮挡、溪桥道往返西市、竹涧的桥板与台阶，以及入冬后同一条路线。 [包校验](../build/polish-opening-errand/release/final/reproducible-build.log) · [堂前陶罐](../build/polish-opening-errand/release/final/native/ravine-map/00d-behind-jar.png) · [竹涧望溪台](../build/polish-opening-errand/release/final/native/ravine-map/01b-lookout-steps.png) · [溪桥道](../build/polish-opening-errand/release/final/native/west-road-visual/replay.log)
+
+## 竹涧溪岸与岔路木牌
+
+- 竹涧的湿泥宽度随湾形变化，溪床以浅水碎石、深色水流和岩脚投影分出高低。水花从岩坎落到潭里后继续向下游散开。柳湾、浅滩和望溪台用垂柳、芦苇及低莎草围出各自的轮廓。封地和溪桥道也换用同一套竹柳，西市的芦苇随季节换图。标题的清晨与薄暮从当前封地重拍。 [同机位前后对比](../build/polish-ravine-banks/release/final/ravine-before-and-after.png) · [柳湾](../build/polish-ravine-banks/release/final/native/ravine-map/05-willow-cove.png) · [图集裁切核对](../build/polish-ravine-banks/work/slot-check.log)
+- 野果坳、浅滩、望溪台和南路小径各有一个对应转向的木牌。用默认 1920×1080 从东关入竹涧，走过木桥、石阶和浅滩，复核野果入仓、柳湾落脚、深水挡路、谷雨湿岩、冬霜和暮色亮灯。 [岔路木牌](../build/polish-ravine-banks/release/final/native/ravine-map/00-west-woods.png) · [实机回放](../build/polish-ravine-banks/release/final/native/ravine-map/replay.log) · [夜间望溪台](../build/polish-ravine-banks/release/final/native/ravine-map/09-lookout-lamp.png)
+- 用上一版解压包在竹涧留下的第 1 天存档，从标题续回木桥西端水迹。记下水迹后到野果坳采摘，粮食从 10 增至 15，原存档校验值一致。 [旧档接续](../build/polish-ravine-banks/release/final/previous-ravine-verified/ravine-old-save/replay.log)
+- 111 项源码回归通过，最终素材与启动再跑了 6 项相关场景。最终包通过 33 项无窗口检查和发行脚本的 22 次隔离桌面运行。传统和改革路线分别第 56 天、第 59 天结算，两个结局均可重启后读回。单井田委派在第 64 天结算，90.816 秒连续运行通过。两次干净导出的包校验值一致。首次玩家独立试玩和人工长线体验仍待验证。 [全量源码回归](../build/polish-ravine-banks/source-final.log) · [最终素材复测](../build/polish-ravine-banks/source-final-assets.log) · [无窗口验证](../build/polish-ravine-banks/release/final/headless.log) · [隔离桌面验证](../build/polish-ravine-banks/release/final/capture.log) · [1024×768 望溪台](../build/polish-ravine-banks/release/final/capture/1024x768/01b-lookout-steps.png) · [重建校验](../build/polish-ravine-banks/release/final/reproducible-build.log)
+
+## 过夜前让门客收工
+
+- 首贡后且已有田务门客时，「今夜安排」可勾选「过夜前让门客收工」。点睡觉时先用当天剩余时辰浇水、收割和补播，再检查更新后的口粮。专项有一格稻田断水，门客照常浇水三格、收割三格、补播两格。收下的麻补齐口粮，清早可在「昨夜结算」查到入库两份、入私仓两份和用粮五份。若完成田务后仍预计有人缺餐离任，会弹出提醒。等待遵守来敌和待议税限制，开关与晨间记录均可续档。 [默认 1920×1080](../build/polish-bedtime-field-work/release/final/native-verified/field-bedtime/05-sleep-field-policy.png) · [清早结算](../build/polish-bedtime-field-work/release/final/native-verified/field-bedtime/06-sleep-field-receipt.png) · [1024×768 缺餐提醒](../build/polish-bedtime-field-work/release/final/compact-verified/field-bedtime/07-planned-work-ration-warning.png)
+- 同一套单井田委派经营回放里，第 10 天交接给渠伯，两版均于第 64 天结算。单独点「等门客收工」从 54 次减到 5 次，有 48 次点睡觉时实际完成了田务。全程每晚供足口粮，交接后原井田的手动田务为零。旧版门客产出 117 份，新版 116 份，结尾仍由渠伯到场。 [更新前](../build/polish-ravine-banks/release/final/headless/reformed-field-work-wait.log) · [新版回放](../build/polish-bedtime-field-work/release/final/headless-verified/reformed-bedtime-steward.log)
+- 112 项源码场景通过。解压包通过 43 项无窗口检查和发行脚本的 25 次隔离桌面运行。普通新档在第 56 天和第 59 天达成两个结局，重启后均可读回。上版第 3 天的存档保留收工开关的默认关闭状态，可续至第 4 天。90.748 秒连续运行通过，两次干净构建校验值一致。另在默认 1920×1080 从东关走过竹涧木桥和石阶，核对桥栏对人物的遮挡与岩岸高度。首次玩家独立试玩与人工长线体验待验证。 [源码验证](../build/polish-bedtime-field-work/source-verified.log) · [发行验证](../build/polish-bedtime-field-work/release/final/headless-verified.log) · [隔离桌面](../build/polish-bedtime-field-work/release/final/capture-verified.log) · [重建校验](../build/polish-bedtime-field-work/release/final/reproducible-final.log) · [竹涧木桥](../build/polish-bedtime-field-work/release/final/scenery-verified/ravine-map/01a-on-wooden-bridge.png)
+
+## 望溪台岩壁与两座木桥
+
+- 望溪台的岩层从台面延伸到崖脚，阶侧底座随坡面增高，苔痕和碎石把崖脚接回草地。由东岸循金线登阶可到野药，绕到平台下方时会在岩脚停下。默认 1920×1080 与 1024×768 各从新档走完木桥、石阶和浅滩，复核石面脚步、谷雨湿岩、冬霜与亥时灯火。 [同位置前后对比](../build/polish-ravine-relief/release/final/ravine-before-and-after.png) · [崖脚实机](../build/polish-ravine-relief/release/final/native-verified/ravine-map/01c-lookout-foot.png) · [1024×768 冬季石阶](../build/polish-ravine-relief/release/final/compact-verified/ravine-map/08a-lookout-steps-frost.png)
+- 竹涧和溪桥道共用的木桥补了梁下木墩、明暗分开的石基和向右下渐淡的桥影。隔离桌面复走两座桥，近侧栏杆遮住人物脚边，桥板上的指路清楚。旧版 Windows 在竹涧保存的第 1 天存档可从标题接续水迹路线，记水迹后还可采果入仓，粮食从 10 增至 15。原存档校验值一致。 [竹涧木桥](../build/polish-ravine-relief/release/final/native-verified/ravine-map/01a-on-wooden-bridge.png) · [溪桥道](../build/polish-ravine-relief/release/final/native-verified/west-road/03a-behind-bridge-rail.png) · [旧档接续](../build/polish-ravine-relief/release/final/cross-version/ravine-old-save/replay.log) · [存档校验](../build/polish-ravine-relief/release/final/cross-version/save-integrity.log)
+- 112 项源码场景通过，最终再复测 5 个相关场景。解压包通过 30 项无窗口检查和发行脚本的 21 次隔离桌面运行。传统和改革新档分别第 56 天、第 59 天结算，关闭游戏后可读回两种结局。单井田睡前收工路线第 64 天结算，上版封地存档也可过夜至第 4 天。90.719 秒连续运行通过。包内说明补上默认窗口和新档入口，程序和数据包的校验值与测试时一致，两次同版构建校验值相同。首次玩家独立试玩与人工长线体验仍待验证。 [源码回归](../build/polish-ravine-relief/source-verified.log) · [源码复测](../build/polish-ravine-relief/source-final-targeted.log) · [无窗口发行验证](../build/polish-ravine-relief/release/final/headless.log) · [隔离桌面验证](../build/polish-ravine-relief/release/final/capture.log) · [包内容校验](../build/polish-ravine-relief/release/final/guide-packaging.log) · [重建校验](../build/polish-ravine-relief/release/final/reproducible-guide-verified.log)
+
+## 换季前照着下季订单种地
+
+- 下季预告可标出适合备货的私田并换好种子。田边按缺货和生长状态接续翻地、播种、浇水、等待和收割。专项第 40 天播麦，续档后继续浇水，在第 43 天准时收麦并到西市交货。公田没有纳入备货，已有的私田续播安排保留。无渠水时备稻仍指向水源。冬单和春单都缺麦时，现货和田苗先给冬单留足。 [1920×1080 下季预告](../build/polish-order-ahead/release/final/native/order-ahead/01-autumn-winter-planting.png) · [1024×768 手柄选田](../build/polish-order-ahead/release/final/compact/order-ahead/02-marked-ground-for-wheat.png) · [第 43 天交货](../build/polish-order-ahead/release/final/native/order-ahead/05-west-market-delivery.png)
+- 两条 Windows 新档都用第二年的春单、秋单和夜间备粮。常规种法在第 28、39 天交单，第 47 天提前请议，第 57 天结算。沿预告种地的回放第 22 天开始备货，第 25、37 天交单，第 45 天请议，第 53 天结算。手动田务从 721 次降到 686 次。两条回放均供足每晚口粮，同一新版程序重跑常规种法也得到原结果。 [上一版常规路线](../build/polish-order-ahead/before/headless/reformed-orders.log) · [本版常规路线](../build/polish-order-ahead/release/final/headless/reformed-orders.log) · [本版提前备货路线](../build/polish-order-ahead/release/final/headless/reformed-order-ahead.log)
+- 上一版 Windows 从「跟踪下季备货」保存的第 40 天档可继续。还缺一份麦时，点旧档已经跟踪的条目即可标出私田。原档校验值一致。 [上版存档](../build/polish-order-ahead/release/final/old-order/previous-order-saved.log) · [新版读档](../build/polish-order-ahead/release/final/old-order/previous-order-resumed.log) · [旧档校验](../build/polish-order-ahead/release/final/old-order/integrity.log)
+- 113 项源码场景通过。解压包通过 41 项无窗口检查和发行脚本的 23 次隔离桌面运行。普通新档在第 56 天和第 59 天达成两个结局，重启后均可读回。上版第 3 天的档也可接续并过夜。90.828 秒连续运行通过，两次干净导出的包校验值一致。首次玩家独立试玩和人工长线体验仍待验证。 [源码回归](../build/polish-order-ahead/source-verified.log) · [无窗口发行验证](../build/polish-order-ahead/release/final/headless.log) · [隔离桌面验证](../build/polish-order-ahead/release/final/capture.log) · [重建校验](../build/polish-order-ahead/release/final/reproducible.log)
+- 同一解压包另在默认 1920×1080 回放竹涧、溪桥道和背包，核对堂前陶罐和桥栏的遮挡、野果采集前后的外观、背包野药及路餐图案。 [堂前陶罐](../build/polish-order-ahead/release/final/map-and-props/ravine-map/00d-behind-jar.png) · [竹涧木桥](../build/polish-order-ahead/release/final/map-and-props/ravine-map/01a-on-wooden-bridge.png) · [溪桥道栏杆](../build/polish-order-ahead/release/final/map-and-props/west-road/03a-behind-bridge-rail.png) · [背包](../build/polish-order-ahead/release/final/map-and-props/backpack/06-packed-wild-herbs.png)
+
+## 西市东口的晒布院
+
+- 西市东口的石街向北分出石径，接到青瓦门阶和晾着蓝布、赭布的晒布架。屋身、栏柱和陶罐都按脚底处理前后层次。谷雨收起挂布，积水留在门前，立冬霜留在屋脊，酉时收布后点亮门边的灯。西市舆图能看到这处地标。 [首日同机位](../build/polish-west-market-dye/release/final/market-entrance-before-after.png) · [西市舆图](../build/polish-west-market-dye/release/final/native/frames/03-market-map.png) · [立冬东口](../build/polish-west-market-dye/release/final/native/frames/08-winter-entrance.png)
+- 默认 1920×1080 从标题新建，穿过溪桥道进西市。首日在晒布架旁向阿苓问路，沿金线走到蔡娘柜台。可走到青瓦屋的门阶，在墙脚停下。巳时沿街送布途中保存，续档后阿苓回到同一路段。谷雨在檐下可问路。立冬专项布置了一份已交样绸的旧记录，阿苓认出柜上的那匹。 [送布实机](../build/polish-west-market-dye/release/final/native/frames/05-carry-cloth.png) · [雨天交谈](../build/polish-west-market-dye/release/final/native/frames/07-rain-shelter.png) · [样绸对白](../build/polish-west-market-dye/release/final/native/frames/09-sample-recognized.png) · [实机回放](../build/polish-west-market-dye/release/final/native/replay.log)
+- 上一版 Windows 从设置保存了第 1 天巳时的西市档。新版在同一时辰读回，复现阿苓沿街送布。原档和读档副本的校验值一致。 [上一版保存](../build/polish-west-market-dye/before/replay.log) · [新版续档](../build/polish-west-market-dye/release/final/legacy-market/replay.log) · [存档校验](../build/polish-west-market-dye/release/final/legacy-market/integrity.log)
+- 1024×768 窗口中用模拟手柄 X 开口、十字键移到「指路去绸摊」、A 确认。选中后沿街走到柜台，窄窗口保持 16:9 画布。三张生产用图通过尺寸、色数和透明边缘检查。 [手柄对话](../build/polish-west-market-dye/release/final/controller-compact/frames/02-ask-directions.png) · [手柄回放](../build/polish-west-market-dye/release/final/controller-compact/replay.log) · [贴图检查](../build/polish-west-market-dye/work/asset-report.json) · [青瓦屋素材记录](../build/polish-west-market-dye/work/dye-house-art.txt)
+- 114 项源码场景通过。两次干净导出校验值一致。解压包通过 47 项无窗口检查和发行脚本的 13 次隔离桌面运行。普通新档分别第 56 天与第 59 天走到结局，两条结局可退出重启后读回。前版第 3 天封地档可继续过夜至第 4 天。连续运行 90.659 秒通过。首次玩家独立试玩和人工长线体验仍待验证。 [Windows 1.0 x64](../build/polish-west-market-dye/release/final/windows/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-west-market-dye/source-verified.log) · [无窗口发行](../build/polish-west-market-dye/release/final/headless.log) · [隔离桌面发行](../build/polish-west-market-dye/release/final/capture.log) · [重建校验](../build/polish-west-market-dye/release/final/reproducible.log)
+
+## 议税前暂缓私田续播
+
+- 纳贡还差时，可从筹备账暂缓一格或整块井田的私田续播。先核对预计用粮，再确认。田格标出「暂缓」并保留固定作物、时令续播或轮作。老版回放在第 49 天确认停播后移除了两份私田安排。新版同档保留两份安排与在田作物，之后按实际收成入库、分粮。两格的暂缓随手动存档读回，第 50 天选择传统后恢复。 [上版停播](../build/polish-sowing-hold/before/council/replay.log) · [默认 1920×1080 暂缓预览](../build/polish-sowing-hold/release/final/native/council/frames/03b-private-sowing-preview.png) · [两格暂缓](../build/polish-sowing-hold/release/final/native/council/frames/03d-private-sowing-held.png)
+- 延期研究专项从已暂缓两格的准备档起步。在第 49 天确认延期，从标题续回后提前恢复其中一格，门客实际播菽，邻格继续歇种。过两夜后经费未齐，在第 51 天见召简定下改革，邻格按原轮作和留肥补播麻。上一版 Windows 写出的第 40 天井田档也可读回，三份原计划均照常生效。 [研究中恢复单格](../build/polish-sowing-hold/release/final/native/research/frames/02-resume-single-plot.png) · [定案提示](../build/polish-sowing-hold/release/final/native/research/frames/03-final-reform-preview.png) · [旧档校验](../build/polish-sowing-hold/release/final/old-save/integrity.log)
+- 同一套单井田新档在第 27 天歇种，第 60 天同召简议税，第 64 天完成「税亩富民」。上一版定案后逐格恢复五份原计划，新版从定案直接接回五份计划。两次皆由渠伯在第 10 天接手，之后该田手动农事为零，公田累计 42 份、私田累计 113 份、最后铜钱 287，全程供足口粮。 [上版恢复五格](../build/polish-sowing-hold/before/campaign-rebuilt/replay.log) · [新版自动恢复](../build/polish-sowing-hold/release/final/headless/reformed-sowing-hold.log)
+- 1024×768 窗口里，从「今夜安排」核对口粮并返回续播页，再用模拟手柄确认暂缓两格。田格在 1024×576 的画布上仍可看清在田作物和暂缓状态。同一解压包以默认 1920×1080 从东关走到竹涧望溪台，复核木桥的栏杆遮挡、石阶落脚和采药。 [窄窗口田格](../build/polish-sowing-hold/release/final/native/compact-council/frames/03d-private-sowing-held.png) · [窄窗口回放](../build/polish-sowing-hold/release/final/native/compact-council/replay.log) · [望溪台斜俯视](../build/polish-sowing-hold/release/final/visual-retry/ravine/frames/01b-lookout-steps.png) · [竹涧回放](../build/polish-sowing-hold/release/final/visual-retry/ravine/replay.log)
+- 115 项源码场景通过。解压包通过 44 项无窗口启动与回放检查，发行脚本在隔离桌面通过 26 次画面回放。两条普通新档分别在第 56 天和第 59 天走到传统和改革结局，均可退出重启后读回。上版第 3 天存档可接续到第 4 天。连续运行 90.625 秒通过，两次干净导出的 ZIP 校验值一致。首次玩家独立上手和人工长线体验仍待验证。 [源码回归](../build/polish-sowing-hold/source-verified.log) · [无窗口发行验证](../build/polish-sowing-hold/release/final/headless.log) · [隔离桌面发行验证](../build/polish-sowing-hold/release/final/capture-verified.log) · [重建校验](../build/polish-sowing-hold/release/final/reproducible.log)
+
+## 岔路的木牌与桥东草甸
+
+- 井田南口的木牌顺着竹径向南，驾御场和南池的木牌沿斜向岔路刻画箭头。西市和竹涧的牌头移出默认画面两角的手记和历书。木牌沿用现有斜俯视图集，地名随牌身显示。 [旧包首日](../build/polish-trail-signs/before/visual/frames/estate.png) · [新版首日](../build/polish-trail-signs/release/final/native/visual/frames/estate.png)
+- 过溪桥后可沿朝南的木牌走到草甸。高草按根部遮挡人物，搁镰石露出顶面和近侧面，割过会留下短茬。默认 1920×1080 和 1024×768 都在关闭金线后沿坡走到割草处。回放夏秋各取两份草料，首个冬夜消耗一份。上一版第 13 天的割草档读回仍有四份草料，重按割草显示「本季已收」，原档校验值一致。 [木桥东岔口](../build/polish-trail-signs/release/final/native/meadow-fodder/frames/11a-meadow-fork.png) · [割草前](../build/polish-trail-signs/release/final/native/meadow-fodder/frames/12-uncut-autumn-grass.png) · [割草后](../build/polish-trail-signs/release/final/native/meadow-fodder/frames/13-cut-grass.png) · [窄窗口回放](../build/polish-trail-signs/release/final/native/meadow-compact/replay.log) · [旧档接续](../build/polish-trail-signs/release/final/previous-cut/replay.log) · [存档校验](../build/polish-trail-signs/release/final/previous-cut/integrity.log)
+- 两端的竹涧小径木牌在向蒲宁交还三处水迹后出现。未开放时，关口横木前可看到开启条件。回放先到关口，再交手记并由新指路牌往返，钓得一尾鲤鱼，从标题继续后仍能沿小径回到封地。 [未开放关口](../build/polish-trail-signs/release/final/native/ravine-shortcut/frames/01-closed-gate.png) · [交接后的岔路](../build/polish-trail-signs/release/final/native/ravine-shortcut/frames/02a-open-fork.png) · [往返回放](../build/polish-trail-signs/release/final/native/ravine-shortcut/replay.log)
+- 115 项源码场景通过。解压包通过 57 项无窗口检查和发行脚本的 19 次隔离桌面运行。普通新档分别在第 56 天和第 59 天达成传统和改革结局，关闭程序后可分别从标题读回。上版第 3 天封地档可续至第 4 天。90.769 秒连续运行通过，两次干净导出的 ZIP 校验值一致。首次玩家能否沿路牌自行发现支路及完整一局的节奏仍待人工试玩。 [源码回归](../build/polish-trail-signs/source-final.log) · [无窗口发行验证](../build/polish-trail-signs/release/final/headless.log) · [隔离桌面发行验证](../build/polish-trail-signs/release/final/capture.log) · [重建校验](../build/polish-trail-signs/release/final/reproducible.log)
+
+## 返程田务与次日查账
+
+- 第 12 天的专项先走西市再进竹涧，两次在途中保存并从标题继续。第一趟浇两格、收三格，国库入一份、私仓入三份，实际进账 27 铜钱和四片桑叶。第二趟只新浇一格，旧版返程会再次报收三格，新版短暂显示本趟的一格。「今夜安排」仍可查外出累计浇三格、收三格和实际收成。 [旧版第二趟](../build/polish-away-receipts/before/comparison/frames/03-second-return.png) · [新版第一趟收成](../build/polish-away-receipts/release/final/native/native-default/frames/02-return-to-estate.png) · [新版第二趟](../build/polish-away-receipts/release/final/native/native-default/frames/03-second-return.png) · [当日累计](../build/polish-away-receipts/release/final/native/native-default/frames/04-field-work-report.png)
+- 从「今夜安排」等门客再浇一格公田，过夜到第 13 天。已浇的作物正常生长，断水稻田停长，粮仓实耗三份。回到标题继续后，「昨夜结算」同时显示第 12 天的外出田务和睡前收工。两种窗口均在隔离桌面操作并核对了页面。 [旧版晨间](../build/polish-away-receipts/before/comparison/frames/05-morning-record.png) · [新版 1920×1080 晨间](../build/polish-away-receipts/release/final/native/native-default/frames/05-morning-record.png) · [新版 1024×768 晨间](../build/polish-away-receipts/release/final/native/native-compact/frames/05-morning-record.png)
+- 上一版从设置保存的两份第 12 天旧档均可继续。已领回报的封地档接着进竹涧，回来只显示新浇的一格。仍在竹涧的旧档在返程时显示存档保留的当天累计。两份档均能继续到第 13 天并查账，两份原档各自的校验值与读取前一致。 [已报旧档回放](../build/polish-away-receipts/release/final/native/old-return/replay.log) · [已报旧档校验](../build/polish-away-receipts/release/final/native/old-return/integrity.log) · [待报旧档回放](../build/polish-away-receipts/release/final/native/old-unread/replay.log) · [待报旧档校验](../build/polish-away-receipts/release/final/native/old-unread/integrity.log)
+- 115 项源码场景和返程田务的最终复测通过。Windows 解压包通过 58 项无窗口检查和发行脚本的 25 次隔离桌面运行。传统和改革的普通新档分别在第 56 天与第 59 天结局，关闭程序后均可读回。上版第 3 天的封地档可续至第 4 天。连续运行 90.692 秒通过，两次干净导出的 ZIP 校验值一致。首次玩家的独立上手与完整一局的节奏仍待人工试玩。 [源码回归](../build/polish-away-receipts/source-final.log) · [田务复测](../build/polish-away-receipts/work/source-receipt-final.log) · [无窗口发行验证](../build/polish-away-receipts/release/final/headless.log) · [隔离桌面发行验证](../build/polish-away-receipts/release/final/capture.log) · [重建校验](../build/polish-away-receipts/release/final/reproducible.log)
+
+## 竹涧试筏埠头与随身野药
+
+- 上游埠头沿用木桥的固定斜俯视。石槛接岸边小路，板面、近侧梁和入水桩脚分开，缆绳从近桩接到筏首。背包的野药保留望溪台植株的浅黄花与叶形，布包能看见折面和系绳。原有四个采集图块逐像素校验一致。 [同机位实景与背包对比](../build/polish-ravine-landing/release/final/landing-and-herbs.png) · [图集导入记录](../build/polish-ravine-landing/work/art-preview/import-geometry.log)
+- 默认 1920×1080 与 1024×768 各走到试筏埠头。第 10 天操筏过四道竹标，从标题续档后，第 11 天可在埠头重读 5.655 秒成绩。两种窗口的背包回放均用手柄交互带走一份野药，并核对药包与路餐同时显示。另核对竹涧木桥、望溪台与谷雨和冬霜。 [1920×1080 试筏](../build/polish-ravine-landing/release/final/native/raft/replay.log) · [1024×768 背包](../build/polish-ravine-landing/release/final/native/backpack-compact/frames/06-packed-wild-herbs.png) · [竹涧路线](../build/polish-ravine-landing/release/final/native/ravine-map/replay.log)
+- 115 项源码场景通过。Windows 解压包通过 38 项无窗口检查、5 次隔离桌面运行和 90.71 秒连续运行。传统、改革分别从新档走到第 56、59 天结局，关闭程序后均可读回，上版第 3 天存档可继续过夜。两次独立构建的 ZIP 校验值一致。首次玩家独立上手和长线体验仍待验收。 [Windows 1.0 x64](../build/polish-ravine-landing/release/final/windows/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-ravine-landing/source-final.log) · [发行回放](../build/polish-ravine-landing/release/final/headless.log) · [重建校验](../build/polish-ravine-landing/release/final/reproducible.log)
+
+## 市场批量备粮与留货
+
+- 「三夜口粮」和「开垦备粮」默认留下本季未交和已跟踪的下季作物，以及历书中的节庆留用。作物有共用时按实际数量留用。余量先转粮，再报价购粮。购粮计入备粮期间最近一期已备足的研究费，开垦也给立桩留钱。勾选「动用预留作物」会显示具体品种和份数，再由玩家成交。关闭或切换计划后恢复默认。 [默认窗口报价](../build/polish-market-reserve/work/native-fixed/frames/01-protected-quote.png) · [手柄确认前](../build/polish-market-reserve/work/native-fixed/frames/05-explicit-reserve-quote.png)
+- 第 63 天的对照档里，上版转掉了秋社留的黍和秋单的一份稷，秋单由齐货变为缺一份。新版转一份混存作物、用 10 铜钱补两份粮，七份留货仍在。次日两位门客吃足、实缴 100 铜钱，交完秋单得 26 铜钱，私仓剩黍一份、麦两份。由上版设置保存的同一份档可在新版重走，原存档校验值一致。 [上版实机](../build/polish-market-reserve/before/final/replay.log) · [新版交货](../build/polish-market-reserve/work/native-fixed/frames/03a-autumn-order-receipt.png) · [旧档接续](../build/polish-market-reserve/release/final/old-market-save/replay.log) · [存档校验](../build/polish-market-reserve/release/final/old-market-save/integrity.log)
+- 预算少 5 铜钱时，默认报价停在待补款，选择动用留货后可按所列的品种备足粮。成交前若铜钱变动，市场会刷新报价，粮仓和私仓仍是原数。勘地专项按计划从 125 补至 128 份粮，留出 280 铜钱立桩和 100 铜钱缴费，再从市场回勘地面板。 [开垦报价](../build/polish-market-reserve/work/native-fixed/frames/06-construction-quote.png) · [运行记录](../build/polish-market-reserve/work/native-fixed/replay.log)
+- 116 项源码场景通过。Windows 解压包通过 40 项无窗口检查，发行回放中 25 次在隔离桌面运行，包含默认 1920×1080 与 1024×768 的备粮和交货。传统、改革新档分别在第 56、59 天结局，关闭程序后均可读回，上一版第 3 天档可继续过夜。连续运行 90.773 秒通过，两次干净构建的 ZIP 校验值一致。首次玩家独立上手和长线体验仍待验收。 [源码回归](../build/polish-market-reserve/source-verified.log) · [无窗口发行](../build/polish-market-reserve/release/final/headless.log) · [隔离桌面发行](../build/polish-market-reserve/release/final/capture.log) · [重建校验](../build/polish-market-reserve/release/final/reproducible.log)
+
+## 让门客先翻地再播种
+
+- 首贡后已有照料门客时，可从「首茬收成」进入「安排门客种下茬」。选好续播方式便可点单格，勾选「包括未翻地」可批量安排私田，也可把新井田交给管事。门客当天先照料已经耕作的田，按剩余工时翻生地并接续播种与浇水。暂缓续播也会暂缓翻地。 [首茬收成](../build/polish-soil-plans/release/final/native-default/frames/01-first-harvest-choice.png) · [七格生地](../build/polish-soil-plans/release/final/native-default/frames/02-preparing-seven-plots.png)
+- 同一套第 3 天首贡回放中，新旧两版都在过夜前播好并浇足九格。新版由渠伯翻开七格，为玩家省 14 点体力。所需游戏内工时从 4 小时 32 分钟增至 6 小时 24 分钟，次晨用粮一份。上一版保存的第 3 天手动档可安排这七格并续至第 4 天，原档校验值一致。 [上版回放](../build/polish-soil-plans/before/verified/replay.log) · [新版回放](../build/polish-soil-plans/release/final/native-default/replay.log) · [旧档接续](../build/polish-soil-plans/release/final/previous-manual-verified/replay.log) · [旧档校验](../build/polish-soil-plans/release/final/old-save-integrity.log)
+- 第 28 天的新井田专项从晨间完工记录进入，交渠伯翻九格。到西路时门客继续翻地、播种和浇水，返程可查新增田务。第 30 天国库入一份，私仓入八份，管事每夜用粮两份。 [交接预览](../build/polish-soil-plans/release/final/native-default/frames/05-new-field-handover.png) · [门客翻地](../build/polish-soil-plans/release/final/native-default/frames/06-steward-turning-soil.png) · [田务收成](../build/polish-soil-plans/release/final/native-default/frames/08-steward-harvest.png)
+- 默认 1920×1080 复走堂前、竹涧木桥和望溪台。地图与场景物件共用固定斜俯视，陶罐和近侧桥栏按人物脚底的前后关系遮挡。接下来优先细化桥头路肩与阶脚，用连续的草面、岩面和落脚处表现高差。 [堂前陶罐](../build/polish-soil-plans/release/final/ravine-default/frames/00d-behind-jar.png) · [木桥](../build/polish-soil-plans/release/final/ravine-default/frames/01a-on-wooden-bridge.png) · [望溪台](../build/polish-soil-plans/release/final/ravine-default/frames/01b-lookout-steps.png)
+- 117 项源码场景、44 项 Windows 解压包无窗口检查与发行脚本的 26 次隔离桌面运行通过。默认 1920×1080 与 1024×768 都回放了委派翻地。普通新档在第 56、59 天达成传统与改革结局，两个结局均可关闭游戏后读回。连续运行 90.709 秒通过，两次干净导出的 ZIP 校验值一致。首次玩家独立上手和人工长线体验仍待验收。 [Windows 1.0 x64](../build/polish-soil-plans/release/final/windows/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-soil-plans/source-delivery.log) · [无窗口发行验证](../build/polish-soil-plans/release/final/headless-verified.log) · [隔离桌面发行验证](../build/polish-soil-plans/release/final/capture-verified.log) · [1024×768 田务预览](../build/polish-soil-plans/release/final/capture-verified/1024x768/02-preparing-seven-plots.png) · [重建校验](../build/polish-soil-plans/release/final/reproducible-verified.log)
+
+## 竹涧木桥到望溪台的草坡和片石
+
+- 木桥两口与望溪台阶脚铺入形状各异的片石，踏面有磨痕和薄侧面。桥东土路接到一段带露岩的低草岸，岔口的坡脚收进望溪台岩脚。1920×1080 在同一机位复走，桥头和阶脚换为石面脚步，桥板仍可听见木声。 [上版实景](../build/polish-ravine-approaches/before/frames/01d-bridge-to-lookout.png) · [新版实景](../build/polish-ravine-approaches/release/final/native-default/frames/01d-bridge-to-lookout.png) · [1920×1080 路线回放](../build/polish-ravine-approaches/release/final/native-default/replay.log)
+- 沿桥东草坡可以直接走到下方草地，再回到岔路。沿崖脚试着侧登望溪台时会停下，从片石阶脚可沿石阶到野药；深水挡路，浅滩仍可跨过。谷雨桥石变暗，立冬的草梗与坡沿见霜。 [下坡到草地](../build/polish-ravine-approaches/release/final/native-default/frames/01e-bridge-verge.png) · [谷雨木桥](../build/polish-ravine-approaches/release/final/native-default/frames/06-bridge-rain.png) · [立冬石阶](../build/polish-ravine-approaches/release/final/native-default/frames/08a-lookout-steps-frost.png)
+- 上一版第 1 天在竹涧保存的「木桥西端水迹」可从标题续档。读回目标后循路记水迹，再上望溪台并到野果坳采摘，粮仓从 10 增至 15，存档文件校验值一致。 [旧档登台](../build/polish-ravine-approaches/release/final/resumed-ravine/frames/02-old-route-arrival.png) · [续档回放](../build/polish-ravine-approaches/release/final/resumed-ravine/replay.log) · [旧档校验](../build/polish-ravine-approaches/release/final/previous-save-integrity.log)
+- 并行导出时有一次 EXE 使用了通用程序图标。Windows 导出器将生成的图标写到同名临时文件。打包脚本隔离临时目录后，两次并行构建都写入红底井田印，并与完成通关验证的解压包校验值一致。 [Godot 4.7.2 导出代码](https://github.com/godotengine/godot/blob/ed1daf0bf/platform/windows/export/export_plugin.cpp#L471-L499) · [对照图标](../build/polish-ravine-approaches/work/final-a-icon.png) · [交付图标](../build/polish-ravine-approaches/work/final-b-icon.png) · [并行重建校验](../build/polish-ravine-approaches/release/final/reproducible-parallel.log)
+- 117 项源码场景、33 项解压包无窗口检查和发行脚本的 17 次隔离桌面运行通过。默认 1920×1080 和 1024×768 都走过新版竹涧。普通新档第 56 天达成传统结局，第 59 天达成改革结局，两个结局均可重启读回。连续运行 90.784 秒通过。首次玩家独立上手和人工长线体验仍待验收。 [Windows 1.0 x64](../build/polish-ravine-approaches/release/final/windows/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-ravine-approaches/source-final.log) · [无窗口发行验证](../build/polish-ravine-approaches/release/final/headless.log) · [隔离桌面发行验证](../build/polish-ravine-approaches/release/final/capture.log) · [1024×768 桥东到石阶](../build/polish-ravine-approaches/release/final/capture/1024x768/01d-bridge-to-lookout.png)
+
+## 从交货簿安排管事备货
+
+- 本季或下季缺作物时，可从交货簿选「安排管事备货」，确认前看品种、格数和预计收成日期。管事从自己负责的空私田补种一茬，先用已翻田，长期续播照原计划进行。已排够的格数计入田边指引。「撤回未播」处理播种安排，「取消下季跟踪」处理田边记录和备粮留用。 [默认窗口预览](../build/polish-order-steward/release/final/native-default/frames/01-winter-preview.png) · [已排冬单](../build/polish-order-steward/release/final/native-default/frames/02-winter-queued.png)
+- 同一份第 40 天档开始时缺一份麦。上版需翻地、播种、浇水和收割共六次。新版交给渠伯，玩家的手动田务为零。渠伯当晚用 48 分钟游戏内工时翻、播、浇，隔夜接着照料。两版都在第 43 天备齐两麦一帛，到西市交货领同样的报酬。 [上版对照](../build/polish-order-steward/before/replay.log) · [新版回放](../build/polish-order-steward/release/final/native-default/replay.log) · [去西市交货](../build/polish-order-steward/release/final/native-default/frames/04-winter-ready.png)
+- 门客在封地内和玩家走到西路时均实际完成了一格生地的翻、播、浇。上版保存的第 40 天手动档可续读、排工、再读回未播计划，保留原有菽种安排，原档校验值一致。 [田边与外出田务](../build/polish-order-steward/release/final/live-work/replay.log) · [旧档接续](../build/polish-order-steward/release/final/previous-winter/replay.log) · [原档校验](../build/polish-order-steward/release/final/previous-save-integrity.log)
+- 两季合需三份麦时，已经在田的麦和可按时播种的计划会合计。筹备本季时保留下季的跟踪。到第 47 天已来不及在冬单截止前收麦，未播批次自动撤回。无渠水的夏单仍可指路到水源。 [共用麦、期限与渠水验证](../build/polish-order-steward/release/final/native-default/replay.log)
+- 118 项源码场景通过，最终界面复核 6 项。解压包通过 41 项无窗口检查，发行脚本通过 18 次隔离桌面运行。默认 1920×1080 和 1024×768 都回放了冬单，窄窗另用手柄操作。普通新档在第 56、59 天达成传统和改革结局，两个结局均可重启读回。连续运行 90.79 秒通过，两次干净并行导出的 ZIP 校验值一致。首次玩家独立上手和人工长线体验仍待验收。 [Windows 1.0 x64](../build/polish-order-steward/release/final/windows/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-order-steward/source-final.log) · [最终界面复核](../build/polish-order-steward/source-final-ui.log) · [无窗口发行验证](../build/polish-order-steward/release/final/headless.log) · [隔离桌面发行验证](../build/polish-order-steward/release/final/capture.log) · [1024×768 已排冬单](../build/polish-order-steward/release/final/capture/1024x768/02-winter-queued.png) · [并行重建校验](../build/polish-order-steward/release/final/reproducible.log)
+
+## 井田畦面、田口与渠岸
+
+- 九格井田共用连续土面，以浅缝分格。中央公田留金角。翻地后能看见垄沟，浇水后土色加深。近侧和东侧露出田埂土壁，草根和霜沿土壁边缘分布。 [上版首日井田](../build/polish-field-banks/before/frames/00a-untilled-field.png) · [新版首日井田](../build/polish-field-banks/release/verified/native-default/frames/00a-untilled-field.png) · [翻地后](../build/polish-field-banks/release/verified/native-default/frames/00b-turned-field.png) · [浇水后](../build/polish-field-banks/release/verified/native-default/frames/00-first-field.png)
+- 水渠画出内壁和渠沿磨痕，过路木板露出板面的木纹与近侧板沿。默认窗口回放实际走过田口踏石和畦面，依次触发石面、土面的脚步。渠板回放也记录到木面脚步。 [谷雨的井田和渠板](../build/polish-field-banks/release/verified/native-default/frames/03-rain-and-second-field.png) · [下田回放](../build/polish-field-banks/release/verified/native-default/replay.log) · [渠板回放](../build/polish-field-banks/release/verified/headless/canal-flow.log)
+- 按正常入口开出两块新井田，分别沿南侧、北侧道路留田口。第 8 天的新田回放核对公田入国库、私田入私仓，重读仍可沿原田口下田。上一版写出的第 3 天带苗存档在新版可继续至第 4 天。 [新田口实景](../build/polish-field-banks/release/verified/new-field-entrances/frames/06-field-entrances-reloaded.png) · [新井田回放](../build/polish-field-banks/release/verified/new-field-entrances/replay.log) · [旧档接续](../build/polish-field-banks/release/verified/headless/legacy-continue-Fiefdom-1.0.0-Windows-x64.log)
+- 默认 1920×1080 和 1024×768 都复核了晴雨、冬季、头一块田的翻地浇水与田口。开局手记的翻地提示缩到一行，窄窗从标题走到第 3 天完成公私田首收。 [窄窗开局](../build/polish-field-banks/release/verified/compact/frames/00a-untilled-field.png) · [同日首收](../build/polish-field-banks/release/verified/opening-title-compact/frames/04c-same-morning-harvests.png) · [窄窗开局回放](../build/polish-field-banks/release/verified/opening-title-compact/replay.log)
+- 118 项源码场景通过。Windows 解压包通过 31 项无窗口检查，发行脚本完成 24 次隔离桌面运行。传统和改革从普通新档分别在第 56、59 天结局，两个结局均能重启读回。连续运行 90.781 秒通过，两次干净并行构建的校验值一致。 [Windows 1.0 x64](../build/polish-field-banks/release/verified/windows/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-field-banks/source-verified.log) · [无窗口发行验证](../build/polish-field-banks/release/verified/headless.log) · [隔离桌面发行验证](../build/polish-field-banks/release/verified/capture.log) · [重建校验](../build/polish-field-banks/release/verified/reproducible.log)
+
+## 议税后翻看首笔收成
+
+- 同一份第 53 天待议税进度，上版选定传统或改革后两处案位仍是空地。新版传统在堂前摆出贡簿，改革在南路亭摆出新税册。舆图可指路，走到账案可翻看，目标齐备可原地呈交。堂前案位向西挪开西市木牌。 [上版传统案位](../build/polish-council-ledger/before-traditional/frames/01-before-first-harvest.png) · [上版改革案位](../build/polish-council-ledger/before-reformed/frames/01-before-first-harvest.png) · [新版贡簿](../build/polish-council-ledger/release/final/native-default/frames/01-traditional-desk-open.png) · [新版新税册](../build/polish-council-ledger/release/final/native-default/frames/06-register-sack.png)
+- 传统线先收私田，再从井田 2 收一份黍入国库。贡簿从公田这笔记起，下一次纳贡仍保留首笔。改革线让石墨在井田 1 代收两份麦，入私仓，实扣税 4 铜钱、实收 12 铜钱。石墨当天能说起这趟收成。账上写明来源，案边添了谷袋，续档恢复同一笔。 [贡簿实收](../build/polish-council-ledger/release/final/native-default/frames/04-tribute-entry.png) · [石墨对白](../build/polish-council-ledger/release/final/native-default/frames/05-worker-remembers.png) · [新税册实收](../build/polish-council-ledger/release/final/native-default/frames/07-tax-entry.png) · [默认窗口回放](../build/polish-council-ledger/release/final/native-default/replay.log)
+- 上版 Windows 写出的第 53 天改革存档已有 16 份私田收成和 99 铜钱，新版保留这些账目。实际走出西关后，渠伯从井田 2 收下一份黍，回南路亭查到这笔实扣 1 铜钱、实收 4 铜钱的代收。旧手动档校验值一致。 [旧档账册](../build/polish-council-ledger/release/final/previous-checkpoint/frames/08-previous-accounts.png) · [返程记账](../build/polish-council-ledger/release/final/previous-checkpoint/frames/09-resumed-register.png) · [续档回放](../build/polish-council-ledger/release/final/previous-checkpoint/replay.log) · [旧档校验](../build/polish-council-ledger/release/final/previous-save-integrity.log)
+- 119 项源码场景、32 项 Windows 无窗口检查和发行脚本的 24 次隔离桌面运行通过。默认 1920×1080 和 1024×768 都翻看了实际入账。普通新档在第 56 天达成传统结局、第 59 天达成改革结局，两份结算都写下首笔收成，两个结局均可重启读回。连续运行 90.714 秒通过，两次干净并行打包的校验值一致。 [Windows 1.0 x64](../build/polish-council-ledger/release/final/windows/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-council-ledger/source-final.log) · [无窗口发行验证](../build/polish-council-ledger/release/final/headless.log) · [隔离桌面发行验证](../build/polish-council-ledger/release/final/capture.log) · [改革结尾](../build/polish-council-ledger/release/final/capture/1920x1080/ending-reformed.png) · [1024×768 新税册](../build/polish-council-ledger/release/final/capture/1024x768/07-tax-entry.png) · [重建校验](../build/polish-council-ledger/release/final/reproducible.log)
+
+## 竹涧的落水潭、东岸缓坡和石阶
+
+- 瀑口嵌在两岸有顶面和侧面的岩石之间，水花向下游散开。木桥东岸沿土路展开缓坡，露岩和草簇聚在坡沿。望溪台有一段更宽的石踏面，阶侧岩基向上接入台侧岩壁。 [1920×1080 上版同机位](../build/polish-ravine-terrace/before/frames/01d-bridge-to-lookout.png) · [新版同机位](../build/polish-ravine-terrace/release/final/native-default/frames/01d-bridge-to-lookout.png) · [落水潭和桥](../build/polish-ravine-terrace/release/final/native-default/frames/05a-cascade-flow.png)
+- 由东关实际走过片石、木桥和宽阶到野药平台，半途可从缓坡下到东岸草地。脚步随片石、木板和草地变化，崖脚和瀑下深水会挡住角色，下游从踏石处可渡溪。在谷雨、立冬和暮色复走。 [默认窗口回放](../build/polish-ravine-terrace/release/final/native-default/replay.log) · [过桥下坡](../build/polish-ravine-terrace/release/final/native-default/frames/01e-bridge-verge.png) · [雨中桥东](../build/polish-ravine-terrace/release/final/native-default/frames/06a-east-bank-rain.png) · [立冬登台](../build/polish-ravine-terrace/release/final/native-default/frames/08a-lookout-steps-frost.png)
+- 上版 Windows 通过游戏内设置留下「木桥西端水迹」手动档。新版在 1024×768 从标题继续，走到原立牌记下水迹，再沿石阶登台并到野果坳采集，粮食由 10 增至 15。原存档和两份验证副本的校验值一致。 [1024×768 旧档登台](../build/polish-ravine-terrace/release/final/previous-waypoint/frames/02-old-route-arrival.png) · [续档回放](../build/polish-ravine-terrace/release/final/previous-waypoint/replay.log) · [旧档校验](../build/polish-ravine-terrace/release/final/previous-save-integrity.log)
+- 119 项源码场景、27 项 Windows 无窗口检查及发行脚本的 30 次隔离桌面运行通过。1920×1080 和 1024×768 都从东关走进竹涧，验证上下坡、踏石过溪和野药站位。独立新档在第 56 天达成传统结局、第 59 天达成改革结局，均可退出重启读回。连续运行 91.105 秒通过，两次干净并行构建的校验值一致。首次玩家独立上手和人工长线试玩仍待验收。 [Windows 1.0 x64](../build/polish-ravine-terrace/release/final/windows/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-ravine-terrace/source-final.log) · [无窗口发行验证](../build/polish-ravine-terrace/release/final/headless.log) · [隔离桌面发行验证](../build/polish-ravine-terrace/release/final/capture.log) · [1024×768 桥东](../build/polish-ravine-terrace/release/final/capture/1024x768/01d-bridge-to-lookout.png) · [重建校验](../build/polish-ravine-terrace/release/final/reproducible.log)
+
+## 堂前石坪和泉边踏石
+
+- 堂屋台阶下铺宽石坪，谷袋和陶罐落在石面上。石坪向南行土路留出磨低的出口。泉眼周围的石板向路边展开，泉脚的阴影沿石板淡开。默认 1920×1080 从标题开新档，在同一机位看得见堂前、泉眼和九格井田。 [上版首日同机位](../build/polish-estate-court/before/frames/00a-untilled-field.png) · [新版首日](../build/polish-estate-court/release/final/native-default/frames/00a-untilled-field.png)
+- 实际走上堂阶和泉边石板会响石面脚步。下田经过田口石面后换为土声，既有渠板响木声。谷雨的扩田回放中，水从泉口接入渠线，仍可由木板过渠。上一版第 6 天手动档在 1024×768 续读，水源对白报出一块井田接水，档内稻苗、一份公田纳贡和 7 铜钱均核对通过。 [泉边实走](../build/polish-estate-court/release/final/native-default/replay.log) · [谷雨接渠](../build/polish-estate-court/release/final/native-default/frames/03-rain-and-second-field.png) · [旧档水源](../build/polish-estate-court/release/final/previous-checkpoint/frames/07-restored-coverage.png) · [旧档校验](../build/polish-estate-court/release/final/previous-save-integrity.log)
+- 标题的清晨和薄暮背景从新版封地取景，两个 2560×1440 的 RGB 画面都用引擎在隔离桌面渲染。 [清晨](../build/polish-estate-court/title-art/frames/estate-morning.png) · [薄暮](../build/polish-estate-court/title-art/frames/estate-dusk.png) · [取景记录](../build/polish-estate-court/title-art/replay.log)
+- 119 项源码场景、26 项 Windows 无窗口检查及发行脚本的 29 次隔离桌面运行通过。1920×1080 和 1024×768 都走过新铺石面，并实际接渠、断渠、再接通到稻谷收成。普通新档在第 56 天达成传统结局、第 59 天达成改革结局，均可重启读回。连续运行 90.878 秒通过，两次干净并行构建的校验值一致。首次玩家独立上手和人工长线试玩仍待验收。 [Windows 1.0 x64](../build/polish-estate-court/release/final/windows/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-estate-court/source-final.log) · [无窗口发行验证](../build/polish-estate-court/release/final/headless.log) · [隔离桌面发行验证](../build/polish-estate-court/release/final/capture.log) · [1024×768 堂前](../build/polish-estate-court/release/final/capture/1024x768/02b-hall-landing.png) · [1920×1080 标题](../build/polish-estate-court/release/final/capture/1920x1080/02-dusk-title.png) · [重建校验](../build/polish-estate-court/release/final/reproducible.log)
+
+## 堂前的首份贡粮账
+
+- 第一次收获公田并入库后，堂前石坪添一袋谷和一枚竹筹。走近按交互键可查首份贡粮、累计数量和下次期限，也可标出公田。第 3 天回放实际从井田 1 收下 1 份黍。 [上版首贡后的堂前](../build/polish-first-tribute-ledger/before/frames/00-before-court.png) · [1920×1080 堂前交互](../build/polish-first-tribute-ledger/release/final/native-default/frames/00-first-tribute-stand.png) · [贡粮账](../build/polish-first-tribute-ledger/release/final/native-default/frames/00a-first-tribute-ledger.png)
+- 同一天到田边找渠伯，开口先说刚入库的黍，接着可约定试一回轮作。手动保存并从标题续读后，首笔明细和轮作约定均可查到。后续收贡会更新累计和下次期限，首笔仍保留原日期。 [1024×768 渠伯对白](../build/polish-first-tribute-ledger/release/final/compact/frames/00b-keeper-first-tribute.png) · [从新档回放](../build/polish-first-tribute-ledger/release/final/native-default/replay.log)
+- 西市外出回放中，渠伯在第 12 天从井田 1 代收 1 份黍。返程提示可到堂前翻账，首份贡粮记明经手人。 [门客代收回放](../build/polish-first-tribute-ledger/release/final/headless/away-field-work.log)
+- 由上版 Windows 写出的第 7 天手动档已有 1 份贡粮。新版可查累计和今晚的期限，照旧收割公田后累计为 2 份，下次期限为第 11 天。原手动档和两份验证副本校验值一致。 [1024×768 旧档贡粮账](../build/polish-first-tribute-ledger/release/final/previous-checkpoint/frames/00a-previous-tribute-ledger.png) · [续档回放](../build/polish-first-tribute-ledger/release/final/previous-checkpoint/replay.log) · [旧档校验](../build/polish-first-tribute-ledger/release/final/previous-save-integrity.log)
+- 119 项源码场景、31 项 Windows 无窗口检查及发行脚本的 29 次隔离桌面运行通过。1920×1080 和 1024×768 均逐步回放首贡、翻账和轮作约定。普通新档在第 56 天达成守礼安邦、第 59 天达成税亩富民，均可退出重启读回。连续运行 91.039 秒通过，两次干净构建的校验值一致。首次玩家独立上手和人工长线试玩仍待验收。 [Windows 1.0 x64](../build/polish-first-tribute-ledger/release/final/windows/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-first-tribute-ledger/source-final.log) · [无窗口发行验证](../build/polish-first-tribute-ledger/release/final/headless.log) · [隔离桌面发行验证](../build/polish-first-tribute-ledger/release/final/capture.log) · [重建校验](../build/polish-first-tribute-ledger/release/final/reproducible.log)
+
+## 亲手按各格安排续播
+
+- 写好续播后在种子栏选「按安排播种」。对准一格可播的空畦，按住 Shift 可看每格的作物和总耗体力，点击一次把本井田可播的空畦种完。显示公私田格数和品种。选任一具体种子即可用手选模式。 [默认 1920×1080 预览](../build/polish-planned-sowing/release/final/native-default/frames/01-planned-sowing-preview.png)
+- 首贡后的第 3 天安排四畦黍、麻、麦、菽。上版实际换种四次、点田四次。新版选一次「按安排播种」，一次批量确认。两版均耗 8 体力，第 6 天收完这四格后都是累计贡粮 2 份、私田收成 4 份、23 铜钱、5 粮食。稻田缺渠水时提示接渠。暂缓和未安排的空畦可用手选种子，桑苗在旁继续长。体力只有 7 点时提示还差 1 点，待恢复后可整批播下。轮作专项复核有菽茬地力时播麦，普通空畦先播菽。 [上版逐格换种](../build/polish-planned-sowing/baseline/frames/01-before-one-crop-at-a-time.png) · [新版第 6 天收成](../build/polish-planned-sowing/release/final/native-default/frames/03-mixed-harvest.png) · [对照数据](../build/polish-planned-sowing/release/final/baseline-comparison.log) · [全段回放](../build/polish-planned-sowing/release/final/native-default/replay.log)
+- 上版 Windows 通过设置写出的第 3 天手动档，在新版 1024×768 从标题继续。保留六格续播、暂缓状态、现有桑苗，直接用新入口完成播种和收割。原存档与两个验证副本校验值一致。 [旧档按原安排播种](../build/polish-planned-sowing/release/final/previous-checkpoint/replay.log) · [手动档校验](../build/polish-planned-sowing/release/final/previous-save-integrity.log)
+- 1024×768 窗口用 LB/RB 选中「按安排播种」，LT 预览各格，按 A 一次播完四格。默认 1920×1080 窗口用键鼠回放。120 项源码场景、30 项 Windows 无窗口检查及发行脚本的 29 次隔离桌面运行通过。普通新档在第 56 天达成守礼安邦、第 59 天达成税亩富民，均可重启读回。连续运行 90.822 秒通过，两次干净构建的校验值一致。首次玩家独立上手和人工长线试玩仍待验收。 [窄窗口手柄预览](../build/polish-planned-sowing/release/final/compact/frames/01-planned-sowing-preview.png) · [源码回归](../build/polish-planned-sowing/source-final.log) · [无窗口发行验证](../build/polish-planned-sowing/release/final/headless.log) · [隔离桌面发行验证](../build/polish-planned-sowing/release/final/capture-verified.log) · [重建校验](../build/polish-planned-sowing/release/final/reproducible.log)
+
+## 从今夜安排去听灯下小谈
+
+- 正常新档第 7 天给季青送一份私田路粮。酉时季青和渠伯坐下后，「今夜安排」出现「路粮匣」，写明两人已经入席。点击「指路去席案」，金线沿南路亭前的岔路引到桌前。近处沿用席案上方的提示，远处可见方向牌。小谈听完记入两人手记，保存重读后仍有日期。 [1920×1080 今夜安排](../build/polish-pavilion-invitation/release/verified/native-default/frames/06-clear-evening-plan.png) · [沿路去席案](../build/polish-pavilion-invitation/release/verified/native-default/frames/06-clear-evening-route.png) · [邻里手记](../build/polish-pavilion-invitation/release/verified/native-default/frames/09-neighbor-journal.png)
+- 谷雨预置档已有守备前情。弋戎和蒲宁同席后，1024×768 用手柄选中指路，实际走到亭东雨棚听完「东路的一盏灯」。缺粮仍优先显示在入口上，点进去也能查到当晚小谈。 [雨棚席案入口](../build/polish-pavilion-invitation/release/verified/compact/frames/10-rain-shelter-plan.png) · [雨天手柄回放](../build/polish-pavilion-invitation/release/verified/compact/replay.log)
+- 上版 Windows 在两人入席后写下第 7 天手动档，当晚的「今夜安排」只列田务与用粮。新版从同一手动档继续，能看到「路粮匣」入口并沿路听完。指路时仍为第 7 天，粮仓仍有 4 份。旧手动档和两个验证副本的校验值一致。 [上版同一晚](../build/polish-pavilion-invitation/baseline/frames/06-old-tonight.png) · [旧档续读](../build/polish-pavilion-invitation/release/verified/previous-checkpoint/replay.log) · [手动档校验](../build/polish-pavilion-invitation/release/verified/previous-save-integrity.log)
+- 120 项源码场景、30 项 Windows 无窗口检查及发行脚本的 24 次隔离桌面运行通过。默认 1920×1080 与 1024×768 均核对小谈入口和出门路线。普通新档在第 56 天达成守礼安邦、第 59 天达成税亩富民，两条路线均可退出重启读回。连续运行 90.92 秒通过，两次干净构建的校验值一致。首次玩家独立上手和人工长线试玩仍待验收。 [源码回归](../build/polish-pavilion-invitation/source-final.log) · [无窗口发行验证](../build/polish-pavilion-invitation/release/verified/headless.log) · [隔离桌面发行验证](../build/polish-pavilion-invitation/release/verified/capture.log) · [重建校验](../build/polish-pavilion-invitation/release/verified/reproducible.log)

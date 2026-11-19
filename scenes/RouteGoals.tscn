@@ -84,6 +84,14 @@ size_flags_vertical = 0
 mouse_default_cursor_shape = 2
 text = "返回  Esc"
 
+[node name="HarvestEntry" type="Label" parent="MapModal/Center/Ledger/Stack"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.86, 0.74, 1)
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 2
+
 [node name="GoalRows" type="VBoxContainer" parent="MapModal/Center/Ledger/Stack"]
 unique_name_in_owner = true
 layout_mode = 2

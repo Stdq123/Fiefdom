@@ -2,7 +2,7 @@ extends Node2D
 
 enum Phase { BANK, LEAP, WATER }
 
-const FROG := preload("res://assets/world/scriptoy/creek-frog.png")
+const FROG := preload("res://assets/characters/creek-frog.png")
 const CROAK := preload("res://assets/audio/creek-frog.wav")
 const HEARING_RANGE := 104.0
 const STARTLE_DISTANCE := 30.0
@@ -44,7 +44,7 @@ func _update_weather() -> void:
 	set_process(active)
 	if not active:
 		croak.stop()
-	body.self_modulate = Color("#9fae81") if Global.has_rain() else Color("#bbc68e")
+	body.self_modulate = Color("#bac397") if Global.has_rain() else Color.WHITE
 
 func _return_to_bank() -> void:
 	phase = Phase.BANK

@@ -24,7 +24,7 @@ static func describe_recovery(amount: Vector2i) -> String:
 
 static func icon(meal: String) -> AtlasTexture:
 	var texture := AtlasTexture.new()
-	texture.atlas = load("res://assets/world/travel-meals.svg")
+	texture.atlas = load("res://assets/world/travel-meals.png")
 	texture.region = Rect2(RECIPES[meal].frame * 32, 0, 32, 32)
 	texture.filter_clip = true
 	return texture

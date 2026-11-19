@@ -1,20 +1,17 @@
-[gd_scene load_steps=3 format=3 uid="uid://reclamation_panel_uid"]
+[gd_scene format=3 uid="uid://reclamation_panel_uid"]
 
 [ext_resource type="Script" path="res://scripts/ReclamationPanel.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/ui/estate-hud-skin.png" id="2_skin"]
+[ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="3_hud"]
 
-[sub_resource type="StyleBoxFlat" id="Ledger"]
-bg_color = Color(0.1216, 0.1804, 0.1412, 1)
-border_width_left = 1
-border_width_top = 2
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.66, 0.56, 0.36, 1)
-corner_radius_top_left = 6
-corner_radius_top_right = 6
-corner_radius_bottom_left = 6
-corner_radius_bottom_right = 6
-shadow_color = Color(0.06, 0.08, 0.06, 0.58)
-shadow_size = 6
+[sub_resource type="StyleBoxTexture" id="Ledger"]
+texture = ExtResource("2_skin")
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+axis_stretch_horizontal = 1
+region_rect = Rect2(192, 32, 32, 32)
 
 [node name="ReclamationPanel" type="Control"]
 layout_mode = 3
@@ -26,6 +23,7 @@ grow_vertical = 2
 script = ExtResource("1_script")
 
 [node name="Panel" type="Panel" parent="."]
+texture_filter = 1
 layout_mode = 0
 offset_left = 16.0
 offset_top = 16.0
@@ -42,6 +40,16 @@ offset_bottom = 46.0
 theme_override_colors/font_color = Color(0.94, 0.81, 0.56, 1)
 theme_override_font_sizes/font_size = 26
 text = "开垦井田"
+
+[node name="SurveyKit" type="TextureRect" parent="Panel"]
+layout_mode = 0
+offset_left = 264.0
+offset_top = 5.0
+offset_right = 340.0
+offset_bottom = 53.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Subtitle" type="Label" parent="Panel"]
 unique_name_in_owner = true
@@ -131,6 +139,7 @@ theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 
 [node name="Shortcuts" type="HBoxContainer" parent="Panel"]
+theme = ExtResource("3_hud")
 layout_mode = 0
 offset_left = 18.0
 offset_top = 341.0
@@ -139,6 +148,7 @@ offset_bottom = 377.0
 theme_override_constants/separation = 8
 
 [node name="VisitorButton" type="Button" parent="Panel/Shortcuts"]
+theme_type_variation = &"HudButton"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -146,6 +156,7 @@ mouse_default_cursor_shape = 2
 visible = false
 
 [node name="MarketButton" type="Button" parent="Panel/Shortcuts"]
+theme_type_variation = &"HudButton"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -154,6 +165,7 @@ visible = false
 text = "开垦备粮"
 
 [node name="WorksiteButton" type="Button" parent="Panel/Shortcuts"]
+theme_type_variation = &"HudButton"
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -162,6 +174,8 @@ visible = false
 text = "去工地"
 
 [node name="ReclaimButton" type="Button" parent="Panel"]
+theme = ExtResource("3_hud")
+theme_type_variation = &"HudPrimary"
 layout_mode = 0
 offset_left = 18.0
 offset_top = 390.0
@@ -171,6 +185,8 @@ mouse_default_cursor_shape = 2
 text = "立桩定界"
 
 [node name="CloseButton" type="Button" parent="Panel"]
+theme = ExtResource("3_hud")
+theme_type_variation = &"HudButton"
 layout_mode = 0
 offset_left = 197.0
 offset_top = 390.0

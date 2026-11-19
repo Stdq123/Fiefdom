@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://qhua4isi3pv1"
+path="res://.godot/imported/player-attire.png-04d15f2f7f91384f4e97842d60e3a88f.res"
+
+[deps]
+
+source_file="res://assets/characters/player-attire.png"
+dest_files=["res://.godot/imported/player-attire.png-04d15f2f7f91384f4e97842d60e3a88f.res"]
+
+[params]
+
+authored_at_2x=true

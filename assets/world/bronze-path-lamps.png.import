@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://b25a4i76ipybt"
+path="res://.godot/imported/bronze-path-lamps.png-ad4d315abd7033a6bf6d6fa469685b1c.res"
+
+[deps]
+
+source_file="res://assets/world/bronze-path-lamps.png"
+dest_files=["res://.godot/imported/bronze-path-lamps.png-ad4d315abd7033a6bf6d6fa469685b1c.res"]
+
+[params]
+
+authored_at_2x=true

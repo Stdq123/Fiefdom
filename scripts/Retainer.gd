@@ -3,10 +3,12 @@ class_name Retainer
 
 enum State { IDLE, MOVE, WORK }
 const ARROW_SCENE := preload("res://scenes/Arrow.tscn")
+const TILL_SOUND := preload("res://assets/audio/farm/till.wav")
 const WATER_SOUND := preload("res://assets/audio/farm/retainer-water.wav")
 const SOW_SOUND := preload("res://assets/audio/farm/sow.wav")
 const HARVEST_SOUND := preload("res://assets/audio/farm/harvest.wav")
 const WORK_GESTURES := {
+	Global.FieldJob.TILL: ToolGesture.Action.TILL,
 	Global.FieldJob.WATER: ToolGesture.Action.WATER,
 	Global.FieldJob.SOW: ToolGesture.Action.SOW,
 	Global.FieldJob.HARVEST: ToolGesture.Action.HARVEST,
@@ -35,8 +37,9 @@ var evening_path: Array[Vector2] = []
 func _ready() -> void:
 	if data == null:
 		data = RetainerData.new()
-	sprite.set_art(data.name, data.get_appearance_texture())
-	tool_gesture.sleeve = CharacterArt.neighbor_sleeve(data.name)
+	sprite.set_motion_sheet(CharacterArt.retainer_motion(data.name, data.school, data.visitor_appearance),
+		CharacterArt.WORKER_COLUMNS, data.name)
+	tool_gesture.sleeve = CharacterArt.retainer_sleeve(data.name, data.school, data.visitor_appearance)
 	home_position = global_position
 
 func set_interaction_focused(focused: bool) -> void:
@@ -52,7 +55,7 @@ func _physics_process(delta: float) -> void:
 	if is_queued_for_deletion():
 		return
 	if evening_seat.is_finite():
-		if not get_parent().pavilion_rest.visible:
+		if get_parent().pavilion_rest.seat_for(data) != evening_seat:
 			set_state(State.IDLE)
 		elif is_instance_valid(observer) and observer.conversation_open:
 			velocity = Vector2.ZERO
@@ -78,9 +81,12 @@ func _stand_at_stop() -> void:
 	if current_state != State.WORK and not tool_gesture.visible and is_instance_valid(observer):
 		sprite.face(observer.global_position - global_position)
 	elif resting_at_pavilion():
-		var table: Node2D = get_parent().pavilion_rest
-		sprite.face(table.global_position - global_position)
-	sprite.stand(Vector2(0, 2) if resting_at_pavilion() else tool_gesture.body_lean)
+		var pavilion: PavilionRest = get_parent().pavilion_rest
+		sprite.face(pavilion.gathering_center() - position)
+	if resting_at_pavilion():
+		sprite.stand(Vector2(0, 2))
+	else:
+		sprite.stand(tool_gesture.body_lean, tool_gesture.work_pose())
 
 func resting_at_pavilion() -> bool:
 	return evening_seat.is_finite() and current_state == State.IDLE
@@ -88,11 +94,13 @@ func resting_at_pavilion() -> bool:
 func pavilion_note() -> String:
 	if not evening_seat.is_finite():
 		return ""
+	if Global.has_rain():
+		return "亭东雨棚 · 檐下避雨" if resting_at_pavilion() else "正往亭东雨棚避雨"
 	return "南路亭 · 灯下歇脚" if resting_at_pavilion() else "正往南路亭"
 
 func restore_evening() -> void:
 	var seat: Vector2 = get_parent().pavilion_rest.seat_for(data)
-	if seat.is_finite() and VisitorData.seconds_since(PavilionRest.START) >= 6.0 and _field_target() == NO_CELL:
+	if seat.is_finite() and VisitorData.seconds_since(PavilionRest.rest_start()) >= 6.0 and _field_target() == NO_CELL:
 		position = seat
 		evening_seat = seat
 		_stand_at_stop()
@@ -103,6 +111,9 @@ func resume_duty_at_dawn() -> void:
 		set_state(State.IDLE)
 
 func _guard(delta: float) -> void:
+	var player: Player = get_parent().player
+	if player.combat_paused():
+		return
 	guard_cooldown = maxf(0.0, guard_cooldown - delta)
 	if guard_cooldown > 0.0:
 		return
@@ -134,7 +145,7 @@ func set_state(next: State) -> void:
 		if tool_gesture.carrying or work_left > 0.0:
 			tool_gesture.clear()
 		work_left = 0.0
-		sprite.stand(tool_gesture.body_lean)
+		sprite.stand(tool_gesture.body_lean, tool_gesture.work_pose())
 		find_work()
 	elif next == State.WORK:
 		velocity = Vector2.ZERO
@@ -147,6 +158,9 @@ func _finish_field_work() -> void:
 	var world := get_parent()
 	var sound: AudioStream
 	match field_job:
+		Global.FieldJob.TILL:
+			if Global.field_job(data, target_grid_pos) == Global.FieldJob.TILL and world.till_plot(target_grid_pos):
+				sound = TILL_SOUND
 		Global.FieldJob.WATER:
 			if world.water_crop(target_grid_pos):
 				sound = WATER_SOUND

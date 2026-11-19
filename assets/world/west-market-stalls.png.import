@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://dj0ap5pqthv8i"
+path="res://.godot/imported/west-market-stalls.png-f854d18f446093f91cc1e794a5968d0b.res"
+
+[deps]
+
+source_file="res://assets/world/west-market-stalls.png"
+dest_files=["res://.godot/imported/west-market-stalls.png-f854d18f446093f91cc1e794a5968d0b.res"]
+
+[params]
+
+authored_at_2x=true

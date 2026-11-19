@@ -1,0 +1,13 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://xaxohk8flbx6"
+path="res://.godot/imported/raft-landing.svg-3c61d73764467fb57bd46ad6a9a85c9f.res"
+
+[deps]
+
+source_file="res://assets/world/raft-landing.svg"
+dest_files=["res://.godot/imported/raft-landing.svg-3c61d73764467fb57bd46ad6a9a85c9f.res"]
+
+[params]

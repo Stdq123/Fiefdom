@@ -224,6 +224,8 @@ func _wear_sample_in_hall() -> void:
 
 func _save_batch_inside() -> bool:
 	await _press(ui.settings_button)
+	var saved_foot := player.global_position
+	var saved_facing := player.facing_direction()
 	var settings: Control = ui.panel_manager.settings_panel_instance
 	var saved := false
 	for button: Button in settings.find_children("*", "Button", true, false):
@@ -236,7 +238,7 @@ func _save_batch_inside() -> bool:
 	if not await _estate():
 		return false
 	return _expect(state.estate_room == state.EstateRoom.SILK_SHED and room.room_camera.is_current()
-		and player.global_position.is_equal_approx(room.get_node("Entry").global_position)
+		and player.global_position.is_equal_approx(saved_foot) and player.facing_direction() == saved_facing
 		and state.silk_workshop.nights_left == state.balance.silk_batch_nights, "Reload restores the active batch and workshop.")
 
 func _begin_batch() -> bool:

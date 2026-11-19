@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://bcj2ixk4b0cby"
+path="res://.godot/imported/autumn-guests.png-68720e70798b6a7ec6819ec59d94826b.res"
+
+[deps]
+
+source_file="res://assets/characters/autumn-guests.png"
+dest_files=["res://.godot/imported/autumn-guests.png-68720e70798b6a7ec6819ec59d94826b.res"]
+
+[params]
+
+authored_at_2x=true

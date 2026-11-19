@@ -90,8 +90,14 @@ func _farm() -> void:
 	var tiles: TileMapLayer = world.tile_map
 	await _click(tiles.get_global_transform_with_canvas() * tiles.map_to_local(PUBLIC))
 
-func _night() -> void:
+func _night(warning_text := "") -> void:
 	await _press(ui.sleep_button)
+	if not warning_text.is_empty():
+		var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
+		if not _expect(warning != null and warning_text in warning.text_label.text,
+			"The first-tribute warning precedes an intentional missed harvest or watering."):
+			return
+		await _press(warning.choices.back())
 	await tree.create_timer(1.12).timeout
 
 func _capture(name: String) -> void:
@@ -193,7 +199,7 @@ func _preference_and_defeat() -> void:
 	await _capture("06-autosave-setting")
 	await _press(_button(panel, "关闭"))
 	var catalog: Array[Dictionary] = state.saved_games()
-	await _night()
+	await _night("待浇")
 	_expect(state.current_day == 3 and state.saved_games() == catalog, "Turning autosave off still allows a normal night.")
 	state.hurt_player(state.health)
 	await tree.process_frame
@@ -212,7 +218,7 @@ func _preference_and_defeat() -> void:
 	await _press(_button(panel, "关闭"))
 	state.days_without_contribution = state.balance.no_contribution_threshold - 1
 	state.reputation = state.balance.rank_strip_threshold + state.balance.no_contribution_penalty
-	await _night()
+	await _night("声望")
 	_expect(state.outcome == state.Outcome.DEFEAT_ESTATE and state.saved_games() == catalog,
 		"The night that loses the estate never replaces the recovery points.")
 	hud = tree.current_scene.get_node("CampaignHUD")

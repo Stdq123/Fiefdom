@@ -1,19 +1,24 @@
 extends Node2D
 
+const TACKLE := preload("res://assets/world/fishing-tackle.png")
+const MARKER := Rect2(2, 1, 48, 58)
+const CREEL := Rect2(56, 18, 37, 34)
+
 @export var site: CreekFish.Site = CreekFish.Site.POOL
 @export var water := Vector2(32, 0)
 
 var hint: Label
 var focused := false
 var line_visible := false
-var rod_grip := Vector2.ZERO
+var rod_tip := Vector2.ZERO
 var phase_time := 0.0
 var submerged := false
+var tautness := 0.0
 
 func _ready() -> void:
 	hint = Label.new()
 	hint.material = preload("res://resources/world_hint_material.tres")
-	hint.position = Vector2(-94, -34)
+	hint.position = Vector2(-94, -48)
 	hint.size.x = 188
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -27,11 +32,12 @@ func _ready() -> void:
 	_refresh()
 
 func _refresh() -> void:
+	if line_visible:
+		hint.text = ""
+		return
 	var place: String = CreekFish.PLACES[site]
 	hint.text = place if site == CreekFish.Site.POND else place + "钓点"
-	if line_visible:
-		hint.text = place + " · 垂钓中"
-	elif focused:
+	if focused:
 		var reason := Global.fishing_block_reason(false, site)
 		var fish := Global.fish_at_today(site)
 		var offer := ("%s · 体力 −%d" % [CreekFish.SPECIES[fish].name, Global.balance.fishing_stamina_cost]
@@ -49,13 +55,14 @@ func set_interaction_focused(active: bool) -> void:
 func interact() -> void:
 	GameEvents.fishing_requested.emit(self)
 
-func show_line(angler: Vector2, time: float, in_water: bool) -> void:
+func show_line(world_tip: Vector2, time: float, in_water: bool, pull: float) -> void:
 	if not line_visible:
 		line_visible = true
 		_refresh()
-	rod_grip = to_local(angler) + Vector2(0, -9)
+	rod_tip = to_local(world_tip)
 	phase_time = time
 	submerged = in_water
+	tautness = pull
 	queue_redraw()
 
 func clear_line() -> void:
@@ -66,27 +73,40 @@ func clear_line() -> void:
 	queue_redraw()
 
 func _draw() -> void:
-	draw_rect(Rect2(-9, 1, 20, 4), Color("#273c32"))
-	draw_rect(Rect2(-6, -14, 3, 18), Color("#69543e"))
-	draw_rect(Rect2(-10, -16, 19, 10), Color("#5a4735"))
-	draw_rect(Rect2(-9, -15, 17, 7), Color("#ba9765"))
-	draw_rect(Rect2(-6, -12, 7, 1), Color("#4c665e"))
-	draw_rect(Rect2(-3, -13, 2, 3), Color("#4c665e"))
-	draw_rect(Rect2(4, -2, 8, 6), Color("#75644d"))
-	draw_rect(Rect2(4, -3, 8, 2), Color("#aa8d62"))
-	if not line_visible:
-		return
-	var float_at := (water + Vector2(sin(phase_time * 8.0) * 1.3, 1.0 if submerged else 0.0)).round()
-	var side := -1.0 if float_at.x < rod_grip.x else 1.0
-	var rod_tip := rod_grip + Vector2(side * 12.0, -9.0)
-	draw_line(rod_grip, rod_tip, Color("#503e30"), 2.3)
-	draw_line(rod_grip + Vector2(0, -1), rod_tip, Color("#bd9d64"), 1.15)
-	var bend := rod_tip.lerp(float_at, 0.55) + Vector2(0, -7)
-	draw_polyline(PackedVector2Array([rod_tip, bend, float_at]), Color("#ded3a5"), 0.85)
-	var ripple := 2.0 + fposmod(phase_time * 11.0, 6.0)
-	draw_arc(float_at, ripple, 0.0, TAU, 10, Color("#b3d4c295"), 0.75)
+	var shore := -1.0 if water.x > 0.0 else 1.0
+	var post := Vector2(4.0 * shore, -2.0)
+	draw_colored_polygon(PackedVector2Array([post + Vector2(-5, 1), post + Vector2(3, -1),
+		post + Vector2(10, 3), post + Vector2(6, 4), post + Vector2(-3, 3)]), Color("#293b355e"))
+	draw_texture_rect_region(TACKLE, Rect2(post + Vector2(-12, -26), MARKER.size * 0.5), MARKER)
+	_draw_creel(self, post + Vector2(shore * 12.0, 4.0))
+	if line_visible:
+		_draw_line()
+
+func _draw_creel(canvas: Node2D, foot: Vector2) -> void:
+	canvas.draw_colored_polygon(PackedVector2Array([foot + Vector2(-7, -1), foot + Vector2(2, -3),
+		foot + Vector2(10, 0), foot + Vector2(7, 2), foot + Vector2(-4, 2)]), Color("#26372f73"))
+	canvas.draw_texture_rect_region(TACKLE, Rect2(foot + Vector2(-9, -15), CREEL.size * 0.5), CREEL)
+
+func _draw_line() -> void:
+	var cast := smoothstep(0.02, 0.32, phase_time)
+	var drift := Vector2(sin(phase_time * 5.0) * (1.0 + tautness), 1.0 if submerged else 0.0)
+	var float_at := (rod_tip.lerp(water + drift, cast) + Vector2.UP * sin(cast * PI) * 7.0).snappedf(0.5)
+	var slack := (1.0 - tautness) * minf(4.0, rod_tip.distance_to(float_at) * 0.18)
+	var line := PackedVector2Array()
+	for i in 7:
+		var t := i / 6.0
+		line.append(rod_tip.lerp(float_at, t) + Vector2.DOWN * (4.0 * t * (1.0 - t) * slack))
+	draw_polyline(line, Color("#e0d8b5"), 0.72)
+	if cast >= 1.0:
+		var wave := fposmod((phase_time - 0.32) * (1.7 if submerged else 0.9), 1.0)
+		var arc := PackedVector2Array()
+		for i in 12:
+			var ring := Vector2.from_angle(TAU * i / 12.0 + 0.45) * (2.0 + wave * 6.0)
+			arc.append(float_at + ring * Vector2(1.0, 0.38))
+		draw_polyline(arc, Color(0.72, 0.84, 0.73, 0.84 - 0.65 * wave), 0.83)
 	if submerged:
-		draw_rect(Rect2(float_at - Vector2(1, 0), Vector2(2, 1)), Color("#f6dc9d"))
+		draw_rect(Rect2(float_at + Vector2(-1.0, -1.0), Vector2(2.5, 1.5)), Color("#f4dbaa"))
 	else:
-		draw_rect(Rect2(float_at - Vector2(1, 4), Vector2(2, 4)), Color("#f3c57a"))
-		draw_rect(Rect2(float_at - Vector2(1, 4), Vector2(2, 2)), Color("#ce6951"))
+		draw_rect(Rect2(float_at - Vector2(1.0, 5.5), Vector2(2, 5.5)), Color("#684e38"))
+		draw_rect(Rect2(float_at - Vector2(1.5, 4), Vector2(3, 2.5)), Color("#eedcaa"))
+		draw_rect(Rect2(float_at - Vector2(1.0, 6.0), Vector2(2, 2)), Color("#d77b55"))

@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/WardrobeFigure.gd" id="1_figure"]
+[ext_resource type="Script" path="res://scripts/ToolGesture.gd" id="2_tool"]
+
+[node name="WardrobeFigure" type="Control"]
+custom_minimum_size = Vector2(150, 140)
+mouse_filter = 2
+texture_filter = 1
+script = ExtResource("1_figure")
+
+[node name="Actor" type="Node2D" parent="."]
+
+[node name="Body" type="Sprite2D" parent="Actor"]
+position = Vector2(0, -6)
+hframes = 7
+vframes = 3
+
+[node name="Tool" type="Sprite2D" parent="Actor"]
+script = ExtResource("2_tool")

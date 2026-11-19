@@ -1,11 +1,18 @@
 extends StaticBody2D
 
+const ART := preload("res://assets/world/silk-interior.png")
 const SOUNDS := {
 	SilkWorkshop.Action.START_BATCH: preload("res://assets/audio/silk/leaves.wav"),
 	SilkWorkshop.Action.REEL: preload("res://assets/audio/silk/reel.wav"),
 	SilkWorkshop.Action.WEAVE: preload("res://assets/audio/silk/loom.wav"),
 }
 const REEL_HUB := Vector2(3, -25)
+const LEAF_SIZE := Vector2(8, 6)
+const WORM := Rect2(26, 212, 6, 4)
+const COCOON := Rect2(34, 212, 4, 5)
+const BOLT := Rect2(42, 212, 13, 6)
+const SHUTTLE := Rect2(58, 212, 9, 4)
+const HUB := Rect2(70, 212, 5, 5)
 
 @export var action := SilkWorkshop.Action.START_BATCH
 @onready var hint: Label = $Hint
@@ -81,29 +88,33 @@ func _draw_details() -> void:
 func _draw_leaves() -> void:
 	for shelf in 2:
 		for bundle in 5:
-			var leaf := Vector2(-15 + bundle * 6, -25 + shelf * 15 + (bundle * 3 + shelf) % 3)
-			details.draw_rect(Rect2(leaf, Vector2(6, 3)), Color("#708052"))
-			details.draw_rect(Rect2(leaf + Vector2(1, 0), Vector2(3, 1)), Color("#a6b36a"))
-		var crawl := Vector2(-10 + roundf(phase * 5.0), -23 + shelf * 15)
-		details.draw_rect(Rect2(crawl, Vector2(3, 1)), Color("#dbcd9e"))
+			var variant := (bundle + shelf) % 3
+			var leaf := Vector2(-16 + bundle * 6, -27 + shelf * 15 + (bundle + shelf) % 2)
+			_draw_at(leaf, Rect2(Vector2(variant * LEAF_SIZE.x, 212), LEAF_SIZE))
+		var crawl := Vector2(-11 + roundf(phase * 5.0), -25 + shelf * 15)
+		_draw_at(crawl, WORM)
 
 func _draw_reel(silk: SilkWorkshop) -> void:
 	for cocoon in mini(4, silk.cocoons):
-		var at := Vector2(-23 + cocoon * 3, -12 + cocoon % 2)
-		details.draw_rect(Rect2(at, Vector2(2, 3)), Color("#e2d3aa"))
+		var at := Vector2(-23 + cocoon * 4, -13 + cocoon % 2)
+		_draw_at(at, COCOON)
 	for spoke in 4:
 		var angle := phase * TAU * 2.0 + float(spoke) * PI * 0.5
-		var end := (REEL_HUB + Vector2.from_angle(angle) * 8.0).round()
-		details.draw_line(REEL_HUB, end, Color("#a78255"), 1.0)
-	details.draw_rect(Rect2(REEL_HUB - Vector2.ONE, Vector2(3, 3)), Color("#e4c897"))
+		var end := (REEL_HUB + Vector2.from_angle(angle) * 9.0).round()
+		details.draw_line(REEL_HUB, end, Color("#715639"), 3.0)
+		details.draw_line(REEL_HUB + Vector2.UP, end + Vector2.UP, Color("#b49665"), 1.0)
 	if silk.raw_silk > 0:
-		details.draw_line(Vector2(-19, -10), REEL_HUB, Color("#dbca9e"), 1.0)
+		details.draw_polyline(PackedVector2Array([Vector2(-19, -10), Vector2(-13, -18), REEL_HUB]),
+			Color("#d1bd91"), 1.0)
+	_draw_at(REEL_HUB - Vector2(2, 2), HUB)
 
 func _draw_loom(bolts: int) -> void:
 	if phase < 1.0:
 		var shuttle := roundf(sin(phase * TAU * 1.5) * 12.0)
-		details.draw_rect(Rect2(Vector2(shuttle - 3.0, -22), Vector2(7, 2)), Color("#794b31"))
+		_draw_at(Vector2(shuttle - 4.0, -23), SHUTTLE)
 	for bolt in mini(3, bolts):
 		var at := Vector2(13, -7 - bolt * 3)
-		details.draw_rect(Rect2(at, Vector2(11, 4)), Color("#d1bc90"))
-		details.draw_rect(Rect2(at, Vector2(9, 1)), Color("#e7d9b4"))
+		_draw_at(at, BOLT)
+
+func _draw_at(at: Vector2, region: Rect2) -> void:
+	details.draw_texture_rect_region(ART, Rect2(at, region.size), region)

@@ -99,6 +99,28 @@ theme_override_font_sizes/font_size = 15
 [node name="RosterDivider" type="HSeparator" parent="HBoxContainer/LeftPanel"]
 layout_mode = 2
 
+[node name="RosterMeal" type="HBoxContainer" parent="HBoxContainer/LeftPanel"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RosterMealSummary" type="Label" parent="HBoxContainer/LeftPanel/RosterMeal"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="RosterNightRations" type="Button" parent="HBoxContainer/LeftPanel/RosterMeal"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(91, 34)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 14
+text = "今夜安排"
+
 [node name="EmptyRoster" type="Label" parent="HBoxContainer/LeftPanel"]
 unique_name_in_owner = true
 visible = false
@@ -157,6 +179,16 @@ size_flags_horizontal = 3
 mouse_default_cursor_shape = 2
 fit_to_longest_item = false
 
+[node name="FillStewardPlans" type="CheckBox" parent="HBoxContainer/RightPanel/封地概览/StewardHandover"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(114, 34)
+layout_mode = 2
+button_pressed = true
+mouse_default_cursor_shape = 2
+text = "补齐续播"
+tooltip_text = "为没有安排的已翻田格补齐续播。可取消勾选，留作自己安排。"
+
 [node name="ApplySteward" type="Button" parent="HBoxContainer/RightPanel/封地概览/StewardHandover"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(145, 34)
@@ -164,7 +196,7 @@ layout_mode = 2
 mouse_default_cursor_shape = 2
 disabled = true
 text = "交给管事"
-tooltip_text = "分派当前井田并补齐续播。保留已有安排和正在生长的作物。"
+tooltip_text = "确认交接这块井田。现有的续播安排和在田作物会保留。"
 
 [node name="StewardPreview" type="Label" parent="HBoxContainer/RightPanel/封地概览"]
 unique_name_in_owner = true
@@ -209,11 +241,33 @@ theme_override_colors/font_color = Color(0.95, 0.82, 0.57, 1)
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 
-[node name="SeedPlanNote" type="Label" parent="HBoxContainer/RightPanel/封地概览"]
+[node name="SeedPlanDetails" type="HBoxContainer" parent="HBoxContainer/RightPanel/封地概览"]
 layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SeedPlanNote" type="Label" parent="HBoxContainer/RightPanel/封地概览/SeedPlanDetails"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.79, 0.82, 0.70, 1)
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
+
+[node name="IncludeUntilled" type="CheckBox" parent="HBoxContainer/RightPanel/封地概览/SeedPlanDetails"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+text = "包括未翻地"
+tooltip_text = "批量续播和补齐管事的安排也可标记未翻地。门客先翻地，再按安排播种。"
+
+[node name="SowingRations" type="Button" parent="HBoxContainer/RightPanel/封地概览/SeedPlanDetails"]
+visible = false
+custom_minimum_size = Vector2(136, 34)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+text = "查看今夜安排"
 
 [node name="GridContainer" type="GridContainer" parent="HBoxContainer/RightPanel/封地概览"]
 layout_mode = 2

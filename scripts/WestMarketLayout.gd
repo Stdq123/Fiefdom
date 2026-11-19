@@ -1,5 +1,8 @@
 extends RefCounted
 
+const STREET_HALF_WIDTH := 22.0
+const PAVING_HALF_WIDTH := 12.0
+const STREET_STONE := Color("#c0ae90")
 const BOUNDS := Rect2(-435, -200, 870, 426)
 const BASIN := Rect2(-250, -145, 60, 38)
 const FISH_PICKUP := Vector2(-198, -91)
@@ -7,6 +10,13 @@ const CART_STOP := Vector2(-262, 180)
 const EAST_GATE := Vector2(392, 36)
 const EAST_OUTSIDE := Vector2(526, 36)
 const SILK_JUNCTION := Vector2(206, 57)
+const DYE_JUNCTION := Vector2(273, 36)
+const DYE_HOUSE := Vector2(267, -22)
+const DYE_EAVE := Vector2(250, -12)
+const DYE_INDIGO_VAT := Vector2(232, 7)
+const DYE_RACK := Vector2(323, 1)
+const DYE_RACK_STOP := Vector2(319, 13)
+const DYE_DELIVERY := Vector2(249, 158)
 const FISH_JUNCTION := Vector2(-38, 61)
 const YARD_ENTRANCE := Vector2(-195, 117)
 const UNLOADING_YARD := Vector2(-272, 143)
@@ -15,12 +25,13 @@ const TAO_STOP := Vector2(233, 177)
 
 const MAIN_ROAD := [
 	GRAIN_COURT, UNLOADING_YARD, YARD_ENTRANCE, Vector2(-123, 73), FISH_JUNCTION,
-	Vector2(48, 74), Vector2(134, 76), SILK_JUNCTION, Vector2(273, 36), EAST_GATE,
+	Vector2(48, 74), Vector2(134, 76), SILK_JUNCTION, DYE_JUNCTION, EAST_GATE,
 ]
 const FISH_LANE := [
 	FISH_JUNCTION, Vector2(-41, 18), Vector2(-61, -32), Vector2(-96, -70), Vector2(-161, -112),
 ]
 const SILK_LANE := [SILK_JUNCTION, Vector2(233, 98), Vector2(248, 142), Vector2(244, 164), TAO_STOP, Vector2(180, 175)]
+const DYE_LANE := [DYE_JUNCTION, Vector2(271, 17), Vector2(259, 0), DYE_EAVE]
 const GRAIN_LANE := [GRAIN_COURT, Vector2(-340, 122)]
 const BOARD_LANE := [UNLOADING_YARD, Vector2(-280, 157)]
 const CART_DRIVE := [CART_STOP, Vector2(-218, 180), Vector2(-200, 156), YARD_ENTRANCE]

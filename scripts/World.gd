@@ -6,8 +6,8 @@ signal channel_feedback(message: String)
 signal visitor_changed(data: VisitorData)
 
 const SEED_ORDER := CropData.IDS
+const PRIVATE_SOIL_COLUMNS := [0, 2, 3]
 const FIELD_IMPACTS := preload("res://assets/farming/field-impacts.svg")
-const HARVEST_TEXT_OFFSET := -4.0
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
 const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
 const DUTY_STATIONS := {
@@ -18,9 +18,12 @@ const DUTY_STATIONS := {
 	RetainerData.Duty.HARVEST: {"anchor": Vector2(147, 113), "place": "田边"},
 	RetainerData.Duty.STEWARD: {"anchor": Vector2(119, 154), "place": "田边"},
 }
-enum FieldAction { NONE, TILL, SOW, WATER, HARVEST, CHANNEL, RAIN, WATERED, DRY_RICE, RICE_SEED }
+enum FieldAction { NONE, TILL, SOW, WATER, HARVEST, CHANNEL, RAIN, WATERED, DRY_RICE, RICE_SEED, NO_SEED_PLAN }
 const FIELD_COSTS := {
 	FieldAction.TILL: 2, FieldAction.SOW: 2, FieldAction.WATER: 1, FieldAction.HARVEST: 3,
+}
+const FIELD_WORK_LABELS := {
+	FieldAction.TILL: "翻地", FieldAction.SOW: "播种", FieldAction.WATER: "浇水", FieldAction.HARVEST: "收割",
 }
 
 @onready var tile_map: TileMapLayer = $TileMapLayer
@@ -43,6 +46,9 @@ var retainer_instances: Dictionary = {} # RetainerData -> Retainer Node
 var current_seed_id: String:
 	get: return Global.selected_seed_id
 	set(value): Global.selected_seed_id = value
+var sow_from_plan := false
+var prepare_empty_plots := false
+var replant_after_harvest := false
 
 var floating_text_scene = preload("res://scenes/FloatingText.tscn")
 var retainer_scene = preload("res://scenes/Retainer.tscn")
@@ -55,10 +61,6 @@ var sweep_action := FieldAction.NONE
 var sweep_field := Rect2i()
 var sweep_pointer := Vector2.ZERO
 var swept_cells: Dictionary[Vector2i, bool] = {}
-var sweep_harvests := 0
-var sweep_gains := Vector4i.ZERO
-var sweep_levy := 0
-var sweep_popup: Label
 
 func _ready() -> void:
 	# millet_data.crop_name = "黍" ... # Moved to ItemManager
@@ -72,12 +74,15 @@ func _ready() -> void:
 	GameEvents.road_provisions_delivered.connect(_on_road_provisions_delivered)
 	GameEvents.silk_sample_delivered.connect(_on_silk_sample_delivered)
 	GameEvents.herb_garden_feedback.connect(_on_herb_garden_feedback)
-	GameEvents.east_watch_built.connect(_refresh_defense_notice)
 	GameEvents.channel_survey_learned.connect(_on_channel_survey_learned)
 	for milestone in [GameEvents.road_rest_changed, GameEvents.channel_survey_learned, GameEvents.silk_sample_delivered,
 			GameEvents.ravine_journal_changed, GameEvents.east_watch_built]:
 		milestone.connect(_update_visitor_activity)
 	GameEvents.daylight_changed.connect(_update_visitor_clock)
+	GameEvents.raid_defeated.connect(_update_visitor_clock)
+	GameEvents.pavilion_story_heard.connect(pavilion_rest.refresh_table)
+	GameEvents.retainer_location_changed.connect(pavilion_rest.refresh_table)
+	GameEvents.council_tribute_rows_changed.connect(_redraw_well_fields)
 	GameEvents.tax_reform_choice_made.connect(_on_tax_reform_choice_made)
 	GameEvents.management_visibility_changed.connect(_end_sweep.unbind(1))
 	GameEvents.estate_room_changed.connect(_on_estate_room_changed)
@@ -90,10 +95,7 @@ func _ready() -> void:
 		Global.well_fields[0]["is_unlocked"] = true  # First field is already ready
 		Global.well_fields[0]["reclamation_progress"] = Global.RECLAMATION_NIGHTS
 		print("Initialized first well field at (5, 5)")
-	for field in Global.well_fields:
-		if field["is_unlocked"]:
-			_draw_well_field(field["center_pos"])
-	$TileMapLayer/WellFieldMarker.refresh_markers()
+	_redraw_well_fields()
 
 	# Setup Navigation (Runtime generation for prototype)
 	setup_navigation()
@@ -107,10 +109,11 @@ func _ready() -> void:
 
 	# Restore crop visuals
 	restore_crops_visuals()
+	if not Global.is_indoors():
+		player.restore_walking_checkpoint(EstateLayout.BOUNDS)
 
 	if Global.raid_day > 0:
 		_spawn_raider()
-	_refresh_defense_notice.call_deferred()
 
 func _process(_delta: float) -> void:
 	if scheduled_visitor and scheduled_visitor.silk_trip() == VisitorData.SilkTrip.WEST_ROAD:
@@ -125,12 +128,6 @@ func _spawn_raider() -> void:
 		enemy.position = EstateLayout.EAST_RAID_SNARE
 	add_child(enemy)
 	print("Raid on day ", Global.raid_day, " enemy ", enemy.type)
-
-func _refresh_defense_notice() -> void:
-	if Global.defense_review_ready() and not Global.is_raid_day(Global.current_day + 1):
-		GameEvents.world_notice.emit("东路已守住 · 可找弋戎复盘")
-	else:
-		GameEvents.world_notice.emit("")
 
 func get_random_crop_pos() -> Vector2i:
 	if active_crops.is_empty():
@@ -172,6 +169,22 @@ func nearest_worksite() -> int:
 func restore_crops_visuals() -> void:
 	for grid_pos in active_crops:
 		_draw_crop(grid_pos)
+
+func wait_for_retainers() -> Dictionary:
+	var result := Global.wait_for_field_work()
+	if result.is_empty():
+		return result
+	for cell: Vector2i in Global.tilled_cells:
+		if tile_map.get_cell_atlas_coords(cell).y == 0:
+			_draw_tilled_plot(cell)
+	crops_layer.clear()
+	restore_crops_visuals()
+	for worker: Retainer in retainer_instances.values():
+		if worker.data.works_fields() and worker.target_grid_pos != Retainer.NO_CELL:
+			worker.set_state(Retainer.State.IDLE)
+	if result.first_tribute:
+		_announce_first_tribute()
+	return result
 
 func _draw_crop(grid_pos: Vector2i) -> void:
 	var crop: Dictionary = active_crops[grid_pos]
@@ -223,9 +236,10 @@ func duty_place(data: RetainerData) -> String:
 	return DUTY_STATIONS[data.duty]["place"]
 
 func path_to_pavilion_seat(from: Vector2, seat: Vector2) -> Array[Vector2]:
-	var table := pavilion_rest.position
+	var table := pavilion_rest.gathering_center()
 	var path: Array[Vector2] = []
-	if from.distance_to(table) > 56.0:
+	var coming_from_road := from.distance_to(table) > 56.0
+	if coming_from_road:
 		var start := from
 		if start.x < 0.0 and start.y < 146.0:
 			start.x = 17.0 # Pass the east side of the silk shed.
@@ -235,6 +249,13 @@ func path_to_pavilion_seat(from: Vector2, seat: Vector2) -> Array[Vector2]:
 			start = LANDSCAPE.EAST_LANE_JUNCTION
 		path.append_array(Array(_follow_lane(LANDSCAPE.ESTATE_SOUTH_LANE, start, EstateLayout.PAVILION_JUNCTION)))
 		path.append_array(EstateLayout.PAVILION_COURT.slice(0, -1))
+	if pavilion_rest.is_rain_shelter():
+		var approach := EstateLayout.PAVILION_SHELTER_APPROACH
+		if coming_from_road:
+			path.append_array(EstateLayout.PAVILION_SHELTER_PATH)
+		elif from.y >= approach.y:
+			path.append(approach)
+	elif coming_from_road:
 		if seat.y < table.y:
 			path.append(table + Vector2(-27, -14))
 		elif seat.x > table.x:
@@ -255,6 +276,7 @@ func _on_retainer_assigned(data: RetainerData, _grid_pos: Vector2i) -> void:
 
 func _on_retainer_duty_changed(data: RetainerData) -> void:
 	_refresh_duty_stations(data)
+	pavilion_rest.refresh_table()
 
 func _on_retainer_recruited(data: RetainerData) -> void:
 	spawn_retainer(data)
@@ -281,10 +303,12 @@ func _on_retainer_departed(data: RetainerData) -> void:
 	elif data.name == VisitorData.RAVINE_GUIDE:
 		_refresh_handoff_visitor()
 		_report_visitor_activity()
+	pavilion_rest.refresh_table()
 
 func _on_road_provisions_delivered() -> void:
 	var cell := tile_map.local_to_map(tile_map.to_local(player.global_position))
 	spawn_floating_text(cell, "路粮已备 · 声望 +%d" % Global.balance.interaction_reputation_gain, Color("#efce80"))
+	pavilion_rest.refresh_table()
 
 func _on_silk_sample_delivered() -> void:
 	var cell := tile_map.local_to_map(tile_map.to_local(player.global_position))
@@ -300,10 +324,7 @@ func _on_channel_survey_learned() -> void:
 func _on_tax_reform_choice_made(choice: Global.TaxReformChoice) -> void:
 	match choice:
 		Global.TaxReformChoice.REFORMED:
-			for field in Global.well_fields:
-				if field["is_unlocked"]:
-					_draw_well_field(field["center_pos"])
-			$TileMapLayer/WellFieldMarker.refresh_markers()
+			_redraw_well_fields()
 			GameEvents.world_notice.emit("新税册已启用 · 收成入私仓，铜钱扣税后入账")
 		Global.TaxReformChoice.TRADITIONAL:
 			GameEvents.world_notice.emit("已定旧制 · 继续收公田纳贡，可在蚕桑页进献丝绸")
@@ -311,34 +332,169 @@ func _on_tax_reform_choice_made(choice: Global.TaxReformChoice) -> void:
 func is_crop_dry(grid_pos: Vector2i) -> bool:
 	return Global.field_crop_is_dry(grid_pos)
 
-func find_field_task(status: int, public_only := false) -> Variant:
+func rotation_site() -> Dictionary:
+	if not Global.field_rotation.waiting_for_harvest():
+		return {}
+	var tracked: Variant = Global.rotation_route_cell
+	if tracked != null and Global.field_route_status in Global.ROTATION_ROUTES:
+		var target := rotation_plot(tracked)
+		if target.get("route", -1) == Global.field_route_status:
+			for field: Dictionary in Global.well_fields:
+				var center: Vector2i = field.center_pos
+				if field.is_unlocked and Rect2i(center - Vector2i.ONE, Vector2i(3, 3)).has_point(tracked):
+					return {"cell": tracked, "field": field.field_id + 1, "route": target.route, "seed": target.seed}
+	var best := {}
+	var best_priority := 0
+	var best_effort := INF
+	for field: Dictionary in Global.well_fields:
+		if not field.is_unlocked:
+			continue
+		var center: Vector2i = field.center_pos
+		for y in range(1, -2, -1):
+			for x in [0, -1, 1]:
+				var cell := center + Vector2i(x, y)
+				var target := rotation_plot(cell)
+				if target.is_empty():
+					continue
+				var cost := _rotation_plot_cost(cell, target)
+				if cost.x > best_priority or (cost.x == best_priority and cost.y < best_effort):
+					best_priority = cost.x
+					best_effort = cost.y
+					best = target
+					best["cell"] = cell
+					best["field"] = field.field_id + 1
+	return best
+
+func rotation_plot(cell: Vector2i) -> Dictionary:
+	if not Global.field_rotation.waiting_for_harvest() or Global.is_public_plot(cell) \
+			or tile_map.get_cell_source_id(cell) < 0:
+		return {}
+	var crop: Dictionary = active_crops.get(cell, {})
+	var fertile := Global.fertile_cells.has(cell)
+	var route := Global.RotationRoute.BEANS
+	var seed := "beans"
+	if crop.is_empty():
+		if fertile:
+			route = Global.RotationRoute.FOLLOWUP
+			seed = "millet"
+	elif not crop.data.restores_fertility:
+		if fertile:
+			route = Global.RotationRoute.FOLLOWUP
+		elif crop.data.is_perennial:
+			return {}
+		else:
+			route = Global.RotationRoute.CLEAR
+	if not crop.is_empty():
+		seed = ""
+	return {"route": route, "seed": seed}
+
+func _rotation_plot_cost(cell: Vector2i, target: Dictionary) -> Vector2i:
+	var crop: Dictionary = active_crops.get(cell, {})
+	if crop.is_empty():
+		var planned := Global.planned_field_seed(cell)
+		var matches_plan: bool = planned.is_empty() or (target.route == Global.RotationRoute.FOLLOWUP) == (planned != "beans")
+		var priority := 4 if target.route == Global.RotationRoute.FOLLOWUP else 2
+		# Prefer an open plot over asking the player to race an incompatible sowing plan.
+		return Vector2i(priority if matches_plan else 0, int(not Global.tilled_cells.has(cell)))
+	var status := Global.crop_night_status(cell)
+	if status == Global.NightGrowth.BLOCKED:
+		return Vector2i(0 if target.route == Global.RotationRoute.FOLLOWUP else -1, 0)
+	var remaining: int = crop.growth_nights - crop.age
+	var effort := remaining * 2 + int(status == Global.NightGrowth.DRY)
+	match target.route:
+		Global.RotationRoute.FOLLOWUP: return Vector2i(5, effort)
+		Global.RotationRoute.BEANS: return Vector2i(3, effort)
+	return Vector2i(1, effort)
+
+func rotation_plot_caption(cell: Vector2i) -> String:
+	var target := rotation_plot(cell)
+	if target.is_empty():
+		return "轮作私田"
+	var prefix := "留肥私田" if Global.fertile_cells.has(cell) else "轮作私田"
+	var action := field_action(cell)
+	var cost := field_cost(action)
+	if cost > Global.current_stamina:
+		return "%s · 体力还差 %d" % [prefix, cost - Global.current_stamina]
+	if action == FieldAction.TILL:
+		return prefix + " · 翻地"
+	if not active_crops.has(cell):
+		var seed: String = target.seed
+		var planted := planting_seed(cell)
+		var selected := ItemManager.get_crop(planted)
+		if target.route == Global.RotationRoute.BEANS and planted != seed:
+			return prefix + " · 换菽种"
+		if target.route == Global.RotationRoute.FOLLOWUP and (not selected or selected.restores_fertility):
+			return prefix + " · 换种（如黍）"
+		if action == FieldAction.RICE_SEED:
+			return prefix + " · 稻需渠水，可换黍"
+		return "%s · 播%s" % [prefix, selected.crop_name]
+	match Global.crop_night_status(cell):
+		Global.NightGrowth.READY: return prefix + " · 收" + active_crops[cell].data.crop_name
+		Global.NightGrowth.DRY: return prefix + " · 待浇水"
+		Global.NightGrowth.BLOCKED: return prefix + " · 稻田断水"
+		Global.NightGrowth.RIPEN: return prefix + " · 明早可收"
+	return prefix + " · 供水后过夜"
+
+func find_field_task(status: int, scope := Global.FieldScope.ALL, previous: Variant = null, returning := false) -> Variant:
 	if status == Global.MulberryRoute.PLANT:
 		return _find_mulberry_planting_site()
 	if status == Global.TributeRoute.TEND:
 		return Global.tribute_field_plan().get("cell")
+	if status in Global.ROTATION_ROUTES:
+		var cell: Variant = Global.rotation_route_cell
+		return cell if cell != null and matches_field_route(cell, status) else null
 	var nearest: Variant = null
 	var distance := INF
-	var public_selected := false
-	var start := estate_player_point()
-	for cell: Vector2i in active_crops:
-		if not matches_field_route(cell, status):
+	var preferred_selected := false
+	var start := get_crop_world_pos(previous) if returning and previous != null else estate_player_point()
+	var planned_sowing := status == Global.SowingRoute.READY
+	var prefer_same_field := planned_sowing or returning
+	var candidates: Dictionary = Global.field_seed_plans if planned_sowing else active_crops
+	var current_field := _working_field_at(previous) if prefer_same_field and previous != null else Rect2i()
+	for cell: Vector2i in candidates:
+		if not Global.field_scope_matches(cell, scope) or not matches_field_route(cell, status):
 			continue
 		var is_public := Global.is_public_plot(cell)
-		if (public_only or public_selected) and not is_public:
+		var preferred := current_field.has_point(cell) if prefer_same_field else is_public
+		if preferred_selected and not preferred:
 			continue
-		var distance_to_crop := start.distance_squared_to(get_crop_world_pos(cell))
-		if is_public != public_selected or distance_to_crop < distance:
+		var distance_to_plot := start.distance_squared_to(get_crop_world_pos(cell))
+		if preferred != preferred_selected or distance_to_plot < distance:
 			nearest = cell
-			distance = distance_to_crop
-			public_selected = is_public
+			distance = distance_to_plot
+			preferred_selected = preferred
 	return nearest
 
+func resumed_field_job(work: Dictionary) -> Dictionary:
+	if work.is_empty():
+		return {}
+	var status: int = work.status
+	var scope: Global.FieldScope = work.scope
+	var previous: Vector2i = work.cell
+	if status == Global.OrderFieldRoute.PREPARE:
+		var order := Global.season_order_work(Global.pinned_season_order())
+		return {} if order.is_empty() else {"status": status, "scope": scope, "cell": order.cell, "order": order}
+	if status in Global.ROTATION_ROUTES:
+		var plot := rotation_plot(previous)
+		if plot.is_empty():
+			return {}
+		var seed: String = plot.seed if plot.route != status and not plot.seed.is_empty() else work.seed
+		return {"status": plot.route, "scope": scope, "cell": previous, "seed": seed}
+	var cell: Variant = previous
+	if status == Global.TributeRoute.TEND or not Global.field_scope_matches(previous, scope) or not matches_field_route(previous, status):
+		cell = find_field_task(status, scope, previous, true)
+	return {} if cell == null else {"status": status, "scope": scope, "cell": cell}
+
 func matches_field_route(cell: Vector2i, status: int) -> bool:
+	if status == Global.SowingRoute.READY:
+		return not Global.planned_field_seed(cell).is_empty()
 	if status == Global.TributeRoute.TEND:
 		return Global.is_public_plot(cell)
 	if status == Global.OrderFieldRoute.HARVEST:
 		var schedule := Global.pinned_season_order()
 		return not schedule.is_empty() and Global.is_season_order_harvest(cell, schedule)
+	if status in Global.ROTATION_ROUTES:
+		return rotation_plot(cell).get("route", -1) == status
 	if status == Global.MulberryRoute.PLANT:
 		return (tile_map.get_cell_source_id(cell) >= 0 and not Global.is_public_plot(cell)
 			and not active_crops.has(cell) and not Global.field_seed_plans.has(cell))
@@ -381,14 +537,16 @@ func is_crop_ripe(grid_pos: Vector2i) -> bool:
 
 func council_harvest_forecast(choice: Global.TaxReformChoice) -> Dictionary:
 	var totals := {"plots": 0, "tribute": 0, "stock": 0, "copper": 0, "leaves": 0, "levy": 0}
-	var rate := clampf(Global.balance.reformed_tax_rate, 0.0, 1.0)
+	var include_council_rows := choice == Global.TaxReformChoice.NONE
+	var rate := (Global.tax_rate if Global.tax_reform_choice == Global.TaxReformChoice.REFORMED
+		else clampf(Global.balance.reformed_tax_rate, 0.0, 1.0))
 	for cell: Vector2i in active_crops:
 		var tile := tile_map.get_cell_tile_data(cell)
 		if tile == null or not is_crop_ripe(cell):
 			continue
 		var crop: Dictionary = active_crops[cell]
 		var data: CropData = crop["data"]
-		var proceeds := Global.harvest_proceeds(Global.is_public_plot(cell), data.sell_price,
+		var proceeds := Global.harvest_proceeds(Global.is_public_plot(cell, include_council_rows), data.sell_price,
 			Global.crop_rotation_bonus(cell, data), choice, rate)
 		totals["plots"] += 1
 		for resource in ["tribute", "stock", "copper", "levy"]:
@@ -409,11 +567,15 @@ func crop_job(worker: Retainer, cell: Vector2i) -> Global.FieldJob:
 
 func find_work_crop(worker: Retainer) -> Vector2i:
 	var assigned := worker.data.assigned_area
-	if assigned != Retainer.NO_CELL and crop_job(worker, assigned) != Global.FieldJob.NONE:
+	if Global.tilled_cells.has(assigned) and crop_job(worker, assigned) != Global.FieldJob.NONE:
 		return assigned
 	var nearest := Retainer.NO_CELL
 	var distance := INF
-	for cell: Vector2i in Global.tilled_cells:
+	for cell: Vector2i in Global.field_work_cells():
+		if Global.tilled_cells.has(nearest) and not Global.tilled_cells.has(cell):
+			break
+		if cell == assigned and crop_job(worker, cell) != Global.FieldJob.NONE:
+			return cell
 		var distance_to_crop := worker.global_position.distance_squared_to(to_global(get_crop_world_pos(cell)))
 		if distance_to_crop < distance and crop_job(worker, cell) != Global.FieldJob.NONE:
 			distance = distance_to_crop
@@ -427,14 +589,20 @@ func water_crop(grid_pos: Vector2i) -> bool:
 	print("Crop watered at ", grid_pos)
 	return true
 
+func _redraw_well_fields() -> void:
+	for field in Global.well_fields:
+		if field.is_unlocked:
+			_draw_well_field(field.center_pos)
+	$TileMapLayer/WellFieldMarker.refresh_markers()
+
 func _draw_well_field(center: Vector2i) -> void:
-	var public_center := Global.is_public_plot(center)
 	for x in range(-1, 2):
 		for y in range(-1, 2):
 			var coords := center + Vector2i(x, y)
-			var public_field := coords == center and public_center
+			var texture_variant := posmod(coords.x * 5 + coords.y * 7, PRIVATE_SOIL_COLUMNS.size())
+			var column: int = 1 if Global.is_public_plot(coords) else PRIVATE_SOIL_COLUMNS[texture_variant]
 			var soil := 1 if Global.tilled_cells.has(coords) else 0
-			tile_map.set_cell(coords, 0, Vector2i(1 if public_field else 0, soil))
+			tile_map.set_cell(coords, 0, Vector2i(column, soil))
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_PAUSED:
@@ -487,6 +655,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			_edit_channel(grid_pos, _fill_held(event))
 			get_viewport().set_input_as_handled()
 		else:
+			if _fill_held(event):
+				_apply_field_batch(grid_pos)
+				get_viewport().set_input_as_handled()
+				return
 			_begin_sweep(grid_pos, event.position)
 			if handle_interaction(grid_pos):
 				get_viewport().set_input_as_handled()
@@ -501,19 +673,150 @@ func _fill_held(event: InputEventMouse) -> bool:
 	return (GamepadInput.filling or Input.is_action_pressed(KeyBindings.FILL)
 		or (Preferences.binding(KeyBindings.FILL) == KEY_SHIFT and event.shift_pressed))
 
+func _working_field_at(cell: Vector2i) -> Rect2i:
+	for field in Global.well_fields:
+		var bounds := Rect2i(field["center_pos"] - Vector2i.ONE, Vector2i(3, 3))
+		if field["is_unlocked"] and bounds.has_point(cell):
+			return bounds
+	return Rect2i()
+
+func field_batch_targets(cell: Vector2i, action: FieldAction) -> Array[Vector2i]:
+	var targets: Array[Vector2i] = []
+	if not FIELD_COSTS.has(action) or Global.outcome != Global.Outcome.RUNNING:
+		return targets
+	var scope := harvest_batch_scope() if action == FieldAction.HARVEST else Global.FieldScope.ALL
+	if not Global.field_scope_matches(cell, scope):
+		return targets
+	var bounds := _working_field_at(cell)
+	for y in range(bounds.position.y, bounds.end.y):
+		for x in range(bounds.position.x, bounds.end.x):
+			var plot := Vector2i(x, y)
+			if Global.field_scope_matches(plot, scope) and field_action(plot) == action:
+				targets.append(plot)
+	return targets
+
+func harvest_batch_scope() -> Global.FieldScope:
+	return Global.field_route_scope if Global.field_route_status == Global.NightGrowth.READY else Global.FieldScope.ALL
+
+func batch_harvest_totals(plots: Array[Vector2i]) -> Dictionary:
+	var totals := {"tribute": 0, "stock": 0, "copper": 0, "levy": 0, "leaves": 0}
+	for cell in plots:
+		var crop: Dictionary = active_crops[cell]
+		var data: CropData = crop.data
+		var public_plot := Global.is_public_plot(cell)
+		var proceeds := Global.harvest_proceeds(public_plot, data.sell_price, Global.crop_rotation_bonus(cell, data),
+			Global.tax_reform_choice, Global.tax_rate)
+		for key in proceeds:
+			totals[key] += proceeds[key]
+		if not public_plot and crop.id == "mulberry":
+			totals.leaves += proceeds.stock * Global.balance.mulberry_leaves_per_harvest
+	return totals
+
+func harvest_replanting(plots: Array[Vector2i]) -> Dictionary:
+	if not replant_after_harvest:
+		return {}
+	var seeds: Dictionary[Vector2i, String] = {}
+	for plot in plots:
+		var seed := Global.planned_seed_after_harvest(plot)
+		if not seed.is_empty():
+			seeds[plot] = seed
+	if seeds.is_empty():
+		return {}
+	var work := _planting_work(seeds)
+	work.cost += plots.size() * field_cost(FieldAction.HARVEST)
+	return work
+
+func _apply_field_batch(cell: Vector2i) -> void:
+	var action := field_action(cell)
+	if uses_preparation(action):
+		_apply_field_preparation(cell)
+		return
+	var targets := field_batch_targets(cell, action)
+	if targets.is_empty():
+		return
+	var replanting := harvest_replanting(targets) if action == FieldAction.HARVEST else {}
+	var cost: int = replanting.get("cost", field_cost(action) * targets.size())
+	if cost > Global.current_stamina:
+		var job := "整田" if replanting.is_empty() else "收后续播"
+		spawn_floating_text(cell, "体力不足 · %s需 %d" % [job, cost], Color.SALMON)
+		return
+	# Use the ordinary per-plot settlement so public yield, rotation and harvest receipts stay in sync.
+	# Apply the aimed plot last so the character finishes the action facing the cursor.
+	var seeds: Dictionary[Vector2i, String] = {}
+	if not replanting.is_empty():
+		seeds = replanting.seeds
+	targets.erase(cell)
+	targets.append(cell)
+	for plot in targets:
+		handle_interaction(plot)
+		if seeds.has(plot):
+			_prepare_plot(plot)
+	if not replanting.is_empty():
+		player.show_action(Player.Action.HARVEST, to_global(get_crop_world_pos(cell)))
+		spawn_floating_text(cell, "批收 %d 格 · 续播 %d 格" % [targets.size(), seeds.size()], Color.WHEAT)
+	elif action != FieldAction.HARVEST:
+		spawn_floating_text(cell, "%s %d 格 · −%d 体力" % [FIELD_WORK_LABELS[action], targets.size(), cost], Color.WHEAT)
+
+func uses_preparation(action: FieldAction) -> bool:
+	return prepare_empty_plots and action in [FieldAction.TILL, FieldAction.SOW, FieldAction.RICE_SEED, FieldAction.NO_SEED_PLAN]
+
+func field_preparation(cell: Vector2i) -> Dictionary:
+	if Global.outcome != Global.Outcome.RUNNING or Global.planned_field_seed(cell, true).is_empty():
+		return {}
+	var bounds := _working_field_at(cell)
+	if not bounds.has_area():
+		return {}
+	var seeds: Dictionary[Vector2i, String] = {}
+	for y in range(bounds.position.y, bounds.end.y):
+		for x in range(bounds.position.x, bounds.end.x):
+			var plot := Vector2i(x, y)
+			var seed := Global.planned_field_seed(plot, true)
+			if not seed.is_empty():
+				seeds[plot] = seed
+	return _planting_work(seeds)
+
+func _planting_work(seeds: Dictionary[Vector2i, String]) -> Dictionary:
+	var to_till := 0
+	var to_water := 0
+	var rain := Global.has_rain()
+	for plot in seeds:
+		to_till += int(not Global.tilled_cells.has(plot))
+		to_water += int(not rain and not Global.irrigation.supplies(plot))
+	var cost := to_till * field_cost(FieldAction.TILL) + seeds.size() * field_cost(FieldAction.SOW) + to_water * field_cost(FieldAction.WATER)
+	return {"seeds": seeds, "till": to_till, "water": to_water, "cost": cost}
+
+func _apply_field_preparation(cell: Vector2i) -> void:
+	var work := field_preparation(cell)
+	if work.is_empty():
+		return
+	if work.cost > Global.current_stamina:
+		spawn_floating_text(cell, "体力不足 · 整备需 %d" % work.cost, Color.SALMON)
+		return
+	for plot: Vector2i in work.seeds:
+		if plot != cell:
+			_prepare_plot(plot)
+	_prepare_plot(cell)
+	spawn_floating_text(cell, "整备 %d 格 · −%d 体力" % [work.seeds.size(), work.cost], Color.WHEAT)
+
+func _prepare_plot(cell: Vector2i) -> void:
+	if field_action(cell) == FieldAction.TILL:
+		handle_interaction(cell)
+	if field_action(cell) == FieldAction.SOW:
+		handle_interaction(cell)
+	if field_action(cell) == FieldAction.WATER:
+		handle_interaction(cell)
+
 func _begin_sweep(cell: Vector2i, pointer: Vector2) -> void:
 	var action := field_action(cell)
 	var cost := field_cost(action)
 	if cost == 0 or cost > Global.current_stamina:
 		return
-	for field in Global.well_fields:
-		var bounds := Rect2i(field["center_pos"] - Vector2i.ONE, Vector2i(3, 3))
-		if field["is_unlocked"] and bounds.has_point(cell):
-			sweep_field = bounds
-			sweep_pointer = pointer
-			sweep_action = action
-			swept_cells[cell] = true
-			return
+	var bounds := _working_field_at(cell)
+	if bounds.has_area():
+		sweep_field = bounds
+		sweep_pointer = pointer
+		sweep_action = action
+		swept_cells[cell] = true
 
 func _sweep_to(pointer: Vector2) -> void:
 	if pointer == sweep_pointer:
@@ -563,23 +866,58 @@ func _stroke_cell(point: Vector2, inward: Vector2i) -> Vector2i:
 func _end_sweep() -> void:
 	sweep_action = FieldAction.NONE
 	swept_cells.clear()
-	sweep_harvests = 0
-	sweep_gains = Vector4i.ZERO
-	sweep_levy = 0
-	sweep_popup = null
 
 func field_at(viewport_point: Vector2) -> Vector2i:
 	return tile_map.local_to_map(tile_map.make_canvas_position_local(viewport_point))
 
 func select_seed(seed_id: String) -> void:
-	if current_seed_id != seed_id and SEED_ORDER.has(seed_id):
+	if SEED_ORDER.has(seed_id) and (sow_from_plan or current_seed_id != seed_id):
 		_end_sweep()
+		sow_from_plan = false
+		prepare_empty_plots = false
+		replant_after_harvest = false
 		current_seed_id = seed_id
 		seed_selected.emit(seed_id)
 
+func set_sow_from_plan(active: bool) -> void:
+	if active != sow_from_plan and (not active or not Global.field_seed_plans.is_empty()):
+		_end_sweep()
+		sow_from_plan = active
+		if not active:
+			prepare_empty_plots = false
+			replant_after_harvest = false
+		seed_selected.emit(current_seed_id)
+
+func set_prepare_empty_plots(active: bool) -> void:
+	if sow_from_plan and prepare_empty_plots != active:
+		_end_sweep()
+		prepare_empty_plots = active
+		seed_selected.emit(current_seed_id)
+
+func set_replant_after_harvest(active: bool) -> void:
+	if sow_from_plan and replant_after_harvest != active:
+		_end_sweep()
+		replant_after_harvest = active
+		seed_selected.emit(current_seed_id)
+
 func _cycle_seed(step: int) -> void:
-	if not channel_mode and not Global.is_indoors():
-		select_seed(SEED_ORDER[posmod(SEED_ORDER.find(current_seed_id) + step, SEED_ORDER.size())])
+	if channel_mode or Global.is_indoors():
+		return
+	var plan_index := SEED_ORDER.size()
+	var count := plan_index + int(sow_from_plan or not Global.field_seed_plans.is_empty())
+	var selected := plan_index if sow_from_plan else SEED_ORDER.find(current_seed_id)
+	var next := posmod(selected + step, count)
+	if next == plan_index:
+		set_sow_from_plan(true)
+	else:
+		select_seed(SEED_ORDER[next])
+
+func planting_seed(cell: Vector2i) -> String:
+	if not sow_from_plan:
+		return current_seed_id
+	if Global.deferred_field_sowing.has(cell):
+		return ""
+	return Global.next_seed_for_plan(cell, Global.field_seed_plans.get(cell, ""))
 
 func set_channel_mode(enabled: bool) -> void:
 	var editing: bool = enabled and not Global.is_indoors() and Global.tech_unlocked["irrigation"]
@@ -641,10 +979,12 @@ func field_action(grid_pos: Vector2i) -> FieldAction:
 	match tile_map.get_cell_atlas_coords(grid_pos).y:
 		0: return FieldAction.TILL
 		1:
-			var seed := ItemManager.get_crop(current_seed_id)
-			if seed and seed.is_water_crop and not Global.irrigation.supplies(grid_pos):
+			var seed := ItemManager.get_crop(planting_seed(grid_pos))
+			if not seed:
+				return FieldAction.NO_SEED_PLAN if sow_from_plan else FieldAction.NONE
+			if seed.is_water_crop and not Global.irrigation.supplies(grid_pos):
 				return FieldAction.RICE_SEED
-			return FieldAction.SOW if seed else FieldAction.NONE
+			return FieldAction.SOW
 	return FieldAction.NONE
 
 func field_cost(action: FieldAction) -> int:
@@ -656,7 +996,7 @@ func field_message(grid_pos: Vector2i, action: FieldAction) -> String:
 	match action:
 		FieldAction.TILL: return "翻地"
 		FieldAction.SOW:
-			var seed := ItemManager.get_crop(current_seed_id)
+			var seed := ItemManager.get_crop(planting_seed(grid_pos))
 			return "播种 · %s · %d 夜" % [seed.crop_name, Global.sowing_nights(seed)]
 		FieldAction.HARVEST:
 			var crop: CropData = active_crops[grid_pos]["data"]
@@ -668,6 +1008,8 @@ func field_message(grid_pos: Vector2i, action: FieldAction) -> String:
 		FieldAction.WATERED: return "已浇水"
 		FieldAction.DRY_RICE: return "稻田断水"
 		FieldAction.RICE_SEED: return "稻种需要通水的水渠"
+		FieldAction.NO_SEED_PLAN:
+			return "已暂缓续播 · 可选种手播" if Global.deferred_field_sowing.has(grid_pos) else "这格暂无续播安排 · 可选种手播"
 	return ""
 
 func handle_interaction(grid_pos: Vector2i) -> bool:
@@ -694,7 +1036,7 @@ func handle_interaction(grid_pos: Vector2i) -> bool:
 			spawn_floating_text(grid_pos, field_message(grid_pos, action) + " · 过夜后生长", Color.CYAN)
 		FieldAction.DRY_RICE:
 			spawn_floating_text(grid_pos, "稻田断水 · 请接通水源", Color.ORANGE)
-		FieldAction.RICE_SEED:
+		FieldAction.RICE_SEED, FieldAction.NO_SEED_PLAN:
 			spawn_floating_text(grid_pos, field_message(grid_pos, action), Color.ORANGE)
 	return true
 
@@ -716,18 +1058,27 @@ func _show_field_impact(cell: Vector2i, action: ToolGesture.Action) -> void:
 	motion.tween_callback(impact.queue_free)
 
 func _till_soil(grid_pos: Vector2i) -> void:
+	if not till_plot(grid_pos):
+		return
 	Global.current_stamina -= field_cost(FieldAction.TILL)
 	GameEvents.stamina_changed.emit(Global.current_stamina)
+	player.show_action(Player.Action.TILL, to_global(get_crop_world_pos(grid_pos)))
+
+func _draw_tilled_plot(grid_pos: Vector2i) -> void:
 	var atlas := tile_map.get_cell_atlas_coords(grid_pos)
 	tile_map.set_cell(grid_pos, 0, Vector2i(atlas.x, 1))
-	Global.tilled_cells[grid_pos] = true
+
+func till_plot(grid_pos: Vector2i) -> bool:
+	if not Global.till_field_plot(grid_pos):
+		return false
+	_draw_tilled_plot(grid_pos)
 	GameEvents.farm_state_changed.emit()
 	_show_field_impact(grid_pos, Player.Action.TILL)
-	player.show_action(Player.Action.TILL, to_global(get_crop_world_pos(grid_pos)))
 	print("Tilled at ", grid_pos)
+	return true
 
 func _plant_crop(grid_pos: Vector2i) -> void:
-	if not sow_crop(grid_pos, current_seed_id):
+	if not sow_crop(grid_pos, planting_seed(grid_pos)):
 		return
 	Global.current_stamina -= field_cost(FieldAction.SOW)
 	GameEvents.stamina_changed.emit(Global.current_stamina)
@@ -752,65 +1103,41 @@ func harvest_crop(grid_pos: Vector2i, worker: Retainer = null) -> bool:
 		Global.current_stamina -= cost
 		GameEvents.stamina_changed.emit(Global.current_stamina)
 
-	var harvest := Global.harvest_field_crop(grid_pos)
-	var message := "国库 +%d" % harvest.tribute if harvest.public else (
-		"%s +%d · 铜钱 +%d" % [harvest.crop, harvest.stock, harvest.copper])
-	if harvest.levy > 0:
-		message += "（税 %d）" % harvest.levy
-	var tone := Color("#efce80") if harvest.public else Color("#d2de9e")
-	if harvest.leaves > 0:
-		message += " · 桑叶 +%d" % harvest.leaves
-	if harvest.rotated:
-		message += " · 轮作增收"
-	if harvest.fertile:
-		message += " · 肥地"
-
+	var harvest := Global.harvest_field_crop(grid_pos, worker.data if worker else null)
+	if harvest.is_empty():
+		return false
 	if active_crops.has(grid_pos):
 		_draw_crop(grid_pos)
 	else:
 		crops_layer.erase_cell(grid_pos)
-	if worker:
-		spawn_floating_text(grid_pos, worker.data.name + "收割 · " + message, tone, HARVEST_TEXT_OFFSET)
-	elif sweep_action == FieldAction.HARVEST:
-		sweep_harvests += 1
-		sweep_gains += Vector4i(harvest.tribute, harvest.stock, harvest.copper, harvest.leaves)
-		sweep_levy += harvest.levy
-		if is_instance_valid(sweep_popup):
-			sweep_popup.queue_free()
-		if sweep_harvests > 1:
-			var totals := PackedStringArray(["收获 %d 格" % sweep_harvests])
-			var names := ["国库", "作物", "铜钱", "桑叶"]
-			for i in names.size():
-				if sweep_gains[i] > 0:
-					totals.append("%s +%d" % [names[i], sweep_gains[i]])
-			if sweep_levy > 0:
-				totals.append("已扣税 %d 铜钱" % sweep_levy)
-			message = " · ".join(totals)
-		sweep_popup = spawn_floating_text(grid_pos, message, tone, HARVEST_TEXT_OFFSET)
-	else:
-		spawn_floating_text(grid_pos, message, tone, HARVEST_TEXT_OFFSET)
+	GameEvents.harvest_receipt.emit(harvest, worker.data.name if worker else "")
 	_show_field_impact(grid_pos, Player.Action.HARVEST)
 	if not worker:
 		tile_map.get_node("FieldCursor").clear_plot_hover(grid_pos)
 		player.show_action(Player.Action.HARVEST, to_global(get_crop_world_pos(grid_pos)))
 	if harvest.first_tribute:
-		AudioManager.play_event_sound("first_tribute")
-		var receipt := "首份纳贡已入库"
-		if Global.rotation_offer_ready() and neighbor_actor(VisitorData.FIELD_KEEPER):
-			receipt += " · 可找渠伯谈轮作"
-		GameEvents.world_notice.emit(receipt)
+		_announce_first_tribute()
 	return true
 
-func spawn_floating_text(grid_pos: Vector2i, text: String, color: Color, offset_y := 13.0) -> Label:
+func _announce_first_tribute() -> void:
+	AudioManager.play_event_sound("first_tribute")
+	GameEvents.world_notice.emit(first_tribute_notice())
+
+func first_tribute_notice() -> String:
+	var receipt := "首份纳贡已入库 · 堂前可翻账"
+	if Global.rotation_offer_ready() and neighbor_actor(VisitorData.FIELD_KEEPER):
+		receipt += " · 可找渠伯谈轮作"
+	return receipt
+
+func spawn_floating_text(grid_pos: Vector2i, text: String, color: Color) -> void:
 	var instance := floating_text_scene.instantiate() as Label
 	instance.text = text
 	instance.modulate = color
 	instance.scale = Vector2.ONE / player.camera.zoom
 	var center := get_crop_world_pos(grid_pos)
 	var half_width := instance.get_combined_minimum_size().x * instance.scale.x / 2
-	instance.position = center + Vector2(-half_width, offset_y)
+	instance.position = center + Vector2(-half_width, 13.0)
 	add_child(instance)
-	return instance
 
 func _on_day_advanced(new_day: int) -> void:
 	_end_sweep()
@@ -837,7 +1164,7 @@ func _on_day_advanced(new_day: int) -> void:
 	_refresh_field_keeper_visit()
 	if Global.begin_raid(new_day):
 		_spawn_raider()
-	_refresh_defense_notice()
+	GameEvents.world_notice.emit("")
 
 func current_visitor() -> VisitorData:
 	var actor := current_visitor_actor()
@@ -888,7 +1215,7 @@ func silk_trip_stop() -> Dictionary:
 		VisitorData.SilkTrip.STALL:
 			note = "在西市绸摊，酉时到南路亭"
 		VisitorData.SilkTrip.RETURN_ROAD:
-			return {"title": "陶辛 · 酉时南路亭", "place": "南路亭", "point": LANDSCAPE.PAVILION_REST_FOOT,
+			return {"title": "陶辛 · 酉时南路亭", "place": "南路亭", "point": pavilion_rest.guest_seat(),
 				"note": "正返程，酉时到南路亭"}
 		_:
 			return {}
@@ -1004,6 +1331,7 @@ func _visitor_arrived(_visitor: Visitor) -> void:
 
 func _report_visitor_activity() -> void:
 	visitor_changed.emit(current_visitor())
+	pavilion_rest.refresh_table()
 
 func _update_visitor_activity() -> void:
 	_refresh_handoff_visitor(true)
@@ -1026,12 +1354,11 @@ func _update_visitor_clock() -> void:
 				_remove_visitor(visitor)
 			_report_visitor_activity()
 		VisitorData.SilkTrip.PAVILION:
-			if visitor and visitor.activity == VisitorData.VisitActivity.PAVILION_REST:
-				return
-			if visitor:
-				_remove_visitor(visitor)
-			_place_scheduled_visitor(false)
-			_report_visitor_activity()
+			if not visitor:
+				_place_scheduled_visitor(false)
+				_report_visitor_activity()
+			elif _apply_pavilion_visit(visitor, true):
+				_report_visitor_activity()
 		_:
 			if visitor and _apply_pavilion_visit(visitor, true):
 				_report_visitor_activity()
@@ -1039,11 +1366,12 @@ func _update_visitor_clock() -> void:
 func _apply_pavilion_visit(visitor: Visitor, walk_in: bool) -> bool:
 	var from_market := visitor.data.silk_trip() == VisitorData.SilkTrip.PAVILION
 	if (visitor.activity == VisitorData.VisitActivity.PAVILION_REST or (not from_market and not visitor.data.has_pavilion_rest())
-		or VisitorData.pavilion_rest_seconds() < 0.0 or Global.outcome != Global.Outcome.RUNNING):
+		or VisitorData.pavilion_rest_seconds() < 0.0 or Global.outcome != Global.Outcome.RUNNING
+		or Global.raid_day > 0):
 		return false
 	var path := _path_to_pavilion(visitor)
 	var elapsed := 0.0 if walk_in else VisitorData.pavilion_rest_seconds()
-	visitor.go_to_activity(VisitorData.VisitActivity.PAVILION_REST, path, LANDSCAPE.PAVILION_WATER,
+	visitor.go_to_activity(VisitorData.VisitActivity.PAVILION_REST, path, pavilion_rest.gathering_center(),
 		Global.day_progress < 1.0, elapsed)
 	return true
 
@@ -1054,15 +1382,50 @@ func _path_to_pavilion(visitor: Visitor) -> PackedVector2Array:
 		path = _follow_lane(LANDSCAPE.ESTATE_TRACKS[0], start, LANDSCAPE.ESTATE_SOUTH_LANE[0])
 	elif visitor.data.name == VisitorData.EAST_WATCHER:
 		path = _follow_lane(LANDSCAPE.ESTATE_EAST_LANE, start, LANDSCAPE.EAST_LANE_JUNCTION)
-	elif visitor.activity == VisitorData.VisitActivity.ROAD_REST and start.x < LANDSCAPE.ROAD_REST_TRACK[0].x:
-		path = _follow_lane(LANDSCAPE.ROAD_REST_TRACK, start, LANDSCAPE.ROAD_REST_TRACK[0])
+	elif visitor.activity == VisitorData.VisitActivity.ROAD_REST and start.x < EstateLayout.PAVILION_JUNCTION.x:
+		path = _follow_lane(EstateLayout.ROAD_REST_TRACK, start, EstateLayout.PAVILION_JUNCTION)
 	elif visitor.activity == VisitorData.VisitActivity.HERBS and start.x > LANDSCAPE.GARDEN_TRACK[1].x:
 		path = _follow_lane(LANDSCAPE.GARDEN_TRACK, start, LANDSCAPE.GARDEN_TRACK[0])
 	if not path.is_empty():
 		start = path[-1]
-	path.append_array(_follow_lane(LANDSCAPE.ESTATE_SOUTH_LANE, start, LANDSCAPE.PAVILION_TURN))
-	path.append_array(PackedVector2Array([EstateLayout.SOUTH_PAVILION + Vector2(-14, 3), LANDSCAPE.PAVILION_REST_FOOT]))
+	path.append_array(_follow_lane(LANDSCAPE.ESTATE_SOUTH_LANE, start, EstateLayout.PAVILION_JUNCTION))
+	path.append_array(PackedVector2Array(EstateLayout.PAVILION_COURT))
+	if pavilion_rest.is_rain_shelter():
+		path.append_array(PackedVector2Array(EstateLayout.PAVILION_SHELTER_PATH.slice(1)))
+	path.append(pavilion_rest.guest_seat())
 	return path
+
+func _pavilion_has_neighbor(speaker: String) -> bool:
+	var person := neighbor_actor(speaker)
+	if person is Retainer:
+		return person.resting_at_pavilion()
+	return person is Visitor and person.resting_at_pavilion()
+
+func _pavilion_expects_neighbor(speaker: String) -> bool:
+	var person := neighbor_actor(speaker)
+	if person is Retainer:
+		return pavilion_rest.has_seat_for(person.data)
+	if person is Visitor and person.activity == VisitorData.VisitActivity.PAVILION_REST:
+		return true
+	return scheduled_visitor != null and scheduled_visitor.name == speaker and (scheduled_visitor.has_pavilion_rest()
+		or (speaker == VisitorData.SILK_MERCHANT and VisitorData.silk_market_day(Global.current_day)))
+
+func pavilion_story_id() -> String:
+	if pavilion_rest == null or not pavilion_rest.is_evening_open():
+		return ""
+	return _unheard_pavilion_story(_pavilion_has_neighbor)
+
+func pavilion_appointment() -> String:
+	if Global.raid_day > 0 or Global.outcome != Global.Outcome.RUNNING or Global.day_progress >= 1.0:
+		return ""
+	return _unheard_pavilion_story(_pavilion_expects_neighbor)
+
+func _unheard_pavilion_story(has_speakers: Callable) -> String:
+	for id: String in PavilionStories.IDS:
+		if not Global.pavilion_stories_heard.has(id) and PavilionStories.available(id) \
+				and PavilionStories.speakers(id).all(has_speakers):
+			return id
+	return ""
 
 func _follow_lane(lane: Array, from: Vector2, destination: Vector2) -> PackedVector2Array:
 	var closest := Vector2.ZERO
@@ -1095,7 +1458,7 @@ func _apply_visitor_activity(visitor: Visitor, walk_in: bool) -> bool:
 		VisitorData.VisitActivity.ROAD_REST:
 			focus = $RoadRest.position
 			path = _follow_lane(LANDSCAPE.ESTATE_SOUTH_LANE, visitor.position, EstateLayout.PAVILION_JUNCTION)
-			path.append_array(PackedVector2Array(LANDSCAPE.ROAD_REST_TRACK.slice(1)))
+			path.append_array(PackedVector2Array(EstateLayout.ROAD_REST_TRACK.slice(1)))
 			path.append(focus + Vector2(20, 11))
 		VisitorData.VisitActivity.MEASURE:
 			focus = get_crop_world_pos(Global.irrigation.source_cell)

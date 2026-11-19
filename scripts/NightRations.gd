@@ -8,16 +8,17 @@ var enabled := false
 var partial_meals := false
 var copper_limit := 0
 var priority: RetainerData
+var festival_day := 0
+var festival_recipe := ""
 var last: Dictionary = {}
+
+static func loyalty_after_missed_meal(loyalty: float) -> float:
+	return maxf(0.0, loyalty - MISSED_MEAL_LOYALTY)
 
 func plan(need: int, food: int, money: int, stock: CropStock, keep: Dictionary, unit_price: int,
 		allocate_meals: Callable) -> Dictionary:
 	var missing := maxi(0, need - food)
-	var reserved: Dictionary[String, int] = {}
-	for id: String in keep:
-		var amount := mini(stock.count(id), int(keep[id]))
-		if amount > 0:
-			reserved[id] = amount
+	var reserved := stock.reserved(keep)
 	var result := {
 		"need": need, "missing": missing, "uncovered": missing, "reserved": reserved,
 		"used": {}, "converted": 0, "bought": 0, "copper": 0,
@@ -47,3 +48,13 @@ static func stock_count(lots: Dictionary) -> int:
 	for amount: int in lots.values():
 		total += amount
 	return total
+
+static func describe_festival_pantry(pantry: Dictionary) -> String:
+	var held := ItemManager.describe_crops(pantry.held)
+	var shared := ItemManager.describe_crops(pantry.shared)
+	var details := PackedStringArray()
+	if not held.is_empty():
+		details.append("另留 " + held)
+	if not shared.is_empty():
+		details.append("与时令单共用 " + shared)
+	return "%s留用 · %s" % [pantry.name, " · ".join(details) if not details.is_empty() else "等作物入仓"]

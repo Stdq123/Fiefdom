@@ -21,6 +21,7 @@
 [ext_resource type="Texture2D" path="res://assets/world/gathering-bell-rack.svg" id="17_bell_rack"]
 [ext_resource type="Script" path="res://scripts/RoadRest.gd" id="18_road_rest"]
 [ext_resource type="Script" path="res://scripts/PavilionRest.gd" id="41_pavilion_rest"]
+[ext_resource type="Texture2D" path="res://assets/world/estate-site-art.png" id="pavilion_rain_shelter"]
 [ext_resource type="Script" path="res://scripts/FieldRotationBook.gd" id="19_rotation_book"]
 [ext_resource type="Script" path="res://scripts/MeadowButterfly.gd" id="20_butterfly"]
 [ext_resource type="Script" path="res://scripts/EstateDirections.gd" id="21_directions"]
@@ -32,6 +33,8 @@
 [ext_resource type="Script" path="res://scripts/EstateEntrance.gd" id="27_entrance"]
 [ext_resource type="PackedScene" path="res://scenes/SilkInterior.tscn" id="28_silk_interior"]
 [ext_resource type="PackedScene" path="res://scenes/SeasonFreight.tscn" id="29_freight"]
+[ext_resource type="Script" path="res://scripts/FreightBench.gd" id="freight_bench"]
+[ext_resource type="PackedScene" path="res://scenes/FreightWaitPanel.tscn" id="freight_wait"]
 [ext_resource type="PackedScene" path="res://scenes/TravelHearth.tscn" id="30_hearth"]
 [ext_resource type="PackedScene" path="res://scenes/SeasonCalendar.tscn" id="31_calendar"]
 [ext_resource type="PackedScene" path="res://scenes/AutumnExhibitStand.tscn" id="32_autumn"]
@@ -53,6 +56,18 @@
 [ext_resource type="Script" path="res://scripts/SeedGarden.gd" id="48_seed_garden"]
 [ext_resource type="Script" path="res://scripts/PondLanding.gd" id="49_pond_landing"]
 [ext_resource type="PackedScene" path="res://scenes/WinterRoadRations.tscn" id="50_winter_rations"]
+[ext_resource type="Script" path="res://scripts/FirstTributeStand.gd" id="first_tribute_stand"]
+[ext_resource type="Script" uid="uid://ci0k0ebcuiwk4" path="res://scripts/HallRankBook.gd" id="hall_rank_book"]
+
+[sub_resource type="AtlasTexture" id="Texture_rain_shelter_back"]
+atlas = ExtResource("pavilion_rain_shelter")
+region = Rect2(392, 0, 92, 64)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Texture_rain_shelter_posts"]
+atlas = ExtResource("pavilion_rain_shelter")
+region = Rect2(484, 0, 92, 64)
+filter_clip = true
 
 [sub_resource type="RectangleShape2D" id="Shape_east_gate"]
 size = Vector2(8, 20)
@@ -88,6 +103,47 @@ script = ExtResource("11_land")
 [node name="Scenery" type="Node2D" parent="World"]
 y_sort_enabled = true
 
+[node name="HallRankBook" type="Node2D" parent="World/Scenery"]
+visible = false
+position = Vector2(-43, 51)
+script = ExtResource("hall_rank_book")
+
+[node name="Hint" type="Label" parent="World/Scenery/HallRankBook"]
+visible = false
+z_index = 6
+material = ExtResource("24_world_hint")
+offset_left = -56.0
+offset_top = -46.0
+offset_right = 56.0
+offset_bottom = -30.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.882, 0.635, 1)
+theme_override_colors/font_outline_color = Color(0.13, 0.21, 0.16, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
+[node name="FirstTributeStand" type="Node2D" parent="World/Scenery"]
+visible = false
+position = Vector2(42, 42)
+texture_filter = 1
+script = ExtResource("first_tribute_stand")
+
+[node name="Hint" type="Label" parent="World/Scenery/FirstTributeStand"]
+visible = false
+z_index = 6
+material = ExtResource("24_world_hint")
+offset_left = -58.0
+offset_top = -40.0
+offset_right = 58.0
+offset_bottom = -24.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.882, 0.635, 1)
+theme_override_colors/font_outline_color = Color(0.13, 0.21, 0.16, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
 [node name="PavilionButterfly" type="Node2D" parent="World/Scenery"]
 position = Vector2(107, 432)
 script = ExtResource("20_butterfly")
@@ -106,7 +162,7 @@ visible = false
 
 [node name="Motion" type="Sprite2D" parent="World/Scenery/SeedGarden/Courier"]
 texture_filter = 1
-position = Vector2(0, -11)
+position = Vector2(0, -13)
 script = ExtResource("35_neighbor_motion")
 
 [node name="SeedPouch" type="Sprite2D" parent="World/Scenery/SeedGarden/Courier"]
@@ -134,7 +190,7 @@ horizontal_alignment = 1
 
 [node name="PondLanding" type="Node2D" parent="World/Scenery" groups=["interactable"]]
 visible = false
-position = Vector2(162, 713)
+y_sort_enabled = true
 script = ExtResource("49_pond_landing")
 
 [node name="EndingRecord" type="Sprite2D" parent="World/Scenery"]
@@ -157,6 +213,36 @@ theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
 
+[node name="WaterSource" type="Node2D" parent="World" groups=["interactable"]]
+y_sort_enabled = true
+texture_filter = 1
+script = ExtResource("47_water_source")
+
+[node name="Basin" type="StaticBody2D" parent="World/WaterSource"]
+position = Vector2(0, 7)
+collision_mask = 0
+
+[node name="StoneFootprint" type="CollisionPolygon2D" parent="World/WaterSource/Basin"]
+polygon = PackedVector2Array(-6, -13, 6, -13, 8, -10, 8, -3, 6, 0, -6, 0, -8, -3, -8, -10)
+
+[node name="Glints" type="Node2D" parent="World/WaterSource/Basin"]
+
+[node name="Runoff" type="Node2D" parent="World/WaterSource"]
+z_index = -1
+
+[node name="Hint" type="Label" parent="World/WaterSource"]
+z_index = 1
+material = ExtResource("24_world_hint")
+offset_left = -64.0
+offset_top = -36.0
+offset_right = 64.0
+offset_bottom = -21.0
+mouse_filter = 2
+theme_override_colors/font_outline_color = Color(0.13, 0.22, 0.18, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
 [node name="TileMapLayer" type="TileMapLayer" parent="World" unique_id=1265781007]
 z_index = -3
 position = Vector2(16, 24)
@@ -168,22 +254,6 @@ script = ExtResource("6_marker")
 [node name="IrrigationOverlay" type="Node2D" parent="World/TileMapLayer"]
 z_index = 1
 script = ExtResource("7_irrigation")
-
-[node name="WaterSource" type="Node2D" parent="World/TileMapLayer/IrrigationOverlay" groups=["interactable"]]
-texture_filter = 1
-script = ExtResource("47_water_source")
-
-[node name="Hint" type="Label" parent="World/TileMapLayer/IrrigationOverlay/WaterSource"]
-material = ExtResource("24_world_hint")
-offset_left = -64.0
-offset_top = -29.0
-offset_right = 64.0
-offset_bottom = -14.0
-mouse_filter = 2
-theme_override_colors/font_outline_color = Color(0.13, 0.22, 0.18, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 10
-horizontal_alignment = 1
 
 [node name="FieldCursor" type="Node2D" parent="World/TileMapLayer"]
 script = ExtResource("12_field_cursor")
@@ -392,6 +462,24 @@ horizontal_alignment = 1
 
 [node name="Freight" parent="World" instance=ExtResource("29_freight")]
 
+[node name="FreightBench" type="Node2D" parent="World" groups=["interactable"]]
+script = ExtResource("freight_bench")
+
+[node name="Hint" type="Label" parent="World/FreightBench"]
+visible = false
+z_index = 6
+material = ExtResource("24_world_hint")
+offset_left = -53.0
+offset_top = -34.0
+offset_right = 37.0
+offset_bottom = -21.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.98, 0.86, 0.64, 1)
+theme_override_colors/font_outline_color = Color(0.13, 0.21, 0.16, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+
 [node name="WatchReliefCourier" type="Node2D" parent="World"]
 visible = false
 script = ExtResource("watch_relay")
@@ -453,6 +541,21 @@ theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
 
+[node name="PavilionRainShelter" type="Sprite2D" parent="World"]
+texture_filter = 1
+position = Vector2(260, 397)
+z_index = -2
+texture = SubResource("Texture_rain_shelter_back")
+centered = false
+offset = Vector2(-46, -45)
+
+[node name="RainShelterFrontPosts" type="Sprite2D" parent="World"]
+texture_filter = 1
+position = Vector2(260, 407)
+texture = SubResource("Texture_rain_shelter_posts")
+centered = false
+offset = Vector2(-46, -55)
+
 [node name="PavilionRest" type="Node2D" parent="World" groups=["interactable"]]
 position = Vector2(151, 436)
 script = ExtResource("41_pavilion_rest")
@@ -460,14 +563,18 @@ script = ExtResource("41_pavilion_rest")
 [node name="Mats" type="Node2D" parent="World/PavilionRest"]
 z_index = -1
 
+[node name="DryLamps" type="Node2D" parent="World/PavilionRest"]
+
+[node name="RainLamps" type="Node2D" parent="World/PavilionRest"]
+
 [node name="Hint" type="Label" parent="World/PavilionRest"]
 visible = false
 z_index = 6
 material = ExtResource("24_world_hint")
 offset_left = -48.0
-offset_top = -32.0
+offset_top = -39.0
 offset_right = 48.0
-offset_bottom = -19.0
+offset_bottom = -26.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.98, 0.86, 0.64, 1)
 theme_override_colors/font_outline_color = Color(0.17, 0.18, 0.14, 1)
@@ -584,6 +691,8 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("21_directions")
+
+[node name="FreightWait" parent="UI/Control" instance=ExtResource("freight_wait")]
 
 [node name="Fader" type="ColorRect" parent="UI/Control" unique_id=730486771]
 layout_mode = 1

@@ -87,7 +87,8 @@ func _run() -> void:
 	var cursor := map.get_node("FieldCursor")
 	var millet := ui.hud.seed_buttons["millet"] as Button
 	var rice := ui.hud.seed_buttons["rice"] as Button
-	_expect("翻地" in guide.text, "The guide starts by pointing to the public field.")
+	_expect(guide.opening_cell == tribute and "中央公田" in guide.text and "翻" in guide.text,
+		"The guide starts by pointing to the public field and telling the player to till it.")
 	_expect(millet.button_pressed and not rice.button_pressed, "The default seed is visible in the tool belt.")
 	await _hover(_point(map, tribute))
 	_expect(cursor.visible and "公田 · 翻地" in cursor.label.text and "−2 体力" in cursor.label.text, "The first field previews the action and its cost.")
@@ -112,7 +113,7 @@ func _run() -> void:
 		_expect("水已到田" in guide.text, "Watering points the player to the sleep button.")
 		await _click(ui.sleep_button.get_global_rect().get_center())
 		await create_timer(1.1).timeout
-	_expect("成熟" in guide.text, "Ripening explains how to deliver the first tribute.")
+	_expect("收割" in guide.text and "入国库" in guide.text, "Ripening explains how to deliver the first tribute.")
 	await _hover(_point(map, tribute))
 	_expect("收获" in cursor.label.text and "−3 体力" in cursor.label.text, "Mature crops show their harvest cost.")
 	await _click(_point(map, tribute))

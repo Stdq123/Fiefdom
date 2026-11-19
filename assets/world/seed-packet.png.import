@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://cu4b3w2n8mj5p"
+path="res://.godot/imported/seed-packet.png-82065bded7ab0808f733468a3b5439a0.res"
+
+[deps]
+
+source_file="res://assets/world/seed-packet.png"
+dest_files=["res://.godot/imported/seed-packet.png-82065bded7ab0808f733468a3b5439a0.res"]
+
+[params]
+
+authored_at_2x=true

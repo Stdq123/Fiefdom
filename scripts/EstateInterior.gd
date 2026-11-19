@@ -15,6 +15,8 @@ extends Node2D
 var flame_phase := 0.0
 
 func _ready() -> void:
+	entrance.add_to_group("travel_threshold")
+	$Exit.add_to_group("travel_threshold")
 	entrance.body_entered.connect(_on_entrance)
 	$Exit.body_entered.connect(_on_exit)
 	GameEvents.campaign_ended.connect(_on_campaign_ended)
@@ -26,7 +28,10 @@ func _restore_room() -> void:
 		return
 	if facade.visible:
 		_arrive(true, get_node(resume_path))
+		var floor_art: Sprite2D = $Floor
+		player.restore_walking_checkpoint(floor_art.global_transform * floor_art.get_rect())
 	else:
+		Global.restored_walking_checkpoint.clear()
 		Global.estate_room = Global.EstateRoom.OUTDOORS
 		GameEvents.estate_room_changed.emit(Global.estate_room)
 

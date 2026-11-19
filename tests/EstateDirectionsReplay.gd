@@ -114,15 +114,17 @@ func _meet(speaker: String) -> Control:
 	var actor: Node2D = world.neighbor_actor(speaker)
 	if not _expect(is_instance_valid(actor), "Expected a person named " + speaker):
 		return null
-	await Campaign.walk_to(tree, world.player, actor.global_position + Vector2(0, 19))
+	await Campaign.walk_estate_road_to(tree, world, actor.global_position + Vector2(0, 19))
 	await tree.physics_frame
+	if not _expect(world.player.interaction_target == actor, "Reach the indicated neighbor along the road before pressing E."):
+		return null
 	await _key(KEY_E)
 	return ui.get_node_or_null("Control/DialoguePanel") as Control
 
-func _visit_while_crop_grows(speaker: String) -> Control:
+func _follow_journal_visit(speaker: String) -> Control:
 	var invitation: Button = ui.hud.opening_action
 	if not _expect(invitation.is_visible_in_tree() and ("去见" + speaker) in invitation.text,
-		"The journal offers a way to find " + speaker + " while the public crop grows."):
+		"The journal offers a way to find " + speaker + "."):
 		return null
 	await _click(invitation.get_global_rect().get_center())
 	_expect(directions.tracked_neighbor == speaker and directions.visible,
@@ -237,7 +239,8 @@ func _private_crop_and_grain(spawn: Vector2) -> void:
 	await _key(KEY_LEFT)
 	await _key(KEY_ENTER)
 	_expect(state.food_storage == before_food + 1 and state.crop_stock.count("beans") == 0
-		and state.king_storage == 1 and not trade.visible and "晋升" in ui.hud.guide.heading.text,
+		and state.king_storage == 1 and (not trade.visible or trade.text != "首茬收成 · 安排去处")
+		and "晋升" in ui.hud.guide.heading.text,
 		"One private crop becomes one ration while the tribute and promotion goal stay in place.")
 	print("DIRECTION_FIRST_RATION day=", state.current_day, " private=", state.private_harvest_total,
 		" tribute=", state.king_storage, " grain=", before_food, "->", state.food_storage)
@@ -252,7 +255,8 @@ func _private_crop_and_grain(spawn: Vector2) -> void:
 	var panel: Control = ui.panel_manager.management_panel_instance
 	var book: Control = panel.season_order_panel
 	_expect(book.is_visible_in_tree() and "亭前备种" in book.order_title.text
-		and state.crop_stock.count("beans") == 1 and state.food_storage == before_food and not trade.visible,
+		and state.crop_stock.count("beans") == 1 and state.food_storage == before_food
+		and (not trade.visible or trade.text != "首茬收成 · 安排去处"),
 		"Keeping the crop opens the current order, leaves stock available, and completes the optional prompt.")
 	await _click(book.pin_button.get_global_rect().get_center())
 	await _capture("12-keep-the-beans")
@@ -261,10 +265,108 @@ func _private_crop_and_grain(spawn: Vector2) -> void:
 	_expect(state.food_storage == before_food - 1 and state.night_rations.last.served == 1
 		and state.crop_stock.count("beans") == 1, "The next night uses existing grain and keeps the bean for the order.")
 	await _save_and_continue()
-	_expect(not ui.hud.opening_action.visible and ui.hud.pinned_order.visible and state.crop_stock.count("beans") == 1,
-		"Continue preserves the chosen order and leaves the one-time prompt closed even with crops still in stock.")
+	_expect(ui.hud.pinned_order.visible and state.crop_stock.count("beans") == 1,
+		"Continue preserves the chosen order and the crop.")
 	print("DIRECTION_FIRST_HARVEST_ORDER day=", state.current_day, " bean=", state.crop_stock.count("beans"),
 		" grain=", state.food_storage, " tracked=", state.pinned_season_start)
+	await _next_reputation_step(spawn)
+
+func _next_reputation_step(spawn: Vector2) -> void:
+	var guest = world.current_visitor()
+	if not _expect(guest != null, "The morning after the first harvest has a visitor."):
+		return
+	var action: Button = ui.hud.opening_action
+	var before: int = state.reputation
+	if not _expect(action.visible and action.text.begins_with("去见" + guest.name)
+		and "可得 %d 声望" % state.balance.interaction_reputation_gain in action.tooltip_text,
+		"Continue restores the next reputation action after the first harvest review."):
+		return
+	await _capture("13-next-reputation-step")
+	var dialog := await _follow_journal_visit(guest.name)
+	if not _expect(dialog != null, "Follow the reputation action to the actual visitor."):
+		return
+	await _click(_button(dialog, "交谈").get_global_rect().get_center())
+	if not _expect(guest.talked_today() and state.reputation == before + state.balance.interaction_reputation_gain
+		and action.visible and "公田" in action.text and ui.hud.pinned_order.visible,
+		"Speaking awards reputation once, preserves the order pin and offers public-field work next."):
+		return
+	await _click(action.get_global_rect().get_center())
+	_expect(directions.tracked_plot == PUBLIC and not action.visible, "The farm action marks the public tile and yields to active directions.")
+	await Campaign.walk_to(tree, world.player, spawn)
+	await _click(_point_on_field())
+	await _click(_point_on_field())
+	if world.is_crop_dry(PUBLIC):
+		await _click(_point_on_field())
+	_expect(state.active_crops.has(PUBLIC) and state.crop_night_status(PUBLIC) in [state.NightGrowth.GROW, state.NightGrowth.RIPEN],
+		"The same marked field can be replanted and watered for the next tribute.")
+	print("DIRECTION_REPUTATION_HANDOFF day=", state.current_day, " visitor=", guest.name,
+		" reputation=", before, "->", state.reputation, " next_field=", directions.tracked_plot)
+
+func _forage_and_return() -> void:
+	if ui.hud.cancel_directions.visible:
+		await _click(ui.hud.cancel_directions.get_global_rect().get_center())
+	if not _expect(state.field_route_status == -1, "Cancel the earlier field guide before checking the default return."):
+		return
+	await _key(KEY_M)
+	var chart: Control = ui.estate_map
+	await _click(chart.tabs.get_node("Ravine").get_global_rect().get_center())
+	for row: Button in chart.row_buttons:
+		if chart.row_buttons[row].title == "野果坳":
+			await _click(row.get_global_rect().get_center())
+			break
+	if not _expect(state.ravine_trip_target == "野果坳", "Use the local chart to plan the first forage trip."):
+		return
+	await _key(KEY_ESCAPE)
+	var day: int = state.current_day
+	var grain: int = state.food_storage
+	var tribute: int = state.king_storage
+	var order: int = state.pinned_season_start
+	var crop: Dictionary = state.active_crops[PUBLIC].duplicate()
+	await Campaign.walk_estate_road_to(tree, world, world.get_node("EastArrival").global_position)
+	if not _expect(await Campaign.walk_through_gates(tree, &"ui_right", state.WILDERNESS_SCENE), "Walk into the ravine."):
+		return
+	await tree.process_frame
+	var ravine := tree.current_scene as Node2D
+	var walker := ravine.get_node("Player") as Node2D
+	var return_button := ravine.get_node("CampaignHUD").field_return_button as Button
+	var fruit := ravine.get_node("WildFruit") as Node2D
+	await Campaign.walk_ravine_to(tree, ravine, fruit.global_position + Vector2(0, 16))
+	await _key(KEY_E)
+	if not _expect(state.food_storage == grain + state.balance.wild_food_yield and ravine.active_waypoint().is_empty()
+		and return_button.visible, "Harvest wild fruit and see the return action when the outward trail ends."):
+		return
+	await _capture("return-ravine-after-gathering")
+	var foot := walker.position
+	await _click(return_button.get_global_rect().get_center())
+	var guide: Node2D = ravine.ravine_map.guide
+	if not _expect(state.market_trip_target == state.FIELD_RETURN and ravine.active_waypoint() == "西门回封地"
+		and not return_button.visible and walker.position == foot and not guide.route.is_empty()
+		and guide.route[-1] == ravine.get_node("ExitArea").position,
+		"The action replaces the old trail and guides to the west gate without moving the player."):
+		return
+	await _capture("return-ravine-west-gate")
+	await Campaign.walk_to_ravine_exit(tree, ravine)
+	if not _expect(await Campaign.walk_through_gates(tree, &"ui_left", state.ESTATE_SCENE), "Follow the trail out of the ravine."):
+		return
+	await _use_estate()
+	await tree.create_timer(0.05).timeout
+	var approach: PackedVector2Array = world.get_node("Landscape").field_approaches[0]
+	var path: PackedVector2Array = directions.road_path
+	if not _expect(state.market_trip_target == state.FIELD_RETURN and directions.tracked_place == state.FIELD_RETURN
+		and directions.road_guide.visible and path.has(EstateLayout.FIELD_TURN) and path[-1] == approach[-1],
+		"The route continues past the estate gate to the actual field entrance."):
+		return
+	await _capture("return-ravine-on-estate")
+	for point in path.slice(1):
+		await Campaign.walk_straight(tree, world.player, world.to_global(point))
+	_expect(world.player.position.distance_to(approach[-1]) < 4.0 and state.market_trip_target.is_empty()
+		and not ui.hud.cancel_directions.visible and state.current_day == day and state.king_storage == tribute
+		and state.food_storage == grain + state.balance.wild_food_yield and state.crop_stock.count("beans") == 1
+		and state.active_crops.get(PUBLIC) == crop and state.pinned_season_start == order,
+		"Reach the entrance on foot and clear the trip with the same day, crop, tribute and order.")
+	await _capture("return-ravine-at-field")
+	print("FIELD_RETURN_RAVINE day=", state.current_day, " grain=", grain, "->", state.food_storage,
+		" entrance=", approach[-1], " remaining_waypoint=", state.market_trip_target)
 
 func _finish() -> void:
 	tree.unload_current_scene()
@@ -309,12 +411,25 @@ func _continue_old_handover() -> void:
 			"The interaction key finishes the old save's conversation.")
 	print("DIRECTION_LEGACY day=", state.current_day, " watered=", state.active_crops[PUBLIC].watered)
 
+func _check_road_posts() -> void:
+	var scenery := world.get_node("Scenery")
+	for entry: Array in [["南路亭", 3], ["西廊", 3], ["驾御场", 1], ["南池", 1]]:
+		var post := scenery.get_node_or_null(entry[0] + "路牌") as Sprite2D
+		if not _expect(post != null and post.is_visible_in_tree(), "The %s sign is on the road in a new game." % entry[0]):
+			continue
+		var art := post.texture as AtlasTexture
+		_expect(art != null and art.region.position == Vector2(entry[1] * 32, 0)
+			and post.flip_h == (entry[0] == "南池") and post.get_node("Caption").text == entry[0],
+			"The board and destination for %s point into its branch." % entry[0])
+	print("DIRECTION_ROAD_POSTS pavilion=south court=south chariot=southeast pond=southwest")
+
 func run(game_tree: SceneTree) -> void:
 	tree = game_tree
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Isolate the directions replay's save directory."):
 		await _finish()
 		return
-	capture_dir = OS.get_environment("FIEFDOM_DIRECTION_CAPTURES")
+	if capture_dir.is_empty():
+		capture_dir = OS.get_environment("FIEFDOM_DIRECTION_CAPTURES")
 	tree.root.notify_mouse_entered()
 	state = tree.root.get_node("Global")
 	tree.change_scene_to_file("res://scenes/Title.tscn")
@@ -326,6 +441,7 @@ func run(game_tree: SceneTree) -> void:
 		return
 	await _click(tree.current_scene.new_button.get_global_rect().get_center())
 	await _use_estate()
+	_check_road_posts()
 	var spawn: Vector2 = world.player.global_position
 	_expect(directions.visible and directions.mark == directions.Mark.PLOT and directions.caption.text == "公田"
 		and "WASD" in ui.hud.guide.text and not ui.hud.tribute_button.visible,
@@ -358,7 +474,7 @@ func run(game_tree: SceneTree) -> void:
 	var gamepad = load("res://tests/GamepadReplay.gd").new()
 	gamepad.tree = tree
 	gamepad.pad = tree.root.get_node("GamepadInput")
-	var first_keeper_dialog := await _visit_while_crop_grows(KEEPER)
+	var first_keeper_dialog := await _follow_journal_visit(KEEPER)
 	if not await _read_handover_dialogue(first_keeper_dialog, gamepad):
 		await _finish()
 		return
@@ -371,7 +487,7 @@ func run(game_tree: SceneTree) -> void:
 	if world.is_crop_dry(PUBLIC):
 		await _click(_point_on_field())
 	await _capture("04c-day-two-visitor")
-	var road_dialog := await _visit_while_crop_grows(ROAD_KEEPER)
+	var road_dialog := await _follow_journal_visit(ROAD_KEEPER)
 	if not await _greet_first_visitor(road_dialog, gamepad):
 		await _finish()
 		return
@@ -418,4 +534,6 @@ func run(game_tree: SceneTree) -> void:
 	print("DIRECTION_OPENING day=", state.current_day, " tribute=", state.king_storage, " rotation=", state.field_rotation.promise_day)
 	if not failed:
 		await _private_crop_and_grain(spawn)
+	if not failed and not legacy:
+		await _forage_and_return()
 	await _finish()

@@ -3,6 +3,7 @@ extends "res://tests/CanalFlowReplay.gd"
 const PUBLIC := Vector2i(5, 5)
 const PRIVATE := Vector2i(6, 5)
 const TRIBUTE_PLAN := NodePath("%TributePlan")
+const FIRST_TRIBUTE_STAND := NodePath("Scenery/FirstTributeStand")
 
 var baseline := false
 var legacy := false
@@ -41,14 +42,81 @@ func _first_harvest() -> void:
 	for cell in [PUBLIC, PRIVATE]:
 		for action in 3:
 			await _click(_point(cell))
+	if not baseline:
+		var sheet := await _open_plan(ui.hud.rations_button)
+		if sheet == null:
+			return
+		_expect(sheet.tribute_deadline.text == "首贡 1 份 · 第 5 天过夜前"
+			and sheet.tribute_goal.text == "长期奖励 · 累计纳贡 0/10 份，达标得 50 声望"
+			and "最早第 3 天可收" in sheet.tribute_details.text,
+			"The first harvest deadline, expected ripeness and long-term reward are distinct.")
+		await _capture("00-opening-tribute-plan")
+		await _button(sheet.close_button)
 	await _sleep()
 	for cell in [PUBLIC, PRIVATE]:
 		await _click(_point(cell))
 	await _sleep()
-	for cell in [PUBLIC, PRIVATE]:
-		await _click(_point(cell))
+	await _click(_point(PRIVATE))
+	if not baseline:
+		var stand := world.get_node_or_null(FIRST_TRIBUTE_STAND) as Node2D
+		_expect(stand != null and not stand.visible and state.first_tribute_entry.is_empty(),
+			"The first private harvest does not uncover the tribute ledger.")
+	await _click(_point(PUBLIC))
 	_expect(state.current_day == 3 and state.king_storage == 1 and state.player_inventory == 1
 		and state.days_without_contribution == 0, "Harvest the first public and private crops through normal farming.")
+
+func _read_first_tribute_ledger(known: bool) -> Control:
+	var stand := world.get_node_or_null(FIRST_TRIBUTE_STAND) as Node2D
+	if not _expect(stand != null and stand.visible and stand.is_in_group("interactable"),
+		"The court has a physical tribute ledger once the granary has received grain."):
+		return null
+	var foot := stand.position + Vector2(0, 13)
+	await Campaign.walk_to(tree, world.player, foot)
+	if not _expect(world.player.position.distance_to(foot) < 4.0 and world.player.interaction_target == stand
+		and stand.get_node("Hint").visible,
+		"Ordinary walking reaches the tribute stand beside the hall on its own interaction prompt."):
+		return null
+	await _capture("00-first-tribute-stand" if known else "00-previous-tribute-stand")
+	await _key(KEY_E)
+	var ledger := ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(ledger != null and ledger.name_label.text == "贡粮账", "E opens the public grain ledger."):
+		return null
+	var note: String = state.first_tribute_note()
+	_expect("国库累计收贡 1 份" in ledger.text_label.text and ledger.choices[0].text == "标出公田",
+		"The ledger reads the current treasury and offers the actual public-field route.")
+	if known:
+		_expect(note == "第 3 天 · 你从井田 1 收下 1 份黍，入国库。"
+			and note in ledger.text_label.text and "第 7 天过夜前收下 1 份公田作物" in ledger.text_label.text,
+			"The ledger records the first harvest and gives the next deadline and quantity.")
+	else:
+		_expect(note.is_empty() and "首份纳贡 ·" not in ledger.text_label.text
+			and "本期纳贡 1 份 · 今夜到期" in ledger.text_label.text,
+			"The previous save's ledger uses the restored treasury and the deadline due tonight.")
+	await _capture("00a-first-tribute-ledger" if known else "00a-previous-tribute-ledger")
+	print("FIRST_TRIBUTE_COURT day=", state.current_day, " known=", known, " totals=", state.king_storage, " note=", note)
+	return ledger
+
+func _respond_to_first_tribute() -> void:
+	var ledger := await _read_first_tribute_ledger(true)
+	if ledger == null:
+		return
+	await _button(ledger.choices[0])
+	_expect(ui.directions.tracked_plot == PUBLIC and state.king_storage == 1,
+		"The court ledger points to the public plot without delivering another tribute.")
+	var keeper: Node2D = world.neighbor_actor(VisitorData.FIELD_KEEPER)
+	if not _expect(is_instance_valid(keeper), "The keeper is present on the first tribute day."):
+		return
+	await Campaign.walk_to(tree, world.player, keeper.position + Vector2(0, 13))
+	await _key(KEY_E)
+	var offer := ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(offer != null and offer.name_label.text == VisitorData.FIELD_KEEPER,
+		"Speak to the real keeper beside the field."):
+		return
+	_expect("堂前的竹筹记下了头一笔黍" in offer.text_label.text and offer.choices[0].text == "约定试一回轮作",
+		"The keeper names the real harvest and still offers the two-crop rotation.")
+	await _capture("00b-keeper-first-tribute")
+	await _button(offer.choices[0])
+	_expect(state.field_rotation.promise_day == 3, "The first tribute dialogue can begin the existing rotation story.")
 
 func _plant_again() -> void:
 	if not baseline:
@@ -56,9 +124,10 @@ func _plant_again() -> void:
 		var panel := await _open_plan(ui.hud.tribute_button)
 		if panel == null:
 			return
-		_expect("第 7 天过夜前" in panel.tribute_deadline.text and "累计纳贡 1/10" in panel.tribute_goal.text
+		_expect(panel.tribute_deadline.text == "本期纳贡 1 份 · 第 7 天过夜前"
+			and panel.tribute_goal.text.begins_with("长期奖励 · 累计纳贡 1/10 份")
 			and "最早第 5 天" in panel.tribute_details.text and panel.find_tribute.text == "选黍并指路",
-			"The first harvest resets the rolling deadline and keeps the cumulative goal visible.")
+			"The next deadline still needs one share and only the long-term reward increments.")
 		await _capture("01-next-tribute")
 		await _button(panel.find_tribute)
 		_expect(ui.directions.tracked_plot == PUBLIC and state.field_route_status == state.TributeRoute.TEND
@@ -68,6 +137,9 @@ func _plant_again() -> void:
 		await _open_title(true)
 		_expect(state.current_day == 3 and ui.directions.tracked_plot == PUBLIC and "播种" in ui.directions.caption.text,
 			"The route and its selected seed survive a manual save from the real title.")
+		_expect(state.first_tribute_entry.get("crop") == "millet" and state.first_tribute_entry.get("day") == 3
+			and world.get_node(FIRST_TRIBUTE_STAND).visible and state.field_rotation.promise_day == 3,
+			"The first entry, physical ledger and rotation promise survive the same reload.")
 	await _click(_point(PUBLIC))
 	await _click(_point(PUBLIC))
 	await _sleep()
@@ -95,7 +167,7 @@ func _open_due_plan(overdue := false) -> Control:
 		"The live HUD and sleep control warn about the real deadline.")
 	var panel := await _open_plan(ui.hud.tribute_button)
 	if panel != null:
-		_expect(sheet_title in panel.tribute_deadline.text and "声望 −8" in panel.tribute_details.text
+		_expect(panel.tribute_deadline.text == "本期纳贡 1 份 · " + sheet_title and "声望 −8" in panel.tribute_details.text
 			and panel.find_tribute.text == "找熟公田", "The evening sheet explains both the risk and the available harvest.")
 	return panel
 
@@ -125,9 +197,12 @@ func _deliver(panel: Control) -> void:
 	_expect(state.king_storage == 2 and state.reputation == before + 10 and state.days_without_contribution == 0
 		and state.tribute_deadline() == day + 4 and state.field_route_status < 0,
 		"Harvesting the marked public crop actually delivers tribute, moves the deadline and completes the route.")
+	_expect(state.first_tribute_entry.get("day", 0) == (0 if legacy else 3),
+		"A later harvest keeps any recorded first delivery and does not backfill an older save.")
 	var sheet := await _open_plan(ui.hud.tribute_button)
 	if sheet != null:
-		_expect("第 %d 天过夜前" % (day + 4) in sheet.tribute_deadline.text and "累计纳贡 2/10" in sheet.tribute_goal.text,
+		_expect(sheet.tribute_deadline.text == "本期纳贡 1 份 · 第 %d 天过夜前" % (day + 4)
+			and sheet.tribute_goal.text.begins_with("长期奖励 · 累计纳贡 2/10 份"),
 			"Both the renewed deadline and the cumulative count are shown.")
 		await _capture("06-renewed-deadline")
 		await _button(sheet.close_button)
@@ -141,6 +216,10 @@ func _fresh_campaign() -> void:
 	await _first_harvest()
 	if failed:
 		return
+	if not baseline:
+		await _respond_to_first_tribute()
+		if failed:
+			return
 	await _plant_again()
 	if failed:
 		return
@@ -180,6 +259,10 @@ func _old_save() -> void:
 	if not _expect(state.current_day == 7 and state.king_storage == 1 and state.days_without_contribution == 4
 		and state.field_crop_is_ripe(PUBLIC), "The genuine old manual save restores the deadline and crop from existing state."):
 		return
+	var ledger := await _read_first_tribute_ledger(false)
+	if ledger == null:
+		return
+	await _button(ledger.choices.back())
 	var panel := await _open_due_plan()
 	if panel != null:
 		await _capture("03-due-tonight")

@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://ckf60kmqvaw04"
+path="res://.godot/imported/council-implements.png-9b549c0683132b1409ec28d552332dbc.res"
+
+[deps]
+
+source_file="res://assets/ui/council-implements.png"
+dest_files=["res://.godot/imported/council-implements.png-9b549c0683132b1409ec28d552332dbc.res"]
+
+[params]
+
+authored_at_2x=true

@@ -1,5 +1,7 @@
 extends ColorRect
 
+const LEDGER_DESK := preload("res://scripts/RouteLedgerDesk.gd")
+
 @onready var records: VBoxContainer = %Records
 @onready var estates: VBoxContainer = %Estates
 @onready var records_heading: Label = %RecordsHeading
@@ -23,14 +25,14 @@ func _ready() -> void:
 		if not campaigns.has(key):
 			campaigns[key] = []
 		campaigns[key].append(entry)
-	var normal := get_theme_stylebox("normal", "Button")
-	var selected := get_theme_stylebox("pressed", "Button").duplicate() as StyleBox
-	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
-		selected.set_content_margin(side, normal.get_margin(side))
 	for key in campaigns:
-		_add_campaign(key, campaigns[key][0], selected)
+		_add_campaign(key, campaigns[key][0])
 	if campaigns.is_empty():
 		_show_unavailable()
+		close_button.focus_next = ^"."
+		close_button.focus_previous = ^"."
+		for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+			close_button.set_focus_neighbor(side, ^".")
 		close_button.grab_focus()
 		return
 	var preferred := preferred_campaign.md5_text()
@@ -38,14 +40,13 @@ func _ready() -> void:
 	_show_records(key)
 	campaign_buttons[key].grab_focus()
 
-func _add_campaign(key: String, latest: Dictionary, selected: StyleBox) -> void:
+func _add_campaign(key: String, latest: Dictionary) -> void:
 	var button := Button.new()
-	button.custom_minimum_size.y = 60
+	button.custom_minimum_size.y = 68
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.toggle_mode = true
 	button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	button.add_theme_stylebox_override("pressed", selected)
 	var heading: String = latest["campaign_name"]
 	var detail := "存档无法读取"
 	if latest["error"] == OK:
@@ -59,6 +60,7 @@ func _add_campaign(key: String, latest: Dictionary, selected: StyleBox) -> void:
 
 func _show_records(key: String) -> void:
 	for estate in campaign_buttons:
+		campaign_buttons[estate].theme_type_variation = &"HudPrimary" if estate == key else &"HudButton"
 		campaign_buttons[estate].set_pressed_no_signal(estate == key)
 	for row in records.get_children():
 		records.remove_child(row)
@@ -70,21 +72,60 @@ func _show_records(key: String) -> void:
 	var readable := false
 	for entry: Dictionary in entries:
 		var button := Button.new()
-		button.custom_minimum_size.y = 46
+		button.custom_minimum_size.y = 68
 		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		button.disabled = entry["error"] != OK
-		button.text = ("%s · 无法读取" % entry["source"]) if button.disabled else (
-			Global.saved_game_caption(entry) + " · " + Global.rank_names[entry["rank"]])
-		if entry["legacy"]:
+		if button.disabled:
+			button.focus_mode = Control.FOCUS_NONE
+			button.text = "%s · 无法读取" % entry["source"]
+		else:
+			var route := Global.saved_game_route(entry)
+			var detail: String = Global.rank_names[entry.rank]
+			if not route.is_empty():
+				detail += " · " + route
+			button.text = Global.saved_game_caption(entry) + "\n" + detail
+			if entry.completed_route in [Global.Outcome.TRADITIONAL, Global.Outcome.REFORMED]:
+				button.icon = LEDGER_DESK.volume_texture(entry.completed_route == Global.Outcome.TRADITIONAL)
+				button.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+				button.expand_icon = true
+				button.add_theme_constant_override("icon_max_width", 66)
+				button.add_theme_constant_override("h_separation", 12)
+		if entry.legacy:
 			button.text += " · 旧版"
 		button.tooltip_text = button.text
-		button.pressed.connect(_load.bind(entry["path"], button))
+		button.pressed.connect(_load.bind(entry["path"], button, key))
 		records.add_child(button)
 		readable = readable or not button.disabled
 	if not readable:
 		_show_unavailable()
+	_link_focus(campaign_buttons[key])
+
+func _link_focus(selected: Button) -> void:
+	var estate_rows: Array[Button] = []
+	estate_rows.assign(campaign_buttons.values())
+	var record_rows: Array[Button] = []
+	for button: Button in records.get_children():
+		if not button.disabled:
+			record_rows.append(button)
+	var first_record := record_rows[0] if not record_rows.is_empty() else close_button
+	_column_focus(estate_rows, SIDE_RIGHT, first_record)
+	_column_focus(record_rows, SIDE_LEFT, selected)
+	estate_rows[0].focus_previous = estate_rows[0].get_path_to(close_button)
+	close_button.focus_next = close_button.get_path_to(estate_rows[0])
+	close_button.focus_neighbor_top = close_button.get_path_to(record_rows.back() if not record_rows.is_empty() else selected)
+	close_button.focus_neighbor_left = close_button.get_path_to(selected)
+	close_button.focus_neighbor_right = ^"."
+	close_button.focus_neighbor_bottom = ^"."
+
+func _column_focus(items: Array[Button], toward: Side, across: Button) -> void:
+	for i in items.size():
+		var row := items[i]
+		row.set_focus_neighbor(toward, row.get_path_to(across))
+		row.set_focus_neighbor(SIDE_LEFT if toward == SIDE_RIGHT else SIDE_RIGHT, ^".")
+		row.focus_neighbor_top = row.get_path_to(items[maxi(0, i - 1)])
+		row.focus_neighbor_bottom = row.get_path_to(items[i + 1] if i + 1 < items.size() else close_button)
 
 func _show_unavailable() -> void:
 	status.text = "没有可读取的存档。"
@@ -102,7 +143,7 @@ func _close() -> void:
 		previous_focus.grab_focus()
 	queue_free()
 
-func _load(path: String, button: Button) -> void:
+func _load(path: String, button: Button, key: String) -> void:
 	get_tree().paused = false
 	var result := Global.load_game(path)
 	if result == OK:
@@ -112,4 +153,6 @@ func _load(path: String, button: Button) -> void:
 	status.show()
 	if result in [ERR_FILE_CORRUPT, ERR_FILE_NOT_FOUND]:
 		button.disabled = true
+		button.focus_mode = Control.FOCUS_NONE
+		_link_focus(campaign_buttons[key])
 	close_button.grab_focus()

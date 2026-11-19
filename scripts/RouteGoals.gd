@@ -26,7 +26,10 @@ const GUIDANCE := {
 
 @onready var heading: Label = %RouteTitle
 @onready var summary: Label = %RouteSummary
+@onready var harvest_entry: Label = %HarvestEntry
 @onready var rows: VBoxContainer = %GoalRows
+
+var world: Node2D
 
 func _map_available() -> bool:
 	return Global.ending_record.is_empty() and not Global.route_objectives().is_empty()
@@ -34,11 +37,13 @@ func _map_available() -> bool:
 func _refresh_on_open() -> void:
 	var goals := Global.route_objectives()
 	var complete := goals.filter(func(goal: Dictionary) -> bool: return goal.value >= goal.target).size()
-	var title := "守礼安邦" if Global.tax_reform_choice == Global.TaxReformChoice.TRADITIONAL else "税亩富民"
-	heading.text = title + " · 结局目标"
+	heading.text = "贡簿 · 守礼安邦" if Global.tax_reform_choice == Global.TaxReformChoice.TRADITIONAL else "新税册 · 税亩富民"
 	summary.text = "已达成 %d/%d 项" % [complete, goals.size()]
 	if Global.tax_reform_day > 0:
 		summary.text = "第 %d 天定案 · " % Global.tax_reform_day + summary.text
+	var entry := Global.route_harvest_note()
+	harvest_entry.text = entry
+	harvest_entry.visible = not entry.is_empty()
 	for row in rows.get_children():
 		rows.remove_child(row)
 		row.queue_free()
@@ -53,13 +58,27 @@ func _add_goal(goal: Dictionary) -> void:
 	var complete: bool = goal.value >= goal.target
 	row.get_node("%GoalTitle").text = goal.label
 	var detail: String = guide.detail
-	if not complete and kind in [Global.RouteGoal.OFFER_SILK, Global.RouteGoal.SELL_SILK]:
+	var action_text: String = _raid_action() if kind == Global.RouteGoal.RAIDS else guide.action
+	if not complete and kind in [Global.RouteGoal.TRIBUTE, Global.RouteGoal.TAXED_HARVEST]:
+		var harvest: Dictionary = world.council_harvest_forecast(Global.tax_reform_choice)
+		if kind == Global.RouteGoal.TRIBUTE and harvest.tribute > 0:
+			detail = "当前熟公田可纳贡 %d 份。" % harvest.tribute
+			action_text = "指路收公田"
+		elif kind == Global.RouteGoal.TAXED_HARVEST and harvest.stock > 0:
+			detail = "当前熟田可入仓 %d 份 · 税后 +%d 铜钱。" % [harvest.stock, harvest.copper]
+			action_text = "指路收熟田"
+	elif not complete and kind == Global.RouteGoal.COPPER:
+		var quote := Global.reform_sale_quote()
+		if not quote.is_empty():
+			detail = "可售 %d 份余粮 · +%d 铜钱。预留今夜口粮与备好的货。" % [quote.amount, quote.gain]
+			action_text = "查看售粮报价"
+	elif not complete and kind in [Global.RouteGoal.OFFER_SILK, Global.RouteGoal.SELL_SILK]:
 		var bolts := Global.silk_workshop.bolts
-		var action_text := "进献" if kind == Global.RouteGoal.OFFER_SILK else "出售"
+		var trade := "进献" if kind == Global.RouteGoal.OFFER_SILK else "出售"
 		if bolts > 0:
-			detail = "手中已有 %d 匹。到蚕桑页点「%s」，记入本案。" % [bolts, action_text]
+			detail = "手中已有 %d 匹。到蚕桑页点「%s」，记入本案。" % [bolts, trade]
 		else:
-			detail = "蚕桑页可查看现有蚕茧和生丝，缺叶时可标出桑田。织成后%s。" % action_text
+			detail = "蚕桑页可查看现有蚕茧和生丝，缺叶时可标出桑田。织成后%s。" % trade
 	row.get_node("%GoalDetail").text = detail
 	var count: Label = row.get_node("%GoalCount")
 	count.text = "%d / %d %s" % [goal.value, goal.target, guide.unit]
@@ -71,7 +90,7 @@ func _add_goal(goal: Dictionary) -> void:
 	progress.value = progress.max_value if complete else goal.value
 	var action: Button = row.get_node("%GoalAction")
 	action.visible = not complete
-	action.text = _raid_action() if kind == Global.RouteGoal.RAIDS else guide.action
+	action.text = action_text
 	action.pressed.connect(_take_action.bind(kind))
 
 func _raid_action() -> String:

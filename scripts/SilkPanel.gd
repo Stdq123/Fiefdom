@@ -128,6 +128,8 @@ func _process_all(action: SilkWorkshop.Action) -> void:
 func _act(action: SilkWorkshop.Action, amount := 1) -> void:
 	if not Global.use_workshop(action, amount):
 		_refresh()
+	elif action == SilkWorkshop.Action.SELL:
+		AudioManager.play_trade_cue(AudioManager.TradeCue.SALE)
 
 func _refresh() -> void:
 	var workshop := Global.silk_workshop

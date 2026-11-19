@@ -16,11 +16,19 @@ const SAVE_LOCATION_NAMES := {"ravine": "竹涧", "west_market": "西市", "west
 const RAVINE_TRIP_PLACES := ["野果坳", "望溪台", "柳湾", "砾滩", SummerRaft.PLACE]
 const MARKET_ORDERS := "收货牌"
 const MARKET_RETURN := "回封地"
+const FIELD_RETURN := "井田 1"
+const FREIGHT_YARD := "南路卸货场"
 const WATER_SOURCE := "水源"
+const POND_LANDING := CreekFish.PLACES[CreekFish.Site.POND]
+const ESTATE_REGIONAL_STOPS := [FIELD_RETURN, WATER_SOURCE, FREIGHT_YARD, POND_LANDING, WinterSupper.PLACE]
 const MARKET_PRODUCE := ["beans", "rice", "sorghum", "wheat"]
 const TAX_ENVOY := "召简"
 const TAX_COUNCIL_YEAR := 3
 const TAX_COUNCIL_PETITION_ORDERS := 2
+const PUBLIC_FIELD_OFFSETS: Array[Vector2i] = [Vector2i.ZERO]
+const COUNCIL_PUBLIC_FIELD_OFFSETS: Array[Vector2i] = [
+	Vector2i.ZERO, Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1),
+]
 const RECLAMATION_BOUNDS := Rect2i(-16, -10, 36, 23)
 const FIRST_FIELD_CENTER := Vector2i(5, 5)
 const RECLAMATION_NIGHTS := 4
@@ -31,14 +39,16 @@ const GATHERING_BEATS := 4
 const GATHERING_MIN_HITS := 3
 const GATHERING_MUSIC_XP := 30
 const FIELD_NIGHT_COUNTS := ["ready", "growing", "public_ripe", "private_ripe", "dry", "blocked"]
-const AWAY_FIELD_JOBS := ["watered", "harvested", "sown"]
-const AWAY_FIELD_YIELDS := ["tribute", "stock", "copper", "leaves"]
-const AWAY_FIELD_TOTALS := {
-	"watered": "浇水 %d 格", "harvested": "收割 %d 格", "sown": "补播 %d 格", "tribute": "国库 +%d",
+const FIELD_WORK_JOBS := ["tilled", "watered", "harvested", "sown"]
+const FIELD_WORK_YIELDS := ["tribute", "stock", "copper", "leaves"]
+const FIELD_WORK_TOTALS := {
+	"tilled": "翻地 %d 格", "watered": "浇水 %d 格", "harvested": "收割 %d 格",
+	"sown": "补播 %d 格", "tribute": "国库 +%d",
 	"stock": "私仓 +%d", "copper": "铜钱 +%d", "leaves": "桑叶 +%d",
 }
 const DAY_START_HOUR := 6.0
 const DAY_END_HOUR := 22.0
+const DAY_MINUTES := int((DAY_END_HOUR - DAY_START_HOUR) * 60.0)
 const DAY_WATCHES := ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"]
 
 # Game balance configuration
@@ -56,6 +66,8 @@ var night_rations := NightRations.new()
 var last_field_night: Dictionary = {}
 var last_dawn: Dictionary = {}
 var away_field_report: Dictionary = {}
+var field_wait_report: Dictionary = {}
+var wait_for_fields_before_sleep := false
 var _away_work_elapsed: Dictionary[RetainerData, float] = {}
 var player_inventory: int:
 	get: return crop_stock.count()
@@ -71,6 +83,7 @@ var legacy_order_start := 0
 var pinned_season_start := 0
 var travel_meal := ""
 var king_storage: int
+var first_tribute_entry: Dictionary = {}
 var private_harvest_total: int
 var first_harvest_reviewed := false
 var money: int
@@ -89,6 +102,7 @@ var east_watch_day := 0
 var watch_snare_armed := false
 var watch_snare_relief_used_day := 0
 var last_forage_day := 0
+var wild_herbs_packed := false
 var last_fishing_day := 0
 var ravine_trip_target := ""
 var market_trip_target := ""
@@ -96,6 +110,7 @@ var market_produce_bought_on := 0
 var restored_ravine_waypoint := ""
 var restored_ravine_south := false
 var restored_west_road_from_market := false
+var restored_walking_checkpoint: Dictionary = {}
 var fish_collection: Dictionary[String, Dictionary] = {}
 var fish_order_receipt: Dictionary = {}
 var creek_trap: Dictionary = {}
@@ -114,6 +129,7 @@ var retainers: Array[RetainerData] = []
 var days_without_contribution: int
 var visitor_encounters: Dictionary[String, int] = {}
 var neighbor_met_days: Dictionary[String, int] = {}
+var pavilion_stories_heard: Dictionary[String, int] = {}
 enum DepartureReason { UNRECORDED, HUNGER, REFORM }
 enum RecruitmentBlock { NONE, UNAVAILABLE, DAILY_LIMIT, JUST_LEFT, REPUTATION, FOOD }
 var neighbor_departures: Dictionary[String, Dictionary] = {}
@@ -138,8 +154,13 @@ var winter_suppers: Dictionary[int, Dictionary] = {}
 var active_crops: Dictionary = {}
 var tilled_cells: Dictionary = {}
 var field_route_status := -1
-var field_route_public_only := false
+var field_route_scope := FieldScope.ALL
+var rotation_route_cell: Variant = null
+var field_return_work: Dictionary = {}
 var field_seed_plans: Dictionary[Vector2i, String] = {}
+var deferred_field_sowing: Dictionary[Vector2i, bool] = {}
+var hold_private_harvest := false
+var council_tribute_rows := false
 var fertile_cells: Dictionary[Vector2i, bool] = {}
 var irrigation: Irrigation
 var first_channel_growth_day := 0
@@ -154,11 +175,18 @@ enum FieldGateSite { AVAILABLE, LOCKED, NOT_EDGE, NO_WATER, ALREADY_BUILT, NO_FU
 enum ReclamationSite { OPEN, EDGE, NEAR_FIELD, SOURCE, CANAL, ROAD, LANDMARK }
 enum CropWater { DRY, BLOCKED, HAND, CANAL, RAIN }
 enum NightGrowth { READY, DRY, BLOCKED, GROW, RIPEN }
+enum FieldScope { ALL, PUBLIC, PRIVATE }
+const FIELD_SCOPE_NAMES := {FieldScope.PUBLIC: "公田", FieldScope.PRIVATE: "私田"}
 enum MulberryRoute { PLANT = 5, WATER, HARVEST }
 enum TributeRoute { TEND = 8 }
-enum OrderFieldRoute { HARVEST = 9 }
+enum OrderFieldRoute { HARVEST = 9, PREPARE = 13 }
+enum RotationRoute { BEANS = 10, FOLLOWUP, CLEAR }
+enum SowingRoute { READY = 14 }
+enum OrderWork { HARVEST, WATER, SOW, WAIT }
+const ROTATION_ROUTES := [RotationRoute.BEANS, RotationRoute.FOLLOWUP, RotationRoute.CLEAR]
 const FIELD_ROUTE_STATES := [NightGrowth.READY, NightGrowth.DRY, NightGrowth.BLOCKED,
-	MulberryRoute.PLANT, MulberryRoute.WATER, MulberryRoute.HARVEST, TributeRoute.TEND, OrderFieldRoute.HARVEST]
+	MulberryRoute.PLANT, MulberryRoute.WATER, MulberryRoute.HARVEST, TributeRoute.TEND,
+	OrderFieldRoute.HARVEST, OrderFieldRoute.PREPARE, SowingRoute.READY] + ROTATION_ROUTES
 enum Season { SPRING, SUMMER, AUTUMN, WINTER }
 const SEASON_NAMES := ["春", "夏", "秋", "冬"]
 
@@ -172,6 +200,7 @@ enum Rank {
 }
 const WELL_FIELD_LIMITS: Array[int] = [1, 2, 4, 9, 16]
 var current_rank: Rank = Rank.XIA_SHI
+var rank_record: Dictionary = {}
 var attire_id := PlayerAttire.DEFAULT
 var hall_mat_id := HallDecor.DEFAULT_MAT
 var hall_shelf_id := HallDecor.DEFAULT_SHELF
@@ -204,6 +233,7 @@ var tax_reform_day: int = 0
 var tax_council_invited := false
 var research_choice_pending := false
 var route_baseline: Dictionary[String, int] = {}
+var route_harvest: Dictionary = {}
 var ending_record: Dictionary = {}
 var tax_rate: float = 0.0  # 改革后的税率（0.0-1.0，默认0表示未改革）
 var zhou_li_score: String = "中"  # 周礼评分（上上/上中/中上/中/中下/下中/下下）
@@ -251,6 +281,8 @@ func _reset_campaign() -> void:
 	last_field_night.clear()
 	last_dawn.clear()
 	away_field_report.clear()
+	field_wait_report.clear()
+	wait_for_fields_before_sleep = false
 	_away_work_elapsed.clear()
 	season_order_receipts.clear()
 	seed_garden_gift = ""
@@ -258,6 +290,7 @@ func _reset_campaign() -> void:
 	pinned_season_start = 0
 	travel_meal = ""
 	king_storage = 0
+	first_tribute_entry.clear()
 	private_harvest_total = 0
 	first_harvest_reviewed = false
 	money = 0
@@ -277,6 +310,7 @@ func _reset_campaign() -> void:
 	watch_snare_armed = false
 	watch_snare_relief_used_day = 0
 	last_forage_day = 0
+	wild_herbs_packed = false
 	last_fishing_day = 0
 	ravine_trip_target = ""
 	market_trip_target = ""
@@ -284,6 +318,7 @@ func _reset_campaign() -> void:
 	restored_ravine_waypoint = ""
 	restored_ravine_south = false
 	restored_west_road_from_market = false
+	restored_walking_checkpoint.clear()
 	creek_trap.clear()
 	fish_collection.clear()
 	fish_order_receipt.clear()
@@ -293,6 +328,7 @@ func _reset_campaign() -> void:
 	retainers = [_starter_retainer()]
 	visitor_encounters.clear()
 	neighbor_met_days.clear()
+	pavilion_stories_heard.clear()
 	neighbor_met_days[VisitorData.FIELD_KEEPER] = current_day
 	neighbor_departures.clear()
 	last_recruit_day = 0
@@ -313,8 +349,13 @@ func _reset_campaign() -> void:
 	active_crops.clear()
 	tilled_cells.clear()
 	field_route_status = -1
-	field_route_public_only = false
+	field_route_scope = FieldScope.ALL
+	rotation_route_cell = null
+	field_return_work.clear()
 	field_seed_plans.clear()
+	deferred_field_sowing.clear()
+	hold_private_harvest = false
+	council_tribute_rows = false
 	fertile_cells.clear()
 	irrigation = Irrigation.new()
 	first_channel_growth_day = 0
@@ -325,6 +366,7 @@ func _reset_campaign() -> void:
 	sheepfold = Sheepfold.new()
 	tech_unlocked = {"irrigation": false, "composite_bow": false}
 	current_rank = Rank.XIA_SHI
+	rank_record.clear()
 	attire_id = PlayerAttire.DEFAULT
 	hall_mat_id = HallDecor.DEFAULT_MAT
 	hall_shelf_id = HallDecor.DEFAULT_SHELF
@@ -336,6 +378,7 @@ func _reset_campaign() -> void:
 	tax_council_invited = false
 	research_choice_pending = false
 	route_baseline.clear()
+	route_harvest.clear()
 	ending_record.clear()
 	tax_rate = 0.0
 	zhou_li_score = "中"
@@ -357,6 +400,15 @@ func knows_neighbor(speaker: String) -> bool:
 func meet_neighbor(speaker: String) -> void:
 	if speaker in VisitorData.NEIGHBORS and not knows_neighbor(speaker):
 		neighbor_met_days[speaker] = current_day
+
+func hear_pavilion_story(id: String, day: int) -> void:
+	if outcome != Outcome.RUNNING or day != current_day or raid_day > 0 or id not in PavilionStories.IDS \
+			or pavilion_stories_heard.has(id) or not PavilionStories.available(id):
+		return
+	pavilion_stories_heard[id] = day
+	for speaker: String in PavilionStories.speakers(id):
+		meet_neighbor(speaker)
+	GameEvents.pavilion_story_heard.emit()
 
 func talk_to_visitor(visitor_name: String) -> void:
 	if visitor_encounters.get(visitor_name, 0) == current_day:
@@ -584,17 +636,24 @@ func is_indoors() -> bool:
 func begin_next_day() -> void:
 	current_day += 1
 	day_progress = 0.0
+	_prune_order_sowing()
 	last_dawn.clear()
-	field_route_status = -1
-	field_route_public_only = false
+	if field_route_status not in ROTATION_ROUTES and field_route_status != OrderFieldRoute.PREPARE:
+		field_route_status = -1
+		rotation_route_cell = null
+	field_route_scope = FieldScope.ALL
+	if field_return_work.get("status", -1) not in ROTATION_ROUTES + [OrderFieldRoute.PREPARE]:
+		field_return_work.clear()
 	away_field_report.clear()
+	field_wait_report.clear()
 	_away_work_elapsed.clear()
 	if sheepfold.owned():
 		sheepfold.settle_night(sheep_feed(sheepfold.fodder, current_day - 1), balance.sheep_wool_nights)
 		GameEvents.sheepfold_changed.emit()
 	GameEvents.daylight_changed.emit()
 
-func record_dawn(previous_rank: Rank, completed_fields: Array[int], research_fee: int, tribute_penalty: int) -> void:
+func record_dawn(previous_rank: Rank, completed_fields: Array[int], research_fee: int, tribute_penalty: int,
+		field_work: Dictionary, away_work: Dictionary) -> void:
 	last_dawn = {
 		"day": current_day - 1,
 		"rank_change": int(current_rank) - int(previous_rank),
@@ -603,6 +662,11 @@ func record_dawn(previous_rank: Rank, completed_fields: Array[int], research_fee
 		"research_gap": maxi(0, research_fee - money) if research_choice_pending else 0,
 		"tribute_penalty": tribute_penalty,
 	}
+	if not field_work.is_empty():
+		last_dawn.field_wait = field_work
+	var daytime := _restore_field_work_report(away_work, current_day - 1)
+	if not daytime.is_empty():
+		last_dawn.away_field = daytime
 
 func has_morning_record() -> bool:
 	return not last_dawn.is_empty() or not last_field_night.is_empty() or not night_rations.last.is_empty()
@@ -611,7 +675,7 @@ func dawn_milestones() -> PackedStringArray:
 	var lines := PackedStringArray()
 	var rank_change: int = last_dawn.get("rank_change", 0)
 	if rank_change > 0:
-		lines.append("晋升%s · 井田上限 %d 块 · 堂屋添了新衣" % [rank_names[current_rank], max_well_fields])
+		lines.append("晋升%s · 井田上限 %d 块 · 堂前挂了爵册" % [rank_names[current_rank], max_well_fields])
 	elif rank_change < 0:
 		lines.append("削爵至%s · 井田上限 %d 块" % [rank_names[current_rank], max_well_fields])
 	var completed: Array = last_dawn.get("completed_fields", [])
@@ -620,8 +684,6 @@ func dawn_milestones() -> PackedStringArray:
 		for number: int in completed:
 			numbers.append(str(number))
 		lines.append("井田 %s 已完工 · 可耕种" % "、".join(numbers))
-		if 2 in completed:
-			lines.append("可在「管理 → 封地概览」交接井田管事。")
 	var research_paid: int = last_dawn.get("research_paid", 0)
 	var research_gap: int = last_dawn.get("research_gap", 0)
 	if research_paid > 0:
@@ -787,6 +849,21 @@ func is_winter_supper_day(day := 0) -> bool:
 func winter_supper_record(day := 0) -> Dictionary:
 	return winter_suppers.get(day if day > 0 else current_day, {})
 
+func winter_supper_preparation_day() -> int:
+	var terms_left := SOLAR_TERMS.find(WinterSupper.TERM) - solar_term_index()
+	var day := _solar_term_start(current_day) + terms_left * maxi(1, balance.days_per_solar_term)
+	if day < current_day or day - current_day > festival_notice_lead(WinterSupper.TERM) or winter_suppers.has(day):
+		return 0
+	return day
+
+func winter_supper_route_open() -> bool:
+	return is_winter_supper_day() or winter_supper_preparation_day() > 0
+
+func winter_supper_fishing_site() -> int:
+	if pond_landing_day() > 0:
+		return CreekFish.Site.POND
+	return CreekFish.Site.POOL if knows_ravine_journal() else -1
+
 func winter_supper_bean_gift(day := 0) -> bool:
 	var date := day if day > 0 else current_day
 	if not is_winter_supper_day(date):
@@ -795,8 +872,19 @@ func winter_supper_bean_gift(day := 0) -> bool:
 	var harvest_day := date - terms_since_autumn * maxi(1, balance.days_per_solar_term)
 	return autumn_exhibit_record(harvest_day).get("shared", false)
 
-func _winter_supper_crops(recipe: String) -> Dictionary:
-	if recipe == WinterSupper.BEAN and winter_supper_bean_gift():
+func festival_notice_lead(term: String) -> int:
+	if term == WinterSupper.TERM:
+		return maxi(ItemManager.get_crop("wheat").days_to_grow, ItemManager.get_crop("beans").days_to_grow)
+	var lead := 1
+	if term == AutumnExhibit.TERM:
+		for id: String in AutumnExhibit.CROPS:
+			var crop := ItemManager.get_crop(id)
+			if not crop.is_water_crop:
+				lead = maxi(lead, crop.days_to_grow)
+	return lead
+
+func _winter_supper_crops(recipe: String, day := 0) -> Dictionary:
+	if recipe == WinterSupper.BEAN and winter_supper_bean_gift(day):
 		return {"wheat": 1}
 	return WinterSupper.RECIPES[recipe].crops
 
@@ -838,6 +926,8 @@ func place_autumn_exhibit(crops: Array[String], share: bool) -> bool:
 		GameEvents.reputation_changed.emit(reputation)
 	player_stats.add_xp(PlayerStats.Art.RITES, balance.autumn_exhibit_rites)
 	GameEvents.autumn_exhibit_completed.emit()
+	if night_rations.festival_day == _solar_term_start(current_day):
+		set_festival_pantry(0)
 	return true
 
 func crop_water(cell: Vector2i, crop: Dictionary, day := 0) -> CropWater:
@@ -849,107 +939,257 @@ func crop_water(cell: Vector2i, crop: Dictionary, day := 0) -> CropWater:
 		return CropWater.RAIN
 	return CropWater.HAND if crop["watered"] else CropWater.DRY
 
-func field_crop_is_dry(cell: Vector2i) -> bool:
-	var crop: Dictionary = active_crops.get(cell, {})
+func field_crop_is_dry(cell: Vector2i, preview: FieldWorkPreview = null) -> bool:
+	var crop: Dictionary = (preview.crops if preview else active_crops).get(cell, {})
 	return not crop.is_empty() and crop.age < crop.growth_nights and crop_water(cell, crop) == CropWater.DRY
 
-func field_crop_is_ripe(cell: Vector2i) -> bool:
-	var crop: Dictionary = active_crops.get(cell, {})
+func field_crop_is_ripe(cell: Vector2i, preview: FieldWorkPreview = null) -> bool:
+	var crop: Dictionary = (preview.crops if preview else active_crops).get(cell, {})
 	return not crop.is_empty() and crop.age >= crop.growth_nights
 
-func water_field_crop(cell: Vector2i) -> bool:
-	if not field_crop_is_dry(cell):
+func water_field_crop(cell: Vector2i, preview: FieldWorkPreview = null) -> bool:
+	if not field_crop_is_dry(cell, preview):
 		return false
-	active_crops[cell].watered = true
-	GameEvents.farm_state_changed.emit()
+	var crops := preview.crops if preview else active_crops
+	crops[cell].watered = true
+	if not preview:
+		GameEvents.farm_state_changed.emit()
 	return true
 
 func can_plan_field_seed(cell: Vector2i) -> bool:
-	if not tilled_cells.has(cell):
+	if not tilled_cells.has(cell) and (not first_tribute_delivered() or not _unlocked_field_contains(cell)):
 		return false
 	var crop: Dictionary = active_crops.get(cell, {})
 	return crop.is_empty() or not crop.data.is_perennial
+
+func till_field_plot(cell: Vector2i, preview: FieldWorkPreview = null) -> bool:
+	var tilled := preview.tilled if preview else tilled_cells
+	if outcome != Outcome.RUNNING or tilled.has(cell) or not _unlocked_field_contains(cell):
+		return false
+	tilled[cell] = true
+	return true
+
+func _unlocked_field_contains(cell: Vector2i) -> bool:
+	return not unlocked_field_at(cell).is_empty()
+
+func unlocked_field_at(cell: Vector2i) -> Dictionary:
+	for field in well_fields:
+		if field.is_unlocked and _well_field_cells(field.center_pos).has_point(cell):
+			return field
+	return {}
+
+func field_route_name(status: int, scope: FieldScope) -> String:
+	if status in ROTATION_ROUTES:
+		return "轮作私田"
+	var names := {
+		NightGrowth.READY: "收获", NightGrowth.DRY: "浇水", NightGrowth.BLOCKED: "断水",
+		MulberryRoute.PLANT: "种桑", MulberryRoute.WATER: "浇桑", MulberryRoute.HARVEST: "采桑叶",
+		TributeRoute.TEND: "照料公田", OrderFieldRoute.HARVEST: "收交货作物",
+		OrderFieldRoute.PREPARE: "备货私田", SowingRoute.READY: "按安排播种",
+	}
+	return String(names.get(status, "田务")) + FIELD_SCOPE_NAMES.get(scope, "")
+
+func field_return_caption() -> String:
+	if field_return_work.is_empty():
+		return ""
+	var field := unlocked_field_at(field_return_work.cell)
+	if field.is_empty():
+		return ""
+	return "井田 %d · %s" % [field.field_id + 1, field_route_name(field_return_work.status, field_return_work.scope)]
+
+func field_return_place_name() -> String:
+	return FIELD_RETURN if field_return_work.is_empty() else "田口"
+
+func _field_scope_for_route(status: int, scope: int) -> FieldScope:
+	if scope == FieldScope.PUBLIC and status in [NightGrowth.READY, NightGrowth.DRY, NightGrowth.BLOCKED]:
+		return FieldScope.PUBLIC
+	if scope == FieldScope.PRIVATE and status == NightGrowth.READY:
+		return FieldScope.PRIVATE
+	return FieldScope.ALL
+
+func _saved_field_return_work() -> Dictionary:
+	return {} if field_return_work.is_empty() else field_return_work.merged({"cell": _cell_key(field_return_work.cell)}, true)
+
+func _restore_field_return_work(saved: Variant) -> Dictionary:
+	if not saved is Dictionary:
+		return {}
+	var status := _read_save_int(saved.get("status"), -1)
+	var cell: Variant = _read_save_cell(saved.get("cell"))
+	if status not in FIELD_ROUTE_STATES or cell == null or unlocked_field_at(cell).is_empty():
+		return {}
+	var plan: bool = saved.get("plan", false) == true
+	var seed: Variant = saved.get("seed", "")
+	return {"status": status, "scope": _field_scope_for_route(status, _read_save_int(saved.get("scope"), FieldScope.ALL)),
+		"cell": cell, "seed": seed if seed is String else "", "plan": plan, "prepare": plan and saved.get("prepare", false) == true,
+		"replant": plan and saved.get("replant", false) == true}
 
 func set_field_seed_plan(cell: Vector2i, plan: String) -> void:
 	if not can_plan_field_seed(cell):
 		return
 	if plan.is_empty():
-		field_seed_plans.erase(cell)
+		_clear_seed_plan(cell)
 	elif FieldSeedPlan.is_valid(plan) and (not FieldSeedPlan.is_rotation(plan) or field_rotation.signed_day > 0):
+		if FieldSeedPlan.is_order(plan) and not _can_seed_order_crop(cell, plan):
+			return
 		field_seed_plans[cell] = plan
 
-func next_seed_for_plan(cell: Vector2i, plan: String) -> String:
+func _clear_seed_plan(cell: Vector2i, preview: FieldWorkPreview = null) -> void:
+	(preview.plans if preview else field_seed_plans).erase(cell)
+	(preview.deferred if preview else deferred_field_sowing).erase(cell)
+
+func can_defer_field_sowing(cell: Vector2i) -> bool:
+	return (field_sowing_can_defer() and not is_public_plot(cell)
+		and field_seed_plans.has(cell) and can_plan_field_seed(cell))
+
+func field_sowing_can_defer() -> bool:
+	return outcome == Outcome.RUNNING and tax_reform_choice in [TaxReformChoice.NONE, TaxReformChoice.DELAYED]
+
+func set_field_sowing_deferred(cell: Vector2i, deferred: bool) -> void:
+	if not deferred:
+		deferred_field_sowing.erase(cell)
+	elif can_defer_field_sowing(cell):
+		deferred_field_sowing[cell] = true
+
+func next_seed_for_plan(cell: Vector2i, plan: String, preview: FieldWorkPreview = null) -> String:
 	if plan == FieldSeedPlan.SEASONAL:
 		return FieldSeedPlan.seasonal_seed(season_index(), irrigation.supplies(cell))
 	if not FieldSeedPlan.is_rotation(plan):
-		return plan
-	var crop: Dictionary = active_crops.get(cell, {})
+		return FieldSeedPlan.crop_id(plan)
+	var crop: Dictionary = (preview.crops if preview else active_crops).get(cell, {})
 	# Preview the soil after harvest when a crop is still in the plot.
-	var prepared: bool = fertile_cells.has(cell) if crop.is_empty() else crop.data.restores_fertility
+	var soil := preview.fertile if preview else fertile_cells
+	var prepared: bool = soil.has(cell) if crop.is_empty() else crop.data.restores_fertility
 	return FieldSeedPlan.crop_id(plan) if prepared else FieldSeedPlan.BEANS
 
-func planned_field_seed(cell: Vector2i) -> String:
-	if active_crops.has(cell):
+func planned_field_seed(cell: Vector2i, include_untilled := false, preview: FieldWorkPreview = null) -> String:
+	if (preview.crops if preview else active_crops).has(cell):
 		return ""
-	var seed_id := next_seed_for_plan(cell, field_seed_plans.get(cell, ""))
-	if seed_id.is_empty():
+	var tilled := preview.tilled if preview else tilled_cells
+	if not tilled.has(cell) and (not include_untilled or not first_tribute_delivered() or not _unlocked_field_contains(cell)):
 		return ""
-	var seed := ItemManager.get_crop(seed_id)
-	return seed_id if not seed.is_water_crop or irrigation.supplies(cell) else ""
+	return _usable_seed_plan(cell, preview)
 
-func sow_field_crop(cell: Vector2i, seed_id: String) -> bool:
-	if seed_id.is_empty() or not tilled_cells.has(cell) or active_crops.has(cell):
+func planned_seed_after_harvest(cell: Vector2i) -> String:
+	if not tilled_cells.has(cell) or not field_crop_is_ripe(cell):
+		return ""
+	var crop: CropData = active_crops[cell].data
+	return "" if crop.is_perennial else _usable_seed_plan(cell)
+
+func _usable_seed_plan(cell: Vector2i, preview: FieldWorkPreview = null) -> String:
+	if (preview.deferred if preview else deferred_field_sowing).has(cell):
+		return ""
+	var plan: String = (preview.plans if preview else field_seed_plans).get(cell, "")
+	var seed_id := next_seed_for_plan(cell, plan, preview)
+	var seed := ItemManager.get_crop(seed_id)
+	return seed_id if seed and (not seed.is_water_crop or irrigation.supplies(cell)) else ""
+
+func sow_field_crop(cell: Vector2i, seed_id: String, preview: FieldWorkPreview = null) -> bool:
+	var crops := preview.crops if preview else active_crops
+	var tilled := preview.tilled if preview else tilled_cells
+	if seed_id.is_empty() or not tilled.has(cell) or crops.has(cell):
 		return false
 	var seed := ItemManager.get_crop(seed_id)
 	if seed == null or (seed.is_water_crop and not irrigation.supplies(cell)):
 		return false
-	active_crops[cell] = {"id": seed_id, "data": seed, "age": 0,
+	crops[cell] = {"id": seed_id, "data": seed, "age": 0,
 		"growth_nights": sowing_nights(seed), "watered": false, "requires_channel": seed.is_water_crop}
-	if seed.is_perennial:
-		field_seed_plans.erase(cell)
-	GameEvents.farm_state_changed.emit()
+	var plans := preview.plans if preview else field_seed_plans
+	if seed.is_perennial or FieldSeedPlan.is_order(plans.get(cell, "")):
+		_clear_seed_plan(cell, preview)
+	if not preview:
+		GameEvents.farm_state_changed.emit()
 	return true
 
-enum FieldJob { NONE, WATER, SOW, HARVEST }
+enum FieldJob { NONE, WATER, SOW, HARVEST, TILL }
 
-func field_job(worker: RetainerData, cell: Vector2i) -> FieldJob:
+class FieldWorkPreview:
+	var crops: Dictionary
+	var tilled: Dictionary
+	var plans: Dictionary[Vector2i, String]
+	var deferred: Dictionary[Vector2i, bool]
+	var fertile: Dictionary[Vector2i, bool]
+	var watered_cells: Array[Vector2i] = []
+
+func can_hold_private_harvest() -> bool:
+	return (outcome == Outcome.RUNNING and first_tribute_delivered()
+		and tax_reform_choice in [TaxReformChoice.NONE, TaxReformChoice.DELAYED])
+
+func set_private_harvest_hold(enabled: bool) -> void:
+	if enabled == hold_private_harvest or (enabled and not can_hold_private_harvest()):
+		return
+	hold_private_harvest = enabled
+	GameEvents.farm_state_changed.emit()
+
+func private_harvest_is_held(cell: Vector2i) -> bool:
+	return hold_private_harvest and not is_public_plot(cell)
+
+func field_job(worker: RetainerData, cell: Vector2i, preview: FieldWorkPreview = null) -> FieldJob:
 	if worker.duty == RetainerData.Duty.STEWARD:
 		var center: Vector2i = stewarded_field(worker).center_pos
 		if not _well_field_cells(center).has_point(cell):
 			return FieldJob.NONE
-	if worker.duty in [RetainerData.Duty.HARVEST, RetainerData.Duty.STEWARD] and field_crop_is_ripe(cell):
+	if (worker.duty in [RetainerData.Duty.HARVEST, RetainerData.Duty.STEWARD]
+			and field_crop_is_ripe(cell, preview) and not private_harvest_is_held(cell)):
 		return FieldJob.HARVEST
 	if worker.duty in [RetainerData.Duty.FIELD, RetainerData.Duty.STEWARD]:
-		if field_crop_is_dry(cell):
+		if field_crop_is_dry(cell, preview):
 			return FieldJob.WATER
-		if not planned_field_seed(cell).is_empty():
+		var plan: String = (preview.plans if preview else field_seed_plans).get(cell, "")
+		if FieldSeedPlan.is_order(plan):
+			var seed := ItemManager.get_crop(FieldSeedPlan.crop_id(plan))
+			if worker.duty != RetainerData.Duty.STEWARD or (seed.is_water_crop and not irrigation.supplies(cell)):
+				return FieldJob.NONE
+		if not planned_field_seed(cell, false, preview).is_empty():
 			return FieldJob.SOW
+		var tilled := preview.tilled if preview else tilled_cells
+		var deferred := preview.deferred if preview else deferred_field_sowing
+		if not tilled.has(cell) and not plan.is_empty() and not deferred.has(cell):
+			return FieldJob.TILL
 	return FieldJob.NONE
 
-func crop_rotation_bonus(cell: Vector2i, crop: CropData) -> int:
-	return int(not crop.restores_fertility and fertile_cells.has(cell))
+func field_work_cells(preview: FieldWorkPreview = null) -> Array[Vector2i]:
+	var tilled := preview.tilled if preview else tilled_cells
+	var plans := preview.plans if preview else field_seed_plans
+	var cells: Array[Vector2i] = []
+	cells.assign(tilled.keys())
+	for cell: Vector2i in plans:
+		if not tilled.has(cell):
+			cells.append(cell)
+	return cells
 
-func harvest_field_crop(cell: Vector2i) -> Dictionary:
-	if outcome != Outcome.RUNNING or not field_crop_is_ripe(cell):
+func crop_rotation_bonus(cell: Vector2i, crop: CropData, preview: FieldWorkPreview = null) -> int:
+	var soil := preview.fertile if preview else fertile_cells
+	return int(not crop.restores_fertility and soil.has(cell))
+
+func harvest_field_crop(cell: Vector2i, worker: RetainerData = null, preview: FieldWorkPreview = null) -> Dictionary:
+	if (outcome != Outcome.RUNNING or not field_crop_is_ripe(cell, preview)
+			or (worker != null and private_harvest_is_held(cell))):
 		return {}
-	var crop: Dictionary = active_crops[cell]
+	var crops := preview.crops if preview else active_crops
+	var soil := preview.fertile if preview else fertile_cells
+	var crop: Dictionary = crops[cell]
 	var data: CropData = crop.data
 	var crop_id: String = crop.id
 	var public_plot := is_public_plot(cell)
-	var first_tribute := public_plot and not first_tribute_delivered()
-	var rotation := crop_rotation_bonus(cell, data)
+	var rotation := crop_rotation_bonus(cell, data, preview)
 	if rotation > 0:
-		fertile_cells.erase(cell)
+		soil.erase(cell)
 	if data.restores_fertility:
-		fertile_cells[cell] = true
+		soil[cell] = true
 	if data.is_perennial:
 		crop.age = mini(1, data.days_to_grow - 1)
 		crop.growth_nights = data.days_to_grow
 		crop.watered = false
 	else:
-		active_crops.erase(cell)
+		crops.erase(cell)
 	var proceeds := harvest_proceeds(public_plot, data.sell_price, rotation, tax_reform_choice, tax_rate)
+	if preview:
+		return proceeds
+	var first_tribute: bool = proceeds.tribute > 0 and not first_tribute_delivered()
+	if first_tribute:
+		first_tribute_entry = _harvest_entry(cell, crop_id, proceeds.tribute, worker)
 	_record_harvest(proceeds, crop_id)
+	_note_route_harvest(cell, crop_id, proceeds, worker)
 	player_stats.add_xp(PlayerStats.Art.MATH, 5)
 	var leaves := collect_mulberry_leaves(proceeds.stock) if not public_plot and crop_id == "mulberry" else 0
 	if not public_plot and (rotation > 0 or data.restores_fertility):
@@ -960,76 +1200,212 @@ func harvest_field_crop(cell: Vector2i) -> Dictionary:
 	return proceeds
 
 func advance_away_field_work(seconds: float) -> void:
-	if outcome != Outcome.RUNNING or tilled_cells.is_empty():
+	if outcome != Outcome.RUNNING or (tilled_cells.is_empty() and field_seed_plans.is_empty()):
 		return
 	for worker in retainers:
 		if not worker.works_fields():
 			continue
-		var period := balance.away_field_work_seconds / maxf(0.1, worker.get_work_efficiency())
+		var period := _field_work_seconds(worker)
 		var elapsed: float = _away_work_elapsed.get(worker, 0.0) + seconds
 		while elapsed >= period and outcome == Outcome.RUNNING:
-			var cell := _away_work_plot(worker)
+			var cell := _timed_work_plot(worker)
 			if cell == RetainerData.NO_ASSIGNMENT:
 				elapsed = 0.0
 				break
 			elapsed -= period
-			_finish_away_field_work(field_job(worker, cell), cell)
+			var first_tribute := _finish_timed_field_work(field_job(worker, cell), cell, away_field_report, worker)
+			away_field_report.first_tribute = away_field_report.get("first_tribute", false) or first_tribute
+			away_field_report.pending = true
 		_away_work_elapsed[worker] = elapsed
 
-func _away_work_plot(worker: RetainerData) -> Vector2i:
+func field_wait_offer() -> Dictionary:
+	if outcome != Outcome.RUNNING or retainers.is_empty():
+		return {"plots": 0, "available": false}
+	var time_left := _daylight_left()
+	var plots := 0
+	var can_finish := false
+	for cell: Vector2i in field_work_cells():
+		var covered := false
+		for worker in retainers:
+			if field_job(worker, cell) != FieldJob.NONE:
+				covered = true
+				can_finish = can_finish or _field_work_seconds(worker) <= time_left
+		plots += int(covered)
+	return {"plots": plots, "available": can_finish and raid_day == 0 and not tax_council_waiting()}
+
+func set_wait_for_fields_before_sleep(enabled: bool) -> void:
+	if outcome != Outcome.RUNNING or enabled == wait_for_fields_before_sleep or (enabled and not first_tribute_delivered()):
+		return
+	wait_for_fields_before_sleep = enabled
+	GameEvents.field_wait_policy_changed.emit()
+
+func wait_for_field_work() -> Dictionary:
+	if not field_wait_offer().available:
+		return {}
+	var result := _run_timed_field_work(_daylight_left(), field_wait_report)
+	var elapsed: float = result.seconds
+	if elapsed > 0.0 and not field_wait_report.is_empty():
+		field_wait_report.minutes = mini(DAY_MINUTES, int(field_wait_report.get("minutes", 0)) + _field_wait_minutes(elapsed))
+	return result
+
+func bedtime_field_forecast() -> Dictionary:
+	if not wait_for_fields_before_sleep or not first_tribute_delivered() or not field_wait_offer().available:
+		return {}
+	# Copy the rows as well as the crop list. A preview can water a crop or leave its perennial roots.
+	var preview := FieldWorkPreview.new()
+	preview.crops = active_crops.duplicate(true)
+	preview.tilled = tilled_cells.duplicate()
+	preview.plans = field_seed_plans.duplicate()
+	preview.deferred = deferred_field_sowing.duplicate()
+	preview.fertile = fertile_cells.duplicate()
+	var work := {}
+	var result := _run_timed_field_work(_daylight_left(), work, preview)
+	return {"growth": field_night_forecast(0, preview), "work": work, "seconds": result.seconds,
+		"watered_cells": preview.watered_cells}
+
+func _run_timed_field_work(limit: float, report: Dictionary, preview: FieldWorkPreview = null) -> Dictionary:
+	var elapsed := 0.0
+	# Workers share the remaining daylight. A plot stays reserved until its job finishes.
+	var booked: Dictionary[RetainerData, Dictionary] = {}
+	var reserved: Array[Vector2i] = []
+	var workers := retainers.filter(func(worker: RetainerData) -> bool: return worker.works_fields())
+	var first_tribute := false
+	while outcome == Outcome.RUNNING and raid_day == 0:
+		var next: RetainerData
+		for worker in workers:
+			if not booked.has(worker):
+				var finish := elapsed + _field_work_seconds(worker)
+				if finish > limit:
+					continue
+				var cell := _timed_work_plot(worker, reserved, preview)
+				if cell == RetainerData.NO_ASSIGNMENT:
+					continue
+				booked[worker] = {"cell": cell, "job": field_job(worker, cell, preview), "finish": finish}
+				reserved.append(cell)
+			if next == null or booked[worker].finish < booked[next].finish:
+				next = worker
+		if next == null:
+			break
+		var task := booked[next]
+		booked.erase(next)
+		reserved.erase(task.cell)
+		# Publish a new watch after the job reaching it has settled.
+		var seconds: float = task.finish - elapsed
+		elapsed = task.finish
+		if retainers.has(next) and field_job(next, task.cell, preview) == task.job:
+			var delivered := _finish_timed_field_work(task.job, task.cell, report, next, preview)
+			first_tribute = first_tribute or delivered
+		if not preview:
+			advance_daylight(seconds)
+	return {"seconds": elapsed, "first_tribute": first_tribute}
+
+func _field_wait_minutes(seconds: float) -> int:
+	return roundi(seconds * DAY_MINUTES / maxf(1.0, balance.daylight_seconds))
+
+func _daylight_left() -> float:
+	return (1.0 - day_progress) * maxf(1.0, balance.daylight_seconds)
+
+func _field_work_seconds(worker: RetainerData) -> float:
+	return balance.away_field_work_seconds / maxf(0.1, worker.get_work_efficiency())
+
+func _timed_work_plot(worker: RetainerData, reserved: Array[Vector2i] = [], preview: FieldWorkPreview = null) -> Vector2i:
 	var anchor := worker.assigned_area if worker.assigned_area != RetainerData.NO_ASSIGNMENT else FIRST_FIELD_CENTER
 	var nearest := RetainerData.NO_ASSIGNMENT
 	var distance := INF
-	for cell: Vector2i in tilled_cells:
+	var tilled := preview.tilled if preview else tilled_cells
+	for cell: Vector2i in field_work_cells(preview):
+		# Work already in cultivation takes priority over opening new soil.
+		if tilled.has(nearest) and not tilled.has(cell):
+			break
 		var distance_to_anchor := cell.distance_squared_to(anchor)
-		if distance_to_anchor < distance and field_job(worker, cell) != FieldJob.NONE:
+		if distance_to_anchor < distance and cell not in reserved and field_job(worker, cell, preview) != FieldJob.NONE:
 			nearest = cell
 			distance = distance_to_anchor
 	return nearest
 
-func _finish_away_field_work(job: FieldJob, cell: Vector2i) -> void:
-	if away_field_report.is_empty():
-		away_field_report = {"day": current_day, "first_tribute": false}
-		for key in AWAY_FIELD_TOTALS:
-			away_field_report[key] = 0
+func _finish_timed_field_work(job: FieldJob, cell: Vector2i, report: Dictionary, worker: RetainerData,
+		preview: FieldWorkPreview = null) -> bool:
+	if report.is_empty():
+		report.day = current_day
+		for key in FIELD_WORK_TOTALS:
+			report[key] = 0
 	match job:
+		FieldJob.TILL:
+			if till_field_plot(cell, preview):
+				report.tilled += 1
+				if not preview:
+					GameEvents.farm_state_changed.emit()
 		FieldJob.WATER:
-			water_field_crop(cell)
-			away_field_report.watered += 1
+			if water_field_crop(cell, preview):
+				report.watered += 1
+				if preview:
+					preview.watered_cells.append(cell)
 		FieldJob.SOW:
-			sow_field_crop(cell, planned_field_seed(cell))
-			away_field_report.sown += 1
+			if sow_field_crop(cell, planned_field_seed(cell, false, preview), preview):
+				report.sown += 1
 		FieldJob.HARVEST:
-			var harvest := harvest_field_crop(cell)
-			away_field_report.harvested += 1
-			away_field_report.first_tribute = away_field_report.first_tribute or harvest.first_tribute
-			for key in AWAY_FIELD_YIELDS:
-				away_field_report[key] += harvest[key]
-	away_field_report.pending = true
+			var harvest := harvest_field_crop(cell, worker, preview)
+			if not harvest.is_empty():
+				report.harvested += 1
+				for key in FIELD_WORK_YIELDS:
+					report[key] += harvest.get(key, 0)
+				return harvest.get("first_tribute", false)
+	return false
 
 func away_field_summary(keys: Array = []) -> String:
-	var included_keys := AWAY_FIELD_TOTALS.keys() if keys.is_empty() else keys
+	return field_work_summary(away_field_report, keys)
+
+func field_work_summary(report: Dictionary, keys: Array = []) -> String:
+	var included_keys := FIELD_WORK_TOTALS.keys() if keys.is_empty() else keys
 	var results := PackedStringArray()
 	for key in included_keys:
-		var count: int = away_field_report.get(key, 0)
+		var count: int = report.get(key, 0)
 		if count > 0:
-			results.append(AWAY_FIELD_TOTALS[key] % count)
+			results.append(FIELD_WORK_TOTALS[key] % count)
 	return " · ".join(results)
 
-func acknowledge_away_field_work() -> bool:
+func take_away_field_receipt() -> Dictionary:
 	_away_work_elapsed.clear()
 	if not away_field_report.get("pending", false):
-		return false
+		return {}
+	var reported: Dictionary = away_field_report.get("reported", {})
+	var receipt := {"whole_day": reported.is_empty(), "first_tribute": away_field_report.first_tribute}
+	var totals := {}
+	for key in FIELD_WORK_TOTALS:
+		var total: int = away_field_report[key]
+		receipt[key] = total - int(reported.get(key, 0))
+		totals[key] = total
+	away_field_report.reported = totals
 	away_field_report.pending = false
-	return true
+	away_field_report.first_tribute = false
+	return receipt if not field_work_summary(receipt, FIELD_WORK_JOBS).is_empty() else {}
 
-func is_public_plot(cell: Vector2i) -> bool:
+func can_arrange_council_tribute_rows() -> bool:
+	return (outcome == Outcome.RUNNING and tax_reform_choice == TaxReformChoice.NONE
+		and not tax_council_invited and first_tribute_delivered()
+		and (current_rank >= Rank.SHANG_SHI or council_tribute_rows))
+
+func set_council_tribute_rows(enabled: bool) -> void:
+	if enabled == council_tribute_rows or (enabled and not can_arrange_council_tribute_rows()):
+		return
+	council_tribute_rows = enabled
+	GameEvents.council_tribute_rows_changed.emit()
+	GameEvents.farm_state_changed.emit()
+
+func public_field_offsets(include_council_rows := true) -> Array[Vector2i]:
+	return COUNCIL_PUBLIC_FIELD_OFFSETS if include_council_rows and council_tribute_rows else PUBLIC_FIELD_OFFSETS
+
+func is_public_plot(cell: Vector2i, include_council_rows := true) -> bool:
 	if tax_reform_choice == TaxReformChoice.REFORMED:
 		return false
+	var offsets := public_field_offsets(include_council_rows)
 	for field in well_fields:
-		if field["is_unlocked"] and field["center_pos"] == cell:
+		if field.is_unlocked and cell - field.center_pos in offsets:
 			return true
 	return false
+
+func field_scope_matches(cell: Vector2i, scope: FieldScope) -> bool:
+	return scope == FieldScope.ALL or is_public_plot(cell) == (scope == FieldScope.PUBLIC)
 
 func night_growth(crop: Dictionary, water: CropWater) -> NightGrowth:
 	var nights_left: int = crop["growth_nights"] - crop["age"]
@@ -1044,12 +1420,16 @@ func crop_night_status(cell: Vector2i, day := 0) -> int:
 	var crop: Dictionary = active_crops.get(cell, {})
 	return -1 if crop.is_empty() else night_growth(crop, crop_water(cell, crop, day))
 
-func field_night_forecast(day := 0) -> Dictionary:
+func field_night_forecast(day := 0, preview: FieldWorkPreview = null) -> Dictionary:
 	var report := {"day": current_day if day <= 0 else day}
 	for key in FIELD_NIGHT_COUNTS:
 		report[key] = 0
-	for cell: Vector2i in active_crops:
-		match crop_night_status(cell, report.day):
+	var crops := preview.crops if preview else active_crops
+	for cell: Vector2i in crops:
+		var crop: Dictionary = crops[cell]
+		if crop.is_empty():
+			continue
+		match night_growth(crop, crop_water(cell, crop, report.day)):
 			NightGrowth.READY: report.ready += 1
 			NightGrowth.DRY: report.dry += 1
 			NightGrowth.BLOCKED: report.blocked += 1
@@ -1065,28 +1445,34 @@ func tribute_field_plan() -> Dictionary:
 	var plan := {}
 	var sowing_seed := ""
 	var earliest := INF
+	var best_can_grow := false
+	var offsets := public_field_offsets()
 	for field in well_fields:
-		if not field["is_unlocked"]:
+		if not field.is_unlocked:
 			continue
-		var cell: Vector2i = field["center_pos"]
-		var crop: Dictionary = active_crops.get(cell, {})
-		var status := crop_night_status(cell)
-		var seed := ""
-		var nights: int
-		var crop_data: CropData
-		if crop.is_empty():
-			if sowing_seed.is_empty():
-				sowing_seed = tribute_seed()
-			seed = sowing_seed
-			crop_data = ItemManager.get_crop(seed)
-			nights = sowing_nights(crop_data)
-		else:
-			crop_data = crop.data
-			nights = maxi(0, int(crop.growth_nights) - int(crop.age))
-		if nights < earliest or (nights == earliest and plan.status == NightGrowth.BLOCKED and status != NightGrowth.BLOCKED):
-			earliest = nights
-			plan = {"cell": cell, "field": int(field["field_id"]) + 1, "status": status,
-				"seed_id": seed, "crop": crop_data.crop_name, "ready_day": current_day + nights}
+		for offset in offsets:
+			var cell: Vector2i = field.center_pos + offset
+			var crop: Dictionary = active_crops.get(cell, {})
+			var status := crop_night_status(cell)
+			var seed := ""
+			var nights: int
+			var crop_data: CropData
+			if crop.is_empty():
+				if sowing_seed.is_empty():
+					sowing_seed = tribute_seed()
+				seed = sowing_seed
+				crop_data = ItemManager.get_crop(seed)
+				nights = sowing_nights(crop_data)
+			else:
+				crop_data = crop.data
+				nights = maxi(0, int(crop.growth_nights) - int(crop.age))
+			var can_grow := status != NightGrowth.BLOCKED
+			if (plan.is_empty() or (can_grow and not best_can_grow)
+				or (can_grow == best_can_grow and nights < earliest)):
+				earliest = nights
+				best_can_grow = can_grow
+				plan = {"cell": cell, "field": int(field.field_id) + 1, "status": status,
+					"seed_id": seed, "crop": crop_data.crop_name, "ready_day": current_day + nights}
 	return plan
 
 func tribute_seed() -> String:
@@ -1255,6 +1641,46 @@ func set_route_baseline(saved: Dictionary = {}) -> void:
 		"sold": clampi(_read_save_int(saved.get("sold"), silk_bolts_sold), 0, silk_bolts_sold)
 	}
 
+func _note_route_harvest(cell: Vector2i, crop_id: String, proceeds: Dictionary, worker: RetainerData) -> void:
+	if not route_harvest.is_empty() or not ending_record.is_empty():
+		return
+	var amount := 0
+	match tax_reform_choice:
+		TaxReformChoice.TRADITIONAL: amount = proceeds.tribute
+		TaxReformChoice.REFORMED: amount = proceeds.stock
+	if amount <= 0:
+		return
+	route_harvest = _harvest_entry(cell, crop_id, amount, worker)
+	if not route_harvest.is_empty():
+		route_harvest.copper = proceeds.copper
+		route_harvest.levy = proceeds.levy
+
+func _harvest_entry(cell: Vector2i, crop_id: String, amount: int, worker: RetainerData) -> Dictionary:
+	for field: Dictionary in well_fields:
+		if field.is_unlocked and _well_field_cells(field.center_pos).has_point(cell):
+			return {"day": current_day, "field": field.field_id, "crop": crop_id, "amount": amount,
+				"worker": _harvest_worker_name(worker.name) if worker else ""}
+	return {}
+
+func first_tribute_note() -> String:
+	return "" if first_tribute_entry.is_empty() else _harvest_entry_line(first_tribute_entry) + "，入国库。"
+
+func route_harvest_note() -> String:
+	if route_harvest.is_empty():
+		return ""
+	var details := "入国库。"
+	if tax_reform_choice == TaxReformChoice.REFORMED:
+		details = "入私仓，实扣税 %d 铜钱，实收 %d 铜钱。" % [route_harvest.levy, route_harvest.copper]
+	return _harvest_entry_line(route_harvest) + "，" + details
+
+func _harvest_entry_line(entry: Dictionary) -> String:
+	var harvester: String = "你" if entry.worker.is_empty() else entry.worker
+	return "第 %d 天 · %s从井田 %d 收下 %d 份%s" % [entry.day, harvester,
+		entry.field + 1, entry.amount, ItemManager.crop_label(entry.crop)]
+
+func _harvest_worker_name(value: String) -> String:
+	return value.replace("\n", " ").replace("\r", " ").strip_edges().left(24)
+
 func route_objectives(choice := TaxReformChoice.NONE) -> Array[Dictionary]:
 	var baseline: Dictionary = route_baseline if choice == TaxReformChoice.NONE else {}
 	if choice == TaxReformChoice.NONE:
@@ -1315,12 +1741,12 @@ func _strip_rank() -> void:
 	if current_rank == Rank.XIA_SHI:
 		finish_campaign(Outcome.DEFEAT_ESTATE)
 		return
+	var previous := current_rank
 	current_rank = (current_rank - 1) as Rank
 	if not can_wear_attire(attire_id):
 		change_attire(PlayerAttire.DEFAULT)
 	days_without_contribution = 0
-	_update_max_well_fields()
-	GameEvents.rank_changed.emit(current_rank)
+	_record_rank_change(previous)
 
 func hurt_player(damage: int) -> void:
 	if outcome != Outcome.RUNNING or damage <= 0:
@@ -1347,6 +1773,9 @@ func finish_campaign(result: Outcome) -> void:
 		if not ending_record.is_empty():
 			return
 		ending_record = _capture_ending(result)
+		var farewell := _ending_farewell(result)
+		if not farewell.is_empty():
+			ending_record["farewell"] = farewell
 	outcome = result
 	GameEvents.campaign_ended.emit(outcome)
 
@@ -1369,8 +1798,37 @@ func _capture_ending(result: Outcome) -> Dictionary:
 		"memories": _ending_memories()
 	}
 
+func _ending_farewell(result: Outcome) -> Dictionary:
+	var speakers := retainers.filter(func(resident: RetainerData) -> bool: return resident.name in VisitorData.NEIGHBORS)
+	if speakers.is_empty():
+		return {}
+	var traditional := result == Outcome.TRADITIONAL
+	if not traditional and tax_reform_day > 0:
+		for resident: RetainerData in speakers:
+			var departure: Dictionary = neighbor_departures.get(resident.name, {})
+			if departure.get("reason") == DepartureReason.REFORM and int(departure.get("returned_day", 0)) > tax_reform_day:
+				return {"speaker": resident.name, "line": "议税那天我卷了铺席。这回回来，还是铺在原来的地方。明早一起去田边走一趟吧。"}
+	if not well_fields.is_empty():
+		for resident: RetainerData in speakers:
+			if resident.duty == RetainerData.Duty.STEWARD:
+				var field: int = stewarded_field(resident).field_id
+				var line := ("井田 %d 我接着照料。等公田再熟，就把谷送到这里。" if traditional else
+					"井田 %d 我接着照料。等谷熟了，咱们还来这张案上照册记一笔。")
+				return {"speaker": resident.name, "line": line % (field + 1), "field": field}
+	var names := speakers.map(func(resident: RetainerData) -> String: return resident.name)
+	if not traditional and VisitorData.SILK_MERCHANT in names:
+		return {"speaker": VisitorData.SILK_MERCHANT, "line": "新册先放这儿。西市下回开张，我还想带一匹咱们的绸去。"}
+	if VisitorData.FIELD_KEEPER in names:
+		var line := ("给公田挑水那只旧桶还在。明早提上它，咱们再看看田哪儿干了。" if traditional else
+			"新册添了几亩，水照旧从一口井里挑。明早你提桶，我去田边等你。")
+		return {"speaker": VisitorData.FIELD_KEEPER, "line": line}
+	return {"speaker": names.front(), "line": "等人散了，我来收案上的木筹。明早开门，又是一日。"}
+
 func _ending_memories() -> Array[String]:
 	var events: Array[Dictionary] = []
+	for id: String in PavilionStories.IDS:
+		if pavilion_stories_heard.has(id):
+			events.append({"day": pavilion_stories_heard[id], "text": PavilionStories.STORIES[id].memory})
 	if field_rotation.signed_day > 0:
 		events.append({"day": field_rotation.signed_day, "text": "渠伯把%s的收成记进轮作簿。" % rotation_crop_name()})
 	if ravine_journal.garden_day > 0:
@@ -1409,7 +1867,15 @@ func _ending_memories() -> Array[String]:
 	for order: Dictionary in SeasonOrders.ORDERS + SeasonOrders.FOLLOW_UP_ORDERS:
 		var receipt: Dictionary = season_order_receipts.get(order.id, {})
 		var day: int = receipt.get("day", 0)
-		var received := relief if order.id == SeasonOrders.WATCH_RELIEF else garden_day if order.id in SeasonOrders.SEED_ORDERS else 0
+		var received := 0
+		match order.id:
+			SeasonOrders.WATCH_RELIEF: received = relief
+			SeasonOrders.WINTER_WOVEN_GOODS: received = rations_day
+			_:
+				if order.id in SeasonOrders.SEED_ORDERS:
+					received = garden_day
+				elif order.id in SeasonOrders.POND_ORDERS:
+					received = pond_day
 		if day > latest_order.get("day", 0) and received < day:
 			latest_order = {"day": day, "text": "西市收下了你备齐的「%s」。" % order.title}
 	if not latest_order.is_empty():
@@ -1426,7 +1892,11 @@ func _ending_memories() -> Array[String]:
 		moments.append("渠水已送到 %d 块井田。" % irrigated)
 	if silk_workshop.built:
 		moments.append("蚕室已能养蚕、缫丝和织绸。")
-	return moments.slice(0, 3)
+	var account_notes := moments.slice(0, 3)
+	var harvest_note := route_harvest_note()
+	if not harvest_note.is_empty():
+		account_notes.push_front(harvest_note)
+	return account_notes
 
 func continue_after_ending(position: Vector2, direction: Vector2) -> Error:
 	var tree := get_tree()
@@ -1472,7 +1942,7 @@ func defeat_raid(guard_name := "") -> void:
 	raid_crop_losses = 0
 	raids_defeated += 1
 	GameEvents.raid_defeated.emit()
-	var follow_up := " · 可找弋戎复盘" if defense_review_ready() else ""
+	var follow_up := " · 可查守备战报" if defense_review_ready() else ""
 	GameEvents.world_notice.emit("击退%s · %s%s" % [raid_name(raid_kind), defense_loss_note(), follow_up])
 
 func defense_review_ready() -> bool:
@@ -1483,8 +1953,8 @@ func review_defense() -> bool:
 		return false
 	east_watch_day = current_day
 	GameEvents.east_watch_built.emit()
-	if not is_raid_day(current_day + 1):
-		GameEvents.world_notice.emit("东路岗立了守备牌 · 靠近按 %s 查看" % GamepadInput.interact_key())
+	var notice := "" if is_raid_day(current_day + 1) else "东路岗立了守备牌 · 靠近按 %s 查看" % GamepadInput.interact_key()
+	GameEvents.world_notice.emit(notice)
 	return true
 
 func defense_loss_note() -> String:
@@ -1553,7 +2023,9 @@ func ravine_place_detail(place: String) -> String:
 			return "野果 · 粮食 +%d" % balance.wild_food_yield
 		"望溪台":
 			var recovered := wild_herb_recovery()
-			return "野药 · 气血 +%d" % recovered if recovered > 0 else "野药 · 气血充足"
+			var treatment := "气血 +%d" % recovered if recovered > 0 else "气血充足"
+			var carry := "已带野药" if wild_herbs_packed else "可带一份"
+			return "野药 · %s · %s" % [treatment, carry]
 	var site := CreekFish.PLACES.find(place)
 	if site < 0:
 		return ""
@@ -1736,6 +2208,22 @@ func forage_herbs() -> void:
 	var recovered := _heal_with_herbs()
 	GameEvents.world_notice.emit("敷了野药 · 气血 +%d" % recovered)
 
+func pack_wild_herbs() -> bool:
+	if wild_herbs_packed or outcome != Outcome.RUNNING or not _take_forage_slot():
+		return false
+	wild_herbs_packed = true
+	GameEvents.wild_herbs_changed.emit()
+	GameEvents.world_notice.emit("野药已装入背包 · 受伤时可敷用")
+	return true
+
+func use_packed_wild_herbs() -> int:
+	if not wild_herbs_packed or outcome != Outcome.RUNNING or wild_herb_recovery() <= 0:
+		return 0
+	wild_herbs_packed = false
+	var recovered := _heal_with_herbs()
+	GameEvents.wild_herbs_changed.emit()
+	return recovered
+
 func wild_herb_recovery() -> int:
 	return mini(balance.wild_herb_healing, balance.player_max_health - health)
 
@@ -1766,10 +2254,10 @@ func _apply_confucian_loyalty_aura() -> void:
 			if retainer.school != RetainerData.School.CONFUCIAN:
 				retainer.loyalty = minf(100.0, retainer.loyalty + loyalty_boost)
 
-func retainer_food_cost() -> int:
+func retainer_food_cost(servings: Dictionary[RetainerData, int] = {}) -> int:
 	var cost := 0
 	for retainer in retainers:
-		cost += retainer_night_ration(retainer)
+		cost += int(servings.get(retainer, retainer_night_ration(retainer)))
 	return cost
 
 func retainer_night_ration(retainer: RetainerData) -> int:
@@ -1778,7 +2266,7 @@ func retainer_night_ration(retainer: RetainerData) -> int:
 func night_ration_for_duty(duty: RetainerData.Duty) -> int:
 	return 1 + (0 if duty == RetainerData.Duty.FIELD else balance.specialist_food_per_night)
 
-func _night_meal(available: int) -> Dictionary:
+func _night_meal(available: int, servings: Dictionary[RetainerData, int] = {}) -> Dictionary:
 	var order := retainers.duplicate()
 	if night_rations.priority:
 		order.erase(night_rations.priority)
@@ -1787,7 +2275,7 @@ func _night_meal(available: int) -> Dictionary:
 	var missed: Array[RetainerData] = []
 	var served := 0
 	for retainer in order:
-		var portions := retainer_night_ration(retainer)
+		var portions: int = servings.get(retainer, retainer_night_ration(retainer))
 		if portions <= available - served:
 			served += portions
 			fed.append(retainer)
@@ -1816,7 +2304,7 @@ func _serve_night_rations(finished_day: int) -> Array[RetainerData]:
 	var departed := PackedStringArray()
 	for retainer: RetainerData in meal.missed:
 		missed.append(retainer.name)
-		retainer.loyalty = maxf(0.0, retainer.loyalty - NightRations.MISSED_MEAL_LOYALTY)
+		retainer.loyalty = NightRations.loyalty_after_missed_meal(retainer.loyalty)
 		if retainer.loyalty == 0.0:
 			departed.append(retainer.name)
 			dismiss_retainer(retainer, DepartureReason.HUNGER, finished_day)
@@ -1833,6 +2321,9 @@ func _serve_night_rations(finished_day: int) -> Array[RetainerData]:
 		night_rations.last["departed"] = departed
 	if supper > 0:
 		night_rations.last["supper"] = supper
+	if night_rations.festival_day > 0 and not _festival_pantry_open(night_rations.festival_day, current_day):
+		night_rations.festival_day = 0
+		night_rations.festival_recipe = ""
 	GameEvents.night_rations_changed.emit()
 	return meal.fed
 
@@ -1858,7 +2349,7 @@ func assign_duty(retainer: RetainerData, duty: RetainerData.Duty) -> bool:
 	return true
 
 func field_steward_unlocked() -> bool:
-	return well_fields.size() > 1 and well_fields[1].is_unlocked
+	return field_rotation.signed_day > 0 or (well_fields.size() > 1 and well_fields[1].is_unlocked)
 
 func stewarded_field(retainer: RetainerData) -> Dictionary:
 	for field in well_fields:
@@ -1890,10 +2381,13 @@ func pending_neighbor_return(speaker: String) -> Dictionary:
 	var departure: Dictionary = neighbor_departures.get(speaker, {})
 	return departure if departure.get("returned_day", 0) == 0 else {}
 
+func recruitment_nightly_food() -> int:
+	return retainer_food_cost() + night_ration_for_duty(RetainerData.Duty.FIELD)
+
 func recruitment_food_requirement(speaker: String) -> int:
 	if (speaker == VisitorData.FIELD_KEEPER
 		or pending_neighbor_return(speaker).get("reason") == DepartureReason.HUNGER):
-		return retainer_food_cost() + 1
+		return recruitment_nightly_food()
 	return 0
 
 func recruitment_block(guest: VisitorData) -> RecruitmentBlock:
@@ -2015,6 +2509,20 @@ func _count_duty(workers: Array[RetainerData], duty: RetainerData.Duty) -> int:
 func silk_thread_yield() -> int:
 	return SilkWorkshop.thread_yield(balance, silk_reelers())
 
+func silk_reserve_for_rations() -> int:
+	var keep := 0 if tax_reform_choice == TaxReformChoice.REFORMED else balance.ending_silk_target
+	if tax_reform_choice == TaxReformChoice.TRADITIONAL:
+		for goal in route_objectives():
+			if goal.kind == RouteGoal.OFFER_SILK:
+				keep = maxi(0, int(goal.target) - int(goal.value))
+	var current := season_order()
+	if season_order_delivered_at(current) == 0:
+		keep += int(current.order.get("silk", 0))
+	var upcoming := _pinned_order_after(current)
+	if not upcoming.is_empty():
+		keep += int(upcoming.order.get("silk", 0))
+	return keep
+
 func silk_night_summary(fed: Array[RetainerData]) -> String:
 	return silk_workshop.describe_tonight(balance, _count_duty(fed, RetainerData.Duty.REEL))
 
@@ -2061,6 +2569,30 @@ func season_order_delivered_at(schedule: Dictionary) -> int:
 	var day: int = receipt.get("day", 0)
 	return day if day >= schedule.start and day <= schedule.end else 0
 
+func pending_freight_receipt() -> Dictionary:
+	var schedule := season_order()
+	if season_order_delivered_at(schedule) > 0:
+		var receipt: Dictionary = season_order_receipts[schedule.order.id]
+		if receipt.dispatch_day >= current_day:
+			return receipt
+	if schedule.start == current_day and current_day > 1:
+		var former := season_order(current_day - 1)
+		var previous: Dictionary = season_order_receipts.get(former.order.id, {})
+		if season_order_delivered_at(former) > 0 and previous.dispatch_day == current_day:
+			return previous
+	return {}
+
+func next_freight_arrival() -> Dictionary:
+	var receipt := pending_freight_receipt()
+	var schedule := season_order()
+	if schedule.start == current_day and current_day > 1:
+		var former := season_order(current_day - 1)
+		var previous: Dictionary = season_order_receipts.get(former.order.id, {})
+		if season_order_delivered_at(former) > 0 and previous.dispatch_day == current_day \
+				and SeasonOrders.transit_progress(previous, current_day, day_progress) < 1.0:
+			return previous
+	return receipt if not receipt.is_empty() and SeasonOrders.transit_progress(receipt, current_day, day_progress) < 1.0 else {}
+
 func is_season_order_pinned(schedule: Dictionary) -> bool:
 	return outcome == Outcome.RUNNING and pinned_season_start == schedule.start and season_order_delivered_at(schedule) == 0
 
@@ -2102,24 +2634,223 @@ func season_order_stock_for(schedule: Dictionary, id: String) -> int:
 	var stock := season_order_stock(id)
 	if schedule.start <= current_day:
 		return stock
-	var current := season_order()
-	if season_order_delivered_at(current) == 0:
-		stock -= int(SeasonOrders.cargo(current.order).get(id, 0))
-	return maxi(0, stock)
+	return maxi(0, stock - _current_order_claim(id))
 
 func season_order_crop_gap(schedule: Dictionary, id: String) -> int:
 	var needed: int = schedule.order.need.get(id, 0)
 	return maxi(0, needed - season_order_stock_for(schedule, id)) if needed > 0 else 0
 
+func _current_order_claim(id: String) -> int:
+	var current := season_order()
+	return int(SeasonOrders.cargo(current.order).get(id, 0)) if season_order_delivered_at(current) == 0 else 0
+
 func is_season_order_harvest(cell: Vector2i, schedule: Dictionary) -> bool:
 	return (field_crop_is_ripe(cell) and not is_public_plot(cell)
 		and season_order_crop_gap(schedule, active_crops[cell].id) > 0)
 
-func has_season_order_harvest(schedule: Dictionary) -> bool:
+func season_order_work(schedule: Dictionary) -> Dictionary:
+	if not _season_order_open(schedule):
+		return {}
+	var best := {}
+	var managed: Array[Vector2i] = []
+	if field_seed_plans.values().any(FieldSeedPlan.is_order):
+		managed = _stewarded_private_plots()
+	for crop_id: String in schedule.order.need:
+		var missing := _order_crop_field_gap(schedule, crop_id)
+		if missing == 0:
+			continue
+		var plan := _order_crop_work(crop_id, missing, schedule.end, managed)
+		if not plan.is_empty() and (best.is_empty() or plan.action < best.action
+			or (plan.action == best.action and plan.day < best.day)):
+			best = plan
+	return best
+
+func _season_order_open(schedule: Dictionary) -> bool:
+	if schedule.is_empty() or outcome != Outcome.RUNNING or season_order_delivered_at(schedule) > 0:
+		return false
+	var current := season_order()
+	return schedule.start in [current.start, current.end + 1]
+
+func _order_crop_field_gap(schedule: Dictionary, crop_id: String) -> int:
+	var missing := season_order_crop_gap(schedule, crop_id)
+	if missing > 0 and schedule.start > current_day:
+		missing += maxi(0, _current_order_claim(crop_id) - crop_stock.count(crop_id))
+	return missing
+
+func steward_order_offer(schedule: Dictionary) -> Dictionary:
+	var plans: Dictionary[Vector2i, String] = {}
+	var offer := {"plans": plans, "queued": 0, "unstaffed": 0, "latest": 0}
+	if not _season_order_open(schedule) or not first_tribute_delivered():
+		return offer
+	var managed := _stewarded_private_plots()
+	for cell: Vector2i in field_seed_plans:
+		if FieldSeedPlan.order_start(field_seed_plans[cell]) == schedule.start:
+			offer.queued += 1
+			offer.unstaffed += int(cell not in managed)
+	if offer.queued > 0 or managed.is_empty():
+		return offer
+	for crop_id: String in schedule.order.need:
+		var needed := _order_crop_field_gap(schedule, crop_id)
+		if needed == 0:
+			continue
+		var crop := ItemManager.get_crop(crop_id)
+		var ripe_day := current_day + sowing_nights(crop)
+		if ripe_day > schedule.end:
+			continue
+		needed -= _order_expected_stock(schedule, crop_id, crop, managed)
+		for cell in managed:
+			if needed <= 0:
+				break
+			if active_crops.has(cell) or field_seed_plans.has(cell) or plans.has(cell):
+				continue
+			if crop.is_water_crop and not irrigation.supplies(cell):
+				continue
+			plans[cell] = crop_id
+			needed -= _order_crop_yield(cell, crop)
+			offer.latest = maxi(offer.latest, ripe_day)
+	return offer
+
+func _stewarded_private_plots() -> Array[Vector2i]:
+	var plots: Array[Vector2i] = []
+	if well_fields.is_empty():
+		return plots
+	for worker in retainers:
+		if worker.duty != RetainerData.Duty.STEWARD:
+			continue
+		var bounds := _well_field_cells(stewarded_field(worker).center_pos)
+		for y in range(bounds.position.y, bounds.end.y):
+			for x in range(bounds.position.x, bounds.end.x):
+				var cell := Vector2i(x, y)
+				if not is_public_plot(cell) and cell not in plots:
+					plots.append(cell)
+	plots.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+		return tilled_cells.has(a) and not tilled_cells.has(b))
+	return plots
+
+func _order_expected_stock(schedule: Dictionary, crop_id: String, crop: CropData, managed: Array[Vector2i]) -> int:
+	var expected := 0
 	for cell: Vector2i in active_crops:
-		if is_season_order_harvest(cell, schedule):
-			return true
-	return false
+		var plant: Dictionary = active_crops[cell]
+		if plant.id != crop_id or is_public_plot(cell) or crop_night_status(cell) == NightGrowth.BLOCKED:
+			continue
+		if current_day + maxi(0, int(plant.growth_nights) - int(plant.age)) <= schedule.end:
+			expected += _order_crop_yield(cell, crop)
+	for cell in managed:
+		var plan: String = field_seed_plans.get(cell, "")
+		if (not active_crops.has(cell) and not deferred_field_sowing.has(cell)
+				and next_seed_for_plan(cell, plan) == crop_id
+				and (not crop.is_water_crop or irrigation.supplies(cell))):
+			expected += _order_crop_yield(cell, crop)
+	return expected
+
+func _order_crop_yield(cell: Vector2i, crop: CropData) -> int:
+	return harvest_proceeds(false, crop.sell_price, crop_rotation_bonus(cell, crop), tax_reform_choice, tax_rate).stock
+
+func queue_steward_order_sowing(schedule: Dictionary) -> bool:
+	var plans: Dictionary = steward_order_offer(schedule).plans
+	if plans.is_empty():
+		return false
+	for cell: Vector2i in plans:
+		set_field_seed_plan(cell, FieldSeedPlan.for_order(schedule.start, plans[cell]))
+	if schedule.start > current_day or pinned_season_order().is_empty():
+		pin_season_order(true, schedule.start > current_day)
+	GameEvents.farm_state_changed.emit()
+	return true
+
+func cancel_order_sowing(start_day: int) -> void:
+	if start_day <= 0:
+		return
+	var changed := false
+	for cell: Vector2i in field_seed_plans.keys():
+		if FieldSeedPlan.order_start(field_seed_plans[cell]) == start_day:
+			_clear_seed_plan(cell)
+			changed = true
+	if changed:
+		GameEvents.farm_state_changed.emit()
+
+func _can_seed_order_crop(cell: Vector2i, plan: String) -> bool:
+	var start := FieldSeedPlan.order_start(plan)
+	var crop_id := FieldSeedPlan.crop_id(plan)
+	var crop := ItemManager.get_crop(crop_id)
+	var schedule := season_order(start)
+	return (first_tribute_delivered() and _unlocked_field_contains(cell) and not is_public_plot(cell)
+		and not active_crops.has(cell) and schedule.start == start and _season_order_open(schedule)
+		and crop_id in schedule.order.need and current_day + sowing_nights(crop) <= schedule.end)
+
+func _prune_order_sowing() -> void:
+	var changed := false
+	for cell: Vector2i in field_seed_plans.keys():
+		var plan: String = field_seed_plans[cell]
+		if FieldSeedPlan.is_order(plan) and not _can_seed_order_crop(cell, plan):
+			_clear_seed_plan(cell)
+			changed = true
+	if changed:
+		GameEvents.farm_state_changed.emit()
+
+func _order_crop_work(crop_id: String, missing: int, deadline: int, managed: Array[Vector2i]) -> Dictionary:
+	var crop := ItemManager.get_crop(crop_id)
+	var sow_day := current_day + sowing_nights(crop)
+	var dry := {}
+	var growing := {}
+	var sow := {}
+	var sow_priority := -1
+	var expected := 0
+	var watered := 0
+	for field: Dictionary in well_fields:
+		if not field.is_unlocked:
+			continue
+		var center: Vector2i = field.center_pos
+		for y in [1, 0, -1]:
+			for x in [0, -1, 1]:
+				var cell := center + Vector2i(x, y)
+				if is_public_plot(cell):
+					continue
+				var plant: Dictionary = active_crops.get(cell, {})
+				if plant.is_empty():
+					if sow_day > deadline:
+						continue
+					var priority := _order_sowing_priority(cell, crop_id, crop.is_water_crop)
+					if (priority >= 0 and cell in managed and not deferred_field_sowing.has(cell)
+							and FieldSeedPlan.is_order(field_seed_plans.get(cell, ""))):
+						expected += _order_crop_yield(cell, crop)
+						continue
+					if priority > sow_priority:
+						sow = _order_work_at(cell, crop_id, OrderWork.SOW, sow_day)
+						sow_priority = priority
+					continue
+				if plant.id != crop_id:
+					continue
+				var status := crop_night_status(cell)
+				if status == NightGrowth.READY:
+					return _order_work_at(cell, crop_id, OrderWork.HARVEST, current_day)
+				var ready_day := current_day + int(plant.growth_nights) - int(plant.age)
+				if status == NightGrowth.BLOCKED or ready_day > deadline:
+					continue
+				var amount := _order_crop_yield(cell, crop)
+				expected += amount
+				if status == NightGrowth.DRY:
+					if dry.is_empty() or ready_day < dry.day:
+						dry = _order_work_at(cell, crop_id, OrderWork.WATER, ready_day)
+				else:
+					watered += amount
+					if growing.is_empty() or ready_day < growing.day:
+						growing = _order_work_at(cell, crop_id, OrderWork.WAIT, ready_day)
+	if watered < missing and not dry.is_empty():
+		return dry
+	if expected < missing and not sow.is_empty():
+		return sow
+	return growing
+
+func _order_sowing_priority(cell: Vector2i, crop_id: String, needs_canal: bool) -> int:
+	var supplied := irrigation.supplies(cell)
+	var plan: String = field_seed_plans.get(cell, "")
+	var follows_plan := plan.is_empty() or deferred_field_sowing.has(cell) or next_seed_for_plan(cell, plan) == crop_id
+	if (needs_canal and not supplied) or not follows_plan:
+		return -1
+	return 2 * int(supplied) + int(tilled_cells.has(cell))
+
+func _order_work_at(cell: Vector2i, crop_id: String, action: OrderWork, day: int) -> Dictionary:
+	return {"cell": cell, "crop_id": crop_id, "action": action, "day": day}
 
 func private_rice_plots() -> Array[Vector2i]:
 	var plots: Array[Vector2i] = []
@@ -2195,6 +2926,7 @@ func deliver_season_order(start_day: int, paid_in_food: bool) -> bool:
 		food_storage += rewards.food
 	else:
 		money += rewards.copper
+	cancel_order_sowing(start_day)
 	GameEvents.inventory_changed.emit(player_inventory)
 	if not fish.is_empty():
 		GameEvents.fish_changed.emit()
@@ -2358,27 +3090,111 @@ func set_ration_priority(retainer: RetainerData) -> void:
 	night_rations.priority = retainer
 	GameEvents.night_rations_changed.emit()
 
+func _festival_pantry_open(day: int, evening: int) -> bool:
+	if day <= 0 or day != _solar_term_start(day):
+		return false
+	var term := get_current_solar_term(day)
+	if evening < day - festival_notice_lead(term):
+		return false
+	if term == AutumnExhibit.TERM:
+		var last_day := day + maxi(1, balance.days_per_solar_term) - 1
+		return evening < last_day and autumn_exhibit_record(day).is_empty()
+	return term == WinterSupper.TERM and evening < day
+
+func can_set_festival_pantry(day: int) -> bool:
+	return outcome == Outcome.RUNNING and _festival_pantry_open(day, current_day)
+
+func set_festival_pantry(day: int, recipe := "") -> void:
+	if outcome != Outcome.RUNNING or (day != 0 and not can_set_festival_pantry(day)):
+		return
+	if day != 0 and is_winter_supper_day(day):
+		if recipe not in WinterSupper.MENU:
+			return
+	else:
+		recipe = ""
+	if night_rations.festival_day == day and night_rations.festival_recipe == recipe:
+		return
+	night_rations.festival_day = day
+	night_rations.festival_recipe = recipe
+	GameEvents.night_rations_changed.emit()
+
+func _festival_pantry(evening: int, order_keep: Dictionary) -> Dictionary:
+	var day := night_rations.festival_day
+	if not _festival_pantry_open(day, evening):
+		return {}
+	var name := AutumnExhibit.NAME
+	var wanted := {}
+	if is_winter_supper_day(day):
+		var recipe := night_rations.festival_recipe
+		name = WinterSupper.RECIPES[recipe].name
+		wanted = _winter_supper_crops(recipe, day)
+	else:
+		var candidates: Array[String] = []
+		var order_crops: Array[String] = []
+		for id in AutumnExhibit.stocked_crops(crop_stock):
+			if crop_stock.count(id) > int(order_keep.get(id, 0)):
+				candidates.append(id)
+			else:
+				order_crops.append(id)
+		candidates.append_array(order_crops)
+		for id in candidates.slice(0, AutumnExhibit.SAMPLE_COUNT):
+			wanted[id] = 1
+	var held := {}
+	var shared := {}
+	for id: String in wanted:
+		var available := mini(crop_stock.count(id), int(wanted[id]))
+		var extra := mini(available, maxi(0, crop_stock.count(id) - int(order_keep.get(id, 0))))
+		if extra > 0:
+			held[id] = extra
+		if available > extra:
+			shared[id] = available - extra
+	return {"name": name, "held": held, "shared": shared}
+
+func _ration_crop_limits(order_keep: Dictionary, pantry: Dictionary) -> Dictionary:
+	var keep := order_keep.duplicate()
+	for id: String in pantry.get("held", {}):
+		keep[id] = int(keep.get(id, 0)) + int(pantry.held[id])
+	return keep
+
 func night_rations_plan(finished_day := 0) -> Dictionary:
-	var plan := _night_rations_supply_plan(finished_day if finished_day > 0 else current_day, night_rations)
-	plan.merge(_night_meal(food_storage + int(plan.supper) + int(plan.converted) + int(plan.bought)))
+	return _forecast_night_rations(finished_day if finished_day > 0 else current_day)
+
+func night_rations_after_duty(retainer: RetainerData, duty: RetainerData.Duty) -> Dictionary:
+	var servings: Dictionary[RetainerData, int] = {retainer: night_ration_for_duty(duty)}
+	return _forecast_night_rations(current_day, servings)
+
+func _forecast_night_rations(evening: int, servings: Dictionary[RetainerData, int] = {}) -> Dictionary:
+	var plan := _night_rations_supply_plan(evening, night_rations, 0, servings)
+	plan.merge(_night_meal(food_storage + int(plan.supper) + int(plan.converted) + int(plan.bought), servings))
+	var departing := PackedStringArray()
+	for retainer: RetainerData in plan.missed:
+		if NightRations.loyalty_after_missed_meal(retainer.loyalty) == 0.0:
+			departing.append(retainer.name)
+	plan.departing = departing
 	return plan
 
-func night_rations_offer() -> Dictionary:
+func night_rations_offer(extra_copper := 0) -> Dictionary:
 	var policy := NightRations.new()
 	policy.enabled = true
 	policy.copper_limit = NightRations.MAX_COPPER_LIMIT
 	policy.partial_meals = night_rations.partial_meals
-	return _night_rations_supply_plan(current_day, policy)
+	return _night_rations_supply_plan(current_day, policy, extra_copper)
 
-func _night_rations_supply_plan(evening: int, policy: NightRations) -> Dictionary:
+func _night_rations_supply_plan(evening: int, policy: NightRations, extra_copper := 0,
+		servings: Dictionary[RetainerData, int] = {}) -> Dictionary:
 	var schedule := season_order(evening + 1)
 	var upcoming := _pinned_order_after(schedule)
-	var need := retainer_food_cost()
+	var need := retainer_food_cost(servings)
 	var supper := mini(need, int(winter_supper_record(evening).get("portions", 0)))
 	var fee := research_fee_due(evening + 1)
-	var reserved := fee if money >= fee else 0
-	var plan := policy.plan(need, food_storage + supper, money - reserved, crop_stock,
-		_order_stock_to_keep(schedule, upcoming), balance.market_food_price, _night_meal)
+	var purse := money + extra_copper
+	var reserved := fee if purse >= fee else 0
+	var order_keep := _order_stock_to_keep(schedule, upcoming)
+	var pantry := _festival_pantry(evening, order_keep)
+	var keep := _ration_crop_limits(order_keep, pantry)
+	var plan := policy.plan(need, food_storage + supper, purse - reserved, crop_stock, keep,
+		balance.market_food_price, _night_meal.bind(servings))
+	plan.festival_pantry = pantry
 	plan.supper = supper
 	plan.research_fee = fee
 	plan.research_reserve = reserved
@@ -2388,8 +3204,8 @@ func _night_rations_supply_plan(evening: int, policy: NightRations) -> Dictionar
 	plan.new_order = schedule.start == evening + 1
 	plan.current_reserved = {}
 	plan.upcoming_reserved = {}
-	for id: String in plan.reserved:
-		var total: int = plan.reserved[id]
+	for id: String in order_keep:
+		var total := mini(crop_stock.count(id), int(order_keep[id]))
 		var current := mini(total, int(schedule.order.need.get(id, 0))) if current_open else 0
 		if current > 0:
 			plan.current_reserved[id] = current
@@ -2400,6 +3216,34 @@ func _night_rations_supply_plan(evening: int, policy: NightRations) -> Dictionar
 func sell_crops(amount: int, crop_id := "") -> bool:
 	var use := market_crop_plan(amount, crop_id)
 	return not use.is_empty() and _market_exchange(use, -amount * balance.market_crop_price, 0)
+
+func reform_sale_quote() -> Dictionary:
+	var target := balance.ending_reformed_wealth
+	var price := balance.market_crop_price
+	if (outcome != Outcome.RUNNING or tax_reform_choice != TaxReformChoice.REFORMED
+		or not ending_record.is_empty() or money >= target or price <= 0):
+		return {}
+
+	var tonight := _night_rations_supply_plan(current_day, night_rations)
+	var keep := season_order_crops_to_keep()
+	for id: String in tonight.reserved:
+		keep[id] = maxi(int(keep.get(id, 0)), int(tonight.reserved[id]))
+	var held := 0
+	for id: String in keep:
+		held += mini(crop_stock.count(id), int(keep[id]))
+	var surplus := player_inventory - held - int(tonight.missing)
+	var needed := ceili(float(target - money) / price)
+	var amount := mini(needed, surplus)
+	if amount <= 0:
+		return {}
+	return {"amount": amount, "used": crop_stock.plan(amount, "", keep), "gain": amount * price,
+		"balance": money + amount * price, "target": target, "rations": tonight.missing, "held": held}
+
+func sell_crops_for_reform(expected: Dictionary) -> Dictionary:
+	var quote := reform_sale_quote()
+	if quote.is_empty() or quote != expected or not _market_exchange(quote.used, -int(quote.gain), 0):
+		return {}
+	return quote
 
 func affordable_market_food() -> int:
 	return floori(float(money) / balance.market_food_price)
@@ -2431,34 +3275,63 @@ func convert_inventory_to_food(amount: int, crop_id := "") -> bool:
 	var use := market_crop_plan(amount, crop_id)
 	return not use.is_empty() and _market_exchange(use, 0, amount)
 
-func food_reserve_plan(nights: int) -> Dictionary:
-	return _food_reserve_for(maxi(0, nights) * retainer_food_cost())
+func food_reserve_plan(nights: int, use_reserved := false) -> Dictionary:
+	return _food_reserve_for(maxi(0, nights) * retainer_food_cost(), nights, use_reserved)
 
-func _food_reserve_for(target: int) -> Dictionary:
+func _food_reserve_for(target: int, nights: int, use_reserved: bool) -> Dictionary:
 	var needed := maxi(0, target - food_storage)
-	var crops := mini(player_inventory, needed)
-	return {"target": target, "crops": crops, "food": needed, "copper": (needed - crops) * balance.market_food_price,
-		"used": market_crop_plan(crops)}
+	var order_keep := season_order_crops_to_keep()
+	var pantry := _festival_pantry(current_day, order_keep)
+	var held := crop_stock.reserved(_ration_crop_limits(order_keep, pantry))
+	var surplus := player_inventory - NightRations.stock_count(held)
+	var crops := mini(needed, player_inventory if use_reserved else surplus)
+	var use := crop_stock.plan(crops, "", held)
+	var tapped := {}
+	for id: String in use:
+		var left := crop_stock.count(id) - use[id]
+		var from_hold := int(held.get(id, 0)) - left
+		if from_hold > 0:
+			tapped[id] = from_hold
+			if left > 0:
+				held[id] = left
+			else:
+				held.erase(id)
 
-func prepare_food_reserve(nights: int) -> bool:
-	var plan := food_reserve_plan(nights)
-	return plan.food > 0 and _market_exchange(plan.used, plan.copper, plan.food)
+	var until_fee := research_days_until_payment()
+	var fee_day := current_day + until_fee
+	var fee := research_fee_due(fee_day) if until_fee <= nights else 0
+	var research_reserve := fee if fee <= money else 0
+	var copper := (needed - crops) * balance.market_food_price
+	var copper_short := maxi(0, copper + research_reserve - money)
+	return {
+		"target": target, "crops": crops, "food": needed, "copper": copper,
+		"used": use, "retained": held, "used_reserved": tapped,
+		"can_use_reserved": needed > surplus and surplus < player_inventory,
+		"research_reserve": research_reserve, "research_day": fee_day if research_reserve > 0 else 0,
+		"copper_short": copper_short, "can_order": outcome == Outcome.RUNNING and needed > 0 and copper_short == 0,
+	}
 
-func reclamation_food_plan() -> Dictionary:
+func prepare_food_reserve(nights: int, use_reserved := false, expected: Dictionary = {}) -> bool:
+	var plan := food_reserve_plan(nights, use_reserved)
+	return _accept_food_reserve(plan, expected)
+
+func reclamation_food_plan(use_reserved := false) -> Dictionary:
 	var site := reclamation_plan()
-	var plan := _food_reserve_for(int(site.grain) + int(site.crew_food))
+	var plan := _food_reserve_for(int(site.grain) + int(site.crew_food), RECLAMATION_NIGHTS, use_reserved)
 	plan.possible = site.possible
 	plan.stake_grain = site.grain
 	plan.stake_copper = site.copper
 	plan.crew_food = site.crew_food
-	plan.copper_short = maxi(0, int(site.copper) + int(plan.copper) - money)
-	plan.can_order = (outcome == Outcome.RUNNING and plan.possible and plan.food > 0
-		and (plan.copper == 0 or plan.copper_short == 0))
+	plan.copper_short = maxi(0, int(site.copper) + int(plan.copper) + int(plan.research_reserve) - money)
+	plan.can_order = plan.can_order and plan.possible and (plan.copper == 0 or plan.copper_short == 0)
 	return plan
 
-func prepare_reclamation_food() -> bool:
-	var plan := reclamation_food_plan()
-	return plan.can_order and _market_exchange(plan.used, plan.copper, plan.food)
+func prepare_reclamation_food(use_reserved := false, expected: Dictionary = {}) -> bool:
+	return _accept_food_reserve(reclamation_food_plan(use_reserved), expected)
+
+func _accept_food_reserve(plan: Dictionary, expected: Dictionary) -> bool:
+	return (plan.can_order and (expected.is_empty() or expected == plan)
+		and _market_exchange(plan.used, plan.copper, plan.food))
 
 func _market_exchange(use: Dictionary, copper_spent: int, food_gained: int) -> bool:
 	if copper_spent > money or not crop_stock.spend(use):
@@ -2489,11 +3362,19 @@ func eligible_for_promotion() -> bool:
 func check_rank_up() -> bool:
 	if not eligible_for_promotion():
 		return false
+	var previous := current_rank
 	current_rank = (current_rank + 1) as Rank
-	_update_max_well_fields()
 	print("Promoted to ", rank_names[current_rank], "!")
-	GameEvents.rank_changed.emit(current_rank)
+	_record_rank_change(previous)
 	return true
+
+func _record_rank_change(previous: Rank) -> void:
+	rank_record = {"day": current_day, "previous": previous, "rank": current_rank}
+	_update_max_well_fields()
+	GameEvents.rank_changed.emit(current_rank)
+
+func has_rank_book() -> bool:
+	return outcome == Outcome.RUNNING and (current_rank > Rank.XIA_SHI or not rank_record.is_empty())
 
 func promotion_reputation() -> int:
 	match current_rank:
@@ -2751,9 +3632,13 @@ func save_game() -> Error:
 	GameEvents.save_finished.emit(result, false)
 	return result
 
-func save_automatically(origin: String) -> void:
-	if Preferences.autosave and outcome == Outcome.RUNNING:
-		GameEvents.save_finished.emit(_save_snapshot(origin), true)
+func save_automatically(origin: String) -> Error:
+	var can_save := outcome in [Outcome.TRADITIONAL, Outcome.REFORMED] if origin == "ending" else outcome == Outcome.RUNNING
+	if not Preferences.autosave or not can_save:
+		return ERR_SKIP
+	var result := _save_snapshot(origin)
+	GameEvents.save_finished.emit(result, true)
+	return result
 
 func _save_snapshot(origin: String) -> Error:
 	var folder := _campaign_directory()
@@ -2788,6 +3673,9 @@ func _save_snapshot(origin: String) -> Error:
 	var saved_seed_plans := {}
 	for cell in field_seed_plans:
 		saved_seed_plans[_cell_key(cell)] = field_seed_plans[cell]
+	var saved_deferred_sowing: Array[String] = []
+	for cell in deferred_field_sowing:
+		saved_deferred_sowing.append(_cell_key(cell))
 
 	var saved_fertility := []
 	for cell in fertile_cells:
@@ -2831,7 +3719,10 @@ func _save_snapshot(origin: String) -> Error:
 		"west_road_from_market": scene.resume_from_market() if location == "west_road" else false,
 		"selected_seed": selected_seed_id,
 		"field_route_status": field_route_status,
-		"field_route_public_only": field_route_public_only,
+		"field_route_scope": field_route_scope,
+		"field_route_public_only": field_route_scope == FieldScope.PUBLIC,
+		"rotation_route_cell": _cell_key(rotation_route_cell) if field_route_status in ROTATION_ROUTES and rotation_route_cell != null else "",
+		"field_return_work": _saved_field_return_work(),
 		"current_stamina": current_stamina,
 		"health": health,
 		"outcome": outcome,
@@ -2847,6 +3738,7 @@ func _save_snapshot(origin: String) -> Error:
 		"watch_snare_armed": watch_snare_armed,
 		"watch_snare_relief_used_day": watch_snare_relief_used_day,
 		"last_forage_day": last_forage_day,
+		"wild_herbs_packed": wild_herbs_packed,
 		"last_fishing_day": last_fishing_day,
 		"ravine_trip_target": ravine_trip_target,
 		"market_trip_target": market_trip_target,
@@ -2868,6 +3760,7 @@ func _save_snapshot(origin: String) -> Error:
 		"pinned_season_start": pinned_season_start,
 		"travel_meal": travel_meal,
 		"king_storage": king_storage,
+		"first_tribute_entry": first_tribute_entry,
 		"private_harvest_total": private_harvest_total,
 		"first_harvest_reviewed": first_harvest_reviewed,
 		"silk_bolts_sold": silk_bolts_sold,
@@ -2879,16 +3772,23 @@ func _save_snapshot(origin: String) -> Error:
 			"partial_meals": night_rations.partial_meals,
 			"copper_limit": night_rations.copper_limit,
 			"priority": retainers.find(night_rations.priority),
+			"festival_day": night_rations.festival_day,
+			"festival_recipe": night_rations.festival_recipe,
 			"last": night_rations.last,
 		},
 		"last_field_night": last_field_night,
 		"last_dawn": last_dawn,
 		"away_field_report": away_field_report,
+		"field_wait_report": field_wait_report,
+		"wait_for_fields_before_sleep": wait_for_fields_before_sleep,
 		"reputation": reputation,
 		"days_without_contribution": days_without_contribution,
 		"active_crops": saved_crops,
 		"tilled_cells": saved_soil,
 		"field_seed_plans": saved_seed_plans,
+		"deferred_field_sowing": saved_deferred_sowing,
+		"hold_private_harvest": hold_private_harvest,
+		"council_tribute_rows": council_tribute_rows,
 		"fertile_cells": saved_fertility,
 		"irrigation_channels": saved_channels,
 		"irrigation_field_gates": saved_field_gates,
@@ -2912,6 +3812,7 @@ func _save_snapshot(origin: String) -> Error:
 		"visitor_encounters": visitor_encounters.keys(),
 		"visitor_talk_days": visitor_encounters,
 		"neighbor_met_days": neighbor_met_days,
+		"pavilion_stories_heard": pavilion_stories_heard,
 		"neighbor_departures": neighbor_departures,
 		"field_rotation": {
 			"promise_day": field_rotation.promise_day,
@@ -2937,6 +3838,7 @@ func _save_snapshot(origin: String) -> Error:
 		"sheepfold": sheepfold.save_record(),
 		"tech_unlocked": tech_unlocked,
 		"current_rank": current_rank,
+		"rank_record": rank_record,
 		"attire": attire_id,
 		"hall_mat": hall_mat_id,
 		"hall_shelf": hall_shelf_id,
@@ -2947,11 +3849,19 @@ func _save_snapshot(origin: String) -> Error:
 		"tax_council_invited": tax_council_invited,
 		"research_choice_pending": research_choice_pending,
 		"route_baseline": route_baseline,
+		"route_harvest": route_harvest,
 		"tax_rate": tax_rate,
 		"zhou_li_score": zhou_li_score,
 		"quest_progress": quest_progress,
 		"quest_completed": quest_completed
 	}
+	if origin.is_empty() and location != null and outcome == Outcome.RUNNING and not MapTravel.active:
+		var actor := get_tree().get_first_node_in_group("player") as Player
+		if actor != null and scene.is_ancestor_of(actor) and not actor.training_cart.visible:
+			data["walking_checkpoint"] = {
+				"x": actor.global_position.x, "y": actor.global_position.y,
+				"facing": _cell_key(Vector2i(actor.facing_direction())),
+			}
 
 	var pending_path := "%s.%d.tmp" % [path, OS.get_process_id()]
 	var file := FileAccess.open(pending_path, FileAccess.WRITE)
@@ -3032,6 +3942,7 @@ func saved_games() -> Array[Dictionary]:
 		if path.get_file() != SAVE_PATH.get_file():
 			match data.get("save_origin"):
 				"council": source = "初税亩自动存档"
+				"ending": source = "结局自动存档"
 				"ending_continue": source = "续营自动存档"
 				_: source = "晨间自动存档"
 		var saved_outcome := _read_save_int(data.get("outcome"), Outcome.RUNNING)
@@ -3318,6 +4229,9 @@ func load_game(path := "") -> Error:
 	var saved_room := _read_save_int(data.get("estate_room"), legacy_room)
 	estate_room = (saved_room as EstateRoom if outcome == Outcome.RUNNING and resume_scene == ESTATE_SCENE
 		and saved_room in EstateRoom.values() else EstateRoom.OUTDOORS)
+	restored_walking_checkpoint = {}
+	if outcome == Outcome.RUNNING and data.get("save_origin", "") == "" and SAVE_SCENES.has(data.get("location")):
+		restored_walking_checkpoint = _read_walking_checkpoint(data.get("walking_checkpoint"))
 	raid_day = clampi(_read_save_int(data.get("raid_day"), 0), 0, saved_day)
 	raid_kind = clampi(_read_save_int(data.get("raid_kind"), 0), 0, 1)
 	raid_health = maxi(-1, _read_save_int(data.get("raid_health"), -1))
@@ -3329,6 +4243,7 @@ func load_game(path := "") -> Error:
 	watch_snare_armed = data.get("watch_snare_armed", false) == true
 	watch_snare_relief_used_day = clampi(_read_save_int(data.get("watch_snare_relief_used_day"), 0), 0, saved_day)
 	last_forage_day = clampi(_read_save_int(data.get("last_forage_day"), 0), 0, saved_day)
+	wild_herbs_packed = data.get("wild_herbs_packed", false) == true
 	# Old saves used one daily record for both activities.
 	last_fishing_day = clampi(_read_save_int(data.get("last_fishing_day"), last_forage_day), 0, saved_day)
 	_restore_fish_collection(data.get("fish_collection"), saved_day)
@@ -3340,12 +4255,19 @@ func load_game(path := "") -> Error:
 	var saved_waypoint: Variant = data.get("ravine_waypoint")
 	restored_ravine_waypoint = saved_waypoint if resume_scene == WILDERNESS_SCENE and saved_waypoint is String else ""
 	var saved_market_trip: Variant = data.get("market_trip_target")
-	var market_places := MarketStall.TITLES + [MARKET_ORDERS, MARKET_RETURN, WATER_SOURCE, VisitorData.SILK_MERCHANT, Sheepfold.MEADOW]
+	var market_places := MarketStall.TITLES + ESTATE_REGIONAL_STOPS + [MARKET_ORDERS, MARKET_RETURN,
+		VisitorData.SILK_MERCHANT, Sheepfold.MEADOW]
 	market_trip_target = saved_market_trip if saved_market_trip is String and saved_market_trip in market_places else ""
 	market_produce_bought_on = clampi(_read_save_int(data.get("market_produce_bought_on"), 0), 0, saved_day)
 	var saved_route := _read_save_int(data.get("field_route_status"), -1)
 	field_route_status = saved_route if saved_route in FIELD_ROUTE_STATES else -1
-	field_route_public_only = field_route_status == NightGrowth.READY and data.get("field_route_public_only", false) == true
+	var legacy_scope := FieldScope.PUBLIC if data.get("field_route_public_only", false) == true else FieldScope.ALL
+	var saved_scope := _read_save_int(data.get("field_route_scope"), legacy_scope)
+	field_route_scope = _field_scope_for_route(field_route_status, saved_scope)
+	rotation_route_cell = _read_save_cell(data.get("rotation_route_cell")) if field_route_status in ROTATION_ROUTES else null
+	if field_route_status in ROTATION_ROUTES and (rotation_route_cell == null or not _is_well_field_cell(rotation_route_cell, restored_fields)):
+		field_route_status = -1
+		rotation_route_cell = null
 	ravine_journal = _restore_ravine_journal(data.get("ravine_journal"), saved_day)
 	restored_ravine_south = (resume_scene == WILDERNESS_SCENE and ravine_shortcut_open()
 		and data.get("ravine_south_arrival", false) == true)
@@ -3368,9 +4290,10 @@ func load_game(path := "") -> Error:
 	silk_bolts_offered = maxi(0, _read_save_int(data.get("silk_bolts_offered"), 0))
 	silk_sample_day = clampi(_read_save_int(data.get("silk_sample_day"), 0), 0, saved_day)
 	food_storage = maxi(0, _read_save_int(data.get("food_storage"), 10))
-	night_rations = _restore_night_rations(data.get("night_rations"), saved_day, restored_retainers)
 	last_field_night = _restore_field_night(data.get("last_field_night"), saved_day)
 	away_field_report = _restore_away_field_report(data.get("away_field_report"), saved_day)
+	field_wait_report = _restore_field_wait_report(data.get("field_wait_report"), saved_day)
+	wait_for_fields_before_sleep = data.get("wait_for_fields_before_sleep") == true
 	_away_work_elapsed.clear()
 	reputation = _read_save_int(data.get("reputation"), 0)
 	days_without_contribution = maxi(0, _read_save_int(data.get("days_without_contribution"), 0))
@@ -3378,6 +4301,7 @@ func load_game(path := "") -> Error:
 	tilled_cells = restored_soil
 	fertile_cells = restored_fertility
 	well_fields = restored_fields
+	field_return_work = _restore_field_return_work(data.get("field_return_work"))
 	last_dawn = _restore_dawn(data.get("last_dawn"), saved_day)
 	irrigation.restore(water_source, restored_channels, _restore_field_gates(data.get("irrigation_field_gates")))
 	first_channel_growth_day = clampi(_read_save_int(data.get("first_channel_growth_day"), 0), 0, saved_day)
@@ -3393,6 +4317,13 @@ func load_game(path := "") -> Error:
 			if first_day > 0 and first_day <= saved_day:
 				neighbor_met_days[speaker] = first_day
 	_restore_neighbor_departures(data.get("neighbor_departures"), saved_day)
+	pavilion_stories_heard.clear()
+	var heard: Variant = data.get("pavilion_stories_heard")
+	if heard is Dictionary:
+		for id: String in PavilionStories.IDS:
+			var day := _read_save_int(heard.get(id), 0)
+			if day > 0 and day <= saved_day:
+				pavilion_stories_heard[id] = day
 	last_recruit_day = clampi(_read_save_int(data.get("last_recruit_day"), 0), 0, saved_day)
 	last_recruit_outside_rotation = data.get("last_recruit_outside_rotation", data.get("last_recruit_from_handoff", false)) == true
 	road_provisions_delivered = data.get("road_provisions_delivered", false) == true
@@ -3408,12 +4339,17 @@ func load_game(path := "") -> Error:
 	_restore_summer_raft_results(data.get("summer_raft_results"), saved_day)
 	_restore_autumn_exhibits(data.get("autumn_exhibits"), saved_day)
 	_restore_winter_suppers(data.get("winter_suppers"), saved_day)
+	if (market_trip_target == POND_LANDING and pond_landing_day() == 0
+			or market_trip_target == WinterSupper.PLACE and not winter_supper_route_open()):
+		market_trip_target = ""
+	night_rations = _restore_night_rations(data.get("night_rations"), saved_day, restored_retainers)
 	_restore_sheepfold(data.get("sheepfold"), saved_day)
 	tech_unlocked = {
 		"irrigation": technology.get("irrigation", false) == true,
 		"composite_bow": technology.get("composite_bow", false) == true
 	}
 	current_rank = clampi(_read_save_int(data.get("current_rank"), Rank.XIA_SHI), Rank.XIA_SHI, Rank.QING) as Rank
+	rank_record = _restore_rank_record(data.get("rank_record"), saved_day)
 	var saved_attire: String = str(data.get("attire", PlayerAttire.DEFAULT))
 	attire_id = saved_attire if can_wear_attire(saved_attire) else PlayerAttire.DEFAULT
 	tax_reform_choice = clampi(_read_save_int(data.get("tax_reform_choice"), TaxReformChoice.NONE),
@@ -3427,15 +4363,22 @@ func load_game(path := "") -> Error:
 	if tax_reform_choice in [TaxReformChoice.TRADITIONAL, TaxReformChoice.REFORMED]:
 		var saved_baseline = data.get("route_baseline", {})
 		set_route_baseline(saved_baseline if saved_baseline is Dictionary else {})
+	_restore_route_harvest(data.get("route_harvest"))
 	zhou_li_score = str(data.get("zhou_li_score", "中"))
 	quest_progress = clampi(_read_save_int(data.get("quest_progress"), king_storage), 0, quest_target)
 	quest_completed = data.get("quest_completed", quest_progress == quest_target) == true
+	hold_private_harvest = data.get("hold_private_harvest", false) == true and can_hold_private_harvest()
+	first_tribute_entry = _read_harvest_entry(data.get("first_tribute_entry"), 1)
+	if first_tribute_entry.get("amount", 0) > king_storage:
+		first_tribute_entry.clear()
 	var saved_mat := str(data.get("hall_mat", HallDecor.DEFAULT_MAT))
 	var saved_shelf := str(data.get("hall_shelf", HallDecor.DEFAULT_SHELF))
 	hall_mat_id = saved_mat if _valid_hall_decor(saved_mat, HallDecor.Slot.MAT) else HallDecor.DEFAULT_MAT
 	hall_shelf_id = saved_shelf if _valid_hall_decor(saved_shelf, HallDecor.Slot.SHELF) else HallDecor.DEFAULT_SHELF
 	field_rotation = _restore_field_rotation(data.get("field_rotation"), saved_day)
+	council_tribute_rows = false
 	field_seed_plans.clear()
+	deferred_field_sowing.clear()
 	var seed_plans: Variant = data.get("field_seed_plans")
 	if seed_plans is Dictionary:
 		for key in seed_plans:
@@ -3443,6 +4386,14 @@ func load_game(path := "") -> Error:
 			var plan: Variant = seed_plans[key]
 			if cell is Vector2i and plan is String:
 				set_field_seed_plan(cell, plan)
+	var deferred_plots: Variant = data.get("deferred_field_sowing")
+	if deferred_plots is Array:
+		for key in deferred_plots:
+			var cell = _read_save_cell(key)
+			if cell is Vector2i:
+				set_field_sowing_deferred(cell, true)
+	council_tribute_rows = (data.get("council_tribute_rows", false) == true and can_hold_private_harvest()
+		and tax_reform_choice == TaxReformChoice.NONE)
 	ending_record = _saved_ending_record(data)
 	if ending_record.is_empty() and outcome in [Outcome.TRADITIONAL, Outcome.REFORMED]:
 		ending_record = _capture_ending(outcome)
@@ -3456,6 +4407,30 @@ func _saved_ending_record(data: Dictionary) -> Dictionary:
 			and record.get("accounts") is Array and not record["accounts"].is_empty():
 			return record
 	return {}
+
+func _restore_route_harvest(record: Variant) -> void:
+	route_harvest = {}
+	if tax_reform_choice not in [TaxReformChoice.TRADITIONAL, TaxReformChoice.REFORMED]:
+		return
+	route_harvest = _read_harvest_entry(record, maxi(1, tax_reform_day))
+	if not route_harvest.is_empty():
+		route_harvest.copper = maxi(0, _read_save_int(record.get("copper"), 0))
+		route_harvest.levy = maxi(0, _read_save_int(record.get("levy"), 0))
+
+func _read_harvest_entry(record: Variant, earliest_day: int) -> Dictionary:
+	if not record is Dictionary:
+		return {}
+	var day := _read_save_int(record.get("day"), 0)
+	var field_id := _read_save_int(record.get("field"), -1)
+	var field := get_well_field(field_id)
+	var crop: Variant = record.get("crop")
+	var amount := _read_save_int(record.get("amount"), 0)
+	if day < earliest_day or day > current_day or not field.get("is_unlocked", false) \
+			or not crop is String or ItemManager.get_crop(crop) == null or amount <= 0:
+		return {}
+	var worker: Variant = record.get("worker", "")
+	var worker_name := _harvest_worker_name(worker) if worker is String else ""
+	return {"day": day, "field": field_id, "crop": crop, "amount": amount, "worker": worker_name}
 
 func _restore_field_rotation(record: Variant, saved_day: int) -> FieldRotation:
 	var restored := FieldRotation.new()
@@ -3489,6 +4464,20 @@ func _restore_field_night(record: Variant, saved_day: int) -> Dictionary:
 		report[key] = maxi(0, _read_save_int(record.get(key), 0))
 	return report
 
+func _restore_rank_record(record: Variant, saved_day: int) -> Dictionary:
+	if record is Dictionary:
+		var day := _read_save_int(record.get("day"), 0)
+		var previous := _read_save_int(record.get("previous"), -1)
+		var rank := _read_save_int(record.get("rank"), -1)
+		if day > 0 and day <= saved_day and rank == current_rank and rank_names.has(previous) and absi(previous - rank) == 1:
+			return {"day": day, "previous": previous, "rank": rank}
+	# An older save from the morning of a rank change still has its settlement.
+	var change: int = last_dawn.get("rank_change", 0)
+	var previous := int(current_rank) - change
+	if change != 0 and rank_names.has(previous):
+		return {"day": saved_day, "previous": previous, "rank": current_rank}
+	return {}
+
 func _restore_dawn(record: Variant, saved_day: int) -> Dictionary:
 	if not record is Dictionary or saved_day <= 1 or _read_save_int(record.get("day"), 0) != saved_day - 1:
 		return {}
@@ -3499,7 +4488,7 @@ func _restore_dawn(record: Variant, saved_day: int) -> Dictionary:
 			var number := _read_save_int(value, 0)
 			if number > 1 and number <= well_fields.size() and well_fields[number - 1]["is_unlocked"]:
 				completed.append(number)
-	return {
+	var restored := {
 		"day": saved_day - 1,
 		"rank_change": clampi(_read_save_int(record.get("rank_change"), 0), -1, 1),
 		"completed_fields": completed,
@@ -3507,13 +4496,41 @@ func _restore_dawn(record: Variant, saved_day: int) -> Dictionary:
 		"research_gap": maxi(0, _read_save_int(record.get("research_gap"), 0)),
 		"tribute_penalty": maxi(0, _read_save_int(record.get("tribute_penalty"), 0)),
 	}
+	var field_work := _restore_field_wait_report(record.get("field_wait"), saved_day - 1)
+	if not field_work.is_empty():
+		restored.field_wait = field_work
+	var daytime := _restore_field_work_report(record.get("away_field"), saved_day - 1)
+	if not daytime.is_empty():
+		restored.away_field = daytime
+	return restored
 
-func _restore_away_field_report(record: Variant, saved_day: int) -> Dictionary:
+func _restore_away_field_report(record: Variant, day: int) -> Dictionary:
+	var report := _restore_field_work_report(record, day)
+	if report.is_empty():
+		return report
+	var pending: bool = record.get("pending") == true
+	report.pending = pending
+	report.first_tribute = pending and record.get("first_tribute") == true
+	var reported: Variant = record.get("reported")
+	# Older reports carry a flag for whether the day's totals were already shown.
+	if not pending or reported is Dictionary:
+		report.reported = {}
+		for key in FIELD_WORK_TOTALS:
+			var total: int = report[key]
+			report.reported[key] = clampi(_read_save_int(reported.get(key), 0), 0, total) if pending else total
+	return report
+
+func _restore_field_wait_report(record: Variant, day: int) -> Dictionary:
+	var report := _restore_field_work_report(record, day)
+	if not report.is_empty():
+		report.minutes = clampi(_read_save_int(record.get("minutes"), 0), 0, DAY_MINUTES)
+	return report
+
+func _restore_field_work_report(record: Variant, saved_day: int) -> Dictionary:
 	if not record is Dictionary or _read_save_int(record.get("day"), 0) != saved_day:
 		return {}
-	var report := {"day": saved_day, "pending": record.get("pending") == true,
-		"first_tribute": record.get("first_tribute") == true}
-	for key in AWAY_FIELD_TOTALS:
+	var report := {"day": saved_day}
+	for key in FIELD_WORK_TOTALS:
 		report[key] = maxi(0, _read_save_int(record.get(key), 0))
 	return report
 
@@ -3547,6 +4564,14 @@ func _restore_night_rations(record: Variant, saved_day: int, roster: Array[Retai
 	var priority := _read_save_int(record.get("priority"), -1)
 	if priority >= 0 and priority < roster.size():
 		restored.priority = roster[priority]
+	var festival_day := _read_save_int(record.get("festival_day"), 0)
+	var recipe: Variant = record.get("festival_recipe", "")
+	if _festival_pantry_open(festival_day, saved_day):
+		if is_autumn_exhibit_day(festival_day):
+			restored.festival_day = festival_day
+		elif recipe is String and recipe in WinterSupper.MENU and is_winter_supper_day(festival_day):
+			restored.festival_day = festival_day
+			restored.festival_recipe = recipe
 	var meal: Variant = record.get("last")
 	if not meal is Dictionary:
 		return restored
@@ -3673,6 +4698,18 @@ func _read_save_number(value: Variant, fallback: float) -> float:
 	if (value is float or value is int) and is_finite(float(value)):
 		return float(value)
 	return fallback
+
+func _read_walking_checkpoint(record: Variant) -> Dictionary:
+	if not record is Dictionary:
+		return {}
+	var point := Vector2(_read_save_number(record.get("x"), INF), _read_save_number(record.get("y"), INF))
+	if not point.is_finite():
+		return {}
+	var saved_facing: Variant = _read_save_cell(record.get("facing"))
+	var facing := Vector2.DOWN
+	if saved_facing in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+		facing = Vector2(saved_facing)
+	return {"point": point, "facing": facing}
 
 func _restore_crop_stock(record: Variant, total: int) -> void:
 	crop_stock = CropStock.new()

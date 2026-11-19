@@ -1,33 +1,35 @@
 extends Panel
 
-const PADDING := 16
+const PADDING := 22
 const SAVE_ARCHIVE := preload("res://scenes/SaveArchive.tscn")
 const BINDINGS_PANEL := preload("res://scripts/KeyboardBindingsPanel.gd")
+const FRAME := preload("res://resources/estate_archive_frame.tres")
+const DIALOG_THEME := preload("res://resources/estate_dialog_theme.tres")
+const VOLUME_THEME := preload("res://resources/estate_volume_theme.tres")
+const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 
 var session_controls := true
-var save_resume_hint := "":
-	set(value):
-		save_resume_hint = value
-		if is_instance_valid(save_button):
-			save_button.tooltip_text = value
 var save_status: Label
 var save_button: Button
 var preferences_status: Label
 var contents: VBoxContainer
 var heading: Label
 var general: VBoxContainer
-var bindings_page: VBoxContainer
+var bindings_page: BINDINGS_PANEL
 var close_button: Button
+var shortcuts: Button
+var master_slider: HSlider
 
 func _ready() -> void:
+	add_theme_stylebox_override("panel", FRAME)
 	contents = VBoxContainer.new()
 	contents.add_theme_constant_override("separation", 8)
 	add_child(contents)
 	
 	heading = Label.new()
 	heading.text = "系统设置"
-	heading.add_theme_font_size_override("font_size", 24)
-	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	heading.add_theme_font_size_override("font_size", 26)
+	heading.add_theme_color_override("font_color", Color("#ebce95"))
 	contents.add_child(heading)
 	general = VBoxContainer.new()
 	general.add_theme_constant_override("separation", 8)
@@ -36,7 +38,7 @@ func _ready() -> void:
 	if session_controls:
 		_add_session_controls(general)
 	
-	_add_volume_control(general, &"MasterVolume", "主音量", Preferences.volume, Preferences.set_volume)
+	master_slider = _add_volume_control(general, &"MasterVolume", "主音量", Preferences.volume, Preferences.set_volume)
 	_add_volume_control(general, &"MusicVolume", "音乐", Preferences.music_volume, Preferences.set_music_volume)
 	_add_volume_control(general, &"AmbienceVolume", "环境与脚步", Preferences.ambience_volume, Preferences.set_ambience_volume)
 	
@@ -58,7 +60,7 @@ func _ready() -> void:
 	preferences_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	general.add_child(preferences_status)
 
-	var shortcuts := Button.new()
+	shortcuts = Button.new()
 	shortcuts.name = "KeyboardBindings"
 	shortcuts.text = "键盘键位"
 	shortcuts.pressed.connect(_show_bindings.bind(true))
@@ -78,11 +80,31 @@ func _ready() -> void:
 	close_button = Button.new()
 	close_button.name = "Close"
 	close_button.text = "关闭"
+	close_button.custom_minimum_size = Vector2(100, 38)
+	close_button.size_flags_horizontal = Control.SIZE_SHRINK_END
 	close_button.pressed.connect(_back_or_close)
 	contents.add_child(close_button)
+	for button: Button in contents.find_children("*", "Button", true, false):
+		if button is not CheckButton:
+			button.theme = HUD_THEME
+			button.theme_type_variation = &"HudButton"
+	visibility_changed.connect(_focus_open_page)
+	_set_focus_edges()
 	contents.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, PADDING)
 	contents.minimum_size_changed.connect(_fit_contents)
 	_fit_contents()
+
+func _focus_open_page() -> void:
+	if is_visible_in_tree():
+		var first: Control = bindings_page.keys[KeyBindings.UP] if bindings_page.visible else master_slider
+		first.grab_focus()
+
+func _set_focus_edges() -> void:
+	var first: Control = save_button if session_controls else master_slider
+	if bindings_page.visible:
+		first = bindings_page.keys[KeyBindings.UP]
+	first.focus_previous = first.get_path_to(close_button)
+	close_button.focus_next = close_button.get_path_to(first)
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("ui_cancel"):
@@ -100,32 +122,54 @@ func _show_bindings(show_page: bool) -> void:
 	bindings_page.visible = show_page
 	heading.text = "键盘键位" if show_page else "系统设置"
 	close_button.text = "返回设置" if show_page else "关闭"
+	_set_focus_edges()
 	_fit_contents()
+	if show_page:
+		bindings_page.keys[KeyBindings.UP].grab_focus()
+	else:
+		shortcuts.grab_focus()
 
 func _fit_contents() -> void:
 	var content := contents.get_combined_minimum_size() + Vector2.ONE * PADDING * 2
-	custom_minimum_size = Vector2(maxf(396.0, content.x), content.y)
+	custom_minimum_size = Vector2(maxf(452.0, content.x), content.y)
 	size = custom_minimum_size
 	set_anchors_and_offsets_preset(Control.PRESET_CENTER, Control.PRESET_MODE_KEEP_SIZE)
 
-func _add_volume_control(vbox: VBoxContainer, control_name: StringName, text: String, value: float, save: Callable) -> void:
+func _add_volume_control(vbox: VBoxContainer, control_name: StringName, text: String, value: float, save: Callable) -> HSlider:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	vbox.add_child(row)
 	var label := Label.new()
 	label.text = text
-	vbox.add_child(label)
-
+	label.custom_minimum_size.x = 86
+	row.add_child(label)
 	var slider := HSlider.new()
 	slider.name = control_name
+	slider.accessibility_name = text
+	slider.custom_minimum_size = Vector2(148, 30)
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slider.theme = VOLUME_THEME
+	slider.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	slider.min_value = 0.0
 	slider.max_value = 1.0
 	slider.step = 0.05
 	slider.value = value
-	slider.value_changed.connect(func(volume: float): _show_preference_result(save.call(volume)))
-	vbox.add_child(slider)
+	row.add_child(slider)
+	var amount := Label.new()
+	amount.custom_minimum_size.x = 46
+	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	amount.text = "%d%%" % roundi(slider.value * 100)
+	row.add_child(amount)
+	slider.value_changed.connect(func(volume: float):
+		amount.text = "%d%%" % roundi(volume * 100)
+		_show_preference_result(save.call(volume))
+	)
+	return slider
 
 func _add_session_controls(vbox: VBoxContainer) -> void:
 	save_button = Button.new()
 	save_button.text = "保存游戏"
-	save_button.tooltip_text = save_resume_hint
+	save_button.tooltip_text = "手动档记录当前地点、站位和面向"
 	save_button.pressed.connect(_on_save_pressed)
 	vbox.add_child(save_button)
 
@@ -140,10 +184,15 @@ func _add_session_controls(vbox: VBoxContainer) -> void:
 
 	var title_confirmation := ConfirmationDialog.new()
 	title_confirmation.name = "TitleConfirmation"
+	title_confirmation.theme = DIALOG_THEME
 	title_confirmation.title = "返回标题"
 	title_confirmation.dialog_text = "返回标题后可继续最近的存档。当天未保存的改动会丢失。"
 	title_confirmation.ok_button_text = "返回标题"
 	title_confirmation.get_cancel_button().text = "继续游戏"
+	title_confirmation.get_cancel_button().theme = HUD_THEME
+	title_confirmation.get_cancel_button().theme_type_variation = &"HudPrimary"
+	title_confirmation.get_ok_button().theme = HUD_THEME
+	title_confirmation.get_ok_button().theme_type_variation = &"HudButton"
 	title_confirmation.confirmed.connect(_return_to_title)
 	add_child(title_confirmation)
 
@@ -163,8 +212,6 @@ func _return_to_title() -> void:
 func _on_save_pressed() -> void:
 	var result := Global.save_game()
 	save_status.text = "游戏已保存" if result == OK else "保存失败（%s）" % error_string(result)
-	if result == OK and not save_resume_hint.is_empty():
-		save_status.text += " · " + save_resume_hint
 
 func _on_load_pressed() -> void:
 	if Global.has_saved_game():

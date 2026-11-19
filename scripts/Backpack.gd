@@ -4,9 +4,9 @@ signal close_requested
 
 enum Page { CROPS, FISH, CRAFT }
 
-const FLEECE := preload("res://assets/world/sheepfold/yard.svg")
-const SACK := preload("res://assets/world/estate-storage.svg")
-const SILK_MATERIALS := preload("res://assets/inventory/silk-materials.svg")
+enum Goods { MIXED_GRAIN, LEAVES, COCOONS, RAW_SILK, SILK_BOLT, WOOL, HERBS }
+
+const GOODS_PATH := "res://assets/inventory/estate-goods.png"
 const POCKET_MINIMUM := Vector2(216, 58)
 const ITEM_NAME_INK := Color("#ffe9bd")
 const QUANTITY_INK := Color("#e7bf96")
@@ -14,6 +14,7 @@ const QUANTITY_INK := Color("#e7bf96")
 @export var item_style: StyleBox
 @export var empty_pocket_style: StyleBox
 
+@onready var goods_art: Texture2D = load(GOODS_PATH)
 @onready var close_button: Button = %Close
 @onready var crop_tab: Button = %CropTab
 @onready var fish_tab: Button = %FishTab
@@ -24,6 +25,10 @@ const QUANTITY_INK := Color("#e7bf96")
 @onready var meal_effect: Label = %MealEffect
 @onready var eat_button: Button = %Eat
 @onready var meal_notice: Label = %MealNotice
+@onready var herb_pouch: PanelContainer = %HerbPouch
+@onready var herb_effect: Label = %HerbEffect
+@onready var use_herbs_button: Button = %UseHerbs
+@onready var herb_notice: Label = %HerbNotice
 @onready var items: GridContainer = %Items
 @onready var empty_pockets: GridContainer = %EmptyPockets
 @onready var empty: Label = %Empty
@@ -33,6 +38,7 @@ var page := Page.CROPS
 func _ready() -> void:
 	%BagIcon.texture = HUDIcons.icon(HUDIcons.Symbol.BACKPACK)
 	%CoinIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
+	%HerbIcon.texture = _goods_icon(Goods.HERBS)
 	for index in CropStock.IDS.size():
 		var pocket := Panel.new()
 		pocket.custom_minimum_size = POCKET_MINIMUM
@@ -45,15 +51,18 @@ func _ready() -> void:
 	fish_tab.pressed.connect(select_page.bind(Page.FISH))
 	craft_tab.pressed.connect(select_page.bind(Page.CRAFT))
 	eat_button.pressed.connect(_eat)
+	use_herbs_button.pressed.connect(_use_herbs)
 	GameEvents.inventory_changed.connect(_refresh_items.unbind(1))
 	GameEvents.fish_changed.connect(_refresh_items)
 	GameEvents.silk_changed.connect(_refresh_items)
 	GameEvents.sheepfold_changed.connect(_refresh_items)
 	GameEvents.money_changed.connect(_refresh_wallet)
 	GameEvents.travel_meal_changed.connect(_refresh_meal)
+	GameEvents.wild_herbs_changed.connect(_refresh_herbs)
 	select_page(page)
 	_refresh_wallet(Global.money)
 	_refresh_meal()
+	_refresh_herbs()
 	close_button.grab_focus()
 
 func select_page(selected: Page) -> void:
@@ -74,9 +83,7 @@ func _refresh_items() -> void:
 				var count := Global.crop_stock.count(id)
 				if count == 0:
 					continue
-				var icon: Texture2D = (_atlas(SACK, Rect2(16, 0, 16, 16)) if id == CropStock.MIXED
-					else ItemManager.crop_picture(ItemManager.get_crop(id)).texture)
-				_add_item(id, ItemManager.crop_label(id), "%d 份" % count, icon)
+				_add_item(id, ItemManager.crop_label(id), "%d 份" % count, _stored_crop_icon(id))
 			empty_caption = "私仓暂无作物"
 		Page.FISH:
 			for id: String in CreekFish.IDS:
@@ -92,15 +99,22 @@ func _refresh_items() -> void:
 func _add_craft_items() -> void:
 	var workshop := Global.silk_workshop
 	if workshop.leaves > 0:
-		_add_item("mulberry_leaves", "桑叶", "%d 片" % workshop.leaves, _atlas(SILK_MATERIALS, Rect2(0, 0, 16, 16)))
+		_add_item("mulberry_leaves", "桑叶", "%d 片" % workshop.leaves, _goods_icon(Goods.LEAVES))
 	if workshop.cocoons > 0:
-		_add_item("cocoons", "蚕茧", "%d 只" % workshop.cocoons, _atlas(SILK_MATERIALS, Rect2(16, 0, 16, 16)))
+		_add_item("cocoons", "蚕茧", "%d 只" % workshop.cocoons, _goods_icon(Goods.COCOONS))
 	if workshop.raw_silk > 0:
-		_add_item("raw_silk", "生丝", "%d 份" % workshop.raw_silk, _atlas(SILK_MATERIALS, Rect2(32, 0, 16, 16)))
+		_add_item("raw_silk", "生丝", "%d 份" % workshop.raw_silk, _goods_icon(Goods.RAW_SILK))
 	if workshop.bolts > 0:
-		_add_item("silk", "丝绸", "%d 匹" % workshop.bolts, ItemManager.season_item_picture(SeasonOrders.SILK_ITEM).texture)
+		_add_item("silk", "丝绸", "%d 匹" % workshop.bolts, _goods_icon(Goods.SILK_BOLT))
 	if Global.sheepfold.wool > 0:
-		_add_item("wool", "羊毛", "%d 份" % Global.sheepfold.wool, _atlas(FLEECE, Rect2(102, 18, 18, 16)))
+		_add_item("wool", "羊毛", "%d 份" % Global.sheepfold.wool, _goods_icon(Goods.WOOL))
+
+func _stored_crop_icon(id: String) -> Texture2D:
+	if id == CropStock.MIXED:
+		return _goods_icon(Goods.MIXED_GRAIN)
+	if HUDIcons.CROPS.has(id):
+		return HUDIcons.icon(HUDIcons.CROPS[id])
+	return ItemManager.crop_picture(ItemManager.get_crop(id)).texture
 
 func _add_item(id: String, label: String, quantity: String, texture: Texture2D) -> void:
 	var slot := PanelContainer.new()
@@ -140,10 +154,10 @@ func _add_item(id: String, label: String, quantity: String, texture: Texture2D) 
 	count_label.text = quantity
 	text.add_child(count_label)
 
-func _atlas(texture: Texture2D, region: Rect2) -> AtlasTexture:
+func _goods_icon(kind: Goods) -> AtlasTexture:
 	var icon := AtlasTexture.new()
-	icon.atlas = texture
-	icon.region = region
+	icon.atlas = goods_art
+	icon.region = Rect2(kind * 32, 0, 32, 32)
 	icon.filter_clip = true
 	return icon
 
@@ -160,9 +174,19 @@ func _refresh_meal() -> void:
 	if packed:
 		meal_icon.texture = TravelMeal.icon(meal)
 		meal_effect.text = TravelMeal.describe_recovery(TravelMeal.benefits(meal, Global.balance))
+	_refresh_focus()
+
+func _refresh_herbs() -> void:
+	herb_pouch.visible = Global.wild_herbs_packed
+	herb_effect.text = "最多恢复 %d 气血" % Global.balance.wild_herb_healing
+	_refresh_focus()
+
+func _refresh_focus() -> void:
 	var buttons: Array[Button] = [close_button, crop_tab, fish_tab, craft_tab]
-	if packed:
+	if eat_button.visible:
 		buttons.append(eat_button)
+	if herb_pouch.visible:
+		buttons.append(use_herbs_button)
 	for index in buttons.size():
 		var button := buttons[index]
 		button.focus_next = button.get_path_to(buttons[(index + 1) % buttons.size()])
@@ -178,3 +202,14 @@ func _eat() -> void:
 	else:
 		meal_notice.text = "眼下用不着这份路餐，先带着。"
 	meal_notice.show()
+
+func _use_herbs() -> void:
+	var recovered := Global.use_packed_wild_herbs()
+	if recovered > 0:
+		AudioManager.play_ui_sfx(0.86)
+		herb_notice.text = "敷了野药 · 气血 +%d" % recovered
+		close_button.grab_focus()
+		GamepadInput.snap_pointer_to_focus()
+	else:
+		herb_notice.text = "气血充足，先带着野药。"
+	herb_notice.show()

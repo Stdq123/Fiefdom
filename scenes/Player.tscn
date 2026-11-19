@@ -1,7 +1,7 @@
 [gd_scene load_steps=8 format=3 uid="uid://player_scene_uid"]
 
 [ext_resource type="Script" path="res://scripts/Player.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/characters/player.svg" id="2_sprite"]
+[ext_resource type="Texture2D" path="res://assets/characters/player.png" id="2_sprite"]
 [ext_resource type="PackedScene" path="res://scenes/TrainingCart.tscn" id="3_cart"]
 [ext_resource type="Script" path="res://scripts/ToolGesture.gd" id="4_tool"]
 [ext_resource type="Theme" path="res://resources/game_theme.tres" id="5_theme"]
@@ -20,7 +20,7 @@ visible = false
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(0, -6)
 texture = ExtResource("2_sprite")
-hframes = 3
+hframes = 7
 vframes = 3
 
 [node name="ToolGesture" type="Sprite2D" parent="."]

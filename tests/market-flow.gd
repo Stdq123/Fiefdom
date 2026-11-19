@@ -134,9 +134,14 @@ func _run() -> void:
 	market.reserve_kind.select(market.ReserveKind.RECLAMATION)
 	market.reserve_kind.item_selected.emit(market.ReserveKind.RECLAMATION)
 	var construction: Dictionary = state.reclamation_food_plan()
-	_expect(construction.target == 64 and construction.copper_short == 1 and market.reserve_button.disabled
-		and "含本季交货作物" in market.reserve_label.text and "还差 1 铜钱" in market.reserve_label.text,
-		"The construction quote uses the next rank's cost, four current rations and the seasonal lot warning.")
+	_expect(construction.target == 64 and construction.copper_short == 8 and market.reserve_button.disabled
+		and "留用 菽 1" in market.reserve_label.text and "还差 8 铜钱" in market.reserve_label.text,
+		"The construction quote uses the next rank's cost and leaves the current order stock.")
+	await process_frame
+	await _click(market.use_reserved)
+	_expect(market.use_reserved.button_pressed and state.reclamation_food_plan(true).copper_short == 1 and market.reserve_button.disabled
+		and "将动用预留 菽 1" in market.reserve_label.text and "还差 1 铜钱" in market.reserve_label.text,
+		"The explicit alternative shows the reserved crop and still holds the stake money: " + market.reserve_label.text)
 	market.reserve_button.pressed.emit()
 	_expect(state.food_storage == 62 and state.player_inventory == 1 and state.money == 146,
 		"The grain shortcut cannot dip into copper needed for stakes or partly debit crops.")

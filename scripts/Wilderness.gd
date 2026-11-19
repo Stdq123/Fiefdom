@@ -5,6 +5,7 @@ const RAVINE_DIRECTIONS := preload("res://scripts/RavineDirections.gd")
 const RAVINE_MAP := preload("res://scenes/RavineMap.tscn")
 const ROAD_NETWORK := preload("res://scripts/RoadNetwork.gd")
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
+const WOODEN_BRIDGE := preload("res://scripts/WoodenBridge.gd")
 const RAFT_TRIAL := preload("res://scenes/RaftTrial.tscn")
 const SETTINGS_PANEL := preload("res://scripts/SettingsPanel.gd")
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
@@ -14,8 +15,10 @@ var ravine_map: Control
 var settings: Panel
 
 func _ready() -> void:
+	add_child(WOODEN_BRIDGE.new(RavineLayout.BRIDGE_DECK, true))
 	if not MapTravel.active:
 		$Player.arrive_at($SouthTrailArrival if Global.restored_ravine_south else $WestArrival)
+		$Player.restore_walking_checkpoint(RavineLayout.BOUNDS)
 	Global.restored_ravine_south = false
 	GameEvents.fishing_requested.connect(_on_fishing_requested)
 	raft_landing.trial_requested.connect(_open_raft_trial)
@@ -40,6 +43,7 @@ func _ready() -> void:
 	}
 	ravine_map.setup(directions, $Player, $Landscape, destinations)
 	ravine_map.open_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
+	$CampaignHUD.add_field_return($Player, ravine_map.follow_region_destination)
 	_setup_settings($CampaignHUD.view)
 	$FishingUI/CreekTrapPanel.route_requested.connect(ravine_map.follow_place)
 	var goal := Global.ravine_trip_target
@@ -48,6 +52,10 @@ func _ready() -> void:
 	var continue_route := Callable()
 	if destinations.has(goal):
 		continue_route = directions.follow.bind(goal, destinations[goal])
+	elif Global.market_trip_target == Global.FIELD_RETURN:
+		continue_route = ravine_map.follow_first_field.bind(saved_waypoint)
+	elif Global.market_trip_target == WinterSupper.PLACE:
+		continue_route = ravine_map.follow_winter_supper.bind(saved_waypoint)
 	elif not Global.market_trip_target.is_empty():
 		continue_route = ravine_map.follow_market.bind(Global.market_trip_target)
 	elif not saved_waypoint.is_empty():
@@ -107,7 +115,6 @@ func _setup_settings(view: Control) -> void:
 
 func _open_settings() -> void:
 	if not get_tree().paused and not MapTravel.active and Global.outcome == Global.Outcome.RUNNING:
-		settings.save_resume_hint = "从竹涧南路小径继续" if resume_from_south_trail() else "从竹涧西门继续"
 		settings.show()
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -122,7 +129,7 @@ func _on_fishing_requested(spot: Node2D) -> void:
 	panel.name = "FishingPanel"
 	panel.spot = spot
 	panel.angler = $Player
-	panel.route_to = ravine_map.follow_market
+	panel.route_to = ravine_map.follow_region_destination
 	$FishingUI.add_child(panel)
 
 func _open_raft_trial() -> void:

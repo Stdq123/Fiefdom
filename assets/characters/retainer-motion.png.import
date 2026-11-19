@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://4fvttu0dlaha"
+path="res://.godot/imported/retainer-motion.png-a34908fc77398e9e9644135138ebf8f0.res"
+
+[deps]
+
+source_file="res://assets/characters/retainer-motion.png"
+dest_files=["res://.godot/imported/retainer-motion.png-a34908fc77398e9e9644135138ebf8f0.res"]
+
+[params]
+
+authored_at_2x=true

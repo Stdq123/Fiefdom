@@ -139,6 +139,19 @@ func _estate_flow() -> bool:
 		"Holding A tills both plots once and only charges each plot's cost.")
 	await _sweep()
 	_expect(state.active_crops.size() == 2 and state.current_stamina == 92, "A new sweep plants both plots without watering them.")
+	await _click(ui.sleep_button)
+	var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not _expect(warning != null, "The controller opens the first-tribute warning."):
+		return false
+	var mark: Button = warning.choices.front()
+	_expect(mark.has_focus() and mark.get_global_rect().has_point(pad.cursor.position),
+		"The safe choice has focus and the pointer. focus=%s button=%s pointer=%s" % [
+			tree.root.gui_get_focus_owner(), mark.get_global_rect(), pad.cursor.position])
+	await _tap(JOY_BUTTON_DPAD_RIGHT)
+	_expect(warning.choices.back().has_focus(), "The D-pad can move to the deliberate overnight choice.")
+	await _tap(JOY_BUTTON_B)
+	_expect(not world.player.conversation_open and state.current_day == 1 and state.field_crop_is_dry(PUBLIC),
+		"B closes the warning and leaves the public crop for watering.")
 	await _sweep()
 	_expect(state.current_stamina == 90, "Watering both newly sown plots costs two stamina.")
 	await _sleep()
@@ -164,6 +177,7 @@ func _estate_flow() -> bool:
 	await _tap(JOY_BUTTON_BACK)
 	_expect(tree.paused and ui.calendar.modal.visible, "View opens the almanac.")
 	await _tap(JOY_BUTTON_B)
+	await _season_shortcut()
 	await _click(ui.manage_button)
 	_expect(world.player.menu_open, "A opens management.")
 	var standing: Vector2 = world.player.position
@@ -173,6 +187,18 @@ func _estate_flow() -> bool:
 		"The left stick navigates the menu and a click behind the panel cannot start field work.")
 	await _tap(JOY_BUTTON_B)
 	_expect(not world.player.menu_open, "B leaves management.")
+	await _aim(_point(PUBLIC))
+	_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	await tree.process_frame
+	await tree.process_frame
+	_expect(hint.preview_plots.size() == 2 and "A 确认" in hint.label.text,
+		"Holding LT over an empty tilled plot previews both matching plots.")
+	await _snapshot("02a-field-batch-pad")
+	await _tap(JOY_BUTTON_A)
+	_expect(state.active_crops.has(PUBLIC) and state.active_crops.has(PRIVATE) and state.current_stamina == 90,
+		"LT and A apply the quoted batch through gamepad input.")
+	_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
+	await tree.process_frame
 
 	await _aim(_point(PUBLIC) + Vector2(60.0, 0.0))
 	_axis(JOY_AXIS_TRIGGER_RIGHT, 0.85)
@@ -208,6 +234,22 @@ func _estate_flow() -> bool:
 	await _click(title_button, true)
 	await _confirm(confirmation, "04-return")
 	return await _scene_is(TITLE)
+
+func _season_shortcut() -> void:
+	var current: int = state.current_day
+	var events := tree.root.get_node("GameEvents")
+	# Use the eve of the first event to exercise View and B without advancing the opening economy.
+	state.current_day = 5
+	events.day_advanced.emit(5)
+	await _tap(JOY_BUTTON_BACK)
+	_expect(tree.paused and ui.calendar.modal.visible and "谷雨" in ui.calendar.title.text
+		and tree.root.gui_get_focus_owner() == ui.calendar.close_button,
+		"View opens the upcoming event with focus inside the almanac.")
+	await _snapshot("02b-gamepad-season-notice")
+	await _tap(JOY_BUTTON_B)
+	_expect(not tree.paused, "B closes the event and restores the estate.")
+	state.current_day = current
+	events.day_advanced.emit(current)
 
 func _irrigation() -> void:
 	# Unlock construction here to test the input gesture after the normal opening harvest.

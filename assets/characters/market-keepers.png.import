@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://2xfpey34jqy3"
+path="res://.godot/imported/market-keepers.png-190c16e3106ac12b062412910f2db01d.res"
+
+[deps]
+
+source_file="res://assets/characters/market-keepers.png"
+dest_files=["res://.godot/imported/market-keepers.png-190c16e3106ac12b062412910f2db01d.res"]
+
+[params]
+
+authored_at_2x=true

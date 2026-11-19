@@ -296,6 +296,8 @@ func _continue_from_market(market: Node2D, fish_id: String) -> void:
 	var saved_money: int = state.money
 	var saved_food: int = state.food_storage
 	var progress: float = state.day_progress
+	var saved_foot: Vector2 = market.player.global_position
+	var saved_facing: Vector2 = market.player.facing_direction()
 	print("MARKET_SAVED copper=", saved_money, " grain=", saved_food)
 	tree.change_scene_to_file(state.TITLE_SCENE)
 	await tree.scene_changed
@@ -310,7 +312,7 @@ func _continue_from_market(market: Node2D, fish_id: String) -> void:
 	if not _expect(market.scene_file_path == state.WEST_MARKET_SCENE, "Continue restores the market scene."):
 		return
 	print("MARKET_CONTINUED at=", market.player.position)
-	_expect(market.player.position == market.get_node("EstateRoadArrival").position
+	_expect(market.player.global_position.is_equal_approx(saved_foot) and market.player.facing_direction() == saved_facing
 		and absf(state.day_progress - progress) < 0.03 and state.money == saved_money and state.food_storage == saved_food
 		and state.fish_count(fish_id) == 0 and state.silk_bolts_sold == 1, "The market checkpoint keeps the clock and receipts.")
 	_expect(market.get_node("Porter").position.distance_to(porter_position) < 5.0,
@@ -320,6 +322,7 @@ func _continue_from_market(market: Node2D, fish_id: String) -> void:
 	print("MARKET_PORTER_RESTORED ", market.get_node("Porter").position, " clock=", state.day_progress)
 	if not await _night(market):
 		return
+	await Campaign.walk_to_market_exit(tree, market)
 	if await _cross(&"ui_right", state.ESTATE_SCENE):
 		var world := tree.current_scene.get_node("World") as Node2D
 		_expect(world.player.position.distance_to(world.get_node("WestMarketArrival").position) < 4.0
@@ -361,7 +364,8 @@ func run(game_tree: SceneTree) -> void:
 	if not _expect(ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"), "Use an isolated market profile."):
 		tree.quit(1)
 		return
-	capture_dir = OS.get_environment("FIEFDOM_MARKET_CAPTURES")
+	if capture_dir.is_empty():
+		capture_dir = OS.get_environment("FIEFDOM_MARKET_CAPTURES")
 	state = tree.root.get_node("Global")
 	tree.root.notify_mouse_entered()
 	tree.change_scene_to_file(state.TITLE_SCENE)

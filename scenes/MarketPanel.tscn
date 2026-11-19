@@ -111,30 +111,69 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 14
 autowrap_mode = 3
 
-[node name="ConvertButton" type="Button" parent="."]
-custom_minimum_size = Vector2(0, 36)
+[node name="TradeActions" type="HFlowContainer" parent="."]
 layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 6
 
-[node name="SellButton" type="Button" parent="."]
+[node name="ConvertButton" type="Button" parent="TradeActions"]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
+size_flags_horizontal = 3
 
-[node name="BuyFoodButton" type="Button" parent="."]
+[node name="SellButton" type="Button" parent="TradeActions"]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BuyFoodButton" type="Button" parent="TradeActions"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
 
 [node name="ReserveDivider" type="HSeparator" parent="."]
 layout_mode = 2
 
-[node name="ReserveKind" type="OptionButton" parent="."]
+[node name="ReformSale" type="HBoxContainer" parent="."]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Note" type="Label" parent="ReformSale"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.9, 0.78, 0.55, 1)
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="SellSurplus" type="Button" parent="ReformSale"]
+custom_minimum_size = Vector2(156, 38)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+text = "按报价出售"
+
+[node name="ReserveOptions" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ReserveKind" type="OptionButton" parent="ReserveOptions"]
 custom_minimum_size = Vector2(150, 32)
 layout_mode = 2
-size_flags_horizontal = 0
 mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 17
 
+[node name="UseReserved" type="CheckBox" parent="ReserveOptions"]
+visible = false
+layout_mode = 2
+focus_neighbor_left = NodePath("../ReserveKind")
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 17
+text = "动用预留作物"
+
 [node name="ReservePlan" type="Label" parent="."]
 layout_mode = 2
+theme_override_font_sizes/font_size = 16
 autowrap_mode = 3
 
 [node name="ReserveActions" type="HBoxContainer" parent="."]

@@ -164,6 +164,7 @@ func _walk_to_landing() -> bool:
 	for point: Vector2 in guide.route.duplicate():
 		await Campaign.walk_to(tree, walker, point)
 	await tree.physics_frame
+	await _frame("03a-open-landing" if state.current_day == day else "07a-quiet-landing")
 	return _expect(walker.interaction_target == ravine.raft_landing and guide.destination_name.is_empty(),
 		"Follow the marked path to the actual raft landing.")
 
@@ -318,7 +319,7 @@ func run(host: SceneTree, directory := "") -> void:
 	_expect(state.ravine_trip_target == SummerRaft.PLACE and ui.directions.tracked_place == "竹涧 · " + SummerRaft.PLACE,
 		"The solstice's guide points to the East Gate and preserves the actual ravine destination.")
 	await _sleep()
-	_expect("今日夏至试筏" in ui.hud.gathering_label.text, "The estate calendar announces the event on the day it opens.")
+	_expect("今日夏至试筏" in ui.hud.season_event_button.text, "The estate calendar announces the event on the day it opens.")
 	var preferences := tree.root.get_node("Preferences")
 	_expect(preferences.set_binding(KeyBindings.RIGHT, KEY_J) == OK, "Use a custom steering key in the replay.")
 	if await _travel_to_ravine() and await _walk_to_landing() and await _ride() and await _return_to_estate():

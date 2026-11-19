@@ -1,0 +1,5 @@
+[submodule "godot-mcp-ultimate"]
+	path = godot-mcp-ultimate
+	url = ./
+	branch = codex/godot-mcp-ultimate
+	shallow = true

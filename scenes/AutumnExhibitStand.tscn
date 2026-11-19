@@ -1,9 +1,14 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/AutumnExhibitStand.gd" id="1_stand"]
-[ext_resource type="Texture2D" path="res://assets/world/autumn-exhibit.svg" id="2_art"]
+[ext_resource type="Texture2D" path="res://assets/world/estate-site-art.png" id="2_art"]
 [ext_resource type="PackedScene" path="res://scenes/AutumnExhibitGuest.tscn" id="3_person"]
 [ext_resource type="Material" path="res://resources/world_hint_material.tres" id="4_hint"]
+
+[sub_resource type="AtlasTexture" id="Texture_stand"]
+atlas = ExtResource("2_art")
+region = Rect2(328, 144, 136, 65)
+filter_clip = true
 
 [sub_resource type="RectangleShape2D" id="TableFootprint"]
 size = Vector2(85, 12)
@@ -18,7 +23,7 @@ position = Vector2(0, 18)
 
 [node name="Display" type="Sprite2D" parent="."]
 centered = false
-texture = ExtResource("2_art")
+texture = SubResource("Texture_stand")
 offset = Vector2(-68, -60)
 
 [node name="ReedMat" type="Sprite2D" parent="."]

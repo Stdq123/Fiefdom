@@ -9,31 +9,73 @@ enum Prop {
 
 const SCENERY := preload("res://assets/world/scenery.svg")
 const ESTATE_BUILDINGS := preload("res://assets/world/estate-buildings.svg")
-const GRAIN := preload("res://assets/world/ground-grain.svg")
 const SEASONAL_TREES := preload("res://assets/world/seasonal-trees.svg")
-const WINTER_WILLOW := preload("res://assets/world/winter-willow.svg")
 const SEASONAL_GROUND := preload("res://scripts/SeasonalGround.gd")
 const ESTATE_TERRAIN := preload("res://scripts/EstateTerrain.gd")
+const ESTATE_ART := ESTATE_TERRAIN.SITE_ART
+const ESTATE_VESSELS := preload("res://assets/world/estate-vessels.png")
 const WATER_SURFACE := preload("res://scripts/WaterSurface.gd")
+const SOUTH_POND := preload("res://scripts/SouthPond.gd")
 const SNOW_FOOTPRINTS := preload("res://scripts/SnowFootprints.gd")
-const ROAD_PAVILION := preload("res://assets/world/road-pavilion.svg")
 const SILK_SAMPLE := preload("res://assets/world/west-court-sample.svg")
 const SILK_SAMPLE_BOUNDS := Rect2(EstateLayout.WEST_COURT + Vector2(-37, -4), Vector2(28, 24))
-const LOOKOUT := preload("res://assets/world/stone-lookout.svg")
+const RAVINE_ART := preload("res://assets/world/ravine-art.png")
 const RAIN_VEIL := preload("res://scripts/RainVeil.gd")
 const TERRAIN_AUDIO := preload("res://scripts/TerrainAudio.gd")
 const DAY_LIGHTING := preload("res://scripts/DayLighting.gd")
 const NINJA_SCENERY := preload("res://assets/world/ninja-adventure/tileset_village_abandoned.png")
-const ACTG_SCENERY := preload("res://assets/world/actg/swamp.png")
-const MOUNTAIN_POST_BAMBOO := preload("res://assets/world/mountain-post/bamboo.png")
 const ESTATE_STORAGE := preload("res://assets/world/estate-storage.svg")
-const RAVINE_ACCENTS := preload("res://assets/world/momonga/ravine-accents.png")
-const RAVINE_ACCENT_PROPS := [Prop.RAVINE_ROCK, Prop.RAVINE_SHOOT, Prop.RAVINE_RUSH]
+const RIVERSIDE_PLANTS := preload("res://assets/world/riverside-plants.png")
+const BAMBOO_ART_PATH := "res://assets/world/river-bamboo.png"
+const BAMBOO_FRAMES := {Prop.TALL_BAMBOO: Rect2(0, 0, 40, 48), Prop.BAMBOO: Rect2(41, 0, 30, 32)}
+const INSCRIPTION := preload("res://scripts/VillageInscription.gd")
+const WOODLAND := preload("res://assets/world/ravine-woodland.svg")
+const RAVINE_BANKS := preload("res://scripts/RavineBanks.gd")
+const RAVINE_RELIEF := preload("res://scripts/RavineRelief.gd")
+const FIELD_BANK_DEPTH: Array[float] = [2.0, 4.5, 6.0, 2.0]
+const RIVERSIDE_REGIONS := {
+	Prop.WILLOW: Rect2(0, 0, 80, 92),
+	Prop.TALL_BAMBOO: Rect2(88, 0, 40, 48),
+	Prop.BAMBOO: Rect2(134, 0, 30, 32),
+	Prop.REEDS: Rect2(170, 0, 30, 28),
+	Prop.RAVINE_RUSH: Rect2(206, 0, 26, 20),
+	Prop.BANK_GRASS: Rect2(88, 54, 32, 25),
+	Prop.FERN: Rect2(126, 54, 27, 21),
+	Prop.RAVINE_SHOOT: Rect2(160, 54, 14, 18),
+}
+const RIVERSIDE_WINTER_ROW := 96
+const WOODLAND_REGIONS := {
+	Prop.GROVE_TREE: Rect2(0, 0, 32, 32),
+	Prop.GROVE_CLUSTER: Rect2(36, 0, 64, 48),
+	Prop.PINE: Rect2(104, 0, 48, 48),
+}
+const SCENERY_SHADOW_SIZES := {
+	Prop.OAK: Vector2(19, 7),
+	Prop.BLOSSOM_TREE: Vector2(19, 7),
+	Prop.GROVE_TREE: Vector2(15, 5),
+	Prop.GROVE_CLUSTER: Vector2(30, 9),
+	Prop.PINE: Vector2(20, 7),
+	Prop.TALL_BAMBOO: Vector2(13, 5),
+	Prop.BAMBOO: Vector2(9, 4),
+	Prop.SHRUB: Vector2(16, 5),
+	Prop.GRAIN_SACK: Vector2(6, 2.5),
+	Prop.OPEN_SACK: Vector2(6, 2.5),
+	Prop.JAR: Vector2(6, 2.5),
+	Prop.LIDDED_JAR: Vector2(6, 2.5),
+}
+const SCENERY_SHADOW_PROFILE := [Vector2(-0.78, -0.14), Vector2(-0.52, -0.78), Vector2(0.06, -0.97),
+	Vector2(0.65, -0.68), Vector2(1.16, -0.2), Vector2(1.45, 0.26), Vector2(1.14, 0.72),
+	Vector2(0.57, 0.95), Vector2(0.05, 0.76), Vector2(-0.4, 0.52), Vector2(-0.81, 0.21)]
+const ROCK_PROPS := [Prop.ROCK, Prop.BOULDER, Prop.MOSS_STONE, Prop.RAVINE_ROCK]
+const STONE_REGIONS := {
+	Prop.MOSS_STONE: Rect2(0, 96, 32, 32),
+	Prop.RAVINE_ROCK: Rect2(48, 96, 36, 22),
+	Prop.PEBBLES: Rect2(96, 96, 16, 16),
+}
 const MEADOW_FLOWERS := {
 	Prop.WHITE_BLOOM: preload("res://assets/world/mini-meadow/flower_white.png"),
 	Prop.PINK_BLOOM: preload("res://assets/world/mini-meadow/flower_pink.png"),
 }
-const ACTG_PROPS := [Prop.WILLOW, Prop.BANK_GRASS]
 const STORAGE_TINTS := {
 	Prop.GRAIN_SACK: Color(0.88, 0.83, 0.68),
 	Prop.OPEN_SACK: Color(0.84, 0.79, 0.64),
@@ -43,20 +85,11 @@ const STORAGE_TINTS := {
 const EXTERNAL_REGIONS := {
 	Prop.GROVE_TREE: Rect2(64, 144, 32, 32),
 	Prop.GROVE_CLUSTER: Rect2(0, 144, 64, 48),
-	Prop.MOSS_STONE: Rect2(112, 80, 32, 32),
-	Prop.FERN: Rect2(80, 80, 16, 16),
 	Prop.STUMP: Rect2(96, 128, 16, 16),
-	Prop.PEBBLES: Rect2(160, 64, 16, 16),
-	Prop.WILLOW: Rect2(411, 22, 80, 100),
-	Prop.BANK_GRASS: Rect2(251, 30, 32, 36),
-	Prop.TALL_BAMBOO: Rect2(0, 0, 32, 44),
 	Prop.GRAIN_SACK: Rect2(0, 0, 16, 16),
 	Prop.OPEN_SACK: Rect2(16, 0, 16, 16),
 	Prop.JAR: Rect2(32, 0, 16, 16),
 	Prop.LIDDED_JAR: Rect2(48, 0, 16, 16),
-	Prop.RAVINE_ROCK: Rect2(0, 0, 34, 17),
-	Prop.RAVINE_SHOOT: Rect2(44, 0, 11, 17),
-	Prop.RAVINE_RUSH: Rect2(62, 0, 22, 17),
 	Prop.WHITE_BLOOM: Rect2(0, 0, 16, 16),
 	Prop.PINK_BLOOM: Rect2(0, 0, 16, 16),
 }
@@ -70,13 +103,56 @@ const BUILDING_REGIONS := {
 	Prop.GATE: Rect2(312, 0, 32, 48),
 	Prop.GATE_FAR: Rect2(280, 0, 32, 48),
 }
-const PAVILION_REGION := Rect2(Vector2(208, 0), EstateLayout.PAVILION_SIZE)
+const PAVILION_REGION := Rect2(Vector2(80, 0), EstateLayout.PAVILION_SIZE)
 const BUILDING_FOOTPRINTS := {
 	Prop.HALL: EstateLayout.HALL_BASE,
 	Prop.SILK_SHED: EstateLayout.SILK_SHED_BASE,
 	Prop.GATE: Rect2(-12, -5, 24, 7),
 	Prop.GATE_FAR: Rect2(-12, -5, 24, 7),
 }
+# The hall yard uses the regular sprite sizes and foot anchors. Seasonal tiles run across each tree row.
+const HALL_YARD_AREA := Rect2(-145, -67, 369, 247)
+const HALL_YARD_REGIONS := {
+	Prop.HALL: Rect2(0, 0, 128, 88),
+	Prop.ROCK: Rect2(128, 0, 48, 48),
+	Prop.OAK: Rect2(0, 96, 48, 48),
+	Prop.BLOSSOM_TREE: Rect2(0, 144, 48, 48),
+	Prop.PINE: Rect2(0, 192, 48, 48),
+	Prop.GROVE_TREE: Rect2(0, 240, 32, 32),
+}
+const HALL_YARD_GROUND := Rect2(224, 0, 432, 272)
+const HALL_YARD_GROUND_AT := Vector2(-177, -94)
+const HALL_YARD_CANOPY_SHADOW := Rect2(288, 276, 64, 31)
+const HALL_YARD_STONE_SHADOW := Rect2(352, 276, 36, 16)
+const ESTATE_SITE_REGIONS := {
+	Prop.SILK_SHED: Rect2(0, 0, 80, 64),
+	Prop.GATE: Rect2(152, 0, 32, 48),
+	Prop.GATE_FAR: Rect2(184, 0, 32, 48),
+	Prop.BOULDER: Rect2(0, 64, 48, 48),
+	Prop.MOSS_STONE: Rect2(48, 64, 32, 32),
+	Prop.RAVINE_ROCK: Rect2(80, 64, 36, 22),
+	Prop.PEBBLES: Rect2(116, 64, 16, 16),
+	Prop.FENCE: Rect2(132, 64, 48, 48),
+	Prop.LOGS: Rect2(180, 64, 48, 48),
+	Prop.SHRUB: Rect2(324, 64, 48, 48),
+	Prop.FLOWERS: Rect2(372, 64, 48, 48),
+	Prop.WHITE_BLOOM: Rect2(420, 64, 16, 16),
+	Prop.PINK_BLOOM: Rect2(436, 64, 16, 16),
+}
+const ESTATE_RIVER_REGIONS := {
+	Prop.WILLOW: Rect2(0, 300, 80, 92),
+	Prop.TALL_BAMBOO: Rect2(80, 300, 40, 48),
+	Prop.BAMBOO: Rect2(120, 300, 30, 32),
+	Prop.REEDS: Rect2(150, 300, 30, 28),
+	Prop.BANK_GRASS: Rect2(180, 300, 32, 25),
+	Prop.FERN: Rect2(212, 300, 27, 21),
+	Prop.RAVINE_RUSH: Rect2(240, 300, 26, 20),
+}
+const CANOPY_SHADOW_SCALE := {
+	Prop.OAK: 1.0, Prop.BLOSSOM_TREE: 1.0, Prop.PINE: 0.82,
+	Prop.GROVE_TREE: 0.64, Prop.GROVE_CLUSTER: 1.24, Prop.WILLOW: 1.54,
+}
+const ESTATE_LEAF_LITTER := Rect2(0, 252, 64, 40)
 const ORCHARD_FRAMES := [Vector2(0, 1), Vector2(1, 0), Vector2(1, 1), Vector2(3, 1)]
 const MAP_BACKDROP := Rect2(-1650, -1400, 3350, 2800)
 const ESTATE_BOUNDS := EstateLayout.BOUNDS
@@ -85,11 +161,17 @@ const HALL_FOOT := EstateLayout.HALL_FOOT
 const HALL_LANDING := EstateLayout.HALL_LANDING
 const SOUTH_PAVILION := EstateLayout.SOUTH_PAVILION
 const PAVILION_TURN := EstateLayout.PAVILION_TURN
-const PAVILION_REST_FOOT := SOUTH_PAVILION + Vector2(5, 5)
-const PAVILION_WATER := PAVILION_REST_FOOT + Vector2(10, -4)
 const SILK_SHED_FOOT := EstateLayout.SILK_SHED_FOOT
 const SCENE_LANDMARK := -1
 const SCENE_WEST_COURT := -2
+const BUILDING_SHADOWS := {
+	Prop.HALL: [Vector2(-51, -10), Vector2(46, -10), Vector2(59, -19), Vector2(70, -8),
+		Vector2(59, 3), Vector2(26, 8), Vector2(-49, 6), Vector2(-55, 1)],
+	Prop.SILK_SHED: [Vector2(-30, -8), Vector2(27, -8), Vector2(36, -16), Vector2(45, -8),
+		Vector2(34, 4), Vector2(8, 6), Vector2(-28, 4), Vector2(-35, 0)],
+	SCENE_LANDMARK: [Vector2(-29, -13), Vector2(24, -13), Vector2(34, -23), Vector2(42, -15),
+		Vector2(34, -3), Vector2(17, 4), Vector2(-27, 4), Vector2(-33, 0)],
+}
 # Meadow, shade, sunny patches, and road for spring through winter.
 const SEASON_PALETTES := [
 	[Color("#4c6549"), Color("#3b563f"), Color("#57704c"), Color("#a08c65")],
@@ -100,20 +182,40 @@ const SEASON_PALETTES := [
 const LEAF_TINTS := [Color(1.04, 1.05, 0.98), Color(0.94, 1.06, 0.98),
 	Color(1.44, 0.88, 0.63), Color(0.82, 0.86, 1.12)]
 const WATER_TINTS := [Color("#477f81"), Color("#48847f"), Color("#52797b"), Color("#658888")]
+const ROADSIDE_PROPS := [Prop.SIGNPOST, Prop.FENCE, Prop.LOGS]
 const SORTED_PROPS := [Prop.HALL, Prop.SILK_SHED, Prop.OAK, Prop.BLOSSOM_TREE, Prop.PINE, Prop.GATE, Prop.GATE_FAR, Prop.BAMBOO,
 	Prop.GROVE_TREE, Prop.GROVE_CLUSTER, Prop.WILLOW, Prop.TALL_BAMBOO,
-	Prop.GRAIN_SACK, Prop.OPEN_SACK, Prop.JAR, Prop.LIDDED_JAR]
+	Prop.GRAIN_SACK, Prop.OPEN_SACK, Prop.JAR, Prop.LIDDED_JAR] + ROCK_PROPS + ROADSIDE_PROPS
 const LEAFY_PROPS := [Prop.OAK, Prop.BLOSSOM_TREE, Prop.GROVE_TREE, Prop.GROVE_CLUSTER, Prop.SHRUB, Prop.FERN,
 	Prop.FLOWERS, Prop.WILLOW, Prop.BANK_GRASS, Prop.TALL_BAMBOO, Prop.RAVINE_SHOOT, Prop.RAVINE_RUSH,
 	Prop.WHITE_BLOOM, Prop.PINK_BLOOM]
-const DORMANT_PROPS := [Prop.FLOWERS, Prop.FERN, Prop.RAVINE_SHOOT, Prop.RAVINE_RUSH, Prop.WHITE_BLOOM, Prop.PINK_BLOOM]
+const DORMANT_PROPS := [Prop.FLOWERS, Prop.FERN, Prop.RAVINE_SHOOT, Prop.WHITE_BLOOM, Prop.PINK_BLOOM]
 const BERRY_GROVE := RavineLayout.FRUIT + Vector2(-17, 8)
 const BRIDGE := RavineLayout.BRIDGE
-const BRIDGE_DECK := Rect2(BRIDGE - Vector2(27, 13), Vector2(54, 26))
+const BRIDGE_DECK := RavineLayout.BRIDGE_DECK
 const FORD := RavineLayout.FORD
 const FORD_AREA := Rect2(FORD - Vector2(35, 17), Vector2(70, 34))
 const CROSSING_HALF_DEPTH := 16.0
 const WATER_HALF_WIDTH := 17.0
+const RAVINE_JUNCTIONS := [
+	[Vector2(-174, 35), RavineLayout.BERRY_LANE, "野果坳"],
+	[Vector2(-62, 14), RavineLayout.FORD_TRAIL, "浅滩"],
+	[Vector2(355, 33), RavineLayout.RIDGE_LANE, "望溪台"],
+	[Vector2(150, 214), RavineLayout.SOUTH_TRAIL, RavineLayout.SOUTH_TRAIL_NAME],
+]
+const ESTATE_WAYPOSTS := [
+	[Vector2(-75, 65), Vector2.LEFT, "西市"],
+	[Vector2(-239, 10), EstateLayout.WEST_LANE[1] - EstateLayout.WEST_FORK, "西廊"],
+	[Vector2(120, 54), Vector2.RIGHT, "东关"],
+	[Vector2(286, 46), Vector2.RIGHT, "竹涧"],
+	[Vector2(351, 57), EstateLayout.DRIVING_APPROACH[1] - EstateLayout.DRIVING_FORK, "驾御场"],
+	[Vector2(23, 209), EstateLayout.FIELD_LANE_TURN - EstateLayout.SOUTH_LANE[6], "南路亭"],
+	[Vector2(0, 527), EstateLayout.SHEEP_LANE[1] - EstateLayout.SOUTH_FORK, "西坡"],
+	[Vector2(50, 511), EstateLayout.HEARTH_LANE[1] - EstateLayout.SOUTH_FORK, "灶台"],
+	[Vector2(226, 605), EstateLayout.FESTIVAL_LANE[1] - EstateLayout.FESTIVAL_FORK, "南池"],
+	[Vector2(278, 553), EstateLayout.RAVINE_TRAIL[1] - EstateLayout.FESTIVAL_FORK, EstateLayout.RAVINE_TRAIL_NAME],
+]
+const WINTER_ROCK_TINT := Color(0.92, 0.99, 1.08)
 const EAST_LANE_JUNCTION := EstateLayout.EAST_LANE_JUNCTION
 const ESTATE_SOUTH_LANE := EstateLayout.SOUTH_LANE
 const ESTATE_EAST_LANE := EstateLayout.EAST_LANE
@@ -123,17 +225,12 @@ const ESTATE_TRACKS := EstateLayout.ROADS + EstateLayout.SOUTH_ROADS + [
 ] + EstateLayout.DRIVING_ROADS
 const WILD_TRACKS := RavineLayout.TRACKS
 const ESTATE_TRACK_WIDTHS: Array[float] = EstateLayout.ROAD_WIDTHS + [
-	18.0, 13.0, 17.0, 14.0, 17.0, 15.0, 13.0, 16.0, 41.0, 30.0, 19.0, 34.0,
+	18.0, 13.0, 17.0, 14.0, 17.0, 15.0, 13.0, 16.0, 14.0, 41.0, 30.0, 19.0, 34.0,
 ]
 const GARDEN_TRACK := [EstateLayout.PAVILION_TURN, Vector2(39, 396), Vector2(58, 402), Vector2(78, 407), Vector2(101, 408)]
-const ROAD_REST_TRACK := [EstateLayout.PAVILION_JUNCTION, Vector2(9, 432), Vector2(-7, 442)]
 const ROTATION_BOOK_TRACK := [EstateLayout.FIELD_LANE_TURN, Vector2(22, 236), Vector2(0, 233), Vector2(-21, 234), Vector2(-43, 238)]
 const WILD_TRACK_WIDTHS := RavineLayout.TRACK_WIDTHS
 const CREEK := RavineLayout.CREEK
-const GRAVEL_BAR := [
-	Vector2(249, 197), Vector2(281, 202), Vector2(300, 218), Vector2(312, 249),
-	Vector2(298, 273), Vector2(265, 254), Vector2(238, 216),
-]
 const ESTATE_PROPS := [
 	Vector3i(-407, -273, Prop.OAK), Vector3i(-365, -286, Prop.PINE),
 	Vector3i(-313, -280, Prop.PINE), Vector3i(-254, -292, Prop.OAK),
@@ -184,7 +281,6 @@ const ESTATE_PROPS := [
 	Vector3i(52, -17, Prop.BLOSSOM_TREE), Vector3i(85, -20, Prop.PINE), Vector3i(115, -42, Prop.GROVE_TREE),
 	Vector3i(126, -25, Prop.SHRUB), Vector3i(173, -23, Prop.ROCK), Vector3i(204, -35, Prop.PINE),
 	Vector3i(233, -21, Prop.OAK), Vector3i(267, -41, Prop.BAMBOO), Vector3i(306, -27, Prop.MOSS_STONE),
-	Vector3i(-239, 10, Prop.SIGNPOST),
 	Vector3i(-320, 94, Prop.FENCE), Vector3i(-290, 99, Prop.OPEN_SACK),
 	Vector3i(-311, 116, Prop.TALL_BAMBOO), Vector3i(-284, 124, Prop.PINE), Vector3i(-231, 101, Prop.TALL_BAMBOO),
 	Vector3i(-211, 115, Prop.SHRUB), Vector3i(-317, 188, Prop.LIDDED_JAR), Vector3i(-311, 195, Prop.JAR),
@@ -203,13 +299,12 @@ const ESTATE_PROPS := [
 	Vector3i(152, 452, Prop.WHITE_BLOOM), Vector3i(161, 455, Prop.PINK_BLOOM), Vector3i(223, 445, Prop.WHITE_BLOOM),
 	Vector3i(289, 285, Prop.FLOWERS), Vector3i(262, 305, Prop.BAMBOO),
 	Vector3i(349, 318, Prop.MOSS_STONE), Vector3i(334, 322, Prop.FERN),
-	Vector3i(120, 54, Prop.SIGNPOST),
-	Vector3i(286, 32, Prop.SIGNPOST), Vector3i(348, -24, Prop.GROVE_TREE), Vector3i(356, -17, Prop.FENCE),
+	Vector3i(348, -24, Prop.GROVE_TREE), Vector3i(356, -17, Prop.FENCE),
 	Vector3i(413, -16, Prop.GATE_FAR), Vector3i(387, 32, Prop.GATE),
 	Vector3i(445, 25, Prop.FENCE), Vector3i(457, 53, Prop.PINE),
 	Vector3i(481, -21, Prop.GROVE_CLUSTER), Vector3i(478, 99, Prop.GROVE_TREE),
 	# The pine verge separates the watch post and the training road.
-	Vector3i(351, 57, Prop.SIGNPOST), Vector3i(357, 87, Prop.OAK), Vector3i(420, 94, Prop.TALL_BAMBOO),
+	Vector3i(357, 87, Prop.OAK), Vector3i(420, 94, Prop.TALL_BAMBOO),
 	Vector3i(354, 109, Prop.GROVE_TREE), Vector3i(357, 194, Prop.PINE), Vector3i(427, 155, Prop.PINE),
 	Vector3i(336, 207, Prop.TALL_BAMBOO), Vector3i(348, 226, Prop.FENCE), Vector3i(446, 222, Prop.FENCE),
 	Vector3i(351, 270, Prop.LOGS), Vector3i(448, 276, Prop.OAK), Vector3i(365, 319, Prop.TALL_BAMBOO),
@@ -217,7 +312,7 @@ const ESTATE_PROPS := [
 	Vector3i(377, 436, Prop.PINE), Vector3i(447, 428, Prop.FENCE), Vector3i(474, 435, Prop.FENCE),
 	Vector3i(468, 491, Prop.TALL_BAMBOO), Vector3i(423, 501, Prop.GROVE_TREE),
 	# Bamboo and low grasses flank the lane between the fields and the pavilion.
-	Vector3i(12, 224, Prop.SIGNPOST), Vector3i(75, 255, Prop.BAMBOO),
+	Vector3i(75, 255, Prop.BAMBOO),
 	Vector3i(-7, 276, Prop.TALL_BAMBOO), Vector3i(-38, 289, Prop.TALL_BAMBOO), Vector3i(-24, 303, Prop.FERN),
 	Vector3i(67, 286, Prop.ROCK), Vector3i(88, 300, Prop.TALL_BAMBOO), Vector3i(122, 307, Prop.GROVE_CLUSTER),
 	Vector3i(54, 315, Prop.TALL_BAMBOO), Vector3i(81, 326, Prop.BAMBOO), Vector3i(46, 338, Prop.FERN),
@@ -232,18 +327,17 @@ const ESTATE_PROPS := [
 	Vector3i(-68, 536, Prop.LIDDED_JAR), Vector3i(-46, 521, Prop.GROVE_TREE), Vector3i(-5, 512, Prop.FERN),
 	Vector3i(-88, 608, Prop.MOSS_STONE), Vector3i(-107, 616, Prop.FLOWERS), Vector3i(-150, 617, Prop.SHRUB),
 	Vector3i(-294, 627, Prop.FENCE), Vector3i(-289, 652, Prop.FLOWERS), Vector3i(-200, 632, Prop.FLOWERS),
-	Vector3i(50, 511, Prop.SIGNPOST), Vector3i(101, 522, Prop.GROVE_TREE), Vector3i(122, 531, Prop.PINE),
+	Vector3i(101, 522, Prop.GROVE_TREE), Vector3i(122, 531, Prop.PINE),
 	Vector3i(172, 530, Prop.TALL_BAMBOO), Vector3i(191, 548, Prop.LOGS), Vector3i(253, 555, Prop.JAR),
 	Vector3i(112, 594, Prop.OAK), Vector3i(136, 621, Prop.PINE), Vector3i(172, 609, Prop.GROVE_TREE),
 	Vector3i(37, 600, Prop.BAMBOO), Vector3i(23, 636, Prop.FLOWERS), Vector3i(4, 678, Prop.TALL_BAMBOO),
 	Vector3i(281, 633, Prop.GROVE_TREE), Vector3i(315, 635, Prop.TALL_BAMBOO), Vector3i(337, 648, Prop.RAVINE_ROCK),
-	Vector3i(278, 553, Prop.SIGNPOST), Vector3i(306, 545, Prop.BAMBOO), Vector3i(341, 539, Prop.GROVE_TREE),
+	Vector3i(306, 545, Prop.BAMBOO), Vector3i(341, 539, Prop.GROVE_TREE),
 	Vector3i(400, 603, Prop.BLOSSOM_TREE), Vector3i(463, 539, Prop.PINE), Vector3i(457, 608, Prop.TALL_BAMBOO),
 	Vector3i(489, 612, Prop.PINE), Vector3i(483, 664, Prop.OAK),
 	# Reeds mark the waterline. The open west bank is the approach to the clearing.
 	Vector3i(198, 663, Prop.RAVINE_RUSH), Vector3i(174, 697, Prop.BANK_GRASS),
-	Vector3i(190, 742, Prop.REEDS), Vector3i(219, 766, Prop.RAVINE_ROCK),
-	Vector3i(270, 766, Prop.BANK_GRASS), Vector3i(327, 735, Prop.REEDS),
+	Vector3i(219, 766, Prop.RAVINE_ROCK), Vector3i(270, 766, Prop.BANK_GRASS),
 	Vector3i(368, 715, Prop.WILLOW), Vector3i(394, 741, Prop.RAVINE_ROCK),
 	Vector3i(452, 705, Prop.GROVE_TREE), Vector3i(467, 762, Prop.TALL_BAMBOO),
 	Vector3i(116, 680, Prop.PINE), Vector3i(96, 735, Prop.TALL_BAMBOO), Vector3i(123, 761, Prop.MOSS_STONE),
@@ -262,17 +356,17 @@ const ESTATE_PROPS := [
 ]
 const WILD_PROPS := [
 	Vector3i(-363, -1, Prop.GATE_FAR), Vector3i(-389, 41, Prop.GATE),
-	Vector3i(-429, -4, Prop.FENCE), Vector3i(-417, 73, Prop.BOULDER), Vector3i(-406, -56, Prop.GROVE_CLUSTER),
-	Vector3i(-358, -32, Prop.PINE), Vector3i(-321, -15, Prop.TALL_BAMBOO), Vector3i(-285, 1, Prop.GROVE_TREE),
+	Vector3i(-423, -48, Prop.FENCE), Vector3i(-417, 73, Prop.BOULDER), Vector3i(-406, -56, Prop.GROVE_CLUSTER),
+	Vector3i(-358, -46, Prop.PINE), Vector3i(-321, -32, Prop.TALL_BAMBOO), Vector3i(-285, 1, Prop.GROVE_TREE),
 	Vector3i(-263, -38, Prop.OAK), Vector3i(-243, -5, Prop.MOSS_STONE), Vector3i(-223, 66, Prop.TALL_BAMBOO),
 	Vector3i(-328, 84, Prop.GROVE_CLUSTER), Vector3i(-296, 66, Prop.PINE), Vector3i(-262, 100, Prop.GROVE_TREE),
 	Vector3i(-427, -136, Prop.PINE), Vector3i(-397, -202, Prop.GROVE_CLUSTER), Vector3i(-359, -148, Prop.TALL_BAMBOO),
 	Vector3i(-329, -209, Prop.PINE), Vector3i(-310, -97, Prop.PINE), Vector3i(-269, -151, Prop.GROVE_TREE),
 	Vector3i(-233, -111, Prop.TALL_BAMBOO), Vector3i(-213, -160, Prop.PINE), Vector3i(-162, -163, Prop.BLOSSOM_TREE),
 	Vector3i(-116, -155, Prop.GROVE_TREE), Vector3i(-107, -115, Prop.SHRUB), Vector3i(-138, -98, Prop.WHITE_BLOOM),
-	Vector3i(-158, -80, Prop.FERN), Vector3i(-174, 35, Prop.SIGNPOST), Vector3i(-120, -26, Prop.GROVE_CLUSTER),
+	Vector3i(-158, -80, Prop.FERN), Vector3i(-120, -26, Prop.GROVE_CLUSTER),
 	Vector3i(-86, -32, Prop.RAVINE_SHOOT), Vector3i(-56, -22, Prop.PINE), Vector3i(-26, -63, Prop.BAMBOO),
-	Vector3i(-116, 57, Prop.FLOWERS), Vector3i(-94, 67, Prop.STUMP), Vector3i(-62, 14, Prop.SIGNPOST),
+	Vector3i(-116, 57, Prop.FLOWERS), Vector3i(-94, 67, Prop.STUMP),
 	Vector3i(-20, 48, Prop.GROVE_TREE), Vector3i(18, 58, Prop.PINE), Vector3i(43, 88, Prop.BOULDER),
 	Vector3i(-131, 125, Prop.OAK), Vector3i(-88, 130, Prop.TALL_BAMBOO), Vector3i(-39, 138, Prop.PINE),
 	Vector3i(-206, 171, Prop.GROVE_CLUSTER), Vector3i(-314, 144, Prop.PINE), Vector3i(-381, 168, Prop.TALL_BAMBOO),
@@ -281,7 +375,7 @@ const WILD_PROPS := [
 	Vector3i(39, 198, Prop.PINE), Vector3i(83, 181, Prop.OAK), Vector3i(114, 191, Prop.MOSS_STONE),
 	Vector3i(143, 140, Prop.FERN), Vector3i(164, 142, Prop.RAVINE_RUSH), Vector3i(156, 208, Prop.REEDS),
 	Vector3i(191, 209, Prop.PEBBLES), Vector3i(204, 227, Prop.RAVINE_ROCK), Vector3i(72, 276, Prop.WILLOW),
-	Vector3i(141, 228, Prop.SIGNPOST), Vector3i(234, 307, Prop.TALL_BAMBOO),
+	Vector3i(234, 307, Prop.TALL_BAMBOO),
 	Vector3i(173, 321, Prop.BAMBOO), Vector3i(167, 356, Prop.GROVE_TREE), Vector3i(235, 352, Prop.RAVINE_ROCK),
 	Vector3i(153, 292, Prop.TALL_BAMBOO), Vector3i(110, 309, Prop.PINE), Vector3i(55, 302, Prop.GROVE_TREE),
 	Vector3i(41, -53, Prop.PINE), Vector3i(23, -100, Prop.OAK), Vector3i(-14, -142, Prop.GROVE_CLUSTER),
@@ -290,21 +384,26 @@ const WILD_PROPS := [
 	Vector3i(112, -157, Prop.RAVINE_RUSH), Vector3i(128, -253, Prop.BANK_GRASS), Vector3i(83, -281, Prop.PINE),
 	Vector3i(40, -262, Prop.TALL_BAMBOO), Vector3i(32, -314, Prop.GROVE_CLUSTER), Vector3i(79, -331, Prop.PINE),
 	Vector3i(129, -287, Prop.PEBBLES), Vector3i(159, -314, Prop.REEDS), Vector3i(187, -356, Prop.RAVINE_RUSH),
-	Vector3i(112, -367, Prop.TALL_BAMBOO), Vector3i(128, -417, Prop.WILLOW), Vector3i(141, -388, Prop.MOSS_STONE),
+	Vector3i(112, -367, Prop.TALL_BAMBOO), Vector3i(123, -406, Prop.WILLOW), Vector3i(141, -388, Prop.MOSS_STONE),
+	Vector3i(115, -394, Prop.FERN), Vector3i(184, -372, Prop.BANK_GRASS), Vector3i(235, -433, Prop.RAVINE_RUSH),
 	Vector3i(183, -387, Prop.PEBBLES), Vector3i(199, -421, Prop.REEDS), Vector3i(143, -456, Prop.PEBBLES),
 	Vector3i(106, -460, Prop.PINE), Vector3i(61, -438, Prop.GROVE_TREE), Vector3i(25, -392, Prop.PINE),
 	Vector3i(85, -504, Prop.GROVE_CLUSTER), Vector3i(134, -510, Prop.TALL_BAMBOO),
 	Vector3i(164, -486, Prop.RAVINE_ROCK), Vector3i(230, -496, Prop.PINE), Vector3i(273, -465, Prop.GROVE_TREE),
-	Vector3i(262, -422, Prop.WILLOW), Vector3i(258, -369, Prop.REEDS), Vector3i(290, -338, Prop.PINE),
+	Vector3i(267, -449, Prop.WILLOW), Vector3i(258, -369, Prop.REEDS), Vector3i(290, -338, Prop.PINE),
 	Vector3i(212, -290, Prop.GROVE_CLUSTER), Vector3i(262, -256, Prop.TALL_BAMBOO), Vector3i(331, -287, Prop.PINE),
-	Vector3i(117, -80, Prop.RAVINE_RUSH), Vector3i(157, -55, Prop.REEDS), Vector3i(92, 3, Prop.TALL_BAMBOO),
+	Vector3i(109, -81, Prop.RAVINE_RUSH), Vector3i(92, -70, Prop.FERN), Vector3i(176, -52, Prop.REEDS),
+	Vector3i(104, -34, Prop.BANK_GRASS), Vector3i(171, -72, Prop.RAVINE_RUSH), Vector3i(92, 3, Prop.TALL_BAMBOO),
 	Vector3i(107, 60, Prop.PEBBLES), Vector3i(183, 58, Prop.PEBBLES), Vector3i(204, 6, Prop.TALL_BAMBOO),
+	Vector3i(117, 96, Prop.BANK_GRASS), Vector3i(141, 135, Prop.REEDS), Vector3i(203, 119, Prop.FERN),
+	Vector3i(223, 129, Prop.BANK_GRASS),
 	Vector3i(225, -169, Prop.WILLOW), Vector3i(208, -108, Prop.MOSS_STONE), Vector3i(241, -88, Prop.GROVE_TREE),
 	Vector3i(269, -52, Prop.PINE), Vector3i(273, -103, Prop.TALL_BAMBOO), Vector3i(304, -132, Prop.GROVE_CLUSTER),
-	Vector3i(319, -46, Prop.BOULDER), Vector3i(348, -61, Prop.BAMBOO), Vector3i(370, -105, Prop.PINE),
+	Vector3i(319, -46, Prop.BOULDER), Vector3i(342, -70, Prop.BAMBOO), Vector3i(376, -112, Prop.PINE),
 	Vector3i(383, -151, Prop.TALL_BAMBOO), Vector3i(420, -149, Prop.GROVE_TREE), Vector3i(467, -145, Prop.PINE),
 	Vector3i(483, -96, Prop.TALL_BAMBOO), Vector3i(499, -69, Prop.GROVE_TREE), Vector3i(452, -63, Prop.FERN),
-	Vector3i(482, -28, Prop.BOULDER), Vector3i(404, -28, Prop.MOSS_STONE), Vector3i(355, 33, Prop.SIGNPOST),
+	Vector3i(382, -16, Prop.BANK_GRASS), Vector3i(400, -36, Prop.RAVINE_SHOOT),
+	Vector3i(482, -28, Prop.BOULDER), Vector3i(414, -25, Prop.MOSS_STONE),
 	Vector3i(369, 73, Prop.TALL_BAMBOO), Vector3i(376, 121, Prop.PINE), Vector3i(433, 100, Prop.GROVE_CLUSTER),
 	Vector3i(486, 44, Prop.PINE), Vector3i(523, -16, Prop.TALL_BAMBOO), Vector3i(526, 99, Prop.GROVE_TREE),
 	Vector3i(253, 99, Prop.PINE), Vector3i(241, 143, Prop.RAVINE_RUSH), Vector3i(280, 132, Prop.SHRUB),
@@ -323,29 +422,44 @@ const WILD_PROPS := [
 @onready var player := get_parent().get_node("Player") as Player
 @onready var hall_rest := get_parent().get_node_or_null("HallRest")
 @onready var silk_shed := get_parent().get_node_or_null("SilkShed")
+@onready var pond_landing := get_parent().get_node_or_null("Scenery/PondLanding") as Node2D
 
 var props: Array[Vector3i] = []
 var scenery: Dictionary[Sprite2D, int] = {}
+var shortcut_waypost: Sprite2D
 var gate_bases: Dictionary[Sprite2D, CollisionShape2D] = {}
 var seasonal_textures: Dictionary[int, AtlasTexture] = {}
+var painted_textures: Dictionary[int, AtlasTexture] = {}
+var low_stone_texture: AtlasTexture
+var forked_oak_texture: AtlasTexture
 var ground_cover: SEASONAL_GROUND
 var estate_terrain: ESTATE_TERRAIN
+var ravine_relief: RAVINE_RELIEF
 var snow_footprints: SNOW_FOOTPRINTS
 var water_surface: WATER_SURFACE
+var south_pond: SOUTH_POND
 var terrain_audio: TERRAIN_AUDIO
 var day_lighting: DAY_LIGHTING
+var creek_edge := PackedVector2Array()
+var creek_profile: RAVINE_BANKS.Channel
 var season := 0
 var raining := false
 var estate_tracks := ESTATE_TRACKS.duplicate()
 var estate_track_widths: Array[float] = []
 var track_shapes: Array[Dictionary] = []
 var field_approaches: Dictionary[int, PackedVector2Array] = {}
+var worksite_mouths: Dictionary[int, Vector2] = {}
 
 func _ready() -> void:
 	ground_cover = SEASONAL_GROUND.new(wilderness)
 	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	if not wilderness:
 		estate_terrain = ESTATE_TERRAIN.new(ESTATE_BOUNDS.position.y)
+	else:
+		ravine_relief = RAVINE_RELIEF.new()
+		var line := PackedVector2Array(CREEK)
+		creek_edge = _ribbon(line, WATER_HALF_WIDTH)
+		creek_profile = RAVINE_BANKS.Channel.new(line, WATER_HALF_WIDTH, [BRIDGE_DECK.grow(4.0), FORD_AREA])
 	snow_footprints = SNOW_FOOTPRINTS.new()
 	snow_footprints.name = "SnowFootprints"
 	add_child(snow_footprints)
@@ -357,6 +471,7 @@ func _ready() -> void:
 	props.assign(WILD_PROPS if wilderness else ESTATE_PROPS)
 	props.sort_custom(func(a: Vector3i, b: Vector3i) -> bool: return a.y < b.y)
 	GameEvents.day_advanced.connect(_update_weather.unbind(1))
+	GameEvents.ravine_journal_changed.connect(_refresh_shortcut_waypost)
 	if not wilderness:
 		get_parent().visitor_changed.connect(queue_redraw.unbind(1))
 		GameEvents.well_field_added.connect(_refresh_field_layout.unbind(1))
@@ -367,7 +482,6 @@ func _ready() -> void:
 		GameEvents.silk_sample_delivered.connect(queue_redraw)
 		GameEvents.ravine_journal_changed.connect(_refresh_estate_tracks)
 		GameEvents.field_rotation_changed.connect(_refresh_estate_tracks)
-		GameEvents.seed_garden_arrived.connect(_refresh_estate_tracks)
 		GameEvents.pond_landing_opened.connect(_refresh_estate_tracks)
 		_layout_field_approaches()
 	else:
@@ -378,6 +492,7 @@ func _ready() -> void:
 
 func _layout_field_approaches() -> void:
 	field_approaches.clear()
+	worksite_mouths.clear()
 	var fields: Array[Rect2] = []
 	for field in Global.well_fields:
 		fields.append(_field_bounds(field["center_pos"]))
@@ -385,11 +500,9 @@ func _layout_field_approaches() -> void:
 	if fields.is_empty():
 		field_approaches[0] = _starter_approach(_field_bounds(Global.FIRST_FIELD_CENTER))
 	for field in Global.well_fields:
-		if not field["is_unlocked"]:
-			continue
 		var id: int = field["field_id"]
 		var area := fields[id]
-		if field["center_pos"] == Global.FIRST_FIELD_CENTER:
+		if field["center_pos"] == Global.FIRST_FIELD_CENTER and field["is_unlocked"]:
 			field_approaches[id] = _starter_approach(area)
 			continue
 		var occupied: Array[Rect2] = []
@@ -398,7 +511,11 @@ func _layout_field_approaches() -> void:
 		occupied.erase(area)
 		var approach := EstateLayout.field_approach(area, occupied)
 		if not approach.is_empty():
-			field_approaches[id] = approach
+			if field["is_unlocked"]:
+				field_approaches[id] = approach
+			else:
+				# Leave a gap in the survey cord facing the future lane.
+				worksite_mouths[id] = approach[-1].direction_to(approach[-2])
 
 func _starter_approach(area: Rect2) -> PackedVector2Array:
 	var entry := Vector2(area.get_center().x, area.end.y)
@@ -412,7 +529,7 @@ func _refresh_field_layout() -> void:
 
 func field_entrance(field_id: int) -> Vector2:
 	if not field_approaches.has(field_id):
-		return Vector2.ZERO
+		return worksite_mouths.get(field_id, Vector2.ZERO)
 	var approach := field_approaches[field_id]
 	return approach[-1].direction_to(approach[-2])
 
@@ -429,12 +546,6 @@ func _refresh_estate_tracks() -> void:
 	if Global.ravine_journal.garden_day > 0:
 		estate_tracks.append(GARDEN_TRACK)
 		estate_track_widths.append(11.0)
-	if Global.seed_garden_day() > 0:
-		estate_tracks.append(EstateLayout.SEED_GARDEN_TRACK)
-		estate_track_widths.append(11.0)
-	elif Global.road_rest_built():
-		estate_tracks.append(ROAD_REST_TRACK)
-		estate_track_widths.append(12.0)
 	if Global.pond_landing_day() > 0:
 		estate_tracks.append(EstateLayout.POND_TRACK)
 		estate_track_widths.append(10.0)
@@ -451,37 +562,85 @@ func _prepare_map() -> void:
 	for placement in props:
 		if placement.z not in SORTED_PROPS:
 			continue
-		var sprite := _place_sprite(props_layer, Vector2(placement.x, placement.y),
-			_prop_bounds(Vector2.ZERO, placement.z).position, _prop_texture(placement.z))
+		var foot := Vector2(placement.x, placement.y)
+		var sprite := _place_sprite(props_layer, foot,
+			_prop_bounds(Vector2.ZERO, placement.z).position, _prop_texture(placement.z, foot))
 		scenery[sprite] = placement.z
 	if wilderness:
-		scenery[_place_sprite(props_layer, RavineLayout.LOOKOUT, Vector2(-24, -38), LOOKOUT)] = SCENE_LANDMARK
+		var lookout := atlas_texture(RAVINE_ART, Rect2(146, 0, 48, 40))
+		scenery[_place_sprite(props_layer, RavineLayout.LOOKOUT, Vector2(-24, -38), lookout)] = SCENE_LANDMARK
+		scenery[INSCRIPTION.place(props_layer, RavineLayout.LOOKOUT + Vector2(-76, 47),
+			INSCRIPTION.Form.STONE, "望溪台")] = Prop.SIGNPOST
+		_place_ravine_wayposts(props_layer)
 	else:
-		var pavilion_texture := _atlas_texture(ESTATE_BUILDINGS, PAVILION_REGION)
-		scenery[_place_sprite(props_layer, SOUTH_PAVILION, _building_offset(PAVILION_REGION.size), pavilion_texture)] = SCENE_LANDMARK
-		var shelter := _atlas_texture(ROAD_PAVILION, Rect2(0, 0, 48, 40))
-		scenery[_place_sprite(props_layer, EstateLayout.WEST_COURT_SHELTER, Vector2(-24, -38), shelter)] = SCENE_WEST_COURT
+		_place_estate_wayposts(props_layer)
+		south_pond.place_bank_plants(props_layer)
+		var pavilion_texture := atlas_texture(ESTATE_ART, PAVILION_REGION)
+		var pavilion := _place_sprite(props_layer, SOUTH_PAVILION, _building_offset(PAVILION_REGION.size), pavilion_texture)
+		scenery[pavilion] = SCENE_LANDMARK
+		INSCRIPTION.place(pavilion, Vector2(0, -20), INSCRIPTION.Form.EAVE, "南路亭")
+		var shelter := atlas_texture(ESTATE_ART, Rect2(216, 0, 48, 40))
+		var court := _place_sprite(props_layer, EstateLayout.WEST_COURT_SHELTER, Vector2(-24, -38), shelter)
+		scenery[court] = SCENE_WEST_COURT
+		INSCRIPTION.place(court, Vector2(0, -6), INSCRIPTION.Form.EAVE, "西廊")
 		var workshop := _place_sprite(props_layer, SILK_SHED_FOOT,
-			_prop_bounds(Vector2.ZERO, Prop.SILK_SHED).position, _prop_texture(Prop.SILK_SHED))
+			_prop_bounds(Vector2.ZERO, Prop.SILK_SHED).position, _prop_texture(Prop.SILK_SHED, SILK_SHED_FOOT))
 		scenery[workshop] = Prop.SILK_SHED
 	_place_lanterns(props_layer)
 
 	var rain := RAIN_VEIL.new()
 	rain.name = "Rain"
 	rain.z_index = 11
+	if not wilderness:
+		rain.shelter_bounds = EstateLayout.PAVILION_SHELTER_BOUNDS
 	add_child(rain)
-	_add_landmark_labels()
 	_install_boundaries()
 	_refresh_scenery()
 
+func _place_ravine_wayposts(layer: Node2D) -> void:
+	for junction: Array in RAVINE_JUNCTIONS:
+		var lane: Array = junction[1]
+		var post := place_waypost(layer, junction[0], lane[1] - lane[0], junction[2])
+		scenery[post] = Prop.SIGNPOST
+		if junction[2] == RavineLayout.SOUTH_TRAIL_NAME:
+			shortcut_waypost = post
+	scenery[INSCRIPTION.place(layer, RavineLayout.WEST_GATE + Vector2(26, -9), INSCRIPTION.Form.STONE,
+		"西门·回封地", Vector2.LEFT)] = Prop.SIGNPOST
+	scenery[place_waypost(layer, RavineLayout.SHORE_FORK + Vector2(-13, -12),
+		RavineLayout.WEST_SHORE[1] - RavineLayout.SHORE_FORK, "柳湾·埠头")] = Prop.SIGNPOST
+	scenery[place_waypost(layer, RavineLayout.DOCK_FORK + Vector2(-18, -5),
+		RavineLayout.WEST_SHORE[4] - RavineLayout.DOCK_FORK, "柳湾")] = Prop.SIGNPOST
+	scenery[place_waypost(layer, BRIDGE + Vector2(-53, 20), Vector2.RIGHT, "木桥")] = Prop.SIGNPOST
+
+func _place_estate_wayposts(layer: Node2D) -> void:
+	for entry: Array in ESTATE_WAYPOSTS:
+		var post := place_waypost(layer, entry[0], entry[1], entry[2], true)
+		scenery[post] = Prop.SIGNPOST
+		if entry[2] == EstateLayout.RAVINE_TRAIL_NAME:
+			shortcut_waypost = post
+	scenery[INSCRIPTION.place(layer, EstateLayout.EAST_GATE + Vector2(-23, -9),
+		INSCRIPTION.Form.STONE, "东关")] = Prop.SIGNPOST
+	scenery[place_waypost(layer, EstateLayout.FESTIVAL_LANE[-5] + Vector2(-14, 4),
+		EstateLayout.FESTIVAL_LANE[-4] - EstateLayout.FESTIVAL_LANE[-5], "南池畔", true)] = Prop.SIGNPOST
+
+static func place_waypost(layer: Node2D, foot: Vector2, direction: Vector2, caption: String,
+		estate_art := false) -> Sprite2D:
+	var form := INSCRIPTION.Form.OAK if estate_art else INSCRIPTION.Form.BAMBOO
+	return INSCRIPTION.place(layer, foot, form, caption, direction)
+
 func _add_water_surface() -> void:
 	if wilderness:
-		water_surface = WATER_SURFACE.new(_ribbon(PackedVector2Array(CREEK), WATER_HALF_WIDTH), 10.0,
-			[BRIDGE_DECK.grow(2.0), FORD_AREA])
+		water_surface = WATER_SURFACE.new(creek_edge, 10.0,
+			[BRIDGE_DECK.grow(2.0), FORD_AREA], true)
 	else:
-		water_surface = WATER_SURFACE.new(estate_terrain.pond, 0.0)
+		south_pond = SOUTH_POND.new()
+		water_surface = south_pond
 	water_surface.name = "WaterSurface"
 	add_child(water_surface)
+	if wilderness:
+		var cascade := RAVINE_BANKS.new()
+		cascade.name = "BridgeCascade"
+		add_child(cascade)
 
 func _place_lanterns(layer: Node2D) -> void:
 	if wilderness:
@@ -489,6 +648,8 @@ func _place_lanterns(layer: Node2D) -> void:
 		day_lighting.place_lamp(layer, BRIDGE + Vector2(-29, 15), 0.83)
 		day_lighting.place_lamp(layer, BRIDGE + Vector2(30, -12), 0.83)
 		day_lighting.place_lamp(layer, RavineLayout.SOUTH_TRAIL_GATE + Vector2(-22, -10), 0.72)
+		day_lighting.place_lamp(layer, RAVINE_RELIEF.WEST_GATE_LAMP, 0.94, 0.05)
+		day_lighting.place_lamp(layer, RAVINE_RELIEF.LOOKOUT_LAMP, 0.68, 0.12)
 	else:
 		day_lighting.place_lamp(layer, Vector2(HALL_FOOT) + Vector2(-18, 8), 0.90)
 		day_lighting.place_lamp(layer, Vector2(HALL_FOOT) + Vector2(18, 8), 0.90)
@@ -497,15 +658,17 @@ func _place_lanterns(layer: Node2D) -> void:
 		day_lighting.place_lamp(layer, EstateLayout.FREIGHT_STOP + Vector2(37, -19), 0.80)
 		day_lighting.place_lamp(layer, EstateLayout.FESTIVAL_FORK + Vector2(13, 18), 0.74)
 		day_lighting.place_lamp(layer, EstateLayout.FESTIVAL_BANK_BEND + Vector2(-13, 20), 0.70)
+		day_lighting.place_lamp(layer, EstateLayout.FESTIVAL_GROUND + Vector2(-33, -35), 0.79, 0.12)
+		day_lighting.place_lamp(layer, EstateLayout.FESTIVAL_GROUND + Vector2(112, 69), 0.70, 0.19)
 		day_lighting.place_lamp(layer, EstateLayout.DRIVING_START + Vector2(28, -14), 0.78)
 		day_lighting.place_lamp(layer, EstateLayout.DRIVING_FINISH + Vector2(-2, -27), 0.76)
 		day_lighting.place_lamp(layer, EstateLayout.RAVINE_TRAIL_GATE + Vector2(-16, -17), 0.72)
 		day_lighting.place_lamp(layer, Vector2(415, 31))
 		day_lighting.place_lamp(layer, Vector2(-286, -4))
-		day_lighting.place_lamp(layer, EstateLayout.WEST_COURT + Vector2(-31, -9), 0.78)
+		day_lighting.place_lamp(layer, EstateLayout.WEST_COURT_SHELTER + Vector2(-24, 7), 0.78)
 	day_lighting.refresh()
 
-func _place_sprite(layer: Node, foot: Vector2, offset: Vector2, texture: Texture2D) -> Sprite2D:
+static func _place_sprite(layer: Node, foot: Vector2, offset: Vector2, texture: Texture2D) -> Sprite2D:
 	var sprite := Sprite2D.new()
 	sprite.position = foot
 	sprite.centered = false
@@ -520,7 +683,7 @@ func _update_weather() -> void:
 		if season == Global.Season.WINTER:
 			snow_footprints.clear()
 		season = next_season
-		_update_tree_textures()
+		_update_prop_textures()
 	raining = Global.has_rain()
 	if not wilderness:
 		_refresh_estate_tracks()
@@ -531,7 +694,7 @@ func _refresh_scenery() -> void:
 	for sprite in scenery:
 		var prop: int = scenery[sprite]
 		if seasonal_textures.has(prop):
-			sprite.texture = seasonal_textures[prop]
+			sprite.texture = _prop_texture(prop, sprite.position)
 		match prop:
 			Prop.HALL:
 				sprite.visible = _fields_clear(_ground_bounds(sprite.position, prop))
@@ -545,13 +708,19 @@ func _refresh_scenery() -> void:
 		var tint := _prop_tint(prop)
 		if not wilderness and sprite.position.y < ESTATE_BOUNDS.position.y - 48.0:
 			tint *= Color("#b8c4ba")
-		sprite.self_modulate = tint
+		sprite.modulate = tint
 	for sprite in gate_bases:
 		gate_bases[sprite].set_deferred("disabled", not sprite.visible)
 	if not wilderness:
 		for lamp in day_lighting.lamps:
 			lamp.visible = _ground_clear(Rect2(to_local(lamp.global_position) - Vector2(4, 2), Vector2(8, 4)))
+	_refresh_shortcut_waypost()
 	queue_redraw()
+
+func _refresh_shortcut_waypost() -> void:
+	if shortcut_waypost != null:
+		shortcut_waypost.visible = Global.ravine_shortcut_open() and (
+			wilderness or _ground_clear(_ground_bounds(shortcut_waypost.position, Prop.SIGNPOST)))
 
 func _process(delta: float) -> void:
 	if not get_tree().paused and not player.conversation_open and not MapTravel.active:
@@ -563,39 +732,54 @@ func _process(delta: float) -> void:
 	var creek_distance := absf(foot.x - creek_x(foot.y)) if wilderness else INF
 	var birds_distance := foot.distance_to(BERRY_GROVE) if wilderness else INF
 	var cricket_distance := foot.distance_to(BERRY_GROVE if wilderness else SOUTH_PAVILION)
-	AudioManager.set_world_ambience(creek_distance, birds_distance, cricket_distance)
+	var under_roof := not wilderness and EstateLayout.PAVILION_SHELTER_FLOOR.has_point(foot)
+	AudioManager.set_world_ambience(creek_distance, birds_distance, cricket_distance, under_roof)
 	for sprite in scenery:
-		if not sprite.visible:
+		var prop: int = scenery[sprite]
+		if not sprite.visible or STORAGE_TINTS.has(prop) or prop in ROCK_PROPS or prop in ROADSIDE_PROPS:
 			continue
 		var from_foot := sprite.to_local(player.global_position)
 		var crown := sprite.get_rect().grow(-3.0)
 		var behind := from_foot.y < -2.0 and crown.has_point(from_foot - Vector2(0, 7))
-		var tint := sprite.self_modulate
-		tint.a = move_toward(tint.a, 0.28 if behind else 1.0, delta * 5.6)
-		sprite.self_modulate = tint
+		sprite.modulate.a = move_toward(sprite.modulate.a, 0.28 if behind else 1.0, delta * 5.6)
 
 func _draw() -> void:
 	_draw_ground()
 	if wilderness:
-		var gravel := _track_dust().lerp(Color("#939988"), 0.58)
-		draw_colored_polygon(PackedVector2Array(GRAVEL_BAR), gravel)
-		draw_colored_polygon(PackedVector2Array(RavineLayout.WILLOW_BANK), gravel)
+		creek_profile.draw_shoulder(self, SEASON_PALETTES[season][0], season, raining)
+		RAVINE_BANKS.draw_fishing_shelves(self, season, raining)
+		ravine_relief.draw_trail_verges(self, season, raining)
 		_draw_tracks()
-		_draw_creek()
+		RAVINE_RELIEF.draw_gate(self, RavineLayout.WEST_GATE, true, season, raining)
+		ravine_relief.draw_lookout(self, season, raining)
+		creek_profile.draw_water(self, WATER_TINTS[season], season, raining)
+		RAVINE_BANKS.draw_banks(self, season, raining)
+		ravine_relief.draw_bridge_aprons(self, season, raining)
 		_draw_crossings()
 	else:
 		_draw_field_verges()
 		_draw_tracks()
-		_draw_hall_landing()
+		var winter := season == Global.Season.WINTER
+		var dirt := _track_dust()
+		estate_terrain.draw_festival_paving(self, SEASON_PALETTES[season][0], winter, raining)
+		RAVINE_RELIEF.draw_gate(self, EstateLayout.EAST_GATE, false, season, raining)
+		estate_terrain.draw_gate_paving(self, EstateLayout.EAST_GATE + RAVINE_RELIEF.GATE_PAVING.position, winter, raining)
+		_draw_building_shadows()
+		if _hall_landing_visible():
+			estate_terrain.draw_hall_court(self, dirt, winter, raining)
+		estate_terrain.draw_spring_apron(self, _tile_point(Global.irrigation.source_cell), winter, raining)
 		_draw_field_banks()
 		if Global.road_provisions_delivered:
 			var provisions := Rect2(SOUTH_PAVILION + Vector2(31, 0), Vector2(14, 10))
-			draw_texture_rect_region(ROAD_PAVILION, provisions, Rect2(48, 30, 14, 10))
-		_draw_pavilion_rest()
+			draw_texture_rect_region(ESTATE_ART, provisions, Rect2(264, 0, 14, 10))
 		if Global.silk_sample_day > 0 and _ground_clear(SILK_SAMPLE_BOUNDS):
 			draw_texture_rect(SILK_SAMPLE, SILK_SAMPLE_BOUNDS, false, _prop_tint(-1))
+	var shade := scenery_shade(raining)
+	for sprite: Sprite2D in scenery:
+		if sprite.visible:
+			draw_sorted_prop_shadow(self, sprite.position, scenery[sprite], shade, raining)
 	for prop in props:
-		if prop.z in SORTED_PROPS and prop.z != Prop.TALL_BAMBOO and not STORAGE_TINTS.has(prop.z):
+		if prop.z in SORTED_PROPS:
 			continue
 		if season == Global.Season.WINTER and prop.z in DORMANT_PROPS:
 			continue
@@ -603,12 +787,8 @@ func _draw() -> void:
 		var bounds := _prop_bounds(foot, prop.z)
 		if not wilderness and not _ground_clear(bounds):
 			continue
-		if prop.z == Prop.TALL_BAMBOO:
-			draw_rect(Rect2(foot - Vector2(11, 2), Vector2(22, 5)), Color("#23382b80"))
-		elif STORAGE_TINTS.has(prop.z):
-			draw_rect(Rect2(foot - Vector2(6, 1), Vector2(12, 3)), Color("#23382b80"))
-		else:
-			_stamp(bounds, prop.z)
+		draw_scenery_shadow(self, foot, prop.z, shade)
+		_stamp(bounds, prop.z)
 
 func _on_footstep(at: Vector2) -> void:
 	var foot := to_local(at)
@@ -623,14 +803,33 @@ func _surface_at(foot: Vector2) -> TERRAIN_AUDIO.Surface:
 			return TERRAIN_AUDIO.Surface.PLANK
 		if absf(foot.y - FORD.y) < CROSSING_HALF_DEPTH and absf(foot.x - creek_x(foot.y)) < WATER_HALF_WIDTH:
 			return TERRAIN_AUDIO.Surface.SHALLOWS
+		if (RAVINE_RELIEF.gate_stone_at(foot, RavineLayout.WEST_GATE)
+				or ravine_relief.lookout_stone_at(foot) or ravine_relief.approach_stone_at(foot)):
+			return TERRAIN_AUDIO.Surface.STONE
 	else:
-		if get_parent().irrigation_overlay.footbridge_at(to_global(foot)):
+		if EstateLayout.PAVILION_SHELTER_FLOOR.has_point(foot) \
+				or get_parent().irrigation_overlay.footbridge_at(to_global(foot)):
 			return TERRAIN_AUDIO.Surface.PLANK
 		for field in Global.well_fields:
-			if _field_bounds(field["center_pos"]).has_point(foot):
-				return TERRAIN_AUDIO.Surface.GRASS
-		if HALL_LANDING.has_point(foot) and _hall_landing_visible():
-			return TERRAIN_AUDIO.Surface.TRACK
+			var area := _field_bounds(field["center_pos"])
+			if not field["is_unlocked"]:
+				if area.has_point(foot):
+					return TERRAIN_AUDIO.Surface.GRASS
+				continue
+			if _field_step_bounds(area, field_entrance(field["field_id"])).has_point(foot):
+				return TERRAIN_AUDIO.Surface.STONE
+			if area.has_point(foot):
+				return TERRAIN_AUDIO.Surface.TRACK
+		if pond_landing.visible and EstateLayout.POND_DECK.has_point(foot):
+			return TERRAIN_AUDIO.Surface.PLANK
+		if estate_terrain.festival_stone_at(foot):
+			return TERRAIN_AUDIO.Surface.STONE
+		if RAVINE_RELIEF.gate_stone_at(foot, EstateLayout.EAST_GATE):
+			return TERRAIN_AUDIO.Surface.STONE
+		if estate_terrain.hall_stone_at(foot) and _hall_landing_visible():
+			return TERRAIN_AUDIO.Surface.STONE
+		if estate_terrain.spring_stone_at(foot - _tile_point(Global.irrigation.source_cell)):
+			return TERRAIN_AUDIO.Surface.STONE
 	for track in track_shapes:
 		var outline: PackedVector2Array = track.shoulder if season == Global.Season.WINTER else track.surface
 		if Geometry2D.is_point_in_polygon(foot, outline):
@@ -639,61 +838,6 @@ func _surface_at(foot: Vector2) -> TERRAIN_AUDIO.Surface:
 		if wilderness or _ground_clear(Rect2(foot, Vector2.ONE)):
 			return TERRAIN_AUDIO.Surface.SNOW
 	return TERRAIN_AUDIO.Surface.GRASS
-
-func _draw_pavilion_rest() -> void:
-	var guest: Visitor = get_parent().current_visitor_actor()
-	if not is_instance_valid(guest) or not guest.resting_at_pavilion():
-		return
-	var mat := PAVILION_REST_FOOT + Vector2(-11, -2)
-	draw_rect(Rect2(mat + Vector2(0, 1), Vector2(22, 6)), Color("#373b2d"))
-	draw_rect(Rect2(mat + Vector2(1, 0), Vector2(20, 5)), Color("#ad9565"))
-	for offset in range(2, 21, 3):
-		draw_rect(Rect2(mat + Vector2(offset, 1), Vector2(1, 3)), Color("#786647"))
-	var bowl := PAVILION_WATER
-	draw_rect(Rect2(bowl + Vector2(-3, 1), Vector2(7, 3)), Color("#694837"))
-	draw_rect(Rect2(bowl + Vector2(-4, 0), Vector2(9, 2)), Color("#b78c61"))
-	draw_rect(Rect2(bowl + Vector2(-2, 0), Vector2(5, 1)), Color("#5e6553"))
-
-func _add_landmark_labels() -> void:
-	if wilderness:
-		_label_at(RavineLayout.WEST_GATE + Vector2(0, -79), "← 西门 · 回封地")
-		_label_at(RavineLayout.GROVE_FORK + Vector2(0, -42), "↑ 野果坳")
-		_label_at(RavineLayout.FORD_FORK + Vector2(-10, 23), "浅滩 ↘")
-		_label_at(Vector2(140, 186), "南路小径 ↓")
-		_label_at(RavineLayout.SHORE_FORK + Vector2(0, -31), "↑ 柳湾 · 埠头")
-		_label_at(RavineLayout.DOCK_FORK + Vector2(-24, -19), "↑ 柳湾")
-		_label_at(BRIDGE + Vector2(-66, -31), "木桥 →")
-		_label_at(RavineLayout.RIDGE_FORK + Vector2(0, -34), "望溪台 ↗")
-		_label_at(RavineLayout.LOOKOUT + Vector2(0, -55), "望溪台")
-	else:
-		_label_at(Vector2(-305, -104), "← 西市")
-		_label_at(Vector2(-136, 37), "← 西市")
-		_label_at(Vector2(-239, -21), "西廊 ↓")
-		_label_at(EstateLayout.WEST_COURT_SHELTER + Vector2(0, -48), "西廊")
-		_label_at(Vector2(120, 6), "东关 →")
-		_label_at(Vector2(287, -22), "东关 · 竹涧 →")
-		_label_at(Vector2(400, -78), "东关")
-		_label_at(Vector2(348, 14), "驾御场 ↘")
-		_label_at(SOUTH_PAVILION + Vector2(0, -69), "南路亭")
-		_label_at(Vector2(12, 181), "南路亭 ↓")
-		_label_at(EstateLayout.SOUTH_FORK + Vector2(22, -38), "西坡 ↙  ·  灶台 →")
-		_label_at(Vector2(278, 510), "竹涧小径 →")
-		_label_at(EstateLayout.FESTIVAL_FORK + Vector2(4, 46), "↙ 南池")
-
-func _label_at(center: Vector2, text: String) -> void:
-	var label := Label.new()
-	label.material = preload("res://resources/world_hint_material.tres")
-	label.text = text
-	label.position = center - Vector2(55, 0)
-	label.size.x = 110
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.z_index = 7
-	label.add_theme_font_size_override("font_size", 10)
-	label.add_theme_color_override("font_color", Color("#e8dbac"))
-	label.add_theme_color_override("font_outline_color", Color("#243a2d"))
-	label.add_theme_constant_override("outline_size", 3)
-	add_child(label)
 
 func _draw_ground() -> void:
 	var colors: Array = SEASON_PALETTES[season]
@@ -707,26 +851,47 @@ func _draw_ground() -> void:
 		meadow = meadow.lerp(Color("#344c4c"), 0.34)
 		shade = shade.lerp(Color("#314344"), 0.25)
 		sun = sun.lerp(Color("#3f5750"), 0.28)
-	draw_rect(MAP_BACKDROP, meadow)
+	ESTATE_TERRAIN.draw_grass(self, MAP_BACKDROP, season, raining, wilderness)
 	var winter := season == Global.Season.WINTER
 	var ground_shade := shade if wilderness else shade.lerp(meadow, 0.26)
 	ground_cover.draw_cover(self, ground_shade, sun, winter)
-	var grain_strength := 0.46 if winter else (1.0 if wilderness else 0.57)
-	draw_texture_rect(GRAIN, MAP_BACKDROP, true, Color(Color.WHITE, grain_strength))
 	ground_cover.draw_marks(self, season, raining)
 	if estate_terrain:
-		estate_terrain.draw_meadow(self, meadow, winter)
+		estate_terrain.draw_meadow(self, season, raining)
+		estate_terrain.draw_farm_yard(self, meadow, season, raining)
+	var ground_tint: Color = LEAF_TINTS[season]
+	if wilderness:
+		ground_tint *= Color(0.87, 0.96, 0.95)
+	if raining:
+		ground_tint *= Color(0.88, 0.94, 0.99)
+	if winter:
+		ground_tint.a = 0.31
+	_draw_prop_litter(ground_tint)
+	if estate_terrain:
+		draw_texture_rect_region(ESTATE_TERRAIN.HALL_YARD_ART, Rect2(HALL_YARD_GROUND_AT, HALL_YARD_GROUND.size),
+			HALL_YARD_GROUND, ground_tint)
 		estate_terrain.draw_north_bank(self, MAP_BACKDROP.position.y, shade, sun, winter)
-		var pond_water: Color = WATER_TINTS[season]
-		estate_terrain.draw_pond(self, meadow, pond_water, winter)
+		south_pond.draw_bed(self)
 	var grass := shade.lightened(0.09)
 	for prop in props:
+		if SCENERY_SHADOW_SIZES.has(prop.z):
+			continue
 		if prop.z in LEAFY_PROPS and (not winter or prop.z not in DORMANT_PROPS):
 			var patch := Vector2(prop.x, prop.y)
 			if winter and ground_cover.has_snow(patch):
 				continue
 			draw_rect(Rect2(patch + Vector2(-14, 0), Vector2(28, 4)), Color(grass, 0.62))
 			draw_rect(Rect2(patch + Vector2(-10, 4), Vector2(19, 2)), Color(grass, 0.57))
+
+func _draw_prop_litter(tint: Color) -> void:
+	for placement in props:
+		if not CANOPY_SHADOW_SCALE.has(placement.z) and placement.z not in ROCK_PROPS:
+			continue
+		var foot := Vector2(placement.x, placement.y)
+		if not wilderness and HALL_YARD_AREA.has_point(foot):
+			continue
+		draw_texture_rect_region(ESTATE_ART, Rect2(foot - Vector2(30, 20), ESTATE_LEAF_LITTER.size),
+			ESTATE_LEAF_LITTER, tint)
 
 func _track_dust() -> Color:
 	var dust: Color = SEASON_PALETTES[season][3]
@@ -817,34 +982,59 @@ func _draw_tracks() -> void:
 	var verge: Color = SEASON_PALETTES[season][0]
 	if raining:
 		verge = verge.darkened(0.15)
-	if estate_terrain:
-		for track in track_shapes:
-			estate_terrain.draw_verge(self, track.gravel_path, track.width, verge, season == Global.Season.WINTER)
+	var grain := ESTATE_TERRAIN.trail_texture() if wilderness else ESTATE_TERRAIN.TRACK_GRAIN
 	for track in track_shapes:
-		draw_colored_polygon(track.shoulder, dust.lerp(verge, 0.69))
+		ESTATE_TERRAIN.draw_loam(self, track.shoulder, dust.lerp(verge, 0.69), grain)
 	for track in track_shapes:
-		draw_colored_polygon(track.edge, dust.lerp(verge, 0.41))
+		ESTATE_TERRAIN.draw_verge(self, track.gravel_path, track.width, season, raining)
 	for track in track_shapes:
-		ESTATE_TERRAIN.draw_loam(self, track.surface, dust)
+		ESTATE_TERRAIN.draw_loam(self, track.edge, dust.lerp(verge, 0.41), grain)
+	for track in track_shapes:
+		ESTATE_TERRAIN.draw_loam(self, track.surface, dust, grain)
 	for track in track_shapes:
 		_track_gravel(track.gravel_path, track.width, dust)
 
+static func scenery_shade(rain: bool) -> Color:
+	var shade := Color("#27392f")
+	shade.a = 0.20 if rain else 0.38
+	return shade
+
+static func draw_scenery_shadow(canvas: CanvasItem, foot: Vector2, prop: int, shade: Color) -> void:
+	if not SCENERY_SHADOW_SIZES.has(prop):
+		return
+	var half_size: Vector2 = SCENERY_SHADOW_SIZES[prop]
+	var outline := PackedVector2Array()
+	for point: Vector2 in SCENERY_SHADOW_PROFILE:
+		outline.append((foot + point * half_size).snapped(Vector2(0.5, 0.5)))
+	canvas.draw_colored_polygon(outline, shade)
+
+static func draw_sorted_prop_shadow(canvas: CanvasItem, foot: Vector2, prop: int, shade: Color, wet: bool) -> void:
+	var tint := Color(1.0, 1.0, 1.0, 0.55) if wet else Color.WHITE
+	if prop in ROCK_PROPS:
+		canvas.draw_texture_rect_region(ESTATE_TERRAIN.HALL_YARD_ART,
+			Rect2(foot - Vector2(15, 5), HALL_YARD_STONE_SHADOW.size), HALL_YARD_STONE_SHADOW, tint)
+		return
+	if CANOPY_SHADOW_SCALE.has(prop):
+		var scale: float = CANOPY_SHADOW_SCALE[prop]
+		canvas.draw_texture_rect_region(ESTATE_TERRAIN.HALL_YARD_ART,
+			Rect2(foot - Vector2(16, 8) * scale, HALL_YARD_CANOPY_SHADOW.size * scale), HALL_YARD_CANOPY_SHADOW, tint)
+		return
+	draw_scenery_shadow(canvas, foot, prop, shade)
+
+func _draw_building_shadows() -> void:
+	var ground_shadow := Color("#26352c")
+	ground_shadow.a = 0.20 if raining else 0.37
+	for sprite: Sprite2D in scenery:
+		var mark: int = scenery[sprite]
+		if not sprite.visible or not BUILDING_SHADOWS.has(mark):
+			continue
+		var outline := PackedVector2Array()
+		for point: Vector2 in BUILDING_SHADOWS[mark]:
+			outline.append(sprite.position + point)
+		draw_colored_polygon(outline, ground_shadow)
+
 func _hall_landing_visible() -> bool:
 	return hall_rest != null and hall_rest.visible and _fields_clear(HALL_LANDING)
-
-func _draw_hall_landing() -> void:
-	if not _hall_landing_visible():
-		return
-	var at := HALL_LANDING.position
-	var stone := Color("#a39879").darkened(0.15 if raining else 0.0)
-	draw_rect(HALL_LANDING, stone.darkened(0.31))
-	draw_rect(Rect2(at + Vector2(1, 1), HALL_LANDING.size - Vector2(2, 3)), stone)
-	draw_rect(Rect2(at + Vector2(2, 7), Vector2(40, 1)), stone.darkened(0.19))
-	draw_rect(Rect2(at + Vector2(13, 1), Vector2(1, 6)), stone.darkened(0.19))
-	draw_rect(Rect2(at + Vector2(32, 1), Vector2(1, 6)), stone.darkened(0.19))
-	draw_rect(Rect2(at + Vector2(23, 8), Vector2(1, 5)), stone.darkened(0.19))
-	draw_rect(Rect2(at + Vector2(4, 9), Vector2(9, 1)), stone.lightened(0.12))
-	draw_rect(Rect2(at + Vector2(31, 3), Vector2(8, 1)), stone.lightened(0.12))
 
 func _track_gravel(points: PackedVector2Array, width: float, dust: Color) -> void:
 	for index in range(points.size() - 1):
@@ -869,76 +1059,111 @@ func _draw_field_verges() -> void:
 	for field in Global.well_fields:
 		var area := _field_bounds(field["center_pos"])
 		var entrance := field_entrance(field["field_id"])
-		_draw_field_edge(area.grow(5.0), verge.lerp(dust, 0.27), entrance, 5.0, true)
+		ESTATE_TERRAIN.draw_loam(self, _field_verge_outline(area.grow(6.0), entrance),
+			verge.lerp(dust, 0.36), ESTATE_TERRAIN.TRACK_GRAIN)
 
 func _draw_field_banks() -> void:
 	var dust := _track_dust()
+	var grass: Color = SEASON_PALETTES[season][0]
+	var frost := season == Global.Season.WINTER
 	for field in Global.well_fields:
 		if not field["is_unlocked"]:
 			continue
 		var area := _field_bounds(field["center_pos"])
 		var entrance := field_entrance(field["field_id"])
-		var bank := area.grow(2.0)
-		if entrance.x == 0.0:
-			bank.size.y += 2.0
-		_draw_field_edge(bank, dust.darkened(0.25), entrance, 4.0)
-		var highlight := Rect2(area.position + Vector2(2, -2), Vector2(area.size.x - 4.0, 1))
-		if entrance == Vector2.UP:
-			var length := (highlight.size.x - EstateLayout.FIELD_ENTRANCE_WIDTH) * 0.5
-			draw_rect(Rect2(highlight.position, Vector2(length, 1)), dust.lightened(0.13))
-			highlight.position.x = highlight.end.x - length
-			highlight.size.x = length
-		draw_rect(highlight, dust.lightened(0.13))
+		var edge := EstateLayout.field_boundary(area, entrance, EstateLayout.FIELD_ENTRANCE_WIDTH)
+		for index in range(1, edge.size()):
+			_draw_field_bank_face(area, edge[index - 1], edge[index], dust, grass, frost)
+		if entrance != Vector2.ZERO:
+			_draw_field_step(area, entrance, dust, frost)
 
-func _draw_field_edge(area: Rect2, color: Color, entrance: Vector2, depth: float, loam := false) -> void:
+func _draw_field_bank_face(area: Rect2, start: Vector2, finish: Vector2, soil: Color, grass: Color, frost: bool) -> void:
+	var along := start.direction_to(finish)
+	var outward := Vector2(along.y, -along.x)
+	var side := EstateLayout.EDGE_NORMALS.find(outward)
+	var depth: float = FIELD_BANK_DEPTH[side]
+	var half_span := along.abs().dot(area.size) * 0.5
+	var corner_a := -along * FIELD_BANK_DEPTH[posmod(side - 1, 4)]
+	var corner_b := along * FIELD_BANK_DEPTH[posmod(side + 1, 4)]
+	var toe_a := start + outward * depth
+	var toe_b := finish + outward * depth
+	if absf((start - area.get_center()).dot(along)) == half_span:
+		toe_a += corner_a
+	if absf((finish - area.get_center()).dot(along)) == half_span:
+		toe_b += corner_b
+	var lit := side == 0 or side == 3
+	var face := soil.darkened(0.25 if lit else 0.43)
+	var shoulder := start.lerp(finish, 0.26) + outward * (depth + 0.8)
+	var hollow := start.lerp(finish, 0.61) + outward * (depth - 0.7)
+	var skirt := start.lerp(finish, 0.80) + outward * (depth + 0.6)
+	draw_colored_polygon(PackedVector2Array([start, finish, toe_b, skirt, hollow, shoulder, toe_a]), face)
+	var crest := soil.lightened(0.13) if lit else soil.darkened(0.08)
+	draw_colored_polygon(PackedVector2Array([start, finish, finish + (toe_b - finish) * 0.32,
+		start.lerp(finish, 0.69) + outward * 1.3, start.lerp(finish, 0.30) + outward * 0.9,
+		start + (toe_a - start) * 0.32]), crest)
+	var roots := grass.lightened(0.11).lerp(crest, 0.20) if not frost else Color("#a3a991").lerp(crest, 0.44)
+	if not lit:
+		roots = roots.darkened(0.15)
+	var accents := PackedVector2Array([shoulder, skirt])
+	for at in accents:
+		var tip := at - outward * 1.5
+		draw_colored_polygon(PackedVector2Array([at - along * 2.8, tip - along * 1.1,
+			tip + along * 0.7 - outward * 0.6, at + along * 2.6]), roots)
+	if not lit:
+		for section: float in [0.18, 0.62]:
+			var clay := start.lerp(finish, section) + outward * (depth * 0.52)
+			var run := along * minf(7.0, start.distance_to(finish) * 0.27)
+			draw_line(clay, clay + run + outward * 0.65, soil.darkened(0.24), 0.85)
+			var shard := clay + run * 0.52 + outward * 0.9
+			draw_colored_polygon(PackedVector2Array([shard - along * 1.55,
+				shard - outward * 0.75, shard + along * 1.35, shard + outward * 0.5]), soil.lerp(Color("#aca38c"), 0.40))
+
+func _field_step_bounds(area: Rect2, entrance: Vector2) -> Rect2:
+	if entrance == Vector2.ZERO:
+		return Rect2()
+	var size := Vector2(14.0, 8.0) if entrance.y != 0.0 else Vector2(8.0, 14.0)
+	var mouth := area.get_center() + entrance * area.size * 0.5
+	return Rect2(mouth + entrance * 4.0 - size * 0.5, size)
+
+func _draw_field_step(area: Rect2, entrance: Vector2, soil: Color, frost: bool) -> void:
+	var landing := _field_step_bounds(area, entrance)
+	var way := landing.get_center()
+	var across := Vector2(entrance.y, -entrance.x)
+	var stone := soil.lerp(Color("#a4a18b"), 0.66)
+	var lower := PackedVector2Array([way - across * 6.4 - entrance * 0.8, way + across * 5.9 - entrance * 0.8,
+		way + across * 7.0 + entrance * 1.8, way + across * 5.0 + entrance * 3.7,
+		way - across * 4.6 + entrance * 3.9, way - across * 6.7 + entrance * 2.6])
+	draw_colored_polygon(lower, stone.darkened(0.12))
+	var upper := PackedVector2Array([way - across * 5.2 - entrance * 4.0, way + across * 4.7 - entrance * 4.0,
+		way + across * 6.5 - entrance * 2.1, way + across * 5.4 + entrance * 0.1,
+		way - across * 5.4 + entrance * 0.4, way - across * 6.9 - entrance * 1.5])
+	draw_colored_polygon(PackedVector2Array([upper[3], upper[4], upper[4] + entrance * 1.2,
+		upper[3] + entrance * 1.6]), stone.darkened(0.32))
+	draw_colored_polygon(upper, stone)
+	draw_line(way + across * 1.1 - entrance * 3.5, way + across * 0.5 + entrance * 0.3, stone.darkened(0.24), 0.65)
+	var gleam := stone.lerp(Color("#c0c2a4"), 0.68 if frost else 0.35)
+	draw_line(upper[4].lerp(upper[3], 0.10), upper[4].lerp(upper[3], 0.68), gleam, 0.75)
+	draw_line(lower[4].lerp(lower[3], 0.19), lower[4].lerp(lower[3], 0.79), stone.darkened(0.24), 0.65)
+
+func _field_verge_outline(area: Rect2, entrance: Vector2) -> PackedVector2Array:
 	var corners := EstateLayout.corners(area)
 	var outline := PackedVector2Array()
 	for side in 4:
 		var start := corners[side]
 		var finish := corners[(side + 1) % 4]
 		var along := start.direction_to(finish)
-		outline.append(start + along * 3.0)
+		outline.append(start + along * 5.0)
 		if EstateLayout.EDGE_NORMALS[side] == entrance:
 			var middle := start.lerp(finish, 0.5)
 			var half_opening := along * EstateLayout.FIELD_ENTRANCE_WIDTH * 0.5
 			var lip := middle - half_opening
 			var far_lip := middle + half_opening
-			outline.append_array(PackedVector2Array([lip, lip - entrance * depth,
-				far_lip - entrance * depth, far_lip]))
-		outline.append(finish - along * 3.0)
-	if loam:
-		ESTATE_TERRAIN.draw_loam(self, outline, color)
-	else:
-		draw_colored_polygon(outline, color)
-
-func _draw_creek() -> void:
-	var line := PackedVector2Array(CREEK)
-	var water: Color = WATER_TINTS[season]
-	var winter := season == Global.Season.WINTER
-	var silt := Color("#778b7d") if winter else Color("#727b5e")
-	var bank := _ribbon(line, WATER_HALF_WIDTH)
-	draw_colored_polygon(_ribbon(line, 26), Color("#505f59") if winter else Color("#475b49"))
-	draw_colored_polygon(_ribbon(line, 22), silt)
-	draw_colored_polygon(bank, water.lerp(Color("#86a587"), 0.43))
-	draw_colored_polygon(_ribbon(line, 11.0, true), water.darkened(0.13))
-	WATER_SURFACE.draw_shore(self, bank, silt, water, winter, [BRIDGE_DECK.grow(4.0), FORD_AREA])
+			outline.append_array(PackedVector2Array([lip, lip - entrance * 6.0,
+				far_lip - entrance * 6.0, far_lip]))
+		outline.append(finish - along * 5.0)
+	return outline
 
 func _draw_crossings() -> void:
-	var deck := BRIDGE_DECK
-	draw_rect(deck.grow(2), Color("#534332"))
-	draw_rect(deck, Color("#ba9967"))
-	for plank in 10:
-		var x := deck.position.x + 2 + plank * 5
-		draw_rect(Rect2(x, deck.position.y + 2, 1, 22), Color("#96744d"))
-		draw_rect(Rect2(x + 1, deck.position.y + 2, 2, 1), Color("#dec18b"))
-	for side: float in [-1.0, 1.0]:
-		var rail_y := BRIDGE.y + side * 13
-		draw_rect(Rect2(BRIDGE.x - 27, rail_y - 1, 54, 2), Color("#795636"))
-		for end: float in [-1.0, 1.0]:
-			var foot := BRIDGE + Vector2(end * 25, side * 13)
-			draw_rect(Rect2(foot - Vector2(2, 3), Vector2(4, 7)), Color("#755538"))
-			draw_rect(Rect2(foot - Vector2(1, 3), Vector2(2, 2)), Color("#dec18b"))
-
 	var ford_water: Color = WATER_TINTS[season]
 	var shoal := PackedVector2Array()
 	var edge_y: Array[float] = [-17.0, -12.0, -6.0, 4.0, 12.0, 17.0]
@@ -949,13 +1174,7 @@ func _draw_crossings() -> void:
 	for i in range(edge_y.size() - 1, -1, -1):
 		var y := FORD.y + edge_y[i]
 		shoal.append(Vector2(roundf(creek_x(y)) + half_widths[i], y))
-	draw_colored_polygon(shoal, ford_water.lightened(0.16))
-	for i in 6:
-		var stone := FORD + Vector2(-25 + i * 10, -4 + posmod(i * 7, 9))
-		var width := 8.0 + posmod(i, 3)
-		draw_rect(Rect2(stone + Vector2(-4, -2), Vector2(width + 2.0, 7)), Color("#61776a"))
-		draw_rect(Rect2(stone + Vector2(-3, -4), Vector2(width, 5)), Color("#a2a898"))
-		draw_rect(Rect2(stone + Vector2(-1, -5), Vector2(width - 3.0, 2)), Color("#c6c3aa"))
+	RAVINE_BANKS.draw_ford(self, shoal, ford_water, season, raining)
 
 static func creek_x(y: float) -> float:
 	for i in range(1, CREEK.size()):
@@ -965,15 +1184,13 @@ static func creek_x(y: float) -> float:
 			return lerpf(a.x, b.x, clampf(inverse_lerp(a.y, b.y, y), 0.0, 1.0))
 	return CREEK.back().x
 
-func _ribbon(line: PackedVector2Array, half_width: float, uneven := false) -> PackedVector2Array:
+func _ribbon(line: PackedVector2Array, half_width: float) -> PackedVector2Array:
 	var band := PackedVector2Array()
 	for point in line:
-		var edge := half_width + (sin(point.y * 0.046) * 2.6 if uneven else 0.0)
-		band.append(point - Vector2(edge, 0))
+		band.append(point - Vector2(half_width, 0))
 	for i in range(line.size() - 1, -1, -1):
 		var point := line[i]
-		var edge := half_width + (cos(point.y * 0.052) * 2.2 if uneven else 0.0)
-		band.append(point + Vector2(edge, 0))
+		band.append(point + Vector2(half_width, 0))
 	return band
 
 func _install_boundaries() -> void:
@@ -992,14 +1209,20 @@ func _install_boundaries() -> void:
 		if prop in [Prop.GATE, Prop.GATE_FAR]:
 			var base := _ground_bounds(sprite.position, prop)
 			gate_bases[sprite] = _add_edge(terrain, base.get_center(), base.size)
+		elif wilderness and prop == Prop.BOULDER:
+			var base := _add_edge(terrain, sprite.position + Vector2(0, -5), Vector2(23, 12))
+			base.name = "RavineBoulder"
 	if wilderness:
+		RAVINE_RELIEF.install_ravine_edges(terrain)
 		_block_water(terrain, bounds.position.y - 12, BRIDGE.y - CROSSING_HALF_DEPTH)
 		_block_water(terrain, BRIDGE.y + CROSSING_HALF_DEPTH, FORD.y - CROSSING_HALF_DEPTH)
 		_block_water(terrain, FORD.y + CROSSING_HALF_DEPTH, bounds.end.y + 12)
 	else:
+		RAVINE_RELIEF.install_estate_edge(terrain)
 		var pond := CollisionPolygon2D.new()
 		pond.name = "SouthPond"
-		pond.polygon = estate_terrain.pond
+		_update_pond_collision(pond)
+		GameEvents.pond_landing_opened.connect(_update_pond_collision.bind(pond))
 		terrain.add_child(pond)
 
 	var camera := player.get_node("Camera2D") as Camera2D
@@ -1009,6 +1232,13 @@ func _install_boundaries() -> void:
 	camera.limit_top = floori(view.position.y)
 	camera.limit_bottom = ceili(view.end.y if wilderness else bounds.end.y + 62.0)
 	camera.force_update_scroll()
+
+func _update_pond_collision(edge: CollisionPolygon2D) -> void:
+	var bank := estate_terrain.pond
+	if pond_landing.visible:
+		# This ramp opens a single notch in the shore. The deck rails close its other sides.
+		bank = Geometry2D.clip_polygons(bank, EstateLayout.corners(EstateLayout.POND_DECK))[0]
+	edge.polygon = bank
 
 func _add_edge(terrain: StaticBody2D, at: Vector2, size: Vector2) -> CollisionShape2D:
 	var edge := CollisionShape2D.new()
@@ -1033,8 +1263,8 @@ func _prop_bounds(foot: Vector2, index: int) -> Rect2:
 	if BUILDING_REGIONS.has(index):
 		var size: Vector2 = BUILDING_REGIONS[index].size
 		return Rect2(foot + _building_offset(size), size)
-	if EXTERNAL_REGIONS.has(index):
-		var size: Vector2 = EXTERNAL_REGIONS[index].size
+	if RIVERSIDE_REGIONS.has(index) or EXTERNAL_REGIONS.has(index) or STONE_REGIONS.has(index):
+		var size := _scenery_region(index).size
 		return Rect2(foot - Vector2(size.x / 2.0, size.y - 2.0), size)
 	return Rect2(foot - PROP_ANCHOR, PROP_SIZE)
 
@@ -1048,13 +1278,20 @@ func _ground_bounds(foot: Vector2, index: int) -> Rect2:
 	return _prop_bounds(foot, index)
 
 func _stamp(bounds: Rect2, index: int) -> void:
-	draw_texture_rect_region(_prop_sheet(index), bounds, _scenery_region(index), _prop_tint(index))
+	if painted_textures.has(index):
+		draw_texture_rect(painted_textures[index], bounds, false, _prop_tint(index))
+		return
+	draw_texture_rect_region(_prop_sheet(index), bounds, _scenery_region(index, season), _prop_tint(index))
 
-func _scenery_region(index: int) -> Rect2:
+func _scenery_region(index: int, at_season := -1) -> Rect2:
 	if BUILDING_REGIONS.has(index):
 		return BUILDING_REGIONS[index]
+	if RIVERSIDE_REGIONS.has(index):
+		return riverside_region(index, at_season)
 	if EXTERNAL_REGIONS.has(index):
 		return EXTERNAL_REGIONS[index]
+	if STONE_REGIONS.has(index):
+		return STONE_REGIONS[index]
 	var frame := Vector2(index % PROP_COLUMNS, floori(float(index) / PROP_COLUMNS))
 	return Rect2(frame * PROP_SIZE, PROP_SIZE)
 
@@ -1063,33 +1300,98 @@ func _prop_sheet(index: int) -> Texture2D:
 		return ESTATE_BUILDINGS
 	if STORAGE_TINTS.has(index):
 		return ESTATE_STORAGE
-	if index == Prop.TALL_BAMBOO:
-		return MOUNTAIN_POST_BAMBOO
-	if index in RAVINE_ACCENT_PROPS:
-		return RAVINE_ACCENTS
+	if RIVERSIDE_REGIONS.has(index):
+		return RIVERSIDE_PLANTS
 	if MEADOW_FLOWERS.has(index):
 		return MEADOW_FLOWERS[index]
-	if index in ACTG_PROPS:
-		return ACTG_SCENERY
 	return NINJA_SCENERY if EXTERNAL_REGIONS.has(index) else SCENERY
 
-func _prop_texture(index: int) -> AtlasTexture:
+func _prop_texture(index: int, foot: Vector2) -> AtlasTexture:
+	if painted_textures.has(index):
+		var in_hall_yard := not wilderness and HALL_YARD_AREA.has_point(foot)
+		var alternate := posmod(roundi(foot.x + foot.y), 2) == 0
+		if index == Prop.ROCK:
+			var low := foot.y > HALL_FOOT.y if in_hall_yard else alternate
+			return low_stone_texture if low else painted_textures[index]
+		if index == Prop.OAK and not in_hall_yard and alternate:
+			return forked_oak_texture
+		return painted_textures[index]
 	if seasonal_textures.has(index):
 		return seasonal_textures[index]
-	return _atlas_texture(_prop_sheet(index), _scenery_region(index))
+	return atlas_texture(_prop_sheet(index), _scenery_region(index))
 
-func _update_tree_textures() -> void:
-	seasonal_textures[Prop.OAK] = _atlas_texture(SEASONAL_TREES, Rect2(Vector2(season, 0) * PROP_SIZE, PROP_SIZE))
-	seasonal_textures[Prop.BLOSSOM_TREE] = _atlas_texture(SEASONAL_TREES,
-		Rect2(ORCHARD_FRAMES[season] * PROP_SIZE, PROP_SIZE))
-	if season == Global.Season.WINTER:
-		seasonal_textures[Prop.PINE] = _atlas_texture(SEASONAL_TREES, Rect2(Vector2(2, 1) * PROP_SIZE, PROP_SIZE))
-		seasonal_textures[Prop.WILLOW] = _atlas_texture(WINTER_WILLOW, Rect2(Vector2.ZERO, WINTER_WILLOW.get_size()))
-	else:
-		seasonal_textures[Prop.PINE] = _atlas_texture(SCENERY, _scenery_region(Prop.PINE))
-		seasonal_textures[Prop.WILLOW] = _atlas_texture(ACTG_SCENERY, _scenery_region(Prop.WILLOW))
+func _update_prop_textures() -> void:
+	for prop in [Prop.OAK, Prop.BLOSSOM_TREE, Prop.PINE, Prop.GROVE_TREE, Prop.GROVE_CLUSTER]:
+		seasonal_textures[prop] = tree_texture(prop, season)
+	for prop: int in RIVERSIDE_REGIONS:
+		seasonal_textures[prop] = painted_riverside_texture(prop, season) if ESTATE_RIVER_REGIONS.has(prop) \
+			else riverside_texture(prop, season)
+	for prop: int in HALL_YARD_REGIONS:
+		var region: Rect2 = HALL_YARD_REGIONS[prop]
+		if seasonal_textures.has(prop):
+			region.position.x += season * region.size.x
+		painted_textures[prop] = atlas_texture(ESTATE_TERRAIN.HALL_YARD_ART, region)
+	low_stone_texture = atlas_texture(ESTATE_TERRAIN.HALL_YARD_ART, Rect2(176, 0, 48, 48))
+	forked_oak_texture = atlas_texture(ESTATE_ART, Rect2(season * 48, 152, 48, 48))
+	painted_textures[Prop.GROVE_CLUSTER] = atlas_texture(ESTATE_ART, Rect2(season * 64, 200, 64, 48))
+	for prop: int in ESTATE_SITE_REGIONS:
+		painted_textures[prop] = atlas_texture(ESTATE_ART, ESTATE_SITE_REGIONS[prop])
+	for prop: int in ESTATE_RIVER_REGIONS:
+		painted_textures[prop] = seasonal_textures[prop]
+	for prop: int in STORAGE_TINTS:
+		painted_textures[prop] = atlas_texture(ESTATE_VESSELS, EXTERNAL_REGIONS[prop])
+	if wilderness:
+		painted_textures[Prop.PINE] = painted_tree_texture(Prop.PINE, season)
+		painted_textures[Prop.RAVINE_SHOOT] = atlas_texture(RAVINE_ART, Rect2(146, 50, 14, 18))
+		painted_textures[Prop.STUMP] = atlas_texture(RAVINE_ART, Rect2(164, 50, 16, 16))
 
-func _atlas_texture(source: Texture2D, region: Rect2) -> AtlasTexture:
+static func painted_tree_texture(prop: int, season_index: int, forked := false) -> AtlasTexture:
+	if prop == Prop.PINE:
+		return atlas_texture(RAVINE_ART, Rect2(248 if season_index == Global.Season.WINTER else 200, 0, 48, 48))
+	if prop == Prop.OAK and forked:
+		return atlas_texture(ESTATE_ART, Rect2(48 * season_index, 152, 48, 48))
+	var region: Rect2 = HALL_YARD_REGIONS[prop]
+	region.position.x += season_index * region.size.x
+	return atlas_texture(ESTATE_TERRAIN.HALL_YARD_ART, region)
+
+static func painted_riverside_texture(prop: int, season_index: int) -> AtlasTexture:
+	if BAMBOO_FRAMES.has(prop):
+		var clump: Rect2 = BAMBOO_FRAMES[prop]
+		if season_index == Global.Season.WINTER:
+			clump.position.y += 48
+		return atlas_texture(load(BAMBOO_ART_PATH), clump)
+	var region: Rect2 = ESTATE_RIVER_REGIONS[prop]
+	if season_index == Global.Season.WINTER:
+		region.position.y += RIVERSIDE_WINTER_ROW
+	return atlas_texture(ESTATE_ART, region)
+
+static func riverside_texture(prop: int, season_index: int) -> AtlasTexture:
+	return atlas_texture(RIVERSIDE_PLANTS, riverside_region(prop, season_index))
+
+static func riverside_region(prop: int, season_index: int) -> Rect2:
+	var region: Rect2 = RIVERSIDE_REGIONS[prop]
+	if season_index == Global.Season.WINTER and prop not in DORMANT_PROPS:
+		region.position.y += RIVERSIDE_WINTER_ROW
+	return region
+
+static func riverside_tint(season_index: int, wet: bool) -> Color:
+	var tint := Color.WHITE
+	if season_index == Global.Season.AUTUMN:
+		tint = Color(1.12, 0.94, 0.69)
+	elif season_index == Global.Season.SUMMER:
+		tint = Color(1.0, 1.08, 0.97)
+	return tint * Color(0.88, 0.94, 0.99) if wet else tint
+
+static func tree_texture(prop: int, season_index: int) -> AtlasTexture:
+	if WOODLAND_REGIONS.has(prop):
+		var region: Rect2 = WOODLAND_REGIONS[prop]
+		if season_index == Global.Season.WINTER:
+			region.position.y += 48.0
+		return atlas_texture(WOODLAND, region)
+	var frame: Vector2 = ORCHARD_FRAMES[season_index] if prop == Prop.BLOSSOM_TREE else Vector2(season_index, 0)
+	return atlas_texture(SEASONAL_TREES, Rect2(frame * PROP_SIZE, PROP_SIZE))
+
+static func atlas_texture(source: Texture2D, region: Rect2) -> AtlasTexture:
 	var result := AtlasTexture.new()
 	result.atlas = source
 	result.region = region
@@ -1097,21 +1399,30 @@ func _atlas_texture(source: Texture2D, region: Rect2) -> AtlasTexture:
 	return result
 
 func _prop_tint(index: int) -> Color:
-	var painted_tree := index == Prop.OAK or index == Prop.BLOSSOM_TREE \
-		or (season == Global.Season.WINTER and index in [Prop.PINE, Prop.WILLOW])
+	if painted_textures.has(index):
+		if ESTATE_RIVER_REGIONS.has(index) or index == Prop.SHRUB:
+			return riverside_tint(season, raining)
+		var wet := Color(0.88, 0.94, 0.99) if raining else Color.WHITE
+		return wet * WINTER_ROCK_TINT if season == Global.Season.WINTER and index in ROCK_PROPS else wet
+	if RIVERSIDE_REGIONS.has(index):
+		return riverside_tint(season, raining)
+	if WOODLAND_REGIONS.has(index):
+		var woodland: Color = LEAF_TINTS[season] if index != Prop.PINE and season != Global.Season.WINTER else Color.WHITE
+		return woodland * Color(0.88, 0.94, 0.99) if raining else woodland
+	var painted_tree := index == Prop.OAK or index == Prop.BLOSSOM_TREE
 	if painted_tree:
 		return Color(0.88, 0.94, 0.99) if raining else Color.WHITE
 	var tint := Color.WHITE
 	if STORAGE_TINTS.has(index):
 		tint = STORAGE_TINTS[index]
-	elif index in ACTG_PROPS:
-		tint = Color(0.96, 0.91, 0.85)
-	elif MEADOW_FLOWERS.has(index) or index in RAVINE_ACCENT_PROPS:
+	elif MEADOW_FLOWERS.has(index):
 		tint = Color(0.86, 0.87, 0.79)
 	elif index == Prop.STUMP:
 		tint = Color(0.75, 0.76, 0.82)
-	elif index != Prop.TALL_BAMBOO and EXTERNAL_REGIONS.has(index):
+	elif EXTERNAL_REGIONS.has(index):
 		tint = NINJA_TINT
+	if season == Global.Season.WINTER and index in ROCK_PROPS:
+		tint *= WINTER_ROCK_TINT
 	if index in LEAFY_PROPS:
 		tint *= LEAF_TINTS[season]
 	if raining:

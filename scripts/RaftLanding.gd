@@ -4,6 +4,7 @@ class_name RaftLanding
 signal trial_requested
 
 const LANDSCAPE := preload("res://scripts/Landscape.gd")
+const DECK_ART := preload("res://assets/world/raft-landing.svg")
 
 @onready var hint: Label = $Hint
 @onready var host: Texture2D = CharacterArt.visitor(VisitorData.School.MOHIST)
@@ -51,16 +52,8 @@ func _process(delta: float) -> void:
 		queue_redraw()
 
 func _draw() -> void:
-	# A short landing on the west bank leaves the path and Willow Pool clear.
-	draw_rect(Rect2(-6, -3, 34, 13), Color("#394d3e"))
-	draw_rect(Rect2(-5, -5, 33, 12), Color("#79583c"))
-	draw_rect(Rect2(-4, -4, 31, 9), Color("#b59161"))
-	for x in range(-3, 28, 5):
-		draw_rect(Rect2(x, -4, 1, 9), Color("#8b6c4a"))
-		draw_rect(Rect2(x + 1, -4, 1, 7), Color("#cda872"))
-	for y in [-6, 6]:
-		draw_rect(Rect2(25, y - 4, 4, 8), Color("#533d2c"))
-		draw_rect(Rect2(25, y - 4, 4, 2), Color("#ceaa70"))
+	var tint := Color(0.88, 0.94, 0.99) if Global.has_rain() else Color.WHITE
+	draw_texture(DECK_ART, Vector2(-10, -12), tint)
 	var pennant := Color("#b35841") if open_today else Color("#88866c")
 	draw_rect(Rect2(7, -29, 2, 25), Color("#6f5236"))
 	draw_colored_polygon(PackedVector2Array([Vector2(9, -28), Vector2(23, -26), Vector2(19, -21),
@@ -70,5 +63,5 @@ func _draw() -> void:
 		draw_texture(host, Vector2(-26, -47))
 		if not boat_away:
 			var boat := Vector2(LANDSCAPE.creek_x(SummerRaft.START_Y) - 4, SummerRaft.START_Y) - position
-			draw_line(Vector2(27, 4), boat + Vector2(-4, 5), Color("#ceaf76"), 1.0)
+			draw_line(Vector2(28, 6), boat + Vector2(-4, 5), Color("#ceaf76"), 1.0)
 			draw_boat(self, boat, idle_frame, false)

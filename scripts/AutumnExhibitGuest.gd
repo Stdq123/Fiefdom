@@ -1,7 +1,6 @@
 extends Node2D
 
-const CAST := "res://assets/characters/autumn-guests.svg"
-const SHARING := "res://assets/world/autumn-sharing.svg"
+const SEED_PACKET := "res://assets/world/seed-packet.png"
 const HOST := 3
 const LANTERN_WATCH := 0.69
 const ROUTES := [
@@ -44,18 +43,10 @@ func _ready() -> void:
 		route.add_point(point)
 	if role == HOST:
 		motion.set_art(speaker, null)
-		icon = CharacterArt.dialogue_portrait(speaker, null, false)
 	else:
-		motion.set_motion_sheet(_art(CAST, Rect2(0, role * 96, 128, 96)))
-		icon = _art(CAST, Rect2(0, role * 96, 32, 32))
-	parcel.texture = _art(SHARING, Rect2(0, 32, 22, 16))
-
-func _art(path: String, area: Rect2) -> AtlasTexture:
-	var atlas := AtlasTexture.new()
-	atlas.atlas = load(path)
-	atlas.region = area
-	atlas.filter_clip = true
-	return atlas
+		motion.set_festival_guest(role)
+	icon = CharacterArt.dialogue_portrait(speaker, null, false)
+	parcel.texture = load(SEED_PACKET)
 
 func show_receipt(record: Dictionary) -> void:
 	parcel.hide()
@@ -85,7 +76,7 @@ func update_pose(clock: float, elapsed: float, shared: bool, snap := false) -> v
 			motion.face(Vector2.DOWN)
 	else:
 		motion.walk(movement)
-	parcel.position.x = -7.0 if motion.flip_h else 7.0
+	motion.carry_at(parcel, 1.0)
 
 func can_interact_from(foot: Vector2) -> bool:
 	return is_visible_in_tree() and global_position.distance_squared_to(foot) <= 20.0 * 20.0

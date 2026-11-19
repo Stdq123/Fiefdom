@@ -3,16 +3,14 @@ extends CanvasLayer
 const GAME_THEME := preload("res://resources/game_theme.tres")
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 const ESTATE_ENDING := preload("res://scenes/EstateEnding.tscn")
+const VITALS := preload("res://scenes/HUDVitals.tscn")
+const TRAVEL_HEADING := preload("res://scenes/TravelHeading.tscn")
 const BACKPACK := preload("res://scenes/Backpack.tscn")
 
 @export var show_field_status := true
 @export var backpack_trigger: NodePath
 
 var view: Control
-var health_label: Label
-var health_bar: ProgressBar
-var trail_stamina: Label
-var trail_stamina_bar: ProgressBar
 var trail_vitals: PanelContainer
 var trail_date: Label
 var outing_label: Label
@@ -26,11 +24,12 @@ var summary: Control
 var status: Label
 var backpack: Control
 var backpack_button: Button
-var trail_weather: TextureRect
-var sky_icons := HUDIcons.SKY.map(HUDIcons.icon)
+var field_return_button: Button
+var _return_player: Player
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	set_process(false)
 	view = Control.new()
 	view.theme = GAME_THEME
 	view.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -52,7 +51,7 @@ func _ready() -> void:
 	notice.offset_right = 265.0
 	notice.offset_top = 112.0
 	notice.offset_bottom = 140.0
-	GameEvents.world_notice.connect(_show_world_notice)
+	GameEvents.world_notice.connect(show_world_notice)
 	GameEvents.management_visibility_changed.connect(func(open: bool):
 		management_open = open
 		_refresh_notice_visibility()
@@ -69,6 +68,38 @@ func _ready() -> void:
 	GameEvents.ending_record_requested.connect(_open_record)
 	if Global.outcome != Global.Outcome.RUNNING:
 		_show_outcome.call_deferred(Global.outcome, true)
+
+func add_field_return(walker: Player, choose_trip: Callable) -> void:
+	_return_player = walker
+	field_return_button = Button.new()
+	field_return_button.name = "FieldReturn"
+	var work := Global.field_return_caption()
+	field_return_button.text = "回井田" if work.is_empty() else "接着田务"
+	field_return_button.tooltip_text = "沿路指引回第一块井田的田口" if work.is_empty() else "回封地后查看先前的田务 · " + work
+	field_return_button.theme = HUD_THEME
+	field_return_button.theme_type_variation = &"HudButton"
+	field_return_button.focus_mode = Control.FOCUS_NONE
+	field_return_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	view.add_child(field_return_button)
+	field_return_button.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	field_return_button.offset_left = -188.0
+	field_return_button.offset_right = -92.0
+	field_return_button.offset_top = 16.0
+	field_return_button.offset_bottom = 56.0
+	field_return_button.pressed.connect(func():
+		if _can_start_field_return() and not choose_trip.call(Global.FIELD_RETURN):
+			show_world_notice("这里接不上山路，靠近一条路后再选。")
+	)
+	field_return_button.hide()
+	set_process(true)
+
+func _process(_delta: float) -> void:
+	field_return_button.visible = _can_start_field_return()
+
+func _can_start_field_return() -> bool:
+	return Global.outcome == Global.Outcome.RUNNING and not get_tree().paused and not settings_open and not modal_open \
+		and not management_open and is_instance_valid(_return_player) and not _return_player.world_controls_blocked() \
+		and Global.regional_destination() != Global.FIELD_RETURN
 
 func _setup_backpack_button() -> void:
 	if backpack_trigger.is_empty():
@@ -147,25 +178,9 @@ func _build_status() -> void:
 	var trail_text := VBoxContainer.new()
 	trail_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	trail_note.add_child(trail_text)
-	var trail_title := Label.new()
-	trail_title.text = "竹涧"
-	trail_title.theme_type_variation = &"HudBronzeInk"
-	trail_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	trail_title.add_theme_font_size_override("font_size", 22)
-	var title_row := HBoxContainer.new()
-	trail_text.add_child(title_row)
-	title_row.add_child(trail_title)
-	var weather_seal := PanelContainer.new()
-	weather_seal.theme_type_variation = &"HudWell"
-	weather_seal.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	title_row.add_child(weather_seal)
-	trail_weather = TextureRect.new()
-	trail_weather.custom_minimum_size = Vector2(18, 18)
-	trail_weather.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	trail_weather.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	trail_weather.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	trail_weather.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	weather_seal.add_child(trail_weather)
+	var heading := TRAVEL_HEADING.instantiate() as TravelHeading
+	heading.place_name = "竹涧"
+	trail_text.add_child(heading)
 	trail_date = Label.new()
 	trail_date.theme_type_variation = &"HudBronzeInk"
 	trail_date.add_theme_font_size_override("font_size", 14)
@@ -186,58 +201,22 @@ func _build_status() -> void:
 	GameEvents.ravine_journal_changed.connect(_refresh_ravine)
 	_refresh_ravine()
 
-	trail_vitals = PanelContainer.new()
-	trail_vitals.theme = HUD_THEME
-	trail_vitals.theme_type_variation = &"HudPanel"
+	trail_vitals = VITALS.instantiate()
 	view.add_child(trail_vitals)
 	trail_vitals.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
 	trail_vitals.offset_left = 16.0
-	trail_vitals.offset_top = -96.0
+	trail_vitals.offset_top = -16.0
 	trail_vitals.offset_right = 202.0
 	trail_vitals.offset_bottom = -16.0
+	trail_vitals.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	GamepadInput.changed.connect(_refresh_camera_hint)
 	_refresh_camera_hint()
-	var health_stack := VBoxContainer.new()
-	health_stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	trail_vitals.add_child(health_stack)
-	health_label = Label.new()
-	health_label.add_theme_font_size_override("font_size", 14)
-	health_stack.add_child(health_label)
-	health_bar = ProgressBar.new()
-	health_bar.custom_minimum_size.y = 5.0
-	health_bar.show_percentage = false
-	health_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	health_bar.theme_type_variation = &"HudHealth"
-	health_stack.add_child(health_bar)
-	health_bar.max_value = Global.balance.player_max_health
-	trail_stamina = Label.new()
-	trail_stamina.add_theme_font_size_override("font_size", 14)
-	health_stack.add_child(trail_stamina)
-	trail_stamina_bar = ProgressBar.new()
-	trail_stamina_bar.custom_minimum_size.y = 5.0
-	trail_stamina_bar.show_percentage = false
-	trail_stamina_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	health_stack.add_child(trail_stamina_bar)
-	GameEvents.stamina_changed.connect(_update_trail_stamina)
-	GameEvents.health_changed.connect(_update_health)
-	_update_health(Global.health)
-	_update_trail_stamina(Global.current_stamina)
-
-func _refresh_trail_date() -> void:
-	trail_weather.texture = sky_icons[HUDIcons.sky_index()]
-	trail_date.text = "第 %d 天 · %s · %s · %s" % [Global.current_day, Global.get_current_solar_term(),
-		Global.day_watch_label(), "雨" if Global.has_rain() else "晴"]
-
-func _update_trail_stamina(amount: int) -> void:
-	trail_stamina.text = "体力 %d/%d" % [amount, Global.max_stamina]
-	trail_stamina_bar.max_value = Global.max_stamina
-	trail_stamina_bar.value = amount
+	GameEvents.stamina_changed.connect(_refresh_outing.unbind(1))
 	_refresh_outing()
 
-func _update_health(health: int) -> void:
-	health_label.text = "气血 %d/%d" % [health, Global.balance.player_max_health]
-	health_label.add_theme_color_override("font_color", Color("#8d3529") if health * 3 < Global.balance.player_max_health else Color("#37291c"))
-	health_bar.value = health
+func _refresh_trail_date() -> void:
+	trail_date.text = "第 %d 天 · %s · %s · %s" % [Global.current_day, Global.get_current_solar_term(),
+		Global.day_watch_label(), "雨" if Global.has_rain() else "晴"]
 
 func _refresh_outing() -> void:
 	outing_label.text = Global.ravine_outing_status()
@@ -250,14 +229,15 @@ func _refresh_ravine() -> void:
 	ravine_label.visible = Global.knows_ravine_journal() and Global.ravine_journal.garden_day == 0
 	ravine_label.text = Global.ravine_status() if ravine_label.visible else ""
 
-func _show_world_notice(message: String) -> void:
+func show_world_notice(message: String, hold_seconds := -1.0) -> void:
 	if notice_tween:
 		notice_tween.kill()
 	notice.text = message
 	notice.modulate.a = 1.0
-	if show_field_status and not message.is_empty():
+	var hold := hold_seconds if hold_seconds >= 0.0 else (2.8 if show_field_status else 0.0)
+	if hold > 0.0 and not message.is_empty():
 		notice_tween = create_tween()
-		notice_tween.tween_interval(2.8)
+		notice_tween.tween_interval(hold)
 		notice_tween.tween_property(notice, "modulate:a", 0.0, 0.45)
 
 func _show_outcome(outcome: Global.Outcome, saved_ending := false) -> void:
@@ -275,10 +255,18 @@ func _show_ending(saved_ending: bool) -> void:
 	var ending = _add_ending_panel()
 	ending.present(get_parent().get_node("World"), saved_ending)
 	status = ending.status
+	ending.ending_saved = saved_ending
+	if not saved_ending:
+		match Global.save_automatically("ending"):
+			OK:
+				ending.ending_saved = true
+				status.text = "结局已自动保存。"
+			ERR_SKIP: status.text = "可点「保存结局」留存本次记录。"
+			_: status.text = "结局自动保存失败。可尝试「保存结局」。"
 	ending.continue_button.pressed.connect(_continue_estate)
 	ending.save_button.pressed.connect(_save_ending)
-	ending.restore_button.disabled = Global.latest_saved_game(true).is_empty()
-	ending.restore_button.pressed.connect(_restore_game)
+	ending.refresh_restore()
+	ending.restore_requested.connect(_restore_game)
 	ending.title_button.pressed.connect(_return_to_title)
 
 func _add_ending_panel() -> Control:
@@ -376,7 +364,8 @@ func _save_ending() -> void:
 	var result := Global.save_game()
 	status.text = "结局已存档。" if result == OK else "保存失败（%s）" % error_string(result)
 	if result == OK:
-		summary.find_child("RestoreCampaign", true, false).disabled = Global.latest_saved_game(true).is_empty()
+		summary.ending_saved = true
+		summary.refresh_restore()
 
 func _restore_game() -> void:
 	get_tree().paused = false

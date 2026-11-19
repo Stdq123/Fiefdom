@@ -13,6 +13,7 @@ func _ready() -> void:
 		sensor.rotation = PI / 2.0
 		caption.position += Vector2(-54, 14)
 	super._ready()
+	body_exited.connect(_on_body_exited)
 	GameEvents.ravine_journal_changed.connect(_refresh)
 	_refresh()
 
@@ -24,9 +25,14 @@ func _refresh() -> void:
 
 func _on_body_entered(body: Node2D) -> void:
 	if not Global.ravine_shortcut_open():
-		GameEvents.world_notice.emit("交完三处水迹，蒲宁会指明这条小径。")
+		if body is Player:
+			caption.text = gate_name + " · 未开\n向蒲宁交还三处水迹"
 		return
 	super._on_body_entered(body)
+
+func _on_body_exited(body: Node2D) -> void:
+	if body is Player and not Global.ravine_shortcut_open():
+		caption.text = gate_name + " · 未开"
 
 func _draw() -> void:
 	var across := Vector2(15, 0) if southbound else Vector2(2, 15)

@@ -167,7 +167,8 @@ func _refresh_destination() -> void:
 	paper.queue_redraw()
 
 func _current_stop() -> String:
-	if not Global.ravine_trip_target.is_empty() or Global.market_trip_target in [Sheepfold.MEADOW, Global.WATER_SOURCE]:
+	if not Global.ravine_trip_target.is_empty() or Global.market_trip_target == Sheepfold.MEADOW \
+			or Global.market_trip_target in Global.ESTATE_REGIONAL_STOPS:
 		return Global.MARKET_RETURN
 	return Global.market_trip_target
 
@@ -176,8 +177,10 @@ func _destination_label(place: String) -> String:
 		return "竹涧 · " + Global.ravine_trip_target
 	if place == Global.MARKET_RETURN and Global.market_trip_target == Sheepfold.MEADOW:
 		return Sheepfold.MEADOW
-	if place == Global.MARKET_RETURN and Global.market_trip_target == Global.WATER_SOURCE:
-		return "封地 · " + Global.WATER_SOURCE
+	if place == Global.MARKET_RETURN and Global.market_trip_target == Global.FIELD_RETURN:
+		return "封地 · " + Global.field_return_place_name()
+	if place == Global.MARKET_RETURN and Global.market_trip_target in Global.ESTATE_REGIONAL_STOPS:
+		return "封地 · " + Global.market_trip_target
 	return place
 
 func _service(place: String) -> String:
@@ -226,6 +229,14 @@ func _draw_chart() -> void:
 	for surface: PackedVector2Array in ground.street:
 		paper.draw_colored_polygon(_map_outline(surface), Color("#b99c6c"))
 	paper.draw_colored_polygon(_map_outline(ground.paving), Color("#beb8a0"))
+	paper.draw_colored_polygon(_map_outline(ground.dye_paving), Color("#beb8a0"))
+	for apron in ground.stall_paving.values():
+		paper.draw_colored_polygon(_map_outline(apron.outline), Color("#beb8a0"))
+	var workshop := Rect2(_map_point(LAYOUT.DYE_HOUSE + Vector2(-45, -48)), Vector2(88, 40) * _scale())
+	paper.draw_rect(workshop.grow(1.5), INK)
+	paper.draw_rect(workshop, Color("#7b8790"))
+	paper.draw_line(workshop.position + Vector2(1, workshop.size.y * 0.36),
+		Vector2(workshop.end.x - 1, workshop.position.y + workshop.size.y * 0.36), Color("#a3aba7"), 1.5)
 	var basin := Rect2(_map_point(LAYOUT.BASIN.position), LAYOUT.BASIN.size * _scale())
 	paper.draw_rect(basin, Color("#8c7c5f"))
 	paper.draw_rect(basin.grow(-2.5), Color("#739995"))

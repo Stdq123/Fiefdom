@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://ceehs0al4i6d2"
+path="res://.godot/imported/dyer-cloth.png-c600b32fa1025658308f7f3c0629298c.res"
+
+[deps]
+
+source_file="res://assets/characters/dyer-cloth.png"
+dest_files=["res://.godot/imported/dyer-cloth.png-c600b32fa1025658308f7f3c0629298c.res"]
+
+[params]
+
+authored_at_2x=true
