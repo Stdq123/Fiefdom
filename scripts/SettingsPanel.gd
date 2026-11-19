@@ -19,6 +19,8 @@ var bindings_page: BINDINGS_PANEL
 var close_button: Button
 var shortcuts: Button
 var master_slider: HSlider
+var fullscreen_button: CheckButton
+var window_size_picker: OptionButton
 
 func _ready() -> void:
 	add_theme_stylebox_override("panel", FRAME)
@@ -43,13 +45,7 @@ func _ready() -> void:
 	_add_volume_control(general, &"SfxVolume", "音效与脚步", Preferences.sfx_volume, Preferences.set_sfx_volume)
 	_add_volume_control(general, &"AmbienceVolume", "环境声", Preferences.ambience_volume, Preferences.set_ambience_volume)
 	
-	# Fullscreen
-	var fs_btn = CheckButton.new()
-	fs_btn.name = "Fullscreen"
-	fs_btn.text = "全屏"
-	fs_btn.set_pressed_no_signal(Preferences.fullscreen)
-	fs_btn.toggled.connect(_on_fullscreen_toggled)
-	general.add_child(fs_btn)
+	_add_display_controls(general)
 	var autosave_button := CheckButton.new()
 	autosave_button.name = "Autosave"
 	autosave_button.text = "自动保存"
@@ -97,6 +93,7 @@ func _ready() -> void:
 
 func _focus_open_page() -> void:
 	if is_visible_in_tree():
+		_sync_display_controls()
 		var first: Control = bindings_page.keys[KeyBindings.UP] if bindings_page.visible else master_slider
 		first.grab_focus()
 
@@ -167,6 +164,63 @@ func _add_volume_control(vbox: VBoxContainer, control_name: StringName, text: St
 	)
 	return slider
 
+func _add_display_controls(vbox: VBoxContainer) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	vbox.add_child(row)
+	var label := Label.new()
+	label.text = "窗口尺寸"
+	label.custom_minimum_size.x = 86
+	row.add_child(label)
+	window_size_picker = OptionButton.new()
+	window_size_picker.name = "WindowSize"
+	window_size_picker.accessibility_name = label.text
+	window_size_picker.custom_minimum_size.y = 38
+	window_size_picker.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	window_size_picker.allow_reselect = true
+	for preset in Preferences.WINDOW_SIZES:
+		window_size_picker.add_item("%d × %d" % [preset.x, preset.y])
+	var popup := window_size_picker.get_popup()
+	popup.add_theme_stylebox_override("panel", FRAME)
+	popup.add_theme_stylebox_override("hover", HUD_THEME.get_stylebox("hover", "HudButton"))
+	window_size_picker.item_selected.connect(_on_window_size_selected, CONNECT_DEFERRED)
+	row.add_child(window_size_picker)
+	fullscreen_button = CheckButton.new()
+	fullscreen_button.name = "Fullscreen"
+	fullscreen_button.text = "全屏"
+	fullscreen_button.toggled.connect(_on_fullscreen_toggled)
+	row.add_child(fullscreen_button)
+	get_window().size_changed.connect(_sync_display_controls, CONNECT_DEFERRED)
+	_sync_display_controls()
+
+func _sync_display_controls() -> void:
+	fullscreen_button.set_pressed_no_signal(Preferences.fullscreen)
+	window_size_picker.disabled = Preferences.fullscreen
+	window_size_picker.tooltip_text = "退出全屏后可调整窗口尺寸。" if Preferences.fullscreen else ""
+	var size_to_show := Preferences.window_size
+	if not Preferences.fullscreen and DisplayServer.get_name() != "headless":
+		size_to_show = get_window().size
+	if size_to_show == Vector2i.ZERO:
+		size_to_show = Preferences.WINDOW_SIZES[0]
+	var index := Preferences.WINDOW_SIZES.find(size_to_show)
+	var custom_index := Preferences.WINDOW_SIZES.size()
+	if index == -1:
+		var caption := "当前 %d × %d" % [size_to_show.x, size_to_show.y]
+		if window_size_picker.item_count == custom_index:
+			window_size_picker.add_item(caption)
+			window_size_picker.set_item_disabled(custom_index, true)
+		else:
+			window_size_picker.set_item_text(custom_index, caption)
+		index = custom_index
+	elif window_size_picker.item_count > custom_index:
+		window_size_picker.remove_item(custom_index)
+	window_size_picker.select(index)
+
+func _on_window_size_selected(index: int) -> void:
+	if not Preferences.fullscreen and index >= 0 and index < Preferences.WINDOW_SIZES.size():
+		_show_preference_result(Preferences.set_window_size(Preferences.WINDOW_SIZES[index]))
+	_sync_display_controls()
+
 func _add_session_controls(vbox: VBoxContainer) -> void:
 	save_button = Button.new()
 	save_button.text = "保存游戏"
@@ -217,6 +271,7 @@ func _on_load_pressed() -> void:
 
 func _on_fullscreen_toggled(toggled: bool) -> void:
 	_show_preference_result(Preferences.set_fullscreen(toggled))
+	_sync_display_controls()
 
 func _show_preference_result(result: Error) -> void:
 	preferences_status.text = "设置已保存" if result == OK else "设置保存失败（%s）" % error_string(result)

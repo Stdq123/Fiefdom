@@ -18,8 +18,9 @@ func _run() -> void:
 		return
 	preferences.restore()
 	if not is_equal_approx(preferences.volume, 0.65) or preferences.ambience_volume != preferences.DEFAULT_AMBIENCE_VOLUME \
-			or preferences.music_volume != preferences.DEFAULT_MUSIC_VOLUME or preferences.sfx_volume != 1.0:
-		push_error("Legacy settings keep their master volume and use the new defaults.")
+			or preferences.music_volume != preferences.DEFAULT_MUSIC_VOLUME or preferences.sfx_volume != 1.0 \
+			or preferences.window_size != Vector2i.ZERO:
+		push_error("Legacy settings keep the master volume, default the new volumes and inherit the startup window size.")
 		quit(1)
 		return
 
@@ -32,6 +33,13 @@ func _run() -> void:
 	var sfx := panel.find_child("SfxVolume", true, false) as HSlider
 	var ambience := panel.find_child("AmbienceVolume", true, false) as HSlider
 	var fullscreen := panel.find_child("Fullscreen", true, false) as CheckButton
+	var sizes := panel.find_child("WindowSize", true, false) as OptionButton
+	sizes.item_selected.emit(2)
+	await process_frame
+	if sizes.selected != 2 or preferences.window_size != Vector2i(1280, 720):
+		push_error("Title settings select the 1280 by 720 window preset.")
+		quit(1)
+		return
 	var music_bus := AudioServer.get_bus_index(&"Music")
 	var ambience_bus := AudioServer.get_bus_index(&"Ambience")
 	var sfx_bus := AudioServer.get_bus_index(&"SFX")
@@ -63,8 +71,9 @@ func _run() -> void:
 	fullscreen.button_pressed = true
 	if config.load(preferences.PATH) != OK or config.get_value("audio", "master") != 0.0 \
 			or config.get_value("audio", "music") != 0.0 or config.get_value("audio", "ambience") != 0.0 \
-			or config.get_value("audio", "sfx") != 0.0 or not config.get_value("display", "fullscreen"):
-		push_error("Title settings write all four volume levels and display mode.")
+			or config.get_value("audio", "sfx") != 0.0 or not config.get_value("display", "fullscreen") \
+			or config.get_value("display", "window_size") != Vector2i(1280, 720) or not sizes.disabled:
+		push_error("Title settings write all four volumes, display mode and the preset while fullscreen disables resizing.")
 		quit(1)
 		return
 	if not AudioServer.is_bus_mute(0) or panel.preferences_status.text != "设置已保存":
@@ -76,12 +85,14 @@ func _run() -> void:
 	preferences.sfx_volume = 1.0
 	preferences.ambience_volume = 1.0
 	preferences.fullscreen = false
+	preferences.window_size = Vector2i.ZERO
 	AudioServer.set_bus_mute(0, false)
 	AudioServer.set_bus_mute(music_bus, false)
 	AudioServer.set_bus_mute(sfx_bus, false)
 	AudioServer.set_bus_mute(ambience_bus, false)
 	preferences.restore()
-	if preferences.volume != 0.0 or not preferences.fullscreen or not AudioServer.is_bus_mute(0):
+	if preferences.volume != 0.0 or not preferences.fullscreen or not AudioServer.is_bus_mute(0) \
+			or preferences.window_size != Vector2i(1280, 720):
 		push_error("Startup restores the persisted settings.")
 		quit(1)
 		return
@@ -136,8 +147,10 @@ func _run() -> void:
 	await process_frame
 	await process_frame
 	var close := panel.find_child("Close", true, false) as Button
-	if not panel.get_global_rect().encloses(close.get_global_rect()) or not is_equal_approx(preferences.ambience_volume, 0.4):
-		push_error("The in-game settings save ambience and keep the close button inside the panel.")
+	sizes = panel.find_child("WindowSize", true, false) as OptionButton
+	if not panel.get_global_rect().encloses(close.get_global_rect()) or not is_equal_approx(preferences.ambience_volume, 0.4) \
+			or sizes.selected != 2 or sizes.disabled:
+		push_error("In-game settings restore the window preset, save ambience and keep Close inside the panel.")
 		quit(1)
 		return
 	print("SCENARIO_OK")

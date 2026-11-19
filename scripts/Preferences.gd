@@ -7,12 +7,17 @@ const DEFAULT_VOLUME := 0.75
 const DEFAULT_MUSIC_VOLUME := 0.8
 const DEFAULT_SFX_VOLUME := 1.0
 const DEFAULT_AMBIENCE_VOLUME := 0.8
+const WINDOW_SIZES: Array[Vector2i] = [
+	Vector2i(1920, 1080), Vector2i(1600, 900), Vector2i(1280, 720), Vector2i(1024, 576),
+]
 
 var volume := DEFAULT_VOLUME
 var music_volume := DEFAULT_MUSIC_VOLUME
 var sfx_volume := DEFAULT_SFX_VOLUME
 var ambience_volume := DEFAULT_AMBIENCE_VOLUME
 var fullscreen := false
+# Zero keeps the startup window dimensions until a preset is selected.
+var window_size := Vector2i.ZERO
 var autosave := true
 var map_zoom := 2.0
 var _bindings := KeyBindings.DEFAULTS.duplicate()
@@ -28,6 +33,8 @@ func restore() -> void:
 	sfx_volume = _read_volume(settings, "sfx", DEFAULT_SFX_VOLUME)
 	ambience_volume = _read_volume(settings, "ambience", DEFAULT_AMBIENCE_VOLUME)
 	fullscreen = settings.get_value("display", "fullscreen", false) == true
+	var saved_size: Variant = settings.get_value("display", "window_size", Vector2i.ZERO)
+	window_size = saved_size if saved_size is Vector2i and saved_size in WINDOW_SIZES else Vector2i.ZERO
 	autosave = settings.get_value("game", "autosave", true) == true
 	_bindings = _read_bindings(settings)
 	_install_bindings()
@@ -63,9 +70,26 @@ func set_ambience_volume(value: float) -> Error:
 	return _save()
 
 func set_fullscreen(value: bool) -> Error:
+	var previous := fullscreen
 	fullscreen = value
-	_apply_display()
-	return _save()
+	var result := _save()
+	if result == OK:
+		_apply_display()
+	else:
+		fullscreen = previous
+	return result
+
+func set_window_size(value: Vector2i) -> Error:
+	if value not in WINDOW_SIZES:
+		return ERR_INVALID_PARAMETER
+	var previous := window_size
+	window_size = value
+	var result := _save()
+	if result == OK:
+		_apply_display()
+	else:
+		window_size = previous
+	return result
 
 func set_autosave(value: bool) -> Error:
 	autosave = value
@@ -167,10 +191,20 @@ func _apply_bus_volume(bus_name: StringName, value: float) -> void:
 		AudioServer.set_bus_volume_db(bus, linear_to_db(maxf(0.001, value)))
 
 func _apply_display() -> void:
-	if DisplayServer.get_name() != "headless":
-		var target := DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
-		if DisplayServer.window_get_mode() != target:
-			DisplayServer.window_set_mode(target)
+	if DisplayServer.get_name() == "headless":
+		return
+	var window := get_window()
+	var target := Window.MODE_FULLSCREEN if fullscreen else Window.MODE_WINDOWED
+	if window.mode != target:
+		window.mode = target
+	if fullscreen or window_size == Vector2i.ZERO or window.size == window_size:
+		return
+	var work_area := DisplayServer.screen_get_usable_rect(window.current_screen)
+	window.size = window_size
+	if work_area.has_area():
+		var outer_size := window.get_size_with_decorations()
+		var frame_offset := window.position - window.get_position_with_decorations()
+		window.position = work_area.position + ((work_area.size - outer_size) / 2).max(Vector2i.ZERO) + frame_offset
 
 func _save() -> Error:
 	var settings := ConfigFile.new()
@@ -179,6 +213,8 @@ func _save() -> Error:
 	settings.set_value("audio", "sfx", sfx_volume)
 	settings.set_value("audio", "ambience", ambience_volume)
 	settings.set_value("display", "fullscreen", fullscreen)
+	if window_size != Vector2i.ZERO:
+		settings.set_value("display", "window_size", window_size)
 	settings.set_value("game", "autosave", autosave)
 	for action in _bindings:
 		settings.set_value("controls", action, _bindings[action])
