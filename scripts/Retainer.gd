@@ -84,7 +84,7 @@ func _stand_at_stop() -> void:
 		var pavilion: PavilionRest = get_parent().pavilion_rest
 		sprite.face(pavilion.gathering_center() - position)
 	if resting_at_pavilion():
-		sprite.stand(Vector2(0, 2))
+		sprite.sit(tool_gesture.sleeve)
 	else:
 		sprite.stand(tool_gesture.body_lean, tool_gesture.work_pose())
 

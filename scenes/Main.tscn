@@ -558,10 +558,13 @@ offset = Vector2(-46, -55)
 
 [node name="PavilionRest" type="Node2D" parent="World" groups=["interactable"]]
 position = Vector2(151, 436)
+y_sort_enabled = true
 script = ExtResource("41_pavilion_rest")
 
 [node name="Mats" type="Node2D" parent="World/PavilionRest"]
 z_index = -1
+
+[node name="Tabletop" type="Node2D" parent="World/PavilionRest"]
 
 [node name="DryLamps" type="Node2D" parent="World/PavilionRest"]
 

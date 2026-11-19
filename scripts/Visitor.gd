@@ -16,6 +16,7 @@ var next_stop := 0
 var activity_focus := Vector2.ZERO
 var task_time := 0.0
 var walking_on_clock := false
+var _rest_cloth := Color.WHITE
 
 var walking_to_stop: bool:
 	get: return walking_on_clock or next_stop < visit_path.size()
@@ -26,6 +27,7 @@ var walking_to_stop: bool:
 func _ready() -> void:
 	var speaker := data.name if data else ""
 	var school := data.school if data else VisitorData.School.CONFUCIAN
+	_rest_cloth = CharacterArt.retainer_sleeve(speaker, 0, school)
 	var guest := AutumnExhibit.GUESTS.find(speaker)
 	if VisitorData.NEIGHBORS.has(speaker):
 		sprite.set_art(speaker, null)
@@ -45,6 +47,8 @@ func set_interaction_focused(focused: bool) -> void:
 	_update_hint()
 
 func go_to_activity(next: VisitorData.VisitActivity, path: PackedVector2Array, look_at: Vector2, walk_in: bool, elapsed := 0.0) -> void:
+	if resting_at_pavilion():
+		sprite.stand()
 	walking_on_clock = false
 	activity = next
 	visit_path = path
@@ -138,7 +142,6 @@ func _idle_at_stop(delta: float) -> void:
 	if activity == VisitorData.VisitActivity.NONE:
 		return
 	if resting_at_pavilion():
-		sprite.stand(Vector2(0, 2))
 		return
 	if is_instance_valid(observer):
 		sprite.stand()
@@ -177,6 +180,8 @@ func _face_stop() -> void:
 		sprite.face(activity_focus - position)
 	else:
 		sprite.face(Vector2.DOWN)
+	if resting_at_pavilion() and Global.raid_day == 0:
+		sprite.sit(_rest_cloth)
 
 func interact() -> void:
 	if not data or data.is_recruited:

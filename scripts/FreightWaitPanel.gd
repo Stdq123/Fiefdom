@@ -46,9 +46,12 @@ func _begin_wait(estate_player: Player, arrival: float, approach: float, caption
 	progress.value = 0.0
 	shade.color.a = 0.0
 	status.text = caption
-	player.arrive_at_position(seat, Vector2.DOWN)
+	var facing := Vector2.DOWN
+	if pavilion:
+		facing = seat.direction_to(pavilion.to_global(pavilion.gathering_center() - pavilion.position))
+	player.arrive_at_position(seat, facing)
 	player.resting = true
-	player.seated = true
+	player.set_seat_pose(SeatedPose.Surface.MAT if pavilion else SeatedPose.Surface.BENCH)
 	show()
 	_refresh_controls()
 	stand.grab_focus()
@@ -93,7 +96,7 @@ func _finish(arrived: bool) -> void:
 		return
 	set_process(false)
 	player.resting = false
-	player.seated = false
+	player.set_seat_pose(SeatedPose.Surface.STANDING)
 	hide()
 	if pavilion:
 		pavilion = null

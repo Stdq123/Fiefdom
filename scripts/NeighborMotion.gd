@@ -21,6 +21,7 @@ var walking := false
 var idle_time := 0.0
 var step_length := STEP_LENGTH
 var _work_column := -1
+var _seated_art: SeatedPose
 
 static func walk_column(distance: float, passing_column := 0, stride := STEP_LENGTH) -> int:
 	match floori(distance / stride) % 4:
@@ -37,6 +38,8 @@ func set_festival_guest(index: int) -> void:
 	set_motion_sheet(CharacterArt.festival_guest_motion(index), CharacterArt.STREET_COLUMNS, AutumnExhibit.GUESTS[index])
 
 func set_motion_sheet(sheet: Texture2D, columns := CharacterArt.MOTION_COLUMNS, speaker := "") -> void:
+	if _seated_art:
+		_seated_art.restore_standing()
 	step_length = NEIGHBOR_STEP_LENGTH.get(speaker, STEP_LENGTH)
 	idle_time = maxi(0, VisitorData.NEIGHBORS.find(speaker)) * 0.37
 	walk_distance = 0.0
@@ -66,6 +69,8 @@ func walk(movement: Vector2) -> float:
 	if travelled < 0.04:
 		stand()
 		return 0.0
+	if _seated_art:
+		_seated_art.restore_standing()
 	face(movement)
 	walking = true
 	_work_column = -1
@@ -90,14 +95,31 @@ func carry_at(bundle: Node2D, hang: float) -> void:
 	bundle.show_behind_parent = facing == Facing.BACK
 
 func stand(lean := Vector2.ZERO, work_pose := -1, errand := false) -> void:
-	walking = false
-	walk_distance = 0.0
-	_work_column = -1
+	if _seated_art:
+		_seated_art.restore_standing()
+	_stop_walking()
 	if hframes == CharacterArt.WORKER_COLUMNS and work_pose >= 0:
 		_work_column = (CharacterArt.ERRAND_COLUMN if errand else CharacterArt.WORK_COLUMN) + work_pose
 	offset = Vector2.ZERO if _work_column >= 0 else lean
 	if directional:
 		_show_idle()
+
+func sit(fabric: Color) -> void:
+	if not directional:
+		stand(Vector2(0, 2))
+		return
+	_stop_walking()
+	offset = Vector2.ZERO
+	_show_idle()
+	if not _seated_art:
+		_seated_art = SeatedPose.new(self)
+		add_child(_seated_art, false, Node.INTERNAL_MODE_BACK)
+	_seated_art.present(SeatedPose.Surface.MAT, fabric)
+
+func _stop_walking() -> void:
+	walking = false
+	walk_distance = 0.0
+	_work_column = -1
 
 func _process(delta: float) -> void:
 	if not walking:

@@ -34,10 +34,13 @@ var hurt_tween: Tween
 var interaction_target: Node2D
 var conversation_open := false
 var resting := false
-var seated := false
+var seated: bool:
+	get: return _seat_surface != SeatedPose.Surface.STANDING
 var menu_open := false
 var meal_controls_blocked := false
 var bow_pointer := Vector2.INF
+var _seat_surface := SeatedPose.Surface.STANDING
+var _seated_art: SeatedPose
 
 var arrow_scene = preload("res://scenes/Arrow.tscn")
 
@@ -159,17 +162,34 @@ func show_action(action: ToolGesture.Action, target: Vector2) -> void:
 	tool_gesture.perform(action, toward)
 	AudioManager.play_field_action(action)
 
+func set_seat_pose(surface: SeatedPose.Surface) -> void:
+	_seat_surface = surface
+	if seated:
+		tool_gesture.clear()
+	_update_walk_sprite(Vector2.ZERO, 0.0)
+
 func _update_walk_sprite(direction: Vector2, travelled: float) -> void:
 	if not direction.is_zero_approx():
 		_face(direction)
+	if seated:
+		walk_distance = 0.0
+		sprite.offset = Vector2.ZERO
+		sprite.frame_coords = Vector2i(0, facing_row)
+		if not _seated_art:
+			_seated_art = SeatedPose.new(sprite)
+			sprite.add_child(_seated_art, false, Node.INTERNAL_MODE_BACK)
+		_seated_art.present(_seat_surface, tool_gesture.sleeve)
+		return
+	if _seated_art:
+		_seated_art.restore_standing()
 	if direction.is_zero_approx() or travelled < 0.04:
 		walk_distance = 0.0
-		var work := -1 if seated else tool_gesture.work_pose()
+		var work := tool_gesture.work_pose()
 		if work >= 0:
 			sprite.offset = Vector2.ZERO
 			sprite.frame_coords = Vector2i(PlayerAttire.WORK_COLUMN + work, facing_row)
 		else:
-			sprite.offset = Vector2(0, 3) if seated else tool_gesture.body_lean
+			sprite.offset = tool_gesture.body_lean
 			sprite.frame_coords = Vector2i(0, facing_row)
 		return
 	sprite.offset = Vector2.ZERO
