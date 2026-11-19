@@ -62,10 +62,12 @@ func _sleep() -> void:
 	ui.sleep_button.pressed.emit()
 	for frame in range(240):
 		await process_frame
-		if ui.dawn_caption.visible:
-			saw_dawn = ui.dawn_caption.text.begins_with("第 %d 天" % tomorrow) and state.get_current_solar_term() in ui.dawn_caption.text
+		if ui.hud.dawn_notice.visible:
+			var date_label: Label = ui.hud.dawn_notice.date_label
+			saw_dawn = date_label.text.begins_with("第 %d 天" % tomorrow) and state.get_current_solar_term() in date_label.text
 		if state.current_day == tomorrow and ui.fader.mouse_filter == Control.MOUSE_FILTER_IGNORE:
-			_expect(saw_dawn and not ui.dawn_caption.visible, "The dawn caption shows the solar term and clears before farming.")
+			_expect(saw_dawn and ui.hud.dawn_notice.mouse_filter == Control.MOUSE_FILTER_IGNORE,
+				"The dawn notice shows the solar term and allows farming after the reveal.")
 			return
 	_expect(false, "The day must advance before the next set of actions.")
 

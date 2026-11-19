@@ -73,7 +73,7 @@ func _capture(name: String) -> void:
 func _sleep() -> String:
 	await _button(ui.sleep_button)
 	await tree.create_timer(0.62).timeout
-	var caption: String = ui.dawn_caption.text
+	var caption: String = ui.hud.dawn_notice.result_label.text
 	await tree.create_timer(0.52).timeout
 	return caption
 

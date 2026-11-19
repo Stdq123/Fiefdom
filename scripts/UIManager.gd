@@ -17,7 +17,6 @@ const FISHING_PANEL := preload("res://scripts/FishingPanel.gd")
 @onready var fader: ColorRect = $Control/Fader
 @onready var freight_wait := $Control/FreightWait
 @onready var freight_bench: FreightBench = $"../World/FreightBench"
-@onready var dawn_caption: Label = $Control/Fader/DawnCaption
 @onready var directions = $Control/EstateDirections
 @onready var estate_map = $Control/EstateMap
 @onready var route_goals = $Control/RouteGoals
@@ -50,6 +49,8 @@ func _ready() -> void:
 	dialog_manager.setup($Control, world.player)
 
 	hud.setup_seeds(world.SEED_ORDER, world.select_seed)
+	hud.dawn_notice.visibility_changed.connect(_position_world_notice)
+	hud.dawn_notice.resized.connect(_position_world_notice)
 	hud.sow_from_plan.toggled.connect(world.set_sow_from_plan)
 	hud.prepare_empty_plots.toggled.connect(world.set_prepare_empty_plots)
 	hud.replant_after_harvest.toggled.connect(world.set_replant_after_harvest)
@@ -1316,6 +1317,7 @@ func _on_sleep_pressed() -> void:
 			GameEvents.world_notice.emit("召简在堂前等候 · 议税后可过夜")
 		return
 	world.player.resting = true
+	hud.dawn_notice.dismiss()
 	fader.mouse_filter = Control.MOUSE_FILTER_STOP
 	sleep_tween = create_tween()
 	sleep_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
@@ -1343,28 +1345,26 @@ func _on_sleep_pressed() -> void:
 		Global.record_dawn(previous_rank, completed, research_fee, tribute_penalty, field_work, away_work)
 		hud.refresh_morning_record()
 		Global.save_automatically("dawn")
-		dawn_caption.text = "第 %d 天 · %s · %s" % [Global.current_day, Global.get_current_solar_term(), Global.day_watch_label()]
-		var milestones := Global.dawn_milestones()
-		var fields := Global.last_field_night
-		var newly_ripe: int = fields.public_ripe + fields.private_ripe
-		if Global.raid_day == Global.current_day:
-			dawn_caption.text += "\n东路来敌 · " + Global.raid_name(Global.raid_kind)
-		elif not milestones.is_empty():
-			dawn_caption.text += "\n" + milestones[0]
-		elif newly_ripe > 0:
-			dawn_caption.text += "\n新熟 %d 格" % newly_ripe
-		dawn_caption.modulate.a = 1.0
-		dawn_caption.show()
+	)
+	_queue_dawn_reveal()
+
+func _queue_dawn_reveal() -> void:
+	sleep_tween.tween_callback(func():
+		if (Global.outcome == Global.Outcome.RUNNING and not _estate_panel_open()
+				and not is_instance_valid(EventManager.active_panel)):
+			hud.show_dawn_notice()
 	)
 	sleep_tween.tween_property(fader, "color:a", 0.0, 0.5)
-	sleep_tween.parallel().tween_property(dawn_caption, "modulate:a", 0.0, 0.40).set_delay(0.10)
 	sleep_tween.tween_callback(_clear_fader)
 
 func _clear_fader() -> void:
 	world.player.resting = false
 	fader.color.a = 0.0
 	fader.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	dawn_caption.hide()
+
+func _position_world_notice() -> void:
+	var dawn_notice: Control = hud.dawn_notice
+	campaign_hud.set_notice_clearance(dawn_notice.get_rect().end.y + 8.0 if dawn_notice.visible else 0.0)
 
 func _on_save_finished(result: Error, automatic: bool) -> void:
 	if result == OK:

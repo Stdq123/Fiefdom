@@ -236,7 +236,7 @@ func _rest_at_hall() -> bool:
 	if not await _request_sleep(sleep):
 		return false
 	await _wait(0.55)
-	_expect("卯时" in ui.dawn_caption.text and state.current_day == 8, "Rest shows the next morning and its first watch.")
+	_expect("卯时" in ui.hud.dawn_notice.date_label.text and state.current_day == 8, "Rest shows the next morning and its first watch.")
 	await _wait(0.57)
 	var latest: Dictionary = state.latest_saved_game()
 	var checkpoint := _read_save(latest.get("path", ""))

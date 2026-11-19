@@ -159,7 +159,7 @@ func _verify_preparation(alert: Button) -> bool:
 	await _button(panel.get_node("%Sleep"))
 	await tree.create_timer(1.14).timeout
 	return _expect(state.current_day == 9 and state.raid_day == 9 and alert.is_visible_in_tree()
-		and "野狗来袭" in alert.text and "东路来敌 · 野狗" in ui.dawn_caption.text,
+		and "野狗来袭" in alert.text and "东路来敌 · 野狗" in ui.hud.dawn_notice.result_label.text,
 		"Confirming sleep presents the live threat at dawn.")
 
 func _continue_at_raid() -> bool:

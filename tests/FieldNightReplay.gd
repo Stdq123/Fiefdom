@@ -78,7 +78,7 @@ func _sleep(leave_public_dry := false) -> String:
 			return ""
 		await _button(proceed)
 	await tree.create_timer(0.60).timeout
-	var caption: String = ui.dawn_caption.text
+	var caption: String = ui.hud.dawn_notice.result_label.text
 	await tree.create_timer(0.51).timeout
 	return caption
 
@@ -165,12 +165,13 @@ func _tend_and_harvest() -> bool:
 	tree.root.size = original_size
 	await _button(plan.close_button)
 	var caption := await _sleep()
-	_expect(state.current_day == 4 and "新熟 2 格" in caption and state.last_field_night.public_ripe == 1
+	_expect(state.current_day == 4 and "公田新熟 1 格 · 私田新熟 1 格" in caption and state.last_field_night.public_ripe == 1
 		and state.last_field_night.private_ripe == 1 and state.last_field_night.ready == 1 and state.food_storage == 7,
 		"Dawn counts only the two crops newly ready, while food still settles each night.")
 	await tree.create_timer(0.65).timeout
-	_expect(not ui.dawn_caption.visible and ui.hud.morning_button.visible and "新熟 2 格" in ui.hud.morning_button.text,
-		"The farm HUD retains the new crop count after the dawn fade clears.")
+	_expect(ui.fader.mouse_filter == Control.MOUSE_FILTER_IGNORE and ui.hud.dawn_notice.visible
+		and ui.hud.morning_button.visible and "新熟 2 格" in ui.hud.morning_button.text,
+		"The farm HUD keeps the new crop count visible while the controls are available.")
 	await _capture("01-morning-hud")
 	var last_fields: Dictionary = state.last_field_night.duplicate()
 	tree.change_scene_to_file(state.TITLE_SCENE)

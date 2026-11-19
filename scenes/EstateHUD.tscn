@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/WatchDial.gd" id="4_watch_dial"]
 [ext_resource type="Script" uid="uid://d2c8b051731pv" path="res://scripts/HarvestReceipt.gd" id="5_harvest_receipt"]
 [ext_resource type="PackedScene" path="res://scenes/HUDVitals.tscn" id="6_vitals"]
+[ext_resource type="PackedScene" path="res://scenes/DawnNotice.tscn" id="7_dawn"]
 
 [node name="EstateHUD" type="Control"]
 layout_mode = 3
@@ -516,6 +517,8 @@ size_flags_horizontal = 8
 mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 14
 text = "昨夜结算"
+
+[node name="DawnNotice" parent="." instance=ExtResource("7_dawn")]
 
 [node name="SaveNotice" type="Label" parent="."]
 unique_name_in_owner = true

@@ -306,7 +306,7 @@ func _night() -> void:
 	else:
 		await _button(ui.sleep_button)
 	await tree.create_timer(0.56).timeout
-	var caption: String = ui.dawn_caption.text
+	var caption: String = ui.hud.dawn_notice.result_label.text
 	var promoted: bool = promoted_day == 0 and rank < state.current_rank
 	if promoted:
 		promoted_day = state.current_day

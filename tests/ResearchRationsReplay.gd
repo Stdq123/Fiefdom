@@ -140,7 +140,8 @@ func _check_whole_portions() -> void:
 	panel = await _open()
 	_expect("还差 %d" % gap in panel.get_node("%ResearchFee").text, "Show the gap when the next installment is genuinely underfunded.")
 	await _overnight(panel)
-	_expect(state.current_day == 53 and state.research_choice_pending and "研究经费未缴 · 缺 %d" % gap in ui.dawn_caption.text,
+	_expect(state.current_day == 53 and state.research_choice_pending
+		and "研究经费未缴 · 缺 %d" % gap in ui.hud.dawn_notice.result_label.text,
 		"An unpaid installment still returns the envoy for a decision.")
 	var record := await _review_night()
 	if record == null:

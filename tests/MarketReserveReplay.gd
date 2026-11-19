@@ -164,7 +164,7 @@ func _protected() -> void:
 	await _sleep("03-fee-paid")
 	_expect(state.current_day == AUTUMN_DAY and state.food_storage == 4 and state.money == 0
 		and not state.research_choice_pending and state.night_rations.last.get("served") == 2
-		and "研究经费已缴 100 铜钱" in ui.dawn_caption.text
+		and "研究经费已缴 100 铜钱" in ui.hud.dawn_notice.result_label.text
 		and state.crop_stock.lots == HELD_CROPS and state.can_deliver_season_order(state.season_order()),
 		"Ordinary sleep feeds both retainers, pays the fee and leaves autumn delivery available.")
 	print("MARKET_RESERVE_PROTECTED day=", state.current_day, " food=", state.food_storage,

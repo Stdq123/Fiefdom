@@ -62,8 +62,9 @@ const VISITOR_NOTES_MAX_HEIGHT := 116.0
 @onready var cancel_directions: Button = %CancelDirections
 @onready var save_notice: Label = %SaveNotice
 @onready var morning_button: Button = %MorningButton
+@onready var dawn_notice: PanelContainer = $DawnNotice
 @onready var map_overlays: Array[Control] = [$Journal, $Calendar, $SeedBelt, $Vitals, $Tools, $Actions,
-	$RationsButton, $SaveNotice, $HarvestReceipt]
+	$RationsButton, $SaveNotice, $HarvestReceipt, dawn_notice]
 
 var seed_buttons: Dictionary = {}
 var save_notice_tween: Tween
@@ -129,7 +130,7 @@ func show_driving_progress(progress: String, instruction: String) -> void:
 func _ready() -> void:
 	for control: Control in [arrival, guide, visitor_label, day_label, calendar_label, rank_label,
 			reputation_label, money_label, king_label, inventory_label, well_field_label, help_label,
-			farm_status, sow_from_plan, prepare_empty_plots, replant_after_harvest, canal_preview]:
+		farm_status, sow_from_plan, prepare_empty_plots, replant_after_harvest, canal_preview, morning_button]:
 		InterfaceFont.scale_reading_text(control)
 	for card: PanelContainer in [$Journal, $Calendar]:
 		card.minimum_size_changed.connect(_fit_top_card.bind(card), CONNECT_DEFERRED)
@@ -292,12 +293,11 @@ func refresh_morning_record() -> void:
 	morning_button.visible = Global.has_morning_record()
 	var fields := Global.last_field_night
 	var ripe: int = fields.get("public_ripe", 0) + fields.get("private_ripe", 0)
-	var meals := Global.night_rations.last
-	var missing: int = meals.get("need", 0) - meals.get("served", 0)
 	var rank_change: int = Global.last_dawn.get("rank_change", 0)
+	var warning := _morning_warning()
 	morning_button.text = "昨夜结算"
-	if missing > 0:
-		morning_button.text += " · 缺粮 %d 份" % missing
+	if not warning.is_empty():
+		morning_button.text += " · " + warning
 	elif rank_change != 0:
 		var change := "晋升" if rank_change > 0 else "削爵至"
 		morning_button.text += " · " + change + Global.rank_names[Global.current_rank]
@@ -305,6 +305,39 @@ func refresh_morning_record() -> void:
 		morning_button.text += " · 井田完工"
 	elif ripe > 0:
 		morning_button.text += " · 新熟 %d 格" % ripe
+
+func _morning_warning(detailed := false) -> String:
+	var research_gap: int = Global.last_dawn.get("research_gap", 0)
+	if research_gap > 0:
+		var message := "研究经费未缴 · 缺 %d 铜钱 · 召简回堂前催议" if detailed else "研究费缺 %d 铜钱"
+		return message % research_gap
+	var tribute_penalty: int = Global.last_dawn.get("tribute_penalty", 0)
+	if tribute_penalty > 0:
+		return "欠贡 · 声望 −%d" % tribute_penalty
+	var meals := Global.night_rations.last
+	var missing: int = meals.get("need", 0) - meals.get("served", 0)
+	return "缺粮 %d 份" % missing if missing > 0 else ""
+
+func show_dawn_notice() -> void:
+	var warning := _morning_warning(true)
+	if Global.raid_day == Global.current_day:
+		warning = "东路来敌 · " + Global.raid_name(Global.raid_kind)
+	var result := warning
+	if result.is_empty():
+		var milestones := Global.dawn_milestones()
+		result = milestones[0] if not milestones.is_empty() else _dawn_harvest()
+	dawn_notice.present(result, not warning.is_empty())
+
+func _dawn_harvest() -> String:
+	var fields := Global.last_field_night
+	var public_ripe: int = fields.get("public_ripe", 0)
+	var private_ripe: int = fields.get("private_ripe", 0)
+	var ready := PackedStringArray()
+	if public_ripe > 0:
+		ready.append("公田新熟 %d 格" % public_ripe)
+	if private_ripe > 0:
+		ready.append("私田新熟 %d 格" % private_ripe)
+	return " · ".join(ready)
 
 func show_save_notice(message: String, warning := false) -> void:
 	if save_notice_tween:

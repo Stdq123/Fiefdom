@@ -8,6 +8,7 @@ const VITALS := preload("res://scenes/HUDVitals.tscn")
 const TRAVEL_HEADING := preload("res://scenes/TravelHeading.tscn")
 const TRAVEL_ROUTE_SIGN := preload("res://scenes/TravelRouteSign.tscn")
 const BACKPACK := preload("res://scenes/Backpack.tscn")
+const NOTICE_TOP := 112.0
 
 @export var show_field_status := true
 @export var backpack_trigger: NodePath
@@ -52,8 +53,7 @@ func _ready() -> void:
 	notice.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	notice.offset_left = -265.0
 	notice.offset_right = 265.0
-	notice.offset_top = 112.0
-	notice.offset_bottom = 140.0
+	set_notice_clearance(0.0)
 	GameEvents.world_notice.connect(show_world_notice)
 	GameEvents.management_visibility_changed.connect(func(open: bool):
 		management_open = open
@@ -74,6 +74,13 @@ func _ready() -> void:
 	elif get_parent().scene_file_path != Global.ESTATE_SCENE and not Global.restore_notice.is_empty():
 		show_world_notice(Global.restore_notice, 4.0)
 		Global.restore_notice = ""
+
+func set_notice_clearance(minimum_top: float) -> void:
+	if not is_instance_valid(notice):
+		return
+	var top := maxf(NOTICE_TOP, minimum_top)
+	notice.offset_top = top
+	notice.offset_bottom = top + 28.0
 
 func add_field_return(walker: Player, choose_trip: Callable) -> void:
 	_return_player = walker
