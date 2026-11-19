@@ -1,5 +1,6 @@
 extends VBoxContainer
 
+const ROSTER_ENTRY := preload("res://scenes/NeighborRosterEntry.tscn")
 const ROLES := {
 	VisitorData.FIELD_KEEPER: "井田管事",
 	VisitorData.ROAD_KEEPER: "南路行客",
@@ -11,9 +12,11 @@ const ROLES := {
 }
 
 @onready var roster: VBoxContainer = %Roster
+@onready var roster_scroll: ScrollContainer = $Pages/RosterCard/Stack/Scroll
 @onready var known_count: Label = %KnownCount
 @onready var page: VBoxContainer = %Page
 @onready var page_scroll: ScrollContainer = $Pages/PageCard/Scroll
+@onready var profile: PanelContainer = %Profile
 @onready var portrait: TextureRect = %Portrait
 @onready var person_name: Label = %PersonName
 @onready var first_meeting: Label = %FirstMeeting
@@ -21,38 +24,34 @@ const ROLES := {
 @onready var locate_button: Button = %LocateNeighbor
 @onready var memory: Label = %Memory
 @onready var next_step: Label = %Next
+@onready var pavilion_card: PanelContainer = %PavilionCard
+@onready var appointment_title: Label = %AppointmentTitle
+@onready var appointment_note: Label = %AppointmentNote
+@onready var pavilion_route: Button = %PavilionRoute
+@onready var world: Node2D = get_tree().current_scene.get_node("World")
 
 var selected := ""
 
 func _ready() -> void:
-	for label: Label in [first_meeting, where, memory, next_step, %Empty]:
-		InterfaceFont.scale_reading_text(label)
-	page_scroll.get_v_scroll_bar().focus_mode = Control.FOCUS_ALL
+	for control: Control in [$Title, known_count, person_name, first_meeting, where, locate_button, memory,
+		next_step, %NextHeading, %MemoryHeading, appointment_title, appointment_note, pavilion_route, %Empty]:
+		InterfaceFont.scale_reading_text(control)
+	for scroll: ScrollContainer in [roster_scroll, page_scroll]:
+		var scrollbar := scroll.get_v_scroll_bar()
+		scrollbar.focus_mode = Control.FOCUS_ALL
+		scrollbar.theme_type_variation = &"HudJournalBar"
+	locate_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
 	var group := ButtonGroup.new()
-	var normal := get_theme_stylebox("normal", "Button")
-	var chosen := get_theme_stylebox("pressed", "Button").duplicate() as StyleBox
-	for side: Side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
-		chosen.set_content_margin(side, normal.get_content_margin(side))
 	for speaker: String in VisitorData.NEIGHBORS:
-		var button := Button.new()
-		button.name = speaker
-		button.text = speaker
-		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		button.custom_minimum_size.y = 41
-		button.add_theme_stylebox_override("pressed", chosen)
-		button.add_theme_stylebox_override("hover_pressed", chosen)
-		button.add_theme_constant_override("icon_max_width", 32)
-		button.add_theme_constant_override("h_separation", 10)
-		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		button.toggle_mode = true
-		button.button_group = group
-		button.pressed.connect(_show_neighbor.bind(speaker))
-		roster.add_child(button)
+		_add_roster_entry(speaker, group)
 	visibility_changed.connect(refresh)
 	GamepadInput.changed.connect(refresh)
 	Preferences.bindings_changed.connect(refresh)
 	GameEvents.day_advanced.connect(refresh.unbind(1))
-	get_tree().current_scene.get_node("World").visitor_changed.connect(refresh.unbind(1))
+	GameEvents.daylight_changed.connect(refresh)
+	world.visitor_changed.connect(refresh.unbind(1))
+	world.pavilion_rest.story_changed.connect(refresh.unbind(3))
+	GameEvents.retainer_assigned.connect(refresh.unbind(2))
 	GameEvents.retainer_duty_changed.connect(refresh.unbind(1))
 	GameEvents.retainer_location_changed.connect(refresh)
 	GameEvents.retainer_recruited.connect(refresh.unbind(1))
@@ -63,26 +62,52 @@ func _ready() -> void:
 	GameEvents.seed_garden_arrived.connect(refresh)
 	GameEvents.field_rotation_changed.connect(refresh)
 	locate_button.pressed.connect(func(): GameEvents.neighbor_directions_requested.emit(selected))
+	pavilion_route.pressed.connect(GameEvents.pavilion_story_directions_requested.emit)
 	refresh()
+
+func _add_roster_entry(speaker: String, group: ButtonGroup) -> void:
+	var button := ROSTER_ENTRY.instantiate() as Button
+	button.name = speaker
+	button.button_group = group
+	button.pressed.connect(_show_neighbor.bind(speaker))
+	roster.add_child(button)
+	button.get_node("Inset/Row/Caption/Name").text = speaker
+	InterfaceFont.scale_reading_text(button.get_node("Inset/Row/Caption/Name"))
+	InterfaceFont.scale_reading_text(button.get_node("Inset/Row/Caption/Status"))
+	var inset := button.get_node("Inset") as MarginContainer
+	var standard_height := button.custom_minimum_size.y
+	var fit := func(): button.custom_minimum_size.y = maxf(standard_height, inset.get_combined_minimum_size().y)
+	inset.minimum_size_changed.connect(fit)
+	fit.call()
 
 func refresh() -> void:
 	if not is_visible_in_tree():
 		return
-	var known: Array[String] = []
+	var known := {}
+	var previous: Button
 	for button: Button in roster.get_children():
 		var speaker := String(button.name)
 		button.visible = Global.knows_neighbor(speaker)
 		if button.visible:
-			known.append(speaker)
-			button.icon = CharacterArt.dialogue_portrait(speaker, null, VisitorData.favor_completed(speaker))
+			var visit := _visit(speaker)
+			known[speaker] = visit
+			button.get_node("Inset/Row/Portrait").texture = CharacterArt.dialogue_portrait(speaker, null, VisitorData.favor_completed(speaker))
+			button.get_node("Inset/Row/Caption/Status").text = visit.summary
+			button.accessibility_name = "%s，%s" % [speaker, visit.summary]
+			button.focus_neighbor_top = button.get_path_to(previous) if previous else NodePath()
+			button.focus_neighbor_bottom = NodePath(".")
+			if previous:
+				previous.focus_neighbor_bottom = previous.get_path_to(button)
+			previous = button
 	known_count.text = "已相识  %d / %d" % [known.size(), VisitorData.NEIGHBORS.size()]
-	$Pages/PageCard.visible = not known.is_empty()
-	%Empty.visible = known.is_empty()
-	%Empty.text = "在田边或南路亭遇见人时，靠近按 %s。" % GamepadInput.interact_key()
+	%PageCard.visible = not known.is_empty()
+	%EmptyCard.visible = known.is_empty()
+	%Empty.text = "在田边或南路亭遇见人时，靠近按 %s 打招呼。" % GamepadInput.interact_key()
 	if not known.is_empty():
-		_show_neighbor(selected if selected in known else known.front())
+		var speaker: String = selected if known.has(selected) else known.keys()[0]
+		_show_neighbor(speaker, known[speaker])
 
-func _show_neighbor(speaker: String) -> void:
+func _show_neighbor(speaker: String, visit := {}) -> void:
 	if selected != speaker:
 		page_scroll.scroll_vertical = 0
 	selected = speaker
@@ -93,12 +118,12 @@ func _show_neighbor(speaker: String) -> void:
 	var day: int = Global.neighbor_met_days.get(speaker, 0)
 	var date := "第 %d 天相识 · %s" % [day, Global.get_current_solar_term(day)] if day > 0 else "旧日相识"
 	first_meeting.text = "%s  ·  %s" % [ROLES[speaker], date]
-	where.text = _location(speaker)
-	var world := get_tree().current_scene.get_node("World")
-	var actor: Node2D = world.neighbor_actor(speaker)
-	var trip: Dictionary = world.silk_trip_stop() if actor == null and speaker == VisitorData.SILK_MERCHANT else {}
-	locate_button.visible = actor != null or not trip.is_empty()
-	locate_button.text = "在地图上找" if trip.is_empty() else "指路去" + trip.place
+	if visit.is_empty():
+		visit = _visit(speaker)
+	where.text = visit.location
+	locate_button.visible = not visit.route.is_empty()
+	locate_button.text = visit.route
+	_refresh_appointment(speaker)
 	var story := _story(speaker)
 	memory.text = story[0]
 	var garden_day := Global.seed_garden_day()
@@ -116,18 +141,37 @@ func _show_neighbor(speaker: String) -> void:
 			memory.text += "\n第 %d 天 · 应邀回来照料田地。" % departure.returned_day
 	var portions := Global.recruitment_food_requirement(speaker)
 	if portions > 0 and not Global.retainers.any(func(resident: RetainerData) -> bool: return resident.name == speaker):
-		where.text += "\n请他回来需备足一夜口粮。粮仓 %d / %d 份。" % [Global.food_storage, portions]
-	next_step.visible = not next_step.text.is_empty()
+		var gap := portions - Global.food_storage
+		var purpose := "留任口粮" if Global.pending_neighbor_return(speaker).is_empty() else "返岗口粮"
+		where.text += "\n%s · 粮仓 %d / %d 份 · %s" % [
+			purpose, Global.food_storage, portions, "还差 %d 份" % gap if gap > 0 else "口粮已备齐"]
+	%NextCard.visible = not next_step.text.is_empty()
 
-func _location(speaker: String) -> String:
-	var world := get_tree().current_scene.get_node("World")
+func _refresh_appointment(speaker: String) -> void:
+	var table := world.pavilion_rest as PavilionRest
+	var ready := not table.story_id.is_empty()
+	var id := table.story_id if ready else table.appointment_id
+	pavilion_card.visible = not id.is_empty() and speaker in PavilionStories.speakers(id)
+	if not pavilion_card.visible:
+		return
+	var story: Dictionary = PavilionStories.STORIES[id]
+	appointment_title.text = "%s · %s" % [PavilionRest.STORY_LABEL if ready else "今晚小谈", story.title]
+	var people := "、".join(story.speakers)
+	appointment_note.text = ("%s已入席 · %s" % [people, table.gathering_name()] if ready
+		else "%s起 · %s · %s" % [PavilionRest.rest_watch(), people, table.gathering_name()])
+	pavilion_route.text = "指路去席案" if ready else "指路去候席"
+
+func _visit(speaker: String) -> Dictionary:
+	var person: Node2D = world.neighbor_actor(speaker)
+	var route := "在地图上找" if is_instance_valid(person) else ""
 	for resident in Global.retainers:
 		if resident.name == speaker:
-			var actor := world.retainer_instances.get(resident) as Retainer
-			if actor and not actor.pavilion_note().is_empty():
-				return actor.pavilion_note() + " · 留任门客"
-			return "%s · 留任门客 · %s" % [world.duty_place(resident), resident.duty_name()]
-	var actor := world.neighbor_actor(speaker) as Visitor
+			var actor := person as Retainer
+			var rest := actor.pavilion_note() if actor else ""
+			if not rest.is_empty():
+				return _visit_note("留任 · 亭边歇脚", rest + " · 留任门客", route)
+			return _visit_note("留任门客", "%s · 留任门客 · %s" % [world.duty_place(resident), resident.duty_name()], route)
+	var actor := person as Visitor
 	if actor and actor in world.active_visitors:
 		var guest := actor.data
 		var purpose := "等交手记" if speaker == VisitorData.RAVINE_GUIDE and Global.ravine_handoff_ready() else "今日来访"
@@ -137,17 +181,21 @@ func _location(speaker: String) -> String:
 			note += "\n" + VisitorData.SILK_MARKET_PLAN
 		elif guest.has_pavilion_rest() and VisitorData.pavilion_rest_seconds() < 0.0:
 			note += "\n" + VisitorData.pavilion_rest_plan()
-		return note
-	if speaker == VisitorData.SILK_MERCHANT and not world.silk_trip_note().is_empty():
-		return world.silk_trip_note()
+		return _visit_note(purpose, note, route)
+	if speaker == VisitorData.SILK_MERCHANT:
+		var trip: Dictionary = world.silk_trip_stop()
+		if not trip.is_empty():
+			var label := "西市行程" if trip.place == "西市" else "正返封地"
+			return _visit_note(label, trip.note, "指路去" + trip.place)
 	if speaker == VisitorData.FIELD_KEEPER:
 		if Global.field_keeper_visiting():
-			return "井田西南 · 今日回来看看"
-		return "住在封地外 · 第 %d 天回井田西南" % Global.next_field_keeper_visit()
+			return _visit_note("今日回访", "井田西南 · 今日回来看看", route)
+		var day := Global.next_field_keeper_visit()
+		return _visit_note("第 %d 天回访" % day, "住在封地外 · 第 %d 天回井田西南" % day)
 	if world.get_node("SpringGathering/Guests").has_node(speaker):
-		return "南路亭东 · 谷雨亭集"
+		return _visit_note("谷雨亭集", "南路亭东 · 谷雨亭集", route)
 	if speaker == VisitorData.MUSIC_HOST:
-		return "随节气来访 · 谷雨可在南路亭东遇见"
+		return _visit_note("谷雨来访", "随节气来访 · 谷雨可在南路亭东遇见", route)
 	for persona in VisitorData.PERSONAS:
 		if persona.name == speaker:
 			var day := Global.next_visitor_day(speaker)
@@ -155,9 +203,12 @@ func _location(speaker: String) -> String:
 				var note := "下一次轮访 · 第 %d 天 · %s" % [day, VisitorData.scheduled_stop(speaker, persona.place, day)]
 				if speaker == VisitorData.SILK_MERCHANT and VisitorData.silk_market_day(day):
 					note += "\n" + VisitorData.SILK_MARKET_PLAN
-				return note
-			return "今日在外 · 来访时常到%s" % persona.place
-	return "今日在外"
+				return _visit_note("第 %d 天轮访" % day, note, route)
+			return _visit_note("今日在外", "今日在外 · 来访时常到%s" % persona.place, route)
+	return _visit_note("今日在外", "今日在外", route)
+
+func _visit_note(summary: String, location: String, route := "") -> Dictionary:
+	return {"summary": summary, "location": location, "route": route}
 
 func _story(speaker: String) -> Array[String]:
 	match speaker:

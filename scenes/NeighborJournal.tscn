@@ -1,38 +1,34 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/NeighborJournal.gd" id="1_script"]
+[ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="2_theme"]
 
 [sub_resource type="StyleBoxFlat" id="NoteCard"]
-content_margin_left = 19.0
-content_margin_top = 16.0
-content_margin_right = 19.0
-content_margin_bottom = 16.0
+content_margin_left = 16.0
+content_margin_top = 12.0
+content_margin_right = 16.0
+content_margin_bottom = 12.0
 bg_color = Color(0.13, 0.19, 0.15, 1)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.44, 0.45, 0.31, 1)
+border_color = Color(0.36, 0.44, 0.32, 1)
 corner_radius_top_left = 5
 corner_radius_top_right = 5
 corner_radius_bottom_left = 5
 corner_radius_bottom_right = 5
 
 [node name="邻里手记" type="VBoxContainer"]
+theme = ExtResource("2_theme")
 theme_override_constants/separation = 10
 script = ExtResource("1_script")
 
 [node name="Title" type="Label" parent="."]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.83, 0.58, 1)
-theme_override_font_sizes/font_size = 25
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 27
 text = "邻里手记"
-
-[node name="Caption" type="Label" parent="."]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.77, 0.81, 0.67, 1)
-theme_override_font_sizes/font_size = 15
-text = "初见、来往和约定会记在这里。"
 
 [node name="Pages" type="HBoxContainer" parent="."]
 layout_mode = 2
@@ -40,120 +36,208 @@ size_flags_vertical = 3
 theme_override_constants/separation = 14
 
 [node name="RosterCard" type="PanelContainer" parent="Pages"]
-custom_minimum_size = Vector2(220, 0)
+custom_minimum_size = Vector2(250, 0)
 layout_mode = 2
 theme_override_styles/panel = SubResource("NoteCard")
 
 [node name="Stack" type="VBoxContainer" parent="Pages/RosterCard"]
 layout_mode = 2
-theme_override_constants/separation = 11
+theme_override_constants/separation = 9
 
 [node name="KnownCount" type="Label" parent="Pages/RosterCard/Stack"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.85, 0.79, 0.59, 1)
+theme_type_variation = &"HudBronzeInk"
 theme_override_font_sizes/font_size = 16
 
 [node name="Scroll" type="ScrollContainer" parent="Pages/RosterCard/Stack"]
 layout_mode = 2
 size_flags_vertical = 3
+follow_focus = true
 horizontal_scroll_mode = 0
 
 [node name="Roster" type="VBoxContainer" parent="Pages/RosterCard/Stack/Scroll"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 7
+theme_override_constants/separation = 5
 
-[node name="PageCard" type="PanelContainer" parent="Pages"]
+[node name="PageCard" type="VBoxContainer" parent="Pages"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_styles/panel = SubResource("NoteCard")
+theme_override_constants/separation = 9
+
+[node name="Profile" type="PanelContainer" parent="Pages/PageCard"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudLacquerTray"
+
+[node name="Inset" type="MarginContainer" parent="Pages/PageCard/Profile"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 3
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 3
+
+[node name="Person" type="HBoxContainer" parent="Pages/PageCard/Profile/Inset"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="ImageWell" type="PanelContainer" parent="Pages/PageCard/Profile/Inset/Person"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"HudWell"
+
+[node name="Portrait" type="TextureRect" parent="Pages/PageCard/Profile/Inset/Person/ImageWell"]
+unique_name_in_owner = true
+texture_filter = 1
+custom_minimum_size = Vector2(92, 92)
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Identity" type="VBoxContainer" parent="Pages/PageCard/Profile/Inset/Person"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+theme_override_constants/separation = 3
+
+[node name="PersonName" type="Label" parent="Pages/PageCard/Profile/Inset/Person/Identity"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 28
+
+[node name="FirstMeeting" type="Label" parent="Pages/PageCard/Profile/Inset/Person/Identity"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.81, 0.85, 0.74, 1)
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
+
+[node name="Where" type="Label" parent="Pages/PageCard/Profile/Inset/Person/Identity"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 3
+
+[node name="LocateNeighbor" type="Button" parent="Pages/PageCard/Profile/Inset/Person"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(132, 40)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+theme_type_variation = &"HudPrimary"
+theme_override_constants/icon_max_width = 18
+theme_override_font_sizes/font_size = 16
+text = "在地图上找"
 
 [node name="Scroll" type="ScrollContainer" parent="Pages/PageCard"]
 layout_mode = 2
+size_flags_vertical = 3
+follow_focus = true
 horizontal_scroll_mode = 0
 
 [node name="Page" type="VBoxContainer" parent="Pages/PageCard/Scroll"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 11
+theme_override_constants/separation = 9
 
-[node name="Person" type="HBoxContainer" parent="Pages/PageCard/Scroll/Page"]
-layout_mode = 2
-theme_override_constants/separation = 16
-
-[node name="Portrait" type="TextureRect" parent="Pages/PageCard/Scroll/Page/Person"]
+[node name="PavilionCard" type="PanelContainer" parent="Pages/PageCard/Scroll/Page"]
 unique_name_in_owner = true
-texture_filter = 1
-custom_minimum_size = Vector2(88, 88)
+visible = false
 layout_mode = 2
-expand_mode = 1
-stretch_mode = 5
+theme_override_styles/panel = SubResource("NoteCard")
 
-[node name="Identity" type="VBoxContainer" parent="Pages/PageCard/Scroll/Page/Person"]
+[node name="PavilionRow" type="HBoxContainer" parent="Pages/PageCard/Scroll/Page/PavilionCard"]
 layout_mode = 2
-alignment = 1
-theme_override_constants/separation = 5
+theme_override_constants/separation = 12
 
-[node name="PersonName" type="Label" parent="Pages/PageCard/Scroll/Page/Person/Identity"]
+[node name="Appointment" type="VBoxContainer" parent="Pages/PageCard/Scroll/Page/PavilionCard/PavilionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 3
+
+[node name="AppointmentTitle" type="Label" parent="Pages/PageCard/Scroll/Page/PavilionCard/PavilionRow/Appointment"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.83, 0.58, 1)
-theme_override_font_sizes/font_size = 30
-
-[node name="FirstMeeting" type="Label" parent="Pages/PageCard/Scroll/Page/Person/Identity"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.75, 0.79, 0.66, 1)
-theme_override_font_sizes/font_size = 16
-
-[node name="Divider" type="HSeparator" parent="Pages/PageCard/Scroll/Page"]
-layout_mode = 2
-
-[node name="LocationHeading" type="Label" parent="Pages/PageCard/Scroll/Page"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.88, 0.77, 0.53, 1)
-theme_override_font_sizes/font_size = 15
-text = "去处与轮访"
-
-[node name="Where" type="Label" parent="Pages/PageCard/Scroll/Page"]
-unique_name_in_owner = true
-layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
 theme_override_font_sizes/font_size = 19
 autowrap_mode = 3
 
-[node name="LocateNeighbor" type="Button" parent="Pages/PageCard/Scroll/Page"]
+[node name="AppointmentNote" type="Label" parent="Pages/PageCard/Scroll/Page/PavilionCard/PavilionRow/Appointment"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 0
-custom_minimum_size = Vector2(112, 35)
-mouse_default_cursor_shape = 2
-text = "在地图上找"
-
-[node name="MemoryHeading" type="Label" parent="Pages/PageCard/Scroll/Page"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.88, 0.77, 0.53, 1)
-theme_override_font_sizes/font_size = 15
-text = "一起做过的事"
-
-[node name="Memory" type="Label" parent="Pages/PageCard/Scroll/Page"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 autowrap_mode = 3
 
-[node name="Next" type="Label" parent="Pages/PageCard/Scroll/Page"]
+[node name="PavilionRoute" type="Button" parent="Pages/PageCard/Scroll/Page/PavilionCard/PavilionRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+theme_type_variation = &"HudButton"
+theme_override_font_sizes/font_size = 16
+
+[node name="NextCard" type="PanelContainer" parent="Pages/PageCard/Scroll/Page"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.73, 0.85, 0.65, 1)
+theme_override_styles/panel = SubResource("NoteCard")
+
+[node name="Promise" type="VBoxContainer" parent="Pages/PageCard/Scroll/Page/NextCard"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="NextHeading" type="Label" parent="Pages/PageCard/Scroll/Page/NextCard/Promise"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 18
+text = "接下来的约定"
+
+[node name="Next" type="Label" parent="Pages/PageCard/Scroll/Page/NextCard/Promise"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.84, 0.89, 0.79, 1)
 theme_override_font_sizes/font_size = 17
 autowrap_mode = 3
 
-[node name="Empty" type="Label" parent="Pages"]
+[node name="MemoryCard" type="PanelContainer" parent="Pages/PageCard/Scroll/Page"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("NoteCard")
+
+[node name="Recollection" type="VBoxContainer" parent="Pages/PageCard/Scroll/Page/MemoryCard"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="MemoryHeading" type="Label" parent="Pages/PageCard/Scroll/Page/MemoryCard/Recollection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 18
+text = "一起做过的事"
+
+[node name="Memory" type="Label" parent="Pages/PageCard/Scroll/Page/MemoryCard/Recollection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 3
+
+[node name="EmptyCard" type="PanelContainer" parent="Pages"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("NoteCard")
+
+[node name="Empty" type="Label" parent="Pages/EmptyCard"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 19
+horizontal_alignment = 1
 autowrap_mode = 3

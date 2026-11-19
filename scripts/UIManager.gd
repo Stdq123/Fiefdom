@@ -308,6 +308,7 @@ func _connect_signals() -> void:
 	GameEvents.night_rations_changed.connect(update_ui)
 	GameEvents.night_rations_requested.connect(_show_night_rations)
 	GameEvents.pavilion_table_requested.connect(_on_pavilion_table_requested)
+	GameEvents.pavilion_story_directions_requested.connect(_guide_pavilion_story)
 	GameEvents.silk_changed.connect(update_ui)
 	GameEvents.ravine_journal_changed.connect(update_ui)
 	GameEvents.rank_changed.connect(update_ui.unbind(1))
@@ -890,14 +891,15 @@ func _show_night_rations(show_previous := false, focus_shortage := false) -> voi
 			GamepadInput.snap_pointer_to_focus.call_deferred()
 	)
 
-func _guide_pavilion_story(panel: Control) -> void:
+func _guide_pavilion_story(panel: Control = null) -> void:
 	var table: PavilionRest = world.pavilion_rest
 	if table.story_id.is_empty() and table.appointment_id.is_empty():
 		return
 	var label := PavilionRest.WAIT_LABEL if table.story_id.is_empty() else PavilionRest.STORY_LABEL
 	directions.follow_place(label, table.gathering_approach())
 	panel_manager.hide_management_panel()
-	panel.queue_free()
+	if panel:
+		panel.queue_free()
 	if Global.is_indoors():
 		hud.practice_label.text = "从南门出去，循标记去席案。"
 
