@@ -3945,7 +3945,8 @@ func saved_games() -> Array[Dictionary]:
 				"ending": source = "结局自动存档"
 				"ending_continue": source = "续营自动存档"
 				_: source = "晨间自动存档"
-		var saved_outcome := _read_save_int(data.get("outcome"), Outcome.RUNNING)
+		var saved_health := _read_save_int(data.get("health"), balance.player_max_health)
+		var saved_outcome := _snapshot_outcome(data, saved_health)
 		var saved_record := _saved_ending_record(data)
 		catalog.append({
 			"path": path,
@@ -3962,7 +3963,7 @@ func saved_games() -> Array[Dictionary]:
 			"tax_choice": _read_save_int(data.get("tax_reform_choice"), TaxReformChoice.NONE),
 			"outcome": saved_outcome,
 			"completed_route": _read_save_int(saved_record.get("outcome"), saved_outcome),
-			"running": saved_outcome == Outcome.RUNNING and _read_save_int(data.get("health"), balance.player_max_health) > 0,
+			"running": saved_outcome == Outcome.RUNNING,
 			"error": snapshot["error"],
 		})
 	catalog.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["sequence"] > b["sequence"])
@@ -3973,10 +3974,18 @@ func saved_game_caption(entry: Dictionary) -> String:
 	var location: String = entry.get("location", "")
 	return caption if location.is_empty() else caption + " · " + location
 
-func saved_game_route(entry: Dictionary) -> String:
+func saved_game_action(entry: Dictionary) -> String:
+	match entry["outcome"]:
+		Outcome.TRADITIONAL, Outcome.REFORMED:
+			return "查看结算"
+		Outcome.DEFEAT_COMBAT, Outcome.DEFEAT_ESTATE:
+			return "查看战败结算"
+	return "继续经营" if entry["completed_route"] in [Outcome.TRADITIONAL, Outcome.REFORMED] else "继续游戏"
+
+func saved_game_route(entry: Dictionary, show_completion := true) -> String:
 	match entry["completed_route"]:
-		Outcome.TRADITIONAL: return "守礼安邦 · 已通关"
-		Outcome.REFORMED: return "税亩富民 · 已通关"
+		Outcome.TRADITIONAL: return "守礼安邦 · 已通关" if show_completion else "守礼安邦"
+		Outcome.REFORMED: return "税亩富民 · 已通关" if show_completion else "税亩富民"
 	match entry["tax_choice"]:
 		TaxReformChoice.TRADITIONAL: return "坚守传统"
 		TaxReformChoice.REFORMED: return "支持改革"
@@ -4016,6 +4025,10 @@ func _can_resume(entry: Dictionary, current_campaign_only: bool) -> bool:
 
 func _snapshot_sequence(data: Dictionary, path: String) -> int:
 	return _read_save_int(data.get("save_sequence"), FileAccess.get_modified_time(path) * SAVE_TIME_SCALE)
+
+func _snapshot_outcome(data: Dictionary, saved_health: int) -> Outcome:
+	var result := clampi(_read_save_int(data.get("outcome"), Outcome.RUNNING), Outcome.RUNNING, Outcome.REFORMED) as Outcome
+	return Outcome.DEFEAT_COMBAT if saved_health <= 0 and result == Outcome.RUNNING else result
 
 func _snapshot_campaign(data: Dictionary) -> String:
 	var key = data.get("campaign_id")
@@ -4203,9 +4216,7 @@ func load_game(path := "") -> Error:
 			restored_practice[art] = last_practice
 
 	var saved_health := clampi(_read_save_int(data.get("health"), balance.player_max_health), 0, balance.player_max_health)
-	var saved_outcome := clampi(_read_save_int(data.get("outcome"), Outcome.RUNNING), Outcome.RUNNING, Outcome.REFORMED) as Outcome
-	if saved_health == 0 and saved_outcome == Outcome.RUNNING:
-		saved_outcome = Outcome.DEFEAT_COMBAT
+	var saved_outcome := _snapshot_outcome(data, saved_health)
 	var resume_scene: String = ESTATE_SCENE
 	if saved_outcome == Outcome.RUNNING:
 		resume_scene = SAVE_SCENES.get(data.get("location"), ESTATE_SCENE)

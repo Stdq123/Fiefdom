@@ -256,7 +256,9 @@ func _show_ending(saved_ending: bool) -> void:
 	ending.present(get_parent().get_node("World"), saved_ending)
 	status = ending.status
 	ending.ending_saved = saved_ending
-	if not saved_ending:
+	if saved_ending:
+		status.text = "此结局已保存，可从「选择存档」重看。"
+	else:
 		match Global.save_automatically("ending"):
 			OK:
 				ending.ending_saved = true

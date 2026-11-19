@@ -39,6 +39,7 @@ func _refresh_menu() -> void:
 	continue_button.disabled = not can_resume
 	archive_button.visible = Global.has_saved_game()
 	if can_resume:
+		continue_button.text = Global.saved_game_action(latest)
 		var route := Global.saved_game_route(latest)
 		status.text = latest.campaign_name + "\n" + Global.saved_game_caption(latest)
 		if not route.is_empty():

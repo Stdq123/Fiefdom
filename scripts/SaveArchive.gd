@@ -50,7 +50,7 @@ func _add_campaign(key: String, latest: Dictionary) -> void:
 	var heading: String = latest["campaign_name"]
 	var detail := "存档无法读取"
 	if latest["error"] == OK:
-		var route := Global.saved_game_route(latest)
+		var route := Global.saved_game_route(latest, false)
 		detail = "第 %d 天 · %s" % [latest["day"], route if not route.is_empty() else Global.rank_names[latest["rank"]]]
 	button.text = heading + "\n" + detail
 	button.tooltip_text = button.text
@@ -80,21 +80,28 @@ func _show_records(key: String) -> void:
 		if button.disabled:
 			button.focus_mode = Control.FOCUS_NONE
 			button.text = "%s · 无法读取" % entry["source"]
+			if entry.legacy:
+				button.text += " · 旧版"
+			button.tooltip_text = button.text
 		else:
-			var route := Global.saved_game_route(entry)
-			var detail: String = Global.rank_names[entry.rank]
+			var route := Global.saved_game_route(entry, false)
+			var rank: String = Global.rank_names[entry.rank]
+			var detail := rank if route.is_empty() else route
+			var caption := Global.saved_game_caption(entry)
 			if not route.is_empty():
-				detail += " · " + route
-			button.text = Global.saved_game_caption(entry) + "\n" + detail
+				caption += " · " + rank
+			if entry.legacy:
+				caption = "旧版 · " + caption
+			button.text = "%s · %s\n%s" % [Global.saved_game_action(entry), detail, caption]
+			button.tooltip_text = button.text
 			if entry.completed_route in [Global.Outcome.TRADITIONAL, Global.Outcome.REFORMED]:
 				button.icon = LEDGER_DESK.volume_texture(entry.completed_route == Global.Outcome.TRADITIONAL)
 				button.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 				button.expand_icon = true
 				button.add_theme_constant_override("icon_max_width", 66)
 				button.add_theme_constant_override("h_separation", 12)
-		if entry.legacy:
-			button.text += " · 旧版"
-		button.tooltip_text = button.text
+		if not button.disabled and not Global.saved_game_route(entry, false).is_empty():
+			button.tooltip_text += "\n爵位 · " + Global.rank_names[entry.rank]
 		button.pressed.connect(_load.bind(entry["path"], button, key))
 		records.add_child(button)
 		readable = readable or not button.disabled
