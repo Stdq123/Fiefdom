@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://bel1aucl0n8sm"
+path="res://.godot/imported/river-bamboo.png-a70700cb049c82218de6c4e2e8dbe50e.res"
+
+[deps]
+
+source_file="res://assets/world/river-bamboo.png"
+dest_files=["res://.godot/imported/river-bamboo.png-a70700cb049c82218de6c4e2e8dbe50e.res"]
+
+[params]
+
+authored_at_2x=true

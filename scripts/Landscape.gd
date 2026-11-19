@@ -25,6 +25,8 @@ const DAY_LIGHTING := preload("res://scripts/DayLighting.gd")
 const NINJA_SCENERY := preload("res://assets/world/ninja-adventure/tileset_village_abandoned.png")
 const ESTATE_STORAGE := preload("res://assets/world/estate-storage.svg")
 const RIVERSIDE_PLANTS := preload("res://assets/world/riverside-plants.png")
+const BAMBOO_ART_PATH := "res://assets/world/river-bamboo.png"
+const BAMBOO_FRAMES := {Prop.TALL_BAMBOO: Rect2(0, 0, 40, 48), Prop.BAMBOO: Rect2(41, 0, 30, 32)}
 const INSCRIPTION := preload("res://scripts/VillageInscription.gd")
 const WOODLAND := preload("res://assets/world/ravine-woodland.svg")
 const RAVINE_BANKS := preload("res://scripts/RavineBanks.gd")
@@ -1320,7 +1322,8 @@ func _update_prop_textures() -> void:
 	for prop in [Prop.OAK, Prop.BLOSSOM_TREE, Prop.PINE, Prop.GROVE_TREE, Prop.GROVE_CLUSTER]:
 		seasonal_textures[prop] = tree_texture(prop, season)
 	for prop: int in RIVERSIDE_REGIONS:
-		seasonal_textures[prop] = riverside_texture(prop, season)
+		seasonal_textures[prop] = painted_riverside_texture(prop, season) if ESTATE_RIVER_REGIONS.has(prop) \
+			else riverside_texture(prop, season)
 	for prop: int in HALL_YARD_REGIONS:
 		var region: Rect2 = HALL_YARD_REGIONS[prop]
 		if seasonal_textures.has(prop):
@@ -1332,7 +1335,7 @@ func _update_prop_textures() -> void:
 	for prop: int in ESTATE_SITE_REGIONS:
 		painted_textures[prop] = atlas_texture(ESTATE_ART, ESTATE_SITE_REGIONS[prop])
 	for prop: int in ESTATE_RIVER_REGIONS:
-		painted_textures[prop] = painted_riverside_texture(prop, season)
+		painted_textures[prop] = seasonal_textures[prop]
 	for prop: int in STORAGE_TINTS:
 		painted_textures[prop] = atlas_texture(ESTATE_VESSELS, EXTERNAL_REGIONS[prop])
 	if wilderness:
@@ -1350,6 +1353,11 @@ static func painted_tree_texture(prop: int, season_index: int, forked := false) 
 	return atlas_texture(ESTATE_TERRAIN.HALL_YARD_ART, region)
 
 static func painted_riverside_texture(prop: int, season_index: int) -> AtlasTexture:
+	if BAMBOO_FRAMES.has(prop):
+		var clump: Rect2 = BAMBOO_FRAMES[prop]
+		if season_index == Global.Season.WINTER:
+			clump.position.y += 48
+		return atlas_texture(load(BAMBOO_ART_PATH), clump)
 	var region: Rect2 = ESTATE_RIVER_REGIONS[prop]
 	if season_index == Global.Season.WINTER:
 		region.position.y += RIVERSIDE_WINTER_ROW

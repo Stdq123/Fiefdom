@@ -2,7 +2,6 @@ extends SceneTree
 
 const Campaign := preload("res://tests/CampaignReplay.gd")
 const TerrainAudio := preload("res://scripts/TerrainAudio.gd")
-const ORCHARD_FRAMES := [Vector2(0, 48), Vector2(48, 0), Vector2(48, 48), Vector2(144, 48)]
 const ORCHARD_FOOT := Vector2(52, -17)
 
 var failed := false
@@ -68,17 +67,16 @@ func _run() -> void:
 	for season in 4:
 		if season > 0:
 			await _sleep_into(season)
-		_expect(estate.season == season and oak.texture.region.position == Vector2(season * 48, 0)
-			and orchard.texture.region.position == ORCHARD_FRAMES[season], "Sleeping updates the living trees for season %d." % season)
+		_expect(estate.season == season and oak.texture.region.position == Vector2(season * 48, 96)
+			and orchard.texture.region.position == Vector2(season * 48, 144), "Sleeping updates the living trees for season %d." % season)
 		_expect(oak.offset == oak_anchor and orchard.offset == orchard_anchor,
 			"Every seasonal tree uses the same ground anchor.")
-		var winter_row := 48 if season == state.Season.WINTER else 0
-		_expect(pine.texture.atlas == estate.WOODLAND and pine.texture.region.position == Vector2(104, winter_row)
-			and sapling.texture.atlas == estate.WOODLAND and sapling.texture.region.position == Vector2(0, winter_row)
+		_expect(pine.texture.atlas == estate.ESTATE_TERRAIN.HALL_YARD_ART and pine.texture.region.position == Vector2(season * 48, 192)
+			and sapling.texture.atlas == pine.texture.atlas and sapling.texture.region.position == Vector2(season * 32, 240)
 			and pine.offset == pine_anchor and sapling.offset == sapling_anchor,
-			"The estate's pine and sapling share the ravine's art and keep their feet through winter.")
-		var bamboo_row: int = estate.RIVERSIDE_WINTER_ROW if season == state.Season.WINTER else 0
-		_expect(bamboo.texture.atlas == estate.RIVERSIDE_PLANTS and bamboo.texture.region.position == Vector2(88, bamboo_row)
+			"The estate's pine and sapling stay rooted through all four seasonal frames.")
+		var bamboo_row := 48 if season == state.Season.WINTER else 0
+		_expect(bamboo.texture.atlas.resource_path == estate.BAMBOO_ART_PATH and bamboo.texture.region.position == Vector2(0, bamboo_row)
 			and bamboo.offset == bamboo_anchor, "Bamboo keeps its base when frost appears.")
 	var snowy_point := Vector2(190, 201)
 	_expect(estate._surface_at(snowy_point) == TerrainAudio.Surface.SNOW, "The lower winter field margin has snow.")
@@ -109,8 +107,8 @@ func _run() -> void:
 	var landscape := current_scene.get_node("Landscape")
 	var terrain := landscape.terrain_audio as TerrainAudio
 	var willow := _tree_at(landscape, Vector2(225, -169))
-	_expect(willow != null and willow.texture.atlas == landscape.RIVERSIDE_PLANTS
-		and willow.texture.region.position.y == landscape.RIVERSIDE_WINTER_ROW,
+	_expect(willow != null and willow.texture.atlas == landscape.ESTATE_ART
+		and willow.texture.region.position.y == landscape.ESTATE_RIVER_REGIONS[landscape.Prop.WILLOW].position.y + landscape.RIVERSIDE_WINTER_ROW,
 		"Winter replaces the green willow silhouette with bare branches in the shared atlas.")
 	var snow_samples: Dictionary[String, bool] = {}
 	walker.footstep.connect(func(at: Vector2) -> void:
@@ -138,7 +136,7 @@ func _run() -> void:
 		return
 	await _sleep_into(4)
 	estate = current_scene.get_node("World/Landscape")
-	_expect(estate.season == 0 and _tree_at(estate, ORCHARD_FOOT).texture.region.position == ORCHARD_FRAMES[0],
+	_expect(estate.season == 0 and _tree_at(estate, ORCHARD_FOOT).texture.region.position == Vector2(0, 144),
 		"The next year returns the orchard to bloom.")
 	if not failed:
 		print("SCENARIO_OK")

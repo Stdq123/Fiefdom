@@ -3,10 +3,11 @@ extends Node2D
 const TERRAIN := preload("res://scripts/EstateTerrain.gd")
 const ROCK_STRATA := preload("res://assets/world/ravine-rock-strata.png")
 const STREAMBED := preload("res://assets/world/ravine-streambed.png")
-const FALL_ART := preload("res://assets/world/ravine-art.png")
+const FALL_ART_PATH := "res://assets/world/ravine-cascade.png"
 const FALL_SIZE := Vector2(52, 62)
-const FALL_AT := Vector2(108, -82)
+const FALL_AT := Vector2(110, -79)
 const FALL_FRAMES := 8
+const DRIFT_FOAM := Rect2(1, 63, 35, 8)
 
 # Creek-bed positions and the height of the bank above them.
 const WEST_UPPER: Array[Vector3] = [Vector3(114, -98, 2), Vector3(114, -86, 10), Vector3(116, -76, 24),
@@ -140,6 +141,7 @@ class Channel:
 var water_time := 0.0
 var frame := 0
 var water_effect_bounds := FALL_BOUNDS.merge(FORD_BOUNDS)
+var fall_art: Texture2D = load(FALL_ART_PATH)
 
 func _process(delta: float) -> void:
 	water_time = fposmod(water_time + delta, 12.0)
@@ -314,25 +316,19 @@ func _draw() -> void:
 	for point in pool:
 		pool_colors.append(Color(water.lerp(Color("#224652"), 0.79), 0.82 * (1.0 - smoothstep(-38.0, -10.0, point.y))))
 	draw_polygon(pool, pool_colors)
-	var region := Rect2(Vector2(posmod(frame, FALL_FRAMES) * FALL_SIZE.x, 92), FALL_SIZE)
+	var region := Rect2(Vector2(posmod(frame, FALL_FRAMES) * FALL_SIZE.x, 0), FALL_SIZE)
 	var tint := Color("#c7d6d1") if wet else Color.WHITE
-	draw_texture_rect_region(FALL_ART, Rect2(FALL_AT, FALL_SIZE), region, tint)
+	draw_texture_rect_region(fall_art, Rect2(FALL_AT, FALL_SIZE), region, tint)
 	_draw_pool_wakes(foam)
 
 func _draw_pool_wakes(foam: Color) -> void:
 	for index in 3:
 		var phase := float(posmod(frame + index * 8, 24)) / 24.0
-		var center := (Vector2(135, -37) + Vector2(6, 21) * phase).round()
-		var span := 6.0 + phase * 8.0
-		var rise := 2.0 + phase * 3.0
-		var white := Color(foam, 0.73 * (1.0 - phase))
-		var back := PackedVector2Array([center + Vector2(-span, 0), center + Vector2(-span * 0.80, -rise * 0.7),
-			center + Vector2(-span * 0.42, -rise), center + Vector2(2, -rise - 1), center + Vector2(span * 0.72, -rise + 1)])
-		var front := PackedVector2Array([center + Vector2(-span * 0.82, 2), center + Vector2(-span * 0.58, rise * 0.8),
-			center + Vector2(-span * 0.19, rise + 1), center + Vector2(span * 0.28, rise + 1),
-			center + Vector2(span * 0.70, rise - 1), center + Vector2(span, 1)])
-		draw_polyline(back, Color(white, white.a * 0.58), 1.0)
-		draw_polyline(front, white, 1.0)
+		var center := Vector2(128 + 7 * index, -30 + (index % 2) * 3) + Vector2(4, 19) * phase
+		var size := Vector2(10 + index * 2, 3) * lerpf(0.85, 1.4, phase)
+		var opacity := smoothstep(0.0, 0.18, phase) * (1.0 - smoothstep(0.38, 1.0, phase))
+		draw_texture_rect_region(fall_art, Rect2((center - size * 0.5).round(), size),
+			DRIFT_FOAM, Color(foam, 0.68 * opacity))
 
 func _draw_ford_ripples(foam: Color) -> void:
 	for index in FORD_RIPPLES.size():
@@ -340,8 +336,7 @@ func _draw_ford_ripples(foam: Color) -> void:
 		var at: Vector2 = RavineLayout.FORD + FORD_RIPPLES[index] + Vector2(3.0, 9.0) * phase
 		var width := 3.0 + phase * 4.0
 		var ripple := Color(foam, foam.a * (1.0 - phase))
-		draw_rect(Rect2(at.round(), Vector2(width, 1)), ripple)
-		draw_rect(Rect2(at.round() + Vector2(1, 2), Vector2(width - 2.0, 1)), Color(ripple, ripple.a * 0.62))
+		draw_texture_rect_region(fall_art, Rect2(at.round(), Vector2(width + 3.0, 3.0)), DRIFT_FOAM, ripple)
 
 static func _ledge(canvas: CanvasItem, profile: Array[Vector3], side: float, season: int, wet: bool) -> void:
 	var winter := season == Global.Season.WINTER

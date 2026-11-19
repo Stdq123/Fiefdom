@@ -258,7 +258,8 @@
   试筏的无帆筏身和水纹取自 Sevarihk 的 Animated Pixel Art Raft Sprite（CC BY 4.0）。取用原图顺流朝向的停泊和移动帧，在游戏中裁切显示并缩小。
   发布页 https://opengameart.org/content/animated-pixel-art-raft-sprite
   许可 https://creativecommons.org/licenses/by/4.0/
-  封地、溪桥道、西市和竹涧的阔叶树、花树、松树和灌木为本项目绘制。柳树、竹丛、芦苇、莎草、蕨和嫩芽同为本项目绘制。冬季使用专绘的柳枝、积霜竹丛和芦苇。
+  封地、溪桥道、西市和竹涧的阔叶树、花树、松树和灌木为本项目绘制。柳树、芦苇、莎草、蕨和嫩芽同为本项目绘制，冬季另绘柳枝和芦苇。
+  溪桥道木桥、竹涧绳桥、南池钓台、竹丛和跌水以本作实景为参照，由 OpenAI ImageGen 生成底图。桥面与栏杆分层整理为 creek-road-bridge.png。竹丛和霜叶整理为 river-bamboo.png。落水涟漪和水帘整理为八帧动画图集 ravine-cascade.png。
   西市晒布院的青瓦屋以本作西市画面为构图参考，由 OpenAI ImageGen 生成底图，裁切和减色后加入冬霜。晒布架和染缸为本项目绘制，阿苓的步态由本作西市伙计图集改绘。
   结局使者召简的行走造型、堂前谷帛和南路亭税册摊为本项目绘制。
   堂前和南路亭的两种谷袋来自 Kenney Vleugels 与 Lynn Evers 的 Roguelike/RPG pack（CC0 1.0）。
@@ -269,7 +270,7 @@
   依据 pottery.png 中左上角分别为 (32, 0) 和 (32, 32) 的 16×16 图块，重绘釉面后与谷袋合图。
   发布页 https://opengameart.org/content/various-containers
   地图散石、苔石、层岩和浅滩踏石为本项目绘制。
-  柳湾和砾滩的鱼纹木牌、岸边和南池钓台上的编织鱼篓由 OpenAI ImageGen 生成底图，经裁切和减色后制成 fishing-tackle.png。竹竿、钓线和浮标由游戏根据持竿姿势绘制。南池钓台的铺板、木栏和水中桩脚取自本作的溪桥道木桥。
+  柳湾和砾滩的鱼纹木牌、岸边和南池钓台上的编织鱼篓由 OpenAI ImageGen 生成底图，经裁切和减色后制成 fishing-tackle.png。竹竿、钓线和浮标由游戏根据持竿姿势绘制。
   南路亭边的白花和粉花来自 myobln 的 Mini Meadow（CC0 1.0）。
   使用 flower_white.png 和 flower_pink.png，按封地色调绘制，冬季隐去。
   发布页 https://myobln.itch.io/game-assets

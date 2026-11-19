@@ -1,8 +1,9 @@
 extends "res://scripts/FishingSpot.gd"
 
-const BRIDGE := preload("res://assets/world/creek-road-bridge.png")
+const CARPENTRY := preload("res://scripts/WoodenBridge.gd")
 const RAILS := [Rect2(166, 701, 34, 3), Rect2(197, 704, 3, 20), Rect2(167, 724, 33, 3)]
 var railing: StaticBody2D
+var timber: Texture2D = load(CARPENTRY.TIMBER_PATH)
 
 func _ready() -> void:
 	position = EstateLayout.POND_LANDING
@@ -64,25 +65,18 @@ func _draw_deck(deck: Node2D) -> void:
 	deck.draw_colored_polygon(PackedVector2Array([Vector2(bounds.position.x + 8, near - 2),
 		Vector2(bounds.end.x, near - 2), Vector2(bounds.end.x + 5, near + 10),
 		Vector2(bounds.end.x - 13, near + 15)]), Color("#17393493"))
-	for x: float in [bounds.position.x + 7, bounds.end.x - 14]:
-		_draw_timber(deck, Rect2(x, near + 2, 15, 11), Rect2(22, 62, 28, 22))
-	_draw_timber(deck, Rect2(bounds.position, bounds.size + Vector2(0, 5)), Rect2(23, 18, 64, 44))
+	_draw_timber(deck, Rect2(bounds.position, CARPENTRY.LANDING_DECK.size), CARPENTRY.LANDING_DECK)
 
 func _draw_rail(art: Node2D, bounds: Rect2) -> void:
 	var top := bounds.position - position - art.position + Vector2.UP * 9.0
 	if bounds.size.x > bounds.size.y:
-		_draw_timber(art, Rect2(top - Vector2(1, 1), Vector2(bounds.size.x + 3, 14)), Rect2(8, 86, 38, 18))
+		_draw_timber(art, Rect2(top - Vector2(1, 1), Vector2(bounds.size.x + 3, 12)), CARPENTRY.LANDING_RAIL)
 	else:
-		# The return rail runs away from the viewer between the two horizontal post caps.
-		_draw_timber(art, Rect2(top + Vector2(0, 1), Vector2(4, bounds.size.y + 2)), Rect2(29, 18, 5, 30))
-		var highlight := Color("#c1c5af") if Global.season_index() == Global.Season.WINTER else Color("#ad8e63")
-		art.draw_line(top + Vector2(0.5, 2), top + Vector2(0.5, bounds.size.y), highlight, 1.0)
+		_draw_timber(art, Rect2(top + Vector2(0, 1), Vector2(4, bounds.size.y + 2)), CARPENTRY.LANDING_RETURN)
 
 func _draw_timber(layer: Node2D, dest: Rect2, region: Rect2) -> void:
-	if Global.season_index() == Global.Season.WINTER:
-		region.position.x += 114.0
-	var tint := Color("#bdc9c2") if Global.has_rain() else Color.WHITE
-	layer.draw_texture_rect_region(BRIDGE, dest, region, tint)
+	CARPENTRY.draw_timber(layer, timber, dest, region, Global.season_index() == Global.Season.WINTER,
+		CARPENTRY.WET_WOOD if Global.has_rain() else Color.WHITE)
 
 func _draw() -> void:
 	if line_visible:
