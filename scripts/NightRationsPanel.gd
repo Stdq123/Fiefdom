@@ -19,6 +19,12 @@ const WINDOW_MARGIN := 16.0
 @onready var window: PanelContainer = $Center/Window
 @onready var content: VBoxContainer = $Center/Window/Content
 @onready var header: HBoxContainer = $Center/Window/Content/Header
+@onready var plan_index: HBoxContainer = %PlanIndex
+@onready var tribute_section: Button = %TributeSection
+@onready var field_section: Button = %FieldSection
+@onready var rations_section: Button = %RationsSection
+@onready var field_plan: PanelContainer = %FieldPlan
+@onready var stock: PanelContainer = %Stock
 @onready var grain: Label = %Grain
 @onready var need: Label = %Need
 @onready var money: Label = %Money
@@ -101,6 +107,14 @@ func _ready() -> void:
 	%FieldMark.texture = HUDIcons.icon(HUDIcons.Symbol.HOE)
 	%MealMark.texture = HUDIcons.icon(HUDIcons.Symbol.RATIONS)
 	%Sleep.icon = HUDIcons.icon(HUDIcons.Symbol.MOON)
+	tribute_section.icon = HUDIcons.icon(HUDIcons.Symbol.TREASURY)
+	field_section.icon = HUDIcons.icon(HUDIcons.Symbol.HOE)
+	rations_section.icon = HUDIcons.icon(HUDIcons.Symbol.RATIONS)
+	tribute_section.pressed.connect(func(): _show_section(tribute_plan, _available_action([find_tribute])))
+	field_section.pressed.connect(func():
+		_show_section(field_plan, _available_action([find_plot, find_ready_plot, wait_button, wait_before_sleep]))
+	)
+	rations_section.pressed.connect(_show_meals)
 	scroll.get_v_scroll_bar().theme_type_variation = &"HudJournalBar"
 	budget.max_value = NightRations.MAX_COPPER_LIMIT
 	budget.get_line_edit().max_length = 10
@@ -189,17 +203,36 @@ func show_pavilion_story(story_id: String, appointment_id: String, place: String
 
 func _focus_meal_options() -> void:
 	await get_tree().process_frame
-	if show_previous or is_queued_for_deletion():
-		return
+	if not show_previous and not is_queued_for_deletion():
+		_show_meals()
+
+func _show_meals() -> void:
+	var action: BaseButton = delegate
 	if meal_forecast.visible:
-		scroll.ensure_control_visible(meal_forecast)
-	for button: BaseButton in [accept_offer, find_fruit, sell_silk, priority_picker, %Market]:
+		action = _available_action([accept_offer, find_fruit, sell_silk, priority_picker, %Market])
+	_show_section(stock, action)
+
+func _available_action(buttons: Array[BaseButton]) -> BaseButton:
+	for button in buttons:
 		if button.is_visible_in_tree() and not button.disabled:
-			button.grab_focus()
-			if scroll.is_ancestor_of(button):
-				scroll.ensure_control_visible(button)
-			GamepadInput.snap_pointer_to_focus()
-			return
+			return button
+	return null
+
+func _show_section(section: Control, action: BaseButton) -> void:
+	if action:
+		action.grab_focus()
+	var body_top := body.get_global_rect().position.y
+	var top := section.get_global_rect().position.y - body_top
+	if action and scroll.is_ancestor_of(action):
+		var action_bottom := action.get_global_rect().end.y - body_top
+		top = maxf(top, action_bottom - scroll.size.y)
+	scroll.scroll_vertical = ceili(top)
+	if action:
+		GamepadInput.snap_pointer_to_focus.call_deferred()
+
+func _set_section_summary(button: Button, message: String, urgent: bool) -> void:
+	button.text = message
+	button.theme_type_variation = &"HudNight" if urgent else &"HudButton"
 
 func _show_page(previous: bool) -> void:
 	show_previous = previous and last_card.visible
@@ -207,6 +240,7 @@ func _show_page(previous: bool) -> void:
 	page_button.text = "今夜安排" if show_previous else "昨夜结算"
 	page_art.region.position.x = page_art.region.size.x if show_previous else 0.0
 	tomorrow_calendar.visible = not show_previous
+	plan_index.visible = not show_previous
 	plan_body.visible = not show_previous
 	footer.visible = not show_previous
 	record_heading.visible = not show_previous
@@ -225,10 +259,10 @@ func _refresh_date() -> void:
 
 func _fit_body() -> void:
 	var separation := content.get_theme_constant("separation")
-	var frame_height := window.get_theme_stylebox("panel").get_minimum_size().y \
-		+ header.get_combined_minimum_size().y + separation
-	if footer.visible:
-		frame_height += footer.get_combined_minimum_size().y + separation
+	var frame_height := window.get_theme_stylebox("panel").get_minimum_size().y
+	for piece: Control in [header, plan_index, footer]:
+		if piece.visible:
+			frame_height += piece.get_combined_minimum_size().y + separation
 	var height := maxf(0.0, get_viewport_rect().size.y - WINDOW_MARGIN * 2.0 - frame_height)
 	scroll.custom_minimum_size.y = minf(body.get_combined_minimum_size().y, height)
 
@@ -276,6 +310,10 @@ func _refresh() -> void:
 	need.add_theme_color_override("font_color", SHORT if plan.uncovered > 0 else Color("#fce8b8"))
 	if plan.uncovered > 0:
 		need.text += " · 缺 %d" % plan.uncovered
+	var meal_status := "口粮 · 预计够用" if plan.need > 0 else "口粮 · 无需准备"
+	if plan.uncovered > 0:
+		meal_status = "口粮 · 缺 %d 份" % plan.uncovered
+	_set_section_summary(rations_section, meal_status, plan.uncovered > 0)
 	money.text = "铜钱\n%d 枚" % Global.money
 	delegate.set_pressed_no_signal(policy.enabled)
 	budget.set_value_no_signal(policy.copper_limit)
@@ -516,6 +554,17 @@ func _refresh_fields() -> void:
 		if not away_yields.is_empty():
 			field_forecast.text += "\n" + away_yields
 	var warnings := PackedStringArray()
+	var dry_or_blocked: int = report.dry + report.blocked
+	var field_status := "田务 · %d 格将长" % report.growing
+	if dry_or_blocked > 0:
+		field_status = "田务 · %d 格缺水" % dry_or_blocked
+	elif current.ready > 0:
+		field_status = "田务 · %d 格可收" % current.ready
+	elif report.public_ripe + report.private_ripe > 0:
+		field_status = "田务 · 明早新熟 %d 格" % (report.public_ripe + report.private_ripe)
+	elif report.growing == 0:
+		field_status = "田务 · 无生长"
+	_set_section_summary(field_section, field_status, dry_or_blocked > 0)
 	if report.dry > 0:
 		var dry := "收工后仍有 %d 格待浇，缺水会停长" if after_work else "%d 格待浇，缺水会停长"
 		warnings.append(dry % report.dry)
@@ -605,18 +654,22 @@ func _open_field_management() -> void:
 func _refresh_tribute(preview: Dictionary) -> void:
 	var due := Global.tribute_deadline()
 	tribute_plan.visible = due > 0
+	tribute_section.visible = tribute_plan.visible
 	if not tribute_plan.visible:
 		return
 	var field := Global.tribute_field_plan()
 	tribute_plot.show_plot(field)
 	var tonight := due == Global.current_day
+	var overdue := Global.tribute_overdue()
 	var late_crop: bool = not field.is_empty() and field.ready_day > due
 	var deadline := "今夜到期" if tonight else "第 %d 天过夜前" % due
-	if Global.tribute_overdue():
+	if overdue:
 		deadline = "已逾期"
-	var due_share := "本期纳贡 1 份" if Global.first_tribute_delivered() else "首贡 1 份"
+	var first := not Global.first_tribute_delivered()
+	var due_share := "首贡 1 份" if first else "本期纳贡 1 份"
 	tribute_deadline.text = due_share + " · " + deadline
-	var urgent := tonight or late_crop or Global.tribute_overdue()
+	var urgent := tonight or late_crop or overdue
+	_set_section_summary(tribute_section, ("%s · " % ("首贡" if first else "纳贡")) + deadline, urgent)
 	tribute_deadline.add_theme_color_override("font_color", Color("#7b3522") if urgent else Color("#33432d"))
 	tribute_goal.visible = not Global.quest_completed
 	tribute_goal.text = "长期奖励 · 累计纳贡 %d/%d 份，达标得 %d 声望" % [

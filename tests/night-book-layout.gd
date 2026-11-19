@@ -20,7 +20,8 @@ func _check() -> void:
 	var plan = scene.instantiate()
 	root.add_child(plan)
 	plan._show_page(true)
-	_expect(not plan.show_previous and not plan.page_button.visible and plan.page_art.region.position.x == 0,
+	_expect(not plan.show_previous and not plan.page_button.visible and plan.plan_index.visible
+		and plan.page_art.region.position.x == 0,
 		"The first evening has no previous page.")
 	_expect(plan.tribute_plot.visible and not plan.tribute_plot.crop_region.has_area(),
 		"The suggested seed must not appear as a plant on an empty public plot.")
@@ -44,7 +45,8 @@ func _check() -> void:
 	root.add_child(morning)
 	_expect(morning.page_art.region.position.x == 64 and plan.page_art.region.position.x == 0,
 		"The two open books must not share a mutable atlas region.")
-	_expect(morning.page_date.text.begins_with("第 1 夜") and morning.get_node("%RecordedMeal").visible
+	_expect(morning.page_date.text.begins_with("第 1 夜") and not morning.plan_index.visible
+		and morning.get_node("%RecordedMeal").visible
 		and not morning.get_node("%ReceiptDivider").visible and not morning.get_node("%RecordedFields").visible,
 		"A meal-only record must use its saved night and a single column.")
 	morning._show_page(false)
@@ -58,6 +60,54 @@ func _check() -> void:
 		"A saved night with no entries should open a readable record.")
 	morning.free()
 	plan.free()
+	await _check_index(state, scene, cell)
 	if not failed:
 		print("SCENARIO_OK")
 	quit(1 if failed else 0)
+
+func _check_index(state: Node, scene: PackedScene, cell: Vector2i) -> void:
+	var items := root.get_node("ItemManager")
+	state.days_without_contribution = state.balance.no_contribution_threshold - 1
+	state.food_storage = 1
+	state.money = 3 * state.balance.market_food_price
+	var retainer_data: GDScript = state.retainers[0].get_script()
+	for person in ["石墨", "季青", "蒲宁"]:
+		var worker: Resource = retainer_data.new(person)
+		worker.loyalty = 20.0
+		state.retainers.append(worker)
+	state.active_crops[cell] = {"data": items.get_crop("millet"), "id": "millet", "age": 1,
+		"growth_nights": 2, "watered": false, "requires_channel": false}
+	var before := [state.current_day, state.money, state.food_storage, state.night_rations.enabled]
+	var book = scene.instantiate()
+	book.focus_shortage = true
+	root.add_child(book)
+	await _settle()
+	var viewport := root.get_visible_rect()
+	var strip: Rect2 = book.plan_index.get_global_rect()
+	_expect(book.tribute_section.text == "首贡 · 今夜到期" and book.field_section.text == "田务 · 1 格缺水"
+		and book.rations_section.text == "口粮 · 缺 3 份" and viewport.encloses(strip),
+		"Tonight's index shows all three urgent summaries in the window.")
+	_expect(book.accept_offer.has_focus()
+		and book.scroll.get_global_rect().encloses(book.accept_offer.get_global_rect()),
+		"Opening from a shortage focuses the available offer in view.")
+	book.tribute_section.pressed.emit()
+	await _settle()
+	_expect(book.find_tribute.has_focus()
+		and book.scroll.get_global_rect().encloses(book.tribute_plan.get_global_rect()),
+		"The tribute jump returns to the due date and focuses the plot directions.")
+	book.field_section.pressed.emit()
+	await _settle()
+	_expect(book.find_plot.has_focus()
+		and book.scroll.get_global_rect().encloses(book.field_warning.get_global_rect()),
+		"The field jump presents the water warning and focuses the nearby action.")
+	book.rations_section.pressed.emit()
+	await _settle()
+	_expect(book.accept_offer.has_focus() and strip == book.plan_index.get_global_rect(),
+		"The ration jump returns to the offer and the three summaries stay in place.")
+	_expect(before == [state.current_day, state.money, state.food_storage, state.night_rations.enabled],
+		"Changing sections does not carry out any night action.")
+	book.free()
+
+func _settle() -> void:
+	for frame in 5:
+		await process_frame

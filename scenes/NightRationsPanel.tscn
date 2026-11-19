@@ -127,6 +127,38 @@ mouse_default_cursor_shape = 2
 text = "关闭"
 tooltip_text = "Esc"
 
+[node name="PlanIndex" type="HBoxContainer" parent="Center/Window/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TributeSection" type="Button" parent="Center/Window/Content/PlanIndex"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HudButton"
+mouse_default_cursor_shape = 2
+tooltip_text = "查看纳贡期限和公田出产。"
+
+[node name="FieldSection" type="Button" parent="Center/Window/Content/PlanIndex"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HudButton"
+mouse_default_cursor_shape = 2
+tooltip_text = "查看今夜生长和还能做的田务。"
+
+[node name="RationsSection" type="Button" parent="Center/Window/Content/PlanIndex"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HudButton"
+mouse_default_cursor_shape = 2
+tooltip_text = "查看门客分餐和备粮。"
+
 [node name="Scroll" type="ScrollContainer" parent="Center/Window/Content"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -260,6 +292,7 @@ mouse_default_cursor_shape = 2
 text = "指路去席案"
 
 [node name="FieldPlan" type="PanelContainer" parent="Center/Window/Content/Scroll/Body/Plan"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_styles/panel = SubResource("Ledger")
 
@@ -358,6 +391,7 @@ mouse_default_cursor_shape = 2
 text = "找可收田"
 
 [node name="Stock" type="PanelContainer" parent="Center/Window/Content/Scroll/Body/Plan"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_type_variation = &"HudCalendar"
 

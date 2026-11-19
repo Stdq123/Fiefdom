@@ -40,6 +40,19 @@ texture_margin_right = 8.0
 texture_margin_bottom = 6.0
 region_rect = Rect2(192, 32, 32, 32)
 
+[sub_resource type="StyleBoxFlat" id="TributeSlip"]
+content_margin_left = 13.0
+content_margin_top = 5.0
+content_margin_right = 10.0
+content_margin_bottom = 6.0
+bg_color = Color(0.92, 0.82, 0.63, 0.95)
+border_width_left = 3
+border_color = Color(0.54, 0.38, 0.22, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_left = 2
+corner_radius_bottom_right = 2
+
 [sub_resource type="StyleBoxTexture" id="Choice"]
 content_margin_left = 16.0
 content_margin_top = 5.0
@@ -207,24 +220,32 @@ mouse_filter = 2
 theme_override_colors/font_color = Color(0.32, 0.22, 0.13, 1)
 theme_override_font_sizes/font_size = 16
 
-[node name="TributeTiming" type="HBoxContainer" parent="Panel/Content/Body"]
+[node name="TributeTiming" type="PanelContainer" parent="Panel/Content/Body"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 mouse_filter = 2
+theme_override_styles/panel = SubResource("TributeSlip")
+
+[node name="Dates" type="HBoxContainer" parent="Panel/Content/Body/TributeTiming"]
+layout_mode = 2
+mouse_filter = 2
 theme_override_constants/separation = 20
 
-[node name="TributeDue" type="Label" parent="Panel/Content/Body/TributeTiming"]
+[node name="TributeDue" type="Label" parent="Panel/Content/Body/TributeTiming/Dates"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_vertical = 0
 mouse_filter = 2
 theme_override_font_sizes/font_size = 17
 
-[node name="TributeEstimate" type="Label" parent="Panel/Content/Body/TributeTiming"]
+[node name="TributeEstimate" type="Label" parent="Panel/Content/Body/TributeTiming/Dates"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
 theme_override_font_sizes/font_size = 17
+autowrap_mode = 3
 
 [node name="TextLabel" type="RichTextLabel" parent="Panel/Content/Body"]
 unique_name_in_owner = true
