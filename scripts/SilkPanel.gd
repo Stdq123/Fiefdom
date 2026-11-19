@@ -130,6 +130,8 @@ func _act(action: SilkWorkshop.Action, amount := 1) -> void:
 		_refresh()
 	elif action == SilkWorkshop.Action.SELL:
 		AudioManager.play_trade_cue(AudioManager.TradeCue.SALE)
+	else:
+		AudioManager.play_workshop_cue(action)
 
 func _refresh() -> void:
 	var workshop := Global.silk_workshop

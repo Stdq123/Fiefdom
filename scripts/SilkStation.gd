@@ -1,11 +1,6 @@
 extends StaticBody2D
 
 const ART := preload("res://assets/world/silk-interior.png")
-const SOUNDS := {
-	SilkWorkshop.Action.START_BATCH: preload("res://assets/audio/silk/leaves.wav"),
-	SilkWorkshop.Action.REEL: preload("res://assets/audio/silk/reel.wav"),
-	SilkWorkshop.Action.WEAVE: preload("res://assets/audio/silk/loom.wav"),
-}
 const REEL_HUB := Vector2(3, -25)
 const LEAF_SIZE := Vector2(8, 6)
 const WORM := Rect2(26, 212, 6, 4)
@@ -47,7 +42,7 @@ func interact() -> void:
 		_set_phase(0.0)
 		movement = create_tween()
 		movement.tween_method(_set_phase, 0.0, 1.0, 0.54)
-		AudioManager.play_world_sfx(SOUNDS[action], self, -9.0, 260.0)
+		AudioManager.play_workshop_cue(action, self)
 	var message := ""
 	match action:
 		SilkWorkshop.Action.START_BATCH:

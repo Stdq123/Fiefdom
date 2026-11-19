@@ -18,6 +18,12 @@ const TRADITION_CUE := preload("res://assets/audio/ledger/council-tribute.wav")
 const REFORM_CUE := preload("res://assets/audio/ledger/council-tax.wav")
 const RESEARCH_CUE := preload("res://assets/audio/ledger/council-research.wav")
 const LEDGER_MUSIC_GAIN := 0.70
+const SILK_SAMPLE_CUE := preload("res://assets/audio/silk/sample-delivered.wav")
+const WORKSHOP_CUES := {
+	SilkWorkshop.Action.START_BATCH: preload("res://assets/audio/silk/leaves.wav"),
+	SilkWorkshop.Action.REEL: preload("res://assets/audio/silk/reel.wav"),
+	SilkWorkshop.Action.WEAVE: preload("res://assets/audio/silk/loom.wav"),
+}
 const TRADE_CUES := [
 	preload("res://assets/audio/market/coins-received.wav"),
 	preload("res://assets/audio/market/purchase.wav"),
@@ -41,6 +47,7 @@ var sfx_player: AudioStreamPlayer
 var ui_sfx_player: AudioStreamPlayer
 var terrain_audio: TERRAIN_AUDIO
 var field_sounds: Array[AudioStreamWAV] = []
+var _workshop_sound: AudioStreamPlayer
 var _music_players: Array[AudioStreamPlayer] = []
 var _music_gains: Array[float] = [0.0, 0.0]
 var _music_bookmarks: Dictionary[AudioStream, float] = {}
@@ -56,6 +63,7 @@ func _ready() -> void:
 	GameEvents.tax_reform_choice_made.connect(_on_tax_reform_choice)
 	GameEvents.well_field_added.connect(_on_well_field_added)
 	GameEvents.well_field_reclaimed.connect(_on_well_field_reclaimed)
+	GameEvents.silk_sample_delivered.connect(_on_silk_sample_delivered)
 	GameEvents.campaign_ended.connect(_on_campaign_ended)
 	GameEvents.day_advanced.connect(_sync_score.unbind(1))
 	get_tree().scene_changed.connect(_sync_score)
@@ -90,6 +98,12 @@ func _ready() -> void:
 	ui_sfx_player.bus = "SFX"
 	ui_sfx_player.volume_db = -8.0
 	add_child(ui_sfx_player)
+
+	_workshop_sound = AudioStreamPlayer.new()
+	_workshop_sound.name = "WorkshopCue"
+	_workshop_sound.bus = &"SFX"
+	_workshop_sound.volume_db = -11.0
+	add_child(_workshop_sound)
 	if DisplayServer.get_name() != "headless":
 		for path in FIELD_SOUND_PATHS:
 			field_sounds.append(load(path))
@@ -185,6 +199,18 @@ func play_field_action(action: int) -> void:
 
 func play_trade_cue(cue: TradeCue) -> void:
 	play_sfx(TRADE_CUES[cue], -9.0)
+
+func play_workshop_cue(action: SilkWorkshop.Action, station: Node2D = null) -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	var cue := WORKSHOP_CUES.get(action) as AudioStream
+	if cue == null:
+		return
+	if station != null:
+		play_world_sfx(cue, station, -9.0, 260.0)
+	elif not _workshop_sound.playing or _workshop_sound.stream != cue:
+		_workshop_sound.stream = cue
+		_workshop_sound.play()
 
 func play_sfx(stream: AudioStream, volume := 0.0, pitch := 1.0, music_gain := 1.0) -> void:
 	if DisplayServer.get_name() == "headless":
@@ -286,6 +312,9 @@ func _on_well_field_added(field_id: int) -> void:
 func _on_well_field_reclaimed(_field_id: int, progress: int) -> void:
 	if progress == Global.RECLAMATION_NIGHTS:
 		play_sfx(CEREMONY_BELL, -14.0, 1.0)
+
+func _on_silk_sample_delivered() -> void:
+	play_sfx(SILK_SAMPLE_CUE, -10.0)
 
 func _on_campaign_ended(result: Global.Outcome) -> void:
 	if result in [Global.Outcome.DEFEAT_COMBAT, Global.Outcome.DEFEAT_ESTATE]:
