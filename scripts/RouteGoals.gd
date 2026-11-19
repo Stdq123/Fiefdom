@@ -3,6 +3,8 @@ extends "res://scripts/SurveyMap.gd"
 signal action_requested(kind: Global.RouteGoal)
 
 const GOAL_ROW := preload("res://scenes/RouteGoalRow.tscn")
+const LEDGER_DESK := preload("res://scripts/RouteLedgerDesk.gd")
+const LEDGER_MARGIN := 20.0
 const GUIDANCE := {
 	Global.RouteGoal.TRIBUTE: {
 		"unit": "份", "action": "查看井田", "detail": "收获井田中央的公田。定案后入国库的作物会记在这里。",
@@ -24,12 +26,32 @@ const GUIDANCE := {
 	},
 }
 
+@onready var ledger: PanelContainer = %Ledger
+@onready var stack: VBoxContainer = %Stack
+@onready var header: HBoxContainer = %Header
+@onready var volume: TextureRect = %Volume
 @onready var heading: Label = %RouteTitle
 @onready var summary: Label = %RouteSummary
+@onready var scroll: ScrollContainer = %ReadScroll
+@onready var body: VBoxContainer = %Body
+@onready var harvest_record: VBoxContainer = %HarvestRecord
 @onready var harvest_entry: Label = %HarvestEntry
 @onready var rows: VBoxContainer = %GoalRows
+@onready var filing: Label = %Filing
 
 var world: Node2D
+
+func _ready() -> void:
+	super._ready()
+	for note: Label in [summary, harvest_entry, filing]:
+		InterfaceFont.scale_reading_text(note)
+	var bar := scroll.get_v_scroll_bar()
+	bar.theme = preload("res://resources/estate_hud_theme.tres")
+	bar.theme_type_variation = &"HudJournalBar"
+	bar.focus_mode = FOCUS_ALL
+	for part: Control in [body, header, filing]:
+		part.minimum_size_changed.connect(_fit_body, CONNECT_DEFERRED)
+	get_viewport().size_changed.connect(_fit_body)
 
 func _map_available() -> bool:
 	return Global.ending_record.is_empty() and not Global.route_objectives().is_empty()
@@ -37,18 +59,33 @@ func _map_available() -> bool:
 func _refresh_on_open() -> void:
 	var goals := Global.route_objectives()
 	var complete := goals.filter(func(goal: Dictionary) -> bool: return goal.value >= goal.target).size()
-	heading.text = "贡簿 · 守礼安邦" if Global.tax_reform_choice == Global.TaxReformChoice.TRADITIONAL else "新税册 · 税亩富民"
+	var traditional := Global.tax_reform_choice == Global.TaxReformChoice.TRADITIONAL
+	heading.text = "贡簿 · 守礼安邦" if traditional else "新税册 · 税亩富民"
+	volume.texture = LEDGER_DESK.volume_texture(traditional)
 	summary.text = "已达成 %d/%d 项" % [complete, goals.size()]
 	if Global.tax_reform_day > 0:
 		summary.text = "第 %d 天定案 · " % Global.tax_reform_day + summary.text
 	var entry := Global.route_harvest_note()
 	harvest_entry.text = entry
-	harvest_entry.visible = not entry.is_empty()
+	harvest_record.visible = not entry.is_empty()
+	harvest_entry.visible = harvest_record.visible
+	var stand := world.get_node("Scenery/EndingRecord")
+	var prompt := "目标齐备 · 到" if Global.route_ready_to_present() else "达标后到"
+	filing.text = prompt + stand.place_name + "呈交" + stand.record_name
 	for row in rows.get_children():
 		rows.remove_child(row)
 		row.queue_free()
 	for goal in goals:
 		_add_goal(goal)
+	scroll.set_deferred("scroll_vertical", 0)
+	_fit_body.call_deferred()
+
+func _fit_body() -> void:
+	var chrome := ledger.get_theme_stylebox("panel").get_minimum_size().y \
+		+ header.get_combined_minimum_size().y + filing.get_combined_minimum_size().y \
+		+ stack.get_theme_constant("separation") * 2
+	var available := maxf(0.0, get_viewport_rect().size.y - LEDGER_MARGIN * 2.0 - chrome)
+	scroll.custom_minimum_size.y = minf(body.get_combined_minimum_size().y, available)
 
 func _add_goal(goal: Dictionary) -> void:
 	var row := GOAL_ROW.instantiate() as PanelContainer
@@ -79,12 +116,19 @@ func _add_goal(goal: Dictionary) -> void:
 			detail = "手中已有 %d 匹。到蚕桑页点「%s」，记入本案。" % [bolts, trade]
 		else:
 			detail = "蚕桑页可查看现有蚕茧和生丝，缺叶时可标出桑田。织成后%s。" % trade
-	row.get_node("%GoalDetail").text = detail
+	var note: Label = row.get_node("%GoalDetail")
+	note.text = detail
 	var count: Label = row.get_node("%GoalCount")
 	count.text = "%d / %d %s" % [goal.value, goal.target, guide.unit]
 	if complete:
 		count.text += " · 达成"
 		count.add_theme_color_override("font_color", Color("#c5d592"))
+	var gap: Label = row.get_node("%GoalGap")
+	gap.visible = not complete
+	if not complete:
+		gap.text = "还差 %d %s" % [goal.target - goal.value, guide.unit]
+	for label: Label in [note, count, gap]:
+		InterfaceFont.scale_reading_text(label)
 	var progress: ProgressBar = row.get_node("%GoalMeter")
 	progress.max_value = maxi(1, goal.target)
 	progress.value = progress.max_value if complete else goal.value
