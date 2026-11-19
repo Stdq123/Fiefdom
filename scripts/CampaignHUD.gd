@@ -69,6 +69,9 @@ func _ready() -> void:
 	GameEvents.ending_record_requested.connect(_open_record)
 	if Global.outcome != Global.Outcome.RUNNING:
 		_show_outcome.call_deferred(Global.outcome, true)
+	elif get_parent().scene_file_path != Global.ESTATE_SCENE and not Global.restore_notice.is_empty():
+		show_world_notice(Global.restore_notice, 4.0)
+		Global.restore_notice = ""
 
 func add_field_return(walker: Player, choose_trip: Callable) -> void:
 	_return_player = walker

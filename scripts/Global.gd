@@ -3,6 +3,8 @@ extends Node
 const SAVE_PATH := "user://savegame.json"
 const AUTO_SAVE_PATHS := ["user://autosave-1.json", "user://autosave-2.json", "user://autosave-3.json"]
 const CAMPAIGN_SAVE_ROOT := "user://campaigns"
+const SAVE_WRITE_LOCK := preload("res://scripts/SaveWriteLock.gd")
+const SAVE_BACKUP_SUFFIX := ".bak"
 const SAVE_VERSION := 2
 const SAVE_TIME_SCALE := 1000000
 const TITLE_SCENE := "res://scenes/Title.tscn"
@@ -3641,6 +3643,17 @@ func save_automatically(origin: String) -> Error:
 	return result
 
 func _save_snapshot(origin: String) -> Error:
+	if OS.get_name() != "Windows":
+		return _write_snapshot(origin)
+	var lock := SAVE_WRITE_LOCK.new()
+	var acquired := lock.acquire()
+	if acquired != OK:
+		return acquired
+	var result := _write_snapshot(origin)
+	lock.release()
+	return result
+
+func _write_snapshot(origin: String) -> Error:
 	var folder := _campaign_directory()
 	var created := DirAccess.make_dir_recursive_absolute(folder)
 	if created != OK:
@@ -3875,12 +3888,28 @@ func _save_snapshot(origin: String) -> Error:
 		DirAccess.remove_absolute(pending_path)
 		return write_error if write_error != OK else ERR_FILE_CANT_WRITE
 
-	var replace_error := DirAccess.rename_absolute(pending_path, path)
+	var replace_error := _install_save_file(pending_path, path)
 	if replace_error != OK:
 		DirAccess.remove_absolute(pending_path)
 	else:
 		checkpoint_sequence = sequence
 	return replace_error
+
+func _install_save_file(pending_path: String, path: String) -> Error:
+	if FileAccess.file_exists(path):
+		var previous := _read_save_file(path)
+		if previous.error == OK:
+			# Park the usable save before promoting the temp file. An interrupted
+			# promotion leaves this checkpoint available at the same logical slot.
+			var moved := DirAccess.rename_absolute(path, path + SAVE_BACKUP_SUFFIX)
+			if moved != OK:
+				return moved
+		elif previous.error != ERR_FILE_CORRUPT:
+			return previous.error
+	return DirAccess.rename_absolute(pending_path, path)
+
+func _save_slot_exists(path: String) -> bool:
+	return FileAccess.file_exists(path) or FileAccess.file_exists(path + SAVE_BACKUP_SUFFIX)
 
 func _campaign_directory() -> String:
 	return CAMPAIGN_SAVE_ROOT.path_join(campaign_id.md5_text())
@@ -3897,7 +3926,7 @@ func _campaign_auto_slots(folder: String) -> PackedStringArray:
 func _next_auto_slot(folder: String, catalog: Array[Dictionary]) -> String:
 	var slots := _campaign_auto_slots(folder)
 	for path in slots:
-		if not FileAccess.file_exists(path):
+		if not _save_slot_exists(path):
 			return path
 	for index in range(catalog.size() - 1, -1, -1):
 		var path: String = catalog[index]["path"]
@@ -3916,7 +3945,7 @@ func _save_paths() -> PackedStringArray:
 
 func has_saved_game() -> bool:
 	for path in _save_paths():
-		if FileAccess.file_exists(path):
+		if _save_slot_exists(path):
 			return true
 	return false
 
@@ -3929,12 +3958,12 @@ func next_campaign_name() -> String:
 func saved_games() -> Array[Dictionary]:
 	var catalog: Array[Dictionary] = []
 	for path in _save_paths():
-		if not FileAccess.file_exists(path):
+		if not _save_slot_exists(path):
 			continue
 		var snapshot := _read_snapshot(path)
 		var data: Dictionary = snapshot["data"]
 		var readable: bool = snapshot["error"] == OK
-		var sequence := _snapshot_sequence(data, path) if readable else -1
+		var sequence := _snapshot_sequence(data, snapshot["file"]) if readable else -1
 		var campaign := _snapshot_campaign(data)
 		var legacy := not path.begins_with(CAMPAIGN_SAVE_ROOT + "/")
 		var campaign_key := campaign.md5_text() if readable or legacy else path.get_base_dir().get_file()
@@ -3960,6 +3989,7 @@ func saved_games() -> Array[Dictionary]:
 			"campaign_key": campaign_key,
 			"campaign_name": _snapshot_campaign_name(data) if readable else "受损存档",
 			"legacy": legacy,
+			"from_backup": snapshot["file"] != path,
 			"tax_choice": _read_save_int(data.get("tax_reform_choice"), TaxReformChoice.NONE),
 			"outcome": saved_outcome,
 			"completed_route": _read_save_int(saved_record.get("outcome"), saved_outcome),
@@ -3970,7 +4000,10 @@ func saved_games() -> Array[Dictionary]:
 	return catalog
 
 func saved_game_caption(entry: Dictionary) -> String:
-	var caption := "%s · 第 %d 天 · %s · %s" % [entry["source"], entry["day"], get_current_solar_term(entry["day"]), entry["watch"]]
+	var source: String = entry["source"]
+	if entry.get("from_backup", false):
+		source = "备份 · " + source
+	var caption := "%s · 第 %d 天 · %s · %s" % [source, entry["day"], get_current_solar_term(entry["day"]), entry["watch"]]
 	var location: String = entry.get("location", "")
 	return caption if location.is_empty() else caption + " · " + location
 
@@ -4018,7 +4051,7 @@ func load_latest_game(current_campaign_only := false) -> Error:
 			continue
 		var result := load_game(entry["path"])
 		if result == OK:
-			if unavailable:
+			if unavailable and restore_notice.is_empty():
 				restore_notice = "部分存档无法读取 · 已载入第 %d 天" % current_day
 			return OK
 		failure = result
@@ -4045,6 +4078,17 @@ func _snapshot_campaign_name(data: Dictionary) -> String:
 	return estate_name.left(16) if estate_name is String and not estate_name.is_empty() else "旧封地"
 
 func _read_snapshot(path: String) -> Dictionary:
+	var snapshot := _read_save_file(path)
+	var backup_path := path + SAVE_BACKUP_SUFFIX
+	if snapshot.error != OK and FileAccess.file_exists(backup_path):
+		var backup := _read_save_file(backup_path)
+		if backup.error == OK:
+			backup["file"] = backup_path
+			return backup
+	snapshot["file"] = path
+	return snapshot
+
+func _read_save_file(path: String) -> Dictionary:
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		return {"error": FileAccess.get_open_error(), "data": {}}
@@ -4059,17 +4103,24 @@ func _read_snapshot(path: String) -> Dictionary:
 	var saved_day := _read_save_int(data.get("current_day"), 0)
 	if version < 0 or version > SAVE_VERSION or saved_day < 1:
 		return {"error": ERR_FILE_CORRUPT, "data": {}}
-	return {"error": OK, "data": data}
+	var result := _load_snapshot_data(data, path, true)
+	return {"error": result, "data": data if result == OK else {}}
 
 func load_game(path := "") -> Error:
 	if path.is_empty():
 		path = manual_save_path()
-		if not FileAccess.file_exists(path):
+		if not _save_slot_exists(path):
 			path = SAVE_PATH
 	var snapshot := _read_snapshot(path)
 	if snapshot["error"] != OK:
 		return snapshot["error"]
-	var data: Dictionary = snapshot["data"]
+	var file: String = snapshot["file"]
+	var result := _load_snapshot_data(snapshot["data"], file)
+	if result == OK and file != path:
+		restore_notice = "已从备份恢复第 %d 天" % current_day
+	return result
+
+func _load_snapshot_data(data: Dictionary, path: String, check_only := false) -> Error:
 	var version := _read_save_int(data.get("save_version", 0), 0)
 	var saved_day := _read_save_int(data["current_day"], 1)
 	var crop_records = data.get("active_crops", {})
@@ -4221,6 +4272,8 @@ func load_game(path := "") -> Error:
 		if last_practice > 0:
 			restored_practice[art] = last_practice
 
+	if check_only:
+		return OK
 	var saved_health := clampi(_read_save_int(data.get("health"), balance.player_max_health), 0, balance.player_max_health)
 	var saved_outcome := _snapshot_outcome(data, saved_health)
 	var resume_scene: String = ESTATE_SCENE
