@@ -15,6 +15,7 @@ const SEASON_ORDER_PANEL := preload("res://scenes/SeasonOrderPanel.tscn")
 const NEIGHBOR_JOURNAL := preload("res://scenes/NeighborJournal.tscn")
 const FISH_LEDGER := preload("res://scripts/FishLedger.gd")
 const MAP_GRID_ITEM := preload("res://scripts/MapGridItem.gd")
+const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 const DEFER_SOWING := "defer_sowing"
 const RESUME_SOWING := "resume_sowing"
 
@@ -29,19 +30,21 @@ const RESUME_SOWING := "resume_sowing"
 @onready var empty_roster: Label = %EmptyRoster
 @onready var retainer_list_container: VBoxContainer = $HBoxContainer/LeftPanel/ScrollContainer/VBoxContainer
 @onready var map_grid_container: GridContainer = $HBoxContainer/RightPanel/封地概览/GridContainer
-@onready var well_field_selector: OptionButton = $HBoxContainer/RightPanel/封地概览/WellFieldSelector
+@onready var overview_scroll: ScrollContainer = %OverviewScroll
+@onready var field_summary: Label = %FieldSummary
+@onready var well_field_selector: OptionButton = %WellFieldSelector
 @onready var steward_note: Label = %StewardNote
 @onready var steward_picker: OptionButton = %StewardPicker
 @onready var fill_steward_plans: CheckBox = %FillStewardPlans
 @onready var apply_steward: Button = %ApplySteward
 @onready var steward_preview: Label = %StewardPreview
-@onready var seed_plan_picker: OptionButton = $HBoxContainer/RightPanel/封地概览/SeedPlan/SeedPicker
-@onready var rotate_seed: CheckBox = $HBoxContainer/RightPanel/封地概览/SeedPlan/RotateSeed
-@onready var apply_private_plan: Button = $HBoxContainer/RightPanel/封地概览/SeedPlan/ApplyPrivate
-@onready var seed_timing: Label = $HBoxContainer/RightPanel/封地概览/SeedTiming
-@onready var seed_plan_note: Label = $HBoxContainer/RightPanel/封地概览/SeedPlanDetails/SeedPlanNote
+@onready var seed_plan_picker: OptionButton = %SeedPicker
+@onready var rotate_seed: CheckBox = %RotateSeed
+@onready var apply_private_plan: Button = %ApplyPrivate
+@onready var seed_timing: Label = %SeedTiming
+@onready var seed_plan_note: Label = %SeedPlanNote
 @onready var include_untilled: CheckBox = %IncludeUntilled
-@onready var sowing_rations: Button = $HBoxContainer/RightPanel/封地概览/SeedPlanDetails/SowingRations
+@onready var sowing_rations: Button = %SowingRations
 @onready var market_panel: VBoxContainer = $HBoxContainer/RightPanel/市场
 @onready var food_label: Label = $HBoxContainer/RightPanel/市场/FoodLabel
 @onready var irrigation_button: Button = $HBoxContainer/RightPanel/科技/TechContainer/IrrigationButton
@@ -105,12 +108,8 @@ func _ready() -> void:
 	seed_plan_picker.set_item_metadata(resume_sowing_index, RESUME_SOWING)
 	seed_plan_picker.add_item("取消续播")
 	seed_plan_picker.set_item_metadata(seed_plan_picker.item_count - 1, "")
-	for picker in [seed_plan_picker, steward_picker]:
-		var menu: PopupMenu = picker.get_popup()
-		menu.add_theme_stylebox_override("panel", picker.get_theme_stylebox("panel", "PanelContainer"))
-		menu.add_theme_stylebox_override("hover", picker.get_theme_stylebox("hover", "Button"))
-		menu.add_theme_color_override("font_color", picker.get_theme_color("font_color", "Button"))
-	seed_plan_picker.item_selected.connect(_refresh_seed_plan_preview.unbind(1))
+	_setup_overview_reading()
+	seed_plan_picker.item_selected.connect(_show_sowing_preview.unbind(1))
 	rotate_seed.toggled.connect(_refresh_seed_plan_preview.unbind(1))
 	include_untilled.toggled.connect(_update_soil_previews.unbind(1))
 	GameEvents.field_rotation_changed.connect(_refresh_seed_plan_preview)
@@ -127,6 +126,7 @@ func _ready() -> void:
 	GameEvents.day_advanced.connect(_refresh_field_tiles.unbind(1))
 	GameEvents.day_advanced.connect(_refresh_seed_choices.unbind(1))
 	GameEvents.channels_changed.connect(_refresh_field_tiles)
+	GameEvents.council_tribute_rows_changed.connect(_refresh_field_tiles)
 	GameEvents.well_field_reclaimed.connect(refresh_well_fields.unbind(2))
 	GameEvents.retainer_duty_changed.connect(_refresh_steward_choices.unbind(1))
 	GameEvents.retainer_assigned.connect(_refresh_steward_choices.unbind(2))
@@ -264,7 +264,7 @@ func show_estate(field_id := -1) -> void:
 func focus_sowing_plans(for_council := false) -> void:
 	var cancel_index := seed_plan_picker.item_count - 1
 	seed_plan_picker.select(defer_sowing_index if for_council else cancel_index)
-	_refresh_seed_plan_preview()
+	_show_sowing_preview()
 	var focus: Control = seed_plan_picker if apply_private_plan.disabled else apply_private_plan
 	focus.grab_focus()
 	GamepadInput.snap_pointer_to_focus.call_deferred()
@@ -489,6 +489,23 @@ func _refresh_roster_meals() -> void:
 	for item in retainer_list_container.get_children():
 		item.show_meal_status(item.data in meal.missed)
 
+func _setup_overview_reading() -> void:
+	var scrollbar := overview_scroll.get_v_scroll_bar()
+	scrollbar.theme = HUD_THEME
+	scrollbar.theme_type_variation = &"HudJournalBar"
+	scrollbar.focus_mode = Control.FOCUS_ALL
+	for control: Control in [field_summary, well_field_selector, %SeedPlanTitle, seed_plan_picker,
+			rotate_seed, apply_private_plan, seed_timing, seed_plan_note, include_untilled, sowing_rations,
+			steward_note, %StewardTitle, steward_picker, fill_steward_plans, apply_steward, steward_preview, %AssignmentHelp]:
+		InterfaceFont.scale_reading_text(control)
+	for picker: OptionButton in [well_field_selector, seed_plan_picker, steward_picker]:
+		var menu := picker.get_popup()
+		menu.add_theme_stylebox_override("panel", picker.get_theme_stylebox("panel", "PanelContainer"))
+		menu.add_theme_stylebox_override("hover", picker.get_theme_stylebox("hover", "Button"))
+		menu.add_theme_color_override("font_color", picker.get_theme_color("font_color", "Button"))
+		var standard := menu.get_theme_font_size(&"font_size")
+		menu.about_to_popup.connect(func(): menu.add_theme_font_size_override(&"font_size", Preferences.reading_font_size(standard)))
+
 func refresh_well_fields() -> void:
 	var previous_id := well_field_selector.get_selected_id()
 	well_field_selector.clear()
@@ -506,6 +523,7 @@ func refresh_well_fields() -> void:
 func _show_well_field(index: int) -> void:
 	if steward_field_id != well_field_selector.get_item_id(index):
 		include_untilled.set_pressed_no_signal(false)
+		overview_scroll.scroll_vertical = 0
 	for child in map_grid_container.get_children():
 		map_grid_container.remove_child(child)
 		child.queue_free()
@@ -518,6 +536,7 @@ func _show_well_field(index: int) -> void:
 			item.retainer_dropped.connect(Global.assign_retainer_plot)
 			item.pressed.connect(_apply_seed_plan.bind(item))
 			map_grid_container.add_child(item)
+	_refresh_field_summary()
 	_refresh_seed_plan_preview()
 	_refresh_steward_choices()
 
@@ -683,8 +702,24 @@ func _refresh_field_tiles() -> void:
 	if is_visible_in_tree():
 		for item: MAP_GRID_ITEM in map_grid_container.get_children():
 			item.refresh_plot()
+		_refresh_field_summary()
 		_refresh_stewards()
 		_refresh_seed_plan_preview()
+
+func _refresh_field_summary() -> void:
+	var plots := map_grid_container.get_child_count()
+	var public_plots := 0
+	var supplied := 0
+	for tile: MAP_GRID_ITEM in map_grid_container.get_children():
+		public_plots += int(Global.is_public_plot(tile.grid_pos))
+		supplied += int(Global.irrigation.supplies(tile.grid_pos))
+	field_summary.text = "公田 %d 格 · 私田 %d 格 · 接渠水 %d/%d 格" % [
+		public_plots, plots - public_plots, supplied, plots]
+	field_summary.visible = plots > 0
+
+func _show_sowing_preview() -> void:
+	overview_scroll.scroll_vertical = 0
+	_refresh_seed_plan_preview()
 
 func _apply_seed_plan(item: MAP_GRID_ITEM) -> void:
 	if seed_plan_picker.selected == 0:

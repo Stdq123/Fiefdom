@@ -3,23 +3,42 @@ extends Button
 signal retainer_dropped(data: RetainerData, grid_pos: Vector2i)
 
 var grid_pos: Vector2i
+var picture: TributePlotPicture
 
 func _ready() -> void:
-	custom_minimum_size = Vector2(92, 62)
+	custom_minimum_size = Vector2(145, 76)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	add_theme_constant_override("icon_max_width", 19)
-	add_theme_constant_override("h_separation", 6)
+	alignment = HORIZONTAL_ALIGNMENT_LEFT
+	autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	for mode in [&"normal", &"hover", &"pressed", &"hover_pressed", &"disabled"]:
+		var style := get_theme_stylebox(mode).duplicate() as StyleBox
+		style.content_margin_left = 61
+		style.content_margin_right = 10
+		add_theme_stylebox_override(mode, style)
 	add_theme_font_size_override("font_size", 16)
+	InterfaceFont.scale_reading_text(self)
+	picture = TributePlotPicture.new()
+	add_child(picture)
+	picture.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT)
+	picture.offset_left = 7
+	picture.offset_right = 55
+	picture.offset_top = -24
+	picture.offset_bottom = 24
 	refresh_plot()
 
 func refresh_plot() -> void:
 	var public_plot := Global.is_public_plot(grid_pos)
 	var crop: Dictionary = Global.active_crops.get(grid_pos, {})
 	var tilled := Global.tilled_cells.has(grid_pos)
+	picture.show_field_cell(grid_pos)
 	var state := "空畦" if tilled else "未翻地"
 	if not crop.is_empty():
-		state = crop.data.crop_name + ("（熟）" if Global.field_crop_is_ripe(grid_pos) else "（苗）")
+		var stage := "（苗）"
+		match picture.status:
+			Global.NightGrowth.READY: stage = "（熟）"
+			Global.NightGrowth.DRY: stage = "（待浇）"
+			Global.NightGrowth.BLOCKED: stage = "（断水）"
+		state = crop.data.crop_name + stage
 	text = "%s · %s" % ["公田" if public_plot else "私田", state]
 	add_theme_color_override("font_color", Color("#efce80") if public_plot else Color("#d5e3ce"))
 	tooltip_text = "可安排续播" if tilled else "先到田里翻地"
@@ -29,8 +48,6 @@ func refresh_plot() -> void:
 		tooltip_text = "桑收后留根，可反复采叶"
 	var plan: String = Global.field_seed_plans.get(grid_pos, "")
 	var next_seed := ItemManager.get_crop(Global.next_seed_for_plan(grid_pos, plan))
-	var display_crop: CropData = next_seed if crop.is_empty() else crop.data
-	icon = ItemManager.crop_picture(display_crop).texture if display_crop else null
 	if next_seed:
 		var waiting := next_seed.is_water_crop and not Global.irrigation.supplies(grid_pos)
 		var deferred := Global.deferred_field_sowing.has(grid_pos)

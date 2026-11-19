@@ -147,16 +147,111 @@ tabs_visible = false
 
 [node name="封地概览" type="VBoxContainer" parent="HBoxContainer/RightPanel"]
 layout_mode = 2
+theme_override_constants/separation = 8
 
-[node name="Label" type="Label" parent="HBoxContainer/RightPanel/封地概览"]
+[node name="FieldHeader" type="HBoxContainer" parent="HBoxContainer/RightPanel/封地概览"]
 layout_mode = 2
-text = "拖动门客到田格可指定优先田。照料门客和管事可按安排续播。"
+theme_override_constants/separation = 15
+
+[node name="WellFieldSelector" type="OptionButton" parent="HBoxContainer/RightPanel/封地概览/FieldHeader"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(172, 40)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+fit_to_longest_item = false
+
+[node name="FieldSummary" type="Label" parent="HBoxContainer/RightPanel/封地概览/FieldHeader"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.91, 0.82, 0.59, 1)
+theme_override_font_sizes/font_size = 16
 autowrap_mode = 3
 
-[node name="WellFieldSelector" type="OptionButton" parent="HBoxContainer/RightPanel/封地概览"]
+[node name="SeedPlan" type="HBoxContainer" parent="HBoxContainer/RightPanel/封地概览"]
 layout_mode = 2
+theme_override_constants/separation = 10
 
-[node name="StewardNote" type="Label" parent="HBoxContainer/RightPanel/封地概览"]
+[node name="SeedPlanTitle" type="Label" parent="HBoxContainer/RightPanel/封地概览/SeedPlan"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "续播安排"
+
+[node name="SeedPicker" type="OptionButton" parent="HBoxContainer/RightPanel/封地概览/SeedPlan"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+fit_to_longest_item = false
+tooltip_text = "按今天的节气估算生长夜数，实际以播种日为准。"
+
+[node name="RotateSeed" type="CheckBox" parent="HBoxContainer/RightPanel/封地概览/SeedPlan"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_default_cursor_shape = 2
+text = "与菽轮作"
+tooltip_text = "每茬交替种菽和所选作物。选黍、稷、稻、麦或麻可安排轮作。"
+
+[node name="ApplyPrivate" type="Button" parent="HBoxContainer/RightPanel/封地概览/SeedPlan"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(145, 40)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+disabled = true
+text = "安排私田"
+tooltip_text = "批量安排当前井田的已翻私田。现有单茬作物收获后再播。"
+
+[node name="OverviewScroll" type="ScrollContainer" parent="HBoxContainer/RightPanel/封地概览"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="Notes" type="VBoxContainer" parent="HBoxContainer/RightPanel/封地概览/OverviewScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="SeedTiming" type="Label" parent="HBoxContainer/RightPanel/封地概览/OverviewScroll/Notes"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.82, 0.57, 1)
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="SeedPlanDetails" type="HBoxContainer" parent="HBoxContainer/RightPanel/封地概览/OverviewScroll/Notes"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SeedPlanNote" type="Label" parent="HBoxContainer/RightPanel/封地概览/OverviewScroll/Notes/SeedPlanDetails"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.79, 0.82, 0.70, 1)
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="IncludeUntilled" type="CheckBox" parent="HBoxContainer/RightPanel/封地概览/OverviewScroll/Notes/SeedPlanDetails"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+text = "包括未翻地"
+tooltip_text = "批量续播和补齐管事的安排也可标记未翻地。门客先翻地，再按安排播种。"
+
+[node name="SowingRations" type="Button" parent="HBoxContainer/RightPanel/封地概览/OverviewScroll/Notes/SeedPlanDetails"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(136, 34)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+text = "查看今夜安排"
+
+[node name="StewardNote" type="Label" parent="HBoxContainer/RightPanel/封地概览/OverviewScroll/Notes"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -164,23 +259,32 @@ theme_override_colors/font_color = Color(0.74, 0.83, 0.62, 1)
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 
-[node name="StewardHandover" type="HBoxContainer" parent="HBoxContainer/RightPanel/封地概览"]
+[node name="StewardPreview" type="Label" parent="HBoxContainer/RightPanel/封地概览/OverviewScroll/Notes"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.79, 0.82, 0.70, 1)
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="StewardHandover" type="HBoxContainer" parent="HBoxContainer/RightPanel/封地概览/OverviewScroll/Notes"]
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Label" type="Label" parent="HBoxContainer/RightPanel/封地概览/StewardHandover"]
+[node name="StewardTitle" type="Label" parent="HBoxContainer/RightPanel/封地概览/OverviewScroll/Notes/StewardHandover"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "井田管事"
 
-[node name="StewardPicker" type="OptionButton" parent="HBoxContainer/RightPanel/封地概览/StewardHandover"]
+[node name="StewardPicker" type="OptionButton" parent="HBoxContainer/RightPanel/封地概览/OverviewScroll/Notes/StewardHandover"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_default_cursor_shape = 2
 fit_to_longest_item = false
 
-[node name="FillStewardPlans" type="CheckBox" parent="HBoxContainer/RightPanel/封地概览/StewardHandover"]
+[node name="FillStewardPlans" type="CheckBox" parent="HBoxContainer/RightPanel/封地概览/OverviewScroll/Notes/StewardHandover"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(114, 34)
@@ -190,7 +294,7 @@ mouse_default_cursor_shape = 2
 text = "补齐续播"
 tooltip_text = "为没有安排的已翻田格补齐续播。可取消勾选，留作自己安排。"
 
-[node name="ApplySteward" type="Button" parent="HBoxContainer/RightPanel/封地概览/StewardHandover"]
+[node name="ApplySteward" type="Button" parent="HBoxContainer/RightPanel/封地概览/OverviewScroll/Notes/StewardHandover"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(145, 34)
 layout_mode = 2
@@ -199,82 +303,18 @@ disabled = true
 text = "交给管事"
 tooltip_text = "确认交接这块井田。现有的续播安排和在田作物会保留。"
 
-[node name="StewardPreview" type="Label" parent="HBoxContainer/RightPanel/封地概览"]
+[node name="AssignmentHelp" type="Label" parent="HBoxContainer/RightPanel/封地概览/OverviewScroll/Notes"]
 unique_name_in_owner = true
-visible = false
 layout_mode = 2
-theme_override_colors/font_color = Color(0.79, 0.82, 0.70, 1)
+theme_override_colors/font_color = Color(0.77, 0.81, 0.69, 1)
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
-
-[node name="SeedPlan" type="HBoxContainer" parent="HBoxContainer/RightPanel/封地概览"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="Label" type="Label" parent="HBoxContainer/RightPanel/封地概览/SeedPlan"]
-layout_mode = 2
-text = "续播安排"
-
-[node name="SeedPicker" type="OptionButton" parent="HBoxContainer/RightPanel/封地概览/SeedPlan"]
-layout_mode = 2
-size_flags_horizontal = 3
-tooltip_text = "按今天的节气估算生长夜数，实际以播种日为准。"
-
-[node name="RotateSeed" type="CheckBox" parent="HBoxContainer/RightPanel/封地概览/SeedPlan"]
-visible = false
-layout_mode = 2
-mouse_default_cursor_shape = 2
-text = "与菽轮作"
-tooltip_text = "每茬交替种菽和所选作物。选黍、稷、稻、麦或麻可安排轮作。"
-
-[node name="ApplyPrivate" type="Button" parent="HBoxContainer/RightPanel/封地概览/SeedPlan"]
-custom_minimum_size = Vector2(145, 34)
-layout_mode = 2
-mouse_default_cursor_shape = 2
-disabled = true
-text = "安排私田"
-tooltip_text = "批量安排当前井田的已翻私田。现有单茬作物收获后再播。"
-
-[node name="SeedTiming" type="Label" parent="HBoxContainer/RightPanel/封地概览"]
-visible = false
-layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.82, 0.57, 1)
-theme_override_font_sizes/font_size = 15
-autowrap_mode = 3
-
-[node name="SeedPlanDetails" type="HBoxContainer" parent="HBoxContainer/RightPanel/封地概览"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="SeedPlanNote" type="Label" parent="HBoxContainer/RightPanel/封地概览/SeedPlanDetails"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.79, 0.82, 0.70, 1)
-theme_override_font_sizes/font_size = 15
-autowrap_mode = 3
-
-[node name="IncludeUntilled" type="CheckBox" parent="HBoxContainer/RightPanel/封地概览/SeedPlanDetails"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-size_flags_vertical = 4
-mouse_default_cursor_shape = 2
-text = "包括未翻地"
-tooltip_text = "批量续播和补齐管事的安排也可标记未翻地。门客先翻地，再按安排播种。"
-
-[node name="SowingRations" type="Button" parent="HBoxContainer/RightPanel/封地概览/SeedPlanDetails"]
-visible = false
-custom_minimum_size = Vector2(136, 34)
-layout_mode = 2
-size_flags_vertical = 4
-mouse_default_cursor_shape = 2
-text = "查看今夜安排"
+text = "拖动门客到田格可指定优先田。"
 
 [node name="GridContainer" type="GridContainer" parent="HBoxContainer/RightPanel/封地概览"]
 layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/h_separation = 10
-theme_override_constants/v_separation = 10
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 7
 columns = 3
 
 [node name="市场" parent="HBoxContainer/RightPanel" instance=ExtResource("2_market")]
