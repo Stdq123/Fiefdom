@@ -386,17 +386,20 @@ func place_scenery(layer: Node2D, occlusion: LANDSCAPE.SCENERY_OCCLUSION) -> voi
 		occlusion.watch(tree)
 	var fence := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, LANDSCAPE.ESTATE_SITE_REGIONS[LANDSCAPE.Prop.FENCE])
 	for foot: Vector2 in FENCE_FEET:
-		_prop(layer, foot, fence, 45.0, wet_tint)
+		occlusion.watch_prop(_prop(layer, foot, fence, 45.0, wet_tint))
 	var reedbed := LANDSCAPE.painted_riverside_texture(LANDSCAPE.Prop.REEDS, season)
 	var plant_tint := LANDSCAPE.riverside_tint(season, Global.has_rain())
 	for detail: Vector3i in PROP_DETAILS:
 		var foot := Vector2(detail.x, detail.y)
+		var sprite: Sprite2D
 		if detail.z == LANDSCAPE.Prop.REEDS:
-			wind.attach(_prop(layer, foot, reedbed, 26.0, plant_tint), FOLIAGE_WIND.STEM)
+			sprite = _prop(layer, foot, reedbed, 26.0, plant_tint)
+			wind.attach(sprite, FOLIAGE_WIND.STEM)
 		else:
 			var prop := LANDSCAPE.Prop.BOULDER if detail.z == LANDSCAPE.Prop.ROCK else detail.z
 			var texture := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, LANDSCAPE.ESTATE_SITE_REGIONS[prop])
-			_prop(layer, foot, texture, 45.0, wet_tint)
+			sprite = _prop(layer, foot, texture, 45.0, wet_tint)
+		occlusion.watch_prop(sprite)
 	for jar: Vector3i in STORAGE:
 		var texture := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_VESSELS, LANDSCAPE.EXTERNAL_REGIONS[STORAGE_PROPS[jar.z]])
 		_prop(layer, Vector2(jar.x, jar.y), texture, 14.0, wet_tint)
@@ -412,6 +415,7 @@ func place_scenery(layer: Node2D, occlusion: LANDSCAPE.SCENERY_OCCLUSION) -> voi
 	var return_sign := VillageInscription.place(layer, LAYOUT.EAST_GATE + Vector2(-29, -9),
 		VillageInscription.Form.STONE, "封地", Vector2.RIGHT)
 	return_sign.modulate = wet_tint
+	occlusion.watch_prop(return_sign)
 
 func _place_dye_vat(layer: Node2D, vat_name: StringName, foot: Vector2, vat_scale: float, dye: DYE_VAT.Dye) -> void:
 	var vat := DYE_VAT.new(dye)

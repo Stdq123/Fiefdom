@@ -362,10 +362,13 @@ func place_scenery(layer: Node2D, occlusion: LANDSCAPE.SCENERY_OCCLUSION) -> voi
 			wind.attach(sprite, FOLIAGE_WIND.STEM)
 		if winter and mark.z in LANDSCAPE.ROCK_PROPS:
 			sprite.self_modulate *= LANDSCAPE.WINTER_ROCK_TINT
-	LANDSCAPE.place_waypost(layer, MARKET_SIGN, Vector2.LEFT, "西市", true).modulate = wet_tint
-	LANDSCAPE.place_waypost(layer, ESTATE_SIGN, Vector2.RIGHT, "封地", true).modulate = wet_tint
+		occlusion.watch_prop(sprite)
 	var meadow_heading: Vector2 = LAYOUT.MEADOW_TRACK[1] - LAYOUT.MEADOW_JUNCTION
-	LANDSCAPE.place_waypost(layer, MEADOW_SIGN, meadow_heading, Sheepfold.MEADOW, true).modulate = wet_tint
+	for marker: Array in [[MARKET_SIGN, Vector2.LEFT, "西市"], [ESTATE_SIGN, Vector2.RIGHT, "封地"],
+			[MEADOW_SIGN, meadow_heading, Sheepfold.MEADOW]]:
+		var board := LANDSCAPE.place_waypost(layer, marker[0], marker[1], marker[2], true)
+		board.modulate = wet_tint
+		occlusion.watch_prop(board)
 
 func _prop(layer: Node2D, foot: Vector2, texture: AtlasTexture) -> Sprite2D:
 	var sprite := Sprite2D.new()

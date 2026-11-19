@@ -635,7 +635,9 @@ func _prepare_map() -> void:
 	_refresh_scenery()
 	for sprite in scenery:
 		var prop := scenery[sprite]
-		if not STORAGE_TINTS.has(prop) and prop not in ROCK_PROPS and prop not in ROADSIDE_PROPS:
+		if prop in ROCK_PROPS or prop in ROADSIDE_PROPS:
+			occlusion.watch_prop(sprite)
+		elif not STORAGE_TINTS.has(prop):
 			occlusion.watch(sprite)
 
 func _place_ravine_wayposts(layer: Node2D) -> void:
