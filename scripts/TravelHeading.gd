@@ -4,7 +4,9 @@ class_name TravelHeading
 @export var place_name := ""
 
 func _ready() -> void:
-	$Place.text = place_name
+	var place: Label = $Place
+	place.text = place_name
+	InterfaceFont.scale_reading_text(place)
 	GameEvents.daylight_changed.connect(_refresh_daylight)
 	_refresh_daylight()
 

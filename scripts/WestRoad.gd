@@ -59,6 +59,7 @@ func _ready() -> void:
 	lighting.add_cloud_shadows(GROUND.BACKDROP)
 	$Waypoint.draw.connect(_draw_waypoint)
 	player.footstep.connect(_step)
+	InterfaceFont.scale_reading_text(%Date)
 	%SettingsButton.icon = HUDIcons.icon(HUDIcons.Symbol.SETTINGS)
 	%SettingsButton.pressed.connect(settings.show)
 	settings.visibility_changed.connect(_update_modal)

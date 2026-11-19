@@ -13,7 +13,7 @@ mouse_filter = 2
 texture_filter = 1
 theme = ExtResource("1_hud")
 
-[node name="Plaque" type="PanelContainer" parent="."]
+[node name="Plaque" type="PanelContainer" parent="." groups=["interaction_prompt_obstacle"]]
 custom_minimum_size = Vector2(176, 50)
 layout_mode = 2
 mouse_filter = 2

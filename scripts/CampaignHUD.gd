@@ -202,21 +202,21 @@ func _build_status() -> void:
 	trail_text.add_child(heading)
 	trail_date = Label.new()
 	trail_date.theme_type_variation = &"HudBronzeInk"
-	trail_date.add_theme_font_size_override("font_size", 14)
 	trail_text.add_child(trail_date)
 	GameEvents.daylight_changed.connect(_refresh_trail_date)
 	_refresh_trail_date()
 	outing_label = Label.new()
 	outing_label.theme_type_variation = &"HudBronzeInk"
-	outing_label.add_theme_font_size_override("font_size", 14)
 	trail_text.add_child(outing_label)
 	GameEvents.forage_taken.connect(_refresh_outing)
 	GameEvents.fish_changed.connect(_refresh_outing)
 	GameEvents.day_advanced.connect(_refresh_outing.unbind(1))
 	ravine_label = Label.new()
-	ravine_label.add_theme_font_size_override("font_size", 14)
 	ravine_label.add_theme_color_override("font_color", Color("#f2c596"))
 	trail_text.add_child(ravine_label)
+	for label: Label in [trail_date, outing_label, ravine_label]:
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		InterfaceFont.scale_reading_text(label)
 	GameEvents.ravine_journal_changed.connect(_refresh_ravine)
 	_refresh_ravine()
 	trail_route_sign = TRAVEL_ROUTE_SIGN.instantiate()

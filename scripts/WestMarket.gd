@@ -24,6 +24,7 @@ const FISH_BOARD := Rect2(64, 64, 24, 18)
 @onready var settings_shade: ColorRect = %SettingsShade
 @onready var date: Label = %Date
 @onready var stock: Label = %Stock
+@onready var food_stock: Label = %FoodStock
 @onready var produce_sack: Sprite2D = $Stalls/GrainStall/ProduceSack
 @onready var produce_tag: Sprite2D = $Stalls/GrainStall/ProduceSack/CropTag
 @onready var sample: Sprite2D = $Stalls/SilkStall/MarketSample
@@ -82,8 +83,11 @@ func _ready() -> void:
 	market_map.open_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
 	$CampaignHUD.add_field_return(player, market_map.follow_region_destination)
 	$DialogManager.setup($UI/Control, player)
+	for label: Label in [date, stock, food_stock]:
+		InterfaceFont.scale_reading_text(label)
 	%SettingsButton.icon = HUDIcons.icon(HUDIcons.Symbol.SETTINGS)
 	%CoinIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
+	%GrainIcon.texture = HUDIcons.icon(HUDIcons.Symbol.GRAIN)
 	%SettingsButton.pressed.connect(settings.show)
 	counter.visibility_changed.connect(_update_modal)
 	settings.visibility_changed.connect(_update_modal)
@@ -163,7 +167,8 @@ func _refresh_date() -> void:
 		" · 雨" if Global.has_rain() else ""]
 
 func _refresh_stock() -> void:
-	stock.text = "%d 铜钱   ·   %d 粮食" % [Global.money, Global.food_storage]
+	stock.text = "%d 铜钱" % Global.money
+	food_stock.text = "%d 粮食" % Global.food_storage
 
 func _refresh_produce_sack() -> void:
 	var available := Global.market_produce_available()

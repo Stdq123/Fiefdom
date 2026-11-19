@@ -34,6 +34,7 @@ func _ready() -> void:
 	arrival_plate = ARRIVAL_PLATE.instantiate()
 	add_child(arrival_plate)
 	arrival_name = arrival_plate.get_node("%Place")
+	InterfaceFont.scale_reading_text(arrival_name)
 	arrival_plate.get_node("%MapIcon").texture = HUDIcons.icon(HUDIcons.Symbol.MAP)
 	for visibility in [GameEvents.modal_visibility_changed, GameEvents.settings_visibility_changed, GameEvents.management_visibility_changed]:
 		visibility.connect(_dismiss_arrival_for_panel)

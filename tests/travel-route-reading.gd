@@ -36,6 +36,11 @@ func _check_layout(sign: Control) -> void:
 			if control is Label:
 				_expect(control.get_visible_line_count() == control.get_line_count(), "Every wrapped line remains visible.")
 
+func _check_readable_label(label: Label, plaque: Control, size: int) -> void:
+	_expect(label.is_visible_in_tree() and label.get_theme_font_size(&"font_size") == size
+		and plaque.get_global_rect().encloses(label.get_global_rect())
+		and label.get_visible_line_count() == label.get_line_count(), "The enlarged travel text fits inside its plaque.")
+
 func _review() -> void:
 	if not ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"):
 		push_error("Run the travel route check with an isolated smoke profile.")
@@ -49,10 +54,27 @@ func _review() -> void:
 	var chart: Control = market.market_map
 	var sign: Control = chart.route_sign
 	var wallet: Control = market.get_node("UI/Control/MarketName")
-	var compact := wallet.size.y
+	var settings_button: Button = market.get_node("%SettingsButton")
 	var font := sign.destination_label.get_theme_font_size(&"font_size") as int
 	_expect(preferences.set_reading_size(2) == OK and sign.destination_label.get_theme_font_size(&"font_size") == font + 6,
 		"Destination labels follow the reading preference.")
+	state.money = 1234567890123456
+	state.food_storage = 123456789012345
+	events.money_changed.emit(state.money)
+	events.food_changed.emit(state.food_storage)
+	await _settle()
+	var compact := wallet.size.y
+	var place: Label = wallet.get_node("Stack/Header/Place")
+	var copper: Label = market.stock
+	var food: Label = market.food_stock
+	_check_readable_label(place, wallet, 26)
+	_check_readable_label(market.date, wallet, 22)
+	_check_readable_label(copper, wallet, 22)
+	_check_readable_label(food, wallet, 22)
+	_expect(copper.text == "1234567890123456 铜钱" and food.text == "123456789012345 粮食"
+		and food.get_global_rect().position.y >= copper.get_global_rect().end.y
+		and wallet.get_global_rect().position.x >= settings_button.get_global_rect().end.x,
+		"Long balances keep their units on separate rows and leave settings clear.")
 	var before := _snapshot(state, market.player)
 	chart.follow_region_destination(state.WATER_SOURCE)
 	await _settle()
@@ -75,6 +97,9 @@ func _review() -> void:
 
 	var road := await _load_map(state.WEST_ROAD_SCENE)
 	sign = road.route_sign
+	var road_plaque: Control = road.get_node("UI/Control/RoadName")
+	_check_readable_label(road_plaque.get_node("Stack/Header/Place"), road_plaque, 26)
+	_check_readable_label(road.get_node("%Date"), road_plaque, 22)
 	before = _snapshot(state, road.player)
 	road._follow_region_destination(state.MARKET_ORDERS)
 	await _settle()
@@ -91,6 +116,10 @@ func _review() -> void:
 
 	state.ravine_journal.garden_day = 1
 	var ravine := await _load_map(state.WILDERNESS_SCENE)
+	var hud: CanvasLayer = ravine.get_node("CampaignHUD")
+	var trail_plaque: Control = hud.trail_date.get_parent().get_parent()
+	_check_readable_label(hud.trail_date, trail_plaque, 22)
+	_check_readable_label(hud.outing_label, trail_plaque, 22)
 	chart = ravine.ravine_map
 	sign = chart.route_sign
 	before = _snapshot(state, ravine.get_node("Player"))

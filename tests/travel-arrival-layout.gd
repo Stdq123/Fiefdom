@@ -12,9 +12,15 @@ func _expect(condition: bool, detail: String) -> void:
 		push_error(detail)
 
 func _check() -> void:
+	if not OS.get_user_data_dir().contains("fiefdom-smoke-"):
+		quit(1)
+		return
 	var state := root.get_node("Global")
 	var events := root.get_node("GameEvents")
 	travel = root.get_node("MapTravel")
+	var preferences := root.get_node("Preferences")
+	_expect(preferences.set_reading_size(2) == OK and travel.arrival_name.get_theme_font_size(&"font_size") == 31,
+		"The arrival title follows the reading preference.")
 	if change_scene_to_file(state.TITLE_SCENE) != OK:
 		quit(1)
 		return
@@ -28,8 +34,9 @@ func _check() -> void:
 		_expect(travel.arrival_plate.visible and travel.arrival_name.text == place,
 			"The reveal names the destination without extending the map lock.")
 		_expect(not travel.active and not travel.cover.visible, "Release the input lock while the sign is visible.")
-		_expect(root.get_visible_rect().encloses(travel.arrival_plate.get_node("Plaque").get_global_rect()),
-			"Keep the plaque inside the window.")
+		var plaque: Control = travel.arrival_plate.get_node("Plaque")
+		_expect(root.get_visible_rect().encloses(plaque.get_global_rect()) and plaque.is_in_group(&"interaction_prompt_obstacle"),
+			"Keep the plaque inside the window and reserve its space for nearby prompts.")
 	events.modal_visibility_changed.emit(true)
 	_expect(not travel.arrival_plate.visible, "A modal dismisses the plaque.")
 	travel.relocate(_under_cover.bind(false), state.WEST_MARKET_SCENE)
