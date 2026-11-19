@@ -44,6 +44,9 @@ func _run() -> void:
 	quit()
 
 func _check_reading_size(dialog: Control, caption: RichTextLabel) -> bool:
+	if not ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"):
+		push_error("Run the reading-size preference check with an isolated smoke profile.")
+		return false
 	var preferences := root.get_node("Preferences")
 	var options: Array[String] = ["接着听", "离开"]
 	var disabled: Array[int] = []
