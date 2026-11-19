@@ -22,10 +22,20 @@ const GATE_NS := Rect2(1, 4, 30, 24)
 const GATE_EW := Rect2(39, 1, 18, 30)
 const DECK_EW := Rect2(65, 4, 30, 24)
 const DECK_NS := Rect2(100, 1, 24, 30)
+
+class CropMarkRow extends Node2D:
+	var marks: Dictionary[Vector2, int] = {}
+
+	func _draw() -> void:
+		for at: Vector2 in marks:
+			FieldPlotArt.draw_task_mark(self, at, marks[at], FieldPlotArt.FARM_MARK_WIDTH)
+
 @onready var waterworks: Texture2D = load(WATERWORKS)
 @onready var tile_map: TileMapLayer = get_parent()
 @onready var tile_size := Vector2(tile_map.tile_set.tile_size)
 @onready var water_source = tile_map.get_parent().get_node("WaterSource")
+@onready var crops: TileMapLayer = tile_map.get_parent().get_node("CropsLayer")
+@onready var crop_marks: Node2D = crops.get_node("StatusMarks")
 
 var editing := false
 var cursor := Vector2i.ZERO
@@ -48,8 +58,9 @@ var rice_plot_highlight: Array[Vector2i] = []
 var gate_candidates: Dictionary[Vector2i, bool] = {}
 var gate_row: Array[Vector2i] = []
 @onready var flow_ink := Node2D.new()
-@onready var crop_icons := Node2D.new()
+@onready var plot_highlights := Node2D.new()
 @onready var plan_ink := Node2D.new()
+var crop_mark_rows: Dictionary[int, CropMarkRow] = {}
 var fertility_highlight: Tween
 var footbridges: Array[Rect2] = []
 var culverts: Dictionary[Vector2i, bool] = {}
@@ -60,10 +71,10 @@ var water_frame := 0
 func _ready() -> void:
 	flow_ink.draw.connect(_draw_flow)
 	add_child(flow_ink)
-	crop_icons.z_index = 2
-	crop_icons.material = MARK_LIGHT
-	crop_icons.draw.connect(_draw_crop_icons)
-	add_child(crop_icons)
+	plot_highlights.z_index = 2
+	plot_highlights.material = MARK_LIGHT
+	plot_highlights.draw.connect(_draw_plot_highlights)
+	add_child(plot_highlights)
 	plan_ink.z_index = 3
 	plan_ink.material = MARK_LIGHT
 	plan_ink.draw.connect(_draw_plan)
@@ -447,7 +458,8 @@ func _refresh_tiles() -> void:
 			flooded_rice[cell] = true
 	queue_redraw()
 	flow_ink.queue_redraw()
-	crop_icons.queue_redraw()
+	plot_highlights.queue_redraw()
+	_refresh_crop_marks()
 
 func _draw_plan() -> void:
 	if not editing:
@@ -508,36 +520,67 @@ func highlight_fertile_cells() -> void:
 	fertility_highlight.tween_interval(FERTILITY_HIGHLIGHT_SECONDS)
 	fertility_highlight.tween_callback(func():
 		fertility_highlight = null
-		crop_icons.queue_redraw()
+		plot_highlights.queue_redraw()
 	)
-	crop_icons.queue_redraw()
+	plot_highlights.queue_redraw()
 	GameEvents.world_notice.emit("田间金框标出豆茬留肥 · %d 秒" % int(FERTILITY_HIGHLIGHT_SECONDS))
 
 func _clear_fertility_highlight() -> void:
 	if fertility_highlight:
 		fertility_highlight.kill()
 		fertility_highlight = null
-		crop_icons.queue_redraw()
+		plot_highlights.queue_redraw()
 
 func _clear_rice_plot_highlight() -> void:
 	rice_plot_highlight.clear()
-	crop_icons.queue_redraw()
+	plot_highlights.queue_redraw()
 
-func _draw_crop_icons() -> void:
+func _draw_plot_highlights() -> void:
 	if editing:
 		return
 	if fertility_highlight:
 		for cell in Global.fertile_cells:
 			var area := _cell_rect(cell).grow(-1)
-			crop_icons.draw_rect(area, Color("#ddbb6f34"))
-			crop_icons.draw_rect(area, Color("#4b4432"), false, 2.4)
-			crop_icons.draw_rect(area, Color("#f4d99c"), false, 1.0)
+			plot_highlights.draw_rect(area, Color("#ddbb6f34"))
+			plot_highlights.draw_rect(area, Color("#4b4432"), false, 2.4)
+			plot_highlights.draw_rect(area, Color("#f4d99c"), false, 1.0)
 	for cell in rice_plot_highlight:
 		if not Global.active_crops.has(cell) and Global.irrigation.supplies(cell):
-			crop_icons.draw_rect(_cell_rect(cell).grow(-1.5), RICE_MARK, false, 1.25)
-	for cell in Global.active_crops:
-		var at := tile_map.map_to_local(cell) + tile_size * 0.5 - Vector2(4, 4)
-		FieldPlotArt.draw_task_mark(crop_icons, at, Global.crop_night_status(cell), FieldPlotArt.FARM_MARK_WIDTH)
+			plot_highlights.draw_rect(_cell_rect(cell).grow(-1.5), RICE_MARK, false, 1.25)
+
+func _refresh_crop_marks() -> void:
+	crop_marks.visible = not editing
+	if editing:
+		return
+	for row: CropMarkRow in crop_mark_rows.values():
+		row.marks.clear()
+	for cell: Vector2i in Global.active_crops:
+		var status := Global.crop_night_status(cell)
+		if status not in [Global.NightGrowth.READY, Global.NightGrowth.DRY, Global.NightGrowth.BLOCKED]:
+			continue
+		var row := _crop_mark_row(cell.y)
+		var center := (crops.map_to_local(cell) - row.position) * crops.scale
+		row.marks[center + tile_size * 0.5 - Vector2(4, 4)] = status
+	for y: int in crop_mark_rows.keys():
+		var row := crop_mark_rows[y]
+		if row.marks.is_empty():
+			row.hide()
+			row.queue_free()
+			crop_mark_rows.erase(y)
+		else:
+			row.queue_redraw()
+
+func _crop_mark_row(y: int) -> CropMarkRow:
+	var row: CropMarkRow = crop_mark_rows.get(y)
+	if not row:
+		row = CropMarkRow.new()
+		row.scale = Vector2.ONE / crops.scale
+		# Place the glyphs after their crop row while keeping them in the actor sort.
+		row.position.y = crops.map_to_local(Vector2i(0, y)).y + crops.y_sort_origin + 0.25
+		row.material = MARK_LIGHT
+		crop_marks.add_child(row)
+		crop_mark_rows[y] = row
+	return row
 
 func _draw() -> void:
 	var network := Global.irrigation

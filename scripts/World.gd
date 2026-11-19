@@ -27,7 +27,7 @@ const FIELD_WORK_LABELS := {
 }
 
 @onready var tile_map: TileMapLayer = $TileMapLayer
-@onready var crops_layer: TileMapLayer = $TileMapLayer/CropsLayer
+@onready var crops_layer: TileMapLayer = $CropsLayer
 @onready var player: Player = $Player
 @onready var tax_envoy: Node2D = $TaxEnvoy
 @onready var irrigation_overlay = $TileMapLayer/IrrigationOverlay
@@ -64,6 +64,7 @@ var swept_cells: Dictionary[Vector2i, bool] = {}
 
 func _ready() -> void:
 	# millet_data.crop_name = "黍" ... # Moved to ItemManager
+	crops_layer.position = tile_map.position
 
 	GameEvents.day_advanced.connect(_on_day_advanced)
 	GameEvents.seed_cycle_requested.connect(_cycle_seed)
