@@ -56,9 +56,10 @@
 
 信任项目后，Codex 从本地 `.codex/config.toml` 读取 `godot-ultimate` 的启动配置。换机器或目录时，将 `.codex/config.example.toml` 复制为 `.codex/config.toml`，把 `cwd` 改为包含 `project.godot` 的绝对路径。这个路径供桌面端后台进程定位项目。
 
-MCP 需要 PATH 中的 Node.js 和 `godot-mcp-ultimate/` 的本地检出。目录为空时，从 [Godot MCP Ultimate](https://github.com/Sharks820/godot-mcp-ultimate) 克隆到该目录，再检出本仓库 `git rev-parse HEAD:godot-mcp-ultimate` 显示的提交。构建命令如下。
+MCP 需要 PATH 中的 Node.js。项目将 Godot MCP Ultimate 的配套版本保存在本仓库的 `codex/godot-mcp-ultimate` 分支，子模块固定到当前游戏提交使用的版本。在项目根目录运行下面的命令即可检出并构建。[Godot MCP Ultimate 上游](https://github.com/Sharks820/godot-mcp-ultimate)
 
 ```powershell
+git submodule update --init -- godot-mcp-ultimate
 npm --prefix ./godot-mcp-ultimate ci --ignore-scripts
 npm --prefix ./godot-mcp-ultimate run build
 ```
