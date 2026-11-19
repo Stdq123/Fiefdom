@@ -1,6 +1,16 @@
 extends Control
 
 const BOW_ARCHERY_LEVEL := 2
+const WORSHIP_XP := 10
+const ART_PROGRESS_CARD := preload("res://scenes/ArtProgressCard.tscn")
+const ART_ACTIVITIES := {
+	PlayerStats.Art.RITES: "祭祀、秋社与冬至",
+	PlayerStats.Art.MUSIC: "编钟与谷雨合奏",
+	PlayerStats.Art.ARCHERY: "击退来敌",
+	PlayerStats.Art.DRIVING: "驾御场练习",
+	PlayerStats.Art.LITERACY: "研读、来客交谈",
+	PlayerStats.Art.MATH: "田间收成",
+}
 const SEASON_ORDER_PANEL := preload("res://scenes/SeasonOrderPanel.tscn")
 const NEIGHBOR_JOURNAL := preload("res://scenes/NeighborJournal.tscn")
 const FISH_LEDGER := preload("res://scripts/FishLedger.gd")
@@ -53,11 +63,19 @@ var silk_panel_script = preload("res://scripts/SilkPanel.gd")
 var ravine_panel_script = preload("res://scripts/RavineJournalPanel.gd")
 var music_practice_script = preload("res://scripts/MusicPractice.gd")
 
-# Six Arts UI References
-@onready var stats_container: VBoxContainer = $HBoxContainer/RightPanel/君子六艺/StatsContainer
-@onready var study_progress: Label = $HBoxContainer/RightPanel/君子六艺/StudyProgress
-@onready var driving_record: Label = $HBoxContainer/RightPanel/君子六艺/DrivingRecord
+# Six Arts
+@onready var arts_page: VBoxContainer = $HBoxContainer/RightPanel/君子六艺
+@onready var arts_scroll: ScrollContainer = %ArtsScroll
+@onready var arts_promotion: Label = %ArtsPromotion
+@onready var stats_container: GridContainer = %StatsContainer
+@onready var study_progress: Label = %StudyProgress
+@onready var driving_record: Label = %DrivingRecord
+@onready var silk_requirement: Label = %SilkRequirement
+@onready var irrigation_requirement: Label = %IrrigationRequirement
+@onready var open_silk: Button = %OpenSilk
+@onready var open_irrigation: Button = %OpenIrrigation
 @onready var read_button: Button = $HBoxContainer/RightPanel/君子六艺/Actions/ReadButton
+@onready var worship_button: Button = $HBoxContainer/RightPanel/君子六艺/Actions/WorshipButton
 @onready var music_button: Button = $HBoxContainer/RightPanel/君子六艺/Actions/MusicButton
 @onready var driving_button: Button = $HBoxContainer/RightPanel/君子六艺/Actions/DrivingButton
 
@@ -221,7 +239,7 @@ func show_market() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(market_panel)
 
 func show_six_arts() -> void:
-	tabs.current_tab = tabs.get_tab_idx_from_control(stats_container.get_parent())
+	tabs.current_tab = tabs.get_tab_idx_from_control(arts_page)
 
 func show_technology() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(irrigation_button.get_parent().get_parent())
@@ -273,6 +291,8 @@ func _announce_visibility() -> void:
 		previous_focus.grab_focus()
 
 func setup_tech() -> void:
+	for control: Control in [rank_progress_label, irrigation_button, bow_button]:
+		InterfaceFont.scale_reading_text(control)
 	irrigation_button.pressed.connect(_on_unlock_irrigation)
 	bow_button.pressed.connect(_on_unlock_bow)
 	_refresh_tech()
@@ -284,7 +304,6 @@ func _on_unlock_irrigation() -> void:
 	Global.tech_unlocked["irrigation"] = true
 	GameEvents.irrigation_unlocked.emit()
 	_refresh_tech()
-	_refresh_study_progress()
 
 func _refresh_tech() -> void:
 	var unlocked: bool = Global.tech_unlocked["irrigation"]
@@ -314,66 +333,50 @@ func _on_unlock_bow() -> void:
 		_refresh_tech()
 
 func setup_six_arts() -> void:
-	# Connect buttons
-	var actions = $HBoxContainer/RightPanel/君子六艺/Actions
-	if actions:
-		actions.get_node("WorshipButton").pressed.connect(_on_worship_pressed)
+	var bar := arts_scroll.get_v_scroll_bar()
+	bar.theme_type_variation = &"HudJournalBar"
+	bar.focus_mode = Control.FOCUS_ALL
+	for control: Control in [arts_promotion, study_progress, driving_record, %SilkTitle, %IrrigationTitle,
+			silk_requirement, irrigation_requirement, open_silk, open_irrigation,
+			read_button, worship_button, music_button, driving_button]:
+		InterfaceFont.scale_reading_text(control)
+	for art in PlayerStats.Art.values():
+		var card := ART_PROGRESS_CARD.instantiate() as ArtProgressCard
+		stats_container.add_child(card)
+		card.setup(art, ART_ACTIVITIES[art])
+
 	read_button.pressed.connect(_on_read_pressed)
+	worship_button.pressed.connect(_on_worship_pressed)
+	worship_button.text = "祭祀 · +%d 礼经验" % WORSHIP_XP
 	music_button.pressed.connect(_open_music_practice)
 	driving_button.pressed.connect(_start_driving_practice)
+	open_silk.pressed.connect(show_silk)
+	open_irrigation.pressed.connect(show_technology)
 	GameEvents.day_advanced.connect(_refresh_practice_buttons.unbind(1))
-	GameEvents.silk_changed.connect(_refresh_study_progress)
-	_refresh_practice_buttons()
-	
-	# Initial update
-	update_stats_ui()
-	
-	# Connect signals
+	GameEvents.money_changed.connect(_refresh_study_gates.unbind(1))
+	GameEvents.silk_changed.connect(_refresh_study_gates)
+	GameEvents.irrigation_unlocked.connect(_refresh_study_gates)
+	GameEvents.rank_changed.connect(_refresh_arts_promotion.unbind(1))
 	Global.player_stats.xp_changed.connect(_on_xp_changed)
+	_refresh_practice_buttons()
+	_refresh_study_gates()
+	_refresh_arts_promotion()
 
 func update_stats_ui() -> void:
-	if not stats_container: return
-	
-	for child in stats_container.get_children():
-		stats_container.remove_child(child)
-		child.queue_free()
-		
-	for i in range(6): # 0 to 5
-		var stat = Global.player_stats.get_stat(i)
-		var stat_name = Global.player_stats.get_art_name(i)
-		
-		var hbox = HBoxContainer.new()
-		
-		var name_label = Label.new()
-		name_label.text = stat_name
-		name_label.custom_minimum_size.x = 100
-		hbox.add_child(name_label)
-		
-		var progress = ProgressBar.new()
-		progress.max_value = stat["max_xp"]
-		progress.value = stat["xp"]
-		progress.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		progress.custom_minimum_size.y = 20
-		progress.show_percentage = false
-		hbox.add_child(progress)
-		
-		var level_label = Label.new()
-		level_label.text = "%d 级" % stat.level
-		hbox.add_child(level_label)
-		
-		stats_container.add_child(hbox)
+	for card: ArtProgressCard in stats_container.get_children():
+		card.refresh()
 
 func _on_read_pressed() -> void:
 	Global.study_bamboo_slips()
 
 func _on_worship_pressed() -> void:
-	# Worship increases Rites (礼)
-	Global.player_stats.add_xp(PlayerStats.Art.RITES, 10)
-	print("Worshipping...")
+	Global.player_stats.add_xp(PlayerStats.Art.RITES, WORSHIP_XP)
 
 func _on_xp_changed(_art_name: String, _xp: int, _max_xp: int) -> void:
 	update_stats_ui()
 	_refresh_practice_buttons()
+	_refresh_study_gates()
+	_refresh_arts_promotion()
 	_refresh_rank_progress()
 	_refresh_tech()
 
@@ -385,7 +388,7 @@ func _refresh_rank_progress() -> void:
 
 func _refresh_practice_buttons() -> void:
 	read_button.disabled = not Global.can_practice_today(PlayerStats.Art.LITERACY)
-	read_button.text = "今日已研读" if read_button.disabled else "研读简册 · +%d" % Global.balance.literacy_study_xp
+	read_button.text = "今日已研读" if read_button.disabled else "研读简册 · +%d 书经验" % Global.balance.literacy_study_xp
 	_refresh_study_progress()
 	music_button.disabled = not Global.can_practice_today(PlayerStats.Art.MUSIC)
 	driving_button.disabled = not Global.can_practice_today(PlayerStats.Art.DRIVING)
@@ -396,14 +399,52 @@ func _refresh_practice_buttons() -> void:
 
 func _refresh_study_progress() -> void:
 	var literacy := Global.player_stats.get_stat(PlayerStats.Art.LITERACY)
-	study_progress.text = "书 %d 级 · 本级经验 %d/%d\n每天可研读一次，与来客交谈也能积累书经验。" % [
-		literacy.level, literacy.xp, literacy.max_xp]
-	if not Global.silk_workshop.built:
-		study_progress.text += "\n" + ("可到蚕桑页建蚕室。" if literacy.level >= SilkWorkshop.LITERACY_LEVEL else
-			"书 %d 级可建蚕室。" % SilkWorkshop.LITERACY_LEVEL)
-	if not Global.tech_unlocked["irrigation"]:
-		study_progress.text += "\n" + ("可到科技页解锁水利。" if literacy.level >= Irrigation.UNLOCK_LITERACY_LEVEL else
-			"书 %d 级可解锁水利。" % Irrigation.UNLOCK_LITERACY_LEVEL)
+	var next_level: int = literacy.level + 1
+	var remaining: int = literacy.max_xp - literacy.xp
+	var progress := "距书 %d 级还差 %d 经验。" % [next_level, remaining]
+	if read_button.disabled:
+		study_progress.text = "%s明日可再读，也可与来客交谈积累书经验。" % progress
+	elif remaining <= Global.balance.literacy_study_xp:
+		study_progress.text = "%s本次研读可达书 %d 级。" % [progress, next_level]
+	else:
+		study_progress.text = "%s每天可免费研读一次，交谈也能积累书经验。" % progress
+
+func _refresh_study_gates() -> void:
+	var level := Global.player_stats.get_level(PlayerStats.Art.LITERACY)
+	var silk_level := SilkWorkshop.LITERACY_LEVEL
+	var silk_cost := Global.balance.silk_workshop_cost
+	if Global.silk_workshop.built:
+		silk_requirement.text = "已建成 · 可查看蚕桑工序"
+	elif level < silk_level:
+		silk_requirement.text = "书 %d/%d 级 · 还差 %d 级，建造需 %d 铜钱" % [level, silk_level, silk_level - level, silk_cost]
+	else:
+		silk_requirement.text = "建造需 %d 铜钱 · 钱袋 %d 铜钱" % [silk_cost, Global.money]
+		if Global.money < silk_cost:
+			silk_requirement.text += " · 还差 %d 铜钱" % (silk_cost - Global.money)
+	var water_level := Irrigation.UNLOCK_LITERACY_LEVEL
+	if Global.tech_unlocked["irrigation"]:
+		irrigation_requirement.text = "已解锁 · 可到田边挖渠"
+	elif level < water_level:
+		irrigation_requirement.text = "书 %d/%d 级 · 还差 %d 级" % [level, water_level, water_level - level]
+	else:
+		irrigation_requirement.text = "书艺已达标 · 可解锁水利"
+
+func _refresh_arts_promotion() -> void:
+	var note := ""
+	match Global.current_rank:
+		Global.Rank.ZHONG_SHI:
+			var target := Global.balance.upper_rank_art_level
+			var highest := Global.highest_six_art_level()
+			var progress := "六艺已达标" if highest >= target else "任一艺需 %d 级" % target
+			note = "晋上士 · %s · 最高 %d 级" % [progress, highest]
+		Global.Rank.DA_FU:
+			var target := Global.balance.minister_rank_art_level
+			var reached := 0
+			for art in PlayerStats.Art.values():
+				reached += int(Global.player_stats.get_level(art) >= target)
+			note = "晋卿 · 六艺 %d/%d 项达 %d 级" % [reached, ART_ACTIVITIES.size(), target]
+	arts_promotion.text = note
+	arts_promotion.visible = not note.is_empty()
 
 func _open_music_practice() -> void:
 	if not music_button.disabled and not has_node("MusicPractice"):
