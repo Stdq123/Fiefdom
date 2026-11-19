@@ -81,6 +81,7 @@ try {
         }
     }
     Copy-Item -LiteralPath (Join-Path $repo 'docs/Windows试玩说明.txt') -Destination (Join-Path $package 'README.txt')
+    Copy-Item -LiteralPath (Join-Path $repo 'tools/Fiefdom-Compatibility.cmd') -Destination $package
     Copy-Item -LiteralPath (Join-Path $repo "docs/licenses/Godot-$engineVersion") -Destination $package -Recurse
     foreach ($fontLicense in 'MaShanZheng-OFL.txt', 'NotoSansCJK-OFL.txt') {
         Copy-Item -LiteralPath (Join-Path $repo "docs/licenses/$fontLicense") -Destination $package
