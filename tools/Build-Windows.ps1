@@ -24,6 +24,7 @@ if ($LASTEXITCODE -ne 0 -or $actualVersion -notlike "$templateVersion.*") {
 }
 
 $originalAppData = $env:APPDATA
+$originalLocalAppData = $env:LOCALAPPDATA
 $originalTemp = $env:TEMP
 $originalTmp = $env:TMP
 if (-not $TemplatesDirectory) {
@@ -63,6 +64,7 @@ try {
     }
 
     $env:APPDATA = Join-Path $scratch.FullName 'export-profile'
+    $env:LOCALAPPDATA = $env:APPDATA
     # Godot uses the same temporary ICO filename in every Windows export.
     $exportTemp = (New-Item -ItemType Directory -Path (Join-Path $scratch.FullName 'export-temp')).FullName
     $env:TMP = $exportTemp
@@ -86,13 +88,23 @@ try {
     foreach ($fontLicense in 'MaShanZheng-OFL.txt', 'NotoSansCJK-OFL.txt') {
         Copy-Item -LiteralPath (Join-Path $repo "docs/licenses/$fontLicense") -Destination $package
     }
+    $files = [IO.Directory]::GetFiles($package, '*', [IO.SearchOption]::AllDirectories)
+    [Array]::Sort($files, [StringComparer]::Ordinal)
+    $checksums = foreach ($file in $files) {
+        $name = [IO.Path]::GetRelativePath($package, $file).Replace([IO.Path]::DirectorySeparatorChar, '/')
+        $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $file).Hash.ToLowerInvariant()
+        "$hash  $name"
+    }
+    $checksumsPath = Join-Path $package 'SHA256SUMS.txt'
+    $checksums | Set-Content -LiteralPath $checksumsPath -Encoding utf8
+    $files += $checksumsPath
+    [Array]::Sort($files, [StringComparer]::Ordinal)
+
     $archive = [IO.Compression.ZipFile]::Open($pendingZip, [IO.Compression.ZipArchiveMode]::Create)
     try {
-        $files = [IO.Directory]::GetFiles($package, '*', [IO.SearchOption]::AllDirectories)
-        [Array]::Sort($files, [StringComparer]::Ordinal)
         $archiveDate = [DateTimeOffset]::new(2000, 1, 1, 0, 0, 0, [TimeSpan]::Zero)
         foreach ($file in $files) {
-            $name = [IO.Path]::GetRelativePath($package, $file).Replace('\', '/')
+            $name = [IO.Path]::GetRelativePath($package, $file).Replace([IO.Path]::DirectorySeparatorChar, '/')
             $entry = $archive.CreateEntry($name, [IO.Compression.CompressionLevel]::Optimal)
             $entry.LastWriteTime = $archiveDate
             $targetStream = $entry.Open()
@@ -111,6 +123,7 @@ try {
     $extracted = Join-Path $scratch.FullName 'extracted'
     Expand-Archive -LiteralPath $pendingZip -DestinationPath $extracted
     $env:APPDATA = (New-Item -ItemType Directory -Path (Join-Path $scratch.FullName 'player-profile')).FullName
+    $env:LOCALAPPDATA = $env:APPDATA
     $runLog = Join-Path $scratch.FullName 'release.log'
     $game = Start-Process -FilePath (Join-Path $extracted 'Fiefdom.exe') -WorkingDirectory $extracted -WindowStyle Hidden -PassThru -ArgumentList @(
         '--headless', '--fixed-fps', '60', '--quit-after', '180', '--log-file', ('"' + $runLog + '"')
@@ -130,6 +143,7 @@ try {
     Get-Item -LiteralPath $zipPath
 } finally {
     $env:APPDATA = $originalAppData
+    $env:LOCALAPPDATA = $originalLocalAppData
     $env:TMP = $originalTmp
     $env:TEMP = $originalTemp
     if (Test-Path -LiteralPath $pendingZip -PathType Leaf) {

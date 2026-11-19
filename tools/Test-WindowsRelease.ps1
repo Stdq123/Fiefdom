@@ -5,6 +5,7 @@ param(
     [string]$Package,
     [string[]]$LegacyPackage,
     [string]$EvidenceDirectory,
+    [switch]$PackageOnly,
     [switch]$Capture,
     [switch]$Soak,
     [switch]$Rations,
@@ -51,6 +52,12 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+if ($PackageOnly) {
+    $replayOptions = @($PSBoundParameters.Keys | Where-Object { $_ -notin 'Package', 'EvidenceDirectory', 'PackageOnly', 'Capture' })
+    if ($replayOptions.Count) {
+        throw "PackageOnly accepts Package, EvidenceDirectory and Capture. Replay options supplied: $($replayOptions -join ', ')."
+    }
+}
 $repo = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).ProviderPath
 $packagePath = (Resolve-Path -LiteralPath $Package).ProviderPath
 if ($Capture -and -not ('Fiefdom.Tools.IsolatedDesktop' -as [type])) {
@@ -58,11 +65,62 @@ if ($Capture -and -not ('Fiefdom.Tools.IsolatedDesktop' -as [type])) {
 }
 if (-not $EvidenceDirectory) {
     $name = [IO.Path]::GetFileNameWithoutExtension($packagePath)
-    $EvidenceDirectory = Join-Path $repo "build/$name-verification"
+    $suffix = if ($PackageOnly) { 'package-verification' } else { 'verification' }
+    $EvidenceDirectory = Join-Path $repo "build/$name-$suffix"
 }
 $evidence = (New-Item -ItemType Directory -Force -Path $EvidenceDirectory).FullName
 $scratch = [IO.Directory]::CreateTempSubdirectory('fiefdom-smoke-release-')
 $originalAppData = $env:APPDATA
+$originalLocalAppData = $env:LOCALAPPDATA
+
+function Confirm-DistributedFiles([string]$Directory) {
+    $files = @{}
+    foreach ($file in Get-ChildItem -LiteralPath $Directory -File -Recurse -Force) {
+        $relative = [IO.Path]::GetRelativePath($Directory, $file.FullName).Replace([IO.Path]::DirectorySeparatorChar, '/')
+        $files[$relative] = $file
+    }
+    $required = @('Fiefdom.exe', 'Fiefdom.pck', 'Fiefdom-Compatibility.cmd', 'README.txt',
+        'MaShanZheng-OFL.txt', 'NotoSansCJK-OFL.txt', 'SHA256SUMS.txt')
+    foreach ($name in $required) {
+        if (-not $files.ContainsKey($name) -or $files[$name].Length -eq 0) { throw "Missing or empty distributed file: $name" }
+    }
+    $engineLicense = $files.Keys | Where-Object { $_ -match '^Godot-\d+\.\d+\.\d+/LICENSE\.txt$' } | Select-Object -First 1
+    if (-not $engineLicense -or $files[$engineLicense].Length -eq 0 -or
+        -not $files[$engineLicense.Replace('LICENSE.txt', 'COPYRIGHT.txt')].Length) {
+        throw 'The Godot license and copyright files must be included together.'
+    }
+
+    $checked = @{}
+    foreach ($line in Get-Content -LiteralPath $files['SHA256SUMS.txt'].FullName -Encoding utf8) {
+        if ($line -cnotmatch '^([0-9a-f]{64})  (.+)$') { throw "Invalid SHA256SUMS.txt entry: $line" }
+        $expected, $name = $Matches[1], $Matches[2]
+        if ($name -eq 'SHA256SUMS.txt' -or -not $files.ContainsKey($name) -or $checked.ContainsKey($name)) {
+            throw "Unexpected or duplicate checksum entry: $name"
+        }
+        $actual = Get-FileHash -Algorithm SHA256 -LiteralPath $files[$name].FullName
+        if ($actual.Hash -ne $expected) { throw "SHA-256 mismatch: $name" }
+        $checked[$name] = $actual
+    }
+    if ($checked.Count -ne $files.Count - 1) { throw 'SHA256SUMS.txt does not cover every distributed file.' }
+    Write-Host "PACKAGE_CHECKSUMS files=$($checked.Count)"
+    return $checked
+}
+
+function Write-VerificationManifest([IO.FileInfo]$Zip, [string]$ZipHash, [object[]]$Runtime, [int]$CheckedFiles) {
+    foreach ($file in $Runtime) {
+        if ((Get-FileHash -Algorithm SHA256 -LiteralPath $file.Path).Hash -ne $file.Hash) {
+            throw "The verifier modified a distributed file at $($file.Path)."
+        }
+    }
+    if ((Get-FileHash -Algorithm SHA256 -LiteralPath $packagePath).Hash -ne $ZipHash) {
+        throw 'The Windows ZIP changed during verification.'
+    }
+    $manifest = @("$($Zip.Name) $($Zip.Length) bytes", "ZIP SHA256 $ZipHash")
+    $manifest += $Runtime | ForEach-Object { "$([IO.Path]::GetFileName($_.Path)) SHA256 $($_.Hash)" }
+    if ($CheckedFiles) { $manifest += "Package files checked $CheckedFiles" }
+    if ($PackageOnly) { $manifest += 'Scope package-only' }
+    $manifest | Set-Content -LiteralPath (Join-Path $evidence 'manifest.txt') -Encoding utf8
+}
 
 function Start-VerifiedGame {
     param(
@@ -71,6 +129,7 @@ function Start-VerifiedGame {
         [string]$Name,
         [string]$Replay,
         [string]$Resolution,
+        [switch]$Compatibility,
         [switch]$ResumeProfile
     )
 
@@ -80,7 +139,9 @@ function Start-VerifiedGame {
     } else {
         (New-Item -ItemType Directory -Path $profilePath).FullName
     }
+    $env:LOCALAPPDATA = $env:APPDATA
     $log = Join-Path $evidence "$Name.log"
+    [IO.File]::WriteAllText($log, '')
     $frameLimit = if ($Replay -like '*-steward' -or $Replay -in 'reformed-orders', 'reformed-order-ahead', 'reformed-field-work-wait') { '42000' } elseif ($Replay) { '12000' } else { '180' }
     $arguments = @('--quit-after', $frameLimit, '--log-file', ('"' + $log + '"'))
     $arguments += if ($Replay -eq 'soak' -or ($Resolution -and $Replay -eq 'market-audio')) {
@@ -97,6 +158,7 @@ function Start-VerifiedGame {
     } else {
         $arguments += '--headless'
     }
+    if ($Compatibility) { $arguments += @('--rendering-method', 'gl_compatibility', '--rendering-driver', 'opengl3') }
     if ($Replay) {
         $arguments += @('--', $Replay)
         if ($Resolution) { $arguments += ('"' + $screens + '"') }
@@ -107,6 +169,7 @@ function Start-VerifiedGame {
         $isolation = ''
         $exitCode = [Fiefdom.Tools.IsolatedDesktop]::Run($executable, ($arguments -join ' '), $Directory, 180000, [ref]$isolation)
         Write-Host $isolation
+        if ($PackageOnly) { $isolation | Set-Content -LiteralPath (Join-Path $evidence "$Name-desktop.txt") -Encoding utf8 }
     } else {
         $process = Start-Process -FilePath $executable -WorkingDirectory $Directory -WindowStyle Hidden -PassThru -ArgumentList $arguments
         try {
@@ -123,7 +186,8 @@ function Start-VerifiedGame {
     $lines = Get-Content -LiteralPath $log -Encoding utf8
     $marker = if ($Replay) { 'SCENARIO_OK' } else { 'Fiefdom title ready' }
     $lines | Where-Object { $_ -match '^(CAMPAIGN_|RELEASE_|LEGACY_|RATIONS_|CALENDAR_|LEDGER_AUDIO_|HARVEST_SCOPE_|RESEARCH_RATIONS_|GAMEPAD_|DRIVING_|BOW_AIM_|WINTER_|AUTUMN_|BINDING_|RAFT_|TITLE_|BACKPACK_|HALL_|DECOR_|ROUTE_|COUNCIL_PREP_|COUNCIL_SILK_|DIRECTION_|PLAN_|TRIBUTE_|FIELD_ROTATION_|SILK_MARKET_|SILK_BATCH_|HANDOFF_|AMBIENCE_|TERRAIN_|CANAL_DOOR_|SPRING_|ESTATE_PROGRESS_|ESTATE_PROVISIONS|RECRUITMENT_|FIELD_ACCESS_|FIELD_STROKE_|WORKSITE_|FIELD_ROUTE_|FIELD_NIGHT_|FIELD_BEDTIME|MORNING_|PAVILION_EVENING_|FISH_MARKET_|RAVINE_MAP_|SHORTCUT_|TRAP_|MARKET_WAYFINDING_|ORDER_AHEAD_|SCENARIO_OK|Fiefdom title ready|Vulkan)' } | Out-Host
-    if ($exitCode -ne 0 -or $lines -cnotcontains $marker -or $lines -cmatch '^\s*(?:SCRIPT ERROR|USER ERROR|ERROR|WARNING):') {
+    if ($exitCode -ne 0 -or $lines -cnotcontains $marker -or $lines -cmatch '^\s*(?:SCRIPT ERROR|USER ERROR|ERROR|WARNING):' -or
+        ($Compatibility -and -not ($lines -cmatch '^OpenGL API .* - Compatibility - '))) {
         throw "$Name failed (exit $exitCode). See $log"
     }
 }
@@ -186,13 +250,30 @@ window/size/no_focus=true
 }
 
 try {
-    $release = Join-Path $scratch.FullName 'unpacked Windows release'
+    $zip = Get-Item -LiteralPath $packagePath
+    $zipHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $packagePath).Hash
+    $directoryName = if ($PackageOnly) { '采邑春秋 Windows 发行包' } else { 'unpacked Windows release' }
+    $release = Join-Path $scratch.FullName $directoryName
     Expand-Archive -LiteralPath $packagePath -DestinationPath $release
     if (Test-Path -LiteralPath (Join-Path $release 'override.cfg')) {
         throw 'The distributed package must start without a verification override.'
     }
-    $runtime = @('Fiefdom.exe', 'Fiefdom.pck') | ForEach-Object { Get-FileHash -LiteralPath (Join-Path $release $_) }
+    $verified = if ($PackageOnly -or (Test-Path -LiteralPath (Join-Path $release 'SHA256SUMS.txt') -PathType Leaf)) {
+        Confirm-DistributedFiles $release
+    }
+    $runtime = @('Fiefdom.exe', 'Fiefdom.pck') | ForEach-Object {
+        if ($verified) { $verified[$_] } else { Get-FileHash -LiteralPath (Join-Path $release $_) }
+    }
     Start-VerifiedGame -Directory $release -Profile 'startup' -Name 'startup'
+    if ($PackageOnly) {
+        if ($Capture) {
+            Start-VerifiedGame -Directory $release -Profile 'title-default' -Name 'title-1920x1080' -Resolution '1920x1080'
+            Start-VerifiedGame -Directory $release -Profile 'title-compatibility' -Name 'title-opengl-1024x768' -Resolution '1024x768' -Compatibility
+        }
+        Write-VerificationManifest $zip $zipHash $runtime $verified.Count
+        Write-Host "Windows package checks passed. Evidence saved to $evidence"
+        return
+    }
     # The fixture lives alongside the unpacked files. The distributed EXE and PCK are used byte for byte.
     Install-Replay $release
     $fullResolution = if ($Capture) { '1920x1080' } else { '' }
@@ -522,21 +603,11 @@ try {
     if ($Soak) {
         Start-VerifiedGame -Directory $release -Profile 'soak' -Name 'soak' -Replay 'soak'
     }
-    foreach ($file in $runtime) {
-        if ((Get-FileHash -LiteralPath $file.Path).Hash -ne $file.Hash) {
-            throw "The verifier modified a distributed file at $($file.Path)."
-        }
-    }
-    $zip = Get-Item -LiteralPath $packagePath
-    $manifest = @(
-        "$($zip.Name) $($zip.Length) bytes",
-        "ZIP SHA256 $((Get-FileHash -LiteralPath $packagePath).Hash)"
-    )
-    $manifest += $runtime | ForEach-Object { "$([IO.Path]::GetFileName($_.Path)) SHA256 $($_.Hash)" }
-    $manifest | Set-Content -LiteralPath (Join-Path $evidence 'manifest.txt') -Encoding utf8
+    Write-VerificationManifest $zip $zipHash $runtime $verified.Count
     Write-Host "Windows release checks passed. Evidence saved to $evidence"
 } finally {
     $env:APPDATA = $originalAppData
+    $env:LOCALAPPDATA = $originalLocalAppData
     $tempRoot = [IO.Path]::TrimEndingDirectorySeparator([IO.Path]::GetFullPath([IO.Path]::GetTempPath()))
     $resolvedScratch = Get-Item -LiteralPath $scratch.FullName -Force
     if ($resolvedScratch.Parent.FullName -eq $tempRoot -and
