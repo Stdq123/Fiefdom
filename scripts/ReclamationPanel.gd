@@ -8,15 +8,27 @@ const WORKSITE := preload("res://scripts/FieldWorksite.gd")
 const READY_INK := Color("#c6dba5")
 const SHORT_INK := Color("#efbf8b")
 const HELP_INK := Color("#e5d6ac")
+const PLOT_OPEN := Color("#c3d391")
+const PLOT_BLOCKED := Color("#ec9a80")
+const PLOT_EMPTY := Color("#847b62")
+const WATER_MARK := Color("#c8f5e3")
+const MARK_OUTLINE := Color("#242a24")
+const SURVEY_HEIGHT := 516.0
+const RECEIPT_HEIGHT := 468.0
+const FULL_ESTATE_HEIGHT := 246.0
 
+@onready var card: Panel = $Panel
 @onready var subtitle: Label = %Subtitle
 @onready var rank_label: Label = %Rank
 @onready var workers_label: Label = %Workers
 @onready var copper_label: Label = %Copper
 @onready var grain_label: Label = %Grain
+@onready var crew_label: Label = %Crew
 @onready var reclaim_button: Button = $Panel/ReclaimButton
-@onready var info_label: Label = $Panel/InfoLabel
-@onready var validity_label: Label = $Panel/ValidityLabel
+@onready var close_button: Button = $Panel/CloseButton
+@onready var info_label: Label = %InfoLabel
+@onready var validity_label: Label = %ValidityLabel
+@onready var site_diagram: Control = %SiteDiagram
 @onready var market_button: Button = %MarketButton
 @onready var visitor_button: Button = %VisitorButton
 @onready var worksite_button: Button = %WorksiteButton
@@ -34,16 +46,25 @@ var preview_watered: Array[Vector2i] = []
 var commissioned_site := -1
 var paid := Vector2i.ZERO
 
+func _ready() -> void:
+	%SurveyKit.texture = WORKSITE.tool_texture(0)
+	site_diagram.draw.connect(_draw_site_diagram)
+	%Scroll.get_v_scroll_bar().theme_type_variation = &"HudJournalBar"
+	for control: Control in %Checks.get_children():
+		InterfaceFont.scale_reading_text(control)
+	for control: Control in [subtitle, info_label, validity_label, reclaim_button, close_button,
+			market_button, visitor_button, worksite_button]:
+		InterfaceFont.scale_reading_text(control)
+
 func setup(estate_world: Node2D, previous_site: Variant = null) -> void:
 	world = estate_world
 	tile_map = world.tile_map
-	$Panel/SurveyKit.texture = WORKSITE.tool_texture(0)
 	highlight = Node2D.new()
 	highlight.z_index = 100
 	highlight.draw.connect(_draw_preview)
 	tile_map.add_child(highlight)
 	reclaim_button.pressed.connect(_reclaim_selected)
-	$Panel/CloseButton.pressed.connect(queue_free)
+	close_button.pressed.connect(queue_free)
 	market_button.pressed.connect(_open_market)
 	visitor_button.pressed.connect(_find_visitor)
 	worksite_button.pressed.connect(_find_worksite)
@@ -105,6 +126,7 @@ func _refresh() -> void:
 
 func _refresh_ledger() -> void:
 	var receipt := commissioned_site >= 0
+	card.size.y = RECEIPT_HEIGHT if receipt else (SURVEY_HEIGHT if plan.possible else FULL_ESTATE_HEIGHT)
 	var field_number := commissioned_site + 1 if receipt else Global.well_fields.size() + 1
 	subtitle.text = "井田 %d · 立桩后 %d 夜完工" % [field_number, Global.RECLAMATION_NIGHTS]
 	if receipt:
@@ -114,14 +136,19 @@ func _refresh_ledger() -> void:
 			if plan.possible else "封地井田已达最高田额")
 	_show_check(rank_label, "%s · %d/%d 块" % [
 		Global.rank_names[Global.current_rank], Global.well_fields.size(), Global.max_well_fields], receipt or plan.has_space)
+	for control: Control in %Checks.get_children():
+		control.visible = plan.possible or receipt or control == rank_label or control.name == &"RankKey"
+	var crew_grain := Global.food_storage if receipt else maxi(0, Global.food_storage - int(plan.grain))
+	_show_requirement(crew_label, crew_grain, plan.crew_food, "份", "" if receipt else "立桩后 ")
+	crew_label.tooltip_text = "按现有门客的耗粮预估 %d 夜所需口粮。" % Global.RECLAMATION_NIGHTS
 	if receipt:
 		_show_check(workers_label, "%d 人" % Global.retainers.size(), true)
 		_show_check(copper_label, "余 %d 枚 · 已扣 %d 枚" % [Global.money, paid.x], true)
 		_show_check(grain_label, "余 %d 份 · 已扣 %d 份" % [Global.food_storage, paid.y], true)
 	else:
-		_show_check(workers_label, "%d/%d 人" % [Global.retainers.size(), Global.RECLAMATION_RETAINERS], plan.workers_needed == 0)
-		_show_check(copper_label, "%d/%d 枚" % [Global.money, plan.copper], Global.money >= plan.copper)
-		_show_check(grain_label, "%d/%d 份" % [Global.food_storage, plan.grain], Global.food_storage >= plan.grain)
+		_show_requirement(workers_label, Global.retainers.size(), Global.RECLAMATION_RETAINERS, "人")
+		_show_requirement(copper_label, Global.money, plan.copper, "枚")
+		_show_requirement(grain_label, Global.food_storage, plan.grain, "份")
 	var seeking_workers: bool = not receipt and plan.possible and plan.workers_needed > 0
 	var candidate: Dictionary = world.recruitment_candidate() if seeking_workers and Global.last_recruit_day != Global.current_day else {}
 	visitor_name = candidate.guest.name if not candidate.is_empty() else ""
@@ -130,7 +157,15 @@ func _refresh_ledger() -> void:
 	market_button.visible = (not receipt and plan.possible
 		and (Global.money < plan.copper or Global.food_storage < plan.grain + plan.crew_food))
 	worksite_button.visible = receipt
+	%Shortcuts.visible = visitor_button.visible or market_button.visible or worksite_button.visible
 	info_label.text = _instructions(candidate)
+	info_label.visible = not info_label.text.is_empty()
+
+func _show_requirement(label: Label, available: int, needed: int, unit: String, prefix := "") -> void:
+	var value := "%s%d/%d %s" % [prefix, available, needed, unit]
+	if available < needed:
+		value += " · 差 %d" % (needed - available)
+	_show_check(label, value, available >= needed)
 
 func _show_check(label: Label, value: String, ready: bool) -> void:
 	label.text = value
@@ -138,19 +173,10 @@ func _show_check(label: Label, value: String, ready: bool) -> void:
 
 func _instructions(candidate: Dictionary) -> String:
 	if commissioned_site >= 0:
-		return "%d 夜后可耕种。余粮 %d 份，施工期间门客共需 %d 份。" % [
-			Global.RECLAMATION_NIGHTS, Global.food_storage, plan.crew_food]
+		return "%d 夜后可耕种。" % Global.RECLAMATION_NIGHTS
 	if not plan.has_space:
-		if not plan.possible:
-			return "现有井田已用尽爵位可管的田额。"
-		return Global.promotion_summary() + "\n过夜时核定爵位。"
-	if plan.ready:
-		var instruction := "" if has_selection else "点选田址。"
-		return instruction + "立桩后余粮 %d 份，%d 夜口粮需 %d 份。" % [
-			Global.food_storage - plan.grain, Global.RECLAMATION_NIGHTS, plan.crew_food]
-	if plan.workers_needed > 0:
-		return _recruitment_instructions(candidate)
-	return "立桩用粮 %d 份，施工期间口粮另需 %d 份。可从市集按计划备粮。" % [plan.grain, plan.crew_food]
+		return Global.promotion_summary() + "\n过夜时核定爵位。" if plan.possible else ""
+	return _recruitment_instructions(candidate) if plan.workers_needed > 0 else ""
 
 func _recruitment_instructions(candidate: Dictionary) -> String:
 	if candidate.is_empty():
@@ -187,23 +213,26 @@ func _show_preview(center: Vector2i) -> void:
 	if preview_site == Global.ReclamationSite.OPEN:
 		preview_watered = Global.irrigation.watered_footprint(center)
 	_update_validity()
-	highlight.queue_redraw()
 
 func _clear_preview() -> void:
 	preview_center = null
 	has_selection = false
 	preview_watered.clear()
 	_update_validity()
-	highlight.queue_redraw()
 
 func _update_validity() -> void:
 	reclaim_button.disabled = not plan.ready or not has_selection or preview_site != Global.ReclamationSite.OPEN
+	var survey_available: bool = plan.has_space and commissioned_site < 0
+	%SiteRule.visible = survey_available
+	%SiteNotes.visible = survey_available
+	site_diagram.queue_redraw()
+	highlight.queue_redraw()
 	validity_label.modulate = HELP_INK
-	if not plan.has_space or commissioned_site >= 0:
+	if not survey_available:
 		validity_label.text = ""
 		return
 	if preview_center == null:
-		validity_label.text = "移动光标查看九格田界与渠水。"
+		validity_label.text = "移动光标勘察九格田界，点选田址。"
 		return
 	validity_label.modulate = READY_INK if preview_site == Global.ReclamationSite.OPEN else SHORT_INK
 	match preview_site:
@@ -215,32 +244,52 @@ func _update_validity() -> void:
 		Global.ReclamationSite.LANDMARK: validity_label.text = "田界会占用建筑或驾御场。请移到旁边空地。"
 		Global.ReclamationSite.OPEN:
 			var status := "已选田址" if has_selection else "此处可用"
-			validity_label.text = "%s · 可接现有渠水 %d/9 格" % [status, preview_watered.size()]
+			var mark := "＋ " if not preview_watered.is_empty() else ""
+			validity_label.text = "%s\n%s可接现有渠水 %d/9 格" % [status, mark, preview_watered.size()]
 
 func _draw_preview() -> void:
 	if preview_center == null:
 		return
 	var cell_size := Vector2(tile_map.tile_set.tile_size)
 	var area := Rect2(tile_map.map_to_local(preview_center) - cell_size * 1.5, cell_size * 3.0)
-	var edge := Color("#c3d391") if preview_site == Global.ReclamationSite.OPEN else Color("#ec9a80")
-	highlight.draw_rect(area, Color(edge, 0.19))
-	for cell in preview_watered:
-		var wet := Rect2(tile_map.map_to_local(cell) - cell_size / 2.0, cell_size).grow(-1.0)
-		highlight.draw_rect(wet, Color("#85d9c280"))
-		highlight.draw_rect(wet, Color("#a7e6d4"), false, 1.0)
+	_draw_plot(highlight, area, cell_size)
+	if has_selection and preview_site == Global.ReclamationSite.OPEN:
+		for corner in EstateLayout.corners(area):
+			var stake := Rect2(corner - Vector2(4.5, 8), Vector2(9, 9))
+			highlight.draw_texture_rect(WORKSITE.tool_texture(WORKSITE.PEG), stake, false)
+
+func _draw_site_diagram() -> void:
+	site_diagram.draw_rect(Rect2(Vector2.ZERO, site_diagram.size), Color("#1b2524"))
+	var area := Rect2(Vector2(3, 3), site_diagram.size - Vector2(6, 6))
+	_draw_plot(site_diagram, area, area.size / 3.0)
+
+func _draw_plot(canvas: CanvasItem, area: Rect2, cell_size: Vector2) -> void:
+	var blocked := preview_center != null and preview_site != Global.ReclamationSite.OPEN
+	var edge := PLOT_EMPTY if preview_center == null else (PLOT_BLOCKED if blocked else PLOT_OPEN)
+	canvas.draw_rect(area, Color(edge, 0.19))
+	if preview_center != null:
+		var first: Vector2i = preview_center - Vector2i.ONE
+		for cell in preview_watered:
+			var wet := Rect2(area.position + Vector2(cell - first) * cell_size, cell_size).grow(-1.0)
+			canvas.draw_rect(wet, Color("#85d9c280"))
+			canvas.draw_rect(wet, Color("#a7e6d4"), false, 1.0)
+			var radius := cell_size.x * 0.25
+			_draw_mark(canvas, wet.get_center(), Vector2(radius, 0), Vector2(0, radius), WATER_MARK)
 	for i: float in [1.0, 2.0]:
 		var x := area.position.x + cell_size.x * i
 		var y := area.position.y + cell_size.y * i
-		highlight.draw_line(Vector2(x, area.position.y), Vector2(x, area.end.y), Color(edge, 0.75))
-		highlight.draw_line(Vector2(area.position.x, y), Vector2(area.end.x, y), Color(edge, 0.75))
-	highlight.draw_rect(area, edge, false, 1.8 if has_selection else 1.2)
-	if has_selection:
-		for corner in EstateLayout.corners(area):
-			if preview_site == Global.ReclamationSite.OPEN:
-				var stake := Rect2(corner - Vector2(4.5, 8), Vector2(9, 9))
-				highlight.draw_texture_rect(WORKSITE.tool_texture(WORKSITE.PEG), stake, false)
-			else:
-				highlight.draw_rect(Rect2(corner - Vector2(1.5, 1.5), Vector2(3, 3)), edge)
+		canvas.draw_line(Vector2(x, area.position.y), Vector2(x, area.end.y), Color(edge, 0.75))
+		canvas.draw_line(Vector2(area.position.x, y), Vector2(area.end.x, y), Color(edge, 0.75))
+	canvas.draw_rect(area, edge, false, 1.8 if has_selection else 1.2)
+	if blocked:
+		var radius := cell_size.x * 0.58
+		_draw_mark(canvas, area.get_center(), Vector2(radius, radius), Vector2(radius, -radius), PLOT_BLOCKED)
+
+func _draw_mark(canvas: CanvasItem, at: Vector2, a: Vector2, b: Vector2, ink: Color) -> void:
+	for arm: Vector2 in [a, b]:
+		canvas.draw_line(at - arm, at + arm, MARK_OUTLINE, 4.6, true)
+	for arm: Vector2 in [a, b]:
+		canvas.draw_line(at - arm, at + arm, ink, 2.2, true)
 
 func _reclaim_selected() -> void:
 	if not has_selection:

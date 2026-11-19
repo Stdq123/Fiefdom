@@ -27,170 +27,229 @@ texture_filter = 1
 layout_mode = 0
 offset_left = 16.0
 offset_top = 16.0
-offset_right = 374.0
-offset_bottom = 464.0
+offset_right = 412.0
+offset_bottom = 532.0
+theme = ExtResource("3_hud")
 theme_override_styles/panel = SubResource("Ledger")
 
-[node name="TitleLabel" type="Label" parent="Panel"]
-layout_mode = 0
+[node name="Ledger" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 offset_left = 18.0
 offset_top = 12.0
-offset_right = 340.0
-offset_bottom = 46.0
+offset_right = -18.0
+offset_bottom = -68.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="Panel/Ledger"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Heading" type="VBoxContainer" parent="Panel/Ledger/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 1
+
+[node name="Title" type="Label" parent="Panel/Ledger/Header/Heading"]
+layout_mode = 2
 theme_override_colors/font_color = Color(0.94, 0.81, 0.56, 1)
 theme_override_font_sizes/font_size = 26
 text = "开垦井田"
 
-[node name="SurveyKit" type="TextureRect" parent="Panel"]
-layout_mode = 0
-offset_left = 264.0
-offset_top = 5.0
-offset_right = 340.0
-offset_bottom = 53.0
+[node name="Subtitle" type="Label" parent="Panel/Ledger/Header/Heading"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.81, 0.69, 1)
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="SurveyKit" type="TextureRect" parent="Panel/Ledger/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(60, 54)
+layout_mode = 2
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="Subtitle" type="Label" parent="Panel"]
-unique_name_in_owner = true
-layout_mode = 0
-offset_left = 18.0
-offset_top = 50.0
-offset_right = 340.0
-offset_bottom = 72.0
-theme_override_colors/font_color = Color(0.78, 0.81, 0.69, 1)
-theme_override_font_sizes/font_size = 15
-
-[node name="Rule" type="ColorRect" parent="Panel"]
-layout_mode = 0
-offset_left = 18.0
-offset_top = 82.0
-offset_right = 340.0
-offset_bottom = 83.0
+[node name="Rule" type="ColorRect" parent="Panel/Ledger"]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
 mouse_filter = 2
 color = Color(0.59, 0.50, 0.33, 0.65)
 
-[node name="Checks" type="GridContainer" parent="Panel"]
-layout_mode = 0
-offset_left = 18.0
-offset_top = 93.0
-offset_right = 340.0
-offset_bottom = 203.0
-theme_override_constants/h_separation = 12
-theme_override_constants/v_separation = 7
+[node name="Scroll" type="ScrollContainer" parent="Panel/Ledger"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="Notes" type="VBoxContainer" parent="Panel/Ledger/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Checks" type="GridContainer" parent="Panel/Ledger/Scroll/Notes"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 4
 columns = 2
 
-[node name="RankKey" type="Label" parent="Panel/Checks"]
+[node name="RankKey" type="Label" parent="Panel/Ledger/Scroll/Notes/Checks"]
 layout_mode = 2
 text = "爵位与田额"
 
-[node name="Rank" type="Label" parent="Panel/Checks"]
+[node name="Rank" type="Label" parent="Panel/Ledger/Scroll/Notes/Checks"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 horizontal_alignment = 2
+autowrap_mode = 3
 
-[node name="WorkersKey" type="Label" parent="Panel/Checks"]
+[node name="WorkersKey" type="Label" parent="Panel/Ledger/Scroll/Notes/Checks"]
 layout_mode = 2
 text = "在籍门客"
 
-[node name="Workers" type="Label" parent="Panel/Checks"]
+[node name="Workers" type="Label" parent="Panel/Ledger/Scroll/Notes/Checks"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 horizontal_alignment = 2
+autowrap_mode = 3
 
-[node name="CopperKey" type="Label" parent="Panel/Checks"]
+[node name="CopperKey" type="Label" parent="Panel/Ledger/Scroll/Notes/Checks"]
 layout_mode = 2
-text = "铜钱"
+text = "立桩铜钱"
 
-[node name="Copper" type="Label" parent="Panel/Checks"]
+[node name="Copper" type="Label" parent="Panel/Ledger/Scroll/Notes/Checks"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 horizontal_alignment = 2
+autowrap_mode = 3
 
-[node name="GrainKey" type="Label" parent="Panel/Checks"]
+[node name="GrainKey" type="Label" parent="Panel/Ledger/Scroll/Notes/Checks"]
 layout_mode = 2
-text = "粮仓"
+text = "立桩用粮"
 
-[node name="Grain" type="Label" parent="Panel/Checks"]
+[node name="Grain" type="Label" parent="Panel/Ledger/Scroll/Notes/Checks"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 horizontal_alignment = 2
+autowrap_mode = 3
 
-[node name="InfoLabel" type="Label" parent="Panel"]
-layout_mode = 0
-offset_left = 18.0
-offset_top = 217.0
-offset_right = 340.0
-offset_bottom = 278.0
+[node name="CrewKey" type="Label" parent="Panel/Ledger/Scroll/Notes/Checks"]
+layout_mode = 2
+text = "施工口粮"
+
+[node name="Crew" type="Label" parent="Panel/Ledger/Scroll/Notes/Checks"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+horizontal_alignment = 2
+autowrap_mode = 3
+
+[node name="InfoLabel" type="Label" parent="Panel/Ledger/Scroll/Notes"]
+unique_name_in_owner = true
+layout_mode = 2
 theme_override_colors/font_color = Color(0.91, 0.88, 0.76, 1)
 autowrap_mode = 3
 
-[node name="ValidityLabel" type="Label" parent="Panel"]
-layout_mode = 0
-offset_left = 18.0
-offset_top = 286.0
-offset_right = 340.0
-offset_bottom = 330.0
+[node name="SiteRule" type="ColorRect" parent="Panel/Ledger"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.59, 0.50, 0.33, 0.45)
+
+[node name="SiteNotes" type="HBoxContainer" parent="Panel/Ledger"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SiteText" type="VBoxContainer" parent="Panel/Ledger/SiteNotes"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+
+[node name="ValidityLabel" type="Label" parent="Panel/Ledger/SiteNotes/SiteText"]
+unique_name_in_owner = true
+layout_mode = 2
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
 
-[node name="Shortcuts" type="HBoxContainer" parent="Panel"]
-theme = ExtResource("3_hud")
-layout_mode = 0
-offset_left = 18.0
-offset_top = 341.0
-offset_right = 340.0
-offset_bottom = 377.0
+[node name="SiteDiagram" type="Control" parent="Panel/Ledger/SiteNotes"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(66, 66)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="Shortcuts" type="HBoxContainer" parent="Panel/Ledger"]
+unique_name_in_owner = true
+layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="VisitorButton" type="Button" parent="Panel/Shortcuts"]
-theme_type_variation = &"HudButton"
+[node name="VisitorButton" type="Button" parent="Panel/Ledger/Shortcuts"]
 unique_name_in_owner = true
+visible = false
+theme_type_variation = &"HudButton"
+custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_default_cursor_shape = 2
-visible = false
 
-[node name="MarketButton" type="Button" parent="Panel/Shortcuts"]
-theme_type_variation = &"HudButton"
+[node name="MarketButton" type="Button" parent="Panel/Ledger/Shortcuts"]
 unique_name_in_owner = true
+visible = false
+theme_type_variation = &"HudButton"
+custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_default_cursor_shape = 2
-visible = false
 text = "开垦备粮"
 
-[node name="WorksiteButton" type="Button" parent="Panel/Shortcuts"]
-theme_type_variation = &"HudButton"
+[node name="WorksiteButton" type="Button" parent="Panel/Ledger/Shortcuts"]
 unique_name_in_owner = true
+visible = false
+theme_type_variation = &"HudButton"
+custom_minimum_size = Vector2(0, 38)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_default_cursor_shape = 2
-visible = false
 text = "去工地"
 
 [node name="ReclaimButton" type="Button" parent="Panel"]
-theme = ExtResource("3_hud")
 theme_type_variation = &"HudPrimary"
-layout_mode = 0
+layout_mode = 1
+anchor_top = 1.0
+anchor_right = 0.56
+anchor_bottom = 1.0
 offset_left = 18.0
-offset_top = 390.0
-offset_right = 187.0
-offset_bottom = 428.0
+offset_top = -58.0
+offset_right = -4.0
+offset_bottom = -16.0
 mouse_default_cursor_shape = 2
 text = "立桩定界"
 
 [node name="CloseButton" type="Button" parent="Panel"]
-theme = ExtResource("3_hud")
 theme_type_variation = &"HudButton"
-layout_mode = 0
-offset_left = 197.0
-offset_top = 390.0
-offset_right = 340.0
-offset_bottom = 428.0
+layout_mode = 1
+anchor_left = 0.56
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = -58.0
+offset_right = -18.0
+offset_bottom = -16.0
 mouse_default_cursor_shape = 2
 text = "返回  Esc"
