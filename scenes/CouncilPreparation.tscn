@@ -28,6 +28,7 @@ anchor_bottom = 1.0
 mouse_filter = 2
 script = ExtResource("1_prep")
 toggle_action = &""
+keep_focus_in_map = true
 
 [node name="MapModal" type="ColorRect" parent="."]
 unique_name_in_owner = true
@@ -105,11 +106,13 @@ theme_override_constants/separation = 5
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 19
+autowrap_mode = 3
 
 [node name="DateStatus" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Gates/Date/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
 
 [node name="Rank" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Gates"]
 layout_mode = 2
@@ -124,6 +127,7 @@ theme_override_constants/separation = 5
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 19
+autowrap_mode = 3
 
 [node name="RankStatus" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Gates/Rank/Details"]
 unique_name_in_owner = true
@@ -149,11 +153,13 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.96, 0.83, 0.59, 1)
 theme_override_font_sizes/font_size = 22
+autowrap_mode = 3
 
 [node name="Account" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Tribute/Row/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
 
 [node name="SowingNote" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Tribute/Row/Details"]
 unique_name_in_owner = true
@@ -165,9 +171,12 @@ autowrap_mode = 3
 
 [node name="ContributionStatus" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Tribute/Row"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(170, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_font_sizes/font_size = 18
+horizontal_alignment = 2
+autowrap_mode = 3
 
 [node name="PetitionCard" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody"]
 unique_name_in_owner = true
@@ -292,11 +301,13 @@ text = "只收熟公田"
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
 
 [node name="PublicResult" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview/Options/PublicCard/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
 
 [node name="PublicPlanCard" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview/Options"]
 unique_name_in_owner = true
@@ -352,11 +363,13 @@ theme_override_font_sizes/font_size = 17
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
 
 [node name="MixedResult" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Preview/Options/MixedCard/Details"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
 
 [node name="Silk" type="PanelContainer" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody"]
 layout_mode = 2
@@ -377,6 +390,7 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 19
 
 [node name="SilkNote" type="Label" parent="MapModal/Center/Ledger/Stack/LedgerScroll/LedgerBody/Silk/Row/Details"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3

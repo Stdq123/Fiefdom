@@ -63,9 +63,16 @@ var sowing_field_id := -1
 
 func _ready() -> void:
 	super()
+	for label: Label in [
+		date_line, date_status, rank_line, rank_status, contribution, account, contribution_status,
+		petition_detail, public_preview, public_result, mixed_preview, mixed_result, harvest_policy_note,
+		public_plan_detail, sowing_note, silk_stock, %SilkNote,
+	]:
+		InterfaceFont.scale_reading_text(label)
 	var bar := scroll.get_v_scroll_bar()
 	bar.theme = preload("res://resources/estate_hud_theme.tres")
 	bar.theme_type_variation = &"HudJournalBar"
+	bar.focus_mode = FOCUS_ALL
 	body.minimum_size_changed.connect(_fit_body, CONNECT_DEFERRED)
 	get_viewport().size_changed.connect(_fit_body)
 	allocation_grid.draw.connect(_draw_allocation_grid)

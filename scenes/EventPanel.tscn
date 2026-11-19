@@ -60,6 +60,7 @@ layout_mode = 2
 theme_override_styles/panel = SubResource("Council")
 
 [node name="Content" type="VBoxContainer" parent="Center/Council"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 9
 
@@ -121,9 +122,24 @@ theme_override_colors/font_color = Color(1, 0.92, 0.76, 1)
 theme_override_font_sizes/font_size = 16
 autowrap_mode = 3
 
-[node name="Choices" type="HBoxContainer" parent="Center/Council/Content"]
+[node name="ChoiceHeadings" type="MarginContainer" parent="Center/Council/Content"]
 unique_name_in_owner = true
 layout_mode = 2
+
+[node name="ChoiceButtons" type="HBoxContainer" parent="Center/Council/Content/ChoiceHeadings"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="CompareScroll" type="ScrollContainer" parent="Center/Council/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Choices" type="HBoxContainer" parent="Center/Council/Content/CompareScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
 [node name="Footer" type="HBoxContainer" parent="Center/Council/Content"]

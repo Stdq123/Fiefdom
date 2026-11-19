@@ -112,10 +112,16 @@ func _layout(panel: Control, count: int) -> void:
 	var panel_rect: Rect2 = panel.sheet.get_global_rect()
 	_expect(tree.root.get_visible_rect().encloses(panel_rect) and panel_rect.encloses(panel.confirm_button.get_global_rect()),
 		"The sheet and the final choice button fit inside the viewport.")
+	var reading_window: Rect2 = panel.scroll.get_global_rect()
+	_expect(panel_rect.encloses(reading_window), "The comparison scrolls inside the council sheet.")
 	var right := panel_rect.position.x
-	for card: PanelContainer in panel.cards.values():
+	for choice: int in panel.cards:
+		var card: PanelContainer = panel.cards[choice]
 		var bounds := card.get_global_rect()
-		_expect(panel_rect.encloses(bounds) and bounds.position.x >= right, "The route cards fit without overlapping.")
+		var heading: Rect2 = panel.option_buttons[choice].get_global_rect()
+		_expect(reading_window.intersection(bounds).has_area() and bounds.position.x >= right
+			and absf(heading.position.x - bounds.position.x) <= 1.0 and absf(heading.size.x - bounds.size.x) <= 1.0,
+			"The visible route cards align with their fixed headings without overlapping.")
 		right = bounds.end.x
 	_expect(panel.cards.size() == count, "Exactly the available choices appear.")
 	print("COUNCIL_LAYOUT window=", tree.root.size, " sheet=", panel.sheet.size, " cards=", count)
