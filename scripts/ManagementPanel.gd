@@ -14,7 +14,7 @@ const ART_ACTIVITIES := {
 const SEASON_ORDER_PANEL := preload("res://scenes/SeasonOrderPanel.tscn")
 const NEIGHBOR_JOURNAL := preload("res://scenes/NeighborJournal.tscn")
 const RAVINE_JOURNAL := preload("res://scenes/RavineJournalPanel.tscn")
-const FISH_LEDGER := preload("res://scripts/FishLedger.gd")
+const FISH_LEDGER := preload("res://scenes/FishLedger.tscn")
 const MAP_GRID_ITEM := preload("res://scripts/MapGridItem.gd")
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 const DEFER_SOWING := "defer_sowing"
@@ -154,8 +154,7 @@ func _ready() -> void:
 	season_order_panel.silk_requested.connect(show_silk)
 	neighbor_journal = NEIGHBOR_JOURNAL.instantiate()
 	tabs.add_child(neighbor_journal)
-	fish_ledger = FISH_LEDGER.new()
-	fish_ledger.name = "溪鱼簿"
+	fish_ledger = FISH_LEDGER.instantiate()
 	tabs.add_child(fish_ledger)
 	market_panel.fish_book_button.pressed.connect(show_fish_ledger)
 	_build_sections()

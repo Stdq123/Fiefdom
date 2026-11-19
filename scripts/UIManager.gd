@@ -326,6 +326,7 @@ func _connect_signals() -> void:
 	GameEvents.mulberry_directions_requested.connect(_on_mulberry_directions_requested)
 	GameEvents.west_market_directions_requested.connect(_on_west_market_directions_requested)
 	GameEvents.ravine_trip_requested.connect(_on_ravine_trip_requested)
+	GameEvents.pond_landing_directions_requested.connect(_guide_pond_landing)
 	GameEvents.ravine_journal_directions_requested.connect(_on_ravine_journal_directions_requested)
 
 	world.seed_selected.connect(_refresh_seed_belt.unbind(1))
@@ -1131,17 +1132,26 @@ func _guide_calendar_event(place: String) -> void:
 	if place == SummerRaft.PLACE or place == CreekFish.PLACES[CreekFish.Site.POOL]:
 		_on_ravine_trip_requested(place)
 		return
-	world.set_channel_mode(false)
 	if place == Global.POND_LANDING:
-		directions.follow_pond_landing()
-	elif place == WinterSupper.PLACE:
+		_guide_pond_landing()
+		return
+	world.set_channel_mode(false)
+	if place == WinterSupper.PLACE:
 		directions.follow_winter_supper()
 	else:
 		var path := "AutumnExhibit/Approach" if place == "秋社展台" else "SpringGathering"
 		var destination := world.get_node(path) as Node2D
 		directions.follow_place(place, world.to_local(destination.global_position))
-	if Global.is_indoors() and place in [Global.POND_LANDING, WinterSupper.PLACE]:
+	if Global.is_indoors() and place == WinterSupper.PLACE:
 		hud.practice_label.text = "已标出%s · 从南门回封地" % place
+
+func _guide_pond_landing() -> void:
+	world.set_channel_mode(false)
+	if not directions.follow_pond_landing():
+		return
+	panel_manager.hide_management_panel()
+	if Global.is_indoors():
+		hud.practice_label.text = "已标出%s · 从南门回封地" % Global.POND_LANDING
 
 func _on_winter_supper_requested() -> void:
 	world.set_channel_mode(false)

@@ -14,9 +14,8 @@ var start_day := 0
 var shore := ""
 
 func _ready() -> void:
-	if at_stall:
-		for control: Control in [title, note, status, tradeoff, copper_button, food_button, directions]:
-			InterfaceFont.scale_reading_text(control)
+	for control: Control in [title, note, status, tradeoff, copper_button, food_button, directions]:
+		InterfaceFont.scale_reading_text(control)
 	copper_button.pressed.connect(_deliver.bind(false))
 	food_button.pressed.connect(_deliver.bind(true))
 	directions.pressed.connect(_follow_offer)

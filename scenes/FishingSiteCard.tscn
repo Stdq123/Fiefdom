@@ -1,0 +1,55 @@
+[gd_scene format=3]
+
+[node name="FishingSite" type="PanelContainer"]
+size_flags_horizontal = 3
+theme_type_variation = &"HudWell"
+
+[node name="Inset" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 3
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 3
+
+[node name="Contents" type="HBoxContainer" parent="Inset"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Icon" type="TextureRect" parent="Inset/Contents"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(38, 38)
+texture_filter = 1
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Text" type="VBoxContainer" parent="Inset/Contents"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 1
+theme_override_constants/separation = 1
+
+[node name="Place" type="Label" parent="Inset/Contents/Text"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 3
+
+[node name="Note" type="Label" parent="Inset/Contents/Text"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="Route" type="Button" parent="Inset/Contents"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(65, 34)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+theme_type_variation = &"HudButton"
+theme_override_font_sizes/font_size = 15
+text = "指路"

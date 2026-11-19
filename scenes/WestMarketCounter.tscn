@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/WestMarketCounter.gd" id="1_counter"]
 [ext_resource type="PackedScene" path="res://scenes/MarketPanel.tscn" id="2_grain"]
-[ext_resource type="Script" path="res://scripts/FishLedger.gd" id="3_fish"]
+[ext_resource type="PackedScene" path="res://scenes/FishLedger.tscn" id="3_fish"]
 [ext_resource type="Texture2D" path="res://assets/world/west-court-sample.svg" id="4_silk"]
 [ext_resource type="PackedScene" path="res://scenes/SeasonOrderPanel.tscn" id="5_orders"]
 [ext_resource type="Script" path="res://scripts/SheepTrade.gd" id="6_sheep"]
@@ -104,6 +104,7 @@ horizontal_scroll_mode = 0
 [node name="CounterLayout" type="HBoxContainer" parent="Center/Card/Inset/Body/CounterScroll"]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 18
 
 [node name="KeeperCard" type="PanelContainer" parent="Center/Card/Inset/Body/CounterScroll/CounterLayout"]
@@ -163,11 +164,10 @@ unique_name_in_owner = true
 layout_mode = 2
 at_stall = true
 
-[node name="Fish" type="VBoxContainer" parent="Center/Card/Inset/Body/CounterScroll/CounterLayout/Views"]
+[node name="Fish" parent="Center/Card/Inset/Body/CounterScroll/CounterLayout/Views" instance=ExtResource("3_fish")]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-script = ExtResource("3_fish")
 at_stall = true
 
 [node name="Silk" type="VBoxContainer" parent="Center/Card/Inset/Body/CounterScroll/CounterLayout/Views"]
