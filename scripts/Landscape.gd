@@ -199,6 +199,8 @@ const LEAFY_PROPS := [Prop.OAK, Prop.BLOSSOM_TREE, Prop.GROVE_TREE, Prop.GROVE_C
 	Prop.WHITE_BLOOM, Prop.PINK_BLOOM]
 const DORMANT_PROPS := [Prop.FLOWERS, Prop.FERN, Prop.RAVINE_SHOOT, Prop.WHITE_BLOOM, Prop.PINK_BLOOM]
 const BERRY_GROVE := RavineLayout.FRUIT + Vector2(-17, 8)
+const HALL_BIRD_TREE := Vector2(52, -17)
+const PAVILION_BIRD_TREE := Vector2(196, 373)
 const BRIDGE := RavineLayout.BRIDGE
 const BRIDGE_DECK := RavineLayout.BRIDGE_DECK
 const FORD := RavineLayout.FORD
@@ -767,12 +769,17 @@ func _process(delta: float) -> void:
 		if wilderness:
 			Global.advance_away_field_work(delta)
 	day_lighting.refresh(delta)
+	_refresh_ambience()
+
+func _refresh_ambience() -> void:
 	var foot := to_local(player.global_position)
 	var creek_distance := absf(foot.x - creek_x(foot.y)) if wilderness else INF
-	var birds_distance := foot.distance_to(BERRY_GROVE) if wilderness else INF
+	var birds_distance := foot.distance_to(BERRY_GROVE) if wilderness else minf(
+		foot.distance_to(HALL_BIRD_TREE), foot.distance_to(PAVILION_BIRD_TREE))
 	var cricket_distance := foot.distance_to(BERRY_GROVE if wilderness else SOUTH_PAVILION)
 	var under_roof := not wilderness and EstateLayout.PAVILION_SHELTER_FLOOR.has_point(foot)
-	AudioManager.set_world_ambience(creek_distance, birds_distance, cricket_distance, under_roof)
+	AudioManager.set_world_ambience(creek_distance, birds_distance, cricket_distance, under_roof,
+		0.78 if wilderness else 1.0)
 
 func _draw() -> void:
 	_draw_ground()

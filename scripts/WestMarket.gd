@@ -135,8 +135,11 @@ func _process(delta: float) -> void:
 	if silk_trip == VisitorData.SilkTrip.RETURN_ROAD and silk_guest:
 		_sync_silk_return()
 	lighting.refresh(delta)
+	_refresh_ambience()
+
+func _refresh_ambience() -> void:
 	var distance: float = ground.distance_to_trees(player.global_position)
-	AudioManager.set_world_ambience(INF, distance, distance)
+	AudioManager.set_world_ambience(INF, distance, distance, false, 0.72)
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("ui_cancel"):
