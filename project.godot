@@ -25,6 +25,7 @@ config/features=PackedStringArray("4.7", "Forward Plus")
 
 [autoload]
 
+InterfaceFont="*res://scripts/InterfaceFont.gd"
 GameEvents="*res://scripts/GameEvents.gd"
 Global="*res://scripts/Global.gd"
 ItemManager="*res://scripts/ItemManager.gd"

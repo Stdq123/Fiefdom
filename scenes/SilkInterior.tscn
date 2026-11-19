@@ -4,7 +4,6 @@
 [ext_resource type="Texture2D" path="res://assets/world/silk-interior.png" id="2_art"]
 [ext_resource type="Script" path="res://scripts/SilkStation.gd" id="3_station"]
 [ext_resource type="Material" path="res://resources/world_hint_material.tres" id="4_unshaded"]
-[ext_resource type="SystemFont" path="res://resources/room_hint_font.tres" id="8_hint_font"]
 
 [sub_resource type="AtlasTexture" id="Atlas_floor"]
 atlas = ExtResource("2_art")
@@ -150,7 +149,6 @@ mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.89, 0.66, 1)
 theme_override_colors/font_outline_color = Color(0.20, 0.13, 0.095, 1)
 theme_override_constants/outline_size = 3
-theme_override_fonts/font = ExtResource("8_hint_font")
 theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
 
@@ -184,7 +182,6 @@ mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.89, 0.66, 1)
 theme_override_colors/font_outline_color = Color(0.20, 0.13, 0.095, 1)
 theme_override_constants/outline_size = 3
-theme_override_fonts/font = ExtResource("8_hint_font")
 theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
 
@@ -218,7 +215,6 @@ mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.89, 0.66, 1)
 theme_override_colors/font_outline_color = Color(0.20, 0.13, 0.095, 1)
 theme_override_constants/outline_size = 3
-theme_override_fonts/font = ExtResource("8_hint_font")
 theme_override_font_sizes/font_size = 10
 horizontal_alignment = 1
 
@@ -241,7 +237,6 @@ offset_right = 42.0
 offset_bottom = 92.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.84, 0.77, 0.60, 1)
-theme_override_fonts/font = ExtResource("8_hint_font")
 theme_override_font_sizes/font_size = 9
 text = "南门 · 回封地"
 horizontal_alignment = 1

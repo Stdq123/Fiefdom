@@ -82,7 +82,9 @@ try {
     }
     Copy-Item -LiteralPath (Join-Path $repo 'docs/Windows试玩说明.txt') -Destination (Join-Path $package 'README.txt')
     Copy-Item -LiteralPath (Join-Path $repo "docs/licenses/Godot-$engineVersion") -Destination $package -Recurse
-    Copy-Item -LiteralPath (Join-Path $repo 'docs/licenses/MaShanZheng-OFL.txt') -Destination $package
+    foreach ($fontLicense in 'MaShanZheng-OFL.txt', 'NotoSansCJK-OFL.txt') {
+        Copy-Item -LiteralPath (Join-Path $repo "docs/licenses/$fontLicense") -Destination $package
+    }
     $archive = [IO.Compression.ZipFile]::Open($pendingZip, [IO.Compression.ZipArchiveMode]::Create)
     try {
         $files = [IO.Directory]::GetFiles($package, '*', [IO.SearchOption]::AllDirectories)
