@@ -45,13 +45,6 @@ func _ready() -> void:
 	InterfaceFont.scale_reading_text(_session_caption)
 	set_process_input(false)
 
-func prepare(path: String) -> void:
-	if path.is_empty() or _preloads.has(path) or not ResourceLoader.exists(path, "PackedScene"):
-		return
-	var packed := ResourceLoader.load(path, "PackedScene") as PackedScene
-	if packed:
-		_preloads[path] = packed
-
 func prepare_session(path: String, caption: String) -> bool:
 	var tree := get_tree()
 	var origin := tree.current_scene
@@ -65,19 +58,22 @@ func prepare_session(path: String, caption: String) -> bool:
 	_clear_arrival()
 	cover.color.a = 1.0
 	cover.show()
-	_session_caption.text = caption
-	_session_plate.show()
-	_session_batch_usec = RESOURCE_BATCH_USEC
-	# Draw the loading card before the first synchronous read.
-	await tree.process_frame
-	await tree.process_frame
+	await _show_loading_card(caption)
 	packed = await _prepare_in_batches(path)
 	if packed:
 		for neighbor in _unprepared_neighbors(packed):
 			await _prepare_in_batches(neighbor)
-	_session_plate.hide()
 	_finish()
 	return is_instance_valid(origin) and tree.current_scene == origin
+
+func _show_loading_card(caption: String) -> void:
+	_session_caption.text = caption
+	_session_plate.show()
+	_session_batch_usec = RESOURCE_BATCH_USEC
+	# Draw the loading card before the first synchronous read.
+	var tree := get_tree()
+	await tree.process_frame
+	await tree.process_frame
 
 func _prepare_in_batches(path: String) -> PackedScene:
 	if _preloads.has(path):
@@ -103,9 +99,11 @@ func _prepare_in_batches(path: String) -> PackedScene:
 			# Slow frame delivery can cost more than a small batch. Amortize that wait for this entry.
 			_session_batch_usec = clampi(maxi(_session_batch_usec, (started - waiting) * 3),
 				RESOURCE_BATCH_USEC, RESOURCE_BATCH_LIMIT_USEC)
-	prepare(path)
+	var packed := ResourceLoader.load(path, "PackedScene") as PackedScene
+	if packed:
+		_preloads[path] = packed
 	await get_tree().process_frame
-	return _preloads.get(path)
+	return packed
 
 func _unprepared_neighbors(packed: PackedScene) -> PackedStringArray:
 	var neighbors := PackedStringArray()
@@ -162,16 +160,24 @@ func _can_depart(origin: Node) -> bool:
 		and Global.outcome == Global.Outcome.RUNNING
 
 func _open_destination(path: String, arrival_path: NodePath, player_path: NodePath) -> bool:
-	prepare(path)
+	var tree := get_tree()
+	var origin := tree.current_scene
 	var packed: PackedScene = _preloads.get(path)
 	if packed == null:
-		return false
+		if path.is_empty() or not ResourceLoader.exists(path, "PackedScene"):
+			return false
+		var place := _place_name(path)
+		await _show_loading_card("正在前往" + place if not place.is_empty() else "正在读入地图")
+		if _can_depart(origin):
+			packed = await _prepare_in_batches(path)
+		_session_plate.hide()
+		if packed == null or not _can_depart(origin):
+			return false
 	var destination := packed.instantiate()
 	if destination == null:
 		return false
 	var marker := destination.get_node_or_null(arrival_path) as Marker2D
 	var player := destination.get_node_or_null(player_path) as Player
-	var tree := get_tree()
 	if marker == null or player == null:
 		destination.free()
 		return false
@@ -191,9 +197,12 @@ func _fade(opacity: float, seconds: float) -> void:
 	tween.tween_property(cover, "color:a", opacity, seconds).set_trans(Tween.TRANS_SINE)
 	await tween.finished
 
-func _show_arrival(path: String) -> void:
+func _place_name(path: String) -> String:
 	var location: Variant = Global.SAVE_SCENES.find_key(path)
-	var place: String = "封地" if location == "estate" else Global.SAVE_LOCATION_NAMES.get(location, "")
+	return "封地" if location == "estate" else Global.SAVE_LOCATION_NAMES.get(location, "")
+
+func _show_arrival(path: String) -> void:
+	var place := _place_name(path)
 	if place.is_empty():
 		return
 	arrival_name.text = place
@@ -216,6 +225,7 @@ func _clear_arrival() -> void:
 	arrival_plate.hide()
 
 func _finish() -> void:
+	_session_plate.hide()
 	cover.hide()
 	cover.color.a = 0.0
 	set_process_input(false)

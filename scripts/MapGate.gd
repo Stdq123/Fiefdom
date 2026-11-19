@@ -7,7 +7,6 @@ extends Area2D
 func _ready() -> void:
 	add_to_group("travel_threshold")
 	body_entered.connect(_on_body_entered)
-	MapTravel.prepare.call_deferred(destination)
 
 func _on_body_entered(body: Node2D) -> void:
 	var player := body as Player

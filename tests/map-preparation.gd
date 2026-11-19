@@ -24,7 +24,10 @@ func _check() -> void:
 		quit(1)
 		return
 	await scene_changed
-	await process_frame
+	for frame in 4:
+		await process_frame
+	_expect(not travel._preloads.has(state.WEST_ROAD_SCENE) and not travel._preloads.has(state.WILDERNESS_SCENE),
+		"The map reveals without loading unvisited neighbors outside a transition.")
 
 	# Call the gates on a fixed scene fixture, without walking or advancing the test day.
 	await _try_gate(^"World/EastGate")
@@ -52,8 +55,16 @@ func _try_gate(at: NodePath) -> void:
 	var clock: float = state.day_progress
 	var before := origin.process_mode
 	var orphans := Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT)
+	var needs_loading: bool = not travel._preloads.has(destination)
 	travel.cross(destination, ^"UnavailableArrival", actor_path)
-	await travel.finished
+	var drew_loading := false
+	while travel.active:
+		await process_frame
+		if travel._session_plate.visible:
+			drew_loading = true
+			_expect(is_equal_approx(travel.cover.color.a, 1.0), "The cover fully closes before displaying the loading card.")
+	_expect(drew_loading == needs_loading and travel._preloads.has(destination),
+		"Only uncached destinations prepare a loading card and enter the cache.")
 	_expect(current_scene == origin and origin.process_mode == before and not travel.cover.visible and not travel.active,
 		"A failed arrival releases input and restores the previous scene.")
 	_expect(Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT) <= orphans,
