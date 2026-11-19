@@ -4,6 +4,7 @@ const LAYOUT := preload("res://scripts/WestRoadLayout.gd")
 const GROUND := preload("res://scripts/WestRoadGround.gd")
 const WOODEN_BRIDGE := preload("res://scripts/WoodenBridge.gd")
 const TRACK_AUDIO := preload("res://scripts/TerrainAudio.gd")
+const RAIN_VEIL := preload("res://scripts/RainVeil.gd")
 const VISITOR := preload("res://scenes/Visitor.tscn")
 const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
 const TRACK_DIRECTION := preload("res://scripts/RoadNetwork.gd")
@@ -24,6 +25,7 @@ var route := PackedVector2Array()
 var route_origin := Vector2.INF
 
 func _ready() -> void:
+	var rain: RAIN_VEIL = $Rain
 	$MarketGate.position = LAYOUT.MARKET_GATE
 	$EstateGate.position = LAYOUT.ESTATE_GATE
 	$MarketArrival.position = LAYOUT.MARKET_GATE + Vector2(33, 0)
@@ -33,6 +35,9 @@ func _ready() -> void:
 	Global.restored_west_road_from_market = false
 	ground.place_scenery($Scenery)
 	add_child(WOODEN_BRIDGE.new(LAYOUT.BRIDGE))
+	rain.add_surface(LAYOUT.BRIDGE.grow(-3.0), 8)
+	if Global.has_rain():
+		rain.add_puddles(ground.weather.bounds, ground.weather.patches)
 	player.restore_walking_checkpoint(LAYOUT.BOUNDS)
 	network = TRACK_DIRECTION.new([LAYOUT.ROAD, LAYOUT.MEADOW_TRACK], self, player)
 	scheduled_guest = Global.visitor_for_day(Global.current_day)

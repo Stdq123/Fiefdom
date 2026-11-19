@@ -568,6 +568,9 @@ func _prepare_map() -> void:
 	var props_layer := get_parent().get_node("Scenery") as Node2D
 	var wind := FOLIAGE_WIND.new()
 	add_child(wind)
+	var rain := RAIN_VEIL.new()
+	rain.name = "Rain"
+	rain.z_index = 11
 	for placement in props:
 		if placement.z not in SORTED_PROPS:
 			continue
@@ -577,7 +580,13 @@ func _prepare_map() -> void:
 		scenery[sprite] = placement.z
 		if WIND_FLEXIBILITY.has(placement.z):
 			wind.attach(sprite, WIND_FLEXIBILITY[placement.z])
+		if placement.z == Prop.HALL:
+			rain.add_roof(sprite, Rect2(-58, -40, 109, 43), [
+				Vector3(-53, -39, 46), Vector3(-30, -39, 45),
+				Vector3(24, -39, 46), Vector3(43, -39, 44),
+			])
 	if wilderness:
+		rain.add_surface(BRIDGE_DECK.grow(-2.0), 5)
 		var lookout := atlas_texture(RAVINE_ART, Rect2(146, 0, 48, 40))
 		scenery[_place_sprite(props_layer, RavineLayout.LOOKOUT, Vector2(-24, -38), lookout)] = SCENE_LANDMARK
 		scenery[INSCRIPTION.place(props_layer, RavineLayout.LOOKOUT + Vector2(-76, 47),
@@ -589,21 +598,27 @@ func _prepare_map() -> void:
 		var pavilion_texture := atlas_texture(ESTATE_ART, PAVILION_REGION)
 		var pavilion := _place_sprite(props_layer, SOUTH_PAVILION, _building_offset(PAVILION_REGION.size), pavilion_texture)
 		scenery[pavilion] = SCENE_LANDMARK
+		rain.add_roof(pavilion, Rect2(-31, -31, 59, 33), [Vector3(-29, -31, 36), Vector3(26, -31, 36)])
 		INSCRIPTION.place(pavilion, Vector2(0, -20), INSCRIPTION.Form.EAVE, "南路亭")
 		var shelter := atlas_texture(ESTATE_ART, Rect2(216, 0, 48, 40))
 		var court := _place_sprite(props_layer, EstateLayout.WEST_COURT_SHELTER, Vector2(-24, -38), shelter)
 		scenery[court] = SCENE_WEST_COURT
+		rain.add_roof(court, Rect2(-21, -19, 41, 17), [Vector3(-18, -18, 22), Vector3(17, -18, 21)])
 		INSCRIPTION.place(court, Vector2(0, -6), INSCRIPTION.Form.EAVE, "西廊")
 		var workshop := _place_sprite(props_layer, SILK_SHED_FOOT,
 			_prop_bounds(Vector2.ZERO, Prop.SILK_SHED).position, _prop_texture(Prop.SILK_SHED, SILK_SHED_FOOT))
 		scenery[workshop] = Prop.SILK_SHED
+		rain.add_roof(workshop, Rect2(-35, -29, 65, 29), [
+			Vector3(-32, -28, 34), Vector3(-18, -28, 33), Vector3(26, -28, 33),
+		])
+		var rain_shelter := get_parent().get_node("PavilionRainShelter") as Node2D
+		var floor_bounds := EstateLayout.PAVILION_SHELTER_FLOOR
+		floor_bounds.position -= rain_shelter.position
+		rain.add_roof(rain_shelter, floor_bounds, [
+			Vector3(-40, -17, 34), Vector3(-23, -17, 34), Vector3(23, -17, 34), Vector3(32, -17, 34),
+		])
+		rain.add_surface(HALL_LANDING.grow(-2.0), 4)
 	_place_lanterns(props_layer)
-
-	var rain := RAIN_VEIL.new()
-	rain.name = "Rain"
-	rain.z_index = 11
-	if not wilderness:
-		rain.shelter_bounds = EstateLayout.PAVILION_SHELTER_BOUNDS
 	add_child(rain)
 	_install_boundaries()
 	_refresh_scenery()

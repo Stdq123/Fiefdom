@@ -7,6 +7,7 @@ const GROUND := preload("res://scripts/WestMarketGround.gd")
 const ORDER_CART := preload("res://scripts/SeasonOrderCart.gd")
 const SILK_JOURNEY := preload("res://scripts/SilkJourney.gd")
 const DYER := preload("res://scripts/MarketDyer.gd")
+const RAIN_VEIL := preload("res://scripts/RainVeil.gd")
 const FIXTURE_ART := preload("res://assets/world/west-market-fixtures.png")
 const FISH_BOARD := Rect2(64, 64, 24, 18)
 
@@ -34,17 +35,23 @@ var silk_trip := VisitorData.SilkTrip.NONE
 var fish_reserved := false
 
 func _ready() -> void:
+	var rain: RAIN_VEIL = $Rain
 	ground.place_scenery($Scenery)
 	dye_house.position = LAYOUT.DYE_HOUSE
 	drying_rack.position = LAYOUT.DYE_RACK
+	rain.add_roof(dye_house, Rect2(-49, -40, 93, 41), [
+		Vector3(-45, -39, 43), Vector3(-27, -39, 44), Vector3(25, -39, 44), Vector3(40, -39, 42),
+	])
 	$DyeHouse/Building.frame = int(Global.season_index() == Global.Season.WINTER)
 	if Global.has_rain():
 		dye_house.modulate = Color("#c0ced2")
 		drying_rack.modulate = Color("#c4d1d3")
+		rain.add_puddles(ground.weather.bounds, ground.weather.patches)
 	dyer.approached.connect(_talk_to_dyer)
 	var destinations: Dictionary[String, Vector2] = {}
 	for stall: MarketStall in $Stalls.get_children():
 		stall.opened.connect(_open_stall)
+		rain.add_roof(stall, Rect2(-46, -41, 91, 44), [Vector3(-44, -40, 46), Vector3(41, -40, 45)])
 		var approach := ground.to_local(stall.to_global(MarketStall.APPROACH))
 		destinations[MarketStall.TITLES[stall.kind]] = approach
 		ground.add_stall_yard(stall.kind, approach, $Scenery)
