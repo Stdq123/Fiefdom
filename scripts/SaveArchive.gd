@@ -115,7 +115,7 @@ func _show_records(key: String) -> void:
 				button.add_theme_constant_override("h_separation", 12)
 		if not button.disabled and not Global.saved_game_route(entry, false).is_empty():
 			button.tooltip_text += "\n爵位 · " + Global.rank_names[entry.rank]
-		button.pressed.connect(_load.bind(entry["path"], button, key))
+		button.pressed.connect(_load.bind(entry, button, key))
 		records.add_child(button)
 		readable = readable or not button.disabled
 	if not readable:
@@ -175,9 +175,11 @@ func _close() -> void:
 		previous_focus.grab_focus()
 	queue_free()
 
-func _load(path: String, button: Button, key: String) -> void:
+func _load(entry: Dictionary, button: Button, key: String) -> void:
+	if not await MapTravel.prepare_session(entry["scene"], "正在读取存档"):
+		return
 	get_tree().paused = false
-	var result := Global.load_game(path)
+	var result := Global.load_game(entry["path"])
 	if result == OK:
 		return
 	get_tree().paused = true

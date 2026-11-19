@@ -1,0 +1,47 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="1_hud"]
+
+[sub_resource type="StyleBoxFlat" id="Style_track"]
+bg_color = Color(0.244, 0.280, 0.227, 1)
+
+[sub_resource type="StyleBoxFlat" id="Style_fill"]
+bg_color = Color(0.809, 0.663, 0.413, 1)
+
+[node name="SessionLoading" type="CenterContainer"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("1_hud")
+
+[node name="Plaque" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(312, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_type_variation = &"HudRail"
+
+[node name="Contents" type="VBoxContainer" parent="Plaque"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="Caption" type="Label" parent="Plaque/Contents"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 25
+horizontal_alignment = 1
+
+[node name="Activity" type="ProgressBar" parent="Plaque/Contents"]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/background = SubResource("Style_track")
+theme_override_styles/fill = SubResource("Style_fill")
+indeterminate = true
+show_percentage = false

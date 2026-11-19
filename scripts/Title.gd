@@ -13,6 +13,7 @@ const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 @onready var new_name: LineEdit = $NewConfirmation/Form/EstateName
 
 var settings_panel: Panel
+var _resume_scene := ""
 
 func _ready() -> void:
 	$Version.text = "Windows · %s" % ProjectSettings.get_setting("application/config/version")
@@ -36,6 +37,7 @@ func _ready() -> void:
 func _refresh_menu() -> void:
 	var latest := Global.latest_saved_game()
 	var can_resume := not latest.is_empty()
+	_resume_scene = latest.get("scene", "")
 	continue_button.visible = can_resume
 	continue_button.disabled = not can_resume
 	archive_button.visible = Global.has_saved_game()
@@ -65,11 +67,15 @@ func _on_new_requested() -> void:
 		_start_game()
 
 func _start_game() -> void:
+	if not await MapTravel.prepare_session(Global.ESTATE_SCENE, "正在打开封地"):
+		return
 	var result := Global.start_new_game(new_name.text)
 	if result != OK:
 		status.text = "打开封地失败（%s）" % error_string(result)
 
 func _continue_game() -> void:
+	if not _resume_scene.is_empty() and not await MapTravel.prepare_session(_resume_scene, "正在读取存档"):
+		return
 	var result := Global.load_latest_game()
 	if result == OK:
 		return

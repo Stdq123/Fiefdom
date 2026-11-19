@@ -3984,6 +3984,7 @@ func saved_games() -> Array[Dictionary]:
 			"day": _read_save_int(data.get("current_day"), 0),
 			"watch": DAY_WATCHES[_day_watch_index(_saved_day_progress(data))] + "时",
 			"location": SAVE_LOCATION_NAMES.get(data.get("location"), ""),
+			"scene": _snapshot_scene(data, saved_outcome),
 			"rank": clampi(_read_save_int(data.get("current_rank"), Rank.XIA_SHI), Rank.XIA_SHI, Rank.QING),
 			"campaign": campaign,
 			"campaign_key": campaign_key,
@@ -4068,6 +4069,9 @@ func _snapshot_sequence(data: Dictionary, path: String) -> int:
 func _snapshot_outcome(data: Dictionary, saved_health: int) -> Outcome:
 	var result := clampi(_read_save_int(data.get("outcome"), Outcome.RUNNING), Outcome.RUNNING, Outcome.REFORMED) as Outcome
 	return Outcome.DEFEAT_COMBAT if saved_health <= 0 and result == Outcome.RUNNING else result
+
+func _snapshot_scene(data: Dictionary, saved_outcome: Outcome) -> String:
+	return SAVE_SCENES.get(data.get("location"), ESTATE_SCENE) if saved_outcome == Outcome.RUNNING else ESTATE_SCENE
 
 func _snapshot_campaign(data: Dictionary) -> String:
 	var key = data.get("campaign_id")
@@ -4276,9 +4280,7 @@ func _load_snapshot_data(data: Dictionary, path: String, check_only := false) ->
 		return OK
 	var saved_health := clampi(_read_save_int(data.get("health"), balance.player_max_health), 0, balance.player_max_health)
 	var saved_outcome := _snapshot_outcome(data, saved_health)
-	var resume_scene: String = ESTATE_SCENE
-	if saved_outcome == Outcome.RUNNING:
-		resume_scene = SAVE_SCENES.get(data.get("location"), ESTATE_SCENE)
+	var resume_scene := _snapshot_scene(data, saved_outcome)
 	# The replacement scene enters the tree at the end of the frame.
 	var reload_error := get_tree().change_scene_to_file(resume_scene)
 	if reload_error != OK:

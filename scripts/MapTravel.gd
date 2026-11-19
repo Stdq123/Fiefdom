@@ -7,6 +7,8 @@ const CLOSE_SECONDS := 0.16
 const OPEN_SECONDS := 0.22
 const ARRIVAL_PLATE := preload("res://scenes/TravelArrival.tscn")
 const ARRIVAL_HOLD := 0.95
+const SESSION_PLATE := preload("res://scenes/SessionLoading.tscn")
+const RESOURCE_BATCH_USEC := 5000
 
 var active := false
 var cover: ColorRect
@@ -14,6 +16,8 @@ var arrival_plate: CenterContainer
 var arrival_name: Label
 var _arrival_tween: Tween
 var _preloads: Dictionary[String, PackedScene] = {}
+var _session_plate: CenterContainer
+var _session_caption: Label
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -33,6 +37,10 @@ func _ready() -> void:
 		visibility.connect(_dismiss_arrival_for_panel)
 	GameEvents.campaign_ended.connect(_clear_arrival.unbind(1))
 	get_tree().scene_changed.connect(_clear_arrival)
+	_session_plate = SESSION_PLATE.instantiate()
+	add_child(_session_plate)
+	_session_caption = _session_plate.get_node("%Caption")
+	InterfaceFont.scale_reading_text(_session_caption)
 	set_process_input(false)
 
 func prepare(path: String) -> void:
@@ -41,6 +49,70 @@ func prepare(path: String) -> void:
 	var packed := ResourceLoader.load(path, "PackedScene") as PackedScene
 	if packed:
 		_preloads[path] = packed
+
+func prepare_session(path: String, caption: String) -> bool:
+	var tree := get_tree()
+	var origin := tree.current_scene
+	if active or origin == null:
+		return false
+	var packed: PackedScene = _preloads.get(path)
+	if packed and _unprepared_neighbors(packed).is_empty():
+		return true
+	active = true
+	set_process_input(true)
+	_clear_arrival()
+	cover.color.a = 1.0
+	cover.show()
+	_session_caption.text = caption
+	_session_plate.show()
+	# Draw the loading card before the first synchronous read.
+	await tree.process_frame
+	await tree.process_frame
+	packed = await _prepare_in_batches(path)
+	if packed:
+		for neighbor in _unprepared_neighbors(packed):
+			await _prepare_in_batches(neighbor)
+	_session_plate.hide()
+	_finish()
+	return is_instance_valid(origin) and tree.current_scene == origin
+
+func _prepare_in_batches(path: String) -> PackedScene:
+	if _preloads.has(path):
+		return _preloads[path]
+	if path.is_empty() or not ResourceLoader.exists(path, "PackedScene"):
+		return null
+	# Retain each dependency until the packed map owns it.
+	var held: Array[Resource] = []
+	var started := Time.get_ticks_usec()
+	for dependency in ResourceLoader.get_dependencies(path):
+		var target := dependency.get_slice("::", 0)
+		if dependency.contains("::") and not ResourceLoader.exists(target):
+			target = dependency.get_slice("::", 2)
+		if ResourceLoader.has_cached(target):
+			continue
+		var resource := ResourceLoader.load(target)
+		if resource:
+			held.append(resource)
+		if Time.get_ticks_usec() - started >= RESOURCE_BATCH_USEC:
+			await get_tree().process_frame
+			started = Time.get_ticks_usec()
+	prepare(path)
+	await get_tree().process_frame
+	return _preloads.get(path)
+
+func _unprepared_neighbors(packed: PackedScene) -> PackedStringArray:
+	var neighbors := PackedStringArray()
+	var scene_state := packed.get_state()
+	var maps := Global.SAVE_SCENES.values()
+	for node in scene_state.get_node_count():
+		for property in scene_state.get_node_property_count(node):
+			if scene_state.get_node_property_name(node, property) != &"destination":
+				continue
+			var destination: Variant = scene_state.get_node_property_value(node, property)
+			if destination is String and destination in maps \
+					and not _preloads.has(destination) and not neighbors.has(destination):
+				neighbors.append(destination)
+	return neighbors
 
 func cross(path: String, arrival_path: NodePath, player_path: NodePath) -> void:
 	relocate(_open_destination.bind(path, arrival_path, player_path), path)
@@ -138,6 +210,7 @@ func _clear_arrival() -> void:
 
 func _finish() -> void:
 	cover.hide()
+	cover.color.a = 0.0
 	set_process_input(false)
 	active = false
 	finished.emit()

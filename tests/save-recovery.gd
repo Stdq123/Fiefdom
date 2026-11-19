@@ -62,9 +62,10 @@ func _interrupt_manual_write() -> void:
 	_expect(state.has_saved_game() and current_scene.continue_button.visible and "备份 · 手动存档 · 第 64 天" in current_scene.status.text,
 		"The title finds the prior manual record, instead of promoting the temporary file.")
 	current_scene.continue_button.pressed.emit()
-	_expect(state.current_day == 64 and state.money == 184 and state.restore_notice == "已从备份恢复第 64 天",
-		"Continue from the title recovers the same stable day.")
 	await scene_changed
+	var notice: Label = current_scene.get_node("UI").hud.save_notice
+	_expect(state.current_day == 64 and state.money == 184 and notice.visible and notice.text == "已从备份恢复第 64 天",
+		"Continue from the title recovers the same stable day and names it in the HUD.")
 	_expect(current_scene.scene_file_path == ESTATE and FileAccess.get_sha256(backup) == good,
 		"Reading the backup resumes the estate and leaves the backup alone.")
 	_put(slot, JSON.stringify({"current_day": 99, "active_crops": []}))
