@@ -19,7 +19,8 @@ var _reflected_lamps: Array[ReflectedLamp] = []
 var _reflection_data := PackedVector4Array([Vector4.ZERO, Vector4.ZERO])
 var _reflection_count := 0
 
-func _init(outline: PackedVector2Array, speed: float, crossings: Array[Rect2] = [], ravine_flow := false) -> void:
+func _init(outline: PackedVector2Array, speed: float, crossings: Array[Rect2] = [],
+		channel := PackedVector2Array()) -> void:
 	patches.append(outline)
 	for crossing in crossings:
 		var visible_water: Array[PackedVector2Array] = []
@@ -28,9 +29,34 @@ func _init(outline: PackedVector2Array, speed: float, crossings: Array[Rect2] = 
 		patches = visible_water
 	surface.shader = SHADER
 	surface.set_shader_parameter("current_speed", speed)
-	surface.set_shader_parameter("ravine_flow", ravine_flow)
 	surface.set_shader_parameter("still_water", is_zero_approx(speed))
+	if channel.size() > 1:
+		_set_channel_profile(channel)
 	material = surface
+
+# Both creek paths run from top to bottom. Store their center and traveled distance at each row.
+func _set_channel_profile(line: PackedVector2Array) -> void:
+	var first_row := floori(line[0].y)
+	var rows := ceili(line[-1].y) - first_row + 1
+	var profile := Image.create_empty(1, rows, false, Image.FORMAT_RGF)
+	var segment := 1
+	var start := line[0]
+	var finish := line[segment]
+	var length := start.distance_to(finish)
+	var distance := 0.0
+	for row in rows:
+		var y := float(first_row + row)
+		while y > finish.y and segment < line.size() - 1:
+			distance += length
+			segment += 1
+			start = finish
+			finish = line[segment]
+			length = start.distance_to(finish)
+		var along := clampf(inverse_lerp(start.y, finish.y, y), 0.0, 1.0)
+		profile.set_pixel(0, row, Color(lerpf(start.x, finish.x, along), distance + length * along, 0.0))
+	surface.set_shader_parameter(&"channel_profile", ImageTexture.create_from_image(profile))
+	surface.set_shader_parameter(&"channel_first_row", first_row)
+	surface.set_shader_parameter(&"channel_flow", true)
 
 # The alpha in this atlas cell follows the exposed water, including holes for rocks or ice.
 func mask_to_water(atlas: Texture2D, cell: Rect2, ground: Rect2) -> void:

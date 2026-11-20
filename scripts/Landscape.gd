@@ -680,7 +680,7 @@ static func place_waypost(layer: Node2D, foot: Vector2, direction: Vector2, capt
 func _add_water_surface() -> void:
 	if wilderness:
 		water_surface = WATER_SURFACE.new(creek_edge, 10.0,
-			[BRIDGE_DECK.grow(2.0), FORD_AREA], true)
+			[BRIDGE_DECK.grow(2.0), FORD_AREA], PackedVector2Array(CREEK))
 	else:
 		south_pond = SOUTH_POND.new()
 		water_surface = south_pond

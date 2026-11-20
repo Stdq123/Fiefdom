@@ -111,7 +111,7 @@ func _ready() -> void:
 		rail.polygon = EstateLayout.corners(Rect2(LAYOUT.BRIDGE.position.x, y, LAYOUT.BRIDGE.size.x, 2.0))
 		channel.add_child(rail)
 	add_child(channel)
-	var surface := WATER_SURFACE.new(exposed_water, 12.0, [LAYOUT.BRIDGE.grow(4.0)], true)
+	var surface := WATER_SURFACE.new(exposed_water, 12.0, [LAYOUT.BRIDGE.grow(4.0)], creek)
 	surface.name = "WaterSurface"
 	add_child(surface)
 	surface.set_weather(LANDSCAPE.WATER_TINTS[Global.season_index()], Global.has_rain())

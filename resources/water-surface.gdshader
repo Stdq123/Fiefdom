@@ -3,7 +3,9 @@ shader_type canvas_item;
 uniform float water_clock = 0.0;
 uniform float current_speed = 0.0;
 uniform bool raining = false;
-uniform bool ravine_flow = false;
+uniform bool channel_flow = false;
+uniform sampler2D channel_profile : hint_default_black, filter_nearest, repeat_disable;
+uniform int channel_first_row = 0;
 uniform bool still_water = false;
 uniform bool masked = false;
 uniform sampler2D shore_mask : hint_default_white, filter_linear, repeat_disable;
@@ -72,7 +74,13 @@ float lantern_glint(vec2 pixel, vec4 lamp) {
 
 void fragment() {
 	vec2 pixel = floor(ground_position);
-	vec2 flow = pixel + vec2(0.0, -floor(water_clock * current_speed));
+	vec2 flow = pixel;
+	if (channel_flow) {
+		int row = clamp(int(pixel.y) - channel_first_row, 0, textureSize(channel_profile, 0).y - 1);
+		vec2 section = texelFetch(channel_profile, ivec2(0, row), 0).rg;
+		flow = vec2(pixel.x - section.x, floor(section.y));
+	}
+	flow.y -= floor(water_clock * current_speed);
 	float swell = sin(flow.x * 0.24 + flow.y * 0.07) + sin(flow.x * 0.13 - flow.y * 0.11 + 1.7);
 	float shadow = smoothstep(0.25, 1.9, -swell) * 0.18;
 	float glint = ripple(flow, vec2(23.0, 18.0)) * 0.36;
@@ -81,7 +89,7 @@ void fragment() {
 		pixel = floor(ground_position * 2.0) * 0.5;
 		glint = wind_crests(pixel) * 0.24;
 		shadow = smoothstep(0.35, 1.8, -swell) * 0.045;
-	} else if (ravine_flow) {
+	} else if (channel_flow) {
 		// Breaking crests intersect narrow reflected runs down the creek.
 		vec2 woven = flow + vec2(floor(sin(flow.y * 0.07) * 3.0), 0.0);
 		vec2 streak = vec2(woven.y, woven.x);
