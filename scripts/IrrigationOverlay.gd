@@ -30,6 +30,14 @@ class CropMarkRow extends Node2D:
 		for at: Vector2 in marks:
 			FieldPlotArt.draw_task_mark(self, at, marks[at], FieldPlotArt.FARM_MARK_WIDTH)
 
+class PaddyInflow:
+	var direction: Vector2
+	var distance: float
+
+	func _init(into: Vector2, from_spring: float) -> void:
+		direction = into
+		distance = from_spring
+
 @onready var waterworks: Texture2D = load(WATERWORKS)
 @onready var tile_map: TileMapLayer = get_parent()
 @onready var tile_size := Vector2(tile_map.tile_set.tile_size)
@@ -68,6 +76,7 @@ var flooded_rice: Dictionary[Vector2i, bool] = {}
 var water_time := 0.0
 var water_frame := 0
 var _open_water: Dictionary[Vector2i, bool] = {}
+var _paddy_inflows: Dictionary[Vector2i, PaddyInflow] = {}
 
 func _ready() -> void:
 	flow_ink.draw.connect(_draw_flow)
@@ -501,10 +510,39 @@ func _refresh_tiles() -> void:
 		var crop: CropData = Global.active_crops[cell].data
 		if crop.is_water_crop and Global.irrigation.supplies(cell):
 			flooded_rice[cell] = true
+	_refresh_paddy_inflows()
 	queue_redraw()
 	flow_ink.queue_redraw()
 	plot_highlights.queue_redraw()
 	_refresh_crop_marks()
+
+func _refresh_paddy_inflows() -> void:
+	_paddy_inflows.clear()
+	var network := Global.irrigation
+	for center in network.field_gates:
+		var inlet := network.field_gates[center]
+		if not network.gate_is_wet(inlet):
+			continue
+		var side := Vector2((inlet - center).sign())
+		var span := tile_size.dot(side.abs())
+		var distance := _water_entry_distance(inlet, span)
+		var row := Irrigation.gate_row(center, inlet)
+		for index in row.size():
+			var cell := row[index]
+			if flooded_rice.has(cell):
+				_paddy_inflows[cell] = PaddyInflow.new(-side, distance + index * span)
+	for cell in flooded_rice:
+		for side: Vector2i in Irrigation.NEIGHBORS:
+			var inlet: Vector2i = cell + side
+			if not network.is_channel_wet(inlet):
+				continue
+			var span := tile_size.dot(Vector2(side.abs()))
+			var distance := _water_entry_distance(inlet, span)
+			if not _paddy_inflows.has(cell) or distance < _paddy_inflows[cell].distance:
+				_paddy_inflows[cell] = PaddyInflow.new(-Vector2(side), distance)
+
+func _water_entry_distance(inlet: Vector2i, span: float) -> float:
+	return (Global.irrigation.flow_distance(inlet) + 0.5) * span
 
 func _draw_plan() -> void:
 	if not editing:
@@ -748,41 +786,38 @@ func _draw_flow() -> void:
 	var network := Global.irrigation
 	for cell in network.channels:
 		var distance := network.flow_distance(cell)
-		if distance <= 0 or culverts.has(cell):
+		if distance <= 0:
 			continue
 		var center := tile_map.map_to_local(cell)
 		for direction: Vector2i in Irrigation.NEIGHBORS:
 			var upstream := cell + direction
-			if network.flow_distance(upstream) != distance - 1 or culverts.has(upstream):
+			if network.flow_distance(upstream) != distance - 1:
 				continue
 			var length := tile_size.x if direction.x != 0 else tile_size.y
 			var traveled := fposmod(water_frame - float(distance - 1) * length, RIPPLE_SPACING)
-			if traveled >= length or (upstream == network.source_cell and traveled < 5.0):
+			var limits := _visible_flow_limits(upstream, cell, length)
+			if traveled < limits.x or traveled >= limits.y:
 				continue
 			var point := (center + Vector2(direction) * (length - traveled)).round()
-			if footbridges.any(func(deck: Rect2) -> bool: return deck.has_point(point)):
-				continue
 			var streak := Vector2(3, 1) if direction.x != 0 else Vector2(1, 3)
-			flow_ink.draw_rect(Rect2(point - (streak * 0.5).floor(), streak), WATER_LIGHT)
+			var glint := Rect2(point - (streak * 0.5).floor(), streak)
+			if not footbridges.any(func(deck: Rect2) -> bool: return deck.intersects(glint)):
+				flow_ink.draw_rect(glint, WATER_LIGHT)
 	for center in network.field_gates:
 		var inlet := network.field_gates[center]
 		if network.gate_is_wet(inlet):
 			var axis := Vector2((inlet - center).sign())
-			var run := tile_size.dot(axis.abs()) * 3.0
+			var span := tile_size.dot(axis.abs())
+			var run := span * 3.0
 			var mouth := tile_map.map_to_local(center) + axis * run * 0.5
-			var traveled := fposmod(water_frame - network.flow_distance(inlet) * 2.0, RIPPLE_SPACING)
+			var traveled := fposmod(water_frame - _water_entry_distance(inlet, span), RIPPLE_SPACING)
 			while traveled < run - 4.0:
 				if traveled > 4.0:
 					var point := (mouth - axis * traveled).round()
 					var streak := Vector2.ONE + axis.abs() * 2.0
 					flow_ink.draw_rect(Rect2(point - (streak * 0.5).floor(), streak), WATER_LIGHT)
 				traveled += RIPPLE_SPACING
-	for cell in flooded_rice:
-		var phase := posmod(water_frame + cell.x * 5 + cell.y * 7, int(RIPPLE_SPACING))
-		if phase < 9:
-			var at := _cell_rect(cell).position + Vector2(3 + phase * 0.5, 11)
-			var opacity := 0.22 + 0.36 * sin(phase * PI / 8.0)
-			flow_ink.draw_rect(Rect2(at, Vector2(3, 0.5)), Color(FieldPlotArt.PADDY_REFLECTION, opacity))
+	_draw_paddy_flow()
 	if editing and not preview_fill and not survey_mode:
 		for cell in starter_canal:
 			var bed := _cell_rect(cell).grow(-2)
@@ -790,6 +825,34 @@ func _draw_flow() -> void:
 			flow_ink.draw_rect(bed, Color("#f3cd7a"), false, 1.3)
 		for cell in rice_plot_highlight:
 			flow_ink.draw_rect(_cell_rect(cell).grow(-1.5), RICE_MARK, false, 1.25)
+
+func _visible_flow_limits(upstream: Vector2i, downstream: Vector2i, length: float) -> Vector2:
+	var start := 5.0 if upstream == Global.irrigation.source_cell else 0.0
+	var finish := length
+	# Clip the entire streak at the seam with the covered tile.
+	if culverts.has(upstream):
+		start = length * 0.5 + 1.5
+	if culverts.has(downstream):
+		finish = length * 0.5 - 1.5
+	return Vector2(start, finish)
+
+func _draw_paddy_flow() -> void:
+	var reflection := FieldPlotArt.PADDY_REFLECTION
+	reflection.a = 0.46 if Global.has_rain() else 0.70
+	for cell in _paddy_inflows:
+		var inlet := _paddy_inflows[cell]
+		var into := inlet.direction
+		var span := tile_size.dot(into.abs())
+		var travel := fposmod(water_frame - inlet.distance, RIPPLE_SPACING)
+		var reach := span - 6.0
+		if travel >= reach:
+			continue
+		var phase := travel / reach
+		var center := tile_map.map_to_local(cell) + into * (2.0 + travel - span * 0.5)
+		var wing := into.orthogonal() * lerpf(1.25, 3.8, phase)
+		var rim := PackedVector2Array([center - wing - into * 0.55, center - wing * 0.42,
+			center + into * 0.6, center + wing * 0.45, center + wing - into * 0.45])
+		flow_ink.draw_polyline(rim, Color(reflection, reflection.a * sin(phase * PI)), 0.7)
 
 func _draw_footbridges() -> void:
 	for deck in footbridges:
