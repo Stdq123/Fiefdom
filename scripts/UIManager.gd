@@ -366,8 +366,7 @@ func update_ui() -> void:
 	hud.refresh_tribute()
 	hud.reputation_label.text = "声望 %d" % Global.reputation
 	hud.calendar_label.text = "第 %d 年 · %s · %s" % [
-		Global.get_current_year(), Global.get_current_solar_term(),
-		"雨" if Global.has_rain() else "晴"]
+		Global.get_current_year(), Global.get_current_solar_term(), Global.weather_label()]
 	_update_visitor_note(world.current_visitor())
 
 func _refresh_season_event() -> void:

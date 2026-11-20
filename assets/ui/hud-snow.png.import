@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://casmjhn1dlsv"
+path="res://.godot/imported/hud-snow.png-a4a57e3704cd777c0eeb676f9d3e27c5.res"
+
+[deps]
+
+source_file="res://assets/ui/hud-snow.png"
+dest_files=["res://.godot/imported/hud-snow.png-a4a57e3704cd777c0eeb676f9d3e27c5.res"]
+
+[params]
+
+authored_at_2x=true

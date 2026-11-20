@@ -97,7 +97,7 @@ func _refresh() -> void:
 	var active := Global.ravine_site_today()
 	var visitor := world.neighbor_actor(VisitorData.RAVINE_GUIDE) as Node2D
 	var has_guide := is_instance_valid(visitor)
-	today.text = "第 %d 天 · %s · %s" % [Global.current_day, Global.get_current_solar_term(), _weather(Global.has_rain())]
+	today.text = "第 %d 天 · %s · %s" % [Global.current_day, Global.get_current_solar_term(), Global.weather_label(0, true)]
 	pages.visible = known
 	introduction.visible = not known
 	garden_card.visible = known and Global.ravine_shortcut_open()
@@ -139,7 +139,8 @@ func _refresh_pages(active: int) -> void:
 			Color("#ffe3a8") if index == active else Color("#cad9b8"))
 		if date > 0:
 			var raining := Global.has_rain(date)
-			headings[index].text = "%s · 第 %d 天 · %s · %s" % [site.name, date, Global.get_current_solar_term(date), _weather(raining)]
+			headings[index].text = "%s · 第 %d 天 · %s · %s" % [
+				site.name, date, Global.get_current_solar_term(date), Global.weather_label(date, true)]
 			notes[index].text = site.rain if raining else site.dry
 		else:
 			headings[index].text = "%s · %s" % [site.name, "今日可记" if index == active else "待记"]
@@ -174,6 +175,3 @@ func _guide_next_step() -> void:
 		GameEvents.neighbor_directions_requested.emit(VisitorData.RAVINE_GUIDE)
 	elif Global.ravine_site_today() >= 0:
 		GameEvents.ravine_journal_directions_requested.emit("东关")
-
-func _weather(raining: bool) -> String:
-	return "雨天" if raining else "晴天"

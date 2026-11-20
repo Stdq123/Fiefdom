@@ -177,7 +177,7 @@ func _refresh_forecast(known: bool, pond: bool) -> void:
 	if pond and not known and Global.outcome == Global.Outcome.RUNNING:
 		detail += " · 竹涧须先找蒲宁"
 	readiness.text = "第 %d 天 · %s · %s · %s" % [Global.current_day, Global.get_current_solar_term(),
-		"雨天" if Global.has_rain() else "晴天", detail]
+		Global.weather_label(0, true), detail]
 	teacher_route.visible = not known and Global.outcome == Global.Outcome.RUNNING \
 		and is_instance_valid(world.neighbor_actor(VisitorData.RAVINE_GUIDE))
 	for site in sites.size():

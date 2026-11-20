@@ -191,6 +191,8 @@ const FIELD_ROUTE_STATES := [NightGrowth.READY, NightGrowth.DRY, NightGrowth.BLO
 	OrderFieldRoute.HARVEST, OrderFieldRoute.PREPARE, SowingRoute.READY] + ROTATION_ROUTES
 enum Season { SPRING, SUMMER, AUTUMN, WINTER }
 const SEASON_NAMES := ["春", "夏", "秋", "冬"]
+enum Weather { CLEAR, RAIN, LIGHT_SNOW, HEAVY_SNOW }
+const WEATHER_LABELS := ["晴", "雨", "落雪", "落雪"]
 
 # Phase 3: Rank & Tech
 enum Rank {
@@ -712,6 +714,19 @@ func sowing_nights(crop: CropData, day := 0) -> int:
 
 func has_rain(day := 0) -> bool:
 	return get_current_solar_term(day) == balance.rain_solar_term
+
+func weather_on(day := 0) -> Weather:
+	if has_rain(day):
+		return Weather.RAIN
+	match get_current_solar_term(day):
+		"小雪": return Weather.LIGHT_SNOW
+		"大雪": return Weather.HEAVY_SNOW
+	return Weather.CLEAR
+
+func weather_label(day := 0, full := false) -> String:
+	var weather := weather_on(day)
+	var label: String = WEATHER_LABELS[weather]
+	return label + "天" if full and weather in [Weather.CLEAR, Weather.RAIN] else label
 
 func sheep_can_graze(day := 0) -> bool:
 	return season_index(day) != Season.WINTER and not has_rain(day)

@@ -163,8 +163,7 @@ func _update_modal() -> void:
 	player.conversation_open = settings.visible or counter.visible
 
 func _refresh_date() -> void:
-	date.text = "第 %d 天 · %s · %s%s" % [Global.current_day, Global.day_watch_label(), Global.get_current_solar_term(),
-		" · 雨" if Global.has_rain() else ""]
+	date.text = TravelHeading.date_caption()
 
 func _refresh_stock() -> void:
 	stock.text = "%d 铜钱" % Global.money

@@ -244,7 +244,7 @@ func _build_status() -> void:
 
 func _refresh_trail_date() -> void:
 	trail_date.text = "第 %d 天 · %s · %s · %s" % [Global.current_day, Global.get_current_solar_term(),
-		Global.day_watch_label(), "雨" if Global.has_rain() else "晴"]
+		Global.day_watch_label(), Global.weather_label()]
 
 func _refresh_outing() -> void:
 	outing_label.text = Global.ravine_outing_status()

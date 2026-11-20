@@ -126,8 +126,7 @@ func resume_from_market() -> bool:
 	return player.position.distance_squared_to(LAYOUT.MARKET_GATE) < player.position.distance_squared_to(LAYOUT.ESTATE_GATE)
 
 func _refresh_clock() -> void:
-	%Date.text = "第 %d 天 · %s · %s%s" % [Global.current_day, Global.day_watch_label(), Global.get_current_solar_term(),
-		" · 雨" if Global.has_rain() else ""]
+	%Date.text = TravelHeading.date_caption()
 
 func _refresh_scheduled_guest() -> void:
 	scheduled_guest = Global.visitor_for_day(Global.current_day)

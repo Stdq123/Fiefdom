@@ -211,9 +211,8 @@ func _show_date(index: int, detail_day := 0) -> void:
 		date_context.text = "明日"
 	else:
 		date_context.text = "%d 天后" % remaining
-	var rain := Global.has_rain(day)
-	weather_icon.texture = HUDIcons.icon(HUDIcons.Symbol.RAIN if rain else HUDIcons.Symbol.SUN)
-	var weather := "雨 · 旱作可得水" if rain else "晴"
+	weather_icon.texture = HUDIcons.icon(HUDIcons.SKY[HUDIcons.sky_index(day)])
+	var weather := "雨 · 旱作可得水" if Global.has_rain(day) else Global.weather_label(day)
 	if day < Global.current_day:
 		forecast.text = weather + "    ·    此日已过"
 	else:

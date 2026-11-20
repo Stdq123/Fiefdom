@@ -13,3 +13,9 @@ func _ready() -> void:
 func _refresh_daylight() -> void:
 	$WatchDial.show_watch(Global.day_watch_label())
 	%WeatherIcon.texture = HUDIcons.icon(HUDIcons.SKY[HUDIcons.sky_index()])
+
+static func date_caption() -> String:
+	var caption := "第 %d 天 · %s · %s" % [Global.current_day, Global.day_watch_label(), Global.get_current_solar_term()]
+	if Global.weather_on() != Global.Weather.CLEAR:
+		caption += " · " + Global.weather_label()
+	return caption

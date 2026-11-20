@@ -72,13 +72,12 @@ func _ring_inside(point: Vector2, outline: PackedVector2Array) -> bool:
 	return true
 
 func _refresh() -> void:
-	var outdoors := not Global.is_indoors()
-	var raining := outdoors and Global.has_rain()
+	var weather := Global.Weather.CLEAR if Global.is_indoors() else Global.weather_on()
+	var raining := weather == Global.Weather.RAIN
 	snowflake_count = 0
-	if outdoors and not raining:
-		match Global.get_current_solar_term():
-			"小雪": snowflake_count = 54
-			"大雪": snowflake_count = 96
+	match weather:
+		Global.Weather.LIGHT_SNOW: snowflake_count = 54
+		Global.Weather.HEAVY_SNOW: snowflake_count = 96
 	visible = raining or snowflake_count > 0
 	splashes.visible = raining
 	set_process(visible)

@@ -494,7 +494,7 @@ func _refresh_plan_seed_button() -> void:
 func refresh_seed_calendar() -> void:
 	var tomorrow := Global.current_day + 1
 	forecast_label.text = "明日 %s · %s" % [
-		Global.get_current_solar_term(tomorrow), "雨润旱田" if Global.has_rain(tomorrow) else "晴"]
+		Global.get_current_solar_term(tomorrow), "雨润旱田" if Global.has_rain(tomorrow) else Global.weather_label(tomorrow)]
 	calendar_button.tooltip_text = forecast_label.text
 	_refresh_watch()
 	for id in seed_buttons:

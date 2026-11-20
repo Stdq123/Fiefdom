@@ -300,7 +300,7 @@ func _refresh() -> void:
 		return
 	var tomorrow := Global.current_day + 1
 	tomorrow_calendar.text = "明日 · %s · %s  ›" % [Global.get_current_solar_term(tomorrow),
-		"雨" if Global.has_rain(tomorrow) else "晴"]
+		Global.weather_label(tomorrow)]
 	_refresh_raid_plan()
 	_refresh_fields()
 	sheep_note.visible = Global.sheepfold.owned()
