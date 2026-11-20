@@ -11,6 +11,7 @@ var save_button: Button
 var exits_game := false
 var _prompt: String
 var _opening_focus: Control
+var _offer_save_copy := false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -36,10 +37,9 @@ func _ready() -> void:
 
 func ask(message: String, stay_caption := "继续游戏", can_save := true) -> void:
 	_opening_focus = get_tree().root.gui_get_focus_owner()
-	var current := "%s · 第 %d 天 · %s" % [Global.campaign_name, Global.current_day, Global.day_watch_label()]
-	var checkpoint := Global.latest_campaign_save()
-	var saved := "本局尚无存档。" if checkpoint.is_empty() else "最近存档 · " + Global.saved_game_caption(checkpoint)
-	_prompt = current + "\n" + saved + "\n\n" + message
+	_prompt = _save_summary() + "\n\n" + message
+	_offer_save_copy = false
+	save_button.text = "保存并退出" if exits_game else "保存并返回"
 	dialog_text = _prompt
 	get_cancel_button().text = stay_caption
 	save_button.visible = can_save
@@ -47,6 +47,12 @@ func ask(message: String, stay_caption := "继续游戏", can_save := true) -> v
 		ok_button_text = "直接退出" if can_save else "退出游戏"
 	popup_centered(Vector2i(568, 208))
 	_focus_action(save_button if can_save else get_cancel_button())
+
+func _save_summary() -> String:
+	var current := "%s · 第 %d 天 · %s" % [Global.campaign_name, Global.current_day, Global.day_watch_label()]
+	var checkpoint := Global.latest_campaign_save()
+	var saved := "本局尚无存档。" if checkpoint.is_empty() else "最近存档 · " + Global.saved_game_caption(checkpoint)
+	return current + "\n" + saved
 
 func _focus_action(button: Button) -> void:
 	button.grab_focus()
@@ -61,11 +67,17 @@ func _restore_opening_focus() -> void:
 	GamepadInput.snap_pointer_to_focus.call_deferred()
 
 func _save_and_leave() -> void:
-	var result: Error = save_progress.call()
+	var result: Error = save_progress.call(true) if _offer_save_copy else save_progress.call()
 	if result == OK:
 		if not exits_game:
 			hide()
 		return_requested.emit()
+	elif result == ERR_ALREADY_IN_USE:
+		_offer_save_copy = true
+		save_button.text = "另存副本并退出" if exits_game else "另存副本并返回"
+		_prompt = _save_summary() + "\n\n" + Global.SAVE_CONFLICT_MESSAGE
+		dialog_text = _prompt
+		_focus_action(get_cancel_button())
 	elif result == ERR_FILE_UNRECOGNIZED:
 		dialog_text = _prompt + "\n\n" + PROTECTED_MANUAL_SAVE + "可先留在当前画面。"
 		_focus_action(get_cancel_button())

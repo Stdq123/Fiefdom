@@ -27,6 +27,7 @@ var fullscreen_button: CheckButton
 var window_size_picker: OptionButton
 var reading_size_picker: OptionButton
 var _opening_focus: Control
+var _offer_save_copy := false
 
 func _ready() -> void:
 	add_to_group("gamepad_directional_menu")
@@ -132,7 +133,7 @@ func _on_visibility_changed() -> void:
 		_restore_opening_focus.call_deferred()
 
 func _restore_opening_focus() -> void:
-	if visible:
+	if visible or not is_inside_tree():
 		return
 	var viewport := get_viewport()
 	if not PANEL_FOCUS.has_popup(viewport):
@@ -327,7 +328,7 @@ func _add_session_controls(vbox: VBoxContainer) -> void:
 	save_button = Button.new()
 	save_button.text = "保存游戏"
 	save_button.tooltip_text = "手动档记录当前地点、站位和面向"
-	save_button.pressed.connect(_on_save_pressed)
+	save_button.pressed.connect(func(): _on_save_pressed(_offer_save_copy))
 
 	var load_btn := Button.new()
 	load_btn.text = "读取游戏"
@@ -361,10 +362,19 @@ func _return_to_title() -> void:
 	else:
 		save_status.text = "返回标题失败（%s）" % error_string(result)
 
-func _on_save_pressed() -> Error:
-	var result := Global.save_game()
+func _on_save_pressed(as_copy := false) -> Error:
+	var result := Global.save_game(as_copy)
 	match result:
-		OK: save_status.text = "游戏已保存"
+		OK:
+			_offer_save_copy = false
+			save_button.text = "保存游戏"
+			save_button.tooltip_text = "手动档记录当前地点、站位和面向"
+			save_status.text = "已另存「%s」" % Global.campaign_name if as_copy else "游戏已保存"
+		ERR_ALREADY_IN_USE:
+			_offer_save_copy = true
+			save_button.text = "另存为封地副本"
+			save_button.tooltip_text = "另开一个封地档案，接着经营当前进度"
+			save_status.text = Global.SAVE_CONFLICT_MESSAGE
 		ERR_FILE_UNRECOGNIZED: save_status.text = TITLE_CONFIRMATION.PROTECTED_MANUAL_SAVE + "可开启自动保存，过夜时尝试其他档位。"
 		_: save_status.text = "保存失败（%s）" % error_string(result)
 	return result

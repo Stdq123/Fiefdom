@@ -16,6 +16,7 @@ const NOTICE_MAX_WIDTH := 536.0
 
 var view: Control
 var _defeat_checkpoint := {}
+var _offer_ending_copy := false
 var trail_vitals: PanelContainer
 var trail_date: Label
 var outing_label: Label
@@ -307,6 +308,7 @@ func _show_outcome(outcome: Global.Outcome, saved_ending := false) -> void:
 
 func _show_ending(saved_ending: bool) -> void:
 	var ending = _add_ending_panel()
+	_offer_ending_copy = false
 	ending.present(get_parent().get_node("World"), saved_ending)
 	status = ending.status
 	ending.ending_saved = saved_ending
@@ -318,10 +320,11 @@ func _show_ending(saved_ending: bool) -> void:
 				ending.ending_saved = true
 				status.text = "结局已自动保存。"
 			ERR_SKIP: status.text = "可点「保存结局」留存本次记录。"
+			ERR_ALREADY_IN_USE: _show_ending_save_conflict()
 			ERR_FILE_UNRECOGNIZED: status.text = "结局自动保存失败。自动档位含新版存档，可点「保存结局」尝试手动档。"
 			_: status.text = "结局自动保存失败。可尝试「保存结局」。"
 	ending.continue_button.pressed.connect(_continue_estate)
-	ending.save_button.pressed.connect(_save_ending)
+	ending.save_button.pressed.connect(func(): _save_ending(_offer_ending_copy))
 	ending.refresh_restore()
 	ending.restore_requested.connect(func(checkpoint: Dictionary):
 		if _restore_game(checkpoint) != OK:
@@ -443,10 +446,20 @@ func _show_defeat(outcome: Global.Outcome) -> void:
 	else:
 		load_button.grab_focus()
 
-func _save_ending() -> Error:
-	var result := Global.save_game()
+func _show_ending_save_conflict() -> void:
+	_offer_ending_copy = true
+	summary.save_button.text = "另存结局副本"
+	status.text = Global.SAVE_CONFLICT_MESSAGE
+
+func _save_ending(as_copy := false) -> Error:
+	var result := Global.save_game(as_copy)
 	match result:
-		OK: status.text = "结局已存档。"
+		OK:
+			_offer_ending_copy = false
+			summary.save_button.text = "保存结局"
+			summary.estate_name.text = Global.campaign_name
+			status.text = "结局已另存「%s」。" % Global.campaign_name if as_copy else "结局已存档。"
+		ERR_ALREADY_IN_USE: _show_ending_save_conflict()
 		ERR_FILE_UNRECOGNIZED: status.text = TITLE_CONFIRMATION.PROTECTED_MANUAL_SAVE + "可留在结算。"
 		_: status.text = "保存失败（%s）" % error_string(result)
 	if result == OK:

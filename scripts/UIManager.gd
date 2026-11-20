@@ -1379,6 +1379,8 @@ func _on_save_finished(result: Error, automatic: bool) -> void:
 	if result == OK:
 		var action := "已自动保存" if automatic else "已手动保存"
 		hud.show_save_notice("%s · 第 %d 天" % [action, Global.current_day])
+	elif automatic and result == ERR_ALREADY_IN_USE:
+		hud.show_save_notice("自动保存暂停 · 封地存档已更新 · 可在设置另存封地副本", true)
 	elif automatic:
 		var reason := " · 自动档含新版记录" if result == ERR_FILE_UNRECOGNIZED else ""
 		hud.show_save_notice("自动保存失败%s · 可尝试手动保存" % reason, true)

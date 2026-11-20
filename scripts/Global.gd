@@ -7,6 +7,7 @@ const SAVE_WRITE_LOCK := preload("res://scripts/SaveWriteLock.gd")
 const SAVE_BACKUP_SUFFIX := ".bak"
 const SAVE_VERSION := 2
 const SAVE_TIME_SCALE := 1000000
+const SAVE_CONFLICT_MESSAGE := "这处封地的存档已更新。可将当前进度另存为封地副本。"
 const TITLE_SCENE := "res://scenes/Title.tscn"
 const ESTATE_SCENE := "res://scenes/Main.tscn"
 const WILDERNESS_SCENE := "res://scenes/Wilderness.tscn"
@@ -123,6 +124,8 @@ var outcome: Outcome = Outcome.RUNNING
 var campaign_id := ""
 var campaign_name := "封地 1"
 var checkpoint_sequence := 0
+var _observed_save_campaign := ""
+var _observed_save_fingerprints := PackedStringArray()
 var restore_notice := ""
 
 # Phase 2: Economy & Retainers
@@ -272,9 +275,14 @@ func start_new_game(estate_name := "") -> Error:
 func _announce_arrival() -> void:
 	GameEvents.estate_arrived.emit()
 
+func _new_campaign_id() -> String:
+	return "%d-%d-%d" % [int(Time.get_unix_time_from_system()), OS.get_process_id(), Time.get_ticks_usec()]
+
 func _reset_campaign() -> void:
-	campaign_id = "%d-%d-%d" % [int(Time.get_unix_time_from_system()), OS.get_process_id(), Time.get_ticks_usec()]
+	campaign_id = _new_campaign_id()
 	checkpoint_sequence = 0
+	_observed_save_campaign = campaign_id
+	_observed_save_fingerprints = PackedStringArray()
 	restore_notice = ""
 	current_day = 1
 	day_progress = 0.0
@@ -3664,8 +3672,8 @@ func _water_source_for(fields: Array[Dictionary]) -> Vector2i:
 			return cell
 	return Vector2i(RECLAMATION_BOUNDS.position.x - 1, 5)
 
-func save_game() -> Error:
-	var result := _save_snapshot("")
+func save_game(as_copy := false) -> Error:
+	var result := _save_snapshot("", as_copy)
 	GameEvents.save_finished.emit(result, false)
 	return result
 
@@ -3677,26 +3685,37 @@ func save_automatically(origin: String) -> Error:
 	GameEvents.save_finished.emit(result, true)
 	return result
 
-func _save_snapshot(origin: String) -> Error:
+func _save_snapshot(origin: String, as_copy := false) -> Error:
 	if OS.get_name() != "Windows":
-		return _write_snapshot(origin)
+		return _write_snapshot(origin, as_copy)
 	var lock := SAVE_WRITE_LOCK.new()
 	var acquired := lock.acquire()
 	if acquired != OK:
 		return acquired
-	var result := _write_snapshot(origin)
+	var result := _write_snapshot(origin, as_copy)
 	lock.release()
 	return result
 
-func _write_snapshot(origin: String) -> Error:
-	var folder := _campaign_directory()
+func _write_snapshot(origin: String, as_copy: bool) -> Error:
+	var save_id := _new_campaign_id() if as_copy else campaign_id
+	var save_name := campaign_name.left(12) + "（副本）" if as_copy else campaign_name
+	var saved := _save_catalog()
+	var catalog: Array[Dictionary] = saved.entries
+	var observed: PackedStringArray = saved.fingerprints.get(save_id.md5_text(), PackedStringArray())
+	# An older checkpoint can be chosen on purpose. Only records unseen by this session block writing.
+	if not as_copy and _observed_save_campaign == campaign_id:
+		for fingerprint in observed:
+			if fingerprint not in _observed_save_fingerprints:
+				return ERR_ALREADY_IN_USE
+	var folder := CAMPAIGN_SAVE_ROOT.path_join(save_id.md5_text())
+	if as_copy and DirAccess.dir_exists_absolute(folder):
+		return ERR_ALREADY_EXISTS
 	var created := DirAccess.make_dir_recursive_absolute(folder)
 	if created != OK:
 		return created
-	var catalog := saved_games()
 	var previous: int = 0 if catalog.is_empty() else catalog[0]["sequence"]
 	var sequence := maxi(previous + 1, int(Time.get_unix_time_from_system() * SAVE_TIME_SCALE))
-	var path := manual_save_path() if origin.is_empty() else _next_auto_slot(folder, catalog)
+	var path := folder.path_join(SAVE_PATH.get_file()) if origin.is_empty() else _next_auto_slot(folder, catalog)
 	if path.is_empty():
 		return ERR_FILE_UNRECOGNIZED
 	var saved_crops := {}
@@ -3758,8 +3777,8 @@ func _write_snapshot(origin: String) -> Error:
 		"save_version": SAVE_VERSION,
 		"save_sequence": sequence,
 		"save_origin": origin,
-		"campaign_id": campaign_id,
-		"campaign_name": campaign_name,
+		"campaign_id": save_id,
+		"campaign_name": save_name,
 		"current_day": current_day,
 		"day_progress": day_progress,
 		"estate_room": estate_room,
@@ -3917,7 +3936,8 @@ func _write_snapshot(origin: String) -> Error:
 	var file := FileAccess.open(pending_path, FileAccess.WRITE)
 	if file == null:
 		return FileAccess.get_open_error()
-	var written := file.store_string(JSON.stringify(data))
+	var contents := JSON.stringify(data)
+	var written := file.store_string(contents)
 	file.flush()
 	var write_error := file.get_error()
 	file.close()
@@ -3929,7 +3949,12 @@ func _write_snapshot(origin: String) -> Error:
 	if replace_error != OK:
 		DirAccess.remove_absolute(pending_path)
 	else:
+		campaign_id = save_id
+		campaign_name = save_name
 		checkpoint_sequence = sequence
+		_observed_save_campaign = save_id
+		observed.append(contents.sha256_text())
+		_observed_save_fingerprints = observed
 	return replace_error
 
 func _install_save_file(pending_path: String, path: String) -> Error:
@@ -3999,7 +4024,11 @@ func next_campaign_name() -> String:
 	return "封地 %d" % (campaigns.size() + 1)
 
 func saved_games() -> Array[Dictionary]:
+	return _save_catalog().entries
+
+func _save_catalog() -> Dictionary:
 	var catalog: Array[Dictionary] = []
+	var fingerprints: Dictionary[String, PackedStringArray] = {}
 	for path in _save_paths():
 		if not _save_slot_exists(path):
 			continue
@@ -4009,6 +4038,10 @@ func saved_games() -> Array[Dictionary]:
 		var campaign := _snapshot_campaign(data)
 		var legacy := not path.begins_with(CAMPAIGN_SAVE_ROOT + "/")
 		var campaign_key := campaign.md5_text() if readable or legacy else path.get_base_dir().get_file()
+		var storage_key := campaign_key if legacy else path.get_base_dir().get_file()
+		var versions: PackedStringArray = fingerprints.get(storage_key, PackedStringArray())
+		versions.append_array(snapshot.slot_fingerprints)
+		fingerprints[storage_key] = versions
 		var name_in_archive := _snapshot_campaign_name(data)
 		if not readable:
 			name_in_archive = snapshot.get("display_name", "受损存档")
@@ -4045,7 +4078,9 @@ func saved_games() -> Array[Dictionary]:
 			"error": snapshot["error"],
 		})
 	catalog.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["sequence"] > b["sequence"])
-	return catalog
+	for entry in catalog:
+		entry["observed_fingerprints"] = fingerprints.get(entry.campaign.md5_text(), PackedStringArray())
+	return {"entries": catalog, "fingerprints": fingerprints}
 
 func saved_game_version_notice(entry: Dictionary) -> String:
 	if entry.get("required_version", 0) <= SAVE_VERSION:
@@ -4150,20 +4185,23 @@ func _snapshot_campaign_name(data: Dictionary) -> String:
 func _read_snapshot(path: String) -> Dictionary:
 	var snapshot := _read_save_file(path)
 	snapshot["file"] = path
-	var backup_path := path + SAVE_BACKUP_SUFFIX
-	if not FileAccess.file_exists(backup_path):
-		return snapshot
-	# A usable primary can be offered for reading even if its backup must be protected.
+	var versions := PackedStringArray()
 	if snapshot.error == OK:
-		snapshot["required_version"] = _read_save_header(backup_path).get("required_version", 0)
-		return snapshot
-	var backup := _read_save_file(backup_path)
-	var required := maxi(snapshot.get("required_version", 0), backup.get("required_version", 0))
-	var backup_needs_update: bool = backup.error == ERR_FILE_UNRECOGNIZED and snapshot.error != ERR_FILE_UNRECOGNIZED
-	if snapshot.error == ERR_FILE_NOT_FOUND or backup.error == OK or backup_needs_update:
-		snapshot = backup
-		snapshot["file"] = backup_path
-	snapshot["required_version"] = required
+		versions.append(snapshot.fingerprint)
+	var backup_path := path + SAVE_BACKUP_SUFFIX
+	if FileAccess.file_exists(backup_path):
+		# Version and content checks also cover the backup when the primary is usable.
+		var backup := _read_save_header(backup_path, true) if snapshot.error == OK else _read_save_file(backup_path)
+		if backup.error == OK:
+			versions.append(backup.fingerprint)
+		var required := maxi(snapshot.get("required_version", 0), backup.get("required_version", 0))
+		if snapshot.error != OK:
+			var backup_needs_update: bool = backup.error == ERR_FILE_UNRECOGNIZED and snapshot.error != ERR_FILE_UNRECOGNIZED
+			if snapshot.error == ERR_FILE_NOT_FOUND or backup.error == OK or backup_needs_update:
+				snapshot = backup
+				snapshot["file"] = backup_path
+		snapshot["required_version"] = required
+	snapshot["slot_fingerprints"] = versions
 	return snapshot
 
 func _read_save_file(path: String) -> Dictionary:
@@ -4211,7 +4249,8 @@ func load_saved_entry(entry: Dictionary, had_unreadable := false) -> Error:
 		if record.error == OK:
 			if record.fingerprint == entry.fingerprint:
 				# Apply the same in-memory content that matched the menu, even if the slot rotates again.
-				return _restore_snapshot(record.data, entry.sequence, file == backup, had_unreadable or entry.get("had_unreadable", false))
+				return _restore_snapshot(record.data, entry.sequence, entry.observed_fingerprints,
+					file == backup, had_unreadable or entry.get("had_unreadable", false))
 			changed = true
 		elif record.error != ERR_FILE_NOT_FOUND and failure != ERR_FILE_UNRECOGNIZED:
 			failure = record.error
@@ -4222,15 +4261,22 @@ func load_game(path := "") -> Error:
 		path = manual_save_path()
 		if not _save_slot_exists(path):
 			path = SAVE_PATH
+	var observed: Dictionary = _save_catalog().fingerprints
 	var snapshot := _read_snapshot(path)
 	if snapshot["error"] != OK:
 		return snapshot["error"]
 	var file: String = snapshot["file"]
-	return _restore_snapshot(snapshot.data, snapshot.sequence, file != path)
+	var campaign := _snapshot_campaign(snapshot.data)
+	var versions: PackedStringArray = observed.get(campaign.md5_text(), PackedStringArray())
+	versions.append(snapshot.fingerprint)
+	return _restore_snapshot(snapshot.data, snapshot.sequence, versions, file != path)
 
-func _restore_snapshot(data: Dictionary, sequence: int, from_backup: bool, had_unreadable := false) -> Error:
+func _restore_snapshot(data: Dictionary, sequence: int, fingerprints: PackedStringArray,
+		from_backup: bool, had_unreadable := false) -> Error:
 	var result := _load_snapshot_data(data, sequence)
 	if result == OK:
+		_observed_save_campaign = campaign_id
+		_observed_save_fingerprints = fingerprints
 		if from_backup:
 			restore_notice = "已从备份恢复第 %d 天" % current_day
 		elif had_unreadable:
