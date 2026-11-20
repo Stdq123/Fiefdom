@@ -5,6 +5,12 @@ const SCENERY_OCCLUSION := preload("res://scripts/SceneryOcclusion.gd")
 const LAMP_DAY: Array[float] = [0.19, 0.34, 0.25, 0.36]
 const WINDOW_DAY: Array[float] = [0.30, 0.26, 0.285, 0.24]
 
+# The hall and the silk shed share the same painted steps.
+static var _stone_threshold := PackedVector2Array([
+	Vector2(-14, 49), Vector2(15, 49), Vector2(23, 68),
+	Vector2(22, 71), Vector2(-22, 71), Vector2(-23, 68),
+])
+
 @export var room_kind := Global.EstateRoom.HALL
 @export var facade_path: NodePath = ^"../HallRest"
 @export var resume_path: NodePath = ^"Entry"
@@ -20,6 +26,9 @@ const WINDOW_DAY: Array[float] = [0.30, 0.26, 0.285, 0.24]
 @onready var window_projection: ShaderMaterial = $Floor.material
 
 var flame_phase := 0.0
+
+func on_stone_threshold(at: Vector2) -> bool:
+	return Geometry2D.is_point_in_polygon(to_local(at), _stone_threshold)
 
 func _ready() -> void:
 	window_projection.set_shader_parameter("room_origin", global_position)

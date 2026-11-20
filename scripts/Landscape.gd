@@ -843,14 +843,20 @@ func _draw() -> void:
 		_stamp(bounds, prop.z)
 
 func _on_footstep(at: Vector2) -> void:
+	_play_step(at, player.get_real_velocity())
+
+func _play_step(at: Vector2, movement: Vector2) -> void:
 	var foot := to_local(at)
-	var indoors := Global.is_indoors()
-	var surface := TERRAIN_AUDIO.Surface.PLANK if indoors else _surface_at(foot)
-	terrain_audio.play_step(surface)
-	if indoors:
+	var left := terrain_audio.step_variant % 2 == 1
+	var shoe := FOOTSTEP_EFFECTS.shoe_at(foot, movement.normalized(), left)
+	if Global.is_indoors():
+		var path := ^"SilkInterior" if Global.estate_room == Global.EstateRoom.SILK_SHED else ^"HallInterior"
+		var room := get_parent().get_node_or_null(path)
+		var stone: bool = room != null and room.on_stone_threshold(to_global(shoe))
+		terrain_audio.play_step(TERRAIN_AUDIO.Surface.STONE if stone else TERRAIN_AUDIO.Surface.PLANK)
 		return
-	var movement := player.get_real_velocity()
-	var left := terrain_audio.step_variant % 2 == 0
+	var surface := _surface_at(shoe if wilderness else foot)
+	terrain_audio.play_step(surface)
 	match surface:
 		TERRAIN_AUDIO.Surface.SNOW:
 			footstep_effects.leave_snow(foot, movement, left)
@@ -864,8 +870,12 @@ func _surface_at(foot: Vector2) -> TERRAIN_AUDIO.Surface:
 	if wilderness:
 		if BRIDGE_DECK.has_point(foot):
 			return TERRAIN_AUDIO.Surface.PLANK
-		if absf(foot.y - FORD.y) < CROSSING_HALF_DEPTH and absf(foot.x - creek_x(foot.y)) < WATER_HALF_WIDTH:
-			return TERRAIN_AUDIO.Surface.SHALLOWS
+		if FORD_AREA.has_point(foot):
+			for stone in ford_stones:
+				if Geometry2D.is_point_in_polygon(foot, stone):
+					return TERRAIN_AUDIO.Surface.STONE
+			if Geometry2D.is_point_in_polygon(foot, ford_shoal):
+				return TERRAIN_AUDIO.Surface.SHALLOWS
 		if (RAVINE_RELIEF.gate_stone_at(foot, RavineLayout.WEST_GATE)
 				or ravine_relief.lookout_stone_at(foot) or ravine_relief.approach_stone_at(foot)):
 			return TERRAIN_AUDIO.Surface.STONE

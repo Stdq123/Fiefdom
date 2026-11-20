@@ -47,14 +47,14 @@ func leave_snow(foot: Vector2, movement: Vector2, left: bool) -> void:
 func lift_dust(foot: Vector2, movement: Vector2, left: bool) -> void:
 	var heading := movement.normalized()
 	if not heading.is_zero_approx():
-		_add_mark(StepMark.new(_shoe(foot, heading, left), heading))
+		_add_mark(StepMark.new(shoe_at(foot, heading, left), heading))
 
 func splash(foot: Vector2, movement: Vector2, left: bool, water: PackedVector2Array,
 		stones: Array[PackedVector2Array] = []) -> void:
 	var heading := movement.normalized()
 	if heading.is_zero_approx():
 		return
-	var shoe := _shoe(foot, heading, left)
+	var shoe := shoe_at(foot, heading, left)
 	if not Geometry2D.is_point_in_polygon(shoe, water):
 		if not Geometry2D.is_point_in_polygon(foot, water):
 			return
@@ -73,7 +73,7 @@ func clear() -> void:
 	set_process(false)
 	queue_redraw()
 
-func _shoe(foot: Vector2, heading: Vector2, left: bool) -> Vector2:
+static func shoe_at(foot: Vector2, heading: Vector2, left: bool) -> Vector2:
 	var spread := heading.orthogonal() * (2.5 if left else -2.5) * Vector2(1.0, 0.65)
 	# The image places the soles below the collision anchor.
 	return (foot + Vector2(0, 5.0) - heading * 1.5 + spread).snappedf(0.5)

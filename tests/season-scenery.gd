@@ -128,7 +128,8 @@ func _run() -> void:
 	await Campaign.walk_to(self, walker, Vector2(226, 36))
 	await Campaign.walk_ravine_to(self, current_scene, RavineLayout.FORD_EAST)
 	await Campaign.walk_to(self, walker, RavineLayout.FORD)
-	_expect(terrain.footsteps.stream.resource_path.get_file().begins_with("water-"), "The winter ford still sounds like water.")
+	var ford_step: String = terrain.footsteps.stream.resource_path.get_file()
+	_expect(ford_step.begins_with("water-") or ford_step.begins_with("stone-"), "The winter ford uses water and stepping-stone samples.")
 	await Campaign.walk_to_ravine_exit(self, current_scene)
 	await _move(&"ui_left", 24)
 	if current_scene.name != "Main":

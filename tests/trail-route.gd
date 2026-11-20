@@ -123,7 +123,8 @@ func _run() -> void:
 
 	await _walk_trail(RavineLayout.FORD_EAST)
 	await _walk(RavineLayout.FORD)
-	_expect(terrain.footsteps.stream.resource_path.get_file().begins_with("water-"), "Wading in the ford plays water steps.")
+	var ford_step: String = terrain.footsteps.stream.resource_path.get_file()
+	_expect(ford_step.begins_with("water-") or ford_step.begins_with("stone-"), "The ford uses water and stepping-stone samples.")
 	await _walk(RavineLayout.FORD_WEST)
 	_expect(walker.position.distance_to(RavineLayout.FORD_WEST) < 3.0, "The shallow crossing provides an alternate way back.")
 	if not await _return_home():

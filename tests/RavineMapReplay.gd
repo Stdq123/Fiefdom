@@ -187,7 +187,7 @@ func _walk_route(allow_exit := false, climb_frame := "01b-lookout-steps") -> boo
 				bridge_captured = true
 		if point == RavineLayout.FORD:
 			var landscape: Node2D = ravine.get_node("Landscape")
-			_expect(landscape._surface_at(player.position) == TERRAIN_AUDIO.Surface.SHALLOWS,
+			_expect(Geometry2D.is_point_in_polygon(landscape.to_local(player.global_position), landscape.ford_shoal),
 				"The shallow steps stay inside the wadeable strip.")
 			await _capture_map_frame("03a-ford-stepping-stones")
 		if point == RavineLayout.RIDGE_FORK and not climb_frame.ends_with("frost") and guide.destination_name == "望溪台":
