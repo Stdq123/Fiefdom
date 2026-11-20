@@ -471,7 +471,7 @@ var track_shapes: Array[Dictionary] = []
 var field_approaches: Dictionary[int, PackedVector2Array] = {}
 var worksite_mouths: Dictionary[int, Vector2] = {}
 var _scenery_ready := false
-var _tree_shadows := TREE_SHADOWS.new()
+var _tree_shadows: TREE_SHADOWS
 
 func _ready() -> void:
 	ground_cover = SEASONAL_GROUND.new(wilderness)
@@ -510,6 +510,7 @@ func _ready() -> void:
 		_layout_field_approaches()
 	else:
 		_build_track_shapes(WILD_TRACKS, WILD_TRACK_WIDTHS)
+	_tree_shadows = TREE_SHADOWS.new()
 	add_child(_tree_shadows)
 	_add_water_surface()
 	_update_weather()
