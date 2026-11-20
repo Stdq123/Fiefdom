@@ -43,8 +43,16 @@ func refresh_restore() -> void:
 	checkpoint.text = ("本局没有可恢复的存档。" if restore_button.disabled else
 		Global.saved_game_caption(_restore_checkpoint))
 	var focus := title_button if restore_button.disabled else restore_button
-	focus.grab_focus()
-	GamepadInput.snap_pointer_to_focus.call_deferred()
+	_focus_action(focus)
+
+func _focus_action(button: Button) -> void:
+	button.grab_focus()
+	if GamepadInput.active:
+		var tree := get_tree()
+		await tree.process_frame
+		await tree.process_frame
+		if is_inside_tree() and PANEL_FOCUS.input_owner(self) == button:
+			GamepadInput.snap_pointer_to_focus()
 
 func _refresh_back_hint() -> void:
 	title_button.text = "返回标题  %s" % GamepadInput.back_key()
