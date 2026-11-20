@@ -1,6 +1,9 @@
 extends Node2D
 
 const SCENERY_OCCLUSION := preload("res://scripts/SceneryOcclusion.gd")
+# Indexed by Global.Weather.
+const LAMP_DAY: Array[float] = [0.19, 0.34, 0.25, 0.36]
+const WINDOW_DAY: Array[float] = [0.30, 0.26, 0.285, 0.24]
 
 @export var room_kind := Global.EstateRoom.HALL
 @export var facade_path: NodePath = ^"../HallRest"
@@ -86,15 +89,15 @@ func _process(delta: float) -> void:
 
 func _refresh_lighting() -> void:
 	var dusk := Global.dusk_amount()
-	var rain := Global.has_rain()
+	var weather := Global.weather_on()
 	var flicker := 0.032 * sin(flame_phase) + 0.013 * sin(3.0 * flame_phase)
-	lamp.energy = lerpf(0.34 if rain else 0.19, 0.86, dusk) + flicker
-	window_light.energy = lerpf(0.26 if rain else 0.30, 0.035, dusk)
+	lamp.energy = lerpf(LAMP_DAY[weather], 0.86, dusk) + flicker
+	window_light.energy = lerpf(WINDOW_DAY[weather], 0.035, dusk)
 
 	var daylight := minf(Global.day_progress / 0.86, 1.0)
 	var sun_height := sin(daylight * PI)
 	var strength := (1.0 - dusk) * lerpf(0.76, 1.0, sun_height)
-	window_projection.set_shader_parameter("direct_light", 0.0 if rain else strength)
+	window_projection.set_shader_parameter("direct_light", strength if weather == Global.Weather.CLEAR else 0.0)
 	window_projection.set_shader_parameter("beam_origin",
 		Vector2(lerpf(-17.0, 18.0, daylight), lerpf(3.0, -12.0, sun_height)))
 	window_projection.set_shader_parameter("beam_depth", lerpf(47.0, 34.0, sun_height))

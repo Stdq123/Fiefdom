@@ -5,30 +5,40 @@ const CLOUD_COVER := preload("res://resources/cloud-cover.tres")
 const DAWN := Color("#ffe3c2")
 const NIGHT := Color("#8298bd")
 const LAMP_RISE := 0.64
+const SNOW_IGNITION_LIMIT := 0.12
+# Indexed by Global.Weather.
+const ROOM_DAY: Array[Color] = [Color("#efe0c6"), Color("#d6dbd2"), Color("#dce3de"), Color("#cad7dc")]
+const EARLY_LAMP: Array[float] = [0.0, 0.32, 0.21, 0.38]
 
 var lamps: Array[Lantern] = []
-var _sky := Gradient.new()
-var _overcast := Gradient.new()
+var _skies: Array[Gradient] = []
 var _glow := GradientTexture2D.new()
 var _cloud_shadow: ColorRect
 var _cloud_material: ShaderMaterial
 var _flicker := 0.0
 
 func _ready() -> void:
-	_sky.set_color(0, DAWN)
-	_sky.set_color(1, NIGHT)
-	_sky.add_point(0.12, Color.WHITE)
-	_sky.add_point(0.57, Color.WHITE)
-	_sky.add_point(0.72, Color("#f7c79f"))
-	_sky.add_point(0.83, Color("#a590a4"))
-	_sky.add_point(0.94, NIGHT)
-	_overcast.set_color(0, Color("#c6d1d9"))
-	_overcast.set_color(1, NIGHT)
-	_overcast.add_point(0.12, Color("#ccdbe0"))
-	_overcast.add_point(0.57, Color("#ccdbe0"))
-	_overcast.add_point(0.73, Color("#abb8c7"))
-	_overcast.add_point(0.85, Color("#8d9eb7"))
-	_overcast.add_point(0.94, NIGHT)
+	var clear := Gradient.new()
+	clear.set_color(0, DAWN)
+	clear.set_color(1, NIGHT)
+	clear.add_point(0.12, Color.WHITE)
+	clear.add_point(0.57, Color.WHITE)
+	clear.add_point(0.72, Color("#f7c79f"))
+	clear.add_point(0.83, Color("#a590a4"))
+	clear.add_point(0.94, NIGHT)
+	var rain := Gradient.new()
+	rain.set_color(0, Color("#c6d1d9"))
+	rain.set_color(1, NIGHT)
+	rain.add_point(0.12, Color("#ccdbe0"))
+	rain.add_point(0.57, Color("#ccdbe0"))
+	rain.add_point(0.73, Color("#abb8c7"))
+	rain.add_point(0.85, Color("#8d9eb7"))
+	rain.add_point(0.94, NIGHT)
+	_skies = [
+		clear, rain,
+		_snow_sky(Color("#d6e5ee"), Color("#e4edf4"), Color("#a7b7cf")),
+		_snow_sky(Color("#becfdc"), Color("#d0dfe9"), Color("#96abc3")),
+	]
 	var falloff := Gradient.new()
 	falloff.set_color(0, Color.WHITE)
 	falloff.set_color(1, Color.BLACK)
@@ -43,6 +53,16 @@ func _ready() -> void:
 	GameEvents.daylight_changed.connect(refresh)
 	GameEvents.estate_room_changed.connect(refresh.unbind(1))
 	refresh()
+
+static func _snow_sky(morning: Color, daylight: Color, evening: Color) -> Gradient:
+	var sky := Gradient.new()
+	sky.set_color(0, morning)
+	sky.set_color(1, NIGHT)
+	sky.add_point(0.12, daylight)
+	sky.add_point(0.57, daylight)
+	sky.add_point(0.74, evening)
+	sky.add_point(0.94, NIGHT)
+	return sky
 
 func add_cloud_shadows(bounds: Rect2) -> void:
 	_cloud_material = ShaderMaterial.new()
@@ -76,21 +96,22 @@ func refresh(delta := 0.0) -> void:
 	var dusk := Global.dusk_amount()
 	var winter := Global.season_index() == Global.Season.WINTER
 	var indoors := Global.is_indoors()
-	var rain := Global.has_rain()
+	var weather := Global.weather_on()
 	if indoors:
-		var room_day := Color("#d6dbd2") if rain else Color("#efe0c6")
-		color = room_day.lerp(Color("#aaa5a6"), dusk)
+		color = ROOM_DAY[weather].lerp(Color("#aaa5a6"), dusk)
 	else:
-		color = (_overcast if rain else _sky).sample(Global.day_progress)
-		if rain:
-			dusk = maxf(dusk, 0.32 * smoothstep(0.50, 0.75, Global.day_progress))
+		color = _skies[weather].sample(Global.day_progress)
+		dusk = maxf(dusk, EARLY_LAMP[weather] * smoothstep(0.50, 0.75, Global.day_progress))
 	if _cloud_shadow != null:
-		_update_cloud_shadow(not indoors and not rain)
+		_update_cloud_shadow(not indoors and weather == Global.Weather.CLEAR)
+	var snowy_outdoors := not indoors and weather in [Global.Weather.LIGHT_SNOW, Global.Weather.HEAVY_SNOW]
 	_flicker = fposmod(_flicker + delta, TAU * 4.0)
 	for index in lamps.size():
 		var phase := _flicker * 4.0 + float(index) * 2.1
 		var flicker := 0.72 + 0.045 * sin(phase) + 0.025 * sin(phase * 2.75)
 		var ignition := lamps[index].ignition
+		if snowy_outdoors:
+			ignition = minf(ignition, SNOW_IGNITION_LIMIT)
 		lamps[index].set_glow(smoothstep(ignition, ignition + LAMP_RISE, dusk) * flicker, winter)
 
 func _update_cloud_shadow(sun_visible: bool) -> void:
