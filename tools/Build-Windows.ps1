@@ -57,11 +57,25 @@ function Invoke-GodotExportStep([string]$Step, [string[]]$Options) {
     }
 }
 
+function Set-ReleaseTextEndings([string]$Directory) {
+    # Godot ships some scene and shader sources verbatim. Git checkouts and archives can use different newlines.
+    $textTypes = @('.gd', '.gdshader', '.gdshaderinc', '.tscn', '.tres', '.uid', '.import',
+        '.svg', '.cfg', '.godot', '.txt', '.cmd')
+    $utf8 = [Text.UTF8Encoding]::new($false, $true)
+    foreach ($file in Get-ChildItem -LiteralPath $Directory -File -Recurse) {
+        if ($file.Extension -notin $textTypes) { continue }
+        $body = [IO.File]::ReadAllText($file.FullName, $utf8).Replace("`r`n", "`n")
+        if ($file.Extension -eq '.cmd') { $body = $body.Replace("`n", "`r`n") }
+        [IO.File]::WriteAllText($file.FullName, $body, $utf8)
+    }
+}
+
 try {
     New-Item -ItemType Directory -Path $project | Out-Null
     foreach ($entry in @('addons', 'assets', 'resources', 'scenes', 'scripts', 'project.godot', 'export_presets.cfg', 'icon.svg', 'icon.svg.import')) {
         Copy-Item -LiteralPath (Join-Path $repo $entry) -Destination $project -Recurse
     }
+    Set-ReleaseTextEndings $project
 
     $env:APPDATA = Join-Path $scratch.FullName 'export-profile'
     $env:LOCALAPPDATA = $env:APPDATA
@@ -88,6 +102,7 @@ try {
     foreach ($fontLicense in 'MaShanZheng-OFL.txt', 'NotoSansCJK-OFL.txt') {
         Copy-Item -LiteralPath (Join-Path $repo "docs/licenses/$fontLicense") -Destination $package
     }
+    Set-ReleaseTextEndings $package
     $files = [IO.Directory]::GetFiles($package, '*', [IO.SearchOption]::AllDirectories)
     [Array]::Sort($files, [StringComparer]::Ordinal)
     $checksums = foreach ($file in $files) {
