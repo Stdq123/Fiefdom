@@ -67,6 +67,7 @@ var culverts: Dictionary[Vector2i, bool] = {}
 var flooded_rice: Dictionary[Vector2i, bool] = {}
 var water_time := 0.0
 var water_frame := 0
+var _open_water: Dictionary[Vector2i, bool] = {}
 
 func _ready() -> void:
 	flow_ink.draw.connect(_draw_flow)
@@ -179,13 +180,48 @@ func _process(delta: float) -> void:
 	if editing:
 		track_pointer(pointer, preview_fill)
 	if Global.is_indoors():
+		water_source.update_water_sound(Vector2.INF, Vector2.INF, delta)
 		return
+	var listener: Vector2 = water_source.player.global_position
+	water_source.update_water_sound(listener, _nearest_open_water(listener), delta)
 	water_time = fposmod(water_time + delta * RIPPLE_SPEED, RIPPLE_SPACING)
 	var next_frame := floori(water_time)
 	if next_frame != water_frame:
 		water_frame = next_frame
 		water_source.animate_water(water_frame, int(RIPPLE_SPACING))
 		flow_ink.queue_redraw()
+
+func _nearest_open_water(listener: Vector2) -> Vector2:
+	if _open_water.is_empty():
+		return Vector2.INF
+	var local := tile_map.to_local(listener)
+	var cell := tile_map.local_to_map(local)
+	var reach: float = water_source.CANAL_HEARING
+	var range_x := ceili(reach / tile_size.x + 0.5)
+	var range_y := ceili(reach / tile_size.y + 0.5)
+	var nearest := Vector2.INF
+	var best := reach * reach
+	for y in range(-range_y, range_y + 1):
+		for x in range(-range_x, range_x + 1):
+			var nearby := cell + Vector2i(x, y)
+			if not _open_water.has(nearby):
+				continue
+			var center := tile_map.map_to_local(nearby)
+			var at := center
+			var distance := center.distance_squared_to(local)
+			for direction: Vector2i in Irrigation.NEIGHBORS:
+				if not _open_water.has(nearby + direction):
+					continue
+				var end := center + Vector2(direction) * tile_size * 0.5
+				var along := Geometry2D.get_closest_point_to_segment(local, center, end)
+				var measured := along.distance_squared_to(local)
+				if measured < distance:
+					at = along
+					distance = measured
+			if distance < best:
+				nearest = at
+				best = distance
+	return tile_map.to_global(nearest) if nearest.is_finite() else Vector2.INF
 
 func _pointer_cell() -> Vector2i:
 	return tile_map.local_to_map(tile_map.make_canvas_position_local(pointer))
@@ -410,13 +446,22 @@ func _compare_flow(next: Dictionary[Vector2i, int], gates: Dictionary[Vector2i, 
 			affected_fields[cell] = supplied
 
 func _refresh_network() -> void:
-	water_source.refresh(tile_map.to_global(tile_map.map_to_local(Global.irrigation.source_cell)))
+	var network := Global.irrigation
+	water_source.refresh(tile_map.to_global(tile_map.map_to_local(network.source_cell)))
 	if not starter_canal.is_empty():
 		starter_canal = starter_canal_cells()
 	culverts.clear()
-	for cell in Global.irrigation.channels:
+	_open_water.clear()
+	for cell in network.channels:
 		if EstateLayout.is_foundation(cell):
 			culverts[cell] = true
+		elif network.is_channel_wet(cell):
+			_open_water[cell] = true
+	for center in network.field_gates:
+		var inlet := network.field_gates[center]
+		if network.gate_is_wet(inlet):
+			for cell in Irrigation.gate_row(center, inlet):
+				_open_water[cell] = true
 	_refresh_footbridges()
 	_refresh_tiles()
 	_refresh_plan()
