@@ -19,6 +19,8 @@
 
 ## Windows 首次启动与兼容入口
 
+从 `7776144` 的 Git 归档和干净工作区各自导出，两个 ZIP 的 SHA-256 同为 `72ad7d05edccb00aabe524a389f1b88a87b1202ffec05e8f4feb4c1538111091`。导出副本统一了场景、资源、脚本和随包文本的换行，四个资源沿用之前归档版的 UID。两种标题入口再次通过核对，测试包已清理。 [重复构建记录](../build/polish-windows-first-launch/release-7776144/release-proof.txt)
+
 随包 `README.txt` 首页列出解压启动、第一块公田、手动保存、续档和备份的位置。从 `6fab5e0` 的干净工作区构建，ZIP 的 SHA-256 为 `a1bbc0452441704fce627c617ca14b235f078e87e6f67d11b3d10703425f6059`。八个随包文件通过校验。隔离桌面从含中文和空格的目录启动了 1920×1080 默认标题，也通过随包的 `Fiefdom-Compatibility.cmd` 启动了 1024×768 的 OpenGL 标题。测试包已清理。新档到双结局的玩法验收继续暂缓。 [核对记录](../build/polish-windows-first-launch/release-6fab5e0/release-proof.txt)
 
 ## 田务浮字与受击数字
