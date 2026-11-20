@@ -36,6 +36,9 @@ var left_down := false
 var right_down := false
 var filling := false
 var pointer_suspended := false
+var _popup: PopupMenu
+var _popup_uses_pointer := false
+var _popup_a_pressed := false
 var cursor := AimCursor.new()
 @onready var window := get_tree().root
 
@@ -107,6 +110,8 @@ func _use_mouse() -> void:
 	changed.emit()
 
 func _release_pointer() -> void:
+	_popup_a_pressed = false
+	_popup_uses_pointer = false
 	if left_down:
 		left_down = false
 		# End a drag without clicking the button that was under the pointer.
@@ -175,6 +180,13 @@ func _process(delta: float) -> void:
 	cursor.position += direction * direction.length() * POINTER_SPEED * delta
 	_clamp_pointer()
 	if cursor.position != previous:
+		var popup := _focused_window() as PopupMenu
+		if popup:
+			_watch_popup(popup)
+			if not _popup_uses_pointer:
+				popup.set_focused_item(-1)
+				_popup_uses_pointer = true
+		cursor.show()
 		_motion(cursor.position - previous)
 
 func _clamp_pointer() -> void:
@@ -191,6 +203,12 @@ func snap_pointer_to_focus(use_focus := true) -> void:
 	if not active or pointer_suspended:
 		return
 	var focus_window := _focused_window()
+	if focus_window is PopupMenu:
+		_watch_popup(focus_window)
+		if not _popup_uses_pointer:
+			_focus_popup(focus_window)
+		return
+	cursor.show()
 	var offset := Vector2(focus_window.position) if focus_window != window else Vector2.ZERO
 	var focus := focus_window.gui_get_focus_owner() if use_focus else null
 	if focus:
@@ -215,6 +233,8 @@ func _active_backpack() -> Control:
 
 func _menu_has_directional_focus() -> bool:
 	var focus_window := _focused_window()
+	if focus_window is PopupMenu:
+		return true
 	if focus_window != window:
 		return focus_window.is_in_group("gamepad_directional_menu") and focus_window.gui_get_focus_owner() != null
 	for panel in get_tree().get_nodes_in_group("gamepad_directional_menu"):
@@ -224,6 +244,14 @@ func _menu_has_directional_focus() -> bool:
 
 func _pad_button(id: int, button: JoyButton, pressed: bool) -> void:
 	if id != device_id or (pointer_suspended and button != JOY_BUTTON_B):
+		return
+	if button == JOY_BUTTON_A and _popup_a_pressed:
+		# The list can close on A press. Keep the release off the screen behind it.
+		if not pressed:
+			_popup_a_pressed = false
+		return
+	var popup := _focused_window() as PopupMenu
+	if popup and _handle_popup_button(popup, button, pressed):
 		return
 	var dialogue := _active_dialogue()
 	if dialogue and DIALOGUE_MOVES.has(button):
@@ -241,6 +269,8 @@ func _pad_button(id: int, button: JoyButton, pressed: bool) -> void:
 		JOY_BUTTON_A:
 			left_down = pressed
 			_mouse_button(MOUSE_BUTTON_LEFT, pressed, cursor.position)
+			if not pressed and _focused_window() is PopupMenu:
+				snap_pointer_to_focus()
 		JOY_BUTTON_B:
 			_cancel(pressed)
 		JOY_BUTTON_X:
@@ -269,6 +299,67 @@ func _pad_button(id: int, button: JoyButton, pressed: bool) -> void:
 		_:
 			if ACTION_BUTTONS.has(button):
 				_action(ACTION_BUTTONS[button], pressed)
+
+func _handle_popup_button(popup: PopupMenu, button: JoyButton, pressed: bool) -> bool:
+	_watch_popup(popup)
+	if UI_DIRECTIONS.has(button):
+		if pressed:
+			_focus_popup(popup)
+		_action(UI_DIRECTIONS[button], pressed)
+		return true
+	match button:
+		JOY_BUTTON_A:
+			if not pressed or left_down:
+				return false
+			var bounds := Rect2(Vector2(popup.position), Vector2(popup.size))
+			if _popup_uses_pointer and bounds.has_point(cursor.position):
+				return false
+			_popup_a_pressed = true
+			if _popup_uses_pointer:
+				_cancel(true)
+			else:
+				_focus_popup(popup)
+				_action(&"ui_accept", true)
+			return true
+		JOY_BUTTON_B:
+			return false
+		JOY_BUTTON_LEFT_STICK, JOY_BUTTON_RIGHT_STICK:
+			return not _popup_uses_pointer
+		_:
+			return true
+
+func _focus_popup(popup: PopupMenu) -> void:
+	_popup_uses_pointer = false
+	cursor.hide()
+	if popup.get_focused_item() >= 0:
+		return
+	var picker := popup.get_parent() as OptionButton
+	if (picker and picker.selected >= 0 and not popup.is_item_disabled(picker.selected)
+			and not popup.is_item_separator(picker.selected)):
+		popup.set_focused_item(picker.selected)
+
+func _watch_popup(popup: PopupMenu) -> void:
+	if _popup == popup:
+		return
+	_popup = popup
+	_popup_uses_pointer = false
+	var restore := _on_popup_closed.bind(popup)
+	if not popup.popup_hide.is_connected(restore):
+		popup.popup_hide.connect(restore, CONNECT_ONE_SHOT)
+
+func _on_popup_closed(popup: PopupMenu) -> void:
+	if _popup != popup:
+		return
+	_popup = null
+	_popup_uses_pointer = false
+	# Selecting a reading size can move the picker while its page relays out.
+	var tree := get_tree()
+	await tree.process_frame
+	await tree.process_frame
+	if (active and not pointer_suspended and not is_instance_valid(_popup)
+			and _stick(JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y).is_zero_approx()
+			and _stick(JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y).is_zero_approx()):
+		snap_pointer_to_focus()
 
 func _pad_trigger(id: int, axis: JoyAxis, pressed: bool) -> void:
 	if id != device_id or pointer_suspended:

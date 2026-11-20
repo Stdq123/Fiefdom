@@ -144,8 +144,12 @@ func _review(scenario: SceneTree) -> void:
 	pad.snap_pointer_to_focus()
 	await _pad(JOY_BUTTON_A)
 	_expect(popup.visible, "A opens the focused seed dropdown.")
+	var highlight := popup.get_focused_item()
+	await _pad(JOY_BUTTON_DPAD_DOWN)
+	_expect(popup.get_focused_item() != highlight and seed_picker.selected == selected and panel.tabs.current_tab == 0,
+		"D-pad browses the seed plans without applying a change or switching the page.")
 	await _pad(JOY_BUTTON_B)
-	_expect(panel.visible and not popup.visible and seed_picker.has_focus() and seed_picker.selected == selected,
+	_expect(panel.visible and not popup.visible and _cursor_on(pad, seed_picker) and seed_picker.selected == selected,
 		"B dismisses the dropdown and returns to its picker.")
 
 	panel.show_market()
