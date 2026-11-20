@@ -72,6 +72,7 @@ script = ExtResource("4_gate")
 destination = "res://scenes/WestMarket.tscn"
 arrival_path = NodePath("EstateRoadArrival")
 player_path = NodePath("Player")
+arrival_note = "西市东口 · 石板街通各摊"
 
 [node name="Mouth" type="CollisionShape2D" parent="MarketGate"]
 shape = SubResource("GateMouth")
@@ -83,6 +84,7 @@ script = ExtResource("4_gate")
 destination = "res://scenes/Main.tscn"
 arrival_path = NodePath("World/WestMarketArrival")
 player_path = NodePath("World/Player")
+arrival_note = "封地西关 · 土路通往堂前"
 
 [node name="Mouth" type="CollisionShape2D" parent="EstateGate"]
 shape = SubResource("GateMouth")

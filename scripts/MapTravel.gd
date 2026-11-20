@@ -7,6 +7,7 @@ const CLOSE_SECONDS := 0.16
 const OPEN_SECONDS := 0.22
 const ARRIVAL_PLATE := preload("res://scenes/TravelArrival.tscn")
 const ARRIVAL_HOLD := 0.95
+const ARRIVAL_NOTE_HOLD := 2.15
 const SESSION_PLATE := preload("res://scenes/SessionLoading.tscn")
 const RESOURCE_BATCH_USEC := 5000
 const RESOURCE_BATCH_LIMIT_USEC := 120000
@@ -15,6 +16,7 @@ var active := false
 var cover: ColorRect
 var arrival_plate: CenterContainer
 var arrival_name: Label
+var arrival_note: Label
 var _arrival_tween: Tween
 var _preloads: Dictionary[String, PackedScene] = {}
 var _session_plate: CenterContainer
@@ -37,7 +39,9 @@ func _ready() -> void:
 	arrival_plate = ARRIVAL_PLATE.instantiate()
 	add_child(arrival_plate)
 	arrival_name = arrival_plate.get_node("%Place")
+	arrival_note = arrival_plate.get_node("%EntryNote")
 	InterfaceFont.scale_reading_text(arrival_name)
+	InterfaceFont.scale_reading_text(arrival_note)
 	arrival_plate.get_node("%MapIcon").texture = HUDIcons.icon(HUDIcons.Symbol.MAP)
 	for visibility in [GameEvents.modal_visibility_changed, GameEvents.settings_visibility_changed, GameEvents.management_visibility_changed]:
 		visibility.connect(_dismiss_arrival_for_panel)
@@ -156,21 +160,21 @@ func _unprepared_neighbors(packed: PackedScene) -> PackedStringArray:
 				neighbors.append(destination)
 	return neighbors
 
-func cross(path: String, arrival_path: NodePath, player_path: NodePath) -> void:
-	relocate(_open_destination.bind(path, arrival_path, player_path), path)
+func cross(path: String, arrival_path: NodePath, player_path: NodePath, entry_note := "") -> void:
+	relocate(_open_destination.bind(path, arrival_path, player_path), path, entry_note)
 
-func relocate(change_location: Callable, arrival_scene := "") -> void:
+func relocate(change_location: Callable, arrival_scene := "", entry_note := "") -> void:
 	var tree := get_tree()
 	if active or tree.paused or tree.current_scene == null or Global.outcome != Global.Outcome.RUNNING:
 		return
 	active = true
 	set_process_input(true)
-	_cross.call_deferred(tree.current_scene, change_location, arrival_scene)
+	_cross.call_deferred(tree.current_scene, change_location, arrival_scene, entry_note)
 
 func _input(_event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 
-func _cross(origin: Node, change_location: Callable, arrival_scene: String) -> void:
+func _cross(origin: Node, change_location: Callable, arrival_scene: String, entry_note: String) -> void:
 	_clear_arrival()
 	if not _can_depart(origin):
 		_finish()
@@ -188,7 +192,7 @@ func _cross(origin: Node, change_location: Callable, arrival_scene: String) -> v
 		if not crossed and not get_tree().paused and Global.outcome == Global.Outcome.RUNNING:
 			GameEvents.world_notice.emit("前方暂时无法通行")
 	if crossed and not get_tree().paused and Global.outcome == Global.Outcome.RUNNING:
-		_show_arrival(arrival_scene)
+		_show_arrival(arrival_scene, entry_note)
 	await _fade(0.0, OPEN_SECONDS)
 	_finish()
 
@@ -239,16 +243,18 @@ func _place_name(path: String) -> String:
 	var location: Variant = Global.SAVE_SCENES.find_key(path)
 	return "封地" if location == "estate" else Global.SAVE_LOCATION_NAMES.get(location, "")
 
-func _show_arrival(path: String) -> void:
+func _show_arrival(path: String, entry_note := "") -> void:
 	var place := _place_name(path)
 	if place.is_empty():
 		return
 	arrival_name.text = place
+	arrival_note.text = entry_note
+	arrival_note.visible = not entry_note.is_empty()
 	arrival_plate.modulate.a = 0.0
 	arrival_plate.show()
 	_arrival_tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	_arrival_tween.tween_property(arrival_plate, "modulate:a", 1.0, 0.12).set_trans(Tween.TRANS_SINE)
-	_arrival_tween.tween_interval(ARRIVAL_HOLD)
+	_arrival_tween.tween_interval(ARRIVAL_NOTE_HOLD if arrival_note.visible else ARRIVAL_HOLD)
 	_arrival_tween.tween_property(arrival_plate, "modulate:a", 0.0, 0.28).set_trans(Tween.TRANS_SINE)
 	_arrival_tween.tween_callback(arrival_plate.hide)
 

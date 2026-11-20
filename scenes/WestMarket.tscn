@@ -215,6 +215,7 @@ script = ExtResource("5_gate")
 destination = "res://scenes/WestRoad.tscn"
 arrival_path = NodePath("MarketArrival")
 player_path = NodePath("Player")
+arrival_note = "西市一侧 · 向东过桥回封地"
 
 [node name="Mouth" type="CollisionShape2D" parent="EstateRoad"]
 shape = SubResource("GateMouth")

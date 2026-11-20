@@ -278,6 +278,7 @@ script = ExtResource("25_gate")
 destination = "res://scenes/Wilderness.tscn"
 arrival_path = NodePath("WestArrival")
 player_path = NodePath("Player")
+arrival_note = "竹涧西门 · 沿溪小路通木桥"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="World/EastGate"]
 shape = SubResource("Shape_east_gate")
@@ -291,6 +292,7 @@ position = Vector2(477, 568)
 destination = "res://scenes/Wilderness.tscn"
 arrival_path = NodePath("SouthTrailArrival")
 player_path = NodePath("Player")
+arrival_note = "南路小径 · 往前可到浅滩"
 gate_name = "竹涧小径"
 
 [node name="RavineTrailArrival" type="Marker2D" parent="World"]
@@ -305,6 +307,7 @@ script = ExtResource("25_gate")
 destination = "res://scenes/WestRoad.tscn"
 arrival_path = NodePath("EstateArrival")
 player_path = NodePath("Player")
+arrival_note = "封地一侧 · 向西过桥去西市"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="World/WestMarketGate"]
 shape = SubResource("Shape_east_gate")

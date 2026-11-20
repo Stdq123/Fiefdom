@@ -59,6 +59,7 @@ script = ExtResource("11_gate")
 destination = "res://scenes/Main.tscn"
 arrival_path = NodePath("World/EastArrival")
 player_path = NodePath("World/Player")
+arrival_note = "封地东关 · 沿路回井田"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ExitArea"]
 shape = SubResource("RectangleShape2D_1")
@@ -71,6 +72,7 @@ position = Vector2(205, 347)
 destination = "res://scenes/Main.tscn"
 arrival_path = NodePath("World/RavineTrailArrival")
 player_path = NodePath("World/Player")
+arrival_note = "竹涧小径 · 土路通往南路亭"
 gate_name = "南路小径"
 southbound = true
 
