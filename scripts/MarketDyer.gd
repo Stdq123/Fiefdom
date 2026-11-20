@@ -1,6 +1,7 @@
 extends Node2D
 
 signal approached()
+signal cloth_set_down()
 
 const LAYOUT := preload("res://scripts/WestMarketLayout.gd")
 const ART := preload("res://assets/characters/market-dyer.png")
@@ -40,7 +41,10 @@ func set_counter_cloth(placed: Sprite2D) -> void:
 	_follow_clock(false)
 
 func _process(_delta: float) -> void:
+	var carried := bundle.visible
 	_follow_clock(true)
+	if carried and not bundle.visible and is_instance_valid(_display) and _display.visible:
+		cloth_set_down.emit()
 
 func _follow_clock(animate: bool) -> void:
 	var clock := Global.day_progress

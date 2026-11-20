@@ -39,6 +39,7 @@ var silk_trip := VisitorData.SilkTrip.NONE
 var fish_reserved := false
 
 func _ready() -> void:
+	$Player/MarketListener.make_current()
 	var rain: RAIN_VEIL = $Rain
 	var occlusion := SCENERY_OCCLUSION.new(player)
 	add_child(occlusion)
@@ -55,10 +56,12 @@ func _ready() -> void:
 		rain.add_puddles(ground.weather.bounds, ground.weather.patches)
 	dyer.approached.connect(_talk_to_dyer)
 	dyer.set_counter_cloth($Stalls/SilkStall/CounterFront/DeliveryCloth)
+	dyer.cloth_set_down.connect($Stalls/SilkStall.play_work_sound)
 	occlusion.watch($DyeHouse/Building, dye_house)
 	occlusion.watch($DryingRack/ClothLine, drying_rack)
 	var destinations: Dictionary[String, Vector2] = {}
 	for stall: MarketStall in $Stalls.get_children():
+		stall.listener = player
 		stall.opened.connect(_open_stall)
 		occlusion.watch(stall.counter_back, stall)
 		occlusion.watch(stall.counter_front, stall)

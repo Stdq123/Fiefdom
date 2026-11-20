@@ -17,15 +17,23 @@ enum KeeperPose { REST, TEND, BLINK, REACH, SET_DOWN }
 const KEEPER_CELL := Vector2(40, 32)
 # Reach, show the goods, then lower them to the counter. Silk opens more slowly than a grain measure.
 const WORK_TIMES := [Vector3(0.26, 0.84, 1.32), Vector3(0.34, 1.05, 1.54), Vector3(0.43, 1.27, 1.91)]
+const WORK_SOUNDS := [
+	preload("res://assets/audio/market/work-grain.wav"),
+	preload("res://assets/audio/market/work-fish.wav"),
+	preload("res://assets/audio/market/work-silk.wav"),
+]
+const WORK_GAIN: Array[float] = [0.37, 0.32, 0.31]
 
 @export var kind: Kind
 @onready var sign: Label = $Sign
 @onready var keeper: Sprite2D = $Keeper
 @onready var counter_back: Sprite2D = $Sprite2D
 @onready var counter_front: Sprite2D = $CounterFront
+@onready var work_sound: AudioStreamPlayer2D = $WorkSound
 
 var focused := false
 var pose_time := 0.0
+var listener: Player
 
 func _ready() -> void:
 	var column := FRAME.x * kind
@@ -40,12 +48,31 @@ func _ready() -> void:
 	keeper.texture = _atlas(load(KEEPER_PATH), Rect2(0, KEEPER_CELL.y * kind, KEEPER_CELL.x * keeper.hframes, KEEPER_CELL.y))
 	var plaque := INSCRIPTION.place(self, Vector2(-18, -37), SHOP_SIGNS[kind], TITLES[kind])
 	plaque.modulate = counter_back.self_modulate
+	var variation := AudioStreamRandomizer.new()
+	variation.add_stream(0, WORK_SOUNDS[kind])
+	variation.random_pitch = 1.06
+	variation.random_volume_offset_db = 1.0
+	work_sound.stream = variation
+	GameEvents.map_departing.connect(work_sound.stop)
 	pose_time = float(kind) * 1.7
 	set_interaction_focused(false)
 
 func _process(delta: float) -> void:
+	var previous := keeper.frame
 	pose_time = fposmod(pose_time + delta, WORK_CYCLE)
 	_update_keeper()
+	if keeper.frame == KeeperPose.SET_DOWN and previous != KeeperPose.SET_DOWN:
+		play_work_sound()
+
+func play_work_sound() -> void:
+	if (not is_instance_valid(listener) or listener.world_controls_blocked()
+			or Global.outcome != Global.Outcome.RUNNING or work_sound.playing):
+		return
+	if listener.global_position.distance_to(work_sound.global_position) >= work_sound.max_distance:
+		return
+	var gain := WORK_GAIN[kind] * lerpf(1.0, 0.55, Global.dusk_amount())
+	work_sound.volume_linear = gain * (0.66 if Global.has_rain() else 1.0)
+	work_sound.play()
 
 func _atlas(texture: Texture2D, region: Rect2) -> AtlasTexture:
 	var atlas := AtlasTexture.new()

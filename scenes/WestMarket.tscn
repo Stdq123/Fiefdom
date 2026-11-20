@@ -260,6 +260,8 @@ limit_top = -251
 limit_right = 501
 limit_bottom = 282
 
+[node name="MarketListener" type="AudioListener2D" parent="Player"]
+
 [node name="DayLighting" type="CanvasModulate" parent="."]
 script = ExtResource("6_light")
 
