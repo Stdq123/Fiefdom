@@ -161,6 +161,9 @@ const ESTATE_BOUNDS := EstateLayout.BOUNDS
 const WILD_BOUNDS := RavineLayout.BOUNDS
 const HALL_FOOT := EstateLayout.HALL_FOOT
 const HALL_LANDING := EstateLayout.HALL_LANDING
+# Openings measured from each facade sprite's foot.
+const HALL_DOOR := Rect2(-12, -38, 24, 27)
+const SHED_DOOR := Rect2(4, -27, 20, 21)
 const SOUTH_PAVILION := EstateLayout.SOUTH_PAVILION
 const PAVILION_TURN := EstateLayout.PAVILION_TURN
 const SILK_SHED_FOOT := EstateLayout.SILK_SHED_FOOT
@@ -596,6 +599,7 @@ func _prepare_map() -> void:
 		if WIND_FLEXIBILITY.has(placement.z):
 			attach_prop_wind(wind, sprite, placement.z)
 		if placement.z == Prop.HALL:
+			hall_rest.paint_door(sprite, HALL_DOOR, true)
 			rain.add_roof(sprite, Rect2(-58, -40, 109, 43), [
 				Vector3(-53, -39, 46), Vector3(-30, -39, 45),
 				Vector3(24, -39, 46), Vector3(43, -39, 44),
@@ -623,6 +627,7 @@ func _prepare_map() -> void:
 		var workshop := _place_sprite(props_layer, SILK_SHED_FOOT,
 			_prop_bounds(Vector2.ZERO, Prop.SILK_SHED).position, _prop_texture(Prop.SILK_SHED, SILK_SHED_FOOT))
 		scenery[workshop] = Prop.SILK_SHED
+		silk_shed.paint_door(workshop, SHED_DOOR, false)
 		occlusion.watch(get_parent().get_node("RainShelterFrontPosts") as Sprite2D)
 		rain.add_roof(workshop, Rect2(-35, -29, 65, 29), [
 			Vector3(-32, -28, 34), Vector3(-18, -28, 33), Vector3(26, -28, 33),
@@ -819,6 +824,8 @@ func _draw() -> void:
 		_draw_building_shadows()
 		if _hall_landing_visible():
 			estate_terrain.draw_hall_court(self, dirt, winter, raining)
+		if _shed_step_visible():
+			estate_terrain.draw_shed_step(self, winter, raining)
 		estate_terrain.draw_spring_apron(self, _tile_point(Global.irrigation.source_cell), winter, raining)
 		_draw_field_banks()
 		if Global.road_provisions_delivered:
@@ -899,6 +906,8 @@ func _surface_at(foot: Vector2) -> TERRAIN_AUDIO.Surface:
 		if RAVINE_RELIEF.gate_stone_at(foot, EstateLayout.EAST_GATE):
 			return TERRAIN_AUDIO.Surface.STONE
 		if estate_terrain.hall_stone_at(foot) and _hall_landing_visible():
+			return TERRAIN_AUDIO.Surface.STONE
+		if estate_terrain.shed_stone_at(foot) and _shed_step_visible():
 			return TERRAIN_AUDIO.Surface.STONE
 		if estate_terrain.spring_stone_at(foot - _tile_point(Global.irrigation.source_cell)):
 			return TERRAIN_AUDIO.Surface.STONE
@@ -1107,6 +1116,9 @@ func _draw_building_shadows() -> void:
 
 func _hall_landing_visible() -> bool:
 	return hall_rest != null and hall_rest.visible and _fields_clear(HALL_LANDING)
+
+func _shed_step_visible() -> bool:
+	return silk_shed != null and silk_shed.visible and _ground_clear(ESTATE_TERRAIN.SHED_STEP_BOUNDS)
 
 func _track_gravel(points: PackedVector2Array, width: float, dust: Color) -> void:
 	for index in range(points.size() - 1):

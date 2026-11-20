@@ -53,6 +53,12 @@ const HALL_COURT := [
 	Vector2(-65, 41), Vector2(-68, 32),
 ]
 const HALL_CURB: Array[float] = [0, 0, 0, 0, 0, 2, 4, 5, 5, 3, 0, 0, 3, 5, 4, 3, 0]
+const SHED_STEP_BOUNDS := Rect2(EstateLayout.SILK_SHED_YARD + Vector2(-12, -17), Vector2(33, 14))
+const SHED_STEP := [
+	Vector2(-6, -17), Vector2(19, -17), Vector2(21, -14), Vector2(16, -10),
+	Vector2(7, -6), Vector2(-8, -6), Vector2(-11, -11),
+]
+const SHED_RISER: Array[float] = [0, 0, 2.0, 2.0, 1.2, 0.0, 1.8]
 const SPRING_APRON := [
 	Vector2(-38, -1), Vector2(-33, -5), Vector2(-23, -5), Vector2(-17, -8), Vector2(-8, -14),
 	Vector2(6, -15), Vector2(17, -11), Vector2(21, -6), Vector2(19, 1), Vector2(22, 7), Vector2(15, 13),
@@ -68,6 +74,7 @@ var pond_paving := PackedVector2Array(EstateLayout.FESTIVAL_PAVING)
 var _paving_margin := Geometry2D.offset_polygon(pond_paving, 5.0)[0]
 var _paving_entrance := EstateLayout.FESTIVAL_LANE[-4]
 var _hall_paving := PackedVector2Array(HALL_COURT)
+var _shed_step := Transform2D(0.0, EstateLayout.SILK_SHED_YARD) * PackedVector2Array(SHED_STEP)
 var _spring_paving := PackedVector2Array(SPRING_APRON)
 
 func _init(north: float) -> void:
@@ -245,6 +252,17 @@ static func _draw_hall_steps(canvas: CanvasItem, stone: Color, winter: bool) -> 
 	if winter:
 		canvas.draw_rect(Rect2(at + Vector2(1, 11), Vector2(7, 1)), Color("#c4cdba"))
 		canvas.draw_rect(Rect2(at + Vector2(37, 10), Vector2(5, 1)), Color("#c4cdba"))
+
+func draw_shed_step(canvas: CanvasItem, winter: bool, wet: bool) -> void:
+	var stone := Color("#97917d").lerp(Color("#68776e"), 0.44 if wet else 0.0)
+	_draw_stone_curb(canvas, _shed_step, SHED_RISER, stone, winter)
+	draw_tiled_surface(canvas, _shed_step, PackedColorArray([stone]), STONE_GRAIN)
+	var edge := EstateLayout.SILK_SHED_YARD + Vector2(1, -16)
+	canvas.draw_line(edge, edge + Vector2(-1, 7), stone.darkened(0.23), 1.0)
+	canvas.draw_line(edge + Vector2(2, 6), edge + Vector2(12, 5), stone.lightened(0.14), 1.0)
+
+func shed_stone_at(foot: Vector2) -> bool:
+	return Geometry2D.is_point_in_polygon(foot, _shed_step)
 
 func draw_spring_apron(canvas: CanvasItem, at: Vector2, winter: bool, wet: bool) -> void:
 	var stone := Color("#999888").lerp(Color("#637a6e"), 0.42 if wet else 0.12)

@@ -1,5 +1,7 @@
 extends SceneTree
 
+const TERRAIN_AUDIO := preload("res://scripts/TerrainAudio.gd")
+
 var failed := false
 
 func _initialize() -> void:
@@ -24,6 +26,35 @@ func _check_clothes_rack(hall: Node2D, actor: Node2D) -> void:
 	_expect(is_equal_approx(rack.modulate.a, 1.0), "The rack returns to solid when the player is in front.")
 	actor.global_position = original
 
+func _check_doors(hall: Node2D, silk: Node2D, actor: Node2D) -> void:
+	var hall_door: Node2D = hall.facade
+	var silk_door: Node2D = silk.facade
+	_expect(hall._leave_room() and hall_door._opening == 1.0 and hall_door._sill_light.enabled,
+		"The hall door is open on the first exterior frame after leaving.")
+	actor.global_position = hall_door.to_global(Vector2(0, 30))
+	hall_door._process(0.18)
+	_expect(hall_door._opening == 0.0 and not hall_door._sill_light.enabled,
+		"Walking away closes the leaves and confines late light to the room.")
+	actor.global_position = hall_door.to_global(Vector2(0, -4))
+	hall_door._process(0.08)
+	_expect(is_equal_approx(hall_door._opening, 0.5) and hall_door._sill_light.energy > 0.20,
+		"The leaves swing over time as the player approaches the sill.")
+	actor.global_position = hall_door.to_global(Vector2(0, 11))
+	hall_door._process(0.18)
+	_expect(hall_door._opening == 1.0, "A small move at the entrance keeps the door open.")
+	silk_door._process(0.0)
+	_expect(silk_door._sill_light.enabled and silk_door._opening == 1.0,
+		"The silk shed has an open aperture with its own light.")
+	var landscape := current_scene.get_node("World/Landscape")
+	var tread := EstateLayout.SILK_SHED_YARD + Vector2(3, -12)
+	_expect(landscape._shed_step_visible() and landscape._surface_at(tread) == TERRAIN_AUDIO.Surface.STONE,
+		"The step reaches the track with stone underfoot.")
+	silk_door.set_available(false)
+	_expect(not silk_door._sill_light.enabled and not silk_door.is_processing() and not landscape._shed_step_visible(),
+		"A removed shed leaves no light, step or entrance animation.")
+	silk_door.set_available(true)
+	_expect(hall._enter_room(), "Restore the staged hall pose.")
+
 func _review() -> void:
 	if not ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"):
 		push_error("Run the interior-light check with an isolated smoke profile.")
@@ -31,7 +62,7 @@ func _review() -> void:
 		return
 	var shader := load("res://resources/interior-window.gdshader") as Shader
 	var uniforms := shader.get_shader_uniform_list()
-	for parameter in [&"room_origin", &"beam_origin", &"beam_depth", &"direct_light"]:
+	for parameter in [&"room_origin", &"beam_origin", &"beam_depth", &"direct_light", &"door_gain", &"door_slant", &"door_softness"]:
 		_expect(uniforms.any(func(entry: Dictionary) -> bool: return entry.name == parameter),
 			"The window shader exposes %s." % parameter)
 
@@ -62,6 +93,7 @@ func _review() -> void:
 
 	var morning: Vector2 = hall_projection.get_shader_parameter("beam_origin")
 	var morning_depth: float = hall_projection.get_shader_parameter("beam_depth")
+	var morning_slant: float = hall_projection.get_shader_parameter("door_slant")
 	var food: int = state.food_storage
 	var money: int = state.money
 	var fields := hash(state.well_fields)
@@ -74,6 +106,10 @@ func _review() -> void:
 	_expect(noon.x > morning.x and noon.y < morning.y and noon_depth < morning_depth
 		and hall_projection.get_shader_parameter("direct_light") > 0.9,
 		"The same source window casts a shorter and shifted outline at noon.")
+	_expect(hall_projection.get_shader_parameter("door_slant") > morning_slant
+		and hall_projection.get_shader_parameter("door_gain").x > 0.30
+		and hall_projection.get_shader_parameter("door_softness") < 2.0,
+		"Clear daylight across the doorstep follows the hour.")
 
 	state.current_day = 6
 	hall._process(0.0)
@@ -81,6 +117,10 @@ func _review() -> void:
 	_expect(state.has_rain() and hall_projection.get_shader_parameter("direct_light") == 0.0
 		and hall.window_light.energy > 0.2 and room_light.color.r < noon_ambient.r,
 		"Rain hides the sharp patch while keeping diffuse light from the window.")
+	_expect(hall_projection.get_shader_parameter("door_gain").z > hall_projection.get_shader_parameter("door_gain").x
+		and hall_projection.get_shader_parameter("door_slant") == 0.0
+		and hall_projection.get_shader_parameter("door_softness") > 4.0,
+		"The doorway admits cooler, softer light on a rainy day.")
 
 	state.day_progress = 0.94
 	hall._process(0.0)
@@ -90,6 +130,9 @@ func _review() -> void:
 	_expect(hall_projection.get_shader_parameter("direct_light") == 0.0 and hall.window_light.energy < 0.05
 		and still_lamp > 0.8 and not is_equal_approx(still_lamp, hall.lamp.energy),
 		"At night the lamp provides flickering local light.")
+	_expect(hall_projection.get_shader_parameter("door_gain") == Vector3.ZERO,
+		"The daylight that enters at the threshold fades by night.")
+	_check_doors(hall, silk, current_scene.get_node("World/Player"))
 	_expect(paused and state.current_day == 6 and is_equal_approx(state.day_progress, 0.94)
 		and state.money == money and state.food_storage == food and hash(state.well_fields) == fields
 		and state.saved_games().is_empty(), "The lighting sample leaves the paused estate record intact.")

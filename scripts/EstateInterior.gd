@@ -4,6 +4,10 @@ const SCENERY_OCCLUSION := preload("res://scripts/SceneryOcclusion.gd")
 # Indexed by Global.Weather.
 const LAMP_DAY: Array[float] = [0.19, 0.34, 0.25, 0.36]
 const WINDOW_DAY: Array[float] = [0.30, 0.26, 0.285, 0.24]
+const DOOR_DAY: Array[Vector3] = [
+	Vector3(0.34, 0.29, 0.23), Vector3(0.11, 0.15, 0.20),
+	Vector3(0.17, 0.23, 0.28), Vector3(0.14, 0.20, 0.24),
+]
 
 # The hall and the silk shed share the same painted steps.
 static var _stone_threshold := PackedVector2Array([
@@ -89,6 +93,8 @@ func _arrive(inside: bool, marker: Marker2D) -> void:
 	camera.force_update_scroll()
 	if inside:
 		_refresh_lighting()
+	else:
+		facade.present_exit()
 	set_process(inside)
 	GameEvents.estate_room_changed.emit(Global.estate_room)
 
@@ -110,6 +116,10 @@ func _refresh_lighting() -> void:
 	window_projection.set_shader_parameter("beam_origin",
 		Vector2(lerpf(-17.0, 18.0, daylight), lerpf(3.0, -12.0, sun_height)))
 	window_projection.set_shader_parameter("beam_depth", lerpf(47.0, 34.0, sun_height))
+	window_projection.set_shader_parameter(&"door_gain", DOOR_DAY[weather] * (1.0 - dusk))
+	var clear := weather == Global.Weather.CLEAR
+	window_projection.set_shader_parameter(&"door_slant", lerpf(-14.0, 20.0, daylight) if clear else 0.0)
+	window_projection.set_shader_parameter(&"door_softness", 1.5 if clear else 5.0)
 
 func _on_campaign_ended(_outcome: Global.Outcome) -> void:
 	if Global.estate_room == room_kind:
