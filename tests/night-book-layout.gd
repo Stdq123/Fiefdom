@@ -11,6 +11,10 @@ func _expect(ok: bool, message: String) -> void:
 		push_error(message)
 
 func _check() -> void:
+	if not OS.get_user_data_dir().contains("fiefdom-smoke-"):
+		push_error("Run the night book check with an isolated profile.")
+		quit(1)
+		return
 	paused = true
 	var state := root.get_node("Global")
 	var items := root.get_node("ItemManager")
@@ -82,11 +86,26 @@ func _check_index(state: Node, scene: PackedScene, cell: Vector2i) -> void:
 	book.focus_shortage = true
 	root.add_child(book)
 	await _settle()
+	var prefs := root.get_node("Preferences")
+	var targets: Array[Node] = [book.title, book.tribute_section, book.tribute_details, book.accept_offer,
+		book.receipt, book.budget.get_line_edit(), book.priority_picker.get_popup()]
+	var standard := targets.map(func(target: Node) -> int: return target.get_theme_font_size("font_size"))
+	for reading_size in [1, 2]:
+		_expect(prefs.set_reading_size(reading_size) == OK, "Update the isolated reading size.")
+		await _settle()
+		for index in targets.size():
+			_expect(targets[index].get_theme_font_size("font_size") == standard[index] + 3 * reading_size,
+				"The night book's headings, details, actions, editor and popup use the selected size.")
+		_expect(book.accept_offer.has_focus()
+			and book.scroll.get_global_rect().encloses(book.accept_offer.get_global_rect()),
+			"The focused offer stays in the scroller after resizing the text.")
 	var viewport := root.get_visible_rect()
 	var strip: Rect2 = book.plan_index.get_global_rect()
 	_expect(book.tribute_section.text == "首贡 · 今夜到期" and book.field_section.text == "田务 · 1 格缺水"
 		and book.rations_section.text == "口粮 · 缺 3 份" and viewport.encloses(strip),
 		"Tonight's index shows all three urgent summaries in the window.")
+	_expect(viewport.encloses(book.window.get_global_rect()) and viewport.encloses(book.get_node("%Sleep").get_global_rect()),
+		"The largest reading size keeps the whole sheet and footer in the viewport.")
 	_expect(book.accept_offer.has_focus()
 		and book.scroll.get_global_rect().encloses(book.accept_offer.get_global_rect()),
 		"Opening from a shortage focuses the available offer in view.")

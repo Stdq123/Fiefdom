@@ -139,6 +139,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"HudButton"
 mouse_default_cursor_shape = 2
+autowrap_mode = 3
 tooltip_text = "查看纳贡期限和公田出产。"
 
 [node name="FieldSection" type="Button" parent="Center/Window/Content/PlanIndex"]
@@ -148,6 +149,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"HudButton"
 mouse_default_cursor_shape = 2
+autowrap_mode = 3
 tooltip_text = "查看今夜生长和还能做的田务。"
 
 [node name="RationsSection" type="Button" parent="Center/Window/Content/PlanIndex"]
@@ -157,6 +159,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_type_variation = &"HudButton"
 mouse_default_cursor_shape = 2
+autowrap_mode = 3
 tooltip_text = "查看门客分餐和备粮。"
 
 [node name="Scroll" type="ScrollContainer" parent="Center/Window/Content"]
@@ -234,6 +237,7 @@ theme_override_constants/separation = 4
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
+autowrap_mode = 3
 
 [node name="TributeDetails" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/TributePlan/Row/Details"]
 unique_name_in_owner = true
@@ -275,6 +279,7 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.945, 0.827, 0.553, 1)
 theme_override_font_sizes/font_size = 18
+autowrap_mode = 3
 
 [node name="PavilionPeople" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/PavilionStory/Row/Details"]
 unique_name_in_owner = true
@@ -495,15 +500,14 @@ layout_mode = 2
 size_flags_horizontal = 3
 horizontal_alignment = 2
 theme_type_variation = &"HudBronzeInk"
-text = "每夜购粮上限"
+text = "每夜购粮上限（铜钱）"
 
 [node name="Budget" type="SpinBox" parent="Center/Window/Content/Scroll/Body/Plan/Policy/Controls"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(150, 36)
+custom_minimum_size = Vector2(180, 36)
 layout_mode = 2
 step = 1.0
 rounded = true
-suffix = "铜钱"
 
 [node name="Rule" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/Policy"]
 layout_mode = 2
@@ -679,6 +683,7 @@ unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.44, 0.21, 0.12, 1)
+autowrap_mode = 3
 autowrap_mode = 3
 
 [node name="Entries" type="HBoxContainer" parent="Center/Window/Content/Scroll/Body/LastCard/Results"]

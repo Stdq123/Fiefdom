@@ -103,6 +103,7 @@ var field_forecast_deadline := 1.0
 
 func _ready() -> void:
 	add_to_group("gamepad_directional_menu")
+	_setup_reading_size()
 	%GrainIcon.texture = HUDIcons.icon(HUDIcons.Symbol.GRAIN)
 	%NeedIcon.texture = HUDIcons.icon(HUDIcons.Symbol.RATIONS)
 	%MoneyIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
@@ -122,7 +123,7 @@ func _ready() -> void:
 	bar.visibility_changed.connect(_link_navigation)
 	page_button.visibility_changed.connect(_link_navigation)
 	budget.max_value = NightRations.MAX_COPPER_LIMIT
-	budget.get_line_edit().max_length = 10
+	budget.get_line_edit().max_length = str(NightRations.MAX_COPPER_LIMIT).length()
 	delegate.toggled.connect(_change_policy.unbind(1))
 	budget.value_changed.connect(_change_policy.unbind(1))
 	partial_meals.toggled.connect(_change_policy.unbind(1))
@@ -135,7 +136,8 @@ func _ready() -> void:
 	)
 	find_fruit.pressed.connect(_guide_fruit)
 	priority_picker.item_selected.connect(_select_priority)
-	body.minimum_size_changed.connect(_fit_body)
+	for part: Control in [header, plan_index, body, footer]:
+		part.minimum_size_changed.connect(_fit_body, CONNECT_DEFERRED)
 	get_viewport().size_changed.connect(_fit_body)
 	close_button.pressed.connect(_close)
 	tomorrow_calendar.pressed.connect(tomorrow_calendar_requested.emit)
@@ -199,6 +201,25 @@ func _ready() -> void:
 	close_button.grab_focus()
 	AudioManager.play_menu_cue(AudioManager.MenuCue.OPEN)
 	_finish_opening_focus()
+
+func _setup_reading_size() -> void:
+	for control: Control in content.find_children("*", "Control"):
+		if control is Label or control is BaseButton:
+			InterfaceFont.scale_reading_text(control)
+	InterfaceFont.scale_reading_text(budget.get_line_edit())
+	InterfaceFont.scale_reading_text(priority_picker.get_popup())
+	Preferences.reading_size_changed.connect(_reveal_reading_focus, CONNECT_DEFERRED)
+
+func _reveal_reading_focus() -> void:
+	var focus := PANEL_FOCUS.input_owner(self)
+	if not focus:
+		return
+	await get_tree().process_frame
+	if not is_instance_valid(focus) or PANEL_FOCUS.input_owner(self) != focus:
+		return
+	if scroll.is_ancestor_of(focus) and not focus is ScrollBar:
+		scroll.ensure_control_visible(focus)
+	GamepadInput.snap_pointer_to_focus.call_deferred()
 
 func _refresh_close_hint() -> void:
 	close_button.tooltip_text = GamepadInput.back_key()
