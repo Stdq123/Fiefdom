@@ -102,6 +102,7 @@ var settling_field_work := false
 var field_forecast_deadline := 1.0
 
 func _ready() -> void:
+	add_to_group("gamepad_directional_menu")
 	%GrainIcon.texture = HUDIcons.icon(HUDIcons.Symbol.GRAIN)
 	%NeedIcon.texture = HUDIcons.icon(HUDIcons.Symbol.RATIONS)
 	%MoneyIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
@@ -116,7 +117,10 @@ func _ready() -> void:
 		_show_section(field_plan, _available_action([find_plot, find_ready_plot, wait_button, wait_before_sleep]))
 	)
 	rations_section.pressed.connect(_show_meals)
-	scroll.get_v_scroll_bar().theme_type_variation = &"HudJournalBar"
+	var bar := PANEL_FOCUS.reading_scrollbar(scroll)
+	bar.theme_type_variation = &"HudJournalBar"
+	bar.visibility_changed.connect(_link_navigation)
+	page_button.visibility_changed.connect(_link_navigation)
 	budget.max_value = NightRations.MAX_COPPER_LIMIT
 	budget.get_line_edit().max_length = 10
 	delegate.toggled.connect(_change_policy.unbind(1))
@@ -199,6 +203,23 @@ func _ready() -> void:
 func _refresh_close_hint() -> void:
 	close_button.tooltip_text = GamepadInput.back_key()
 
+func _link_navigation() -> void:
+	var buttons: Array[Button] = []
+	if tomorrow_calendar.visible:
+		buttons.append(tomorrow_calendar)
+	if page_button.visible:
+		buttons.append(page_button)
+	buttons.append(close_button)
+	for index in buttons.size():
+		var button := buttons[index]
+		button.focus_neighbor_left = button.get_path_to(buttons[maxi(0, index - 1)])
+		button.focus_neighbor_right = button.get_path_to(buttons[mini(index + 1, buttons.size() - 1)])
+	var bar := scroll.get_v_scroll_bar()
+	rations_section.focus_neighbor_right = rations_section.get_path_to(bar) if bar.visible else ^"."
+	close_button.focus_neighbor_bottom = close_button.get_path_to(bar) if show_previous and bar.visible else ^""
+	var back := close_button if show_previous else rations_section
+	bar.focus_neighbor_left = bar.get_path_to(back)
+
 func show_pavilion_story(story_id: String, appointment_id: String, place: String) -> void:
 	var ready_to_hear := not story_id.is_empty()
 	var id := story_id if ready_to_hear else appointment_id
@@ -256,6 +277,7 @@ func _show_page(previous: bool) -> void:
 	plan_index.visible = not show_previous
 	plan_body.visible = not show_previous
 	footer.visible = not show_previous
+	_link_navigation()
 	record_heading.visible = not show_previous
 	_refresh_date()
 	_refresh_fields()
@@ -763,7 +785,7 @@ func _describe_exchange(plan: Dictionary) -> String:
 	return " · ".join(details)
 
 func _input(event: InputEvent) -> void:
-	if event is InputEventKey:
+	if event is InputEventKey or event is InputEventAction:
 		var focus := PANEL_FOCUS.input_owner(self)
 		if focus:
 			PANEL_FOCUS.keep_navigation_inside(self, focus, event)

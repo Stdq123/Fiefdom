@@ -20,6 +20,18 @@ func _tab(backward: bool) -> void:
 		root.push_input(event, true)
 	await process_frame
 
+func _pad(code: JoyButton) -> void:
+	var pad := root.get_node("GamepadInput")
+	for pressed in [true, false]:
+		var event := InputEventJoypadButton.new()
+		event.device = 31
+		event.button_index = code
+		event.pressed = pressed
+		pad._window_input(event)
+		await process_frame
+	for frame in 3:
+		await process_frame
+
 func _run() -> void:
 	if not ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"):
 		push_error("Run calendar-reading in an isolated profile.")
@@ -52,6 +64,25 @@ func _run() -> void:
 			await _tab(backward)
 			var focus := root.gui_get_focus_owner()
 			_expect(focus != null and modal.is_ancestor_of(focus), "Tab must stay inside the calendar.")
+	book.close_button.grab_focus()
+	await _pad(JOY_BUTTON_DPAD_DOWN)
+	_expect(book.seasons.get_child(book.season).has_focus(), "D-pad goes to the active season.")
+	await _pad(JOY_BUTTON_DPAD_DOWN)
+	_expect(book.dates.get_child(book.focus).has_focus(), "D-pad enters the list of terms.")
+	event_note.text += "\n今日的节气、备粮与天气记事。".repeat(30)
+	for frame in 6:
+		await process_frame
+	var bar: VScrollBar = book.read_scroll.get_v_scroll_bar()
+	await _pad(JOY_BUTTON_DPAD_RIGHT)
+	if book.order_button.has_focus():
+		await _pad(JOY_BUTTON_DPAD_RIGHT)
+	_expect(bar.visible and bar.has_focus(), "D-pad Right reaches the long note's scrollbar.")
+	await _pad(JOY_BUTTON_DPAD_DOWN)
+	_expect(bar.has_focus() and book.read_scroll.scroll_vertical > 0, "Down scrolls and keeps focus on the note.")
+	await _pad(JOY_BUTTON_DPAD_UP)
+	_expect(bar.has_focus() and book.read_scroll.scroll_vertical == 0, "Up scrolls back to the start of the note.")
+	await _pad(JOY_BUTTON_DPAD_LEFT)
+	_expect(not bar.has_focus() and modal.is_ancestor_of(root.gui_get_focus_owner()), "Left leaves the scrollbar inside the calendar.")
 	_expect(state.current_day == festival - 2 and state.saved_games().is_empty(),
 		"Browsing the calendar keeps the date and the save catalog.")
 	if not failed:

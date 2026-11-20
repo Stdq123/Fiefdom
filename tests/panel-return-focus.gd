@@ -95,15 +95,20 @@ func _check_map(map: Control, opener: Button, has_region := false, use_pad := fa
 	await _tabs_inside(map.modal, 10)
 	if has_region:
 		var region: Control = map.region_map
-		map.get_node("%RegionMap").pressed.emit()
+		var region_button := map.get_node("%RegionMap") as Button
+		map.close_button.grab_focus()
+		await _pad(JOY_BUTTON_DPAD_LEFT)
+		_expect(region_button.has_focus() and pad.cursor.position.is_equal_approx(region_button.get_global_rect().get_center()),
+			"D-pad Left from Return selects Region on each local chart.")
+		region_button.pressed.emit()
 		await _frames(3)
 		_expect(paused and not map.modal.visible and region.local_button.has_focus(),
 			"The regional chart receives focus and owns the open pause.")
 		region.local_button.pressed.emit()
 		await _frames(3)
-		_expect(paused and not region.modal.visible and map.get_node("%RegionMap").has_focus(),
+		_expect(paused and not region.modal.visible and region_button.has_focus(),
 			"Local and regional charts retain focus across the switch.")
-		map.get_node("%RegionMap").pressed.emit()
+		region_button.pressed.emit()
 		map = region
 		await _frames(3)
 	if pad_controls:

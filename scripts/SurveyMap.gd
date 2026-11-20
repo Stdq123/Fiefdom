@@ -15,6 +15,8 @@ var owns_pause := false
 var _opening_focus: WeakRef
 
 func _ready() -> void:
+	if keep_focus_in_map:
+		modal.add_to_group("gamepad_directional_menu")
 	close_button.pressed.connect(close_map)
 	GameEvents.campaign_ended.connect(_on_campaign_ended)
 	GamepadInput.changed.connect(_refresh_shortcuts)
@@ -49,7 +51,10 @@ func add_region_map(region: Region, blocked: Callable, active: Callable, choose:
 	get_parent().add_child(overview)
 	toggle_action = &""
 	overview.setup(region, blocked, active, choose, clear, self, south)
-	%RegionMap.pressed.connect(switch_to.bind(overview, overview.local_button))
+	var region_button: Button = %RegionMap
+	region_button.pressed.connect(switch_to.bind(overview, overview.local_button))
+	close_button.focus_neighbor_left = close_button.get_path_to(region_button)
+	region_button.focus_neighbor_right = region_button.get_path_to(close_button)
 	return overview
 
 func _show_map() -> void:
@@ -105,28 +110,21 @@ func _refresh_on_open() -> void:
 	pass
 
 func _input(event: InputEvent) -> void:
-	if not keep_focus_in_map or not owns_pause or not modal.visible or not event is InputEventKey:
+	if (not keep_focus_in_map or not owns_pause or not modal.visible
+			or not (event is InputEventKey or event is InputEventAction)):
 		return
 	if PANEL_FOCUS.has_popup(get_viewport()):
 		return
 	var current := get_viewport().gui_get_focus_owner()
+	if current and modal.is_ancestor_of(current):
+		PANEL_FOCUS.keep_navigation_inside(modal, current, event)
+		return
 	var backward := event.is_action_pressed(&"ui_focus_prev", true)
 	if backward or event.is_action_pressed(&"ui_focus_next", true):
-		if current and modal.is_ancestor_of(current):
-			var next := current.find_prev_valid_focus() if backward else current.find_next_valid_focus()
-			if next and modal.is_ancestor_of(next):
-				return
 		var edge := PANEL_FOCUS.edge(modal, backward)
 		if edge:
 			edge.grab_focus()
 		get_viewport().set_input_as_handled()
-	elif current and modal.is_ancestor_of(current) and not current is Range:
-		for side in PANEL_FOCUS.ARROWS.size():
-			if event.is_action_pressed(PANEL_FOCUS.ARROWS[side], true):
-				var next := current.find_valid_focus_neighbor(side as Side)
-				if next and not modal.is_ancestor_of(next):
-					get_viewport().set_input_as_handled()
-				return
 
 func _unhandled_input(event: InputEvent) -> void:
 	if toggle_action != &"" and event.is_pressed() and not event.is_echo() and Preferences.matches(event, toggle_action):

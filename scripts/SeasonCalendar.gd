@@ -43,8 +43,7 @@ func _ready() -> void:
 	super._ready()
 	for label: Label in [forecast, planting, order_note, event_note, pantry_note]:
 		InterfaceFont.scale_reading_text(label)
-	var bar := read_scroll.get_v_scroll_bar()
-	bar.focus_mode = FOCUS_ALL
+	var bar := PANEL_FOCUS.reading_scrollbar(read_scroll)
 	bar.visibility_changed.connect(_refresh_focus, CONNECT_DEFERRED)
 	previous_year.pressed.connect(_change_year.bind(-1))
 	next_year.pressed.connect(_change_year.bind(1))
@@ -244,8 +243,9 @@ func _refresh_focus() -> void:
 	date_rows.assign(dates.get_children())
 	var active_season := season_tabs[season]
 	var active_date := date_rows[focus]
+	var bar := read_scroll.get_v_scroll_bar()
 	var detail_rows: Array[Array] = [
-		_visible_controls([order_button, read_scroll.get_v_scroll_bar()]),
+		_visible_controls([order_button, bar]),
 		_visible_controls([guide, fish_guide]),
 		_visible_controls([keep_samples, keep_porridge, keep_soup]),
 	]
@@ -268,6 +268,9 @@ func _refresh_focus() -> void:
 		_focus_row(row, above, below, active_date)
 		tab_order.append_array(row)
 		above = row[0]
+	if bar.visible:
+		var after_reading: Control = detail_rows[1][0] if detail_rows.size() > 1 else bar
+		bar.focus_neighbor_right = bar.get_path_to(after_reading)
 	for index in tab_order.size():
 		var control := tab_order[index]
 		control.focus_next = control.get_path_to(tab_order[(index + 1) % tab_order.size()])

@@ -98,6 +98,7 @@ var music_practice_script = preload("res://scripts/MusicPractice.gd")
 @onready var driving_button: Button = $HBoxContainer/RightPanel/君子六艺/Actions/DrivingButton
 
 func _ready() -> void:
+	add_to_group("gamepad_directional_menu")
 	InterfaceFont.scale_reading_text(roster_meal_summary)
 	InterfaceFont.scale_reading_text(roster_night_rations)
 	refresh_retainers()
@@ -231,7 +232,7 @@ func _refresh_section(index: int) -> void:
 		GamepadInput.snap_pointer_to_focus.call_deferred()
 
 func _input(event: InputEvent) -> void:
-	if not event is InputEventKey:
+	if not (event is InputEventKey or event is InputEventAction):
 		return
 	var focus := PANEL_FOCUS.input_owner(self)
 	if not focus:
@@ -323,9 +324,8 @@ func _announce_visibility() -> void:
 		GamepadInput.snap_pointer_to_focus.call_deferred()
 
 func setup_tech() -> void:
-	var bar := technology_page.get_v_scroll_bar()
+	var bar := PANEL_FOCUS.reading_scrollbar(technology_page)
 	bar.theme_type_variation = &"HudJournalBar"
-	bar.focus_mode = Control.FOCUS_ALL
 	for control: Control in [%WaterTitle, %WaterUse, water_status, water_budget, irrigation_button, water_next,
 			%BowTitle, %BowUse, bow_status, bow_note, bow_button, bow_study,
 			rank_title, rank_progress_label, rank_requirement, rank_next, rank_tribute, rank_arts]:
@@ -426,9 +426,8 @@ func _on_unlock_bow() -> void:
 		_refresh_bow_technology()
 
 func setup_six_arts() -> void:
-	var bar := arts_scroll.get_v_scroll_bar()
+	var bar := PANEL_FOCUS.reading_scrollbar(arts_scroll)
 	bar.theme_type_variation = &"HudJournalBar"
-	bar.focus_mode = Control.FOCUS_ALL
 	for control: Control in [arts_promotion, study_progress, driving_record, %SilkTitle, %IrrigationTitle,
 			silk_requirement, irrigation_requirement, open_silk, open_irrigation,
 			read_button, worship_button, music_button, driving_button]:
@@ -619,10 +618,9 @@ func _refresh_roster_meals() -> void:
 		item.show_meal_status(item.data in meal.missed)
 
 func _setup_overview_reading() -> void:
-	var scrollbar := overview_scroll.get_v_scroll_bar()
+	var scrollbar := PANEL_FOCUS.reading_scrollbar(overview_scroll)
 	scrollbar.theme = HUD_THEME
 	scrollbar.theme_type_variation = &"HudJournalBar"
-	scrollbar.focus_mode = Control.FOCUS_ALL
 	for control: Control in [field_summary, well_field_selector, %SeedPlanTitle, seed_plan_picker,
 			rotate_seed, apply_private_plan, seed_timing, seed_plan_note, include_untilled, sowing_rations,
 			steward_note, %StewardTitle, steward_picker, fill_steward_plans, apply_steward, steward_preview, %AssignmentHelp]:

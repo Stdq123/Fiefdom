@@ -100,11 +100,9 @@ func _ready() -> void:
 	add_to_group("gamepad_directional_menu")
 	for label: Label in [caption, estate_name, date, epilogue, farewell_line, restore_detail]:
 		InterfaceFont.scale_reading_text(label)
-	var bar := report_scroll.get_v_scroll_bar()
+	var bar := PANEL_FOCUS.reading_scrollbar(report_scroll)
 	bar.theme = HUD_THEME
 	bar.theme_type_variation = &"HudJournalBar"
-	bar.focus_mode = Control.FOCUS_ALL
-	bar.custom_step = 48.0
 	for section: Control in [report_header, report_body, report_footer]:
 		section.minimum_size_changed.connect(_fit_report_body, CONNECT_DEFERRED)
 	resized.connect(_fit_report_body, CONNECT_DEFERRED)

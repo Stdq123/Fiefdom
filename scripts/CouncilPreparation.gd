@@ -69,10 +69,9 @@ func _ready() -> void:
 		public_plan_detail, sowing_note, silk_stock, %SilkNote,
 	]:
 		InterfaceFont.scale_reading_text(label)
-	var bar := scroll.get_v_scroll_bar()
+	var bar := PANEL_FOCUS.reading_scrollbar(scroll)
 	bar.theme = preload("res://resources/estate_hud_theme.tres")
 	bar.theme_type_variation = &"HudJournalBar"
-	bar.focus_mode = FOCUS_ALL
 	body.minimum_size_changed.connect(_fit_body, CONNECT_DEFERRED)
 	get_viewport().size_changed.connect(_fit_body)
 	allocation_grid.draw.connect(_draw_allocation_grid)

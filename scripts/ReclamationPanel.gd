@@ -54,9 +54,8 @@ func _ready() -> void:
 	site_diagram.draw.connect(_draw_site_diagram)
 	var scroll := %Scroll as ScrollContainer
 	scroll.follow_focus = true
-	var scroll_bar := scroll.get_v_scroll_bar()
+	var scroll_bar := PANEL_FOCUS.reading_scrollbar(scroll)
 	scroll_bar.theme_type_variation = &"HudJournalBar"
-	scroll_bar.focus_mode = FOCUS_ALL
 	GamepadInput.changed.connect(_refresh_shortcuts)
 	_refresh_shortcuts()
 	for control: Control in %Checks.get_children():

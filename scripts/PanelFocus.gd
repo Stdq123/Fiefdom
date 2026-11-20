@@ -2,6 +2,13 @@ extends RefCounted
 
 const ARROWS := [&"ui_left", &"ui_up", &"ui_right", &"ui_down"]
 
+static func reading_scrollbar(scroll: ScrollContainer) -> VScrollBar:
+	var bar := scroll.get_v_scroll_bar()
+	bar.focus_mode = Control.FOCUS_ALL
+	# ScrollContainer uses a zero range step, so give its focus keys a reading increment.
+	bar.custom_step = 48.0
+	return bar
+
 static func has_popup(viewport: Viewport) -> bool:
 	return viewport.get_embedded_subwindows().any(func(window: Window): return not window.unfocusable)
 
@@ -55,6 +62,10 @@ static func keep_navigation_inside(panel: Control, current: Control, event: Inpu
 				continue
 			var vertical := side == SIDE_TOP or side == SIDE_BOTTOM
 			if current is ScrollBar and vertical == (current is VScrollBar):
+				if current.custom_step > 0.0:
+					var direction := -1.0 if side == SIDE_TOP or side == SIDE_LEFT else 1.0
+					current.value += current.custom_step * direction
+					viewport.set_input_as_handled()
 				return
 			var next := current.find_valid_focus_neighbor(side as Side)
 			if next and not panel.is_ancestor_of(next):

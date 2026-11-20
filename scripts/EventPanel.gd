@@ -32,10 +32,8 @@ func _ready() -> void:
 	add_to_group("gamepad_directional_menu")
 	for label: Label in [text_label, ledger, selection_label]:
 		InterfaceFont.scale_reading_text(label)
-	var bar := scroll.get_v_scroll_bar()
+	var bar := PANEL_FOCUS.reading_scrollbar(scroll)
 	bar.theme_type_variation = &"HudJournalBar"
-	bar.focus_mode = FOCUS_ALL
-	bar.custom_step = 48.0
 	bar.visibility_changed.connect(_link_focus, CONNECT_DEFERRED)
 	choices_container.minimum_size_changed.connect(_fit_comparison, CONNECT_DEFERRED)
 	content.minimum_size_changed.connect(_fit_comparison, CONNECT_DEFERRED)

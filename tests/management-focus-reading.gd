@@ -171,6 +171,22 @@ func _review(scenario: SceneTree) -> void:
 	for backward in [false, true]:
 		_tab_cycle(rations, ration_close, backward)
 	_check_arrows(rations)
+	ration_close.grab_focus()
+	await _pad(JOY_BUTTON_DPAD_LEFT)
+	_expect(_cursor_on(pad, rations.tomorrow_calendar), "D-pad reaches tomorrow's calendar in the front book.")
+	await _pad(JOY_BUTTON_DPAD_DOWN)
+	_expect(_cursor_on(pad, rations.rations_section), "D-pad enters the night summary without moving management behind it.")
+	var tribute_details: Label = rations.tribute_details
+	tribute_details.text += "\n公田供水、成熟日期和纳贡期限。".repeat(26)
+	await _settle()
+	var scroll: ScrollContainer = rations.scroll
+	var scrollbar := scroll.get_v_scroll_bar()
+	await _pad(JOY_BUTTON_DPAD_RIGHT)
+	_expect(scrollbar.visible and _cursor_on(pad, scrollbar), "D-pad reaches the long night book from its summary.")
+	await _pad(JOY_BUTTON_DPAD_DOWN)
+	_expect(scroll.scroll_vertical > 0 and scrollbar.has_focus(), "D-pad reads more of the book without moving into the footer.")
+	await _pad(JOY_BUTTON_DPAD_LEFT)
+	_expect(_cursor_on(pad, rations.rations_section), "Left brings focus back to the summary.")
 	tree.paused = false
 	await _pad(JOY_BUTTON_RIGHT_SHOULDER)
 	tree.paused = true
@@ -184,8 +200,8 @@ func _review(scenario: SceneTree) -> void:
 	tree.paused = true
 	_expect(panel.tabs.current_tab == 0 and _cursor_on(pad, panel.section_buttons[0]),
 		"LB selects the previous page and moves the pointer to its tab.")
-	_key(KEY_DOWN)
-	_expect(well_picker.has_focus(), "The estate tab leads to the well field picker.")
+	await _pad(JOY_BUTTON_DPAD_DOWN)
+	_expect(_cursor_on(pad, well_picker), "D-pad Down from the estate tab leads to the well field picker.")
 	await _pad(JOY_BUTTON_B)
 	await _settle()
 	_expect(not panel.visible and _cursor_on(pad, ui.manage_button), "B returns focus and pointer to the estate's Manage button.")
