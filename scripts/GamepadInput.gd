@@ -49,6 +49,7 @@ func _ready() -> void:
 		Input.set_custom_mouse_cursor(preload("res://assets/ui/cursor-arrow.png"), Input.CURSOR_ARROW, Vector2(2, 2))
 		Input.set_custom_mouse_cursor(preload("res://assets/ui/cursor-hand.png"), Input.CURSOR_POINTING_HAND, Vector2(11, 3))
 		Input.set_custom_mouse_cursor(preload("res://assets/ui/cursor-text.png"), Input.CURSOR_IBEAM, Vector2(16, 16))
+	get_tree().node_added.connect(_watch_button_cursor)
 	add_child(cursor)
 	cursor.hide()
 	set_process(false)
@@ -62,6 +63,23 @@ func _ready() -> void:
 	window.size_changed.connect(_clamp_pointer)
 	get_tree().scene_changed.connect(snap_pointer_to_focus)
 	Input.joy_connection_changed.connect(_joy_connection_changed)
+
+func _watch_button_cursor(node: Node) -> void:
+	if not node is BaseButton:
+		return
+	var button := node as BaseButton
+	var refresh := _refresh_button_cursor.bind(button)
+	# Disabling or enabling a button redraws it, including while a menu pauses the tree.
+	if not button.draw.is_connected(refresh):
+		button.draw.connect(refresh)
+	_refresh_button_cursor(button)
+
+func _refresh_button_cursor(button: BaseButton) -> void:
+	if button.mouse_default_cursor_shape not in [Control.CURSOR_ARROW, Control.CURSOR_POINTING_HAND]:
+		return
+	var shape := Control.CURSOR_ARROW if button.disabled else Control.CURSOR_POINTING_HAND
+	if button.mouse_default_cursor_shape != shape:
+		button.mouse_default_cursor_shape = shape
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
