@@ -121,6 +121,46 @@ func _run() -> void:
 	settings.close_button.pressed.emit()
 	_expect(settings_button.has_focus() and current_scene == title and get_nodes_in_group("player").is_empty(),
 		"Closing settings must return to the menu without starting a campaign.")
+	await _check_new_game_form(title, preferences)
+	_expect(current_scene == title and state.saved_games().size() == entries.size(),
+		"The title check keeps the staged records and does not enter the estate.")
 	if not failed:
 		print("SCENARIO_OK")
 	quit(1 if failed else 0)
+
+func _check_new_game_form(title: Node, preferences: Node) -> void:
+	var pad := root.get_node("GamepadInput")
+	var new_game: Button = title.new_button
+	var dialog: ConfirmationDialog = title.new_confirmation
+	var field: LineEdit = title.new_name
+	var start := dialog.get_ok_button()
+	var cancel := dialog.get_cancel_button()
+	var menu_size := new_game.get_theme_font_size(&"font_size")
+	var name_size := field.get_theme_font_size(&"font_size")
+	_expect(preferences.set_reading_size(0) == OK and new_game.get_theme_font_size(&"font_size") == menu_size - 6
+		and field.get_theme_font_size(&"font_size") == name_size - 6, "The title buttons and new estate field share the reading preference.")
+	title.continue_button.grab_focus()
+	await _pad(JOY_BUTTON_DPAD_DOWN)
+	_expect(new_game.has_focus(), "D-pad browses the title actions.")
+	new_game.pressed.emit()
+	await process_frame
+	_expect(dialog.visible and start.has_focus() and cancel.text == "取消  B", "Gamepad opens the form on Start and labels Cancel.")
+	await _pad(JOY_BUTTON_DPAD_UP)
+	_expect(field.has_focus(), "D-pad reaches the name field from the confirmation buttons.")
+	await _pad(JOY_BUTTON_DPAD_DOWN)
+	_expect(start.has_focus(), "D-pad returns from the name to Start.")
+	var direction := JOY_BUTTON_DPAD_LEFT if cancel.position.x < start.position.x else JOY_BUTTON_DPAD_RIGHT
+	await _pad(direction)
+	_expect(cancel.has_focus(), "D-pad moves to the form's other action.")
+	await _pad(JOY_BUTTON_B)
+	await process_frame
+	_expect(not dialog.visible and new_game.has_focus()
+		and pad.cursor.position.is_equal_approx(new_game.get_global_rect().get_center()), "B restores the title focus and pointer.")
+	pad._use_mouse()
+	new_game.pressed.emit()
+	_expect(dialog.visible and field.has_focus() and field.get_selected_text() == field.placeholder_text
+		and cancel.text == "取消  Esc", "Keyboard opening selects the suggested name for immediate editing.")
+	await _key(KEY_TAB)
+	_expect(start.has_focus() or cancel.has_focus(), "Tab moves from the name to the form actions.")
+	await _key(KEY_ESCAPE)
+	_expect(not dialog.visible and new_game.has_focus(), "Escape backs out without starting a new game.")

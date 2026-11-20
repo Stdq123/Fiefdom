@@ -14,10 +14,15 @@ const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 
 var settings_panel: Panel
 var _resume_scene := ""
+var _retry_new_name := false
 
 func _ready() -> void:
 	$Version.text = "Windows · %s" % ProjectSettings.get_setting("application/config/version")
-	InterfaceFont.scale_reading_text(status)
+	menu.add_to_group("gamepad_directional_menu")
+	new_confirmation.add_to_group("gamepad_directional_menu")
+	for control: Control in [status, new_button, continue_button, archive_button, $Center/Menu/Settings, $Center/Menu/Exit,
+			new_name, $NewConfirmation/Form/NameLabel, $NewConfirmation/Form/SaveHint]:
+		InterfaceFont.scale_reading_text(control)
 	new_button.pressed.connect(_on_new_requested)
 	continue_button.pressed.connect(_continue_game)
 	archive_button.pressed.connect(_open_archive)
@@ -26,12 +31,17 @@ func _ready() -> void:
 	new_confirmation.confirmed.connect(_start_game)
 	new_confirmation.canceled.connect(AudioManager.play_menu_cue.bind(AudioManager.MenuCue.CLOSE))
 	new_confirmation.register_text_enter(new_name)
-	new_confirmation.get_cancel_button().text = "取消"
-	for button in [new_confirmation.get_ok_button(), new_confirmation.get_cancel_button()]:
+	var start := new_confirmation.get_ok_button()
+	new_name.focus_neighbor_bottom = new_name.get_path_to(start)
+	for button: Button in [start, new_confirmation.get_cancel_button()]:
 		button.theme = HUD_THEME
-		button.theme_type_variation = &"HudPrimary" if button == new_confirmation.get_ok_button() else &"HudButton"
+		button.theme_type_variation = &"HudPrimary" if button == start else &"HudButton"
 		button.custom_minimum_size = Vector2(124, 40)
+		button.focus_neighbor_top = button.get_path_to(new_name)
+		InterfaceFont.scale_reading_text(button)
 	new_confirmation.visibility_changed.connect(_update_new_visibility)
+	GamepadInput.changed.connect(_refresh_new_controls)
+	_refresh_new_controls()
 	_refresh_menu()
 	print("Fiefdom title ready")
 
@@ -58,27 +68,47 @@ func _refresh_menu() -> void:
 	primary.grab_focus()
 
 func _on_new_requested() -> void:
-	if Global.has_saved_game():
-		new_name.text = Global.next_campaign_name()
-		new_confirmation.popup_centered()
-		AudioManager.play_menu_cue(AudioManager.MenuCue.OPEN)
+	if not Global.has_saved_game():
+		_start_game()
+		return
+	var suggested_name := Global.next_campaign_name()
+	new_name.placeholder_text = suggested_name
+	if not _retry_new_name:
+		new_name.text = suggested_name
+	_retry_new_name = false
+	new_confirmation.popup_centered()
+	AudioManager.play_menu_cue(AudioManager.MenuCue.OPEN)
+	if GamepadInput.active:
+		new_confirmation.get_ok_button().grab_focus()
+		GamepadInput.snap_pointer_to_focus.call_deferred()
+	else:
 		new_name.grab_focus()
 		new_name.select_all()
-	else:
-		_start_game()
+
+func _refresh_new_controls() -> void:
+	new_confirmation.get_cancel_button().text = "取消  %s" % GamepadInput.back_key()
 
 func _start_game() -> void:
+	if MapTravel.active:
+		return
+	var form_open := new_confirmation.visible
+	var requested_name := new_name.text if form_open else ""
+	new_confirmation.hide()
 	var prepared := await MapTravel.prepare_session(Global.ESTATE_SCENE, "正在打开封地")
 	if prepared in [ERR_BUSY, ERR_SKIP]:
 		return
 	if prepared != OK:
-		status.text = "无法读取封地地图。可再次选择新建游戏。"
-		new_button.grab_focus()
-		GamepadInput.snap_pointer_to_focus.call_deferred()
+		_show_new_game_error("无法读取封地地图。可再次选择新建游戏。", form_open)
 		return
-	var result := Global.start_new_game(new_name.text)
+	var result := Global.start_new_game(requested_name)
 	if result != OK:
-		status.text = "打开封地失败（%s）" % error_string(result)
+		_show_new_game_error("打开封地失败（%s）" % error_string(result), form_open)
+
+func _show_new_game_error(message: String, retry_name: bool) -> void:
+	status.text = message
+	_retry_new_name = retry_name
+	new_button.grab_focus()
+	GamepadInput.snap_pointer_to_focus.call_deferred()
 
 func _continue_game() -> void:
 	var prepared := OK
@@ -102,6 +132,7 @@ func _update_new_visibility() -> void:
 	menu.visible = not new_confirmation.visible
 	if menu.visible:
 		new_button.grab_focus()
+		GamepadInput.snap_pointer_to_focus.call_deferred()
 
 func _open_archive() -> void:
 	var archive := SAVE_ARCHIVE.instantiate()
@@ -128,3 +159,4 @@ func _update_settings_visibility() -> void:
 	$ModalShade.visible = settings_panel.visible
 	if menu.visible:
 		$Center/Menu/Settings.grab_focus()
+		GamepadInput.snap_pointer_to_focus.call_deferred()

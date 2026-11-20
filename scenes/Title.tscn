@@ -207,9 +207,10 @@ color = Color(0.057, 0.079, 0.06, 0.65)
 title = "新建封地"
 theme = ExtResource("7_dialog")
 ok_button_text = "开始新游戏"
+dialog_hide_on_ok = false
 
 [node name="Form" type="VBoxContainer" parent="NewConfirmation"]
-custom_minimum_size = Vector2(392, 0)
+custom_minimum_size = Vector2(464, 0)
 theme_override_constants/separation = 9
 
 [node name="NameLabel" type="Label" parent="NewConfirmation/Form"]
@@ -219,7 +220,7 @@ theme_override_font_sizes/font_size = 18
 text = "封地名称"
 
 [node name="EstateName" type="LineEdit" parent="NewConfirmation/Form"]
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 accessibility_name = "封地名称"
 placeholder_text = "封地名称"
@@ -228,4 +229,4 @@ max_length = 16
 [node name="SaveHint" type="Label" parent="NewConfirmation/Form"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.83, 0.83, 0.71, 1)
-text = "各局封地的存档独立保存。"
+text = "各局封地的存档独立保存。留空使用默认名。"
