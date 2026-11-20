@@ -18,6 +18,13 @@ func review() -> void:
 	var trades: Texture2D = load(art.TRADE_SIGNS)
 	check(art.LETTERING.multichannel_signed_distance_field and not art.LETTERING.allow_system_fallback,
 		"The imported brush lettering scales on the board using only its bundled glyphs")
+	var lettering: FontFile = art.LETTERING
+	var cache_size := Vector2i(lettering.msdf_size, 0)
+	var prerendered := lettering.get_glyph_list(0, cache_size)
+	check(lettering.get_texture_count(0, cache_size) > 0, "The glyph atlas is available before a board is created")
+	for character in lettering.get_supported_chars():
+		var glyph := lettering.get_glyph_index(lettering.msdf_size, character.unicode_at(0), 0)
+		check(glyph in prerendered, "The import prerenders the bundled glyph for " + character)
 	check(boards.get_size() == Vector2(128, 96) and trades.get_size() == Vector2(64, 72), "Logical dimensions of site and trade signs")
 	var inscriptions := ["东关", "柳湾·埠头", "西门·回封地", "井田 12", "南路亭",
 		"井田 12 · 划畦\n余 1 夜", "粮摊", "鱼摊", "绸摊"]
