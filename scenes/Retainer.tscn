@@ -9,19 +9,22 @@
 size = Vector2(14, 14)
 
 [node name="Retainer" type="CharacterBody2D" groups=["interactable"]]
+y_sort_enabled = true
 collision_layer = 2
 collision_mask = 1
 script = ExtResource("1_script")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Art" type="Node2D" parent="."]
+
+[node name="Sprite2D" type="Sprite2D" parent="Art"]
 texture_filter = 1
 position = Vector2(0, -6)
 script = ExtResource("3_motion")
 
-[node name="ToolGesture" type="Sprite2D" parent="."]
+[node name="ToolGesture" type="Sprite2D" parent="Art"]
 script = ExtResource("2_tool")
 
-[node name="InteractionHint" type="Label" parent="." groups=["interaction_prompt"]]
+[node name="InteractionHint" type="Label" parent="Art" groups=["interaction_prompt"]]
 visible = false
 z_index = 2
 material = ExtResource("4_world_hint")

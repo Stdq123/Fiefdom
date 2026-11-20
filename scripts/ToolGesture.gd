@@ -38,10 +38,7 @@ func perform(action: Action, toward: Vector2, windup := 0.08, field_point := Vec
 		_apply_pose()
 		return
 	_finish_contact()
-	show_sample(action, toward, windup, 0.0)
-	_field_point = field_point
-	if field_point.is_finite():
-		_apply_pose()
+	show_sample(action, toward, windup, 0.0, field_point)
 	set_process(true)
 
 func at_contact(effect: Callable) -> void:
@@ -58,9 +55,9 @@ func _finish_contact() -> void:
 			effect.call()
 
 # Both the wardrobe and world actors use this same pose at a given point in a stroke.
-func show_sample(action: Action, toward: Vector2, windup: float, time: float) -> void:
+func show_sample(action: Action, toward: Vector2, windup: float, time: float, field_point := Vector2.INF) -> void:
 	set_process(false)
-	_field_point = Vector2.INF
+	_field_point = field_point
 	_contact_effects.clear()
 	contact_time = maxf(windup, 0.01)
 	if time >= contact_time + RECOVERY:

@@ -67,7 +67,8 @@ func _refresh() -> void:
 	var body: Sprite2D = walker.sprite
 	if body.is_visible_in_tree():
 		occupied.append((body.get_global_transform_with_canvas() * body.get_rect()).grow(4.0))
-	var subject := target.get_global_transform_with_canvas() * Rect2(-14, -34, 28, 46)
+	var anchor: Node2D = target.art if target is Retainer else target
+	var subject := anchor.get_global_transform_with_canvas() * Rect2(-14, -34, 28, 46)
 	occupied.append(subject.grow(4.0))
 	var preferred := source_label.get_global_transform_with_canvas() * (source_label.size * 0.5)
 	var proposed := Rect2((preferred - size * 0.5).round(), size)

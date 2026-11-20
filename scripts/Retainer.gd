@@ -14,14 +14,17 @@ const WORK_GESTURES := {
 	Global.FieldJob.HARVEST: ToolGesture.Action.HARVEST,
 }
 const NO_CELL := RetainerData.NO_ASSIGNMENT
+const FIELD_STANCE_DISTANCE := 15.0
+const STANCE_SETTLE_TIME := 0.16
 
 @export var move_speed := 100.0
 @export var data: RetainerData
 
 @onready var navigation_agent: NavigationAgent2D = $NavigationAgent2D
-@onready var sprite: NeighborMotion = $Sprite2D
-@onready var tool_gesture: ToolGesture = $ToolGesture
-@onready var hint: Label = $InteractionHint
+@onready var art: Node2D = $Art
+@onready var sprite: NeighborMotion = $Art/Sprite2D
+@onready var tool_gesture: ToolGesture = $Art/ToolGesture
+@onready var hint: Label = $Art/InteractionHint
 
 var current_state := State.IDLE
 var target_grid_pos := NO_CELL
@@ -33,6 +36,11 @@ var last_heading := Vector2.LEFT
 var observer: Player
 var evening_seat := Vector2.INF
 var evening_path: Array[Vector2] = []
+
+var _stance := Vector2.INF
+var _stance_start := Vector2.ZERO
+var _work_point := Vector2.INF
+var _work_duration := 0.0
 
 func _ready() -> void:
 	if data == null:
@@ -66,15 +74,16 @@ func _physics_process(delta: float) -> void:
 			if Engine.get_physics_frames() % 60 == 0:
 				find_work()
 		State.MOVE:
-			_walk()
+			_walk(delta)
 		State.WORK:
-			work_left -= delta
-			if work_left <= 0.0:
+			if _advance_field_pose(delta):
 				_finish_field_work()
 				set_state(State.IDLE)
 	if data.duty == RetainerData.Duty.GUARD:
 		_guard(delta)
-	if current_state != State.MOVE:
+	if current_state == State.IDLE:
+		if not tool_gesture.visible:
+			art.position = art.position.move_toward(Vector2.ZERO, move_speed * delta)
 		_stand_at_stop()
 
 func _stand_at_stop() -> void:
@@ -84,6 +93,7 @@ func _stand_at_stop() -> void:
 		var pavilion: PavilionRest = get_parent().pavilion_rest
 		sprite.face(pavilion.gathering_center() - position)
 	if resting_at_pavilion():
+		art.position = Vector2.ZERO
 		sprite.sit(tool_gesture.sleeve)
 	else:
 		sprite.stand(tool_gesture.body_lean, tool_gesture.work_pose())
@@ -142,6 +152,7 @@ func set_state(next: State) -> void:
 	current_state = next
 	if next == State.IDLE:
 		velocity = Vector2.ZERO
+		_stance = Vector2.INF
 		if tool_gesture.carrying or work_left > 0.0:
 			tool_gesture.clear()
 		work_left = 0.0
@@ -149,10 +160,44 @@ func set_state(next: State) -> void:
 		find_work()
 	elif next == State.WORK:
 		velocity = Vector2.ZERO
-		work_left = 1.0 / maxf(data.get_work_efficiency(), 0.1)
-		sprite.face(last_heading)
-		sprite.stand()
-		tool_gesture.perform(WORK_GESTURES[field_job], last_heading, work_left)
+		_work_duration = 1.0 / maxf(data.get_work_efficiency(), 0.1)
+		work_left = _work_duration
+		var world := get_parent()
+		_work_point = world.to_global(world.get_crop_world_pos(target_grid_pos))
+		if not _stance.is_finite():
+			_stance = global_position
+			if _stance.distance_to(_work_point) <= ToolGesture.FIELD_REACH:
+				_stance = _stance_for_plot(_work_point)
+		_stance_start = art.global_position
+		_advance_field_pose(0.0)
+
+func _stance_for_plot(plot: Vector2) -> Vector2:
+	var toward := global_position.direction_to(plot)
+	if toward.is_zero_approx():
+		toward = last_heading if not last_heading.is_zero_approx() else Vector2.UP
+	# Seen from behind, the actor's head would cover the plant directly ahead.
+	if toward.y < -0.8 and absf(toward.x) < 0.56:
+		var side := -1.0 if toward.x < 0.0 else 1.0
+		toward = Vector2(0.56 * side, -0.83).normalized()
+	return plot - toward * FIELD_STANCE_DISTANCE
+
+func _advance_field_pose(delta: float) -> bool:
+	work_left = maxf(0.0, work_left - delta)
+	var time := _work_duration - work_left
+	var settled := smoothstep(0.0, minf(STANCE_SETTLE_TIME, _work_duration * 0.24), time)
+	var previous_foot := art.global_position
+	art.global_position = _stance_start.lerp(_stance, settled)
+	var facing := _stance.direction_to(_work_point)
+	var sample_time := maxf(_work_duration, 0.01) - work_left
+	tool_gesture.show_sample(WORK_GESTURES[field_job], facing, _work_duration, sample_time, _work_point)
+	var moved := art.global_position.distance_to(previous_foot)
+	if settled < 1.0 and moved > 0.04:
+		var rise := sprite.walk(facing * moved)
+		tool_gesture.position.y += rise
+	else:
+		sprite.face(facing)
+		_stand_at_stop()
+	return work_left <= 0.0
 
 func _finish_field_work() -> void:
 	var world := get_parent()
@@ -171,6 +216,7 @@ func _finish_field_work() -> void:
 			if world.harvest_crop(target_grid_pos, self):
 				sound = HARVEST_SOUND
 	if sound:
+		tool_gesture.set_process(true)
 		AudioManager.play_world_sfx(sound, self, -9.0, 190.0)
 	else:
 		tool_gesture.clear()
@@ -211,10 +257,11 @@ func _walk_next_pavilion_step() -> void:
 	_walk_to(get_parent().to_global(evening_path.pop_front()))
 
 func _walk_to(destination: Vector2) -> void:
+	_stance = Vector2.INF
 	navigation_agent.target_position = destination
 	current_state = State.MOVE
 
-func _walk() -> void:
+func _walk(delta: float) -> void:
 	var next_step := navigation_agent.get_next_path_position()
 	if navigation_agent.is_navigation_finished():
 		if not evening_path.is_empty():
@@ -233,7 +280,19 @@ func _walk() -> void:
 		return
 	last_heading = global_position.direction_to(next_step)
 	velocity = last_heading * move_speed
+	var previous_foot := art.global_position
 	move_and_slide()
-	var step_height := sprite.walk(get_position_delta())
+	# Follow the ordinary navigation path while the visible feet plant beside the crop.
+	var plot := navigation_agent.target_position
+	if not _stance.is_finite() and target_grid_pos != NO_CELL and global_position.distance_to(plot) <= FIELD_STANCE_DISTANCE:
+		_stance = _stance_for_plot(plot)
+	var next_foot := _stance if _stance.is_finite() else global_position
+	art.global_position = previous_foot.move_toward(next_foot, move_speed * 1.2 * delta)
+	var visible_step := art.global_position - previous_foot
+	var step_height := sprite.walk(visible_step)
 	if target_grid_pos != NO_CELL and Global.field_job(data, target_grid_pos) == Global.FieldJob.WATER:
-		tool_gesture.carry_pail(last_heading, step_height)
+		var facing := visible_step if sprite.walking else last_heading
+		if not sprite.walking and _stance.is_finite():
+			facing = _stance.direction_to(plot)
+			sprite.face(facing)
+		tool_gesture.carry_pail(facing, step_height)
