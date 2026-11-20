@@ -153,6 +153,12 @@
 
 从 `6621862` 独立构建两次，ZIP 的 SHA-256 均为 `7b7b10ca862bf9380d566af165c99f7a882a0c99a18c4f2c6aed434071a7db70`。九项无窗口检查与原样解包启动通过。1920×1080 Vulkan、1920×1080 Direct3D 12 与 1024×768 OpenGL 在隔离桌面各取样 21 帧，复核两条溪流四处弯道的位移和桥面、浅滩的遮挡。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-creek-current/release-6621862/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-creek-current/release-6621862/release-proof.txt)
 
+## 竹涧瀑布的入潭声
+
+跌水和泡沫声从木桥上游的潭口传来，站在两岸时声道方向相反。靠近瀑布时普通溪声稍轻，离开后继续原来的循环。谷雨和冬季的跌水声稍低，可用「环境声」调节。
+
+构建提交 `a616847`，Windows ZIP 的 SHA-256 为 `0664506206f4a3a1fdf2efc6da15f4a91b08fa86c378fe18258ce5fe9c56f0c9`。三项无窗口检查和原样解包启动通过。1920×1080 Vulkan 与 1024×768 OpenGL 的隔离桌面各采十段混音，核对近远、声道、循环、静音和离场。测试包已清理。 [核对记录](../build/polish-ravine-waterfall-audio/release-a616847/release-proof.txt)
+
 ## 舆图返回后继续读田务回执
 
 返程田务回执随舆图、设置和管理面板收起，计时和淡出一起暂停。回到地图后按剩余时间继续显示。面板里发出的新提示等到地图重新可见时开始计时。晨间结果可从历书下的「昨夜结算」重读。
