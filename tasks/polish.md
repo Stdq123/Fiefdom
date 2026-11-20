@@ -381,6 +381,8 @@ Windows 候选包内的 `SHA256SUMS.txt` 覆盖程序、资源、兼容入口、
 
 ## Windows 关窗与继续游戏
 
+标题加载期间关窗会取消本次新建或读档。加载牌显示「正在退出」，收回正在进行的读取后从标题关闭。构建 `cd09739` 在 1920×1080 Vulkan 核对了新建、命名后新建、继续和选档，在 1024×768 OpenGL 复核了选档。五次均收到 Windows 关窗消息并从标题退出，预置存档的 SHA-256 保持一致。四项无窗口界面检查和原样解包启动通过，测试包已清理。 [构建校验与核对记录](../build/polish-close-loading/release-cd09739/release-proof.txt)
+
 游戏中关闭窗口会显示本局当前日期与最近存档，默认聚焦「保存并退出」。保存失败时可在确认框内重试。直接退出会放弃尚未保存的改动，取消会恢复原来的焦点和暂停状态。通关结算也可保存后退出，战败时可留在结算读取旧档。
 
 从 `6696a8d` 独立构建两次，ZIP 的 SHA-256 均为 `b3a4fc88e77eba120acec8924b776b5055c162adeadfc636dd98bf8bd559e2ec`。六项无窗口界面回归通过。隔离桌面在 1920×1080 的 Vulkan 和 Direct3D 12、1024×768 的 OpenGL 上触发 Windows 关窗，模拟手柄取消和保存重试，重启后从标题恢复第 9 天的封地位置和朝向。另核对直接退出保留第 8 天的旧档，以及从标题关窗直接退出。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-window-exit/release-6696a8d/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-window-exit/release-6696a8d/release-proof.txt)
