@@ -27,6 +27,7 @@ func _run() -> void:
 	var handover: Control = ui.handover
 	current_scene.get_node("World").process_mode = Node.PROCESS_MODE_DISABLED
 	paused = false
+	await _check_opening_hud(ui, state, preferences)
 	ui.hud.handover_button.grab_focus()
 	ui._open_handover()
 	_expect(paused and handover.modal.visible, "Open the handover from the estate UI.")
@@ -82,6 +83,61 @@ func _run() -> void:
 	if not failed:
 		print("SCENARIO_OK")
 	quit(1 if failed else 0)
+
+func _check_opening_hud(ui: Node, state: Node, preferences: Node) -> void:
+	var hud: Control = ui.hud
+	var world := current_scene.get_node("World")
+	var tile: Vector2i = state.well_fields[0].center_pos
+	var fields: TileMapLayer = world.tile_map
+	var untilled_atlas := fields.get_cell_atlas_coords(tile)
+	var soil_source := fields.get_cell_source_id(tile)
+	var original_seed: String = world.current_seed_id
+	var before := _snapshot(state)
+	var old_action_size: int = hud.opening_action.get_theme_font_size(&"font_size")
+	var old_due_size: int = hud.tribute_button.get_theme_font_size(&"font_size")
+	_expect(hud.opening_action.is_visible_in_tree() and hud.opening_action.text == "标出公田",
+		"The new estate offers the public field directly on the journal.")
+	var deadline: String = "首贡 1 份 · 第 %d 天过夜前" % state.tribute_deadline()
+	_expect(hud.tribute_button.is_visible_in_tree() and hud.tribute_button.text == deadline
+		and deadline not in hud.guide.text, "The first deadline is visible as one actionable line.")
+	_expect(preferences.set_reading_size(2) == OK
+		and hud.opening_action.get_theme_font_size(&"font_size") == old_action_size + 6
+		and hud.tribute_button.get_theme_font_size(&"font_size") == old_due_size + 6,
+		"The shortcut and deadline both follow the reading size.")
+	for frame in 5:
+		await process_frame
+	var journal: Rect2 = hud.get_node("Journal").get_global_rect()
+	_expect(journal.encloses(hud.opening_action.get_global_rect()) and journal.encloses(hud.tribute_button.get_global_rect()),
+		"Large shortcuts stay inside the opening journal.")
+	hud.opening_action.pressed.emit()
+	_expect(ui.directions.tracked_plot == tile and hud.cancel_directions.is_visible_in_tree()
+		and world.current_seed_id == original_seed and _snapshot(state) == before,
+		"The direct mark points to the center without switching seed, opening a dialog or advancing.")
+	ui.directions.cancel_tracking()
+	state.tilled_cells[tile] = true
+	fields.set_cell(tile, soil_source, Vector2i(untilled_atlas.x, 1))
+	world.select_seed("rice")
+	root.get_node("GameEvents").farm_state_changed.emit()
+	_expect(hud.opening_action.text == "选黍种 · 标出公田", "Unsupported rice shows a specific seed and destination.")
+	hud.opening_action.pressed.emit()
+	_expect(ui.directions.tracked_plot == tile and world.current_seed_id == "millet" and state.active_crops.is_empty(),
+		"The explicit seed shortcut selects millet and marks the field without sowing it.")
+	ui.directions.cancel_tracking()
+	state.tilled_cells.erase(tile)
+	fields.set_cell(tile, soil_source, untilled_atlas)
+	world.select_seed(original_seed)
+	root.get_node("GameEvents").farm_state_changed.emit()
+	var previous_streak: int = state.days_without_contribution
+	state.days_without_contribution = state.balance.no_contribution_threshold - 1
+	ui.update_ui()
+	_expect(hud.tribute_button.text == "首贡 1 份 · 今夜到期", "The deadline switches to tonight on the due day.")
+	state.days_without_contribution += 1
+	ui.update_ui()
+	_expect(hud.tribute_button.text == "首贡 1 份 · 已逾期", "A missed deadline displays its overdue state.")
+	state.days_without_contribution = previous_streak
+	ui.update_ui()
+	_expect(preferences.set_reading_size(0) == OK, "Restore the original fixture reading size.")
+	_expect(_snapshot(state) == before, "The opening journal check leaves the estate unchanged after staging.")
 
 func _check_public_plot_link(ui: Node, state: Node) -> void:
 	var handover: Control = ui.handover

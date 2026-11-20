@@ -64,6 +64,22 @@ func _run() -> void:
 	await _settle()
 	_expect(is_equal_approx(journal.size.y, short_height) and notes.scroll_vertical == 0 and not bar.visible,
 		"A shorter updated note must reopen at the top with no empty space.")
+	var standard_heading: int = hud.guide.heading.get_theme_font_size(&"font_size")
+	var standard_handover: int = hud.handover_button.get_theme_font_size(&"font_size")
+	var prefs := root.get_node("Preferences")
+	_expect(prefs.set_reading_size(2) == OK, "The journal uses the largest reading preference.")
+	hud.visitor_label.text = "渠伯在田边。\n".repeat(12) + "陶辛在西廊。"
+	hud.refresh_tribute()
+	await _settle()
+	_expect(hud.guide.heading.get_theme_font_size(&"font_size") == standard_heading + 6
+		and hud.handover_button.get_theme_font_size(&"font_size") == standard_handover + 6,
+		"Headings and book tabs use the same reading scale as the rest of the journal.")
+	var expanded: Rect2 = journal.get_global_rect()
+	for button: Button in [hud.tribute_button, hud.handover_button, hud.opening_action, hud.first_private_button]:
+		_expect(expanded.encloses(button.get_global_rect()) and button.get_combined_minimum_size().x <= button.size.x,
+			"The large deadline, actions and book tabs remain within the journal.")
+	_expect(expanded.end.y < hud.get_node("Vitals").get_global_rect().position.y and bar.visible,
+		"Large text with many visitors keeps the map and vitals accessible.")
 	hud.free()
 	if failures.is_empty():
 		print("SCENARIO_OK")

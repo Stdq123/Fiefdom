@@ -124,13 +124,11 @@ func refresh() -> void:
 	_refresh_first_private_button()
 
 func _show_first_tribute() -> void:
-	var public_cell: Vector2i = Global.well_fields[0].center_pos
-	var public_step := _opening_field_step(public_cell, true)
-	var due := Global.tribute_deadline()
-	var deadline := ""
-	if due > 0:
-		deadline = "\n首贡 1 份 · 已逾期" if Global.tribute_overdue() else "\n首贡 1 份 · 第 %d 天过夜前" % due
-	_describe("第一次纳贡", public_step + deadline)
+	var plan := Global.tribute_field_plan()
+	if plan.is_empty():
+		_describe("第一次纳贡", "井田中央的公田用于纳贡。")
+		return
+	_describe("第一次纳贡", _opening_field_step(plan.cell, true))
 	if not waiting_for_tribute_crop or Global.private_harvest_total > 0:
 		return
 	var cell := _first_private_cell()
@@ -140,7 +138,7 @@ func _show_first_tribute() -> void:
 		ESTATE_WORLD.FieldAction.RICE_SEED, ESTATE_WORLD.FieldAction.WATER, ESTATE_WORLD.FieldAction.HARVEST]
 		and world.field_cost(action) <= Global.current_stamina)
 	if offer_first_private and tending_first_private:
-		_describe("兼顾一格私田", _opening_field_step(cell, false) + deadline)
+		_describe("兼顾一格私田", _opening_field_step(cell, false))
 
 func _toggle_first_private() -> void:
 	tending_first_private = not tending_first_private
@@ -235,8 +233,8 @@ func _opening_field_step(cell: Vector2i, is_public: bool) -> String:
 	match action:
 		ESTATE_WORLD.FieldAction.TILL:
 			if is_public:
-				return ("左摇杆移动，右摇杆对准中央公田。\n按 A 翻地，收成用来纳贡。" if pad
-					else "%s 或方向键移动。\n左键翻中央公田，收成用来纳贡。" % _walking_keys())
+				return ("左摇杆移动，右摇杆瞄准。\n按 A 翻公田，收成纳贡。" if pad
+					else "%s 或方向键移动。\n左键翻公田，收成纳贡。" % _walking_keys())
 			return "%s翻地。\n收成归你，可换口粮或留作时令交货。" % point
 		ESTATE_WORLD.FieldAction.SOW:
 			var seed := ItemManager.get_crop(selected)

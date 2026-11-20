@@ -135,7 +135,9 @@ func show_driving_progress(progress: String, instruction: String) -> void:
 	driving_hint.text = instruction
 
 func _ready() -> void:
-	for control: Control in [arrival, guide, visitor_label, day_label, calendar_label, rank_label,
+	for control in $Journal.find_children("*", "Label") + $Journal.find_children("*", "Button"):
+		InterfaceFont.scale_reading_text(control)
+	for control: Control in [day_label, calendar_label, rank_label,
 			reputation_label, money_label, king_label, inventory_label, well_field_label, help_label,
 		farm_status, sow_from_plan, prepare_empty_plots, replant_after_harvest, canal_preview, morning_button]:
 		InterfaceFont.scale_reading_text(control)
@@ -417,14 +419,15 @@ func refresh_rations() -> void:
 
 func refresh_tribute() -> void:
 	var due := Global.tribute_deadline()
-	tribute_button.visible = (Global.outcome == Global.Outcome.RUNNING and due > 0
-		and (Global.first_tribute_delivered() or due <= Global.current_day + 1))
+	tribute_button.visible = Global.outcome == Global.Outcome.RUNNING and due > 0
 	if tribute_button.visible:
 		var tonight := due == Global.current_day
-		tribute_button.text = "纳贡 · 今夜前" if tonight else "纳贡 · 第 %d 天过夜前" % due
+		var name := "纳贡" if Global.first_tribute_delivered() else "首贡 1 份"
+		var deadline := "今夜到期" if tonight else "第 %d 天过夜前" % due
 		if Global.tribute_overdue():
-			tribute_button.text = "欠贡 · 查看公田"
-		tribute_button.tooltip_text = "收割任一公田，作物入国库，期限重新计算。"
+			deadline = "已逾期"
+		tribute_button.text = "%s · %s" % [name, deadline]
+		tribute_button.tooltip_text = "查看今夜安排。收割任一公田后，纳贡期限重新计算。"
 		tribute_button.add_theme_color_override("font_color", Color("#efbf8a") if tonight else Color("#e7ddbd"))
 	_refresh_sleep_tooltip()
 

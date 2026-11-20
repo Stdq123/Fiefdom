@@ -79,6 +79,15 @@ theme_override_constants/line_spacing = 1
 autowrap_mode = 3
 script = ExtResource("2_guide")
 
+[node name="TributeButton" type="Button" parent="Journal/Stack"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 27)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 14
+
 [node name="Shortcuts" type="HFlowContainer" parent="Journal/Stack"]
 layout_mode = 2
 mouse_filter = 2
@@ -132,23 +141,16 @@ mouse_default_cursor_shape = 2
 theme_override_font_sizes/font_size = 15
 text = "查议税条件"
 
-[node name="TributeButton" type="Button" parent="Journal/Stack/Shortcuts"]
-visible = false
-custom_minimum_size = Vector2(0, 27)
-layout_mode = 2
-size_flags_horizontal = 0
-mouse_default_cursor_shape = 2
-unique_name_in_owner = true
-theme_override_font_sizes/font_size = 14
-
 [node name="OpeningAction" type="Button" parent="Journal/Stack/Shortcuts"]
 unique_name_in_owner = true
 visible = false
-custom_minimum_size = Vector2(0, 27)
+custom_minimum_size = Vector2(0, 31)
 layout_mode = 2
 size_flags_horizontal = 0
 mouse_default_cursor_shape = 2
-theme_override_font_sizes/font_size = 14
+theme_type_variation = &"HudPrimary"
+theme_override_font_sizes/font_size = 15
+theme_override_constants/icon_max_width = 14
 
 [node name="FirstPrivateButton" type="Button" parent="Journal/Stack/Shortcuts"]
 unique_name_in_owner = true

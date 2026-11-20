@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 const NIGHT_RATIONS_PANEL := preload("res://scenes/NightRationsPanel.tscn")
+const CAMPAIGN_GUIDE := preload("res://scripts/CampaignGuide.gd")
 const SEED_GARDEN := preload("res://scripts/SeedGarden.gd")
 const WINTER_RATIONS := preload("res://scripts/WinterRoadRations.gd")
 const FISHING_PANEL := preload("res://scripts/FishingPanel.gd")
@@ -335,6 +336,7 @@ func _connect_signals() -> void:
 	GameEvents.ravine_journal_directions_requested.connect(_on_ravine_journal_directions_requested)
 
 	world.seed_selected.connect(_refresh_seed_belt.unbind(1))
+	world.seed_selected.connect(_refresh_opening_action.unbind(1))
 	world.pavilion_rest.story_changed.connect(_refresh_pavilion_story.unbind(1))
 	_refresh_pavilion_story(world.pavilion_rest.story_id, world.pavilion_rest.appointment_id)
 	world.channel_mode_changed.connect(_on_channel_mode_changed)
@@ -348,6 +350,7 @@ func _connect_signals() -> void:
 	)
 	world.visitor_changed.connect(_update_visitor_note)
 	hud.cancel_directions.visibility_changed.connect(_refresh_opening_action)
+	hud.first_private_button.pressed.connect(_refresh_opening_action)
 	hud.opening_action.pressed.connect(_on_opening_action)
 	hud.rotation_guide_button.pressed.connect(_open_rotation_guide)
 	sleep_button.pressed.connect(_request_sleep)
@@ -553,6 +556,8 @@ func _refresh_opening_action() -> void:
 		_show_opening_neighbor(Global.TAX_ENVOY)
 		return
 	if not first_tribute:
+		if _show_first_public_action():
+			return
 		var speaker := _first_tribute_neighbor()
 		if speaker.is_empty():
 			hud.opening_action.hide()
@@ -592,6 +597,21 @@ func _refresh_opening_action() -> void:
 		_set_opening_action("查看开垦筹备", "查看第二块井田所需的门客、铜钱和粮食。", _on_reclaim_pressed)
 		return
 	hud.opening_action.hide()
+
+func _show_first_public_action() -> bool:
+	var guide := hud.guide as CAMPAIGN_GUIDE
+	if (guide.opening_cue not in [CAMPAIGN_GUIDE.OpeningCue.PLOT, CAMPAIGN_GUIDE.OpeningCue.SEED]
+			or not Global.is_public_plot(guide.opening_cell)):
+		return false
+	var seed := guide.opening_seed_id if guide.opening_cue == CAMPAIGN_GUIDE.OpeningCue.SEED else ""
+	var label := "标出公田" if seed.is_empty() else "选%s种 · 标出公田" % ItemManager.crop_label(seed)
+	_set_opening_action(label, "标出手记所说的公田。收成入国库。", _guide_first_public_plot.bind(seed),
+		HUDIcons.icon(HUDIcons.Symbol.MAP))
+	return true
+
+func _guide_first_public_plot(seed: String) -> void:
+	if _follow_tribute_plot(Global.TributeRoute.TEND, false) and not seed.is_empty():
+		world.select_seed(seed)
 
 func _open_rotation_guide() -> void:
 	if _map_controls_blocked() or not hud.rotation_guide_button.is_visible_in_tree():
@@ -722,10 +742,11 @@ func _show_opening_neighbor(speaker: String, reputation_gain := 0) -> void:
 		tip += "今日交谈可得 %d 声望。" % reputation_gain
 	_set_opening_action("去见%s · %s" % [speaker, place], tip, guide_to_neighbor)
 
-func _set_opening_action(label: String, tip: String, handler: Callable) -> void:
+func _set_opening_action(label: String, tip: String, handler: Callable, icon: Texture2D = null) -> void:
 	opening_action = handler
 	hud.opening_action.text = label
 	hud.opening_action.tooltip_text = tip
+	hud.opening_action.icon = icon
 	hud.opening_action.show()
 
 func _review_first_harvest() -> void:
