@@ -96,6 +96,9 @@ func set_reclamation_mode(active: bool) -> void:
 	reclamation_mode = active
 	_refresh_sections()
 
+func set_field_effort(cost: int) -> void:
+	$Vitals.set_stamina_cost(cost)
+
 func set_estate_room(room: Global.EstateRoom) -> void:
 	indoors = room != Global.EstateRoom.OUTDOORS
 	$RoomLocation.text = "蚕棚" if room == Global.EstateRoom.SILK_SHED else "堂屋"

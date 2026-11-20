@@ -87,13 +87,24 @@ func review() -> void:
 
 	var meters = load("res://scenes/HUDVitals.tscn").instantiate()
 	root.add_child(meters)
+	await process_frame
+	var width: float = meters.size.x
 	var maximum: int = state.balance.player_max_health
 	events.health_changed.emit(maximum)
 	expect(not meters.get_node("%HealthWarning").visible and meters.health_bar.value == maximum, "Full health")
 	events.health_changed.emit(1)
-	expect(meters.get_node("%HealthWarning").visible and meters.get_node("%HealthWarning").text == "偏低", "Low health")
+	expect(meters.get_node("%HealthWarning").visible and meters.get_node("%HealthWarning").text == "偏低"
+		and meters.health_bar.value == 1 and is_equal_approx(meters.health_bar._trace, 1.0),
+		"The actual health and the short previous-fill trace are distinct.")
+	meters.health_bar._motion.custom_step(1.0)
+	expect(is_equal_approx(meters.health_bar._trace, meters.health_bar.ratio), "The loss trace settles to the real value.")
+	events.health_changed.emit(maximum)
+	expect(meters.health_bar.value == maximum and meters.health_bar._trace < meters.health_bar.ratio,
+		"Recovery shows the new value immediately and highlights the portion regained.")
 	events.stamina_changed.emit(0)
 	expect(meters.get_node("%StaminaWarning").text == "已尽" and meters.stamina_bar.value == 0, "Empty stamina")
+	await process_frame
+	expect(is_equal_approx(meters.size.x, width), "Warnings do not move the gauge ends.")
 	events.stamina_changed.emit(state.max_stamina)
 	expect(not meters.get_node("%StaminaWarning").visible and meters.stamina_bar.value == state.max_stamina, "Recovered reading")
 	meters.free()

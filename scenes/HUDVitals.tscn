@@ -2,8 +2,10 @@
 
 [ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="1_theme"]
 [ext_resource type="Script" path="res://scripts/HUDVitals.gd" id="2_vitals"]
+[ext_resource type="Script" path="res://scripts/VitalMeter.gd" id="3_meter"]
 
 [node name="Vitals" type="PanelContainer"]
+custom_minimum_size = Vector2(186, 0)
 theme = ExtResource("1_theme")
 theme_type_variation = &"HudRail"
 script = ExtResource("2_vitals")
@@ -55,12 +57,13 @@ theme_type_variation = &"HudBronzeInk"
 
 [node name="HealthBar" type="ProgressBar" parent="Stack"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 7)
+custom_minimum_size = Vector2(0, 9)
 layout_mode = 2
 mouse_filter = 2
 accessibility_name = "气血"
 show_percentage = false
 theme_type_variation = &"HudHealth"
+script = ExtResource("3_meter")
 
 [node name="Stamina" type="HBoxContainer" parent="Stack"]
 layout_mode = 2
@@ -104,8 +107,9 @@ theme_type_variation = &"HudBronzeInk"
 
 [node name="StaminaBar" type="ProgressBar" parent="Stack"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 7)
+custom_minimum_size = Vector2(0, 9)
 layout_mode = 2
 mouse_filter = 2
 accessibility_name = "体力"
 show_percentage = false
+script = ExtResource("3_meter")

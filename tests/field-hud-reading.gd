@@ -66,6 +66,17 @@ func _review() -> void:
 	var font: int = cursor.label.get_theme_font_size(&"font_size")
 	var note := await _read(center)
 	_expect("公田 · 翻地" in note and "左键 · −2 体力" in note, "The first plot names its tool and cost.")
+	var gauge: ProgressBar = hud.get_node("Vitals").stamina_bar
+	_expect(gauge.planned_cost == 2 and gauge.value == state.current_stamina, "The gauge previews the same single-plot cost.")
+	var action: int = world.field_action(center)
+	var plots: Array[Vector2i] = world.field_batch_targets(center, action)
+	var total: int = world.field_cost(action) * plots.size()
+	cursor._show_field_preview(center, action, plots)
+	_expect(total > 2 and gauge.planned_cost == total and gauge.value == state.current_stamina,
+		"The batch marks its full cost without deducting it.")
+	events.modal_visibility_changed.emit(true)
+	_expect(gauge.planned_cost == 0, "An open panel clears the projected deduction immediately.")
+	events.modal_visibility_changed.emit(false)
 	var before_size: Vector2 = cursor.caption.size
 	var money_font: int = hud.money_label.get_theme_font_size(&"font_size")
 	_expect(prefs.set_reading_size(2) == OK, "Set the largest reading size in the isolated profile.")
@@ -79,6 +90,9 @@ func _review() -> void:
 	note = await _read(center)
 	_expect("公田 · 翻地" in note and "需 2 · 还差 1" in note and "左键" not in note,
 		"Insufficient stamina keeps the action and shows the exact shortage.")
+	_expect(gauge.planned_cost == 2 and gauge.value == 1 and "还差 1" in gauge.accessibility_description
+		and hud.get_node("Vitals").get_node("%StaminaWarning").text == "不足",
+		"The patterned preview distinguishes a shortage from the current reading.")
 	state.current_stamina = state.max_stamina
 	events.stamina_changed.emit(state.current_stamina)
 	state.active_crops[center] = {"id": "millet", "data": items.get_crop("millet"), "growth_nights": 2, "age": 2,
@@ -90,6 +104,7 @@ func _review() -> void:
 	_expect("收获" in note and "国库 +1" in note and "−3 体力" in note, "Single public harvest previews the tribute.")
 	note = await _read(farm)
 	_expect("稻田断水" in note and "还需供水 2 夜" in note, "Dry rice reports the time with water still needed.")
+	_expect(gauge.planned_cost == 0, "A read-only field has no projected expenditure.")
 	state.tax_reform_choice = state.TaxReformChoice.REFORMED
 	state.tax_rate = 0.25
 	pad.active = true
@@ -98,6 +113,7 @@ func _review() -> void:
 		"The same public cell uses the current tax rules and controller cue.")
 	pad.active = false
 	cursor._clear_pointer()
+	_expect(gauge.planned_cost == 0, "Moving the pointer away clears the forecast.")
 
 	state.money = 1234567
 	state.food_storage = 876543

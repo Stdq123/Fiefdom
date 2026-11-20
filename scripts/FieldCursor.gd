@@ -21,6 +21,7 @@ func _ready() -> void:
 	z_index = 52
 	material = preload("res://resources/world_hint_material.tres")
 	hide()
+	visibility_changed.connect(_clear_effort_if_hidden)
 	caption.use_parent_material = true
 	caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var plate := HUD_THEME.get_stylebox(&"panel", &"HudRail").duplicate() as StyleBox
@@ -57,6 +58,10 @@ func _ready() -> void:
 func _clear_pointer() -> void:
 	pointer_seen = false
 	hide()
+
+func _clear_effort_if_hidden() -> void:
+	if not is_visible_in_tree() and is_instance_valid(hud):
+		hud.set_field_effort(0)
 
 func clear_plot_hover(cell: Vector2i) -> void:
 	if pointer_seen and world.field_at(pointer) == cell:
@@ -146,7 +151,7 @@ func _process(_delta: float) -> void:
 				lines.append("按住 %s 预览收后续播" % modifier)
 			elif plots.size() > 1:
 				lines.append("按住 %s 预览整田%s" % [modifier, world.FIELD_WORK_LABELS[action]])
-	_place_caption(cell, "\n".join(lines), tone)
+	_place_caption(cell, "\n".join(lines), tone, [], {}, HUDIcons.Symbol.HOE, cost)
 
 func _show_field_preview(cell: Vector2i, action: int, plots: Array[Vector2i]) -> void:
 	var cost: int = plots.size() * world.field_cost(action)
@@ -214,10 +219,10 @@ func _show_batch_caption(cell: Vector2i, title: String, details: PackedStringArr
 	var accept := "A 确认" if GamepadInput.active else "左键确认"
 	details.append("%d 体力 · %s" % [cost, accept] if can_afford
 		else "需 %d 体力 · 还差 %d" % [cost, cost - Global.current_stamina])
-	_place_caption(cell, "\n".join(details), Color("#eacb80") if can_afford else Color("#efaa84"), plots, seeds, symbol)
+	_place_caption(cell, "\n".join(details), Color("#eacb80") if can_afford else Color("#efaa84"), plots, seeds, symbol, cost)
 
 func _place_caption(cell: Vector2i, text: String, tone: Color, plots: Array[Vector2i] = [],
-		seeds: Dictionary[Vector2i, String] = {}, symbol := HUDIcons.Symbol.HOE) -> void:
+		seeds: Dictionary[Vector2i, String] = {}, symbol := HUDIcons.Symbol.HOE, cost := 0) -> void:
 	var at_cell := tile_map.map_to_local(cell)
 	if tone != ink or preview_plots != plots or preview_seeds != seeds or (not plots.is_empty() and position != at_cell):
 		ink = tone
@@ -262,6 +267,7 @@ func _place_caption(cell: Vector2i, text: String, tone: Color, plots: Array[Vect
 	caption.visible = screen_position != Vector2.INF
 	if caption.visible:
 		caption.position = transform.affine_inverse() * screen_position - position
+	hud.set_field_effort(cost if caption.visible else 0)
 
 func _draw() -> void:
 	var half_cell := Vector2(tile_map.tile_set.tile_size) / 2 - Vector2.ONE
