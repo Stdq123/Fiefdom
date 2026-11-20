@@ -10,6 +10,8 @@ const MOUSE_CURSORS := {
 	DisplayServer.CURSOR_ARROW: [preload("res://assets/ui/cursor-arrow.png"), Vector2(-2, -2)],
 	DisplayServer.CURSOR_POINTING_HAND: [preload("res://assets/ui/cursor-hand.png"), Vector2(-11, -3)],
 	DisplayServer.CURSOR_IBEAM: [preload("res://assets/ui/cursor-text.png"), Vector2(-16, -16)],
+	DisplayServer.CURSOR_CAN_DROP: [preload("res://assets/ui/cursor-drop-allowed.png"), Vector2(-2, -2)],
+	DisplayServer.CURSOR_FORBIDDEN: [preload("res://assets/ui/cursor-drop-blocked.png"), Vector2(-2, -2)],
 }
 const FIELD_TOOLS := preload("res://assets/ui/cursor-field-tools.png")
 const ACTION_BUTTONS := {
@@ -175,6 +177,9 @@ func _update_mouse_cursor() -> void:
 	if active:
 		return
 	var shape := DisplayServer.cursor_get_shape()
+	if window.gui_is_dragging() and shape != DisplayServer.CURSOR_CAN_DROP:
+		# Godot can report an arrow over empty canvas during a drag.
+		shape = DisplayServer.CURSOR_FORBIDDEN
 	var art: Variant = MOUSE_CURSORS.get(shape)
 	var draw_pointer := false
 	var draw_tool := false
@@ -192,7 +197,7 @@ func _update_mouse_cursor() -> void:
 				draw_tool = _update_mouse_field_tool(point, bounds)
 	_mouse_cursor.visible = draw_pointer
 	_field_tool.visible = draw_tool
-	# Leave window chrome and special cursors such as drag indicators to the display server.
+	# Leave window chrome and shapes without themed art to the display server.
 	var mode := Input.MOUSE_MODE_HIDDEN if draw_pointer else Input.MOUSE_MODE_VISIBLE
 	if Input.mouse_mode != mode:
 		Input.mouse_mode = mode

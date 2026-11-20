@@ -105,7 +105,13 @@ func _select_field(index: int) -> void:
 	Global.assign_retainer_plot(data, field.center_pos)
 
 func _get_drag_data(_at_position: Vector2) -> Variant:
-	var preview := Label.new()
-	preview.text = data.name
+	var preview := Control.new()
+	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var caption := Label.new()
+	caption.text = data.name
+	caption.position = Vector2(34, 3)
+	caption.add_theme_color_override(&"font_outline_color", Color("#30251e"))
+	caption.add_theme_constant_override(&"outline_size", 5)
+	preview.add_child(caption)
 	set_drag_preview(preview)
 	return data
