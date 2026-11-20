@@ -8,6 +8,9 @@ const FALL_SIZE := Vector2(52, 62)
 const FALL_AT := Vector2(110, -79)
 const FALL_FRAMES := 8
 const DRIFT_FOAM := Rect2(1, 63, 35, 8)
+const FALL_SOUND_PATH := "res://assets/audio/ravine-waterfall.wav"
+const FALL_IMPACT := FALL_AT + Vector2(27, 49)
+const FALL_HEARING := 148.0
 
 # Creek-bed positions and the height of the bank above them.
 const WEST_UPPER: Array[Vector3] = [Vector3(114, -98, 2), Vector3(114, -86, 10), Vector3(116, -76, 24),
@@ -142,6 +145,35 @@ var water_time := 0.0
 var frame := 0
 var water_effect_bounds := FALL_BOUNDS.merge(FORD_BOUNDS)
 var fall_art: Texture2D = load(FALL_ART_PATH)
+var waterfall: AudioStreamPlayer2D
+
+func _ready() -> void:
+	var stream := load(FALL_SOUND_PATH) as AudioStreamWAV
+	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	stream.loop_end = roundi(stream.get_length() * stream.mix_rate)
+	waterfall = AudioStreamPlayer2D.new()
+	waterfall.name = "Waterfall"
+	waterfall.stream = stream
+	waterfall.bus = &"Ambience"
+	waterfall.position = FALL_IMPACT
+	waterfall.max_distance = 192.0
+	waterfall.panning_strength = 1.35
+	waterfall.volume_linear = 0.0
+	add_child(waterfall)
+	GameEvents.map_departing.connect(waterfall.stop)
+
+func update_waterfall(listener: Vector2, delta: float) -> float:
+	var distance := listener.distance_to(waterfall.global_position)
+	var proximity := 1.0 - smoothstep(22.0, FALL_HEARING, distance)
+	var weather_gain := 0.75 if Global.has_rain() else (0.84 if Global.season_index() == Global.Season.WINTER else 1.0)
+	var gain := 0.57 * proximity * weather_gain
+	waterfall.volume_linear = move_toward(waterfall.volume_linear, gain, delta * 0.88)
+	if DisplayServer.get_name() != "headless":
+		if waterfall.volume_linear > 0.0 and not waterfall.playing:
+			waterfall.play()
+		elif is_zero_approx(waterfall.volume_linear) and waterfall.playing:
+			waterfall.stop()
+	return proximity
 
 func _process(delta: float) -> void:
 	water_time = fposmod(water_time + delta, 12.0)

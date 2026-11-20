@@ -127,7 +127,7 @@ func _ready() -> void:
 	_sync_score.call_deferred()
 
 func set_world_ambience(creek_distance: float, birds_distance: float, cricket_distance: float,
-		under_roof := false, wind_exposure := 1.0) -> void:
+		under_roof := false, wind_exposure := 1.0, creek_gain_scale := 1.0) -> void:
 	var season := Global.season_index()
 	var indoors := Global.is_indoors()
 	var raining := Global.has_rain()
@@ -137,7 +137,7 @@ func set_world_ambience(creek_distance: float, birds_distance: float, cricket_di
 	var wind_gain := WIND_GAIN_BY_SEASON[season] * wind_exposure * lerpf(1.0, 0.80, dusk)
 	if raining:
 		wind_gain *= 0.70
-	terrain_audio.set_ambience(creek_distance, raining, birds, crickets, dusk, under_roof or indoors, wind_gain)
+	terrain_audio.set_ambience(creek_distance, raining, birds, crickets, dusk, under_roof or indoors, wind_gain, creek_gain_scale)
 
 func _sync_score() -> void:
 	var scene := get_tree().current_scene

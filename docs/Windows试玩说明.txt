@@ -326,7 +326,7 @@
   许可 https://xiaoxue.iis.sinica.edu.tw/License/License
 
 声音素材（均为 CC0 1.0）
-  溪流录音 Cours d’eau #2，Joseph SARDIN / LaSonotheque。节选并制作循环。封地泉眼用同一录音滤波，混入下列浮标水花的短声。
+  溪流录音 Cours d’eau #2，Joseph SARDIN / LaSonotheque。节选并制作循环。封地泉眼用同一录音滤波，混入下列浮标水花的短声。竹涧瀑布以同一溪流录音为底，混入本作合成的水帘和气泡，制成 18 秒单声道循环。
   https://lasonotheque.org/cours-d-eau-2-s3133.html
   谷雨 Rain (loopable)，Ylmir / OpenGameArt，原包 3.ogg。节选并制作立体声循环。
   https://opengameart.org/content/rain-loopable

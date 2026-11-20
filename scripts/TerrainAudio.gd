@@ -61,9 +61,9 @@ func _ready() -> void:
 	add_child(footsteps)
 
 func set_ambience(creek_distance: float, raining: bool, birds_distance: float,
-		cricket_distance: float, dusk: float, sheltered: bool, wind_gain := 0.0) -> void:
+		cricket_distance: float, dusk: float, sheltered: bool, wind_gain := 0.0, creek_gain_scale := 1.0) -> void:
 	_sheltered = sheltered
-	_creek_gain = (1.0 - smoothstep(20.0, 145.0, creek_distance)) * 0.50
+	_creek_gain = (1.0 - smoothstep(20.0, 145.0, creek_distance)) * 0.50 * creek_gain_scale
 	_rain_gain = (0.12 if sheltered else 0.39) if raining else 0.0
 	_bird_gain = 0.0 if raining else (1.0 - smoothstep(28.0, 134.0, birds_distance)) * 0.28 * (1.0 - dusk)
 	_cricket_gain = 0.0 if raining else (1.0 - smoothstep(24.0, 127.0, cricket_distance)) * 0.34 * dusk

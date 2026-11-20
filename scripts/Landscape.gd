@@ -456,6 +456,7 @@ var ground_cover: SEASONAL_GROUND
 var estate_terrain: ESTATE_TERRAIN
 var ravine_relief: RAVINE_RELIEF
 var water_surface: WATER_SURFACE
+var bridge_cascade: RAVINE_BANKS
 var south_pond: SOUTH_POND
 var terrain_audio: TERRAIN_AUDIO
 var day_lighting: DAY_LIGHTING
@@ -697,9 +698,9 @@ func _add_water_surface() -> void:
 	water_surface.name = "WaterSurface"
 	add_child(water_surface)
 	if wilderness:
-		var cascade := RAVINE_BANKS.new()
-		cascade.name = "BridgeCascade"
-		add_child(cascade)
+		bridge_cascade = RAVINE_BANKS.new()
+		bridge_cascade.name = "BridgeCascade"
+		add_child(bridge_cascade)
 
 func _place_lanterns(layer: Node2D) -> void:
 	if wilderness:
@@ -790,17 +791,18 @@ func _process(delta: float) -> void:
 		if wilderness:
 			Global.advance_away_field_work(delta)
 	day_lighting.refresh(delta)
-	_refresh_ambience()
+	_refresh_ambience(delta)
 
-func _refresh_ambience() -> void:
+func _refresh_ambience(delta := 0.0) -> void:
 	var foot := to_local(player.global_position)
 	var creek_distance := absf(foot.x - creek_x(foot.y)) if wilderness else INF
+	var fall_proximity := bridge_cascade.update_waterfall(player.global_position, delta) if bridge_cascade else 0.0
 	var birds_distance := foot.distance_to(BERRY_GROVE) if wilderness else minf(
 		foot.distance_to(HALL_BIRD_TREE), foot.distance_to(PAVILION_BIRD_TREE))
 	var cricket_distance := foot.distance_to(BERRY_GROVE if wilderness else SOUTH_PAVILION)
 	var under_roof := not wilderness and EstateLayout.PAVILION_SHELTER_FLOOR.has_point(foot)
 	AudioManager.set_world_ambience(creek_distance, birds_distance, cricket_distance, under_roof,
-		0.78 if wilderness else 1.0)
+		0.78 if wilderness else 1.0, lerpf(1.0, 0.55, fall_proximity))
 
 func _draw() -> void:
 	# Foot shadows and land surfaces share a canvas item. Wait for the deferred props before drawing it.

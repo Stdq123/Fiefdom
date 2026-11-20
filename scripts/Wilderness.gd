@@ -15,6 +15,7 @@ var ravine_map: Control
 var settings: Panel
 
 func _ready() -> void:
+	$Player/CreekListener.make_current()
 	add_child(WOODEN_BRIDGE.new(RavineLayout.BRIDGE_DECK, true))
 	if not MapTravel.active:
 		$Player.arrive_at($SouthTrailArrival if Global.restored_ravine_south else $WestArrival)

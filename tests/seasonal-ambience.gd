@@ -181,6 +181,38 @@ func _check_maps() -> void:
 		print("SEASONAL_AMBIENCE_MAP ", item[3], " wind_gain=", wind.volume_linear, " playhead=", position)
 		await _record(item[3])
 		_expect(snapshot == _estate_snapshot(), "The ambient mix does not advance a mounted map.")
+		if item[0] == state.WILDERNESS_SCENE:
+			_check_waterfall(source)
+
+func _check_waterfall(landscape: Node2D) -> void:
+	var cascade := landscape.get_node("BridgeCascade") as Node2D
+	var sound := cascade.get_node("Waterfall") as AudioStreamPlayer2D
+	var stream := sound.stream as AudioStreamWAV
+	var player: Node2D = landscape.player
+	var listener := player.get_node("CreekListener") as AudioListener2D
+	_expect(listener.is_current() and sound.position == cascade.FALL_IMPACT
+		and sound.bus == &"Ambience" and stream.loop_mode == AudioStreamWAV.LOOP_FORWARD
+		and is_equal_approx(stream.get_length(), 18.0), "Use the looping waterfall at the visible plunge pool.")
+	var previous := player.global_position
+	var day: int = state.current_day
+	player.global_position = sound.global_position + Vector2(-42, 0)
+	landscape._refresh_ambience(1.0)
+	var near := sound.volume_linear
+	var foot := landscape.to_local(player.global_position)
+	var usual_creek := 0.50 * (1.0 - smoothstep(20.0, 145.0, absf(foot.x - landscape.creek_x(foot.y))))
+	_expect(near > 0.45 and terrain._creek_gain < usual_creek * 0.65,
+		"The nearby plunge pool comes forward while the creek bed softens.")
+	state.current_day = _day_for("谷雨")
+	landscape._refresh_ambience(1.0)
+	_expect(is_equal_approx(sound.volume_linear, near * 0.75), "Rain leaves room for the existing weather track.")
+	state.current_day = day
+	var remote_y: float = cascade.FALL_IMPACT.y - 180.0
+	player.global_position = landscape.to_global(Vector2(landscape.creek_x(remote_y) - 22.0, remote_y))
+	landscape._refresh_ambience(1.0)
+	_expect(is_zero_approx(sound.volume_linear) and terrain._creek_gain > 0.49,
+		"The distant bank keeps the full creek bed and cannot hear the plunge pool.")
+	player.global_position = previous
+	landscape._refresh_ambience(1.0)
 
 func _review(scenario: SceneTree) -> void:
 	tree = scenario
