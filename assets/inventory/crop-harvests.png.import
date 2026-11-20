@@ -1,0 +1,15 @@
+[remap]
+
+importer="fiefdom_art"
+type="Texture2D"
+uid="uid://bfymrdm73yrx3"
+path="res://.godot/imported/crop-harvests.png-e599b9a42d64f7f866f109791f6047af.res"
+
+[deps]
+
+source_file="res://assets/inventory/crop-harvests.png"
+dest_files=["res://.godot/imported/crop-harvests.png-e599b9a42d64f7f866f109791f6047af.res"]
+
+[params]
+
+authored_at_2x=true

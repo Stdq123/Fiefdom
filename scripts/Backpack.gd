@@ -7,6 +7,7 @@ enum Page { CROPS, FISH, CRAFT }
 enum Goods { MIXED_GRAIN, LEAVES, COCOONS, RAW_SILK, SILK_BOLT, WOOL, HERBS }
 
 const GOODS_PATH := "res://assets/inventory/estate-goods.png"
+const HARVEST_ART := preload("res://assets/inventory/crop-harvests.png")
 const CROP_POCKETS := CropData.IDS + [CropStock.MIXED]
 const PANEL_FOCUS := preload("res://scripts/PanelFocus.gd")
 const POCKET_MINIMUM := Vector2(216, 82)
@@ -67,13 +68,13 @@ class Pocket:
 
 var page := Page.CROPS
 var pockets: Array[Pocket] = []
-var _selected_pocket := -1
+var _selected_by_page: Array[int] = [-1, -1, -1]
 
 func _ready() -> void:
 	add_to_group(&"backpack_panel")
 	%BagIcon.texture = HUDIcons.icon(HUDIcons.Symbol.BACKPACK)
 	%CoinIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
-	%HerbIcon.texture = _goods_icon(Goods.HERBS)
+	%HerbIcon.texture = _item_icon(goods_art, Goods.HERBS)
 	for index in CROP_POCKETS.size():
 		pockets.append(_new_pocket(index))
 	for label: Label in find_children("*", "Label", true, false):
@@ -102,19 +103,20 @@ func _ready() -> void:
 	close_button.grab_focus()
 
 func select_page(selected: Page) -> void:
-	if selected != page:
-		_selected_pocket = -1
-		if is_visible_in_tree():
-			AudioManager.play_menu_cue(AudioManager.MenuCue.PAGE)
+	var changed := selected != page
+	if changed and is_visible_in_tree():
+		AudioManager.play_menu_cue(AudioManager.MenuCue.PAGE)
 	page = selected
 	crop_tab.set_pressed_no_signal(page == Page.CROPS)
 	fish_tab.set_pressed_no_signal(page == Page.FISH)
 	craft_tab.set_pressed_no_signal(page == Page.CRAFT)
+	if changed:
+		# The same pocket buttons are reused for every shelf.
+		_page_tab().grab_focus()
 	_refresh_items()
 
 func cycle_page(step: int) -> void:
 	select_page(posmod(page + step, EMPTY_SHELVES.size()) as Page)
-	_page_tab().grab_focus()
 
 func _page_tab() -> Button:
 	return [crop_tab, fish_tab, craft_tab][page]
@@ -143,7 +145,7 @@ func _refresh_items() -> void:
 				var id: String = CROP_POCKETS[index]
 				var count := Global.crop_stock.count(id)
 				if count > 0:
-					_show_item(index, id, ItemManager.crop_label(id), count, "份", _stored_crop_icon(id))
+					_show_item(index, id, ItemManager.crop_label(id), count, "份", _stored_crop_icon(index))
 		Page.FISH:
 			for index in CreekFish.IDS.size():
 				var id: String = CreekFish.IDS[index]
@@ -158,8 +160,9 @@ func _refresh_items() -> void:
 		pocket.button.visible = not pocket.id.is_empty()
 		if first_filled == -1 and pocket.button.visible:
 			first_filled = index
-	if _selected_pocket == -1 or pockets[_selected_pocket].id.is_empty():
-		_selected_pocket = first_filled
+	var selected := _selected_by_page[page]
+	if selected < 0 or pockets[selected].id.is_empty():
+		_selected_by_page[page] = first_filled
 	_refresh_detail()
 	_refresh_focus()
 	if previous_focus and items.is_ancestor_of(previous_focus) and not previous_focus.is_visible_in_tree():
@@ -176,14 +179,12 @@ func _show_craft_items() -> void:
 
 func _show_material(kind: Goods, id: String, display_name: String, count: int, unit: String) -> void:
 	if count > 0:
-		_show_item(kind - Goods.LEAVES, id, display_name, count, unit, _goods_icon(kind))
+		_show_item(kind - Goods.LEAVES, id, display_name, count, unit, _item_icon(goods_art, kind))
 
-func _stored_crop_icon(id: String) -> Texture2D:
-	if id == CropStock.MIXED:
-		return _goods_icon(Goods.MIXED_GRAIN)
-	if HUDIcons.CROPS.has(id):
-		return HUDIcons.icon(HUDIcons.CROPS[id])
-	return ItemManager.crop_picture(ItemManager.get_crop(id)).texture
+func _stored_crop_icon(index: int) -> AtlasTexture:
+	if CROP_POCKETS[index] == CropStock.MIXED:
+		return _item_icon(goods_art, Goods.MIXED_GRAIN)
+	return _item_icon(HARVEST_ART, index)
 
 func _new_pocket(index: int) -> Pocket:
 	var pocket := Pocket.new()
@@ -242,17 +243,19 @@ func _show_item(index: int, id: String, label: String, count: int, unit: String,
 	pocket.row.show()
 
 func _select_pocket(index: int) -> void:
-	if index == _selected_pocket or pockets[index].id.is_empty():
+	if index == _selected_by_page[page] or pockets[index].id.is_empty():
 		return
-	_selected_pocket = index
+	_selected_by_page[page] = index
 	_refresh_detail()
+	_refresh_focus()
 
 func _refresh_detail() -> void:
+	var selected := _selected_by_page[page]
 	for index in pockets.size():
 		var pocket := pockets[index]
 		if not pocket.id.is_empty():
-			pocket.panel.add_theme_stylebox_override("panel", selected_pocket_style if index == _selected_pocket else item_style)
-	var stocked := _selected_pocket >= 0
+			pocket.panel.add_theme_stylebox_override("panel", selected_pocket_style if index == selected else item_style)
+	var stocked := selected >= 0
 	detail_icon.visible = stocked
 	detail_use.visible = stocked
 	if not stocked:
@@ -260,7 +263,7 @@ func _refresh_detail() -> void:
 		detail_name.text = EMPTY_SHELVES[page]
 		detail_order.hide()
 		return
-	var pocket := pockets[_selected_pocket]
+	var pocket := pockets[selected]
 	detail_icon.texture = pocket.icon.texture
 	detail_name.text = pocket.button.accessibility_name
 	if CreekFish.SPECIES.has(pocket.id):
@@ -286,10 +289,10 @@ func _order_caption(id: String, unit: String) -> String:
 	var status := "还差 %d" % gap if gap > 0 else "本项已备足"
 	return "本季「%s」需 %d %s · %s" % [schedule.order.title, need, unit, status]
 
-func _goods_icon(kind: Goods) -> AtlasTexture:
+func _item_icon(atlas: Texture2D, column: int) -> AtlasTexture:
 	var icon := AtlasTexture.new()
-	icon.atlas = goods_art
-	icon.region = Rect2(kind * 32, 0, 32, 32)
+	icon.atlas = atlas
+	icon.region = Rect2(column * 32, 0, 32, 32)
 	icon.filter_clip = true
 	return icon
 
@@ -319,15 +322,14 @@ func _refresh_focus() -> void:
 		buttons.append(eat_button)
 	if herb_pouch.visible:
 		buttons.append(use_herbs_button)
-	var first_item: Button
 	for pocket in pockets:
 		if pocket.button.visible:
 			buttons.append(pocket.button)
-			if first_item == null:
-				first_item = pocket.button
+	var selected := _selected_by_page[page]
+	var selected_item: Button = pockets[selected].button if selected >= 0 else null
 	for tab in [crop_tab, fish_tab, craft_tab]:
 		tab.focus_neighbor_top = tab.get_path_to(close_button)
-		tab.focus_neighbor_bottom = tab.get_path_to(first_item) if first_item else NodePath()
+		tab.focus_neighbor_bottom = tab.get_path_to(selected_item) if selected_item else NodePath()
 	close_button.focus_neighbor_bottom = close_button.get_path_to(_page_tab())
 	for index in buttons.size():
 		var button := buttons[index]

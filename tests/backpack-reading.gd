@@ -101,6 +101,7 @@ func _stage_stock() -> void:
 	state.crop_stock.add("beans", 1)
 	state.crop_stock.add("mixed", 8765432)
 	state.fish_collection["carp"] = {"first_day": 3, "first_site": 1, "stock": 2}
+	state.fish_collection["perch"] = {"first_day": 4, "first_site": 1, "stock": 1}
 	state.silk_workshop.leaves = 12
 	state.silk_workshop.bolts = 2
 	state.sheepfold.wool = 3
@@ -167,6 +168,7 @@ func _review_details(bag: Control, standard: int, enlarged: int, events: Node) -
 	_expect(bag.items.get_node("carp/Inspect").has_focus(), "The D-pad enters the selected shelf.")
 	_measure_labels(bag)
 	await _capture("estate-fish")
+	await _click(bag.items.get_node("perch/Inspect"))
 	await _pad(JOY_BUTTON_RIGHT_SHOULDER)
 	await _pad(JOY_BUTTON_DPAD_DOWN)
 	_expect("桑叶" in bag.detail_name.text and "蚕" in bag.detail_use.text,
@@ -179,6 +181,42 @@ func _review_details(bag: Control, standard: int, enlarged: int, events: Node) -
 	print("BACKPACK_READING_DETAILS quantity_font=", standard, "/", enlarged, " depletion_focus=", bag.craft_tab.has_focus(),
 		" fixed_grid=", _bounds(bag) == old_bounds)
 	await _capture("estate-materials")
+	await _click(bag.items.get_node("wool/Inspect"))
+	for shelf: Array in [
+		[bag.crop_tab, "mixed", "混存作物"],
+		[bag.fish_tab, "perch", "鳜鱼"],
+		[bag.craft_tab, "wool", "羊毛"],
+	]:
+		await _pad(JOY_BUTTON_RIGHT_SHOULDER)
+		_expect(shelf[0].has_focus() and shelf[2] in bag.detail_name.text, "Returning to a shelf remembers its item: " + shelf[1])
+		await _pad(JOY_BUTTON_DPAD_DOWN)
+		_expect(bag.items.get_node(shelf[1] + "/Inspect").has_focus(), "Down enters the remembered item: " + shelf[1])
+	state.fish_collection.erase("perch")
+	events.fish_changed.emit()
+	await _pad(JOY_BUTTON_LEFT_SHOULDER)
+	_expect(bag.fish_tab.has_focus() and "鲤鱼" in bag.detail_name.text,
+		"A remembered item that depleted off the shelf falls back to the first available item.")
+	await _pad(JOY_BUTTON_DPAD_DOWN)
+	_expect(bag.items.get_node("carp/Inspect").has_focus(), "Down reaches the fallback item when the remembered stack is empty.")
+	print("BACKPACK_READING_BOOKMARKS shelves=3 fallback=", bag.detail_name.text)
+	await _pad(JOY_BUTTON_LEFT_SHOULDER)
+	for id: String in CropData.IDS:
+		if state.crop_stock.count(id) == 0:
+			state.crop_stock.add(id, 1)
+	events.inventory_changed.emit(state.crop_stock.count())
+	await _settle()
+	var harvests := 0
+	for index in CropData.IDS.size():
+		var icon: AtlasTexture = bag.pockets[index].icon.texture
+		if bag.pockets[index].id == CropData.IDS[index] and icon and icon.region == Rect2(index * 32, 0, 32, 32):
+			harvests += 1
+	_expect(harvests == CropData.IDS.size(), "Each named crop is displayed with the correctly sliced harvest sprite.")
+	await _click(bag.items.get_node("mulberry/Inspect"))
+	_expect(bag.detail_icon.texture == bag.pockets[CropData.IDS.find("mulberry")].icon.texture,
+		"The selected crop uses the same drawing in its pocket and in the enlarged detail.")
+	_measure_labels(bag)
+	await _capture("estate-harvests")
+	print("BACKPACK_READING_HARVESTS sprites=", harvests, " detail=", bag.detail_name.text, " uniform_bounds=", _bounds(bag) == old_bounds)
 	await _pad(JOY_BUTTON_B)
 	_expect(tree.current_scene.get_node("CampaignHUD").backpack == null and not tree.paused,
 		"Gamepad B closes only the backpack.")

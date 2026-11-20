@@ -32,18 +32,22 @@ func review() -> void:
 	check_sheet("res://assets/ui/hud-symbols.png", 23, 16)
 	check_sheet("res://assets/ui/watch-dial.png", 1, 48)
 	check_sheet("res://assets/inventory/estate-goods.png", 7, 32)
+	check_sheet("res://assets/inventory/crop-harvests.png", CropData.IDS.size(), 32)
 	check_sheet("res://assets/world/creek-fish.png", 4, 16)
 	check_sheet("res://assets/world/travel-meals.png", 3, 32)
 
 	var icons = load("res://scripts/HUDIcons.gd")
 	var bag = load("res://scenes/Backpack.tscn").instantiate()
 	root.add_child(bag)
-	for crop: String in icons.CROPS:
+	for index in CropData.IDS.size():
+		var crop: String = CropData.IDS[index]
 		var symbol: int = icons.CROPS[crop]
 		var slot: AtlasTexture = icons.icon(symbol)
-		expect(slot == bag._stored_crop_icon(crop) and slot.region == Rect2(16 * symbol, 0, 16, 16),
-			"The bag and seed belt show the same " + crop)
-	expect(bag._stored_crop_icon("mixed").atlas == bag.goods_art, "Older mixed grain still has a sack")
+		var harvest: AtlasTexture = bag._stored_crop_icon(index)
+		expect(slot.region == Rect2(16 * symbol, 0, 16, 16), "Seed belt frame " + crop)
+		expect(harvest.atlas.resource_path == "res://assets/inventory/crop-harvests.png"
+			and harvest.region == Rect2(index * 32, 0, 32, 32) and harvest.filter_clip, "Harvest sprite " + crop)
+	expect(bag._stored_crop_icon(CropData.IDS.size()).atlas == bag.goods_art, "Older mixed grain still has a sack")
 	var fish = load("res://scripts/CreekFish.gd")
 	for i in fish.IDS.size():
 		expect(fish.portrait(fish.IDS[i]).region == Rect2(16 * i, 0, 16, 16), "Fish frame " + fish.IDS[i])
