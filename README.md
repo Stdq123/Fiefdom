@@ -4,7 +4,7 @@
 
 ## Windows 1.0
 
-解压 `Fiefdom-1.0.0-Windows-x64.zip` 后双击 `Fiefdom.exe`。可从新档走到传统或改革结局。启动、操作和存档说明随包附带。 [Windows 操作说明](docs/Windows试玩说明.txt)
+解压 `Fiefdom-1.0.0-Windows-x64.zip` 后双击 `Fiefdom.exe`。可从新档走到传统或改革结局。随包的 `README.txt` 开头说明如何找到第一块公田、手动保存和备份封地。启动后遇到黑屏时，可双击同目录的 `Fiefdom-Compatibility.cmd`。 [Windows 操作说明](docs/Windows试玩说明.txt)
 
 用 Godot 4.7.2 打开 `project.godot` 后按 F5 可运行源码。场景在 `scenes/`，玩法脚本在 `scripts/`，数值配置在 `resources/BalanceData.tres`。
 
@@ -18,7 +18,7 @@
 
 同一源码、引擎和 PowerShell 环境下，两次干净构建的 ZIP SHA-256 一致。导出保留文本场景和资源，ZIP 使用固定的条目顺序和时间戳。 [Godot 导出设置](https://docs.godotengine.org/en/stable/classes/class_projectsettings.html#class-projectsettings-property-editor-export-convert-text-resources-to-binary)
 
-仅核对交付包和标题启动时，使用 `-PackageOnly`。它核对程序、资源及随包文件的 `SHA256SUMS.txt`，再从含中文和空格的路径启动。加上 `-Capture` 可在隔离桌面核对 1920×1080 标题及 1024×768 的 OpenGL 兼容模式。记录保存在 `build/Fiefdom-1.0.0-Windows-x64-package-verification/`。
+仅核对交付包和标题启动时，使用 `-PackageOnly`。它核对程序、资源及随包文件的 `SHA256SUMS.txt`，再从含中文和空格的路径启动。加上 `-Capture` 可在隔离桌面核对 1920×1080 标题，并通过随包的兼容启动脚本核对 1024×768 的 OpenGL 标题。记录保存在 `build/Fiefdom-1.0.0-Windows-x64-package-verification/`。
 
 ```powershell
 & ./tools/Test-WindowsRelease.ps1 -Package ./build/Fiefdom-1.0.0-Windows-x64.zip -PackageOnly -Capture

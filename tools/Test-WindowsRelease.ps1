@@ -158,7 +158,6 @@ function Start-VerifiedGame {
     } else {
         $arguments += '--headless'
     }
-    if ($Compatibility) { $arguments += @('--rendering-method', 'gl_compatibility', '--rendering-driver', 'opengl3') }
     if ($Replay) {
         $arguments += @('--', $Replay)
         if ($Resolution) { $arguments += ('"' + $screens + '"') }
@@ -167,7 +166,18 @@ function Start-VerifiedGame {
     $executable = Join-Path $Directory 'Fiefdom.exe'
     if ($Resolution) {
         $isolation = ''
-        $exitCode = [Fiefdom.Tools.IsolatedDesktop]::Run($executable, ($arguments -join ' '), $Directory, 180000, [ref]$isolation)
+        $commandLine = $arguments -join ' '
+        if ($Compatibility) {
+            # The shipped batch file detaches the game. Keep its process tree on the test desktop until it exits.
+            $driver = Join-Path $repo 'tests/Start-CompatibilityTitle.ps1'
+            $executable = Join-Path $PSHOME 'pwsh.exe'
+            $commandLine = '-NoLogo -NoProfile -NonInteractive -File "{0}" -Resolution {1}' -f $driver, $Resolution
+        }
+        $exitCode = [Fiefdom.Tools.IsolatedDesktop]::Run($executable, $commandLine, $Directory, 180000, [ref]$isolation)
+        if ($Compatibility) {
+            Copy-Item -LiteralPath (Join-Path $scratch.FullName 'compatibility-title.log') -Destination $log
+            Write-Host 'WINDOWS_LAUNCHER Fiefdom-Compatibility.cmd'
+        }
         Write-Host $isolation
         if ($PackageOnly) { $isolation | Set-Content -LiteralPath (Join-Path $evidence "$Name-desktop.txt") -Encoding utf8 }
     } else {
