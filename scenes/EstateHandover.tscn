@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/EstateHandover.gd" id="1_handover"]
+[ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="2_hud"]
 
 [sub_resource type="StyleBoxFlat" id="Style_handover"]
 content_margin_left = 24.0
@@ -102,6 +103,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.96, 0.83, 0.59, 1)
 theme_override_font_sizes/font_size = 29
+autowrap_mode = 3
 
 [node name="CloseMap" type="Button" parent="MapModal/Center/Sheet/Stack/Header"]
 unique_name_in_owner = true
@@ -159,6 +161,7 @@ size_flags_vertical = 4
 theme_override_constants/separation = 4
 
 [node name="Public" type="Label" parent="MapModal/Center/Sheet/Stack/Body/Field/Legend"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.95, 0.82, 0.57, 1)
 theme_override_font_sizes/font_size = 19
@@ -171,6 +174,7 @@ text = "收成入国库，记作纳贡。"
 autowrap_mode = 3
 
 [node name="Private" type="Label" parent="MapModal/Center/Sheet/Stack/Body/Field/Legend"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.75, 0.82, 0.59, 1)
 theme_override_font_sizes/font_size = 19
@@ -199,5 +203,16 @@ custom_minimum_size = Vector2(144, 40)
 layout_mode = 2
 size_flags_vertical = 4
 mouse_default_cursor_shape = 2
-theme_override_colors/font_color = Color(0.97, 0.83, 0.57, 1)
+theme = ExtResource("2_hud")
+theme_type_variation = &"HudButton"
 text = "去见渠伯"
+
+[node name="FindPublicPlot" type="Button" parent="MapModal/Center/Sheet/Stack/Footer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(144, 40)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+theme = ExtResource("2_hud")
+theme_type_variation = &"HudPrimary"
+text = "标出公田"

@@ -25,7 +25,9 @@ func _run() -> void:
 	await scene_changed
 	var ui := current_scene.get_node("UI")
 	var handover: Control = ui.handover
+	current_scene.get_node("World").process_mode = Node.PROCESS_MODE_DISABLED
 	paused = false
+	ui.hud.handover_button.grab_focus()
 	ui._open_handover()
 	_expect(paused and handover.modal.visible, "Open the handover from the estate UI.")
 	var due: int = state.tribute_deadline()
@@ -37,7 +39,7 @@ func _run() -> void:
 	var standard := letter.get_theme_font_size("font_size")
 	_expect(preferences.set_reading_size(2) == OK and letter.get_theme_font_size("font_size") == standard + 6,
 		"The handover follows the selected reading size.")
-	handover.close_map()
+	await _check_public_plot_link(ui, state)
 	paused = true
 
 	state.current_day = due
@@ -80,6 +82,37 @@ func _run() -> void:
 	if not failed:
 		print("SCENARIO_OK")
 	quit(1 if failed else 0)
+
+func _check_public_plot_link(ui: Node, state: Node) -> void:
+	var handover: Control = ui.handover
+	var public_button := handover.get_node_or_null("%FindPublicPlot") as Button
+	var world: Node2D = current_scene.get_node("World")
+	if not public_button:
+		_expect(false, "The handover must let players mark the public plot directly.")
+		handover.close_map()
+		return
+	_expect(public_button.has_focus() and handover.find_keeper.is_visible_in_tree(),
+		"Open at the public plot action with the keeper still accessible.")
+	var original_seed: String = world.current_seed_id
+	world.select_seed("rice")
+	var before := _snapshot(state)
+	var foot: Vector2 = world.player.position
+	public_button.pressed.emit()
+	var plot: Vector2i = state.well_fields[0].center_pos
+	for frame in 4:
+		await process_frame
+	_expect(not paused and not handover.modal.visible and ui.directions.tracked_plot == plot
+		and state.field_route_status == state.TributeRoute.TEND and "公田" in ui.hud.cancel_directions.text,
+		"Mark the actual center plot on the estate after leaving the handover.")
+	_expect(ui.hud.handover_button.has_focus(), "Returning from the handover restores its opening focus.")
+	_expect(world.current_seed_id == "rice" and state.selected_seed_id == "rice" and world.player.position == foot
+		and _snapshot(state) == before, "Pointing to the plot preserves the seed, player position, date and economy.")
+	ui._open_handover()
+	handover.find_keeper.pressed.emit()
+	_expect(ui.directions.tracked_neighbor == "渠伯" and ui.directions.tracked_plot == null,
+		"The keeper action still follows the resident.")
+	ui.directions.cancel_tracking()
+	world.select_seed(original_seed)
 
 func _check_first_tribute(ui: Node, state: Node, remaining: int, lesson: String, consequence: String,
 		expect_shortage: bool) -> void:

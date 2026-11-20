@@ -68,6 +68,7 @@ func setup(estate_world: Node2D, estate_hud: Control) -> void:
 	caption.add_theme_font_size_override("font_size", 14)
 	caption.add_theme_color_override("font_color", GOLD)
 	add_child(caption)
+	InterfaceFont.scale_reading_text(caption)
 	hide()
 
 func _refresh_road_network() -> void:
@@ -554,7 +555,7 @@ func _mark_map(bounds: Rect2, label_text: String, style: Mark, near: bool) -> vo
 			var clearance := bounds.size.y + 6.0 if style == Mark.PLOT else 7.0
 			plaque = Rect2(Vector2(bounds.get_center().x - badge_size.x / 2.0, bounds.end.y + clearance), badge_size)
 			var has_space: bool = hud.map_space_clear(plaque)
-			if style == Mark.PLACE and not has_space:
+			if style in [Mark.PLOT, Mark.PLACE] and not has_space:
 				plaque.position.y = bounds.position.y - badge_size.y - clearance
 				has_space = hud.map_space_clear(plaque)
 			if has_space:

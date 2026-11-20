@@ -1,6 +1,7 @@
 extends "res://scripts/SurveyMap.gd"
 
 signal find_keeper_requested()
+signal public_plot_requested()
 
 const PUBLIC_INK := Color("#f7de9e")
 const PRIVATE_INK := Color("#cddab6")
@@ -13,13 +14,17 @@ const LATE_INK := Color("#f2b398")
 @onready var heading: Label = %HandoverTitle
 @onready var sketch: GridContainer = %WellFieldSketch
 @onready var find_keeper: Button = %FindKeeper
+@onready var find_public_plot: Button = %FindPublicPlot
 @onready var tribute_due: Label = %FirstTributeDue
 
 func _ready() -> void:
 	super._ready()
-	for label: Label in [%Letter, %Tribute, %Income, tribute_due]:
+	for label: Label in [heading, %Letter, %Public, %Tribute, %Private, %Income, tribute_due]:
 		InterfaceFont.scale_reading_text(label)
+	for button: Button in [find_keeper, find_public_plot]:
+		InterfaceFont.scale_reading_text(button)
 	find_keeper.pressed.connect(_find_keeper)
+	find_public_plot.pressed.connect(_find_public_plot)
 	for index in 9:
 		var plot := PanelContainer.new()
 		plot.custom_minimum_size = Vector2(48, 48)
@@ -32,6 +37,12 @@ func _ready() -> void:
 		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		label.add_theme_color_override("font_color", PUBLIC_INK if center else PRIVATE_INK)
 		plot.add_child(label)
+		InterfaceFont.scale_reading_text(label)
+
+func _show_map() -> void:
+	super._show_map()
+	if find_public_plot.visible:
+		find_public_plot.grab_focus()
 
 func _map_available() -> bool:
 	return not Global.first_tribute_delivered()
@@ -39,6 +50,7 @@ func _map_available() -> bool:
 func _refresh_on_open() -> void:
 	heading.text = "%s · 交接简" % Global.campaign_name
 	find_keeper.visible = is_instance_valid(world.neighbor_actor(VisitorData.FIELD_KEEPER))
+	find_public_plot.visible = not Global.tribute_field_plan().is_empty()
 	var due := Global.tribute_deadline()
 	tribute_due.visible = due > 0
 	if due <= 0:
@@ -56,3 +68,7 @@ func _refresh_on_open() -> void:
 func _find_keeper() -> void:
 	close_map()
 	find_keeper_requested.emit()
+
+func _find_public_plot() -> void:
+	close_map()
+	public_plot_requested.emit()

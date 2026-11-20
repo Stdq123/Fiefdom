@@ -93,6 +93,7 @@ func _ready() -> void:
 	hud.leave_cart.pressed.connect(world.get_node("DrivingPractice").dismount)
 	hud.handover_button.pressed.connect(_open_handover)
 	handover.find_keeper_requested.connect(_on_neighbor_directions_requested.bind(VisitorData.FIELD_KEEPER))
+	handover.public_plot_requested.connect(_follow_tribute_plot.bind(Global.TributeRoute.TEND, false))
 	route_goals.world = world
 	hud.route_progress.pressed.connect(_open_route_goals)
 	route_goals.action_requested.connect(_on_route_goal_action)
@@ -919,11 +920,11 @@ func _on_tribute_field_requested(panel: Control) -> void:
 	if _follow_tribute_plot(Global.TributeRoute.TEND):
 		panel.queue_free()
 
-func _follow_tribute_plot(route: int) -> bool:
+func _follow_tribute_plot(route: int, choose_seed := true) -> bool:
 	var scope := Global.FieldScope.ALL if route == Global.TributeRoute.TEND else Global.FieldScope.PUBLIC
 	if not directions.follow_field_route(route, scope):
 		return false
-	if route == Global.TributeRoute.TEND:
+	if route == Global.TributeRoute.TEND and choose_seed:
 		var seed: String = Global.tribute_field_plan().seed_id
 		if not seed.is_empty():
 			world.select_seed(seed)
