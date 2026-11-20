@@ -165,16 +165,40 @@ func _review_world_notice(ui: Node) -> void:
 		"The notice fits between the HUD panels and leaves input to the map.")
 	var events := screen.get_node("GameEvents")
 	events.modal_visibility_changed.emit(true)
+	events.settings_visibility_changed.emit(true)
 	_expect(not notice.visible, "A modal hides the active notice.")
+	await _frames(350)
 	events.modal_visibility_changed.emit(false)
-	_expect(notice.visible and notice.text == receipt, "The active notice returns when the modal closes.")
-	campaign.show_world_notice("草料 +2 · 已送回羊棚", 0.05)
+	_expect(not notice.visible, "Settings still covers the notice after the other panel closes.")
+	events.settings_visibility_changed.emit(false)
+	_expect(notice.visible and notice.text == receipt and notice.modulate.a == 1.0,
+		"A five-second receipt remains readable after more than five seconds in a panel.")
+	await _frames(286)
+	_expect(notice.visible and notice.modulate.a == 1.0, "The remaining reading time is available after closing the panels.")
+	await _frames(43)
+	_expect(not notice.visible and is_zero_approx(notice.modulate.a), "Fading frees the notice's reserved area.")
+
+	events.management_visibility_changed.emit(true)
+	campaign.show_world_notice("今日已采集", 0.05)
+	const SHORT_NOTICE := "草料 +2 · 已送回羊棚"
+	campaign.show_world_notice(SHORT_NOTICE, 0.05)
+	await _frames(40)
+	_expect(not notice.visible, "A notice sent during management waits for the world view.")
+	events.management_visibility_changed.emit(false)
+	_expect(notice.visible and notice.text == SHORT_NOTICE and notice.modulate.a == 1.0,
+		"The latest notice starts at full opacity even if it was posted in a panel.")
 	await _frames(6)
 	_expect(notice.size.y < bounds.size.y and notice.size.x < bounds.size.x,
 		"A short message uses a compact panel after the long receipt.")
-	await _frames(30)
-	_expect(not notice.visible and is_zero_approx(notice.modulate.a), "Fading frees the notice's reserved area.")
+	var fade_alpha := notice.modulate.a
+	events.modal_visibility_changed.emit(true)
+	await _frames(40)
+	events.modal_visibility_changed.emit(false)
+	_expect(notice.visible and fade_alpha > 0.0 and fade_alpha < 1.0 and notice.modulate.a == fade_alpha,
+		"A partially faded notice resumes without restarting.")
+	events.modal_visibility_changed.emit(true)
 	events.world_notice.emit("")
+	events.modal_visibility_changed.emit(false)
 	_expect(not notice.visible, "An empty notice leaves no panel behind.")
 
 func _review_hall(state: Node, prefs: Node) -> void:

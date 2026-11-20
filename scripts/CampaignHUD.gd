@@ -185,8 +185,13 @@ func _close_backpack() -> void:
 	GameEvents.modal_visibility_changed.emit(false)
 
 func _refresh_notice_visibility() -> void:
-	notice.visible = not notice.text.is_empty() and notice.modulate.a > 0.0 \
-		and not (management_open or settings_open or modal_open)
+	var covered := management_open or settings_open or modal_open or is_instance_valid(summary)
+	notice.visible = not covered and not notice.text.is_empty() and notice.modulate.a > 0.0
+	if notice_tween and notice_tween.is_valid():
+		if notice.visible:
+			notice_tween.play()
+		else:
+			notice_tween.pause()
 
 func _build_status() -> void:
 	var trail_note := PanelContainer.new()
@@ -260,16 +265,17 @@ func _refresh_ravine() -> void:
 func show_world_notice(message: String, hold_seconds := -1.0) -> void:
 	if notice_tween:
 		notice_tween.kill()
+		notice_tween = null
 	notice.text = message
 	notice.modulate.a = 1.0
 	_fit_notice_width()
-	_refresh_notice_visibility()
 	var hold := hold_seconds if hold_seconds >= 0.0 else (2.8 if show_field_status else 0.0)
 	if hold > 0.0 and not message.is_empty():
 		notice_tween = create_tween()
 		notice_tween.tween_interval(hold)
 		notice_tween.tween_property(notice, "modulate:a", 0.0, 0.45)
 		notice_tween.tween_callback(notice.hide)
+	_refresh_notice_visibility()
 
 func _fit_notice_width() -> void:
 	if notice.text.is_empty():
@@ -330,7 +336,7 @@ func _show_ending(saved_ending: bool) -> void:
 
 func _add_ending_panel() -> Control:
 	summary = ESTATE_ENDING.instantiate()
-	notice.hide()
+	_refresh_notice_visibility()
 	view.add_child(summary)
 	return summary
 
@@ -356,6 +362,7 @@ func _show_defeat(outcome: Global.Outcome) -> void:
 	var background := ColorRect.new()
 	background.color = Color("#211c1bf7")
 	summary = background
+	_refresh_notice_visibility()
 	view.add_child(summary)
 	summary.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var center := CenterContainer.new()
