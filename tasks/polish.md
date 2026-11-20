@@ -313,6 +313,12 @@ Windows 候选包内的 `SHA256SUMS.txt` 覆盖程序、资源、兼容入口、
 
 从 `cf9e7f2` 独立构建两次，ZIP 的 SHA-256 均为 `5f819a1a64a615e1f90bfeaba1a711075a7b5f2d2263a5e53d30d07c123c0ab7`。六项无窗口检查通过。默认 1920×1080 的 Vulkan 和 Direct3D 12、1024×768 的 OpenGL 在隔离桌面共核对候选包的 60 次换图。四张地图的同机位对照中，溪桥道和西市共六段石板及路缘的几何数据一致。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-map-performance/release-cf9e7f2/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-map-performance/release-cf9e7f2/release-proof.txt)
 
+## 背包收成图样和翻页
+
+私仓用同一斜俯视绘制黍、稷、稻、麦的穗，菽荚、桑葚和麻束。缩小窗口后仍可对照轮廓和颜色，物品格与放大详情使用同一张图。翻页时，私仓、鱼篓和工艺材料各自记住上次选中的一格。向下回到那一格，库存耗尽时先显示该页首个仍有货的物品。
+
+构建提交 `01bc4cf`，Windows ZIP 的 SHA-256 为 `286942ef22b3e160752b11e1474c1e1914de3d513e927ef1d3f06187acbddc4c`。三项无窗口检查通过。隔离桌面用 1920×1080 的 Vulkan 和 Direct3D 12、1024×768 的 OpenGL 共核对 21 张暂停界面，七个图样逐一与对应格位比对，存档写入为零。测试包已清理。 [核对记录](../build/polish-harvest-inventory/release-01bc4cf/release-proof.txt)
+
 ## 背包物品详情与阅读字号
 
 点击有货的格子，或用方向键、十字键选中，格板下会显示放大的物品图样、用途及相关的本季交货缺额。手柄可用 LB、RB 翻页，空槽跳过焦点。物品耗尽时焦点回到当前页签。数量、详情及随身路餐和野药说明随阅读字号放大。
