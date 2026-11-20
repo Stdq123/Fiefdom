@@ -19,6 +19,8 @@
 
 ## 游戏内鼠标指针
 
+从封地管理拖动门客时，游戏画面绘制青铜箭头，带玉色勾表示可落位，带朱色叉表示不可落位。姓名随指针显示在右侧。1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面均核对了帧内徽记、箭尖落点、取消拖放和窗口边框。构建提交 `14ca1a0`，Windows ZIP 的 SHA-256 为 `b2a934223087101e8cf6b69d3f8d40d24d1a128a973ae3575607b639d173632c`。测试包已清理。 [光标核对记录](../build/polish-themed-drag-cursor/release-14ca1a0/release-proof.txt)
+
 封地的青铜箭头指向可操作田格时，旁边显示锄、种粒、水滴或镰刀。图标随田况和剩余体力更新，即使鼠标停在原处也会切换。贴近画面边缘时，图标移到内侧。构建提交 `7e04ab7`，Windows ZIP 的 SHA-256 为 `d54a87bd491efae5a8306f15638bf2eaddd923d671bf0590bccbab7db57616c6`。1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面各核对十四个田务界面状态。测试包已清理。 [田务光标核对记录](../build/polish-field-cursor/release-7e04ab7/release-proof.txt)
 
 青铜箭头、可用按钮的手形和输入框的工字形现在随游戏画面绘制。窗口边框和特殊控件用系统光标，切换到手柄时显示准星。隔离桌面核对了 1920×1080 Vulkan 和 1024×768 OpenGL 的弹窗、按钮状态、换回鼠标及田格落点。构建提交 `54e51d4`，Windows ZIP 的 SHA-256 为 `5ef5b4a81072951a01ea8c45c976ee9cf90f34f8ced6ebedc501b2ec6f03b31c`。测试包已清理。 [核对记录](../build/polish-game-cursor/release-54e51d4/release-proof.txt)
