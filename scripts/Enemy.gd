@@ -19,6 +19,8 @@ const BITE_HALF_ANGLE := PI / 5.0
 const SNARE_REACH := 3.0
 const WINDUP_INK := Color("#f1bc73")
 const STRIKE_INK := Color("#f08d6b")
+const CUE_OUTLINE := Color("#362629")
+const CUE_PROGRESS := Color("#ffe4b5")
 const HIT_INK := Color("#ffb18c")
 const WALK_CYCLE := [Pose.STRIDE_A, Pose.GATHER, Pose.STRIDE_B, Pose.GATHER]
 const RELEASE_SECONDS := 0.18
@@ -267,32 +269,67 @@ func _draw_attack_cue() -> void:
 		return
 	if pending_attack == Attack.NONE:
 		return
-	var progress := 1.0 - windup_left / windup_duration
+	var progress := clampf(1.0 - windup_left / maxf(windup_duration, 0.001), 0.0, 1.0)
 	var ink := WINDUP_INK.lerp(STRIKE_INK, progress)
 	match pending_attack:
-		Attack.BITE:
-			var sector := PackedVector2Array([Vector2.ZERO])
-			for edge in range(13):
-				var angle := lerpf(-BITE_HALF_ANGLE, BITE_HALF_ANGLE, edge / 12.0)
-				sector.append(aim.rotated(angle) * BITE_REACH)
-			attack_cue.draw_colored_polygon(sector, Color(ink, 0.27))
-			sector.append(Vector2.ZERO)
-			attack_cue.draw_polyline(sector, Color(ink, 0.92), 1.0)
-			attack_cue.draw_line(Vector2.ZERO, aim * BITE_REACH * progress, ink, 1.5)
-		Attack.SHOT:
-			var end := aim * ARROW.HOSTILE_REACH
-			attack_cue.draw_line(Vector2.ZERO, end, Color(ink, 0.24), 6.0)
-			attack_cue.draw_dashed_line(Vector2.ZERO, end, Color(ink, 0.86), 1.0, 4.0)
-			attack_cue.draw_line(Vector2.ZERO, end * progress, ink, 1.5)
-			var side := aim.orthogonal() * 4.0
-			attack_cue.draw_polyline(PackedVector2Array([end - aim * 7.0 - side, end, end - aim * 7.0 + side]), ink, 1.2)
-		Attack.CROP:
-			var tile := Rect2(attack_cue.to_local(aim_point) - Vector2(8, 8), Vector2(16, 16))
-			attack_cue.draw_rect(tile, Color(STRIKE_INK, 0.33))
-			attack_cue.draw_rect(tile.grow(0.6), Color("#5e382c"), false, 2.6)
-			attack_cue.draw_rect(tile, STRIKE_INK, false, 1.2)
-			var start := tile.position + Vector2(1, 13)
-			attack_cue.draw_line(start, start + Vector2(14 * progress, 0), ink, 1.5)
+		Attack.BITE: _draw_bite_cue(progress, ink)
+		Attack.SHOT: _draw_shot_cue(progress, ink)
+		Attack.CROP: _draw_crop_cue(progress)
+
+func _stroke_cue(points: PackedVector2Array, ink: Color, width := 1.3) -> void:
+	attack_cue.draw_polyline(points, CUE_OUTLINE, width + 1.5)
+	attack_cue.draw_polyline(points, ink, width)
+
+func _draw_bite_cue(progress: float, ink: Color) -> void:
+	var start := aim.angle() - BITE_HALF_ANGLE
+	var sweep := BITE_HALF_ANGLE * 2.0
+	var sector := PackedVector2Array([Vector2.ZERO])
+	for index in range(17):
+		var angle := start + sweep * (index / 16.0)
+		sector.append(Vector2.from_angle(angle) * BITE_REACH)
+	attack_cue.draw_colored_polygon(sector, Color(ink, 0.19))
+	sector.append(Vector2.ZERO)
+	_stroke_cue(sector, ink)
+	for step in range(1, 4):
+		var ray := Vector2.from_angle(start + sweep * (step / 4.0))
+		_stroke_cue(PackedVector2Array([ray * BITE_REACH, ray * (BITE_REACH - 2.5)]), ink, 1.05)
+	if progress > 0.0:
+		attack_cue.draw_arc(Vector2.ZERO, BITE_REACH - 5.5, start, start + sweep * progress, 16, CUE_OUTLINE, 3.0)
+		attack_cue.draw_arc(Vector2.ZERO, BITE_REACH - 5.5, start, start + sweep * progress, 16, CUE_PROGRESS, 1.55)
+
+func _draw_shot_cue(progress: float, ink: Color) -> void:
+	var end := aim * ARROW.HOSTILE_REACH
+	attack_cue.draw_line(Vector2.ZERO, end, Color(CUE_OUTLINE, 0.80), 5.8)
+	attack_cue.draw_line(Vector2.ZERO, end, Color(ink, 0.34), 3.5)
+	attack_cue.draw_dashed_line(Vector2.ZERO, end, ink, 1.0, 5.0)
+	if progress > 0.0:
+		attack_cue.draw_line(Vector2.ZERO, end * progress, CUE_PROGRESS, 1.25)
+	for distance in range(26, int(ARROW.HOSTILE_REACH), 37):
+		var passed := distance <= ARROW.HOSTILE_REACH * progress
+		_draw_cue_arrowhead(aim * distance, 4.0, 2.3, CUE_PROGRESS if passed else ink)
+	_draw_cue_arrowhead(end, 7.0, 3.7, ink)
+
+func _draw_cue_arrowhead(tip: Vector2, length: float, half_width: float, ink: Color) -> void:
+	var base := tip - aim * length
+	var side := aim.orthogonal() * half_width
+	_stroke_cue(PackedVector2Array([base - side, tip, base + side]), ink, 1.25)
+
+func _crop_cue_rect() -> Rect2:
+	var tile_map: TileMapLayer = world_ref.tile_map
+	var scale_to_cue := (tile_map.global_scale / attack_cue.global_scale).abs()
+	var size := Vector2(tile_map.tile_set.tile_size) * scale_to_cue
+	return Rect2(attack_cue.to_local(aim_point) - size * 0.5, size)
+
+func _draw_crop_cue(progress: float) -> void:
+	var tile := _crop_cue_rect()
+	var arm := minf(tile.size.x, tile.size.y) * 0.28
+	for corner: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
+		var edge := tile.get_center() + tile.size * corner * 0.5
+		_stroke_cue(PackedVector2Array([edge - Vector2(arm * corner.x, 0), edge,
+			edge - Vector2(0, arm * corner.y)]), STRIKE_INK)
+	var meter := Rect2(tile.position.x + 2.0, tile.end.y - 3.0, tile.size.x - 4.0, 2.0)
+	attack_cue.draw_rect(meter.grow(0.5), CUE_OUTLINE)
+	attack_cue.draw_rect(Rect2(meter.position, Vector2(meter.size.x * progress, meter.size.y)), CUE_PROGRESS)
 
 func _draw_snare_cue() -> void:
 	var fraction := Global.raid_snare_left / Global.balance.raid_snare_seconds
