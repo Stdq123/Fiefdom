@@ -21,6 +21,7 @@ var current_state = State.IDLE
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var tool_gesture: ToolGesture = $ToolGesture
+@onready var silk_hands: SilkWorkHands = $SilkWorkHands
 @onready var training_cart: TrainingCart = $TrainingCart
 @onready var bow_target: Node2D = $BowTarget
 @onready var camera: Camera2D = $Camera2D
@@ -132,6 +133,7 @@ func set_training_cart(mounted: bool) -> void:
 	velocity = Vector2.ZERO
 	walk_distance = WALK_START
 	tool_gesture.clear()
+	silk_hands.clear()
 	sprite.position.y = -15.0 if mounted else -6.0
 	if mounted:
 		_update_driver(0.0)
@@ -158,6 +160,7 @@ func take_damage(amount: int) -> void:
 		Global.hurt_player(amount)
 
 func show_action(action: ToolGesture.Action, target: Vector2, impact := Callable()) -> void:
+	silk_hands.clear()
 	var toward := target - global_position
 	if velocity.is_zero_approx() and toward.length_squared() > 1.0:
 		_face(toward)
@@ -174,10 +177,22 @@ func show_action(action: ToolGesture.Action, target: Vector2, impact := Callable
 			impact.call()
 	)
 
+func show_silk_work(station: Node2D, grip: Vector2, support: Vector2, reach: float) -> void:
+	_face(station.global_position - global_position)
+	silk_hands.present(station, facing_direction(), to_local(grip), to_local(support), reach, tool_gesture.sleeve)
+	_update_walk_sprite(Vector2.ZERO)
+
+func clear_silk_work(station: Node2D) -> void:
+	if silk_hands.station == station:
+		silk_hands.clear()
+		if velocity.is_zero_approx():
+			_update_walk_sprite(Vector2.ZERO)
+
 func set_seat_pose(surface: SeatedPose.Surface) -> void:
 	_seat_surface = surface
 	if seated:
 		tool_gesture.clear()
+		silk_hands.clear()
 	_update_walk_sprite(Vector2.ZERO)
 
 func _update_walk_sprite(direction: Vector2, movement := Vector2.ZERO) -> void:
@@ -200,6 +215,8 @@ func _update_walk_sprite(direction: Vector2, movement := Vector2.ZERO) -> void:
 		walk_distance = WALK_START
 		sprite.flip_h = facing_left
 		var work := tool_gesture.work_pose()
+		if work < 0:
+			work = silk_hands.body_pose
 		if work >= 0:
 			sprite.offset = Vector2.ZERO
 			sprite.frame_coords = Vector2i(PlayerAttire.WORK_COLUMN + work, facing_row)
@@ -207,6 +224,7 @@ func _update_walk_sprite(direction: Vector2, movement := Vector2.ZERO) -> void:
 			sprite.offset = tool_gesture.body_lean
 			sprite.frame_coords = Vector2i(0, facing_row)
 		return
+	silk_hands.clear()
 	sprite.offset = Vector2.ZERO
 	var previous := NeighborMotion.walk_column(walk_distance, PlayerAttire.PASS_COLUMN)
 	walk_distance = fposmod(walk_distance + travelled, WALK_CYCLE)
@@ -363,6 +381,7 @@ func facing_direction() -> Vector2:
 		_: return Vector2.DOWN
 
 func arrive_at_position(position_in_world: Vector2, direction: Vector2) -> void:
+	silk_hands.clear()
 	global_position = position_in_world
 	velocity = Vector2.ZERO
 	_face(direction)
