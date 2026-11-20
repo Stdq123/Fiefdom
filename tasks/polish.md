@@ -487,6 +487,8 @@ Windows 候选包内的 `SHA256SUMS.txt` 覆盖程序、资源、兼容入口、
 
 ## 交接简的公私田与首贡期限
 
+交接简可直接「标出公田」，回到封地就能看到田格和当前田务。指路沿用已选种子，离得远时在屏幕边缘提示，在堂屋时写明从南门回田边。构建 `eae492c` 在 1920×1080 Vulkan、1024×768 和 1024×576 OpenGL 的隔离桌面核对最大字号、鼠标与手柄导航。ZIP 的 SHA-256 为 `4dc7ff77179dbb6215f3ba862f25103843ac5d7e8882c023f13c9ef3b7946551`。测试包已清理，玩法验收继续暂缓。 [核对记录](../build/polish-handover-field/release-eae492c/release-proof.txt)
+
 交接简的九格图用文字标出中央公田与四周私田，页脚显示一份首贡的期限、今夜到期或已逾期。书信、收成去向与期限随阅读字号放大。人在堂屋时，首贡前过夜提醒会在确认前说明从南门回田边。
 
 从 `5c8a8e8` 独立构建两次，ZIP 的 SHA-256 均为 `558816bd3ea506901bc1f961cfe39516c073e4564ab7e867424202f29012aada`。无窗口检查通过。隔离桌面在 1920×1080 的 Vulkan 和 Direct3D 12、1024×768 的 OpenGL 各核对 8 个界面。最大字号下交接简书信从 19 增至 25 个逻辑像素，待浇、断水、到期未播和已熟四种提醒都能读到完整正文与选项。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-first-tribute-reading/release-5c8a8e8/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-first-tribute-reading/release-5c8a8e8/release-proof.txt)
