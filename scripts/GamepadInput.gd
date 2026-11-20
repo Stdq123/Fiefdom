@@ -78,8 +78,13 @@ func _refresh_button_cursor(button: BaseButton) -> void:
 	if button.mouse_default_cursor_shape not in [Control.CURSOR_ARROW, Control.CURSOR_POINTING_HAND]:
 		return
 	var shape := Control.CURSOR_ARROW if button.disabled else Control.CURSOR_POINTING_HAND
-	if button.mouse_default_cursor_shape != shape:
-		button.mouse_default_cursor_shape = shape
+	if button.mouse_default_cursor_shape == shape:
+		return
+	button.mouse_default_cursor_shape = shape
+	var viewport := button.get_viewport()
+	if not active and viewport.gui_get_hovered_control() == button and not viewport.gui_is_dragging():
+		# A stationary pointer keeps the last native shape until the next motion event.
+		DisplayServer.cursor_set_shape(DisplayServer.CURSOR_ARROW if button.disabled else DisplayServer.CURSOR_POINTING_HAND)
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
