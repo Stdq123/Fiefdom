@@ -26,6 +26,7 @@
 [ext_resource type="Texture2D" path="res://assets/world/market-drying-rack.png" id="25_dye_rack"]
 [ext_resource type="Script" path="res://scripts/MarketDyer.gd" id="26_dyer"]
 [ext_resource type="Texture2D" path="res://assets/characters/dyer-cloth.png" id="27_bundle"]
+[ext_resource type="Script" path="res://scripts/MarketCarry.gd" id="28_carry"]
 [ext_resource type="PackedScene" path="res://scenes/TravelHeading.tscn" id="travel_heading"]
 [ext_resource type="PackedScene" path="res://scenes/TravelRouteSign.tscn" id="travel_route"]
 
@@ -100,6 +101,10 @@ script = ExtResource("17_motion")
 visible = false
 position = Vector2(8, -9)
 texture = ExtResource("27_bundle")
+script = ExtResource("28_carry")
+sleeve = Color(0.30, 0.40, 0.47, 1)
+grip = Vector2(-3, -2)
+support = Vector2(5, 2)
 
 [node name="Hint" type="Label" parent="Dyer" groups=["interaction_prompt"]]
 visible = false
@@ -152,6 +157,20 @@ texture_filter = 1
 position = Vector2(180, 151)
 kind = 2
 
+[node name="DeliveryCloth" type="Sprite2D" parent="Stalls/SilkStall/CounterFront"]
+visible = false
+position = Vector2(15, -14)
+rotation = -0.10
+scale = Vector2(1, 0.88)
+texture_filter = 1
+texture = ExtResource("27_bundle")
+
+[node name="ContactShadow" type="Polygon2D" parent="Stalls/SilkStall/CounterFront/DeliveryCloth"]
+show_behind_parent = true
+position = Vector2(0.5, 3)
+color = Color(0.19, 0.12, 0.09, 0.42)
+polygon = PackedVector2Array(-8, -2, 6, -3, 10, -1, 8, 2, -7, 2, -9, 0)
+
 [node name="MarketSample" type="Sprite2D" parent="Stalls/SilkStall"]
 visible = false
 texture_filter = 1
@@ -185,6 +204,8 @@ texture = ExtResource("22_creel")
 region_enabled = true
 region_rect = Rect2(56, 18, 37, 34)
 region_filter_clip_enabled = true
+script = ExtResource("28_carry")
+sleeve = Color(0.48, 0.43, 0.34, 1)
 
 [node name="EstateRoad" type="Area2D" parent="."]
 position = Vector2(392, 36)

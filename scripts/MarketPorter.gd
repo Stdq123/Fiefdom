@@ -10,7 +10,7 @@ const LEAVE_BASIN := 0.706
 const LEAVE_MARKET := 0.845
 
 @onready var body: NeighborMotion = $Body
-@onready var creel: Sprite2D = $Creel
+@onready var creel: MarketCarry = $Creel
 
 var route := PackedVector3Array()
 
@@ -60,4 +60,5 @@ func _follow_clock(animate: bool) -> void:
 	else:
 		body.stand()
 		body.face(Vector2.UP if from == to else to - from)
-	body.carry_at(creel, 2.5)
+	if creel.visible:
+		creel.hold(2.5)

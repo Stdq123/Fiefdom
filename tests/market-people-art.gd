@@ -70,6 +70,47 @@ func check_walker(body, load_sprite: Sprite2D, hang: float) -> void:
 	body.carry_at(load_sprite, hang)
 	expect(load_sprite.show_behind_parent, "Load passes behind the walker when facing away")
 
+func check_cloth_delivery(scene: Node) -> void:
+	var state := root.get_node("Global")
+	var former_day: int = state.current_day
+	var former_clock: float = state.day_progress
+	var dyer := scene.get_node("Dyer") as Node2D
+	var cloth := scene.get_node("Stalls/SilkStall/CounterFront/DeliveryCloth") as Sprite2D
+	var lands := cloth.global_position
+	var before := [state.money, state.food_storage, state.silk_workshop.bolts, state.silk_sample_day]
+	state.current_day = 1
+	for watch in [0.22, 0.281, dyer.COUNTER_REACH, dyer.SET_DOWN_AT - 0.00001]:
+		state.day_progress = watch
+		dyer._follow_clock(false)
+		expect(dyer.bundle.visible and not cloth.visible, "Only the bundle in her hands is visible before putting it down.")
+	expect(dyer.position.is_equal_approx(dyer.COUNTER_FOOT) and dyer.bundle.global_position.distance_to(lands) < 0.1,
+		"The delivery puts her hand at the actual counter surface.")
+	state.day_progress = dyer.SET_DOWN_AT
+	dyer._follow_clock(false)
+	expect(not dyer.bundle.visible and cloth.visible and cloth.global_position == lands,
+		"The placed cloth takes over at the hand's last position.")
+	state.day_progress = 0.32
+	dyer._follow_clock(false)
+	expect(dyer.position.is_equal_approx(dyer.LAYOUT.DYE_DELIVERY) and cloth.visible,
+		"The dyer clears the counter and the cloth stays on the tabletop.")
+	state.day_progress = dyer.STOW_CLOTH.y - 0.002
+	dyer._follow_clock(false)
+	expect(cloth.visible and cloth.modulate.a < 0.7 and cloth.global_position.y < lands.y,
+		"The cloth slips back under the awning as the stand closes.")
+	state.day_progress = 0.73
+	dyer._follow_clock(false)
+	expect(not cloth.visible and not dyer.bundle.visible, "Closing the stand clears both cloth poses.")
+	state.current_day = state.SOLAR_TERMS.find(state.balance.rain_solar_term) * state.balance.days_per_solar_term + 1
+	state.day_progress = 0.32
+	dyer._follow_clock(false)
+	expect(state.has_rain() and not cloth.visible and not dyer.bundle.visible and dyer.position == dyer.LAYOUT.DYE_EAVE,
+		"The cloth stays under cover in the rain.")
+	state.current_day = former_day
+	state.day_progress = former_clock
+	dyer._follow_clock(false)
+	expect(before == [state.money, state.food_storage, state.silk_workshop.bolts, state.silk_sample_day],
+		"The market presentation keeps the cloth stock and commission record intact.")
+
 func check_market() -> void:
 	paused = true
 	character_art = load("res://scripts/CharacterArt.gd")
@@ -78,6 +119,7 @@ func check_market() -> void:
 	check_keepers(scene)
 	var dyer = scene.get_node("Dyer")
 	var porter = scene.get_node("Porter")
+	check_cloth_delivery(scene)
 	check_density(dyer.bundle.texture, Vector2i(18, 12))
 	check_walker(dyer.body, dyer.bundle, 0.0)
 	check_walker(porter.body, porter.creel, 2.5)

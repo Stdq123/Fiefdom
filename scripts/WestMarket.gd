@@ -54,6 +54,7 @@ func _ready() -> void:
 		drying_rack.modulate = Color("#c4d1d3")
 		rain.add_puddles(ground.weather.bounds, ground.weather.patches)
 	dyer.approached.connect(_talk_to_dyer)
+	dyer.set_counter_cloth($Stalls/SilkStall/CounterFront/DeliveryCloth)
 	occlusion.watch($DyeHouse/Building, dye_house)
 	occlusion.watch($DryingRack/ClothLine, drying_rack)
 	var destinations: Dictionary[String, Vector2] = {}
