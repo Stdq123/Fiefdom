@@ -703,6 +703,36 @@ func record_dawn(previous_rank: Rank, completed_fields: Array[int], research_fee
 func has_morning_record() -> bool:
 	return not last_dawn.is_empty() or not last_field_night.is_empty() or not night_rations.last.is_empty()
 
+func last_night_ration_shortage() -> int:
+	var meal := night_rations.last
+	return maxi(0, int(meal.get("need", 0)) - int(meal.get("served", 0)))
+
+func dawn_warnings(detailed := false) -> PackedStringArray:
+	var warnings := PackedStringArray()
+	var research_gap: int = last_dawn.get("research_gap", 0)
+	if research_gap > 0:
+		var text := "研究经费未缴 · 缺 %d 铜钱 · 召简回堂前催议" if detailed else "研究费缺 %d 铜钱"
+		warnings.append(text % research_gap)
+	var penalty: int = last_dawn.get("tribute_penalty", 0)
+	if penalty > 0:
+		var text := "欠贡 · 声望 −%d" % penalty
+		if last_dawn.get("rank_change", 0) < 0:
+			text += " · 削爵至%s" % rank_names[current_rank]
+		warnings.append(text)
+	var meal := night_rations.last
+	if meal.get("day", 0) != current_day - 1:
+		return warnings
+	var missing := last_night_ration_shortage()
+	var departed: int = meal.get("departed", PackedStringArray()).size()
+	var meals := PackedStringArray()
+	if missing > 0:
+		meals.append("缺粮 %d 份" % missing)
+	if departed > 0:
+		meals.append("%d 人离任" % departed)
+	if not meals.is_empty():
+		warnings.append(" · ".join(meals))
+	return warnings
+
 func dawn_milestones() -> PackedStringArray:
 	var lines := PackedStringArray()
 	var rank_change: int = last_dawn.get("rank_change", 0)

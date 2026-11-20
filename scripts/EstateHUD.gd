@@ -306,10 +306,13 @@ func refresh_morning_record() -> void:
 	var fields := Global.last_field_night
 	var ripe: int = fields.get("public_ripe", 0) + fields.get("private_ripe", 0)
 	var rank_change: int = Global.last_dawn.get("rank_change", 0)
-	var warning := _morning_warning()
+	var warnings := Global.dawn_warnings()
 	morning_button.text = "昨夜结算"
-	if not warning.is_empty():
-		morning_button.text += " · " + warning
+	morning_button.tooltip_text = "\n".join(warnings)
+	if warnings.size() > 1:
+		morning_button.text += " · %d 项提醒" % warnings.size()
+	elif not warnings.is_empty():
+		morning_button.text += " · " + warnings[0]
 	elif rank_change != 0:
 		var change := "晋升" if rank_change > 0 else "削爵至"
 		morning_button.text += " · " + change + Global.rank_names[Global.current_rank]
@@ -318,27 +321,15 @@ func refresh_morning_record() -> void:
 	elif ripe > 0:
 		morning_button.text += " · 新熟 %d 格" % ripe
 
-func _morning_warning(detailed := false) -> String:
-	var research_gap: int = Global.last_dawn.get("research_gap", 0)
-	if research_gap > 0:
-		var message := "研究经费未缴 · 缺 %d 铜钱 · 召简回堂前催议" if detailed else "研究费缺 %d 铜钱"
-		return message % research_gap
-	var tribute_penalty: int = Global.last_dawn.get("tribute_penalty", 0)
-	if tribute_penalty > 0:
-		return "欠贡 · 声望 −%d" % tribute_penalty
-	var meals := Global.night_rations.last
-	var missing: int = meals.get("need", 0) - meals.get("served", 0)
-	return "缺粮 %d 份" % missing if missing > 0 else ""
-
 func show_dawn_notice() -> void:
-	var warning := _morning_warning(true)
+	var warnings := Global.dawn_warnings(true)
 	if Global.raid_day == Global.current_day:
-		warning = "东路来敌 · " + Global.raid_name(Global.raid_kind)
-	var result := warning
+		warnings.insert(0, "东路来敌 · " + Global.raid_name(Global.raid_kind))
+	var result := "\n".join(warnings)
 	if result.is_empty():
 		var milestones := Global.dawn_milestones()
 		result = milestones[0] if not milestones.is_empty() else _dawn_harvest()
-	dawn_notice.present(result, not warning.is_empty())
+	dawn_notice.present(result, not warnings.is_empty())
 
 func _dawn_harvest() -> String:
 	var fields := Global.last_field_night

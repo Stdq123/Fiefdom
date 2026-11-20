@@ -74,6 +74,8 @@ const PANEL_FOCUS := preload("res://scripts/PanelFocus.gd")
 @onready var meal_forecast: Label = %MealForecast
 @onready var duties_button: Button = %Duties
 @onready var last_card: PanelContainer = %LastCard
+@onready var record_summary: PanelContainer = %RecordSummary
+@onready var record_summary_text: Label = %RecordSummaryText
 @onready var receipt: Label = %Receipt
 @onready var field_receipt: Label = %FieldReceipt
 @onready var away_field_receipt: Label = %AwayFieldReceipt
@@ -136,7 +138,7 @@ func _ready() -> void:
 	)
 	find_fruit.pressed.connect(_guide_fruit)
 	priority_picker.item_selected.connect(_select_priority)
-	for part: Control in [header, plan_index, body, footer]:
+	for part: Control in [header, plan_index, record_summary, body, footer]:
 		part.minimum_size_changed.connect(_fit_body, CONNECT_DEFERRED)
 	get_viewport().size_changed.connect(_fit_body)
 	close_button.pressed.connect(_close)
@@ -296,6 +298,7 @@ func _show_page(previous: bool) -> void:
 	page_art.region.position.x = page_art.region.size.x if show_previous else 0.0
 	tomorrow_calendar.visible = not show_previous
 	plan_index.visible = not show_previous
+	_refresh_record_summary()
 	plan_body.visible = not show_previous
 	footer.visible = not show_previous
 	_link_navigation()
@@ -316,7 +319,7 @@ func _refresh_date() -> void:
 func _fit_body() -> void:
 	var separation := content.get_theme_constant("separation")
 	var frame_height := window.get_theme_stylebox("panel").get_minimum_size().y
-	for piece: Control in [header, plan_index, footer]:
+	for piece: Control in [header, plan_index, record_summary, footer]:
 		if piece.visible:
 			frame_height += piece.get_combined_minimum_size().y + separation
 	var height := maxf(0.0, get_viewport_rect().size.y - WINDOW_MARGIN * 2.0 - frame_height)
@@ -420,13 +423,14 @@ func _refresh() -> void:
 	receipt.visible = not meal.is_empty()
 	if receipt.visible:
 		receipt.text = "第 %d 夜 · 用粮 %d/%d 份" % [meal.day, meal.served, meal.need]
+		var missing := Global.last_night_ration_shortage()
+		if missing > 0:
+			receipt.text += " · 缺 %d 份" % missing
 		if meal.has("supper"):
 			receipt.text += " · 围炉 %d 份" % meal.supper
 		var exchange := _describe_exchange(meal)
 		if not exchange.is_empty():
 			receipt.text += "\n" + exchange
-		elif meal.served < meal.need:
-			receipt.text += " · 缺 %d 份" % (meal.need - meal.served)
 		var missed: PackedStringArray = meal.get("missed", PackedStringArray())
 		var departed: PackedStringArray = meal.get("departed", PackedStringArray())
 		if not missed.is_empty():
@@ -450,6 +454,20 @@ func _refresh() -> void:
 	%EmptyRecord.visible = not has_entries
 	page_button.visible = last_card.visible
 	_refresh_date()
+	_refresh_record_summary()
+
+func _refresh_record_summary() -> void:
+	var lines := PackedStringArray()
+	var warnings := Global.dawn_warnings()
+	if not warnings.is_empty():
+		lines.append("　".join(warnings))
+	var report := Global.last_field_night
+	if not report.is_empty():
+		var ripe := _describe_ripe(report)
+		if not ripe.is_empty():
+			lines.append("新熟 · " + ripe)
+	record_summary_text.text = "\n".join(lines)
+	record_summary.visible = show_previous and not lines.is_empty()
 
 func _refresh_night_offer(plan: Dictionary) -> void:
 	night_offer.hide()

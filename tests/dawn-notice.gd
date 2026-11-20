@@ -123,7 +123,6 @@ func _review_results(ui: Node, state: Node, actor: Node) -> void:
 	await _capture("05-date-only")
 
 	state.last_dawn.research_gap = 104
-	state.last_dawn.tribute_penalty = 8
 	ui.hud.show_dawn_notice()
 	await _frames(6)
 	_expect(notice.result_label.text == "研究经费未缴 · 缺 104 铜钱 · 召简回堂前催议", "An unpaid research installment shows the gap and the envoy's location.")
@@ -132,9 +131,12 @@ func _review_results(ui: Node, state: Node, actor: Node) -> void:
 
 	state.raid_day = state.current_day
 	state.raid_kind = 0
+	state.last_dawn.tribute_penalty = 8
 	ui.hud.show_dawn_notice()
 	await _frames(6)
-	_expect(notice.result_label.text == "东路来敌 · 野狗", "A live raid takes precedence over the other morning results.")
+	_expect(notice.result_label.text.begins_with("东路来敌 · 野狗\n")
+		and "研究经费未缴 · 缺 104 铜钱" in notice.result_label.text and "欠贡 · 声望 −8" in notice.result_label.text,
+		"A live raid is listed first while the overnight results remain readable.")
 	_layout(ui)
 	await _capture("07-raider-warning")
 	screen.get_node("GameEvents").map_departing.emit()
@@ -263,10 +265,85 @@ func _review_save_notice(ui: Node, state: Node, actor: Node) -> void:
 	_expect(not notice.visible and before == _estate_snapshot(state, actor),
 		"Only the confirmation times out and all game state is kept.")
 
+func _review_combined_record(ui: Node, state: Node, actor: Node) -> void:
+	var night: int = state.current_day - 1
+	var work := {"day": night, "tilled": 12, "watered": 16, "harvested": 13, "sown": 11,
+		"tribute": 1, "stock": 18, "copper": 102, "leaves": 9, "minutes": 96}
+	state.last_dawn = {"day": night, "research_gap": 48, "tribute_penalty": 8,
+		"rank_change": -1, "completed_fields": [2], "field_wait": work, "away_field": work}
+	state.last_field_night = {"day": night, "public_ripe": 1, "private_ripe": 4,
+		"ready": 0, "growing": 5, "dry": 3, "blocked": 2}
+	state.night_rations.last = {"day": night, "need": 8, "served": 3, "used": {"millet": 1}, "bought": 2, "copper": 12,
+		"missed": PackedStringArray(["渠伯", "石墨", "弋戎", "蒲宁", "季青"]), "departed": PackedStringArray(["石墨"])}
+	state.raid_day = state.current_day
+	var before := _estate_snapshot(state, actor)
+	var notice: Control = ui.hud.dawn_notice
+	ui.hud.refresh_morning_record()
+	ui.hud.show_dawn_notice()
+	await _frames(6)
+	var result: String = notice.result_label.text
+	print("COMBINED_DAWN ", result.replace("\n", " / "))
+	_expect("东路来敌" in result and "研究经费未缴 · 缺 48 铜钱" in result and "欠贡 · 声望 −8" in result
+		and "缺粮 5 份" in result and "1 人离任" in result,
+		"An arriving threat does not hide the unpaid research, tribute, shortage or departure.")
+	_expect("3 项" in ui.hud.morning_button.text and "缺粮 5 份" in ui.hud.morning_button.tooltip_text,
+		"The persistent button identifies all three recorded warnings.")
+	_layout(ui)
+	await _capture("14-combined-dawn")
+
+	ui.hud.morning_button.grab_focus()
+	ui.hud.morning_button.pressed.emit()
+	var book := ui.get_node_or_null("Control/NightRationsPanel") as Control
+	await _frames(6)
+	_expect(book != null and book.show_previous and book.close_button.has_focus(), "Open the complete dated receipt.")
+	if not book:
+		return
+	print("COMBINED_MEAL ", book.receipt.text.replace("\n", " / "))
+	_expect("缺 5 份" in book.receipt.text and "购粮 2 份" in book.receipt.text and "已离任 · 石墨" in book.receipt.text,
+		"Buying some grain still leaves an explicit shortage beside the actual disbursements.")
+	var overview := book.get_node_or_null("%RecordSummaryText") as Label
+	_expect(overview != null and overview.is_visible_in_tree(), "The previous page has a fixed summary above its editable area.")
+	if overview:
+		var bounds := overview.get_global_rect()
+		_expect("欠贡" in overview.text and "缺粮 5 份" in overview.text and "公田 1 格、私田 4 格" in overview.text
+			and screen.get_visible_rect().encloses(book.window.get_global_rect())
+			and overview.get_visible_line_count() == overview.get_line_count() and not book.plan_index.visible,
+			"All warnings and newly ripe plots fit with the latest night record at the largest reading size.")
+		await _capture("15-combined-record")
+		var bar: VScrollBar = book.scroll.get_v_scroll_bar()
+		_expect(bar.visible, "A long receipt remains scrollable.")
+		bar.value = bar.max_value
+		await _frames(6)
+		_expect(book.scroll.scroll_vertical > 0 and overview.get_global_rect() == bounds,
+			"The summary stays put while reading details at the bottom.")
+		await _capture("16-combined-record-bottom")
+		book.page_button.pressed.emit()
+		await _frames(5)
+		_expect(not overview.is_visible_in_tree() and book.plan_index.visible,
+			"Tonight retains its own forecast and controls.")
+	book.close_button.pressed.emit()
+	await _frames(5)
+	_expect(before == _estate_snapshot(state, actor) and ui.hud.morning_button.has_focus(),
+		"Reading both pages returns to the same button with the campaign state intact.")
+	state.raid_day = 0
+	state.night_rations.last.day = night - 1
+	ui.hud.refresh_morning_record()
+	_expect("2 项" in ui.hud.morning_button.text and "缺粮" not in ui.hud.morning_button.tooltip_text,
+		"An older ration receipt does not count toward last night's warnings.")
+	ui.hud.morning_button.pressed.emit()
+	var older := ui.get_node_or_null("Control/NightRationsPanel") as Control
+	await _frames(5)
+	_expect(older != null and "第 %d 夜" % (night - 1) in older.receipt.text and "缺 5 份" in older.receipt.text,
+		"The older ration receipt remains readable with its own date.")
+	if older:
+		older.close_button.pressed.emit()
+		await _frames(5)
+
 func _review_hall(state: Node, prefs: Node) -> void:
 	state.estate_room = state.EstateRoom.HALL
 	state.last_dawn = {"day": state.current_day - 1}
 	state.last_field_night = {}
+	state.night_rations.last = {}
 	_expect(prefs.set_reading_size(0) == OK, "Use the standard reading size indoors.")
 	if tree.change_scene_to_file(state.ESTATE_SCENE) != OK:
 		_expect(false, "Mount the paused hall.")
@@ -322,6 +399,7 @@ func _review(scenario: SceneTree) -> void:
 	await _review_results(ui, state, actor)
 	await _review_world_notice(ui)
 	await _review_save_notice(ui, state, actor)
+	await _review_combined_record(ui, state, actor)
 	await _review_hall(state, prefs)
 	_expect(tree.paused and state.saved_games().is_empty() and state.day_progress == 0.0,
 		"Presentation checks keep the world paused and write no game saves.")
