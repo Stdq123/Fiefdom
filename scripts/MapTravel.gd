@@ -13,6 +13,7 @@ const ARRIVAL_NOTE_HOLD := 2.15
 const SESSION_PLATE := preload("res://scenes/SessionLoading.tscn")
 const RESOURCE_BATCH_USEC := 5000
 const RESOURCE_BATCH_LIMIT_USEC := 120000
+const BACKGROUND_SCRIPTS := ["res://scripts/World.gd", "res://scripts/UIManager.gd"]
 
 var active := false
 var cover: ColorRect
@@ -130,10 +131,22 @@ func _prepare_in_batches(path: String, stage: String) -> PackedScene:
 	var started := Time.get_ticks_usec()
 	for dependency in dependencies:
 		var target := dependency.get_slice("::", 0)
-		if dependency.contains("::") and not ResourceLoader.exists(target):
-			target = dependency.get_slice("::", 2)
+		var source_path := dependency.get_slice("::", 2) if dependency.contains("::") else target
+		if target != source_path and not ResourceLoader.exists(target):
+			target = source_path
 		if not ResourceLoader.has_cached(target):
-			var resource := ResourceLoader.load(target)
+			var resource: Resource
+			# Text scripts parse their scene preloads on the main thread. The export ships tokenized scripts.
+			var packed_script := source_path in BACKGROUND_SCRIPTS and FileAccess.file_exists(source_path + "c")
+			if packed_script and ResourceLoader.load_threaded_request(target, "GDScript") == OK:
+				_set_read_count(read, total)
+				# Collect this request while the loading cover still owns the transition.
+				while ResourceLoader.load_threaded_get_status(target) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+					await get_tree().process_frame
+				resource = ResourceLoader.load_threaded_get(target)
+				started = Time.get_ticks_usec()
+			else:
+				resource = ResourceLoader.load(target)
 			if resource:
 				held.append(resource)
 		read += 1
