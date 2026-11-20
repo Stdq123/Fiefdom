@@ -24,7 +24,7 @@ const YARD_SPRIGS := [Vector2(-36, 19), Vector2(-36, 43), Vector2(-25, 48), Vect
 const GRAVEL := [Vector2(-3, 57), Vector2(3, 52), Vector2(-2, 46), Vector2(4, 41),
 	Vector2(6, 34), Vector2(12, 28)]
 
-@onready var animal: Sprite2D = $Paddock/Sheep
+@onready var animal: SheepMotion = $Paddock/Sheep
 @onready var landscape: Node2D = $"../Landscape"
 @onready var ground: Node2D = $Paddock/Yard
 @onready var hay: Sprite2D = $Paddock/Trough/Fodder
@@ -59,8 +59,7 @@ func _refresh() -> void:
 		shape.set_deferred("disabled", not visible)
 	if not visible:
 		return
-	var grown := flock.wool_nights >= mini(3, Global.balance.sheep_wool_nights)
-	animal.frame = int(grown)
+	animal.full_fleece = flock.wool_nights >= mini(3, Global.balance.sheep_wool_nights)
 	hay.visible = flock.fodder > 0
 	for bale: Sprite2D in haystack.get_children():
 		bale.visible = bale.get_index() < flock.fodder
@@ -74,34 +73,32 @@ func _process(delta: float) -> void:
 
 func _update_sheep(delta: float) -> void:
 	var foot := SHELTER
+	var heading := Vector2.RIGHT
 	var clock := Global.day_progress
 	var pasture := Global.sheep_can_graze()
 	var grazing := pasture and clock > 0.05 and clock < 0.76
 	var at_trough := false
+	var grazing_at_rest := false
 	if grazing:
 		var progress := inverse_lerp(0.05, 0.76, clock) * (ROUTE.size() - 1)
-		var segment := floori(progress)
-		foot = ROUTE[segment].lerp(ROUTE[segment + 1], smoothstep(0.0, 0.65, fposmod(progress, 1.0)))
+		var segment := mini(floori(progress), ROUTE.size() - 2)
+		var step := progress - segment
+		heading = ROUTE[segment + 1] - ROUTE[segment]
+		foot = ROUTE[segment].lerp(ROUTE[segment + 1], smoothstep(0.0, 0.65, step))
+		grazing_at_rest = step >= 0.65
 	elif not pasture and hay.visible:
 		var trip := smoothstep(WALK_TO_FEED, AT_TROUGH, clock) * (1.0 - smoothstep(LEAVE_TROUGH, BACK_IN_SHELTER, clock))
 		foot = SHELTER.lerp(FEEDING_SPOT, trip)
 		at_trough = clock >= AT_TROUGH and clock <= LEAVE_TROUGH
-	var motion := foot - animal.position
-	animal.position = foot
-	if at_trough:
-		animal.flip_h = false
-	elif absf(motion.x) > 0.01:
-		animal.flip_h = motion.x < 0.0
+		if clock > LEAVE_TROUGH and clock < BACK_IN_SHELTER:
+			heading = SHELTER - FEEDING_SPOT
 	pose_time = fposmod(pose_time + delta, 4.0)
-	var moving := motion.length_squared() > 0.0002
-	var lift := -1.0 if moving and fposmod(pose_time, 0.50) < 0.23 else 0.0
-	var tilt := 0.0
+	var dip := 0.0
 	if at_trough:
-		tilt = 0.15 + sin(pose_time * TAU) * 0.035
-	elif grazing and not moving and pose_time > 2.8:
-		tilt = 0.09
-	animal.rotation = -tilt if animal.flip_h else tilt
-	animal.offset.y = lift - 8.0
+		dip = 0.78 + sin(pose_time * TAU) * 0.12
+	elif grazing_at_rest:
+		dip = 0.91 + sin(pose_time * TAU) * 0.08
+	animal.present(foot, heading, dip, delta)
 
 func _draw_yard() -> void:
 	var season := Global.season_index()
@@ -168,7 +165,7 @@ func interact() -> void:
 func _on_sheared() -> void:
 	AudioManager.play_world_sfx(BLEAT, animal, -15.0, 125.0)
 	var landing := animal.position + Vector2(-13 if animal.flip_h else 13, 5)
-	clipping.position = animal.position + Vector2(0, -11)
+	clipping.position = animal.position + animal.fleece_contact()
 	clipping.modulate.a = 1.0
 	clipping.show()
 	var fall := create_tween().set_parallel(true)

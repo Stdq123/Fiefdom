@@ -293,7 +293,7 @@
   发布页 https://opengameart.org/content/butterflies
   竹涧溪石边的小蛙来自 scriptoy 的 Pixel Frog（CC0 1.0），沿用原作的蹲伏与起跳两帧，按场景调色。
   发布页 https://opengameart.org/content/pixel-frog-1616
-  西坡羊棚的长毛绵羊取自 FreeGameSprites 的 Farm Sheep（CC0 1.0），按封地人物尺寸显示，行走和低头由游戏驱动。
+  西坡羊棚的原始绵羊素材为 FreeGameSprites 的 Farm Sheep（CC0 1.0）。本作按斜俯视调整羊毛像素图，以分层动作表现迈步和低头。
   发布页 https://freegamesprites.com/en/assets/farm-sheep
   驾御场马匹取自 bluecarrot16 的 [LPC] Horses（采用 CC BY 3.0）。从棕马图集中裁切四个朝向的站立和行走帧，按封地比例缩小，并与本项目的车身合用。
   发布页 https://opengameart.org/content/lpc-horses

@@ -122,7 +122,7 @@ func _test_pasture() -> void:
 		"The sheep walks out from the shelter toward the trough on a fed winter day.")
 	_watch(0.34)
 	await tree.create_timer(0.15).timeout
-	_expect(pen.animal.position.is_equal_approx(pen.FEEDING_SPOT) and pen.animal.rotation > 0.10
+	_expect(pen.animal.position.is_equal_approx(pen.FEEDING_SPOT) and pen.animal.head_drop > 0.5
 		and _visible_hay_bundles(pen) == 3 and state.sheepfold.fodder == 3,
 		"The sheep lowers its head at the trough beside the winter hay reserve.")
 	await _snapshot("02b-winter-feeding")
@@ -215,7 +215,7 @@ func _grow_and_shear(capture: bool) -> bool:
 			var rainy_pen := world.get_node("SheepfoldPen") as Node2D
 			_watch(0.34)
 			await tree.create_timer(0.15).timeout
-			_expect(rainy_pen.animal.position.is_equal_approx(rainy_pen.FEEDING_SPOT) and rainy_pen.animal.rotation > 0.10,
+			_expect(rainy_pen.animal.position.is_equal_approx(rainy_pen.FEEDING_SPOT) and rainy_pen.animal.head_drop > 0.5,
 				"On a fed rainy day the sheep eats by the trough.")
 		await _advance_night()
 		if rainy:
