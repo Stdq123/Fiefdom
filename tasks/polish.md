@@ -15,6 +15,12 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 下拉菜单的手柄操作
+
+设置、续播和分餐等下拉列表可用十字键逐项浏览，跳过禁用项和分隔线。按 A 确认高亮项，按 B 回到原控件。摇杆可指向列表项，光标移到列表外再按 A 会合上列表。字号改变后，手柄光标随页面重排回到选择器。
+
+从 `90b1cf1` 独立构建两次，ZIP 的 SHA-256 均为 `b2552966fd2ec367eee6b89f6ce2ea7dca39ce7dfa41069cb3af63b64855c876`。十项无窗口检查和解压启动通过。1920×1080 Vulkan、1920×1080 Direct3D 12 与 1024×768 OpenGL 各核对五个界面状态和 21 次模拟按键。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-popup-navigation/release-90b1cf1/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-popup-navigation/release-90b1cf1/release-proof.txt)
+
 ## 今夜安排与昨夜结算的阅读字号
 
 两张账页的页首、摘要、说明、操作按钮、购粮上限和分餐菜单跟随三档阅读字号。长摘要换行，滚读时仍能看到纳贡期限、口粮摘要和过夜按钮。昨夜田务与用粮分栏显示，购粮上限可完整显示十位数。
