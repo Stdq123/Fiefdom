@@ -83,6 +83,7 @@ func _open(view: Array, day: int) -> CanvasModulate:
 func _review(view: Array, day: int, wet: bool) -> Dictionary:
 	var lighting := await _open(view, day)
 	var sky := lighting.get_node_or_null("CloudShadow") as ColorRect
+	var shadows := tree.current_scene.find_child("TreeShadows", true, false) as Node2D
 	var actor: Node = tree.get_first_node_in_group("player")
 	var camera := tree.root.get_camera_2d()
 	var record := {"foot": actor.global_position, "camera": camera.get_screen_center_position(), "zoom": camera.zoom}
@@ -90,6 +91,8 @@ func _review(view: Array, day: int, wet: bool) -> Dictionary:
 	record.morning = lighting.color
 	if not baseline:
 		_expect(sky != null, "Each outdoor map installs the shared cloud shade.")
+		_expect(shadows != null and not shadows.trees.is_empty() and shadows.visible != wet,
+			"Each outdoor map projects its own trees in direct sunlight.")
 		if sky != null:
 			_expect(sky.visible != wet and sky.mouse_filter == Control.MOUSE_FILTER_IGNORE,
 				"Cloud shade belongs to clear daytime and allows pointer input.")
@@ -114,6 +117,9 @@ func _review(view: Array, day: int, wet: bool) -> Dictionary:
 		await _capture(view[0] + "-rain-dusk")
 	state.day_progress = NIGHT
 	lighting.refresh()
+	if shadows:
+		shadows.refresh()
+		_expect(not shadows.visible, "At night only the planted contact shade remains.")
 	record.night = lighting.color
 	if not baseline and sky != null:
 		_expect(not sky.visible and lighting.lamps[0].glow.energy > 0.55,
@@ -123,14 +129,17 @@ func _review(view: Array, day: int, wet: bool) -> Dictionary:
 func _check_rooms(estate: Array, day: int) -> void:
 	var lighting := await _open(estate, day)
 	var sky := lighting.get_node("CloudShadow") as ColorRect
+	var shadows := tree.current_scene.find_child("TreeShadows", true, false) as Node2D
 	var events := tree.root.get_node("GameEvents")
 	for room: int in [state.EstateRoom.HALL, state.EstateRoom.SILK_SHED]:
 		state.estate_room = room
 		events.estate_room_changed.emit(room)
 		_expect(not sky.visible and lighting.color == Color("#efe0c6"), "Room light comes from the existing indoor palette.")
+		_expect(shadows != null and not shadows.visible, "Outside tree projections are hidden inside either room.")
 	state.estate_room = state.EstateRoom.OUTDOORS
 	events.estate_room_changed.emit(state.estate_room)
 	_expect(sky.visible, "Clouds return as soon as the room state returns outdoors.")
+	_expect(shadows != null and shadows.visible, "Tree projections return as soon as the room state returns outdoors.")
 
 func _capture(name: String) -> void:
 	if capture_dir.is_empty() or DisplayServer.get_name() == "headless":

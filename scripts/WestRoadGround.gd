@@ -330,6 +330,8 @@ func place_scenery(layer: Node2D, occlusion: LANDSCAPE.SCENERY_OCCLUSION) -> voi
 	var winter := season == Global.Season.WINTER
 	var wind := FOLIAGE_WIND.new()
 	add_child(wind)
+	var shadows := LANDSCAPE.TREE_SHADOWS.new()
+	add_child(shadows)
 	var tree_art := {}
 	for variety in [LANDSCAPE.Prop.OAK, LANDSCAPE.Prop.BLOSSOM_TREE, LANDSCAPE.Prop.PINE]:
 		tree_art[variety] = LANDSCAPE.painted_tree_texture(variety, season)
@@ -341,6 +343,7 @@ func place_scenery(layer: Node2D, occlusion: LANDSCAPE.SCENERY_OCCLUSION) -> voi
 		var tree := _prop(layer, TREES[index], texture)
 		tree.self_modulate = wet_tint
 		LANDSCAPE.attach_prop_wind(wind, tree, variety)
+		shadows.track(tree)
 		occlusion.watch(tree)
 	var willow := LANDSCAPE.painted_riverside_texture(LANDSCAPE.Prop.WILLOW, season)
 	var plant_tint := LANDSCAPE.riverside_tint(season, Global.has_rain())
@@ -349,6 +352,7 @@ func place_scenery(layer: Node2D, occlusion: LANDSCAPE.SCENERY_OCCLUSION) -> voi
 		tree.scale = Vector2.ONE * placement.z
 		tree.self_modulate = plant_tint
 		LANDSCAPE.attach_prop_wind(wind, tree, LANDSCAPE.Prop.WILLOW)
+		shadows.track(tree)
 		occlusion.watch(tree)
 	for mark: Vector3i in BANK_PROPS:
 		if winter and mark.z == LANDSCAPE.Prop.FLOWERS:

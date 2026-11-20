@@ -366,6 +366,8 @@ func _draw_basin_piece(canvas: CanvasItem, at: Vector2, region: Rect2) -> void:
 func place_scenery(layer: Node2D, occlusion: LANDSCAPE.SCENERY_OCCLUSION) -> void:
 	var wind := FOLIAGE_WIND.new()
 	add_child(wind)
+	var shadows := LANDSCAPE.TREE_SHADOWS.new()
+	add_child(shadows)
 	var rim := Node2D.new()
 	rim.name = "BasinFront"
 	rim.position = Vector2(LAYOUT.BASIN.position.x, LAYOUT.BASIN.end.y)
@@ -383,6 +385,7 @@ func place_scenery(layer: Node2D, occlusion: LANDSCAPE.SCENERY_OCCLUSION) -> voi
 		var variant := index % tree_art.size()
 		var tree := _prop(layer, TREE_FEET[index], tree_art[variant], 45.0, wet_tint)
 		LANDSCAPE.attach_prop_wind(wind, tree, TREE_PATTERN[variant])
+		shadows.track(tree)
 		occlusion.watch(tree)
 	var fence := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, LANDSCAPE.ESTATE_SITE_REGIONS[LANDSCAPE.Prop.FENCE])
 	for foot: Vector2 in FENCE_FEET:

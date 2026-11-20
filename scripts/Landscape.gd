@@ -25,6 +25,7 @@ const FOLIAGE_WIND := preload("res://scripts/FoliageWind.gd")
 const SCENERY_OCCLUSION := preload("res://scripts/SceneryOcclusion.gd")
 const TERRAIN_AUDIO := preload("res://scripts/TerrainAudio.gd")
 const DAY_LIGHTING := preload("res://scripts/DayLighting.gd")
+const TREE_SHADOWS := preload("res://scripts/TreeShadows.gd")
 const NINJA_SCENERY := preload("res://assets/world/ninja-adventure/tileset_village_abandoned.png")
 const ESTATE_STORAGE := preload("res://assets/world/estate-storage.svg")
 const RIVERSIDE_PLANTS := preload("res://assets/world/riverside-plants.png")
@@ -470,6 +471,7 @@ var track_shapes: Array[Dictionary] = []
 var field_approaches: Dictionary[int, PackedVector2Array] = {}
 var worksite_mouths: Dictionary[int, Vector2] = {}
 var _scenery_ready := false
+var _tree_shadows := TREE_SHADOWS.new()
 
 func _ready() -> void:
 	ground_cover = SEASONAL_GROUND.new(wilderness)
@@ -508,6 +510,7 @@ func _ready() -> void:
 		_layout_field_approaches()
 	else:
 		_build_track_shapes(WILD_TRACKS, WILD_TRACK_WIDTHS)
+	add_child(_tree_shadows)
 	_add_water_surface()
 	_update_weather()
 	_prepare_map.call_deferred()
@@ -598,6 +601,7 @@ func _prepare_map() -> void:
 		scenery[sprite] = placement.z
 		if WIND_FLEXIBILITY.has(placement.z):
 			attach_prop_wind(wind, sprite, placement.z)
+			_tree_shadows.track(sprite)
 		if placement.z == Prop.HALL:
 			hall_rest.paint_door(sprite, HALL_DOOR, true)
 			rain.add_roof(sprite, Rect2(-58, -40, 109, 43), [
@@ -1098,7 +1102,7 @@ static func draw_sorted_prop_shadow(canvas: CanvasItem, foot: Vector2, prop: int
 	if CANOPY_SHADOW_SCALE.has(prop):
 		var scale: float = CANOPY_SHADOW_SCALE[prop]
 		canvas.draw_texture_rect_region(ESTATE_TERRAIN.HALL_YARD_ART,
-			Rect2(foot - Vector2(16, 8) * scale, HALL_YARD_CANOPY_SHADOW.size * scale), HALL_YARD_CANOPY_SHADOW, tint)
+			Rect2(foot - Vector2(15, 5) * scale, Vector2(32, 13) * scale), HALL_YARD_CANOPY_SHADOW, tint)
 		return
 	draw_scenery_shadow(canvas, foot, prop, shade)
 
