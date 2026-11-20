@@ -4,6 +4,7 @@ signal choice_selected(choice: Global.TaxReformChoice)
 signal dismissed
 
 const IMPLEMENTS := preload("res://scripts/CouncilImplements.gd")
+const PANEL_FOCUS := preload("res://scripts/PanelFocus.gd")
 const SHEET_MARGIN := 20.0
 
 @onready var sheet: PanelContainer = %Council
@@ -28,11 +29,13 @@ var card_style: StyleBoxTexture
 var selected_style: StyleBoxTexture
 
 func _ready() -> void:
-	for label: Label in [text_label, ledger]:
+	add_to_group("gamepad_directional_menu")
+	for label: Label in [text_label, ledger, selection_label]:
 		InterfaceFont.scale_reading_text(label)
 	var bar := scroll.get_v_scroll_bar()
 	bar.theme_type_variation = &"HudJournalBar"
 	bar.focus_mode = FOCUS_ALL
+	bar.custom_step = 48.0
 	bar.visibility_changed.connect(_link_focus, CONNECT_DEFERRED)
 	choices_container.minimum_size_changed.connect(_fit_comparison, CONNECT_DEFERRED)
 	content.minimum_size_changed.connect(_fit_comparison, CONNECT_DEFERRED)
@@ -47,6 +50,7 @@ func _ready() -> void:
 	selected_style.modulate_color = Color("#ffe5af")
 	confirm_button.pressed.connect(_confirm)
 	leave_button.pressed.connect(_leave)
+	GamepadInput.changed.connect(_refresh_selection_prompt)
 
 func setup(event_data: Dictionary) -> void:
 	current_event_data = event_data
@@ -136,9 +140,15 @@ func _select(choice: Global.TaxReformChoice) -> void:
 		cards[id].add_theme_stylebox_override("panel", selected_style if id == choice else card_style)
 	confirm_button.disabled = choice == Global.TaxReformChoice.NONE
 	confirm_button.text = "延期研究" if choice == Global.TaxReformChoice.DELAYED else "定案"
-	selection_label.text = ("选定方案后可定案。" if confirm_button.disabled else
-		"当前选择 · " + option_buttons[choice].text)
+	_refresh_selection_prompt()
 	_link_focus()
+
+func _refresh_selection_prompt() -> void:
+	var back := GamepadInput.back_key()
+	if selected_choice == Global.TaxReformChoice.NONE:
+		selection_label.text = "选定方案后可定案  ·  %s 稍后再议" % back
+	else:
+		selection_label.text = "当前选择 · %s  ·  %s 清除选择" % [option_buttons[selected_choice].text, back]
 
 func _link_focus() -> void:
 	if option_buttons.is_empty():
@@ -169,6 +179,16 @@ func _link_focus() -> void:
 	var current: Button = option_buttons.get(selected_choice, options[0])
 	leave_button.focus_neighbor_bottom = leave_button.get_path_to(current)
 	confirm_button.focus_neighbor_top = confirm_button.get_path_to(current)
+	if bar.visible:
+		bar.focus_neighbor_left = bar.get_path_to(current)
+		bar.focus_neighbor_right = bar.get_path_to(current if confirm_button.disabled else confirm_button)
+		confirm_button.focus_neighbor_left = confirm_button.get_path_to(bar)
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey or event is InputEventAction:
+		var focus := PANEL_FOCUS.input_owner(sheet)
+		if focus:
+			PANEL_FOCUS.keep_navigation_inside(sheet, focus, event)
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and event.keycode in [KEY_PAGEUP, KEY_PAGEDOWN]:
@@ -183,6 +203,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if selected_choice != Global.TaxReformChoice.NONE:
 		_select(Global.TaxReformChoice.NONE)
 		option_buttons.values().front().grab_focus()
+		GamepadInput.snap_pointer_to_focus.call_deferred()
 	else:
 		_leave()
 

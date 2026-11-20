@@ -185,14 +185,19 @@ func _ready() -> void:
 	GameEvents.raid_started.connect(_refresh_raid_plan)
 	GameEvents.raid_defeated.connect(_refresh_raid_plan)
 	GamepadInput.changed.connect(_refresh_raid_plan)
+	GamepadInput.changed.connect(_refresh_close_hint)
 	GameEvents.raid_started.connect(_refresh_fields)
 	GameEvents.raid_defeated.connect(_refresh_fields)
 	GameEvents.watch_snare_changed.connect(_refresh_raid_plan)
+	_refresh_close_hint()
 	_refresh()
 	_show_page(show_previous)
 	close_button.grab_focus()
 	AudioManager.play_menu_cue(AudioManager.MenuCue.OPEN)
 	_finish_opening_focus()
+
+func _refresh_close_hint() -> void:
+	close_button.tooltip_text = GamepadInput.back_key()
 
 func show_pavilion_story(story_id: String, appointment_id: String, place: String) -> void:
 	var ready_to_hear := not story_id.is_empty()

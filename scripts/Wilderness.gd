@@ -85,7 +85,8 @@ func _setup_settings(view: Control) -> void:
 	button.icon = HUDIcons.icon(HUDIcons.Symbol.SETTINGS)
 	button.theme = HUD_THEME
 	button.theme_type_variation = &"HudButton"
-	button.tooltip_text = "系统设置  Esc"
+	GamepadInput.changed.connect(_refresh_settings_hint.bind(button))
+	_refresh_settings_hint(button)
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	view.add_child(button)
 	view.move_child(button, ravine_map.get_index())
@@ -113,6 +114,9 @@ func _setup_settings(view: Control) -> void:
 		if open:
 			settings.close_button.grab_focus()
 	)
+
+func _refresh_settings_hint(button: Button) -> void:
+	button.tooltip_text = "系统设置  %s" % GamepadInput.back_key()
 
 func _open_settings() -> void:
 	if not get_tree().paused and not MapTravel.active and Global.outcome == Global.Outcome.RUNNING:

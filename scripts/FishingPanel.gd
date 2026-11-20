@@ -29,6 +29,7 @@ var line_meter: ProgressBar
 var tension_band: ColorRect
 var catch_icon: TextureRect
 var pull_button: Button
+var close_button: Button
 var actions: HBoxContainer
 var route_actions: HFlowContainer
 var sound: AudioStreamPlayer
@@ -144,13 +145,12 @@ func _build_layout() -> void:
 	pull_button.button_down.connect(_press_line)
 	pull_button.button_up.connect(_release_line)
 	actions.add_child(pull_button)
-	var close := Button.new()
-	close.theme_type_variation = &"HudButton"
-	close.text = "收竿 · B / Esc"
-	close.custom_minimum_size = Vector2(116, 36)
-	close.focus_mode = Control.FOCUS_NONE
-	close.pressed.connect(queue_free)
-	actions.add_child(close)
+	close_button = Button.new()
+	close_button.theme_type_variation = &"HudButton"
+	close_button.custom_minimum_size = Vector2(116, 36)
+	close_button.focus_mode = Control.FOCUS_NONE
+	close_button.pressed.connect(queue_free)
+	actions.add_child(close_button)
 
 func _draw_tension_marks() -> void:
 	var height := tension_band.size.y
@@ -220,6 +220,7 @@ func _input(event: InputEvent) -> void:
 func _refresh_shortcut() -> void:
 	var shortcut := GamepadInput.rhythm_key()
 	pull_button.text = "%s · %s" % ["按住收线" if phase >= Phase.REELING else "提竿", shortcut]
+	close_button.text = "收竿 · %s" % GamepadInput.back_key()
 	if phase == Phase.BITE:
 		detail.text = "按 %s，或按住「提竿」。" % shortcut
 

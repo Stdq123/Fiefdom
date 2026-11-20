@@ -147,6 +147,9 @@ func suspend_pointer(suspended: bool) -> void:
 func interact_key() -> String:
 	return "X" if active else Preferences.key_label(KeyBindings.INTERACT)
 
+func back_key() -> String:
+	return "B" if active else "Esc"
+
 func bow_instruction() -> String:
 	return "用右摇杆瞄准，按 RT 放箭" if active else "右键朝来敌射箭"
 

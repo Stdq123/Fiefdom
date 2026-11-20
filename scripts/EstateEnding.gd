@@ -11,6 +11,7 @@ const LEDGER_DESK := preload("res://scripts/RouteLedgerDesk.gd")
 const COUNCIL_IMPLEMENTS := preload("res://scripts/CouncilImplements.gd")
 const RECORD_STAND := preload("res://scripts/EstateRecordStand.gd")
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
+const PANEL_FOCUS := preload("res://scripts/PanelFocus.gd")
 const TRADITIONAL_SCORE := preload("res://assets/audio/music/ending-traditional.ogg")
 const REFORMED_SCORE := preload("res://assets/audio/music/ending-reformed.ogg")
 const UNITS := {"新增公田纳贡": "份", "进献丝绸": "匹", "新增计税收成": "份",
@@ -96,12 +97,14 @@ var shot := Shot.RECORD
 
 func _ready() -> void:
 	set_process(false)
+	add_to_group("gamepad_directional_menu")
 	for label: Label in [caption, estate_name, date, epilogue, farewell_line, restore_detail]:
 		InterfaceFont.scale_reading_text(label)
 	var bar := report_scroll.get_v_scroll_bar()
 	bar.theme = HUD_THEME
 	bar.theme_type_variation = &"HudJournalBar"
 	bar.focus_mode = Control.FOCUS_ALL
+	bar.custom_step = 48.0
 	for section: Control in [report_header, report_body, report_footer]:
 		section.minimum_size_changed.connect(_fit_report_body, CONNECT_DEFERRED)
 	resized.connect(_fit_report_body, CONNECT_DEFERRED)
@@ -115,6 +118,8 @@ func _ready() -> void:
 		_close_restore()
 		restore_requested.emit()
 	)
+	GamepadInput.changed.connect(_refresh_back_hints)
+	_refresh_back_hints()
 
 func present(estate_world: Node2D, already_finished: bool) -> void:
 	estate = estate_world
@@ -134,12 +139,19 @@ func open_archive() -> void:
 	for button in [continue_button, replay_button, save_button, restore_button]:
 		button.hide()
 	status.hide()
-	title_button.text = "返回封地  Esc"
+	_refresh_back_hints()
 	title_button.size_flags_horizontal = Control.SIZE_SHRINK_END
 	title_button.custom_minimum_size.x = 158.0
 	title_button.get_parent().alignment = BoxContainer.ALIGNMENT_END
 	title_button.pressed.connect(func(): close_requested.emit())
 	_show_record()
+
+func _refresh_back_hints() -> void:
+	var key := GamepadInput.back_key()
+	skip_button.text = "跳过结尾  %s" % key
+	stay_button.text = "留在结算  %s" % key
+	if archive_open:
+		title_button.text = "返回封地  %s" % key
 
 func refresh_restore() -> void:
 	var checkpoint := Global.latest_saved_game(true)
@@ -171,6 +183,13 @@ func _focus_action(button: Button) -> void:
 		await get_tree().process_frame
 		if button.has_focus():
 			GamepadInput.snap_pointer_to_focus()
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey or event is InputEventAction:
+		var page := restore_confirmation if restore_confirmation.visible else (report if report.visible else film)
+		var focus := PANEL_FOCUS.input_owner(page)
+		if focus:
+			PANEL_FOCUS.keep_navigation_inside(page, focus, event)
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel") and (restore_confirmation.visible or archive_open or shot != Shot.RECORD):
