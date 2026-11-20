@@ -25,6 +25,7 @@ func _on_close_requested() -> void:
 	if _close_pending or _dialog.visible:
 		return
 	_close_pending = true
+	MapTravel.cancel_title_load()
 	_offer_exit.call_deferred()
 
 func _offer_exit() -> void:

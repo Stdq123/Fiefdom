@@ -7,6 +7,7 @@ var travel: Node
 var bar: ProgressBar
 var progress: Dictionary[String, Array] = {}
 var failure := false
+var cancelled_result := ERR_BUSY
 
 func _initialize() -> void:
 	_review.call_deferred()
@@ -30,6 +31,16 @@ func _review() -> void:
 
 	var missing: Error = await travel.prepare_session(MISSING, "正在读取存档")
 	_expect(missing == ERR_FILE_NOT_FOUND and _released(), "Missing destinations return an error without blocking the title.")
+	_prepare_cancelled_estate()
+	travel.cancel_title_load()
+	_expect(travel.active and travel._session_plate.visible and travel._session_caption.text == "正在退出",
+		"A close from the title acknowledges the request while keeping the cover in place.")
+	await travel.finished
+	await process_frame
+	_expect(cancelled_result == ERR_SKIP and travel._preloads.is_empty() and _released()
+		and current_scene == title and _state() == initial,
+		"Cancelling before the first read leaves the title, campaign and map cache intact.")
+
 	_prepare_estate()
 	_expect(travel.active and travel.cover.visible and travel._session_plate.visible
 		and bar.indeterminate and travel._session_caption.text == "正在打开封地"
@@ -81,6 +92,9 @@ func _review() -> void:
 func _prepare_estate() -> void:
 	var result: Error = await travel.prepare_session(state.ESTATE_SCENE, "正在打开封地")
 	_expect(result == OK, "The packaged estate scene can be prepared.")
+
+func _prepare_cancelled_estate() -> void:
+	cancelled_result = await travel.prepare_session(state.ESTATE_SCENE, "正在打开封地")
 
 func _record_progress(read: float) -> void:
 	if bar.indeterminate or not travel._session_plate.visible or read == 0.0:

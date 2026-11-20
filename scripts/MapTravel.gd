@@ -29,6 +29,7 @@ var _session_stage: Label
 var _session_count: Label
 var _session_activity: ProgressBar
 var _session_batch_usec := RESOURCE_BATCH_USEC
+var _title_load_cancelled := false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -84,13 +85,20 @@ func prepare_session(path: String, caption: String) -> Error:
 	packed = await _prepare_in_batches(path, stage)
 	if packed:
 		for neighbor in _unprepared_neighbors(packed):
-			if not is_instance_valid(origin) or tree.current_scene != origin:
+			if _title_load_cancelled or not is_instance_valid(origin) or tree.current_scene != origin:
 				break
 			await _prepare_in_batches(neighbor, "预备关口 · " + place_name(neighbor))
+	var cancelled := _title_load_cancelled
 	_finish()
-	if not is_instance_valid(origin) or tree.current_scene != origin:
+	if cancelled or not is_instance_valid(origin) or tree.current_scene != origin:
 		return ERR_SKIP
 	return OK if packed else ERR_CANT_OPEN
+
+func cancel_title_load() -> void:
+	var origin := get_tree().current_scene
+	if active and _session_plate.visible and origin and origin.scene_file_path == Global.TITLE_SCENE:
+		_title_load_cancelled = true
+		_session_caption.text = "正在退出"
 
 func _map_read_stage(path: String, caption: String) -> String:
 	var place := place_name(path)
@@ -114,6 +122,8 @@ func _set_read_count(read: int, total: int) -> void:
 	_session_activity.value = read
 
 func _prepare_in_batches(path: String, stage: String) -> PackedScene:
+	if _title_load_cancelled:
+		return null
 	if _preloads.has(path):
 		return _preloads[path]
 	if path.is_empty() or not ResourceLoader.exists(path, "PackedScene"):
@@ -130,6 +140,8 @@ func _prepare_in_batches(path: String, stage: String) -> PackedScene:
 	var held: Array[Resource] = []
 	var started := Time.get_ticks_usec()
 	for dependency in dependencies:
+		if _title_load_cancelled:
+			return null
 		var target := dependency.get_slice("::", 0)
 		var source_path := dependency.get_slice("::", 2) if dependency.contains("::") else target
 		if target != source_path and not ResourceLoader.exists(target):
@@ -158,6 +170,8 @@ func _prepare_in_batches(path: String, stage: String) -> PackedScene:
 			# Slow frame delivery can cost more than a small batch. Amortize that wait for this entry.
 			_session_batch_usec = clampi(maxi(_session_batch_usec, (started - waiting) * 3),
 				RESOURCE_BATCH_USEC, RESOURCE_BATCH_LIMIT_USEC)
+	if _title_load_cancelled:
+		return null
 	var packed := ResourceLoader.load(path, "PackedScene") as PackedScene
 	if packed:
 		_preloads[path] = packed
@@ -314,5 +328,6 @@ func _finish() -> void:
 	cover.hide()
 	cover.color.a = 0.0
 	set_process_input(false)
+	_title_load_cancelled = false
 	active = false
 	finished.emit()
