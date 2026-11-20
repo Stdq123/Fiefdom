@@ -6,6 +6,8 @@ const COVER_COLOR := Color("#151e1a")
 const CLOSE_SECONDS := 0.16
 const OPEN_SECONDS := 0.22
 const ARRIVAL_PLATE := preload("res://scenes/TravelArrival.tscn")
+const ARRIVAL_TOP := 30.0
+const ARRIVAL_GAP := 8.0
 const ARRIVAL_HOLD := 0.95
 const ARRIVAL_NOTE_HOLD := 2.15
 const SESSION_PLATE := preload("res://scenes/SessionLoading.tscn")
@@ -17,6 +19,7 @@ var cover: ColorRect
 var arrival_plate: CenterContainer
 var arrival_name: Label
 var arrival_note: Label
+var _arrival_plaque: PanelContainer
 var _arrival_tween: Tween
 var _preloads: Dictionary[String, PackedScene] = {}
 var _session_plate: CenterContainer
@@ -38,6 +41,8 @@ func _ready() -> void:
 	cover.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	arrival_plate = ARRIVAL_PLATE.instantiate()
 	add_child(arrival_plate)
+	_arrival_plaque = arrival_plate.get_node("Plaque")
+	arrival_plate.visibility_changed.connect(func(): set_process(arrival_plate.visible))
 	arrival_name = arrival_plate.get_node("%Place")
 	arrival_note = arrival_plate.get_node("%EntryNote")
 	InterfaceFont.scale_reading_text(arrival_name)
@@ -55,6 +60,7 @@ func _ready() -> void:
 	_session_activity = _session_plate.get_node("%Activity")
 	for label: Label in [_session_caption, _session_stage, _session_count]:
 		InterfaceFont.scale_reading_text(label)
+	set_process(false)
 	set_process_input(false)
 
 func prepare_session(path: String, caption: String) -> Error:
@@ -257,6 +263,28 @@ func _show_arrival(path: String, entry_note := "") -> void:
 	_arrival_tween.tween_interval(ARRIVAL_NOTE_HOLD if arrival_note.visible else ARRIVAL_HOLD)
 	_arrival_tween.tween_property(arrival_plate, "modulate:a", 0.0, 0.28).set_trans(Tween.TRANS_SINE)
 	_arrival_tween.tween_callback(arrival_plate.hide)
+
+func _process(_delta: float) -> void:
+	var area := get_viewport().get_visible_rect().grow(-ARRIVAL_GAP)
+	var size := _arrival_plaque.get_combined_minimum_size()
+	var candidate := Rect2(Vector2(area.get_center().x - size.x * 0.5, ARRIVAL_TOP), size)
+	var occupied: Array[Rect2] = []
+	var rows := PackedFloat32Array([ARRIVAL_TOP])
+	for overlay: Control in get_tree().get_nodes_in_group(&"interaction_prompt_obstacle"):
+		if overlay == _arrival_plaque or not overlay.is_visible_in_tree():
+			continue
+		var obstacle := (overlay.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, overlay.size)).grow(ARRIVAL_GAP)
+		if obstacle.end.x > candidate.position.x and obstacle.position.x < candidate.end.x:
+			occupied.append(obstacle)
+			rows.append(ceilf(obstacle.end.y))
+	rows.sort()
+	for top in rows:
+		candidate.position.y = top
+		if top >= ARRIVAL_TOP and area.encloses(candidate) and HintPlacement.is_clear(candidate, occupied):
+			arrival_plate.offset_top = top
+			arrival_plate.offset_bottom = top + size.y
+			return
+	_clear_arrival()
 
 func _dismiss_arrival_for_panel(opened: bool) -> void:
 	if opened:

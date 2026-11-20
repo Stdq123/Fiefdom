@@ -690,7 +690,7 @@ mouse_default_cursor_shape = 2
 text = "装田口闸"
 tooltip_text = "从已通水的田边引水，沿田沟润过三格"
 
-[node name="Tools" type="HBoxContainer" parent="."]
+[node name="Tools" type="HBoxContainer" parent="." groups=["interaction_prompt_obstacle"]]
 layout_mode = 1
 anchor_left = 0.5
 anchor_right = 0.5

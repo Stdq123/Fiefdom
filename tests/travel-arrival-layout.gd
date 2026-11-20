@@ -84,11 +84,29 @@ func _check_gate_notes(state: Node) -> void:
 				and travel.arrival_note.get_visible_line_count() == travel.arrival_note.get_line_count(),
 				"The gate note fits at the largest reading size.")
 			if name == "MarketGate":
+				await _check_clearance(plaque)
 				await create_timer(1.2).timeout
 				_expect(travel.arrival_plate.visible and not travel.active and not travel.cover.visible,
 					"The longer gate note stays readable after the curtain releases input.")
 		source.free()
 	_expect(seen.size() == 8, "All outdoor entries have their own context.")
+
+func _check_clearance(plaque: Control) -> void:
+	var original_y := plaque.get_global_rect().position.y
+	var notice := Control.new()
+	notice.size = Vector2(420, 86)
+	notice.position = Vector2(root.get_visible_rect().get_center().x - notice.size.x * 0.5, 28)
+	notice.add_to_group(&"interaction_prompt_obstacle")
+	root.add_child(notice)
+	for frame in 3:
+		await process_frame
+	_expect(plaque.get_global_rect().position.y >= notice.get_global_rect().end.y + 8.0,
+		"The plaque makes room for a message that appears during the reveal.")
+	notice.free()
+	for frame in 3:
+		await process_frame
+	_expect(is_equal_approx(plaque.get_global_rect().position.y, original_y),
+		"Removing the message restores the clear arrival position.")
 
 func _under_cover(allowed: bool) -> bool:
 	_expect(not travel.arrival_plate.visible and is_equal_approx(travel.cover.color.a, 1.0),

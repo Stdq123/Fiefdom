@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/DawnNotice.gd" id="1_notice"]
 [ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="2_hud"]
 
-[node name="DawnNotice" type="PanelContainer"]
+[node name="DawnNotice" type="PanelContainer" groups=["interaction_prompt_obstacle"]]
 visible = false
 layout_mode = 1
 anchor_left = 0.5
