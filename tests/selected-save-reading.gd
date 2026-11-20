@@ -190,7 +190,8 @@ func _outcome_selection(won: bool) -> void:
 		_expect(panel.restore_confirmation.visible and panel.stay_button.has_focus()
 			and "第 32 天" in panel.restore_detail.text, "The ending confirmation names the selected checkpoint.")
 	else:
-		_expect("第 32 天" in hud.status.text, "The defeat page names the selected recovery point.")
+		_expect("第 32 天" in panel.checkpoint.text and restore.has_focus(),
+			"The defeat page names and focuses the selected recovery point.")
 	_put(path, _record(id, "南津", 33, 330, 65))
 	var confirm: Button = panel.load_before_ending if won else restore
 	confirm.pressed.emit()
@@ -203,8 +204,8 @@ func _outcome_selection(won: bool) -> void:
 		_expect(panel.restore_confirmation.visible and "第 33 天" in panel.restore_detail.text,
 			"Another confirmation offers the refreshed day before accepting it.")
 	else:
-		_expect(not restore.disabled and "第 33 天" in hud.status.text,
-			"The defeat page offers the updated checkpoint for a new choice.")
+		_expect(not restore.disabled and restore.has_focus() and "第 33 天" in panel.checkpoint.text
+			and "第 32 天" not in panel.checkpoint.text, "The defeat page offers the updated checkpoint for a new choice.")
 	panel.free()
 	hud.summary = null
 

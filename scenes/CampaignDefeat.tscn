@@ -1,0 +1,147 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/CampaignDefeat.gd" id="1_defeat"]
+[ext_resource type="StyleBox" path="res://resources/estate_archive_frame.tres" id="2_frame"]
+[ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="3_hud"]
+
+[sub_resource type="StyleBoxFlat" id="Seal"]
+bg_color = Color(0.239, 0.124, 0.096, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.71, 0.43, 0.29, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[node name="CampaignDefeat" type="ColorRect"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.071, 0.061, 0.051, 0.89)
+script = ExtResource("1_defeat")
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Sheet" type="PanelContainer" parent="Center"]
+custom_minimum_size = Vector2(642, 0)
+layout_mode = 2
+theme_override_styles/panel = ExtResource("2_frame")
+
+[node name="Stack" type="VBoxContainer" parent="Center/Sheet"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Masthead" type="HBoxContainer" parent="Center/Sheet/Stack"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Seal" type="PanelContainer" parent="Center/Sheet/Stack/Masthead"]
+custom_minimum_size = Vector2(62, 62)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("Seal")
+
+[node name="DefeatSeal" type="Label" parent="Center/Sheet/Stack/Masthead/Seal"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.953, 0.636, 0.508, 1)
+theme_override_font_sizes/font_size = 34
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Heading" type="VBoxContainer" parent="Center/Sheet/Stack/Masthead"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 2
+
+[node name="EstateName" type="Label" parent="Center/Sheet/Stack/Masthead/Heading"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94, 0.839, 0.613, 1)
+theme_override_font_sizes/font_size = 19
+autowrap_mode = 3
+
+[node name="DefeatDate" type="Label" parent="Center/Sheet/Stack/Masthead/Heading"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.78, 0.81, 0.682, 1)
+theme_override_font_sizes/font_size = 15
+autowrap_mode = 3
+
+[node name="DefeatHeading" type="Label" parent="Center/Sheet/Stack/Masthead/Heading"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.7, 0.54, 1)
+theme_override_font_sizes/font_size = 38
+
+[node name="DefeatCause" type="Label" parent="Center/Sheet/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+autowrap_mode = 3
+
+[node name="Recovery" type="PanelContainer" parent="Center/Sheet/Stack"]
+layout_mode = 2
+theme = ExtResource("3_hud")
+theme_type_variation = &"HudRail"
+
+[node name="Stack" type="VBoxContainer" parent="Center/Sheet/Stack/Recovery"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="CheckpointHeading" type="Label" parent="Center/Sheet/Stack/Recovery/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.89, 0.79, 0.558, 1)
+theme_override_font_sizes/font_size = 17
+text = "可恢复存档"
+
+[node name="Checkpoint" type="Label" parent="Center/Sheet/Stack/Recovery/Stack"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="ReadStatus" type="Label" parent="Center/Sheet/Stack"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.712, 0.581, 1)
+autowrap_mode = 3
+
+[node name="Actions" type="HBoxContainer" parent="Center/Sheet/Stack"]
+layout_mode = 2
+theme_override_constants/separation = 9
+
+[node name="RestoreCampaign" type="Button" parent="Center/Sheet/Stack/Actions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+theme = ExtResource("3_hud")
+theme_type_variation = &"HudPrimary"
+text = "读取最近存档"
+
+[node name="ReturnToTitle" type="Button" parent="Center/Sheet/Stack/Actions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 2
+theme = ExtResource("3_hud")
+theme_type_variation = &"HudButton"
+text = "返回标题  Esc"

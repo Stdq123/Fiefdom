@@ -5,6 +5,7 @@ signal notice_coverage_changed(covered: bool)
 const GAME_THEME := preload("res://resources/game_theme.tres")
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 const ESTATE_ENDING := preload("res://scenes/EstateEnding.tscn")
+const CAMPAIGN_DEFEAT := preload("res://scenes/CampaignDefeat.tscn")
 const TITLE_CONFIRMATION := preload("res://scripts/ReturnToTitleDialog.gd")
 const VITALS := preload("res://scenes/HUDVitals.tscn")
 const TRAVEL_HEADING := preload("res://scenes/TravelHeading.tscn")
@@ -17,7 +18,6 @@ const NOTICE_MAX_WIDTH := 536.0
 @export var backpack_trigger: NodePath
 
 var view: Control
-var _defeat_checkpoint := {}
 var _offer_ending_copy := false
 var trail_vitals: PanelContainer
 var trail_date: Label
@@ -372,82 +372,17 @@ func _close_record() -> void:
 	get_tree().paused = false
 
 func _show_defeat(outcome: Global.Outcome) -> void:
-	var background := ColorRect.new()
-	background.color = Color("#211c1bf7")
-	summary = background
+	var defeat := CAMPAIGN_DEFEAT.instantiate()
+	summary = defeat
 	_refresh_notice_visibility()
-	view.add_child(summary)
-	summary.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var center := CenterContainer.new()
-	summary.add_child(center)
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var content := VBoxContainer.new()
-	content.custom_minimum_size.x = 440
-	content.add_theme_constant_override("separation", 14)
-	center.add_child(content)
-
-	var heading := Label.new()
-	var epilogue: String
-	var seal_text: String
-	match outcome:
-		Global.Outcome.DEFEAT_COMBAT:
-			heading.text = "战败"
-			seal_text = "危"
-			epilogue = "气血耗尽，封地经营暂告一段落。"
-		_:
-			heading.text = "褫夺封地"
-			seal_text = "黜"
-			epilogue = "久未纳贡，声望跌过底线，国君已收回封地。"
-	var seal := PanelContainer.new()
-	seal.custom_minimum_size = Vector2(68, 60)
-	seal.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	content.add_child(seal)
-	var inscription := Label.new()
-	inscription.text = seal_text
-	inscription.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	inscription.add_theme_font_size_override("font_size", 34)
-	inscription.add_theme_color_override("font_color", Color("#f0927a"))
-	seal.add_child(inscription)
-	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	heading.add_theme_font_size_override("font_size", 42)
-	content.add_child(heading)
-	var detail := Label.new()
-	detail.text = epilogue
-	detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	content.add_child(detail)
-	var load_button := Button.new()
-	load_button.name = "RestoreCampaign"
-	load_button.text = "读取最近存档"
-	_defeat_checkpoint = Global.latest_saved_game(true)
-	load_button.disabled = _defeat_checkpoint.is_empty()
-	load_button.custom_minimum_size.y = 44
-	content.add_child(load_button)
-	var title_button := Button.new()
-	title_button.name = "ReturnToTitle"
-	title_button.text = "返回标题"
-	title_button.custom_minimum_size.y = 44
-	title_button.pressed.connect(_return_to_title)
-	content.add_child(title_button)
-	load_button.pressed.connect(func():
-		if _restore_game(_defeat_checkpoint) == OK:
-			return
-		_defeat_checkpoint = Global.latest_saved_game(true)
-		load_button.disabled = _defeat_checkpoint.is_empty()
-		if load_button.disabled:
-			status.text += "\n本局没有可恢复的存档。"
-			title_button.grab_focus()
-		else:
-			status.text += "\n" + Global.saved_game_caption(_defeat_checkpoint)
+	view.add_child(defeat)
+	status = defeat.status
+	defeat.present(outcome)
+	defeat.title_requested.connect(_return_to_title)
+	defeat.restore_requested.connect(func(checkpoint: Dictionary):
+		if _restore_game(checkpoint) != OK:
+			defeat.refresh_restore()
 	)
-	status = Label.new()
-	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	status.text = ("本局没有可恢复的存档。" if load_button.disabled else
-		Global.saved_game_caption(_defeat_checkpoint))
-	content.add_child(status)
-	if load_button.disabled:
-		title_button.grab_focus()
-	else:
-		load_button.grab_focus()
 
 func _show_ending_save_conflict() -> void:
 	_offer_ending_copy = true

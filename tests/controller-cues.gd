@@ -26,6 +26,7 @@ func _review() -> void:
 	var initial := _state()
 	await _council()
 	await _endings()
+	await _defeat_without_checkpoint()
 	await _fishing()
 	await _map_cues()
 	_expect(initial == _state() and state.saved_games().is_empty(), "The check only reads interfaces in a paused fixture.")
@@ -119,6 +120,27 @@ func _endings() -> void:
 	_expect(report.report.visible and not report.film.visible and report.continue_button.has_focus(), "B skips to the settlement page.")
 	report.free()
 	state.ending_record = original
+
+func _defeat_without_checkpoint() -> void:
+	var scene := load("res://scenes/CampaignDefeat.tscn") as PackedScene
+	for outcome: int in [state.Outcome.DEFEAT_COMBAT, state.Outcome.DEFEAT_ESTATE]:
+		var panel := scene.instantiate() as Control
+		var returns: Array[bool] = []
+		root.add_child(panel)
+		panel.title_requested.connect(func(): returns.append(true))
+		panel.present(outcome)
+		await _frames(4)
+		var combat: bool = outcome == state.Outcome.DEFEAT_COMBAT
+		_expect(panel.heading.text == ("战败" if combat else "褫夺封地")
+			and panel.estate_name.text == state.campaign_name and panel.cause.get_theme_font_size(&"font_size") == 24,
+			"Both defeat outcomes identify the estate and follow the reading size.")
+		_expect(panel.restore_button.disabled and panel.title_button.has_focus(),
+			"With no checkpoint, the return action gets focus.")
+		_tab_inside(panel, 6)
+		await _pad(JOY_BUTTON_B)
+		_expect(returns.size() == 1 and panel.title_button.text == "返回标题  B",
+			"B returns from the no-checkpoint defeat page.")
+		panel.free()
 
 func _record(outcome: int) -> Dictionary:
 	var account := "新增公田纳贡" if outcome == state.Outcome.TRADITIONAL else "新增计税收成"
