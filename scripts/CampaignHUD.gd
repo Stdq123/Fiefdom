@@ -15,6 +15,7 @@ const NOTICE_MAX_WIDTH := 536.0
 @export var backpack_trigger: NodePath
 
 var view: Control
+var _defeat_checkpoint := {}
 var trail_vitals: PanelContainer
 var trail_date: Label
 var outing_label: Label
@@ -322,7 +323,12 @@ func _show_ending(saved_ending: bool) -> void:
 	ending.continue_button.pressed.connect(_continue_estate)
 	ending.save_button.pressed.connect(_save_ending)
 	ending.refresh_restore()
-	ending.restore_requested.connect(_restore_game)
+	ending.restore_requested.connect(func(checkpoint: Dictionary):
+		if _restore_game(checkpoint) != OK:
+			ending.refresh_restore()
+			if ending.restore_button.disabled:
+				ending.continue_button.grab_focus()
+	)
 	var title_confirmation := TITLE_CONFIRMATION.new()
 	title_confirmation.name = "TitleConfirmation"
 	title_confirmation.save_progress = _save_ending
@@ -406,10 +412,9 @@ func _show_defeat(outcome: Global.Outcome) -> void:
 	var load_button := Button.new()
 	load_button.name = "RestoreCampaign"
 	load_button.text = "读取最近存档"
-	var recovery := Global.latest_saved_game(true)
-	load_button.disabled = recovery.is_empty()
+	_defeat_checkpoint = Global.latest_saved_game(true)
+	load_button.disabled = _defeat_checkpoint.is_empty()
 	load_button.custom_minimum_size.y = 44
-	load_button.pressed.connect(_restore_game)
 	content.add_child(load_button)
 	var title_button := Button.new()
 	title_button.name = "ReturnToTitle"
@@ -417,10 +422,21 @@ func _show_defeat(outcome: Global.Outcome) -> void:
 	title_button.custom_minimum_size.y = 44
 	title_button.pressed.connect(_return_to_title)
 	content.add_child(title_button)
+	load_button.pressed.connect(func():
+		if _restore_game(_defeat_checkpoint) == OK:
+			return
+		_defeat_checkpoint = Global.latest_saved_game(true)
+		load_button.disabled = _defeat_checkpoint.is_empty()
+		if load_button.disabled:
+			status.text += "\n本局没有可恢复的存档。"
+			title_button.grab_focus()
+		else:
+			status.text += "\n" + Global.saved_game_caption(_defeat_checkpoint)
+	)
 	status = Label.new()
 	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	status.text = ("本局没有可恢复的存档。" if load_button.disabled else
-		Global.saved_game_caption(recovery))
+		Global.saved_game_caption(_defeat_checkpoint))
 	content.add_child(status)
 	if load_button.disabled:
 		title_button.grab_focus()
@@ -438,13 +454,16 @@ func _save_ending() -> Error:
 		summary.refresh_restore()
 	return result
 
-func _restore_game() -> void:
+func _restore_game(checkpoint: Dictionary) -> Error:
 	get_tree().paused = false
-	var result := Global.load_latest_game(true)
+	var result := Global.load_saved_entry(checkpoint)
 	if result != OK:
 		get_tree().paused = true
-		status.text = ("请用更新版本的《采邑春秋》读取这份存档。" if result == ERR_FILE_UNRECOGNIZED
-			else "读取失败（%s）" % error_string(result))
+		match result:
+			ERR_FILE_UNRECOGNIZED: status.text = "请用更新版本的《采邑春秋》读取这份存档。"
+			ERR_ALREADY_IN_USE, ERR_FILE_NOT_FOUND, ERR_FILE_CORRUPT: status.text = "刚才选中的记录已变动，请重新选择。"
+			_: status.text = "读取失败（%s）" % error_string(result)
+	return result
 
 func _return_to_title() -> void:
 	get_tree().paused = false

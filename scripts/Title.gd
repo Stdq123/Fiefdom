@@ -13,7 +13,8 @@ const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 @onready var new_name: LineEdit = $NewConfirmation/Form/EstateName
 
 var settings_panel: Panel
-var _resume_scene := ""
+var _resume_entry: Dictionary = {}
+var _has_unreadable_records := false
 var _retry_new_name := false
 
 func _ready() -> void:
@@ -49,14 +50,16 @@ func _refresh_menu() -> void:
 	var catalog := Global.saved_games()
 	var latest: Dictionary = {}
 	var needs_update := false
+	_has_unreadable_records = false
 	for entry in catalog:
 		if entry.error == OK:
-			latest = entry
-			break
-		if entry.error == ERR_FILE_UNRECOGNIZED:
-			needs_update = true
+			if latest.is_empty():
+				latest = entry
+		else:
+			_has_unreadable_records = true
+			needs_update = needs_update or entry.error == ERR_FILE_UNRECOGNIZED
 	var can_resume := not latest.is_empty()
-	_resume_scene = latest.get("scene", "")
+	_resume_entry = latest
 	continue_button.visible = can_resume
 	continue_button.disabled = not can_resume
 	archive_button.visible = not catalog.is_empty()
@@ -124,20 +127,31 @@ func _show_new_game_error(message: String, retry_name: bool) -> void:
 	GamepadInput.snap_pointer_to_focus.call_deferred()
 
 func _continue_game() -> void:
-	var prepared := OK
-	if not _resume_scene.is_empty():
-		prepared = await MapTravel.prepare_session(_resume_scene, "正在读取存档")
-		if prepared in [ERR_BUSY, ERR_SKIP]:
-			return
-	var result := Global.load_latest_game()
+	var entry := _resume_entry
+	var had_unreadable := _has_unreadable_records
+	if entry.is_empty():
+		_refresh_menu()
+		return
+	var prepared := await MapTravel.prepare_session(entry.scene, "正在读取存档")
+	if prepared in [ERR_BUSY, ERR_SKIP]:
+		return
+	if prepared != OK:
+		_refresh_menu()
+		if archive_button.visible:
+			status.text += "\n无法读取存档所需地图。可从「选择存档」试其他记录。"
+		else:
+			status.text = "无法读取存档所需地图。"
+		GamepadInput.snap_pointer_to_focus.call_deferred()
+		return
+	var result := Global.load_saved_entry(entry, had_unreadable)
 	if result == OK:
 		return
 	_refresh_menu()
-	if prepared != OK:
-		status.text = ("无法读取存档所需地图。可从「选择存档」试其他记录。"
-			if archive_button.visible else "无法读取存档所需地图。")
-	elif result not in [ERR_FILE_NOT_FOUND, ERR_FILE_CORRUPT, ERR_FILE_UNRECOGNIZED]:
-		status.text = "继续失败（%s）" % error_string(result)
+	if result in [ERR_ALREADY_IN_USE, ERR_FILE_NOT_FOUND, ERR_FILE_CORRUPT, ERR_FILE_UNRECOGNIZED]:
+		if continue_button.visible:
+			status.text += "\n原记录已变更，请确认上方存档后再继续。"
+	else:
+		status.text += "\n继续失败（%s）" % error_string(result)
 	GamepadInput.snap_pointer_to_focus.call_deferred()
 
 func _update_new_visibility() -> void:
@@ -154,7 +168,9 @@ func _open_archive() -> void:
 	archive.tree_exiting.connect(func():
 		if is_inside_tree() and get_tree().current_scene == self:
 			menu.show()
-			archive_button.grab_focus()
+			_refresh_menu()
+			if archive_button.visible:
+				archive_button.grab_focus()
 			GamepadInput.snap_pointer_to_focus.call_deferred()
 	)
 

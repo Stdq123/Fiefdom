@@ -88,7 +88,7 @@ func _select_save() -> void:
 	_expect_loading("正在读取存档")
 	await travel.finished
 	await process_frame
-	_expect(current_scene == title and paused and row.disabled and archive.close_button.has_focus()
+	_expect(current_scene == title and paused and archive.records.get_child(0).disabled and archive.close_button.has_focus()
 		and archive.status.visible, "An unavailable file leaves the picker open with a readable error and return focus.")
 	_expect_revealed()
 	archive.close_button.pressed.emit()

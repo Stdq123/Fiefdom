@@ -4006,7 +4006,6 @@ func saved_games() -> Array[Dictionary]:
 		var snapshot := _read_snapshot(path)
 		var data: Dictionary = snapshot["data"]
 		var readable: bool = snapshot["error"] == OK
-		var sequence := _snapshot_sequence(data, snapshot["file"]) if readable else -1
 		var campaign := _snapshot_campaign(data)
 		var legacy := not path.begins_with(CAMPAIGN_SAVE_ROOT + "/")
 		var campaign_key := campaign.md5_text() if readable or legacy else path.get_base_dir().get_file()
@@ -4026,7 +4025,8 @@ func saved_games() -> Array[Dictionary]:
 		catalog.append({
 			"path": path,
 			"source": source,
-			"sequence": sequence,
+			"sequence": snapshot.get("sequence", -1),
+			"fingerprint": snapshot.get("fingerprint", ""),
 			"day": _read_save_int(data.get("current_day"), 0),
 			"watch": DAY_WATCHES[_day_watch_index(_saved_day_progress(data))] + "时",
 			"location": SAVE_LOCATION_NAMES.get(data.get("location"), ""),
@@ -4084,8 +4084,12 @@ func _saved_day_progress(data: Dictionary) -> float:
 	return clampf(_read_save_number(data.get("day_progress"), 0.0), 0.0, 1.0)
 
 func latest_saved_game(current_campaign_only := false) -> Dictionary:
-	for entry in saved_games():
+	var catalog := saved_games()
+	for entry in catalog:
 		if entry["error"] == OK and _can_resume(entry, current_campaign_only):
+			var key: String = entry.campaign_key
+			entry["had_unreadable"] = catalog.any(func(other: Dictionary) -> bool:
+				return other.error != OK and (not current_campaign_only or other.campaign_key == key))
 			return entry
 	return {}
 
@@ -4113,10 +4117,8 @@ func load_latest_game(current_campaign_only := false) -> Error:
 	for entry in catalog:
 		if entry["error"] != OK or not _can_resume(entry, current_campaign_only):
 			continue
-		var result := load_game(entry["path"])
+		var result := load_saved_entry(entry, unavailable)
 		if result == OK:
-			if unavailable and restore_notice.is_empty():
-				restore_notice = "部分存档无法读取 · 已载入第 %d 天" % current_day
 			return OK
 		failure = result
 		unavailable = true
@@ -4127,7 +4129,8 @@ func _can_resume(entry: Dictionary, current_campaign_only: bool) -> bool:
 		and entry["sequence"] <= checkpoint_sequence and entry["day"] <= current_day)
 
 func _snapshot_sequence(data: Dictionary, path: String) -> int:
-	return _read_save_int(data.get("save_sequence"), FileAccess.get_modified_time(path) * SAVE_TIME_SCALE)
+	var sequence := _read_save_int(data.get("save_sequence"), -1)
+	return sequence if sequence >= 0 else FileAccess.get_modified_time(path) * SAVE_TIME_SCALE
 
 func _snapshot_outcome(data: Dictionary, saved_health: int) -> Outcome:
 	var result := clampi(_read_save_int(data.get("outcome"), Outcome.RUNNING), Outcome.RUNNING, Outcome.REFORMED) as Outcome
@@ -4164,19 +4167,19 @@ func _read_snapshot(path: String) -> Dictionary:
 	return snapshot
 
 func _read_save_file(path: String) -> Dictionary:
-	var header := _read_save_header(path)
+	var header := _read_save_header(path, true)
 	if header.error != OK:
 		return header
-	var result := _load_snapshot_data(header.data, path, true)
-	return {"error": result, "data": header.data if result == OK else {}}
+	var result := _load_snapshot_data(header.data, 0, true)
+	return header if result == OK else {"error": result, "data": {}}
 
-func _read_save_header(path: String) -> Dictionary:
+func _read_save_header(path: String, fingerprint := false) -> Dictionary:
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		return {"error": FileAccess.get_open_error(), "data": {}}
 	var json := JSON.new()
-	var parse_error := json.parse(file.get_as_text())
-	file.close()
+	var contents := file.get_as_text()
+	var parse_error := json.parse(contents)
 	if parse_error != OK or not json.data is Dictionary:
 		return {"error": ERR_FILE_CORRUPT, "data": {}}
 
@@ -4189,7 +4192,30 @@ func _read_save_header(path: String) -> Dictionary:
 	var saved_day := _read_save_int(data.get("current_day"), 0)
 	if version < 0 or saved_day < 1:
 		return {"error": ERR_FILE_CORRUPT, "data": {}}
-	return {"error": OK, "data": data}
+	var header := {"error": OK, "data": data}
+	if fingerprint:
+		header["fingerprint"] = contents.sha256_text()
+		header["sequence"] = _snapshot_sequence(data, path)
+	return header
+
+func load_saved_entry(entry: Dictionary, had_unreadable := false) -> Error:
+	if entry.get("error", ERR_INVALID_DATA) != OK or str(entry.get("fingerprint", "")).is_empty():
+		return ERR_INVALID_DATA
+	var path: String = entry.path
+	var backup := path + SAVE_BACKUP_SUFFIX
+	var sources := [backup, path] if entry.from_backup else [path, backup]
+	var failure := ERR_FILE_NOT_FOUND
+	var changed := false
+	for file: String in sources:
+		var record := _read_save_file(file)
+		if record.error == OK:
+			if record.fingerprint == entry.fingerprint:
+				# Apply the same in-memory content that matched the menu, even if the slot rotates again.
+				return _restore_snapshot(record.data, entry.sequence, file == backup, had_unreadable or entry.get("had_unreadable", false))
+			changed = true
+		elif record.error != ERR_FILE_NOT_FOUND and failure != ERR_FILE_UNRECOGNIZED:
+			failure = record.error
+	return ERR_ALREADY_IN_USE if changed else failure
 
 func load_game(path := "") -> Error:
 	if path.is_empty():
@@ -4200,12 +4226,18 @@ func load_game(path := "") -> Error:
 	if snapshot["error"] != OK:
 		return snapshot["error"]
 	var file: String = snapshot["file"]
-	var result := _load_snapshot_data(snapshot["data"], file)
-	if result == OK and file != path:
-		restore_notice = "已从备份恢复第 %d 天" % current_day
+	return _restore_snapshot(snapshot.data, snapshot.sequence, file != path)
+
+func _restore_snapshot(data: Dictionary, sequence: int, from_backup: bool, had_unreadable := false) -> Error:
+	var result := _load_snapshot_data(data, sequence)
+	if result == OK:
+		if from_backup:
+			restore_notice = "已从备份恢复第 %d 天" % current_day
+		elif had_unreadable:
+			restore_notice = "部分存档无法读取 · 已载入第 %d 天" % current_day
 	return result
 
-func _load_snapshot_data(data: Dictionary, path: String, check_only := false) -> Error:
+func _load_snapshot_data(data: Dictionary, sequence: int, check_only := false) -> Error:
 	var version := _read_save_int(data.get("save_version", 0), 0)
 	var saved_day := _read_save_int(data["current_day"], 1)
 	var crop_records = data.get("active_crops", {})
@@ -4369,7 +4401,7 @@ func _load_snapshot_data(data: Dictionary, path: String, check_only := false) ->
 
 	campaign_id = _snapshot_campaign(data)
 	campaign_name = _snapshot_campaign_name(data)
-	checkpoint_sequence = _snapshot_sequence(data, path)
+	checkpoint_sequence = sequence
 	restore_notice = ""
 	current_day = saved_day
 	day_progress = _saved_day_progress(data)

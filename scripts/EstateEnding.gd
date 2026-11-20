@@ -2,7 +2,7 @@ extends Control
 
 signal film_finished()
 signal close_requested()
-signal restore_requested()
+signal restore_requested(checkpoint: Dictionary)
 
 enum Shot { FIELD, CEREMONY, FAREWELL, RECORD }
 
@@ -93,6 +93,7 @@ var accounts: Array = []
 var has_route_totals := false
 var archive_open := false
 var ending_saved := false
+var _restore_checkpoint := {}
 var shot := Shot.RECORD
 
 func _ready() -> void:
@@ -114,7 +115,7 @@ func _ready() -> void:
 	stay_button.pressed.connect(_close_restore)
 	load_before_ending.pressed.connect(func():
 		_close_restore()
-		restore_requested.emit()
+		restore_requested.emit(_restore_checkpoint)
 	)
 	GamepadInput.changed.connect(_refresh_back_hints)
 	_refresh_back_hints()
@@ -152,20 +153,19 @@ func _refresh_back_hints() -> void:
 		title_button.text = "返回封地  %s" % key
 
 func refresh_restore() -> void:
-	var checkpoint := Global.latest_saved_game(true)
-	restore_button.disabled = checkpoint.is_empty()
-	restore_button.tooltip_text = "本局没有可读取的通关前存档。" if checkpoint.is_empty() else Global.saved_game_caption(checkpoint)
+	_restore_checkpoint = Global.latest_saved_game(true)
+	restore_button.disabled = _restore_checkpoint.is_empty()
+	restore_button.tooltip_text = "本局没有可读取的通关前存档。" if _restore_checkpoint.is_empty() else Global.saved_game_caption(_restore_checkpoint)
 
 func _confirm_restore() -> void:
-	var checkpoint := Global.latest_saved_game(true)
-	if checkpoint.is_empty():
-		refresh_restore()
+	refresh_restore()
+	if _restore_checkpoint.is_empty():
 		status.text = "本局没有可读取的通关前存档。"
 		return
 	var consequence := ("已保存的结局可从标题的「选择存档」打开。" if ending_saved else
 		"可先留在结算，点「保存结局」保留这次记录。")
 	restore_detail.text = "%s\n\n读取后会回到呈交账册前。\n%s" % [
-		Global.saved_game_caption(checkpoint), consequence]
+		Global.saved_game_caption(_restore_checkpoint), consequence]
 	report.hide()
 	restore_confirmation.show()
 	_focus_action(stay_button)

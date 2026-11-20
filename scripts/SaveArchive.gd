@@ -27,6 +27,14 @@ func _ready() -> void:
 		InterfaceFont.scale_reading_text(control)
 	GamepadInput.changed.connect(_refresh_controls_hint)
 	_refresh_controls_hint()
+	_refresh_catalog(preferred_campaign.md5_text())
+
+func _refresh_catalog(preferred_key: String, previous_path := "") -> void:
+	campaigns.clear()
+	campaign_buttons.clear()
+	selected_campaign = ""
+	_clear_rows(estates)
+	status.hide()
 	for entry in Global.saved_games():
 		var key: String = entry["campaign_key"]
 		if not campaigns.has(key):
@@ -41,6 +49,8 @@ func _ready() -> void:
 					break
 		_add_campaign(key, summary)
 	if campaigns.is_empty():
+		_clear_rows(records)
+		records_heading.text = "存档记录"
 		_show_unavailable()
 		close_button.focus_next = ^"."
 		close_button.focus_previous = ^"."
@@ -48,11 +58,31 @@ func _ready() -> void:
 			close_button.set_focus_neighbor(side, ^".")
 		close_button.grab_focus()
 	else:
-		var preferred := preferred_campaign.md5_text()
-		var key: String = preferred if campaigns.has(preferred) else campaigns.keys()[0]
+		var key: String = preferred_key if campaigns.has(preferred_key) else campaigns.keys()[0]
 		_show_records(key)
-		campaign_buttons[key].grab_focus()
+		var focus: Button = campaign_buttons[key]
+		if not previous_path.is_empty() and key == preferred_key:
+			focus = _record_focus(key, previous_path)
+		focus.grab_focus()
 	GamepadInput.snap_pointer_to_focus.call_deferred()
+
+func _record_focus(key: String, path: String) -> Button:
+	var first_readable: Button
+	for i in campaigns[key].size():
+		var row := records.get_child(i) as Button
+		if not row.disabled:
+			if campaigns[key][i].path == path:
+				return row
+			if not first_readable:
+				first_readable = row
+	if first_readable:
+		return first_readable
+	return close_button if campaigns.size() == 1 else campaign_buttons[key]
+
+func _clear_rows(column: VBoxContainer) -> void:
+	for row in column.get_children():
+		column.remove_child(row)
+		row.queue_free()
 
 func _add_row(column: VBoxContainer) -> Button:
 	var button := Button.new()
@@ -90,9 +120,7 @@ func _show_records(key: String) -> void:
 	for estate in campaign_buttons:
 		campaign_buttons[estate].theme_type_variation = &"HudPrimary" if estate == key else &"HudButton"
 		campaign_buttons[estate].set_pressed_no_signal(estate == key)
-	for row in records.get_children():
-		records.remove_child(row)
-		row.queue_free()
+	_clear_rows(records)
 	record_scroll.scroll_vertical = 0
 	var entries: Array = campaigns[key]
 	records_heading.text = "%s的存档" % entries[0]["campaign_name"] if entries[0]["error"] == OK else "存档记录"
@@ -127,7 +155,7 @@ func _show_records(key: String) -> void:
 				button.add_theme_constant_override("h_separation", 12)
 		if not button.disabled and not Global.saved_game_route(entry, false).is_empty():
 			button.tooltip_text += "\n爵位 · " + Global.rank_names[entry.rank]
-		button.pressed.connect(_load.bind(entry, button, key))
+		button.pressed.connect(_load.bind(entry, key))
 		readable = readable or not button.disabled
 	if not readable:
 		_show_unavailable()
@@ -200,7 +228,7 @@ func _close() -> void:
 		GamepadInput.snap_pointer_to_focus.call_deferred()
 	queue_free()
 
-func _load(entry: Dictionary, button: Button, key: String) -> void:
+func _load(entry: Dictionary, key: String) -> void:
 	var prepared := await MapTravel.prepare_session(entry["scene"], "正在读取存档")
 	if prepared in [ERR_BUSY, ERR_SKIP]:
 		return
@@ -208,21 +236,23 @@ func _load(entry: Dictionary, button: Button, key: String) -> void:
 		_show_load_error("无法读取这份存档所需的地图。可重试或选择其他记录。")
 		return
 	get_tree().paused = false
-	var result := Global.load_game(entry["path"])
+	var result := Global.load_saved_entry(entry)
 	if result == OK:
 		return
 	get_tree().paused = true
-	if result in [ERR_FILE_CORRUPT, ERR_FILE_NOT_FOUND, ERR_FILE_UNRECOGNIZED]:
-		entry.error = result
+	if result in [ERR_ALREADY_IN_USE, ERR_FILE_CORRUPT, ERR_FILE_NOT_FOUND, ERR_FILE_UNRECOGNIZED]:
+		_refresh_catalog(key, entry.path)
+		if campaigns.is_empty():
+			return
+		var notice := "原记录已变更，请核对列表后重新选择。"
 		if result == ERR_FILE_UNRECOGNIZED:
-			for current in Global.saved_games():
-				if current.path == entry.path and current.error == result:
-					entry.merge(current, true)
-					break
-		_mark_unavailable(button, entry)
-		_link_focus(campaign_buttons[key])
-	if result == ERR_FILE_UNRECOGNIZED:
-		_show_load_error("请用更新版本的《采邑春秋》读取这份存档。")
+			notice = "原记录需要更新版本的《采邑春秋》。"
+		if status.visible:
+			if result != ERR_FILE_UNRECOGNIZED:
+				status.text += "\n" + notice
+		else:
+			status.text = notice
+			status.show()
 		return
 	_show_load_error("这份存档无法读取。请选择其他存档。")
 

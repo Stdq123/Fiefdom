@@ -57,7 +57,7 @@ func _review() -> void:
 	_expect(travel._session_caption.text == "正在前往西市" and current_scene == title and _released(),
 		"A cold gate reads only the named map and releases the screen if its arrival marker is missing.")
 
-	title._resume_scene = MISSING
+	title._resume_entry = {"scene": MISSING}
 	await title._continue_game()
 	_expect(title.status.text == "无法读取存档所需地图。" and title.new_button.has_focus() and _released(),
 		"Continue can return to a usable title and report a missing map.")
@@ -66,7 +66,7 @@ func _review() -> void:
 	var row := Button.new()
 	archive.records.add_child(row)
 	row.grab_focus()
-	await archive._load({"path": "user://unavailable-for-review.json", "scene": MISSING}, row, "")
+	await archive._load({"path": "user://unavailable-for-review.json", "scene": MISSING}, "")
 	_expect(paused and archive.status.visible and archive.status.text.begins_with("无法读取这份存档所需的地图")
 		and archive.close_button.has_focus() and not row.disabled and _released(),
 		"The archive stays open and available when the required map could not be prepared.")

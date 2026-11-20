@@ -182,7 +182,7 @@ func _history_and_fallback() -> void:
 	panel = await _settings()
 	await _press(_button(panel, "读取游戏"))
 	archive = ui.get_node("Control/SaveArchive")
-	var damaged := _button(archive.records, "晨间自动存档 · 无法读取")
+	var damaged := _button(archive.records, "自动存档 · 无法读取")
 	_expect(is_instance_valid(damaged) and damaged.disabled, "The archive marks an unreadable file.")
 	await _press(_button(archive.records, "手动存档"))
 	await _estate()
