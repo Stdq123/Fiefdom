@@ -19,6 +19,9 @@ var _arrival_tween: Tween
 var _preloads: Dictionary[String, PackedScene] = {}
 var _session_plate: CenterContainer
 var _session_caption: Label
+var _session_stage: Label
+var _session_count: Label
+var _session_activity: ProgressBar
 var _session_batch_usec := RESOURCE_BATCH_USEC
 
 func _ready() -> void:
@@ -43,32 +46,51 @@ func _ready() -> void:
 	_session_plate = SESSION_PLATE.instantiate()
 	add_child(_session_plate)
 	_session_caption = _session_plate.get_node("%Caption")
-	InterfaceFont.scale_reading_text(_session_caption)
+	_session_stage = _session_plate.get_node("%ReadStage")
+	_session_count = _session_plate.get_node("%ReadCount")
+	_session_activity = _session_plate.get_node("%Activity")
+	for label: Label in [_session_caption, _session_stage, _session_count]:
+		InterfaceFont.scale_reading_text(label)
 	set_process_input(false)
 
-func prepare_session(path: String, caption: String) -> bool:
+func prepare_session(path: String, caption: String) -> Error:
 	var tree := get_tree()
 	var origin := tree.current_scene
 	if active or origin == null:
-		return false
+		return ERR_BUSY
 	var packed: PackedScene = _preloads.get(path)
 	if packed and _unprepared_neighbors(packed).is_empty():
-		return true
+		return OK
+	if path.is_empty() or not ResourceLoader.exists(path, "PackedScene"):
+		return ERR_FILE_NOT_FOUND
 	active = true
 	set_process_input(true)
 	_clear_arrival()
 	cover.color.a = 1.0
 	cover.show()
-	await _show_loading_card(caption)
-	packed = await _prepare_in_batches(path)
+	var stage := _map_read_stage(path, caption)
+	await _show_loading_card(caption, stage)
+	packed = await _prepare_in_batches(path, stage)
 	if packed:
 		for neighbor in _unprepared_neighbors(packed):
-			await _prepare_in_batches(neighbor)
+			if not is_instance_valid(origin) or tree.current_scene != origin:
+				break
+			await _prepare_in_batches(neighbor, "预备关口 · " + _place_name(neighbor))
 	_finish()
-	return is_instance_valid(origin) and tree.current_scene == origin
+	if not is_instance_valid(origin) or tree.current_scene != origin:
+		return ERR_SKIP
+	return OK if packed else ERR_CANT_OPEN
 
-func _show_loading_card(caption: String) -> void:
+func _map_read_stage(path: String, caption: String) -> String:
+	var place := _place_name(path)
+	return "地图资源" if place.is_empty() or caption.contains(place) else place + " · 地图资源"
+
+func _show_loading_card(caption: String, stage: String) -> void:
 	_session_caption.text = caption
+	_session_stage.text = stage
+	_session_count.text = ""
+	_session_activity.value = 0.0
+	_session_activity.indeterminate = true
 	_session_plate.show()
 	_session_batch_usec = RESOURCE_BATCH_USEC
 	# Draw the loading card before the first synchronous read.
@@ -76,24 +98,37 @@ func _show_loading_card(caption: String) -> void:
 	await tree.process_frame
 	await tree.process_frame
 
-func _prepare_in_batches(path: String) -> PackedScene:
+func _set_read_count(read: int, total: int) -> void:
+	_session_count.text = "%d/%d 项" % [read, total]
+	_session_activity.value = read
+
+func _prepare_in_batches(path: String, stage: String) -> PackedScene:
 	if _preloads.has(path):
 		return _preloads[path]
 	if path.is_empty() or not ResourceLoader.exists(path, "PackedScene"):
 		return null
+	var dependencies := ResourceLoader.get_dependencies(path)
+	var total := dependencies.size() + 1
+	var read := 0
+	_session_activity.set_value_no_signal(0.0)
+	_session_stage.text = stage
+	_session_activity.max_value = total
+	_set_read_count(read, total)
+	_session_activity.indeterminate = false
 	# Retain each dependency until the packed map owns it.
 	var held: Array[Resource] = []
 	var started := Time.get_ticks_usec()
-	for dependency in ResourceLoader.get_dependencies(path):
+	for dependency in dependencies:
 		var target := dependency.get_slice("::", 0)
 		if dependency.contains("::") and not ResourceLoader.exists(target):
 			target = dependency.get_slice("::", 2)
-		if ResourceLoader.has_cached(target):
-			continue
-		var resource := ResourceLoader.load(target)
-		if resource:
-			held.append(resource)
+		if not ResourceLoader.has_cached(target):
+			var resource := ResourceLoader.load(target)
+			if resource:
+				held.append(resource)
+		read += 1
 		if Time.get_ticks_usec() - started >= _session_batch_usec:
+			_set_read_count(read, total)
 			var waiting := Time.get_ticks_usec()
 			await get_tree().process_frame
 			started = Time.get_ticks_usec()
@@ -103,6 +138,7 @@ func _prepare_in_batches(path: String) -> PackedScene:
 	var packed := ResourceLoader.load(path, "PackedScene") as PackedScene
 	if packed:
 		_preloads[path] = packed
+	_set_read_count(total if packed else read, total)
 	await get_tree().process_frame
 	return packed
 
@@ -168,9 +204,10 @@ func _open_destination(path: String, arrival_path: NodePath, player_path: NodePa
 		if path.is_empty() or not ResourceLoader.exists(path, "PackedScene"):
 			return false
 		var place := _place_name(path)
-		await _show_loading_card("正在前往" + place if not place.is_empty() else "正在读入地图")
+		var caption := "正在前往" + place if not place.is_empty() else "正在读入地图"
+		await _show_loading_card(caption, "地图资源")
 		if _can_depart(origin):
-			packed = await _prepare_in_batches(path)
+			packed = await _prepare_in_batches(path, "地图资源")
 		_session_plate.hide()
 		if packed == null or not _can_depart(origin):
 			return false

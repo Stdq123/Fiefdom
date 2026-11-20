@@ -180,18 +180,25 @@ func _close() -> void:
 	queue_free()
 
 func _load(entry: Dictionary, button: Button, key: String) -> void:
-	if not await MapTravel.prepare_session(entry["scene"], "正在读取存档"):
+	var prepared := await MapTravel.prepare_session(entry["scene"], "正在读取存档")
+	if prepared in [ERR_BUSY, ERR_SKIP]:
+		return
+	if prepared != OK:
+		_show_load_error("无法读取这份存档所需的地图。可重试或选择其他记录。")
 		return
 	get_tree().paused = false
 	var result := Global.load_game(entry["path"])
 	if result == OK:
 		return
 	get_tree().paused = true
-	status.text = "这份存档无法读取。请选择其他存档。"
-	status.show()
 	if result in [ERR_FILE_CORRUPT, ERR_FILE_NOT_FOUND]:
 		button.disabled = true
 		button.focus_mode = Control.FOCUS_NONE
 		_link_focus(campaign_buttons[key])
+	_show_load_error("这份存档无法读取。请选择其他存档。")
+
+func _show_load_error(message: String) -> void:
+	status.text = message
+	status.show()
 	close_button.grab_focus()
 	GamepadInput.snap_pointer_to_focus.call_deferred()

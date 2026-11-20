@@ -68,21 +68,34 @@ func _on_new_requested() -> void:
 		_start_game()
 
 func _start_game() -> void:
-	if not await MapTravel.prepare_session(Global.ESTATE_SCENE, "正在打开封地"):
+	var prepared := await MapTravel.prepare_session(Global.ESTATE_SCENE, "正在打开封地")
+	if prepared in [ERR_BUSY, ERR_SKIP]:
+		return
+	if prepared != OK:
+		status.text = "无法读取封地地图。可再次选择新建游戏。"
+		new_button.grab_focus()
+		GamepadInput.snap_pointer_to_focus.call_deferred()
 		return
 	var result := Global.start_new_game(new_name.text)
 	if result != OK:
 		status.text = "打开封地失败（%s）" % error_string(result)
 
 func _continue_game() -> void:
-	if not _resume_scene.is_empty() and not await MapTravel.prepare_session(_resume_scene, "正在读取存档"):
-		return
+	var prepared := OK
+	if not _resume_scene.is_empty():
+		prepared = await MapTravel.prepare_session(_resume_scene, "正在读取存档")
+		if prepared in [ERR_BUSY, ERR_SKIP]:
+			return
 	var result := Global.load_latest_game()
 	if result == OK:
 		return
 	_refresh_menu()
-	if result not in [ERR_FILE_NOT_FOUND, ERR_FILE_CORRUPT]:
+	if prepared != OK:
+		status.text = ("无法读取存档所需地图。可从「选择存档」试其他记录。"
+			if archive_button.visible else "无法读取存档所需地图。")
+	elif result not in [ERR_FILE_NOT_FOUND, ERR_FILE_CORRUPT]:
 		status.text = "继续失败（%s）" % error_string(result)
+	GamepadInput.snap_pointer_to_focus.call_deferred()
 
 func _update_new_visibility() -> void:
 	$ModalShade.visible = new_confirmation.visible

@@ -20,7 +20,7 @@ mouse_filter = 2
 theme = ExtResource("1_hud")
 
 [node name="Plaque" type="PanelContainer" parent="."]
-custom_minimum_size = Vector2(312, 0)
+custom_minimum_size = Vector2(368, 0)
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"HudRail"
@@ -38,10 +38,30 @@ theme_override_font_sizes/font_size = 25
 horizontal_alignment = 1
 
 [node name="Activity" type="ProgressBar" parent="Plaque/Contents"]
-custom_minimum_size = Vector2(0, 6)
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 8)
 layout_mode = 2
 mouse_filter = 2
 theme_override_styles/background = SubResource("Style_track")
 theme_override_styles/fill = SubResource("Style_fill")
 indeterminate = true
 show_percentage = false
+
+[node name="ProgressDetails" type="HBoxContainer" parent="Plaque/Contents"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 20
+
+[node name="ReadStage" type="Label" parent="Plaque/Contents/ProgressDetails"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 16
+
+[node name="ReadCount" type="Label" parent="Plaque/Contents/ProgressDetails"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 2
