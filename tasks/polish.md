@@ -15,6 +15,12 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 门客田务的站位与落点
+
+门客先在目标田格旁站稳，再翻地、撒种、浇水或收割。种粒和水流落入目标格，锄尖碰到土面，镰刃从谷茎下横过。背向镜头时侧站，留出可以看见水流和苗的空隙。弯腰与农具接触共用田务的完成时点。
+
+从 `caded86` 独立构建两次，ZIP 的 SHA-256 均为 `5bf7f5976efa3008d73e1616b91b79c8f2c94229ec494caadc714470bde40a28`。十一项无窗口检查与原样解包启动通过。隔离桌面分别用 1920×1080 Vulkan、1920×1080 Direct3D 12 和 1024×768 OpenGL 各核对六种动作的起手和接触画面。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-retainer-contact/release-caded86/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-retainer-contact/release-caded86/release-proof.txt)
+
 ## 堂屋木门与蚕棚踏石
 
 靠近堂屋时，两扇木门带着门环向内打开，露出门槛后的木板。出门时木门已经打开。蚕棚的低踏石从门槛接到西廊土路，踏上去响石声。白天的门光沿石阶照进两间屋，谷雨和雪天呈较软的冷光，入夜后敞开的门洞把暖光投到屋外的石阶。
