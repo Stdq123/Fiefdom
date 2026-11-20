@@ -5,6 +5,7 @@ const PAPER := Color("#e2d6b2")
 const INK := Color("#443c2a")
 const GOLD := Color("#f2ca73")
 const ROAD_INK := Color("#9b8660")
+const PREVIEW_INK := Color("#315d54")
 const WATER := Color("#6b9992")
 const POINTS := [Vector2(97, 184), Vector2(266, 184), Vector2(449, 184), Vector2(636, 184)]
 const ROAD_WEST := Vector2(188, 184)
@@ -13,13 +14,11 @@ const MEADOW_TURN := Vector2(305, 184)
 const MEADOW_BEND := Vector2(303, 221)
 const MEADOW_ICON := Vector2(320, 254)
 const MEADOW_TRAIL := [MEADOW_TURN, MEADOW_BEND, MEADOW_ICON]
-const TRAILS := [
-	[POINTS[0], Vector2(147, 186), ROAD_WEST, POINTS[1]],
-	[POINTS[1], MEADOW_TURN, ROAD_EAST, Vector2(388, 188), POINTS[2]],
-	[Vector2(449, 184), Vector2(509, 177), Vector2(569, 170), Vector2(636, 184)],
-]
-const SHORTCUT := [Vector2(449, 184), Vector2(465, 232), Vector2(513, 265),
-	Vector2(567, 265), Vector2(619, 240), Vector2(636, 184)]
+const MAIN_TRAIL := [POINTS[0], Vector2(147, 186), ROAD_WEST, POINTS[1],
+	MEADOW_TURN, ROAD_EAST, Vector2(388, 188), POINTS[2]]
+const EAST_TRAIL := [POINTS[2], Vector2(509, 177), Vector2(569, 170), POINTS[3]]
+const SHORTCUT := [POINTS[2], Vector2(465, 232), Vector2(513, 265),
+	Vector2(567, 265), Vector2(619, 240), POINTS[3]]
 const STREAM := [Vector2(242, -12), Vector2(235, 65), Vector2(247, 119), Vector2(257, 146),
 	Vector2(267, 188), Vector2(254, 240), Vector2(235, 294), Vector2(239, 381)]
 const RAVINE_STREAM := [Vector2(655, -12), Vector2(642, 56), Vector2(652, 105), Vector2(662, 150),
@@ -39,9 +38,11 @@ const HERE_RADIUS := 23.0
 @onready var road_button: Button = %RoadMap
 @onready var current_location: Label = %CurrentLocation
 @onready var active_route: Label = %ActiveRoute
+@onready var active_swatch: Control = %ActiveSwatch
 @onready var route_label: Label = %Route
 @onready var place_detail: Label = %PlaceDetail
 @onready var preview_badge: Label = %PreviewBadge
+@onready var preview_swatch: Control = %PreviewSwatch
 @onready var route_button: Button = %Follow
 @onready var clear_button: Button = %ClearDirections
 @onready var region_buttons: HBoxContainer = %Regions
@@ -61,11 +62,15 @@ var destination_buttons: Dictionary[String, Button] = {}
 
 func _ready() -> void:
 	super._ready()
-	for label: Label in [active_route, route_label, place_detail]:
+	for label: Label in [current_location, active_route, route_label, place_detail, preview_badge]:
 		InterfaceFont.scale_reading_text(label)
 	paper.draw.connect(_draw_chart)
 	paper.resized.connect(paper.queue_redraw)
+	Preferences.reading_size_changed.connect(paper.queue_redraw)
 	paper.gui_input.connect(_select_region_on_map)
+	for swatch in [active_swatch, preview_swatch]:
+		swatch.draw.connect(_draw_swatch.bind(swatch))
+		swatch.resized.connect(swatch.queue_redraw)
 	for button: Button in region_buttons.get_children():
 		button.pressed.connect(_browse.bind(button.get_index()))
 	route_button.pressed.connect(_follow)
@@ -135,13 +140,13 @@ func _browse(index: int) -> void:
 
 func _select_region_on_map(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
-		if Rect2(MEADOW_ICON - Vector2(45, 20), Vector2(90, 44)).has_point(event.position):
+		if Rect2(MEADOW_ICON - Vector2(47, 18), Vector2(100, 56)).has_point(event.position):
 			_browse(Region.ROAD)
 			_preview_destination(Sheepfold.MEADOW)
 			return
 		for index in POINTS.size():
 			var point: Vector2 = POINTS[index]
-			if Rect2(point - Vector2(45, 88), Vector2(90, 135)).has_point(event.position):
+			if Rect2(point - Vector2(56, 88), Vector2(112, 135)).has_point(event.position):
 				_browse(index)
 				return
 
@@ -201,7 +206,9 @@ func _refresh_route() -> void:
 	var active: String = active_trip.call()
 	var active_place := Global.field_return_place_name() if active == Global.FIELD_RETURN else active
 	active_route.text = "当前未指路" if active_place.is_empty() else "当前指路 · " + active_place
+	active_swatch.visible = not _active_destination().is_empty()
 	preview_badge.visible = not selected_place.is_empty() and selected_place != active
+	preview_swatch.visible = preview_badge.visible
 	var destination: Button = destination_buttons.get(selected_place)
 	place_detail.text = destination.tooltip_text if destination else ""
 	if selected_place == Sheepfold.MEADOW:
@@ -228,7 +235,7 @@ func _refresh_route() -> void:
 		for stop in _route_regions(_region_for(selected_place)):
 			names.append(REGIONS[stop])
 		route_label.text = " → ".join(names)
-		var south := _uses_shortcut()
+		var south := _uses_shortcut(selected_place)
 		if _region_for(selected_place) == Region.RAVINE and region != Region.RAVINE:
 			route_label.text += " · 经" + (EstateLayout.RAVINE_TRAIL_NAME if south else "东关")
 		elif region == Region.RAVINE and _region_for(selected_place) != Region.RAVINE:
@@ -261,9 +268,45 @@ func _route_regions(destination: Region) -> Array[int]:
 		stops.append(region + direction * offset)
 	return stops
 
-func _uses_shortcut() -> bool:
-	return uses_south_trail.is_valid() and not selected_place.is_empty() \
-		and (selected == Region.RAVINE or region == Region.RAVINE) and uses_south_trail.call(selected_place)
+func _uses_shortcut(place: String) -> bool:
+	return uses_south_trail.is_valid() and Global.ravine_shortcut_open() and not place.is_empty() \
+		and (region == Region.RAVINE or _region_for(place) == Region.RAVINE) and uses_south_trail.call(place)
+
+func _route_points(place: String, progress: Vector2) -> PackedVector2Array:
+	if place.is_empty():
+		return PackedVector2Array()
+	var foot := _current_point(progress)
+	var meadow := place == Sheepfold.MEADOW
+	var on_meadow_trail := region == Region.ROAD and progress.y > 0.0
+	var points := PackedVector2Array([foot])
+	if on_meadow_trail:
+		if meadow:
+			if progress.y < 0.5:
+				points.append(MEADOW_BEND)
+			if foot != MEADOW_ICON:
+				points.append(MEADOW_ICON)
+			return points
+		if progress.y > 0.5:
+			points.append(MEADOW_BEND)
+		points.append(MEADOW_TURN)
+	var start := points[-1]
+	var finish: Vector2 = MEADOW_TURN if meadow else POINTS[_region_for(place)]
+	var eastern_leg := SHORTCUT if _uses_shortcut(place) else EAST_TRAIL
+	# These roads are ordered west to east. Start and end may be inside a road segment.
+	var trail: Array = MAIN_TRAIL + eastern_leg.slice(1)
+	if finish.x < start.x:
+		trail.reverse()
+	var west := minf(start.x, finish.x)
+	var east := maxf(start.x, finish.x)
+	for vertex: Vector2 in trail:
+		if vertex.x > west and vertex.x < east:
+			points.append(vertex)
+	if start != finish:
+		points.append(finish)
+	if meadow:
+		points.append(MEADOW_BEND)
+		points.append(MEADOW_ICON)
+	return points
 
 func _draw_chart() -> void:
 	var sheet := Rect2(Vector2.ZERO, paper.size)
@@ -275,38 +318,39 @@ func _draw_chart() -> void:
 			19 + posmod(index * 67, int(paper.size.y) - 38))
 		paper.draw_rect(Rect2(at, Vector2(2, 1)), Color("#a9926240"))
 	_draw_land()
-	var highlighted: Array[int] = []
-	if not selected_place.is_empty():
-		highlighted = _route_regions(_region_for(selected_place))
-	var south := _uses_shortcut()
-	var meadow := selected_place == Sheepfold.MEADOW
-	for index in TRAILS.size():
-		var active := (index in highlighted and index + 1 in highlighted
-			and (index != Region.ESTATE or not south) and (index != Region.ROAD or not meadow))
-		_draw_road(TRAILS[index], active)
+	for path: Array in [MAIN_TRAIL, EAST_TRAIL, MEADOW_TRAIL]:
+		paper.draw_polyline(PackedVector2Array(path), ROAD_INK, 5.0, true)
 	if Global.ravine_shortcut_open():
-		_draw_road(SHORTCUT, south)
-		_draw_text("南路小径", Vector2(542, 286), 14, INK)
-	_draw_meadow(meadow)
+		paper.draw_polyline(PackedVector2Array(SHORTCUT), ROAD_INK, 5.0, true)
+		_draw_text("南路小径", Vector2(542, 288), 14, INK)
 	_draw_bridge()
 	_draw_landmarks()
+	_draw_seal(MEADOW_ICON, 7.5)
+	for at: Vector2 in POINTS:
+		_draw_seal(at, SEAL_RADIUS)
+	var progress: Vector2 = road_progress.call() if region == Region.ROAD else Vector2.ZERO
+	var active := _active_destination()
+	var confirmed := _route_points(active, progress)
+	var preview := _route_points(selected_place, progress) if selected_place != active else PackedVector2Array()
+	if confirmed.size() > 1:
+		_draw_active_route(paper, confirmed)
+	if preview.size() > 1:
+		_draw_preview_route(paper, preview)
+	_draw_text(Sheepfold.MEADOW, MEADOW_ICON + Vector2(6, 21), 14, INK)
 	_draw_text("北", Vector2(680, 42), 15, INK)
 	paper.draw_colored_polygon(PackedVector2Array([Vector2(680, 52), Vector2(674, 67), Vector2(680, 63), Vector2(686, 67)]), INK)
 	for index in REGIONS.size():
 		var at: Vector2 = POINTS[index]
-		var current := index == region
-		var target := index == selected
-		paper.draw_circle(at, SEAL_RADIUS, INK, true, -1.0, true)
-		paper.draw_circle(at, SEAL_RADIUS - 3.0, GOLD if target or index in highlighted else PAPER, true, -1.0, true)
-		if current:
-			if region == Region.ROAD:
-				_draw_road_position(_road_point(road_progress.call()))
-			else:
-				paper.draw_arc(at, SEAL_RADIUS + 3.0, 0.0, TAU, 24, INK, 2.0, true)
-				paper.draw_circle(at, 3.0, INK, true, -1.0, true)
-		_draw_text(REGIONS[index], at + Vector2(0, 29), 20, INK)
-		if current:
-			_draw_text("当前位置", at + Vector2(0, 50), 14, Color("#586b4d"))
+		_draw_text(REGIONS[index], at + Vector2(-9 if index == Region.ROAD else 0, 29), 20, INK)
+	if not confirmed.is_empty():
+		paper.draw_circle(confirmed[-1], 8.5, INK, true, -1.0, true)
+		paper.draw_circle(confirmed[-1], 5.5, GOLD, true, -1.0, true)
+	if not preview.is_empty():
+		_draw_preview_marker(preview[-1])
+	_draw_current_position(_current_point(progress))
+
+func _current_point(progress: Vector2) -> Vector2:
+	return _road_point(progress) if region == Region.ROAD else POINTS[region]
 
 func _road_point(progress: Vector2) -> Vector2:
 	if progress.y == 0.0:
@@ -315,33 +359,24 @@ func _road_point(progress: Vector2) -> Vector2:
 		return MEADOW_TURN.lerp(MEADOW_BEND, progress.y * 2.0)
 	return MEADOW_BEND.lerp(MEADOW_ICON, progress.y * 2.0 - 1.0)
 
-func _draw_road_position(foot: Vector2) -> void:
+func _draw_current_position(foot: Vector2) -> void:
 	var pin := foot - Vector2(0, HERE_RADIUS)
-	paper.draw_line(pin + Vector2(0, 7), foot, INK, 1.6, true)
+	paper.draw_colored_polygon(PackedVector2Array([pin + Vector2(-6, 3), pin + Vector2(6, 3), foot]), INK)
 	paper.draw_circle(pin, 8.0, INK, true, -1.0, true)
-	paper.draw_circle(pin, 5.0, GOLD, true, -1.0, true)
-	paper.draw_circle(pin, 2.0, INK, true, -1.0, true)
+	paper.draw_circle(pin, 5.0, Color("#fff3d7"), true, -1.0, true)
+	paper.draw_circle(pin, 2.0, PREVIEW_INK, true, -1.0, true)
 
-func _draw_meadow(selected_meadow: bool) -> void:
-	var trail := MEADOW_TRAIL
-	if selected_meadow:
-		match region:
-			Region.MARKET:
-				_draw_road([POINTS[Region.ROAD], MEADOW_TURN], true)
-			Region.ESTATE, Region.RAVINE:
-				_draw_road(TRAILS[Region.ROAD].slice(1), true)
-			Region.ROAD:
-				var progress: Vector2 = road_progress.call()
-				var start := _road_point(progress)
-				if progress.y > 0.0:
-					_draw_road(MEADOW_TRAIL, false)
-					trail = [start, MEADOW_BEND, MEADOW_ICON] if progress.y < 0.5 else [start, MEADOW_ICON]
-				else:
-					_draw_road([start, MEADOW_TURN], true)
-	_draw_road(trail, selected_meadow)
-	paper.draw_circle(MEADOW_ICON, 7.5, INK, true, -1.0, true)
-	paper.draw_circle(MEADOW_ICON, 4.0, GOLD if selected_meadow else PAPER, true, -1.0, true)
-	_draw_text(Sheepfold.MEADOW, MEADOW_ICON + Vector2(5, 18), 14, INK)
+func _draw_seal(at: Vector2, radius: float) -> void:
+	paper.draw_circle(at, radius, INK, true, -1.0, true)
+	paper.draw_circle(at, radius - 2.5, PAPER, true, -1.0, true)
+
+func _draw_preview_marker(at: Vector2) -> void:
+	var shape := PackedVector2Array([
+		at + Vector2(0, -12), at + Vector2(12, 0),
+		at + Vector2(0, 12), at + Vector2(-12, 0), at + Vector2(0, -12),
+	])
+	paper.draw_polyline(shape, PAPER, 5.0, true)
+	paper.draw_polyline(shape, PREVIEW_INK, 2.8, true)
 
 func _draw_land() -> void:
 	paper.draw_colored_polygon(PackedVector2Array([Vector2(23, 97), Vector2(54, 65), Vector2(128, 52),
@@ -355,15 +390,21 @@ func _draw_land() -> void:
 	paper.draw_polyline(PackedVector2Array(RAVINE_STREAM), WATER.lightened(0.30), 20.0, true)
 	paper.draw_polyline(PackedVector2Array(RAVINE_STREAM), WATER.darkened(0.09), 13.0, true)
 
-func _draw_road(path: Array, highlighted: bool) -> void:
-	var line := PackedVector2Array(path)
-	paper.draw_polyline(line, INK if highlighted else ROAD_INK, 8.0 if highlighted else 5.0, true)
-	if highlighted:
-		if selected_place == _active_destination():
-			paper.draw_polyline(line, GOLD, 4.0, true)
-		else:
-			for index in range(1, line.size()):
-				paper.draw_dashed_line(line[index - 1], line[index], GOLD, 4.0, 9.0, true, true)
+func _draw_active_route(canvas: CanvasItem, line: PackedVector2Array) -> void:
+	canvas.draw_polyline(line, INK, 10.0, true)
+	canvas.draw_polyline(line, GOLD, 7.0, true)
+
+func _draw_preview_route(canvas: CanvasItem, line: PackedVector2Array, ink := PREVIEW_INK) -> void:
+	for index in range(1, line.size()):
+		canvas.draw_dashed_line(line[index - 1], line[index], ink, 3.6, 7.0, true, true)
+
+func _draw_swatch(swatch: Control) -> void:
+	var mid := swatch.size.y * 0.5
+	var line := PackedVector2Array([Vector2(2.0, mid), Vector2(swatch.size.x - 2.0, mid)])
+	if swatch == active_swatch:
+		_draw_active_route(swatch, line)
+	else:
+		_draw_preview_route(swatch, line, PREVIEW_INK.lightened(0.46))
 
 func _draw_bridge() -> void:
 	var deck := Rect2(247, 175, 38, 18)
@@ -385,6 +426,7 @@ func _draw_landmarks() -> void:
 
 func _draw_text(value: String, at: Vector2, font_size: int, color: Color) -> void:
 	var font := paper.get_theme_default_font()
+	font_size = Preferences.reading_font_size(font_size)
 	var span := font.get_string_size(value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
 	paper.draw_string(font, at + Vector2(-span.x * 0.5, font.get_ascent(font_size) * 0.5),
 		value, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, color)

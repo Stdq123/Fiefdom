@@ -194,21 +194,40 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 4
 
-[node name="ActiveRoute" type="Label" parent="MapModal/Center/Panel/Layout/Footer/RouteState"]
+[node name="ActivePath" type="HBoxContainer" parent="MapModal/Center/Panel/Layout/Footer/RouteState"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ActiveSwatch" type="Control" parent="MapModal/Center/Panel/Layout/Footer/RouteState/ActivePath"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(32, 12)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ActiveRoute" type="Label" parent="MapModal/Center/Panel/Layout/Footer/RouteState/ActivePath"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.88, 0.72, 1)
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.93, 0.85, 0.67, 1)
 autowrap_mode = 3
 
 [node name="Path" type="HBoxContainer" parent="MapModal/Center/Panel/Layout/Footer/RouteState"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
+[node name="PreviewSwatch" type="Control" parent="MapModal/Center/Panel/Layout/Footer/RouteState/Path"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(32, 12)
+layout_mode = 2
+mouse_filter = 2
+
 [node name="PreviewBadge" type="Label" parent="MapModal/Center/Panel/Layout/Footer/RouteState/Path"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-theme_override_colors/font_color = Color(0.95, 0.79, 0.5, 1)
+theme_override_colors/font_color = Color(0.7, 0.88, 0.82, 1)
 text = "虚线预览"
 
 [node name="Route" type="Label" parent="MapModal/Center/Panel/Layout/Footer/RouteState/Path"]
