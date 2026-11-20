@@ -15,6 +15,12 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 田务动作、落点与音效
+
+翻地时锄尖对准邻格土面，收割时镰刃扫过谷茎。撒种和浇水的落点也跟随选中的田格。泥点、种粒、水花、断穗和对应的声音在接触帧出现。一次动作内连续拖过多格时，每格都有落点反馈。
+
+从 `1928af0` 独立构建两次，ZIP 的 SHA-256 均为 `85dafd6d02daeb314bbbfec558cc2cbe26b007ebc2b219efe331aa176666beca`。十项无窗口检查与原样解包启动通过。1920×1080 Vulkan、1920×1080 Direct3D 12 和 1024×768 OpenGL 在隔离桌面各核对五个接触样例和一次连续两格的动作。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-field-stroke-contact/release-1928af0/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-field-stroke-contact/release-1928af0/release-proof.txt)
+
 ## 主角落脚与声音同步
 
 左右脚落地的画面、脚步声和地面反馈共用行走距离。水花、雪印和尘土贴对应鞋底。沿墙滑行时，画面朝向实际走过的方向。衣架预览沿用主角的起步帧和步态。

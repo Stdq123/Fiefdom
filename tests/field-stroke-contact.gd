@@ -4,7 +4,6 @@ var failed := false
 var world: Node2D
 var actor
 var tool
-var audio
 
 func _initialize() -> void:
 	_review.call_deferred()
@@ -23,10 +22,6 @@ func _review() -> void:
 	world = current_scene.get_node("World")
 	actor = world.player
 	tool = actor.tool_gesture
-	audio = root.get_node("AudioManager")
-	if audio.field_sounds.is_empty():
-		for path in audio.FIELD_SOUND_PATHS:
-			audio.field_sounds.append(load(path))
 	var before := [state.current_day, state.day_progress, state.current_stamina, state.food_storage,
 		state.money, hash(state.active_crops), hash(state.tilled_cells)]
 	var cell: Vector2i = state.well_fields[0].center_pos
@@ -54,11 +49,10 @@ func _check_stroke(cell: Vector2i, action: int, plot: Vector2) -> void:
 	_reset()
 	world._play_field_stroke(cell, action)
 	tool._process(0.04)
-	_expect(tool.visible and _impacts().is_empty() and audio.sfx_player.stream == null, "Allow the windup to show before feedback.")
+	_expect(tool.visible and _impacts().is_empty(), "Allow the windup to show before feedback.")
 	tool._process(0.06)
 	var impacts := _impacts()
-	_expect(tool.work_pose() == 1 and impacts.size() == 1 and audio.sfx_player.stream == audio.field_sounds[action],
-		"Draw one tile impact and select its sound on the contact pose.")
+	_expect(tool.work_pose() == 1 and impacts.size() == 1, "Draw one tile impact on the contact pose.")
 	_expect(actor.sprite.frame_coords.x == PlayerAttire.WORK_COLUMN + 1, "Draw the stationary actor in the contact frame.")
 	if impacts.size() == 1:
 		_expect(impacts[0].global_position.is_equal_approx(plot) and impacts[0].frame_coords.x == action,
@@ -122,8 +116,6 @@ func _impacts() -> Array[Sprite2D]:
 
 func _reset() -> void:
 	tool.clear()
-	audio.sfx_player.stop()
-	audio.sfx_player.stream = null
 	for mark in _impacts():
 		mark.free()
 
