@@ -18,7 +18,7 @@ var music_volume := DEFAULT_MUSIC_VOLUME
 var sfx_volume := DEFAULT_SFX_VOLUME
 var ambience_volume := DEFAULT_AMBIENCE_VOLUME
 var fullscreen := false
-# Zero keeps the startup window dimensions until a preset is selected.
+# Zero uses the startup size. Store the requested preset even when it has to fit a smaller display.
 var window_size := Vector2i.ZERO
 var reading_size := 0
 var autosave := true
@@ -226,7 +226,10 @@ func _apply_saved_display() -> void:
 	var window := get_window()
 	# Establish the saved windowed size before the first fullscreen entry.
 	if not fullscreen or not _is_fullscreen(window.mode):
-		_apply_window_preset(window)
+		if window_size != Vector2i.ZERO:
+			_apply_window_preset(window)
+		elif window.mode == Window.MODE_WINDOWED:
+			_fit_window(window, window.size, false)
 	_apply_fullscreen_mode(window)
 
 func _apply_fullscreen_mode(window: Window) -> void:
@@ -249,14 +252,31 @@ func _is_fullscreen(mode: Window.Mode) -> bool:
 func _apply_window_preset(window: Window) -> void:
 	if window.mode != Window.MODE_WINDOWED:
 		window.mode = Window.MODE_WINDOWED
-	if window_size == Vector2i.ZERO or window.size == window_size:
-		return
+	var requested := window_size if window_size != Vector2i.ZERO else window.size
+	_fit_window(window, requested, true)
+
+func _fit_window(window: Window, requested: Vector2i, center_on_resize: bool) -> void:
 	var work_area := DisplayServer.screen_get_usable_rect(window.current_screen)
-	window.size = window_size
-	if work_area.has_area():
-		var outer_size := window.get_size_with_decorations()
-		var frame_offset := window.position - window.get_position_with_decorations()
-		window.position = work_area.position + ((work_area.size - outer_size) / 2).max(Vector2i.ZERO) + frame_offset
+	var frame := (window.get_size_with_decorations() - window.size).max(Vector2i.ZERO)
+	var target := _fit_client_size(requested, work_area.size - frame)
+	var resized := window.size != target
+	if resized:
+		window.size = target
+	if not work_area.has_area():
+		return
+	var outer_position := window.get_position_with_decorations()
+	var travel := (work_area.size - window.get_size_with_decorations()).max(Vector2i.ZERO)
+	var origin := outer_position.clamp(work_area.position, work_area.position + travel)
+	if center_on_resize and resized:
+		origin = work_area.position + travel / 2
+	if origin != outer_position:
+		window.position += origin - outer_position
+
+static func _fit_client_size(requested: Vector2i, available: Vector2i) -> Vector2i:
+	if available.x <= 0 or available.y <= 0:
+		return requested
+	var scale := minf(1.0, minf(float(available.x) / requested.x, float(available.y) / requested.y))
+	return Vector2i((Vector2(requested) * scale).round()).clamp(Vector2i.ONE, available)
 
 func _save() -> Error:
 	var settings := ConfigFile.new()

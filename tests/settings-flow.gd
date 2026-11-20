@@ -10,6 +10,14 @@ func _run() -> void:
 		return
 	root.size = Vector2i(1280, 720)
 	var preferences := root.get_node("Preferences")
+	var preferred := Vector2i(1920, 1080)
+	if preferences._fit_client_size(preferred, Vector2i(2540, 1460)) != preferred \
+			or preferences._fit_client_size(preferred, Vector2i(1904, 982)) != Vector2i(1746, 982) \
+			or preferences._fit_client_size(Vector2i(1024, 768), Vector2i(800, 680)) != Vector2i(800, 600) \
+			or preferences._fit_client_size(preferred, Vector2i.ZERO) != preferred:
+		push_error("The window fits the available client space proportionally and keeps sizes that already fit.")
+		quit(1)
+		return
 	var config := ConfigFile.new()
 	config.set_value("audio", "master", 0.65)
 	if config.save(preferences.PATH) != OK:
