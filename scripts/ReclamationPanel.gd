@@ -5,6 +5,7 @@ signal visitor_requested(speaker: String)
 signal worksite_requested(field_id: int)
 
 const WORKSITE := preload("res://scripts/FieldWorksite.gd")
+const PANEL_FOCUS := preload("res://scripts/PanelFocus.gd")
 const READY_INK := Color("#c6dba5")
 const SHORT_INK := Color("#efbf8b")
 const HELP_INK := Color("#e5d6ac")
@@ -45,11 +46,19 @@ var preview_site := Global.ReclamationSite.OPEN
 var preview_watered: Array[Vector2i] = []
 var commissioned_site := -1
 var paid := Vector2i.ZERO
+var returned_to_estate := false
 
 func _ready() -> void:
+	add_to_group("gamepad_directional_menu")
 	%SurveyKit.texture = WORKSITE.tool_texture(0)
 	site_diagram.draw.connect(_draw_site_diagram)
-	%Scroll.get_v_scroll_bar().theme_type_variation = &"HudJournalBar"
+	var scroll := %Scroll as ScrollContainer
+	scroll.follow_focus = true
+	var scroll_bar := scroll.get_v_scroll_bar()
+	scroll_bar.theme_type_variation = &"HudJournalBar"
+	scroll_bar.focus_mode = FOCUS_ALL
+	GamepadInput.changed.connect(_refresh_shortcuts)
+	_refresh_shortcuts()
 	for control: Control in %Checks.get_children():
 		InterfaceFont.scale_reading_text(control)
 	for control: Control in [subtitle, info_label, validity_label, reclaim_button, close_button,
@@ -64,7 +73,7 @@ func setup(estate_world: Node2D, previous_site: Variant = null) -> void:
 	highlight.draw.connect(_draw_preview)
 	tile_map.add_child(highlight)
 	reclaim_button.pressed.connect(_reclaim_selected)
-	close_button.pressed.connect(queue_free)
+	close_button.pressed.connect(_return_to_estate)
 	market_button.pressed.connect(_open_market)
 	visitor_button.pressed.connect(_find_visitor)
 	worksite_button.pressed.connect(_find_worksite)
@@ -79,6 +88,20 @@ func setup(estate_world: Node2D, previous_site: Variant = null) -> void:
 	_refresh()
 	if previous_site != null and plan.has_space:
 		_select_site(previous_site)
+	_focus_return()
+	AudioManager.play_menu_cue(AudioManager.MenuCue.OPEN)
+
+func _refresh_shortcuts() -> void:
+	close_button.text = "返回  B" if GamepadInput.active else "返回  Esc"
+
+func _focus_return() -> void:
+	close_button.grab_focus()
+	GamepadInput.snap_pointer_to_focus.call_deferred()
+
+func _return_to_estate() -> void:
+	returned_to_estate = true
+	AudioManager.play_menu_cue(AudioManager.MenuCue.CLOSE)
+	queue_free()
 
 func _process(_delta: float) -> void:
 	if preview_center != null and not has_selection and get_viewport().gui_get_hovered_control() != self:
@@ -105,11 +128,17 @@ func _select_site(cell: Vector2i) -> void:
 	_show_preview(cell)
 	_refresh_ledger()
 
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey or event is InputEventAction:
+		var current := PANEL_FOCUS.input_owner(card)
+		if current:
+			PANEL_FOCUS.keep_navigation_inside(card, current, event)
+
 func _unhandled_key_input(event: InputEvent) -> void:
 	if not event.pressed or event.echo:
 		return
 	if event.is_action_pressed("ui_cancel"):
-		queue_free()
+		_return_to_estate()
 		get_viewport().set_input_as_handled()
 	elif Preferences.matches(event, KeyBindings.INTERACT) or event.is_action_pressed("ui_accept"):
 		get_viewport().set_input_as_handled()
@@ -125,6 +154,7 @@ func _refresh() -> void:
 		_update_validity()
 
 func _refresh_ledger() -> void:
+	var previous := PANEL_FOCUS.input_owner(card)
 	var receipt := commissioned_site >= 0
 	card.size.y = RECEIPT_HEIGHT if receipt else (SURVEY_HEIGHT if plan.possible else FULL_ESTATE_HEIGHT)
 	var field_number := commissioned_site + 1 if receipt else Global.well_fields.size() + 1
@@ -160,6 +190,8 @@ func _refresh_ledger() -> void:
 	%Shortcuts.visible = visitor_button.visible or market_button.visible or worksite_button.visible
 	info_label.text = _instructions(candidate)
 	info_label.visible = not info_label.text.is_empty()
+	if previous and not previous.is_visible_in_tree():
+		_focus_return()
 
 func _show_requirement(label: Label, available: int, needed: int, unit: String, prefix := "") -> void:
 	var value := "%s%d/%d %s" % [prefix, available, needed, unit]
@@ -221,7 +253,10 @@ func _clear_preview() -> void:
 	_update_validity()
 
 func _update_validity() -> void:
+	var staking_selected := reclaim_button.has_focus()
 	reclaim_button.disabled = not plan.ready or not has_selection or preview_site != Global.ReclamationSite.OPEN
+	if staking_selected and reclaim_button.disabled:
+		_focus_return()
 	var survey_available: bool = plan.has_space and commissioned_site < 0
 	%SiteRule.visible = survey_available
 	%SiteNotes.visible = survey_available

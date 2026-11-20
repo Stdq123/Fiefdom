@@ -24,6 +24,21 @@ static func edge(panel: Control, backward := false) -> Control:
 			return control
 	return null
 
+static func restore_opening_focus(viewport: Viewport, opening: WeakRef, fallback: Control = null) -> bool:
+	if viewport.gui_get_focus_owner() or has_popup(viewport):
+		return false
+	var target := opening.get_ref() as Control if opening else null
+	if not _available(target):
+		target = fallback
+	if not _available(target):
+		return false
+	target.grab_focus()
+	return target.has_focus()
+
+static func _available(control: Control) -> bool:
+	return (is_instance_valid(control) and control.is_visible_in_tree()
+		and control.focus_mode != Control.FOCUS_NONE and (not control is BaseButton or not control.disabled))
+
 static func keep_navigation_inside(panel: Control, current: Control, event: InputEvent) -> void:
 	var viewport := panel.get_viewport()
 	var backward := event.is_action_pressed(&"ui_focus_prev", true)

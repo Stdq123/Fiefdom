@@ -4,6 +4,7 @@ const NIGHT_RATIONS_PANEL := preload("res://scenes/NightRationsPanel.tscn")
 const SEED_GARDEN := preload("res://scripts/SeedGarden.gd")
 const WINTER_RATIONS := preload("res://scripts/WinterRoadRations.gd")
 const FISHING_PANEL := preload("res://scripts/FishingPanel.gd")
+const PANEL_FOCUS := preload("res://scripts/PanelFocus.gd")
 
 @onready var world = $"../World"
 @onready var hud = $Control/EstateHUD
@@ -1198,6 +1199,8 @@ func _on_reclaim_pressed(previous_site: Variant = null) -> void:
 	if ($Control.has_node("ReclamationPanel") or world.player.conversation_open or MapTravel.active
 		or (sleep_tween and sleep_tween.is_running()) or Global.outcome != Global.Outcome.RUNNING):
 		return
+	var opener := get_viewport().gui_get_focus_owner()
+	var opening_focus: WeakRef = weakref(opener) if opener else null
 	world.set_channel_mode(false)
 	panel_manager.hide_settings_panel()
 	panel_manager.hide_management_panel()
@@ -1208,10 +1211,16 @@ func _on_reclaim_pressed(previous_site: Variant = null) -> void:
 	reclamation_panel.tree_exited.connect(func():
 		if is_instance_valid(hud):
 			hud.set_reclamation_mode(false)
+		if is_inside_tree() and reclamation_panel.returned_to_estate:
+			get_tree().process_frame.connect(_restore_reclamation_focus.bind(opening_focus), CONNECT_ONE_SHOT | CONNECT_DEFERRED)
 	)
 	reclamation_panel.market_requested.connect(_show_reclamation_market)
 	reclamation_panel.visitor_requested.connect(_on_neighbor_directions_requested)
 	reclamation_panel.worksite_requested.connect(directions.follow_worksite)
+
+func _restore_reclamation_focus(opener: WeakRef) -> void:
+	if PANEL_FOCUS.restore_opening_focus(get_viewport(), opener, reclaim_button):
+		GamepadInput.snap_pointer_to_focus()
 
 func _refresh_worksite_button() -> void:
 	hud.worksite_button.visible = world.nearest_worksite() >= 0
