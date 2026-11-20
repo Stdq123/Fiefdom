@@ -517,6 +517,8 @@ Windows 候选包内的 `SHA256SUMS.txt` 覆盖程序、资源、兼容入口、
 
 ## 结算簿的封地名与阅读布局
 
+新结算把首笔收成、近期记事和封地成果一起入簿，能查到井田、留任门客、通渠和蚕室。最大字号下账目和记事通栏，重看结束或跳过后从原处接着读。Windows 构建 `d84c301` 在 1920×1080 Vulkan、1024×768 和 1024×576 OpenGL 核对两条路线和旧账簿。ZIP 的 SHA-256 为 `16154e05cbeec2e695efde28950f6327dee1d615e0accbba9f9f9627ba7f62c1`。测试包已清理，玩法验收继续暂缓。 [核对记录](../build/polish-ending-reading/release-d84c301/release-proof.txt)
+
 守礼和改税的簿首页显示完整封地名和通关日期，路线数字注明实绩与门槛，旧格式的库存和铜钱列在封地账目下。结尾字幕和结算正文跟随阅读字号。长记事可在中间翻页，封地名和保存、续营等操作留在画面内。
 
 从 `280db77` 独立构建两次，ZIP 的 SHA-256 均为 `df9f7991c91268570a5425e3deb580487a64c548a04fc20db95137fd76b4c5fc`。无窗口检查通过。隔离桌面在 1920×1080 的 Vulkan 和 Direct3D 12、1024×768 的 OpenGL 各核对七张，含两条路线的常规结算、长记录翻页、最大字号字幕、读取确认和旧格式结算。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-ending-report/release-280db77/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-ending-report/release-280db77/release-proof.txt)
