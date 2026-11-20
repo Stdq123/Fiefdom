@@ -3,6 +3,7 @@ extends Node2D
 const TACKLE := preload("res://assets/world/fishing-tackle.png")
 const MARKER := Rect2(2, 1, 48, 58)
 const CREEL := Rect2(56, 18, 37, 34)
+const SPLASH_SECONDS := 0.32
 
 @export var site: CreekFish.Site = CreekFish.Site.POOL
 @export var water := Vector2(32, 0)
@@ -14,6 +15,8 @@ var rod_tip := Vector2.ZERO
 var phase_time := 0.0
 var submerged := false
 var tautness := 0.0
+var nibble := 0.0
+var bite_age := -1.0
 
 func _ready() -> void:
 	hint = Label.new()
@@ -56,7 +59,7 @@ func set_interaction_focused(active: bool) -> void:
 func interact() -> void:
 	GameEvents.fishing_requested.emit(self)
 
-func show_line(world_tip: Vector2, time: float, in_water: bool, pull: float) -> void:
+func show_line(world_tip: Vector2, time: float, in_water: bool, pull: float, quiver: float, bite_seconds: float) -> void:
 	if not line_visible:
 		line_visible = true
 		_refresh()
@@ -64,6 +67,8 @@ func show_line(world_tip: Vector2, time: float, in_water: bool, pull: float) -> 
 	phase_time = time
 	submerged = in_water
 	tautness = pull
+	nibble = quiver
+	bite_age = bite_seconds
 	queue_redraw()
 
 func clear_line() -> void:
@@ -89,25 +94,45 @@ func _draw_creel(canvas: Node2D, foot: Vector2) -> void:
 	canvas.draw_texture_rect_region(TACKLE, Rect2(foot + Vector2(-9, -15), CREEL.size * 0.5), CREEL)
 
 func _draw_line() -> void:
-	var cast := smoothstep(0.02, 0.32, phase_time)
-	var drift := Vector2(sin(phase_time * 5.0) * (1.0 + tautness), 1.0 if submerged else 0.0)
-	var float_at := (rod_tip.lerp(water + drift, cast) + Vector2.UP * sin(cast * PI) * 7.0).snappedf(0.5)
+	var cast := smoothstep(0.02, FishingRod.CAST_SECONDS, phase_time)
+	var sway := sin(phase_time * 5.0) * (1.0 + tautness)
+	var twitch := sin(phase_time * 34.0) * nibble
+	var surface := water + Vector2(sway + twitch, 0.0)
+	var depth := 1.5 if submerged else (0.35 * sin(phase_time * 5.0) + twitch * 1.2)
+	var float_at := (rod_tip.lerp(surface + Vector2(0, depth), cast) + Vector2.UP * sin(cast * PI) * 7.0).snappedf(0.5)
 	var slack := (1.0 - tautness) * minf(4.0, rod_tip.distance_to(float_at) * 0.18)
 	var line := PackedVector2Array()
 	for i in 7:
 		var t := i / 6.0
 		line.append(rod_tip.lerp(float_at, t) + Vector2.DOWN * (4.0 * t * (1.0 - t) * slack))
+	draw_polyline(line, Color("#34534fa8"), 1.75)
 	draw_polyline(line, Color("#e0d8b5"), 0.72)
 	if cast >= 1.0:
-		var wave := fposmod((phase_time - 0.32) * (1.7 if submerged else 0.9), 1.0)
-		var arc := PackedVector2Array()
-		for i in 12:
-			var ring := Vector2.from_angle(TAU * i / 12.0 + 0.45) * (2.0 + wave * 6.0)
-			arc.append(float_at + ring * Vector2(1.0, 0.38))
-		draw_polyline(arc, Color(0.72, 0.84, 0.73, 0.84 - 0.65 * wave), 0.83)
+		var settled := phase_time - FishingRod.CAST_SECONDS
+		var wave := fposmod(settled * (1.7 if submerged else 0.9), 1.0)
+		_draw_ripple(surface, 2.0 + wave * 6.0, Color(0.72, 0.84, 0.73, 0.68 - 0.50 * wave))
+		var splash := bite_age if bite_age >= 0.0 else settled
+		if splash < SPLASH_SECONDS:
+			_draw_splash(surface, splash / SPLASH_SECONDS, bite_age >= 0.0)
 	if submerged:
 		draw_rect(Rect2(float_at + Vector2(-1.0, -1.0), Vector2(2.5, 1.5)), Color("#f4dbaa"))
 	else:
 		draw_rect(Rect2(float_at - Vector2(1.0, 5.5), Vector2(2, 5.5)), Color("#684e38"))
 		draw_rect(Rect2(float_at - Vector2(1.5, 4), Vector2(3, 2.5)), Color("#eedcaa"))
 		draw_rect(Rect2(float_at - Vector2(1.0, 6.0), Vector2(2, 2)), Color("#d77b55"))
+
+func _draw_ripple(at: Vector2, radius: float, tint: Color) -> void:
+	var arc := PackedVector2Array()
+	for i in 13:
+		var ring := Vector2.from_angle(TAU * i / 12.0 + 0.45) * radius
+		arc.append(at + ring * Vector2(1.0, 0.38))
+	draw_polyline(arc, tint, 0.83)
+
+func _draw_splash(at: Vector2, progress: float, tug: bool) -> void:
+	var drift := ease(progress, 0.58)
+	var tint := Color(0.78, 0.90, 0.82, (1.0 - progress) * 0.91)
+	_draw_ripple(at, 3.0 + drift * (10.0 if tug else 6.0), tint)
+	for drop: float in [-1.0, 0.0, 1.0]:
+		var spread := drop * (2.0 + drift * 5.0)
+		var height := sin(progress * PI) * (3.0 if drop != 0.0 else 6.0)
+		draw_rect(Rect2((at + Vector2(spread, -height - 1.0)).round(), Vector2(1, 2)), tint)

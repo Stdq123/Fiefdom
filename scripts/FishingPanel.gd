@@ -4,9 +4,11 @@ enum Phase { WAITING, BITE, REELING, DONE }
 
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 const FRAME := preload("res://resources/estate_archive_frame.tres")
-const SPLASH := "res://assets/audio/fishing/float-splash.wav"
+const SPLASH := preload("res://assets/audio/fishing/float-splash.wav")
+const BITE_SPLASH := preload("res://assets/audio/fishing/bite-splash.wav")
 const SAFE_LOW := 0.27
 const SAFE_HIGH := 0.79
+const NIBBLE_SECONDS := 0.38
 
 var spot: Node2D
 var angler: Player
@@ -54,9 +56,7 @@ func _ready() -> void:
 		sound = AudioStreamPlayer.new()
 		sound.name = "FloatSplash"
 		sound.bus = &"SFX"
-		sound.stream = load(SPLASH)
 		add_child(sound)
-		_splash(-17.0, 1.10)
 	rod = FishingRod.new()
 	rod.name = "FishingRod"
 	angler.add_child(rod)
@@ -69,7 +69,10 @@ func _present_cast() -> void:
 	elif phase == Phase.REELING:
 		pose = FishingRod.Pose.PULL if holding else FishingRod.Pose.EASE
 	rod.present(spot.to_global(spot.water), pose, float_time, tension)
-	spot.show_line(rod.to_global(rod.tip), float_time, phase != Phase.WAITING, tension if phase == Phase.REELING else 0.0)
+	var waiting := phase == Phase.WAITING
+	var nibble := smoothstep(wait_time - NIBBLE_SECONDS, wait_time, phase_time) if waiting else 0.0
+	spot.show_line(rod.to_global(rod.tip), float_time, not waiting, tension if phase == Phase.REELING else 0.0,
+		nibble, -1.0 if waiting else phase_time)
 
 func _put_away() -> void:
 	if is_instance_valid(rod):
@@ -105,14 +108,14 @@ func _build_layout() -> void:
 	catch_icon.hide()
 	row.add_child(catch_icon)
 	status = Label.new()
-	status.text = "看着浮标，沉下去时再提竿。"
+	status.text = "等浮标沉下再提竿。"
 	status.add_theme_color_override("font_color", Color("#e8c983"))
 	status.add_theme_font_size_override("font_size", 18)
 	status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row.add_child(status)
 	detail = Label.new()
-	detail.text = "浮标轻晃时先等一等。"
+	detail.text = "提得太早，鱼会散开。"
 	detail.add_theme_color_override("font_color", Color("#d0d2bc"))
 	detail.add_theme_font_size_override("font_size", 15)
 	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -151,20 +154,25 @@ func _build_layout() -> void:
 	close_button.focus_mode = Control.FOCUS_NONE
 	close_button.pressed.connect(queue_free)
 	actions.add_child(close_button)
+	for control in [title, status, detail, pull_button, close_button]:
+		InterfaceFont.scale_reading_text(control)
 
 func _draw_tension_marks() -> void:
 	var height := tension_band.size.y
 	for edge: float in [0.0, tension_band.size.x - 1.0]:
 		tension_band.draw_line(Vector2(edge, 1), Vector2(edge, height - 1), Color("#c3d1ac"), 1.0)
-	var at := roundf(line_meter.value * line_meter.size.x - tension_band.position.x)
+	var at := clampf(roundf(line_meter.value * line_meter.size.x), 3.0, line_meter.size.x - 3.0) - tension_band.position.x
 	tension_band.draw_rect(Rect2(at - 2, 1, 5, height - 2), Color("#483f32"))
 	tension_band.draw_rect(Rect2(at - 1, 2, 3, height - 4), Color("#ffdda0"))
 
 func _process(delta: float) -> void:
 	# Keep reaction and tension readable during long render frames.
 	var step := minf(delta, 0.05)
+	var airborne := float_time < FishingRod.CAST_SECONDS
 	phase_time += step
 	float_time += step
+	if airborne and float_time >= FishingRod.CAST_SECONDS:
+		_play_float_cue(SPLASH, -17.0, 1.10)
 	match phase:
 		Phase.WAITING:
 			if phase_time >= wait_time:
@@ -172,9 +180,9 @@ func _process(delta: float) -> void:
 				phase_time = 0.0
 				status.text = "浮标沉下去了！现在提竿。"
 				_refresh_shortcut()
-				_splash(-6.0, 1.0)
-			elif phase_time > wait_time - 0.38:
-				status.text = "浮标轻晃，先等它沉下。"
+				_play_float_cue(BITE_SPLASH, -9.0)
+			elif phase_time > wait_time - NIBBLE_SECONDS:
+				status.text = "浮标在轻颤，等它沉下。"
 		Phase.BITE:
 			line_meter.value = maxf(0.0, 1.0 - phase_time / fish.bite)
 			if phase_time >= fish.bite:
@@ -198,12 +206,12 @@ func _reel(step: float) -> void:
 		if id.is_empty():
 			_finish("这次垂钓已结束。")
 		else:
-			_splash(-10.0, 0.93)
+			_play_float_cue(SPLASH, -10.0, 0.93)
 			_finish("钓到%s · 已收入鱼篓" % fish.name, id)
 
 func _refresh_tension() -> void:
 	line_meter.value = tension
-	status.text = "松开一点，让钓线缓下来。" if tension >= 0.67 else "按住收线，保持在绿段。"
+	status.text = "松开一点，让钓线缓下来。" if tension >= 0.67 else "按住收线，让游标留在刻线内。"
 	detail.text = "张力 %d%%   ·   收线 %d%%" % [roundi(tension * 100), mini(100, roundi(reeled / fish.reel * 100))]
 
 func _input(event: InputEvent) -> void:
@@ -299,6 +307,7 @@ func _add_route_button(button_name: String, caption: String, place: String) -> B
 	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	button.pressed.connect(_follow_route.bind(place))
 	route_actions.add_child(button)
+	InterfaceFont.scale_reading_text(button)
 	route_actions.show()
 	return button
 
@@ -308,8 +317,9 @@ func _follow_route(place: String) -> void:
 	else:
 		detail.text = "这里接不上山路。收竿走近道路后，再从舆图指路。"
 
-func _splash(volume_db: float, pitch: float) -> void:
+func _play_float_cue(stream: AudioStream, volume_db: float, pitch := 1.0) -> void:
 	if sound:
+		sound.stream = stream
 		sound.volume_db = volume_db
 		sound.pitch_scale = pitch
 		sound.play()

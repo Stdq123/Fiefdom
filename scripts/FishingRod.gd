@@ -3,6 +3,8 @@ class_name FishingRod
 
 enum Pose { WAIT, BITE, PULL, EASE }
 
+const CAST_SECONDS := 0.32
+
 var grip := Vector2.ZERO
 var tip := Vector2.ZERO
 var bend := Vector2.ZERO
@@ -42,7 +44,7 @@ func present(water: Vector2, pose: Pose, seconds: float, tension: float) -> void
 	var profile := absf(direction.x) >= absf(direction.y)
 	above = not profile and direction.y < 0.0
 	var row := Player.Facing.PROFILE if profile else (Player.Facing.BACK if above else Player.Facing.FRONT)
-	var casting := 1.0 - smoothstep(0.0, 0.32, seconds)
+	var casting := 1.0 - smoothstep(0.0, CAST_SECONDS, seconds)
 	var beat := sin(seconds * 9.0)
 	var lift_to := casting
 	var strain_to := 0.0
