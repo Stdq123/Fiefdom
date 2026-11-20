@@ -985,6 +985,8 @@ Windows 候选包来自 `d9b649d`。两次独立构建的 ZIP 校验值均为 `5
 
 ## 稻田浅水与断流
 
+- 稻田的细波纹按通水距离从渠口或田闸逐格向内展开。暗渠入口和出口在外露渠段接上反光，木桥板面遮住重叠的水纹。构建提交 `988e4bd` 在 1920×1080 Vulkan 和 1024×768 OpenGL 隔离窗口各取 14 帧，确认西闸进水、北渠进水、断水、旱作湿土和木板遮挡。标题启动与四项无窗口场景检查通过，测试包已清理，双结局玩法验收继续暂缓。 [构建校验与验证记录](../build/polish-paddy-flow/release-988e4bd/release-proof.txt)
+
 - 有稻苗的田格接通渠水后，可见田沿下的浅水、入水口和错开的波纹。相邻旱作和空格接水后呈湿土。田格边缘和公田金角可见。断渠、拆闸或收割后，对应田格重新露出土面。 [上版通渠画面](../build/polish-paddy-water/before/frames/02-connected.png) · [1920×1080 通渠画面](../build/polish-paddy-water/release/verified/native-full/frames/02-connected.png) · [1024×768 稻与黍](../build/polish-paddy-water/release/verified/native-compact/frames/03a-rice-and-millet.png) · [水面取帧校验](../build/polish-paddy-water/release/verified/render-pixels.log)
 - 用第 9 天的双井田档，通过原有挖渠和接闸操作给三格稻田供水。填断缺口后，次日稻苗停在原阶段。接回渠道后过夜，三格稻苗各长一龄。第 13 天收割，公田入国库一份、私田入私仓一份。 [断渠实景](../build/polish-paddy-water/release/verified/native-full/frames/05-line-dry-again.png) · [成熟稻田](../build/polish-paddy-water/release/verified/native-full/frames/09-ripe-rice.png) · [生长和收割日志](../build/polish-paddy-water/release/verified/native-full/replay.log)
 - 从选档页读回上一版实际写出的第 10 天手动档。可看到干渠与断水田，接通后出现浅水并继续生长。原手动档和验证副本的校验值一致。 [旧档接通渠水](../build/polish-paddy-water/release/verified/native-resume/frames/01-previous-save-reconnected.png) · [旧档校验](../build/polish-paddy-water/release/verified/native-resume/integrity.log)
