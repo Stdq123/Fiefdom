@@ -15,6 +15,12 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 主角落脚与声音同步
+
+左右脚落地的画面、脚步声和地面反馈共用行走距离。水花、雪印和尘土贴对应鞋底。沿墙滑行时，画面朝向实际走过的方向。衣架预览沿用主角的起步帧和步态。
+
+从 `838bc29` 独立构建两次，ZIP 的 SHA-256 均为 `4ecdfff12a8b0fde18707dfeeb2a3d2277b6a41d4f3ae58777d0e64b52c7c75f`。十二项无窗口检查与原样解包启动通过。1920×1080 Vulkan、1920×1080 Direct3D 12 和 1024×768 OpenGL 在隔离桌面各核对八次走路落脚、水花与贴墙停步。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-walking-footfalls/release-838bc29/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-walking-footfalls/release-838bc29/release-proof.txt)
+
 ## 浅滩踏石与两间屋的脚步
 
 竹涧浅滩的脚步采样取决于鞋底落在哪种材质。踩上踏石有石面声，踩入浅水有涉水声和从脚边扬起的水花。堂屋和蚕棚到石槛时会听到石面脚步，回到地板上切换为木板声。
