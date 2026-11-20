@@ -17,6 +17,21 @@ var _mirrored := false
 var _lift := 0.0
 var _settle: Tween
 
+static func draw_reed_mat(canvas: CanvasItem, seat: Vector2) -> void:
+	canvas.draw_set_transform(seat)
+	canvas.draw_rect(Rect2(-9.0, 0.0, 18.5, 6.0), Color("#2d2b2287"))
+	canvas.draw_colored_polygon(PackedVector2Array([
+		Vector2(-9.0, -1.5), Vector2(-7.5, -3.0), Vector2(8.0, -3.0), Vector2(9.0, -2.0),
+		Vector2(9.0, 4.0), Vector2(7.5, 5.0), Vector2(-8.0, 5.0), Vector2(-9.0, 4.0),
+	]), Color("#564936"))
+	canvas.draw_rect(Rect2(-8.0, -2.0, 16.0, 6.0), Color("#ad9668"))
+	for x in range(-7, 8, 2):
+		canvas.draw_line(Vector2(x, -2.0), Vector2(x + 0.5, 4.0), Color("#877355"), 0.5)
+		canvas.draw_rect(Rect2(x + 0.5, 0.0, 1.0, 0.5), Color("#c8af7e"))
+	canvas.draw_rect(Rect2(-7.5, -2.0, 15.0, 0.5), Color("#cfb887"))
+	canvas.draw_rect(Rect2(-8.0, 3.5, 16.0, 1.0), Color("#78614c"))
+	canvas.draw_set_transform_matrix(Transform2D.IDENTITY)
+
 func _init(body: Sprite2D) -> void:
 	name = "SeatedPose"
 	_standing_sprite = body

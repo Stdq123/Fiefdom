@@ -127,18 +127,7 @@ func _draw_mats() -> void:
 	if is_instance_valid(guest) and guest.activity == VisitorData.VisitActivity.PAVILION_REST:
 		seats.append(guest_seat() - gathering_center())
 	for seat: Vector2 in seats:
-		mats.draw_set_transform(seat)
-		mats.draw_rect(Rect2(-9.0, 0.0, 18.5, 6.0), Color("#2d2b2287"))
-		mats.draw_colored_polygon(PackedVector2Array([
-			Vector2(-9.0, -1.5), Vector2(-7.5, -3.0), Vector2(8.0, -3.0), Vector2(9.0, -2.0),
-			Vector2(9.0, 4.0), Vector2(7.5, 5.0), Vector2(-8.0, 5.0), Vector2(-9.0, 4.0),
-		]), Color("#564936"))
-		mats.draw_rect(Rect2(-8.0, -2.0, 16.0, 6.0), Color("#ad9668"))
-		for x in range(-7, 8, 2):
-			mats.draw_line(Vector2(x, -2.0), Vector2(x + 0.5, 4.0), Color("#877355"), 0.5)
-			mats.draw_rect(Rect2(x + 0.5, 0.0, 1.0, 0.5), Color("#c8af7e"))
-		mats.draw_rect(Rect2(-7.5, -2.0, 15.0, 0.5), Color("#cfb887"))
-		mats.draw_rect(Rect2(-8.0, 3.5, 16.0, 1.0), Color("#78614c"))
+		SeatedPose.draw_reed_mat(mats, seat)
 
 func _draw_tabletop() -> void:
 	tabletop.draw_set_transform(-TABLE_FRONT_EDGE)
