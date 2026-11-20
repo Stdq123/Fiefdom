@@ -45,6 +45,10 @@ var cursor := AimCursor.new()
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	layer = 1025 # Above embedded confirmation and option windows.
+	if DisplayServer.get_name() != "headless":
+		Input.set_custom_mouse_cursor(preload("res://assets/ui/cursor-arrow.png"), Input.CURSOR_ARROW, Vector2(2, 2))
+		Input.set_custom_mouse_cursor(preload("res://assets/ui/cursor-hand.png"), Input.CURSOR_POINTING_HAND, Vector2(11, 3))
+		Input.set_custom_mouse_cursor(preload("res://assets/ui/cursor-text.png"), Input.CURSOR_IBEAM, Vector2(16, 16))
 	add_child(cursor)
 	cursor.hide()
 	set_process(false)
