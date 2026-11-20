@@ -357,6 +357,12 @@ Windows 候选包内的 `SHA256SUMS.txt` 覆盖程序、资源、兼容入口、
 
 从 `4684dda` 独立构建两次，ZIP 的 SHA-256 均为 `879ba8ffbf8d530a0f681470f24276cf6df0f5c2ff4bc73fec5baf3dbb7335fb`。五项无窗口回归通过。隔离桌面用 1920×1080 的 Vulkan 和 Direct3D 12、1024×768 的 OpenGL 核对 48 个同机位画面。OpenGL 的雨天样例中，人物、田埂和草甸路牌周边的边缘反差保留约 84% 至 85%。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-outdoor-light/release-4684dda/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-outdoor-light/release-4684dda/release-proof.txt)
 
+## 四处户外随时辰变化的树影
+
+封地、竹涧、溪桥道和西市用各季节的树冠、枝条和竹梢轮廓在地上投影。清晨影子向右拉长，正午收向树脚，傍晚向右下伸出后逐渐淡去。谷雨、落雪和夜里只留树脚的短影。
+
+构建提交 `d96597d`，ZIP 的 SHA-256 为 `a9e159f399b60f96026b8d275890bb067eaf778cfa99ce3b3b1090506d6f92fa`。四项无窗口检查和原样解包启动通过。1920×1080 Vulkan 与 1024×768 OpenGL 各核对十二对隔离桌面定帧。四处地图正午的投影覆盖面积约为清晨的 57% 至 61%。测试包已清理。 [核对记录](../build/polish-tree-shadows/release-d96597d/release-proof.txt)
+
 ## Windows 关窗与继续游戏
 
 游戏中关闭窗口会显示本局当前日期与最近存档，默认聚焦「保存并退出」。保存失败时可在确认框内重试。直接退出会放弃尚未保存的改动，取消会恢复原来的焦点和暂停状态。通关结算也可保存后退出，战败时可留在结算读取旧档。
