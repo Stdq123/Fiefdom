@@ -24,6 +24,8 @@ var reading_size := 0
 var autosave := true
 var map_zoom := 2.0
 var _bindings := KeyBindings.DEFAULTS.duplicate()
+var _window_mode_before_fullscreen := Window.MODE_WINDOWED
+var _preset_before_fullscreen := Vector2i.ZERO
 
 func _ready() -> void:
 	restore()
@@ -47,7 +49,7 @@ func restore() -> void:
 	apply_music_volume()
 	apply_sfx_volume()
 	apply_ambience_volume()
-	_apply_display()
+	_apply_saved_display()
 	bindings_changed.emit()
 	reading_size_changed.emit()
 
@@ -80,7 +82,8 @@ func set_fullscreen(value: bool) -> Error:
 	fullscreen = value
 	var result := _save()
 	if result == OK:
-		_apply_display()
+		if DisplayServer.get_name() != "headless":
+			_apply_fullscreen_mode(get_window())
 	else:
 		fullscreen = previous
 	return result
@@ -92,7 +95,8 @@ func set_window_size(value: Vector2i) -> Error:
 	window_size = value
 	var result := _save()
 	if result == OK:
-		_apply_display()
+		if not fullscreen and DisplayServer.get_name() != "headless":
+			_apply_window_preset(get_window())
 	else:
 		window_size = previous
 	return result
@@ -216,14 +220,36 @@ func _apply_bus_volume(bus_name: StringName, value: float) -> void:
 		AudioServer.set_bus_mute(bus, is_zero_approx(value))
 		AudioServer.set_bus_volume_db(bus, linear_to_db(maxf(0.001, value)))
 
-func _apply_display() -> void:
+func _apply_saved_display() -> void:
 	if DisplayServer.get_name() == "headless":
 		return
 	var window := get_window()
-	var target := Window.MODE_FULLSCREEN if fullscreen else Window.MODE_WINDOWED
-	if window.mode != target:
-		window.mode = target
-	if fullscreen or window_size == Vector2i.ZERO or window.size == window_size:
+	# Establish the saved windowed size before the first fullscreen entry.
+	if not fullscreen or not _is_fullscreen(window.mode):
+		_apply_window_preset(window)
+	_apply_fullscreen_mode(window)
+
+func _apply_fullscreen_mode(window: Window) -> void:
+	var current := window.mode
+	var is_fullscreen := _is_fullscreen(current)
+	if fullscreen and not is_fullscreen:
+		_window_mode_before_fullscreen = Window.MODE_MAXIMIZED if current == Window.MODE_MAXIMIZED else Window.MODE_WINDOWED
+		_preset_before_fullscreen = window_size
+		window.mode = Window.MODE_FULLSCREEN
+	elif not fullscreen and is_fullscreen:
+		if window_size == _preset_before_fullscreen:
+			# The display server restores the windowed rectangle on leaving fullscreen.
+			window.mode = _window_mode_before_fullscreen
+		else:
+			_apply_window_preset(window)
+
+func _is_fullscreen(mode: Window.Mode) -> bool:
+	return mode == Window.MODE_FULLSCREEN or mode == Window.MODE_EXCLUSIVE_FULLSCREEN
+
+func _apply_window_preset(window: Window) -> void:
+	if window.mode != Window.MODE_WINDOWED:
+		window.mode = Window.MODE_WINDOWED
+	if window_size == Vector2i.ZERO or window.size == window_size:
 		return
 	var work_area := DisplayServer.screen_get_usable_rect(window.current_screen)
 	window.size = window_size
