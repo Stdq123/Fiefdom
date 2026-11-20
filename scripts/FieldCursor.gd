@@ -24,6 +24,7 @@ func _ready() -> void:
 	visibility_changed.connect(_clear_effort_if_hidden)
 	caption.use_parent_material = true
 	caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	caption.add_to_group(&"world_feedback_obstacle")
 	var plate := HUD_THEME.get_stylebox(&"panel", &"HudRail").duplicate() as StyleBox
 	plate.set_content_margin(SIDE_LEFT, 9)
 	plate.set_content_margin(SIDE_RIGHT, 9)

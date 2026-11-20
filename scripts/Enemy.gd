@@ -7,7 +7,6 @@ enum Pose { IDLE, STRIDE_A, GATHER, STRIDE_B, BRACE, READY, RELEASE, HIT, FALL }
 
 const ARROW_SCENE := preload("res://scenes/Arrow.tscn")
 const ARROW := preload("res://scripts/Arrow.gd")
-const FLOATING_TEXT := preload("res://scenes/FloatingText.tscn")
 const ENEMY_MOTION := "res://assets/characters/enemy-motion.png"
 const BOW_DRAW := preload("res://assets/audio/combat/scout-draw.wav")
 const ARROW_HIT := preload("res://assets/audio/combat/arrow-hit.wav")
@@ -362,12 +361,7 @@ func take_damage(amount: int, guard_name := "") -> void:
 	health -= amount
 	if raid:
 		Global.raid_health = maxi(0, health)
-	var feedback := FLOATING_TEXT.instantiate() as Label
-	feedback.text = "−%d" % amount
-	feedback.modulate = Color("#ffdda2")
-	feedback.scale = Vector2.ONE * 0.65
-	feedback.position = position + Vector2(-9, -29)
-	get_parent().add_child(feedback)
+	FloatingText.present(world_ref, global_position + Vector2(0, -22.0), "−%d" % amount, Color("#ffdda2"), true)
 	AudioManager.play_world_sfx(ARROW_HIT, self, -5.0, 235.0)
 	if health <= 0:
 		_die(guard_name)

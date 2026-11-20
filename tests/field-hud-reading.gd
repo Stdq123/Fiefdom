@@ -36,6 +36,36 @@ func _read(cell: Vector2i) -> String:
 	_expect(paused and before == _snapshot(), "Reading a plot preserves the staged field and player state.")
 	return cursor.label.text
 
+func _read_feedback(center: Vector2i, events: Node) -> void:
+	var before := _snapshot()
+	world.spawn_floating_text(center, "已浇水 · 过夜后生长", Color.WHITE)
+	world.spawn_floating_text(center + Vector2i.LEFT, "体力不足 · 翻地需 2", Color.WHITE)
+	world.spawn_floating_text(center, "已浇水 · 过夜后生长", Color.WHITE)
+	var overlay := world.get_node_or_null("FloatingText")
+	_expect(overlay != null, "The staged field feedback creates its display node.")
+	if not overlay:
+		return
+	overlay._process(0.0)
+	_expect(overlay.messages.size() == 2, "Repeating the same note on a plot refreshes its existing label.")
+	var occupied: Array[Rect2] = [cursor.caption.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, cursor.caption.size)]
+	for entry in overlay.messages:
+		var label: Label = entry.label
+		var bounds := label.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, label.size)
+		_expect(label.is_visible_in_tree() and label.get_theme_font_size(&"font_size") == 21 and label.size.y < 64.0,
+			"Single-line feedback fits at the largest reading size.")
+		_expect(hud.map_space_clear(bounds) and HintPlacement.is_clear(bounds, occupied),
+			"Feedback clears the HUD, the cursor caption and neighboring notes.")
+		occupied.append(bounds)
+	events.modal_visibility_changed.emit(true)
+	overlay._process(2.0)
+	_expect(not overlay.is_visible_in_tree() and overlay.messages.size() == 2,
+		"An open panel hides the notes and preserves their remaining lifetime.")
+	events.modal_visibility_changed.emit(false)
+	overlay._process(0.0)
+	_expect(overlay.is_visible_in_tree(), "Returning to the map shows the pending notes.")
+	overlay._process(2.0)
+	_expect(overlay.messages.is_empty() and before == _snapshot(), "Feedback expires without changing the staged state.")
+
 func _review() -> void:
 	if not ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"):
 		push_error("Run the field HUD check with an isolated smoke profile.")
@@ -85,6 +115,7 @@ func _review() -> void:
 	_expect(cursor.label.get_theme_font_size(&"font_size") == font + 6 and cursor.caption.size.y > before_size.y
 		and hud.money_label.get_theme_font_size(&"font_size") == money_font + 6,
 		"The same cursor note remeasures after a live size change.")
+	_read_feedback(center, events)
 	state.current_stamina = 1
 	events.stamina_changed.emit(state.current_stamina)
 	note = await _read(center)

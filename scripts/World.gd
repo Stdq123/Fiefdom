@@ -50,7 +50,6 @@ var sow_from_plan := false
 var prepare_empty_plots := false
 var replant_after_harvest := false
 
-var floating_text_scene = preload("res://scenes/FloatingText.tscn")
 var retainer_scene = preload("res://scenes/Retainer.tscn")
 var visitor_scene = preload("res://scenes/Visitor.tscn")
 var enemy_scene = preload("res://scenes/Enemy.tscn")
@@ -1138,14 +1137,8 @@ func first_tribute_notice() -> String:
 	return receipt
 
 func spawn_floating_text(grid_pos: Vector2i, text: String, color: Color) -> void:
-	var instance := floating_text_scene.instantiate() as Label
-	instance.text = text
-	instance.modulate = color
-	instance.scale = Vector2.ONE / player.camera.zoom
-	var center := get_crop_world_pos(grid_pos)
-	var half_width := instance.get_combined_minimum_size().x * instance.scale.x / 2
-	instance.position = center + Vector2(-half_width, 13.0)
-	add_child(instance)
+	var at := to_global(get_crop_world_pos(grid_pos) + Vector2(0, 9.0))
+	FloatingText.present(self, at, text, color)
 
 func _on_day_advanced(new_day: int) -> void:
 	_end_sweep()
