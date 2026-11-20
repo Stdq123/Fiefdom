@@ -583,10 +583,11 @@ func find_work_crop(worker: Retainer) -> Vector2i:
 			nearest = cell
 	return nearest
 
-func water_crop(grid_pos: Vector2i) -> bool:
+func water_crop(grid_pos: Vector2i, show_impact := true) -> bool:
 	if not Global.water_field_crop(grid_pos):
 		return false
-	_show_field_impact(grid_pos, Player.Action.WATER)
+	if show_impact:
+		_show_field_impact(grid_pos, Player.Action.WATER)
 	print("Crop watered at ", grid_pos)
 	return true
 
@@ -1028,8 +1029,8 @@ func handle_interaction(grid_pos: Vector2i) -> bool:
 			_plant_crop(grid_pos)
 		FieldAction.WATER:
 			Global.current_stamina -= cost
-			water_crop(grid_pos)
-			player.show_action(Player.Action.WATER, to_global(get_crop_world_pos(grid_pos)))
+			if water_crop(grid_pos, false):
+				_play_field_stroke(grid_pos, Player.Action.WATER)
 			GameEvents.stamina_changed.emit(Global.current_stamina)
 		FieldAction.HARVEST:
 			harvest_crop(grid_pos)
@@ -1040,6 +1041,9 @@ func handle_interaction(grid_pos: Vector2i) -> bool:
 		FieldAction.RICE_SEED, FieldAction.NO_SEED_PLAN:
 			spawn_floating_text(grid_pos, field_message(grid_pos, action), Color.ORANGE)
 	return true
+
+func _play_field_stroke(cell: Vector2i, action: ToolGesture.Action) -> void:
+	player.show_action(action, to_global(get_crop_world_pos(cell)), _show_field_impact.bind(cell, action))
 
 func _show_field_impact(cell: Vector2i, action: ToolGesture.Action) -> void:
 	var impact := Sprite2D.new()
@@ -1059,37 +1063,39 @@ func _show_field_impact(cell: Vector2i, action: ToolGesture.Action) -> void:
 	motion.tween_callback(impact.queue_free)
 
 func _till_soil(grid_pos: Vector2i) -> void:
-	if not till_plot(grid_pos):
+	if not till_plot(grid_pos, false):
 		return
 	Global.current_stamina -= field_cost(FieldAction.TILL)
 	GameEvents.stamina_changed.emit(Global.current_stamina)
-	player.show_action(Player.Action.TILL, to_global(get_crop_world_pos(grid_pos)))
+	_play_field_stroke(grid_pos, Player.Action.TILL)
 
 func _draw_tilled_plot(grid_pos: Vector2i) -> void:
 	var atlas := tile_map.get_cell_atlas_coords(grid_pos)
 	tile_map.set_cell(grid_pos, 0, Vector2i(atlas.x, 1))
 
-func till_plot(grid_pos: Vector2i) -> bool:
+func till_plot(grid_pos: Vector2i, show_impact := true) -> bool:
 	if not Global.till_field_plot(grid_pos):
 		return false
 	_draw_tilled_plot(grid_pos)
 	GameEvents.farm_state_changed.emit()
-	_show_field_impact(grid_pos, Player.Action.TILL)
+	if show_impact:
+		_show_field_impact(grid_pos, Player.Action.TILL)
 	print("Tilled at ", grid_pos)
 	return true
 
 func _plant_crop(grid_pos: Vector2i) -> void:
-	if not sow_crop(grid_pos, planting_seed(grid_pos)):
+	if not sow_crop(grid_pos, planting_seed(grid_pos), false):
 		return
 	Global.current_stamina -= field_cost(FieldAction.SOW)
 	GameEvents.stamina_changed.emit(Global.current_stamina)
-	player.show_action(Player.Action.SOW, to_global(get_crop_world_pos(grid_pos)))
+	_play_field_stroke(grid_pos, Player.Action.SOW)
 
-func sow_crop(grid_pos: Vector2i, seed_id: String) -> bool:
+func sow_crop(grid_pos: Vector2i, seed_id: String, show_impact := true) -> bool:
 	if not Global.sow_field_crop(grid_pos, seed_id):
 		return false
 	_draw_crop(grid_pos)
-	_show_field_impact(grid_pos, Player.Action.SOW)
+	if show_impact:
+		_show_field_impact(grid_pos, Player.Action.SOW)
 	print("Planted ", ItemManager.crop_label(seed_id), " at ", grid_pos)
 	return true
 
@@ -1112,10 +1118,11 @@ func harvest_crop(grid_pos: Vector2i, worker: Retainer = null) -> bool:
 	else:
 		crops_layer.erase_cell(grid_pos)
 	GameEvents.harvest_receipt.emit(harvest, worker.data.name if worker else "")
-	_show_field_impact(grid_pos, Player.Action.HARVEST)
-	if not worker:
+	if worker:
+		_show_field_impact(grid_pos, Player.Action.HARVEST)
+	else:
 		tile_map.get_node("FieldCursor").clear_plot_hover(grid_pos)
-		player.show_action(Player.Action.HARVEST, to_global(get_crop_world_pos(grid_pos)))
+		_play_field_stroke(grid_pos, Player.Action.HARVEST)
 	if harvest.first_tribute:
 		_announce_first_tribute()
 	return true

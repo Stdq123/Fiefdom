@@ -6,9 +6,13 @@ enum Action { TILL, SOW, WATER, HARVEST, BOW }
 const HAND_TOOLS := "res://assets/characters/hand-tools.png"
 const RECOVERY := 0.18
 const REPLAY_INTERVAL := 0.10
+const FIELD_REACH := 25.0
+const EDGE_ADJUSTMENT := 12.0
 # Grip positions are in the native tool frame, measured from its centre.
 const GRIPS := [Vector2(0, -5), Vector2(-4, -2), Vector2(0, -9), Vector2(-6, 6), Vector2(5, 0)]
 const HOE_REAR_GRIP := Vector2(-8, -5)
+const HOE_EDGE := Vector2(10, 6)
+const SICKLE_EDGE := Vector2(6, -5)
 const PAIL_BASE := Vector2(4, 6)
 const PAIL_LIP := Vector2(5, -1)
 
@@ -19,23 +23,45 @@ var aim := Vector2.DOWN
 var elapsed := 0.0
 var contact_time := 0.08
 var reach := 0.0
+var _field_point := Vector2.INF
+var _contact_effects: Array[Callable] = []
 
 func _ready() -> void:
 	texture = load(HAND_TOOLS)
 	hframes = Action.size()
 	clear()
 
-func perform(action: Action, toward: Vector2, windup := 0.08) -> void:
+func perform(action: Action, toward: Vector2, windup := 0.08, field_point := Vector2.INF) -> void:
 	if visible and not carrying and frame == action and elapsed < REPLAY_INTERVAL:
+		_field_point = field_point
 		_face(toward)
 		_apply_pose()
 		return
+	_finish_contact()
 	show_sample(action, toward, windup, 0.0)
+	_field_point = field_point
+	if field_point.is_finite():
+		_apply_pose()
 	set_process(true)
+
+func at_contact(effect: Callable) -> void:
+	if elapsed >= contact_time:
+		effect.call()
+	else:
+		_contact_effects.append(effect)
+
+func _finish_contact() -> void:
+	var effects := _contact_effects
+	_contact_effects = []
+	for effect in effects:
+		if effect.is_valid():
+			effect.call()
 
 # Both the wardrobe and world actors use this same pose at a given point in a stroke.
 func show_sample(action: Action, toward: Vector2, windup: float, time: float) -> void:
 	set_process(false)
+	_field_point = Vector2.INF
+	_contact_effects.clear()
 	contact_time = maxf(windup, 0.01)
 	if time >= contact_time + RECOVERY:
 		clear()
@@ -61,6 +87,8 @@ func carry_pail(toward: Vector2, step_height: float) -> void:
 
 func clear() -> void:
 	carrying = false
+	_field_point = Vector2.INF
+	_contact_effects.clear()
 	reach = 0.0
 	body_lean = Vector2.ZERO
 	hide()
@@ -72,6 +100,11 @@ func work_pose() -> int:
 	return int(elapsed >= contact_time - 0.018 and elapsed < contact_time + RECOVERY * 0.72)
 
 func _process(delta: float) -> void:
+	if not _contact_effects.is_empty() and elapsed < contact_time and elapsed + delta >= contact_time:
+		elapsed = contact_time
+		_apply_pose()
+		_finish_contact()
+		return
 	elapsed += delta
 	if elapsed >= contact_time + RECOVERY:
 		clear()
@@ -91,8 +124,10 @@ func _apply_pose() -> void:
 	reach = swing * (1.0 - release)
 	var lift := sin(PI * swing)
 	var hand := Vector2.ZERO
+	var edge := Vector2.INF
 	match frame:
 		Action.TILL:
+			edge = HOE_EDGE
 			hand = Vector2((5.0 + reach * 2.0) * side, -10.0 + reach * 10.0 - lift * 2.0) + aim * (1.0 + reach * 3.0)
 			var strike := clampf(atan2(aim.y + 0.38, absf(aim.x) + 0.20) - 0.60, -1.80, 1.04)
 			rotation = lerpf(maxf(-2.55, strike - 1.45), strike, reach) * side
@@ -104,6 +139,7 @@ func _apply_pose() -> void:
 			hand = Vector2(side * (7.0 + reach * 3.5), -8.5 + reach * 1.5 - lift) + aim * (2.0 + reach)
 			rotation = lerpf(-0.05, 1.03, reach) * side
 		Action.HARVEST:
+			edge = SICKLE_EDGE
 			hand = Vector2(6.5 * side, -1.5 + lift) + aim * (3.0 + 3.0 * (1.0 - reach))
 			var sweep := 1.38 + clampf(atan2(aim.y, absf(aim.x) + 0.20), -1.10, 0.70)
 			rotation = lerpf(sweep - 1.10, sweep, reach) * side
@@ -112,10 +148,51 @@ func _apply_pose() -> void:
 			position = Vector2(width * side, -6.0 - lift * 4.0) + aim * (2.0 + 5.0 * reach)
 			rotation = lerpf(-0.12, 0.08, reach) * side + Vector2(side, 0).angle_to(aim)
 	if frame != Action.BOW:
-		position = hand - (GRIPS[frame] * Vector2(side, 1.0)).rotated(rotation)
+		var mirror := Vector2(side, 1.0)
+		var grip: Vector2 = GRIPS[frame] * mirror
+		var ground := _near_field_point()
+		if ground.is_finite() and edge.is_finite():
+			if frame == Action.HARVEST:
+				ground.y -= 3.0
+			var blade := edge * mirror - grip
+			rotation = lerp_angle(rotation, blade.angle_to(ground - hand), reach)
+			hand += (ground - hand - blade.rotated(rotation)).limit_length(EDGE_ADJUSTMENT) * reach
+		position = hand - grip.rotated(rotation)
 	position = position.round()
 	body_lean = (aim * reach * 2.0).round()
 	queue_redraw()
+
+func _near_field_point() -> Vector2:
+	if not _field_point.is_finite():
+		return Vector2.INF
+	var ground := (get_parent() as Node2D).to_local(_field_point)
+	var distance := ground.length()
+	return ground if distance >= 8.0 and distance <= FIELD_REACH else Vector2.INF
+
+func _water_stream(lip: Vector2, side: float, flow: float) -> PackedVector2Array:
+	var ground := _near_field_point()
+	if not ground.is_finite():
+		return PackedVector2Array([lip, lip + Vector2(side * 3, 2) * flow, lip + Vector2(side * 4, 8) * flow])
+	var end := lip.lerp(ground, flow)
+	var bend := lip.lerp(end, 0.44) - Vector2(0, 1.5 * flow)
+	return PackedVector2Array([lip, bend, end])
+
+func _draw_grains(hand: Vector2, side: float) -> void:
+	var ground := _near_field_point()
+	if ground.is_finite():
+		var release := contact_time * 0.50
+		if elapsed >= release and elapsed < contact_time + 0.035:
+			var progress := clampf(inverse_lerp(release, contact_time, elapsed), 0.0, 1.0)
+			for grain in 3:
+				var scatter := Vector2((grain - 1) * 2.0, absf(grain - 1.0))
+				var at := hand.lerp(ground + scatter, progress) - Vector2(0, sin(progress * PI) * 4.0)
+				draw_rect(Rect2(at.round(), Vector2(2, 1)), Color("#e7c474"))
+	elif elapsed >= contact_time and elapsed < contact_time + RECOVERY * 0.74:
+		var flight := (elapsed - contact_time) / RECOVERY
+		for grain in 3:
+			var at := hand + (aim + Vector2(side * 0.55, 0)) * (2 + grain * 2 + flight * 5)
+			at.y += flight * 6 + absi(1 - grain)
+			draw_rect(Rect2(at.round(), Vector2(2, 1)), Color("#e7c474"))
 
 func _draw() -> void:
 	if not visible:
@@ -141,19 +218,13 @@ func _draw() -> void:
 				if reach > 0.67:
 					var lip := transform * (PAIL_LIP * mirror)
 					var stream := (reach - 0.67) / 0.33
-					var bend := lip + Vector2(side * 3, 2) * stream
-					var end := lip + Vector2(side * 4, 8) * stream
-					draw_polyline(PackedVector2Array([lip, bend, end]), Color("#86b8aa"), 1.3)
-					draw_rect(Rect2(end.round() + Vector2(0, 2), Vector2(1, 2)), Color("#c4d9ba"))
+					var water := _water_stream(lip, side, stream)
+					draw_polyline(water, Color("#86b8aa"), 1.3)
+					draw_rect(Rect2(water[-1].round() + Vector2(0, 2), Vector2(1, 2)), Color("#c4d9ba"))
 		Action.SOW:
 			_draw_arm(far_shoulder, grip, -side, true)
 			grip = (Vector2(side * (1.0 + 7.0 * reach), -3.5) + aim * (4.0 * reach)).round()
-			if elapsed >= contact_time and elapsed < contact_time + RECOVERY * 0.74:
-				var flight := (elapsed - contact_time) / RECOVERY
-				for grain in 3:
-					var at := grip + (aim + Vector2(side * 0.55, 0)) * (2 + grain * 2 + flight * 5)
-					at.y += flight * 6 + absi(1 - grain)
-					draw_rect(Rect2(at.round(), Vector2(2, 1)), Color("#e7c474"))
+			_draw_grains(grip, side)
 		Action.HARVEST:
 			var gathered := Vector2(side * 2.0, -3.0) + aim * (4.0 + 4.0 * (1.0 - reach))
 			_draw_arm(far_shoulder, gathered, -side, true)

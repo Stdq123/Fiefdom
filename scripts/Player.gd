@@ -157,12 +157,22 @@ func take_damage(amount: int) -> void:
 		AudioManager.play_event_sound("hurt")
 		Global.hurt_player(amount)
 
-func show_action(action: ToolGesture.Action, target: Vector2) -> void:
+func show_action(action: ToolGesture.Action, target: Vector2, impact := Callable()) -> void:
 	var toward := target - global_position
 	if velocity.is_zero_approx() and toward.length_squared() > 1.0:
 		_face(toward)
-	tool_gesture.perform(action, toward)
-	AudioManager.play_field_action(action)
+	if action == Action.BOW:
+		tool_gesture.perform(action, toward)
+		AudioManager.play_field_action(action)
+		return
+	tool_gesture.perform(action, toward, 0.08, target)
+	tool_gesture.at_contact(func():
+		if velocity.is_zero_approx() and tool_gesture.work_pose() == 1:
+			_update_walk_sprite(Vector2.ZERO)
+		AudioManager.play_field_action(action)
+		if impact.is_valid():
+			impact.call()
+	)
 
 func set_seat_pose(surface: SeatedPose.Surface) -> void:
 	_seat_surface = surface
