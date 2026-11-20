@@ -19,6 +19,8 @@
 
 ## 游戏内鼠标指针
 
+青铜箭头、可用按钮的手形和输入框的工字形现在随游戏画面绘制。窗口边框和特殊控件用系统光标，切换到手柄时显示准星。隔离桌面核对了 1920×1080 Vulkan 和 1024×768 OpenGL 的弹窗、按钮状态、换回鼠标及田格落点。构建提交 `54e51d4`，Windows ZIP 的 SHA-256 为 `5ef5b4a81072951a01ea8c45c976ee9cf90f34f8ced6ebedc501b2ec6f03b31c`。测试包已清理。 [核对记录](../build/polish-game-cursor/release-54e51d4/release-proof.txt)
+
 设置和对话面板的可用按钮显示手形，灰掉的选项和正文显示箭头。鼠标停在窗口尺寸选择器上时，禁用和恢复会立即换指针。离开按钮进入正文也会换回箭头。`6d53f9a` 的 Windows ZIP 的 SHA-256 为 `d9dcabcc2c69224e0d9285665392dc0214d9842269ffc42b67871f7f6632cc2d`。在 1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面各核对十个悬停状态，标题页写入存档数为零。 [按钮光标核对记录](../build/polish-button-cursors/release-6d53f9a/release-proof.txt)
 
 地图和普通界面使用青铜箭头，可点击按钮使用带青袖口的手形，文字输入框使用工字形光标。Windows 发行包在 1920×1080 Vulkan 和 1024×768 OpenGL 两种模式下均已核对。三种原生光标的热点、颜色和透明度与原图一致。箭尖悬停在井田中央时，田边显示「公田 · 翻地」，命中的田格与尖端位置相符。构建提交 `d9c12b9`，ZIP 的 SHA-256 为 `d5d044fa619673f997e3f106393e9c32078dbb24e28ec0d44e248806c624b3e8`。 [核对记录](../build/polish-native-cursor/release-d9c12b9/release-proof.txt)
