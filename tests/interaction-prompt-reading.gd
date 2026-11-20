@@ -107,7 +107,31 @@ func _review() -> void:
 	player._set_interaction_target(target)
 	await _settle()
 	_inspect(player, plaque, "渔生 · 鱼摊 · G")
+	await _check_market_exit(player, current_scene.get_node("EstateRoad"))
 	_expect(paused and state.saved_games().is_empty(), "The market cue can be checked on a frozen scene.")
 	if not failed:
 		print("SCENARIO_OK")
 	quit(1 if failed else 0)
+
+func _check_market_exit(player: Node2D, gate: Area2D) -> void:
+	var plaque: Control = player.interaction_prompt
+	var approach := gate.global_position + Vector2(-25, 0)
+	player.camera.zoom = Vector2.ONE * 3.0
+	player.arrive_at_position(approach, Vector2.RIGHT)
+	player._set_interaction_target(player._nearest_interactable())
+	await _settle()
+	var bounds := _bounds(plaque)
+	_expect(plaque.is_visible_in_tree() and plaque.target == gate and player.interaction_target == null
+		and plaque.description.text == "沿路前往溪桥道",
+		"The east gate preview names the actual next map and leaves the interaction action free.")
+	_expect(root.get_visible_rect().encloses(bounds) and not bounds.intersects(gate.mouth_in_viewport())
+		and plaque.description.get_line_count() == plaque.description.get_visible_line_count(),
+		"The destination is legible next to the passage at maximum reading size and zoom.")
+	player.arrive_at_position(approach, Vector2.LEFT)
+	player._set_interaction_target(player._nearest_interactable())
+	await _settle()
+	_expect(not plaque.visible, "Facing into the market after arrival clears the exit preview.")
+	player.arrive_at_position(approach + Vector2(0, -32), Vector2.RIGHT)
+	player._set_interaction_target(player._nearest_interactable())
+	await _settle()
+	_expect(plaque.target != gate, "Approaching the gate from beside the road does not advertise travel.")

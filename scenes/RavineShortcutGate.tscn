@@ -53,7 +53,7 @@ offset = Vector2(-10, -26)
 region_enabled = true
 region_filter_clip_enabled = true
 
-[node name="Caption" type="Label" parent="."]
+[node name="Caption" type="Label" parent="." groups=["interaction_prompt"]]
 z_index = 6
 material = ExtResource("2_hint")
 offset_left = -61.0

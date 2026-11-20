@@ -20,16 +20,19 @@ func _ready() -> void:
 	set_process(false)
 
 func set_target(actor: Node2D) -> void:
+	if target == actor:
+		return
 	_restore_label()
 	target = actor
 	source_label = null
+	var gate := is_instance_valid(target) and target.is_in_group(&"outdoor_gates")
 	if is_instance_valid(target):
 		for candidate: Label in target.find_children("*", "Label", true, false):
 			if candidate.is_in_group(&"interaction_prompt"):
 				source_label = candidate
 				source_color = candidate.self_modulate
 				break
-	set_process(source_label != null)
+	set_process(gate or source_label != null)
 	_refresh()
 
 func _exit_tree() -> void:
@@ -43,20 +46,23 @@ func _process(_delta: float) -> void:
 	_refresh()
 
 func _refresh() -> void:
-	if not is_instance_valid(target) or not is_instance_valid(source_label):
+	var gate := is_instance_valid(target) and target.is_in_group(&"outdoor_gates")
+	if not is_instance_valid(target) or (not gate and not is_instance_valid(source_label)):
 		hide()
 		set_process(false)
 		return
-	source_label.self_modulate.a = 0.0
-	if (not source_label.is_visible_in_tree() or source_label.text.is_empty() or walker.world_controls_blocked()
+	if source_label:
+		source_label.self_modulate.a = 0.0
+	var caption: String = target.approach_caption() if gate else source_label.text
+	if (caption.is_empty() or (not gate and not source_label.is_visible_in_tree()) or walker.world_controls_blocked()
 		or walker.training_cart.visible or Global.outcome != Global.Outcome.RUNNING
 		or modal_open or settings_open or management_open):
 		hide()
 		return
 	var actual_size := description.get_theme_font_size(&"font_size")
-	if description.text != source_label.text or actual_size != font_size:
+	if description.text != caption or actual_size != font_size:
 		font_size = actual_size
-		_set_description(source_label.text)
+		_set_description(caption)
 	var bounds := get_viewport_rect().grow(-8.0)
 	var occupied: Array[Rect2] = []
 	if estate_obstacles.is_valid():
@@ -68,9 +74,11 @@ func _refresh() -> void:
 	if body.is_visible_in_tree():
 		occupied.append((body.get_global_transform_with_canvas() * body.get_rect()).grow(4.0))
 	var anchor: Node2D = target.art if target is Retainer else target
-	var subject := anchor.get_global_transform_with_canvas() * Rect2(-14, -34, 28, 46)
+	var subject: Rect2 = target.mouth_in_viewport() if gate else (
+		anchor.get_global_transform_with_canvas() * Rect2(-14, -34, 28, 46))
 	occupied.append(subject.grow(4.0))
-	var preferred := source_label.get_global_transform_with_canvas() * (source_label.size * 0.5)
+	var preferred: Vector2 = Vector2(subject.get_center().x, subject.position.y - size.y * 0.5 - 8.0) if gate else (
+		source_label.get_global_transform_with_canvas() * (source_label.size * 0.5))
 	var proposed := Rect2((preferred - size * 0.5).round(), size)
 	if bounds.encloses(proposed) and HintPlacement.is_clear(proposed, occupied):
 		position = proposed.position

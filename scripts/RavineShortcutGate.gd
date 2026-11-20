@@ -66,9 +66,14 @@ func _refresh_art() -> void:
 func _on_body_entered(body: Node2D) -> void:
 	if not Global.ravine_shortcut_open():
 		if body is Player:
-			caption.text = gate_name + " · 未开\n向蒲宁交还三处水迹"
+			caption.text = approach_caption()
 		return
 	super._on_body_entered(body)
+
+func approach_caption() -> String:
+	if not Global.ravine_shortcut_open():
+		return gate_name + " · 未开\n向蒲宁交还三处水迹"
+	return "沿小径前往%s" % MapTravel.place_name(destination)
 
 func _on_body_exited(body: Node2D) -> void:
 	if body is Player and not Global.ravine_shortcut_open():

@@ -119,14 +119,26 @@ func _physics_process(delta: float) -> void:
 	_set_interaction_target(_nearest_interactable())
 
 func _set_interaction_target(next_target: Node2D) -> void:
-	if next_target == interaction_target:
-		return
-	if is_instance_valid(interaction_target) and interaction_target.has_method("set_interaction_focused"):
-		interaction_target.set_interaction_focused(false)
-	interaction_target = next_target
-	if next_target and next_target.has_method("set_interaction_focused"):
-		next_target.set_interaction_focused(true)
-	interaction_prompt.set_target(next_target)
+	if next_target != interaction_target:
+		if is_instance_valid(interaction_target) and interaction_target.has_method("set_interaction_focused"):
+			interaction_target.set_interaction_focused(false)
+		interaction_target = next_target
+		if next_target and next_target.has_method("set_interaction_focused"):
+			next_target.set_interaction_focused(true)
+	interaction_prompt.set_target(next_target if next_target else _nearest_gate())
+
+func _nearest_gate() -> Node2D:
+	if world_controls_blocked() or Global.is_indoors() or training_cart.visible:
+		return null
+	var nearest: Node2D
+	var distance := INF
+	var heading := facing_direction()
+	for gate in get_tree().get_nodes_in_group(&"outdoor_gates"):
+		var approach: float = gate.approach_distance(global_position, heading)
+		if approach < distance:
+			distance = approach
+			nearest = gate
+	return nearest
 
 func set_training_cart(mounted: bool) -> void:
 	training_cart.visible = mounted

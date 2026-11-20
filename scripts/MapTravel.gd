@@ -85,14 +85,14 @@ func prepare_session(path: String, caption: String) -> Error:
 		for neighbor in _unprepared_neighbors(packed):
 			if not is_instance_valid(origin) or tree.current_scene != origin:
 				break
-			await _prepare_in_batches(neighbor, "预备关口 · " + _place_name(neighbor))
+			await _prepare_in_batches(neighbor, "预备关口 · " + place_name(neighbor))
 	_finish()
 	if not is_instance_valid(origin) or tree.current_scene != origin:
 		return ERR_SKIP
 	return OK if packed else ERR_CANT_OPEN
 
 func _map_read_stage(path: String, caption: String) -> String:
-	var place := _place_name(path)
+	var place := place_name(path)
 	return "地图资源" if place.is_empty() or caption.contains(place) else place + " · 地图资源"
 
 func _show_loading_card(caption: String, stage: String) -> void:
@@ -213,7 +213,7 @@ func _open_destination(path: String, arrival_path: NodePath, player_path: NodePa
 	if packed == null:
 		if path.is_empty() or not ResourceLoader.exists(path, "PackedScene"):
 			return false
-		var place := _place_name(path)
+		var place := place_name(path)
 		var caption := "正在前往" + place if not place.is_empty() else "正在读入地图"
 		await _show_loading_card(caption, "地图资源")
 		if _can_depart(origin):
@@ -245,12 +245,12 @@ func _fade(opacity: float, seconds: float) -> void:
 	tween.tween_property(cover, "color:a", opacity, seconds).set_trans(Tween.TRANS_SINE)
 	await tween.finished
 
-func _place_name(path: String) -> String:
+func place_name(path: String) -> String:
 	var location: Variant = Global.SAVE_SCENES.find_key(path)
 	return "封地" if location == "estate" else Global.SAVE_LOCATION_NAMES.get(location, "")
 
 func _show_arrival(path: String, entry_note := "") -> void:
-	var place := _place_name(path)
+	var place := place_name(path)
 	if place.is_empty():
 		return
 	arrival_name.text = place
