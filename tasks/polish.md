@@ -17,6 +17,10 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 游戏内鼠标指针
+
+地图和普通界面使用青铜箭头，可点击按钮使用带青袖口的手形，文字输入框使用工字形光标。Windows 发行包在 1920×1080 Vulkan 和 1024×768 OpenGL 两种模式下均已核对。三种原生光标的热点、颜色和透明度与原图一致。箭尖悬停在井田中央时，田边显示「公田 · 翻地」，命中的田格与尖端位置相符。构建提交 `d9c12b9`，ZIP 的 SHA-256 为 `d5d044fa619673f997e3f106393e9c32078dbb24e28ec0d44e248806c624b3e8`。 [核对记录](../build/polish-native-cursor/release-d9c12b9/release-proof.txt)
+
 ## Windows 首次启动与兼容入口
 
 从 `7776144` 的 Git 归档和干净工作区各自导出，两个 ZIP 的 SHA-256 同为 `72ad7d05edccb00aabe524a389f1b88a87b1202ffec05e8f4feb4c1538111091`。导出副本统一了场景、资源、脚本和随包文本的换行，四个资源沿用之前归档版的 UID。两种标题入口再次通过核对，测试包已清理。 [重复构建记录](../build/polish-windows-first-launch/release-7776144/release-proof.txt)
