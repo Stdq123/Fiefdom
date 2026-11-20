@@ -14,6 +14,8 @@ class Cover:
 	var sort_origin: Node2D
 	var original_alpha: float
 	var first_fade_sample: int
+	var sample_mask := 0
+	var target_alpha: float
 
 	func _init(art: Sprite2D, origin: Node2D, first_sample: int) -> void:
 		sprite = art
@@ -43,26 +45,60 @@ func _process(delta: float) -> void:
 	var room_visible := Global.estate_room == _room and body.is_visible_in_tree()
 	var body_pose := body.global_transform.translated_local(body.offset)
 	var foot_y := _player.global_position.y
+	var depth := PackedInt32Array()
+	depth.resize(BODY_SAMPLES.size())
+	var blockers := 0
+	for cover in _cover:
+		cover.sample_mask = 0
+		cover.target_alpha = cover.original_alpha
+		if (not room_visible or cover.original_alpha <= 0.0 or foot_y >= cover.sort_origin.global_position.y
+				or not cover.sprite.is_visible_in_tree()):
+			continue
+		cover.sample_mask = _covered_samples(cover.sprite, body_pose)
+		if cover.sample_mask == 0:
+			continue
+		blockers += 1
+		var covered := 0
+		for sample in BODY_SAMPLES.size():
+			if cover.sample_mask & (1 << sample):
+				covered += 1
+				depth[sample] += 1
+		var level := clampi(covered - cover.first_fade_sample + 1, 0, OPACITY.size() - 1)
+		cover.target_alpha *= OPACITY[level]
+	if blockers > 1:
+		_share_opacity(depth)
 	for cover in _cover:
 		var sprite := cover.sprite
-		var alpha := cover.original_alpha
-		if room_visible and foot_y < cover.sort_origin.global_position.y and sprite.is_visible_in_tree():
-			alpha *= _opacity_at(cover, body_pose)
+		var alpha := cover.target_alpha
 		var current := sprite.modulate.a
 		if not is_equal_approx(current, alpha):
 			var rate := FADE_RATE if alpha < current else RESTORE_RATE
 			sprite.modulate.a = move_toward(current, alpha, delta * rate)
 
-func _opacity_at(cover: Cover, body_pose: Transform2D) -> float:
-	var sprite := cover.sprite
+func _covered_samples(sprite: Sprite2D, body_pose: Transform2D) -> int:
 	var pose := sprite.global_transform.affine_inverse() * body_pose
 	if not sprite.get_rect().intersects(pose * BODY_BOUNDS):
-		return 1.0
+		return 0
+	var mask := 0
+	for sample in BODY_SAMPLES.size():
+		if sprite.is_pixel_opaque(pose * BODY_SAMPLES[sample]):
+			mask |= 1 << sample
+	return mask
+
+func _share_opacity(depth: PackedInt32Array) -> void:
 	var covered := 0
-	var fully_faded := cover.first_fade_sample + OPACITY.size() - 2
-	for point: Vector2 in BODY_SAMPLES:
-		if sprite.is_pixel_opaque(pose * point):
-			covered += 1
-			if covered == fully_faded:
-				break
-	return OPACITY[maxi(0, covered - cover.first_fade_sample + 1)]
+	for layers in depth:
+		covered += int(layers > 0)
+	if covered < PROP_COVER_SAMPLES:
+		return
+	var maximum: float = OPACITY[covered - PROP_COVER_SAMPLES + 1]
+	var limits := PackedFloat32Array()
+	# Light from the character passes through each foreground layer at a shared sample.
+	for layers in depth:
+		limits.append(1.0 - pow(1.0 - maximum, 1.0 / maxi(layers, 1)))
+	for cover in _cover:
+		if cover.sample_mask == 0:
+			continue
+		for sample in BODY_SAMPLES.size():
+			if cover.sample_mask & (1 << sample):
+				cover.target_alpha = minf(cover.target_alpha, limits[sample])
