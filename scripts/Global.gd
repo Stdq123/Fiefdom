@@ -457,6 +457,26 @@ func tribute_deadline() -> int:
 func tribute_penalty_tonight() -> int:
 	return balance.no_contribution_penalty if tribute_deadline() == current_day else 0
 
+func tribute_penalty_forecast(rations: Dictionary = {}) -> Dictionary:
+	var penalty := tribute_penalty_tonight()
+	if penalty <= 0:
+		return {}
+	var teachers := _count_duty(retainers, RetainerData.Duty.TEACH)
+	var fed_teachers := 0
+	if teachers > 0:
+		var meal := night_rations_plan() if rations.is_empty() else rations
+		fed_teachers = _count_duty(meal.fed, RetainerData.Duty.TEACH)
+	var teaching := fed_teachers * balance.confucian_teaching_reputation
+	var remaining := reputation + teaching - penalty
+	var note := "若今夜仍无纳贡，声望 −%d，扣后余 %d。" % [penalty, remaining]
+	if remaining <= balance.rank_strip_threshold:
+		note += "将失去封地。" if current_rank == Rank.XIA_SHI else "将削爵为%s。" % rank_names[current_rank - 1]
+	if teaching > 0:
+		note = "按当前分餐，讲学声望 +%d。\n" % teaching + note
+	elif teachers > 0 and fed_teachers == 0:
+		note = "按当前分餐，讲学门客缺餐，今晚没有讲学声望。\n" + note
+	return {"remaining": remaining, "text": note, "teaching_shortage": fed_teachers < teachers}
+
 func tribute_overdue() -> bool:
 	return days_without_contribution >= balance.no_contribution_threshold
 

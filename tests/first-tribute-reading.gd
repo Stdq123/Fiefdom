@@ -43,15 +43,142 @@ func _run() -> void:
 	state.current_day = due
 	state.days_without_contribution = state.balance.no_contribution_threshold - 1
 	state.estate_room = state.EstateRoom.HALL
-	_expect(ui._warn_before_first_tribute(""), "The unsown public plot has a deadline warning.")
-	var warning := ui.get_node("Control/DialoguePanel") as Control
-	_expect("从南门出去" in warning.text_label.text and "声望" in warning.text_label.text,
-		"The indoor warning shows the way back and the consequence.")
-	_expect(warning.choices[0].has_focus() and warning.choices.back().text == "仍然过夜",
-		"The field action remains the default.")
-	warning.free()
-	_expect(state.current_day == due and state.active_crops.is_empty() and state.saved_games().is_empty(),
-		"Opening both screens leaves the seeded estate on the same day.")
+	var retainer_data: GDScript = state.retainers[0].get_script()
+	var teacher: Resource = retainer_data.new("季青", "士人", retainer_data.School.CONFUCIAN)
+	teacher.duty = retainer_data.Duty.TEACH
+	teacher.loyalty = 10.0
+	state.retainers.append(teacher)
+	var threshold: int = state.balance.rank_strip_threshold
+	var penalty: int = state.balance.no_contribution_penalty
+	var teaching: int = state.balance.confucian_teaching_reputation
+	state.reputation = threshold + penalty
+	state.food_storage = state.retainer_food_cost()
+	var fed_note := "讲学声望 +%d" % teaching
+	var missed_note := "讲学门客缺餐"
+	var loss := "将失去封地"
+	var demotion := "将削爵为下士"
+	_check_first_tribute(ui, state, threshold + teaching, fed_note, "", false)
+
+	var events := root.get_node("GameEvents")
+	ui.panel_manager.show_management_panel()
+	var office: Control = ui.panel_manager.management_panel_instance
+	office.show_technology()
+	state.food_storage -= 1
+	events.food_changed.emit(state.food_storage)
+	_check_consequence(office.rank_tribute.text, threshold, missed_note, loss)
+	ui.panel_manager.hide_management_panel()
+	_check_first_tribute(ui, state, threshold, missed_note, loss, true)
+
+	state.current_rank = state.Rank.ZHONG_SHI
+	events.rank_changed.emit(state.current_rank)
+	_check_first_tribute(ui, state, threshold, missed_note, demotion, true)
+	teacher.loyalty = 90.0
+	await _check_retained_teacher_route(ui, state)
+	_check_planned_tribute(ui, state, retainer_data)
+	_expect(state.current_day == due and state.saved_games().is_empty(),
+		"Reading the warnings and ledgers keeps the date and the empty save catalog.")
 	if not failed:
 		print("SCENARIO_OK")
 	quit(1 if failed else 0)
+
+func _check_first_tribute(ui: Node, state: Node, remaining: int, lesson: String, consequence: String,
+		expect_shortage: bool) -> void:
+	var before := _snapshot(state)
+	ui._request_sleep()
+	var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
+	_expect(warning != null, "The unsown public plot opens its warning before sleep.")
+	if not warning:
+		return
+	_check_consequence(warning.text_label.text, remaining, lesson, consequence)
+	var field: Dictionary = state.tribute_field_plan()
+	_expect("从南门出去" in warning.text_label.text and warning.choices[0].text == "选%s并指路" % field.crop
+		and warning.choices[0].has_focus() and warning.choices.back().text == "仍然过夜",
+		"The indoor route, default field action and sleep option remain available.")
+	_expect(warning.choices.size() == (3 if expect_shortage else 2), "Only a shortage adds a third action.")
+	if expect_shortage:
+		_expect(warning.choices[1].text == "查看今夜安排" and "季青缺餐后将离任" in warning.text_label.text,
+			"The combined warning gives the affected teacher and a route to the meal plan.")
+	warning.free()
+
+	ui._show_night_rations()
+	var night := ui.get_node("Control/NightRationsPanel") as Control
+	_check_consequence(night.tribute_details.text, remaining, lesson, consequence)
+	night.free()
+	ui.panel_manager.show_management_panel()
+	var office: Control = ui.panel_manager.management_panel_instance
+	office.show_technology()
+	_check_consequence(office.rank_tribute.text, remaining, lesson, consequence)
+	ui.panel_manager.hide_management_panel()
+	_expect(_snapshot(state) == before, "Forecasts do not serve meals, teach, collect tribute or advance the estate.")
+
+func _check_consequence(report: String, remaining: int, lesson: String, consequence: String) -> void:
+	_expect(lesson in report and "扣后余 %d。" % remaining in report, "Show the meal-adjusted score: " + report)
+	_expect(("失去封地" in report) == (consequence == "将失去封地")
+		and ("削爵" in report) == (consequence == "将削爵为下士")
+		and (consequence.is_empty() or consequence in report), "Show the correct rank consequence: " + report)
+
+func _check_retained_teacher_route(ui: Node, state: Node) -> void:
+	var before := _snapshot(state)
+	ui._request_sleep()
+	var warning := ui.get_node_or_null("Control/DialoguePanel") as Control
+	if not warning:
+		_expect(false, "A teacher missing a meal still gets the first-tribute warning.")
+		return
+	var has_meal_link: bool = warning.choices.size() == 3 and warning.choices[1].text == "查看今夜安排"
+	_expect(has_meal_link and "讲学门客缺餐" in warning.text_label.text and "离任" not in warning.text_label.text,
+		"A retained teacher's missed meal offers the night plan without announcing a departure.")
+	if not has_meal_link:
+		warning.free()
+		return
+	warning.choices[1].pressed.emit()
+	await warning.tree_exited
+	await process_frame
+	await process_frame
+	var night := ui.get_node_or_null("Control/NightRationsPanel") as Control
+	_expect(night != null and night.focus_shortage, "Following the link opens tonight's ration controls.")
+	if night:
+		night.free()
+	_expect(_snapshot(state) == before, "Following the meal link does not settle the evening.")
+
+func _check_planned_tribute(ui: Node, state: Node, retainer_data: GDScript) -> void:
+	state.king_storage = 1
+	state.retainers[0].duty = retainer_data.Duty.HARVEST
+	state.wait_for_fields_before_sleep = true
+	var cell: Vector2i = state.well_fields[0].center_pos
+	var crop: Resource = root.get_node("ItemManager").get_crop("millet")
+	var nights: int = state.sowing_nights(crop)
+	state.tilled_cells[cell] = true
+	state.active_crops[cell] = {"id": "millet", "data": crop, "age": nights, "growth_nights": nights,
+		"requires_channel": false, "watered": false}
+	var before := _snapshot(state)
+	ui._show_night_rations()
+	var night := ui.get_node("Control/NightRationsPanel") as Control
+	var note: String = night.tribute_details.text
+	_expect("收工预计纳贡 1 份" in note and "扣后余" not in note and "削爵" not in note,
+		"A planned public harvest takes precedence over a missed-tribute penalty.")
+	night.free()
+	_expect(_snapshot(state) == before, "The projected harvest leaves the ripe crop and treasury untouched.")
+
+	var private_cell := cell + Vector2i.RIGHT
+	state.active_crops[private_cell] = state.active_crops[cell]
+	state.active_crops.erase(cell)
+	state.tilled_cells[private_cell] = true
+	state.food_storage = state.retainer_food_cost() - 1
+	state.set_night_rations(true, 0)
+	before = _snapshot(state)
+	ui._show_night_rations()
+	night = ui.get_node("Control/NightRationsPanel") as Control
+	note = night.tribute_details.text
+	_expect("收工后可再核对分餐" in note and "收工预计纳贡" not in note,
+		"A private harvest that could supply the missing serving makes the forecast conditional.")
+	night.free()
+	_expect(_snapshot(state) == before, "The conditional forecast does not harvest or convert the private crop.")
+
+func _snapshot(state: Node) -> Array:
+	var resident_state := []
+	for resident: Resource in state.retainers:
+		resident_state.append([resident.name, resident.duty, resident.loyalty])
+	return [state.current_day, state.day_progress, state.days_without_contribution, state.reputation,
+		state.current_rank, state.outcome, state.food_storage, state.king_storage, state.money,
+		state.quest_progress, state.crop_stock.lots.duplicate(), resident_state, state.night_rations.last.duplicate(true),
+		state.active_crops.duplicate(true), state.player_stats.stats.duplicate(true)]

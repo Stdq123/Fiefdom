@@ -473,11 +473,11 @@ func _on_xp_changed(_art_name: String, _xp: int, _max_xp: int) -> void:
 	_refresh_water_technology()
 	_refresh_bow_technology()
 
-func _refresh_rank_progress() -> void:
+func _refresh_rank_progress(rations: Dictionary = {}) -> void:
 	var rank := Global.current_rank
 	var reputation := Global.reputation
 	var target := Global.promotion_reputation()
-	var penalty := Global.tribute_penalty_tonight()
+	var penalty := Global.tribute_penalty_forecast(rations)
 	var qualified := Global.eligible_for_promotion()
 	var arts := _art_promotion_progress()
 	rank_title.text = "爵位 · %s" % Global.rank_names[rank]
@@ -498,13 +498,10 @@ func _refresh_rank_progress() -> void:
 			rank_next.text = "当前条件已达，过夜核定爵位。"
 		elif reputation < target:
 			rank_next.text = "还差 %d 声望。纳贡或与来客交谈可积声望。" % (target - reputation)
-	var after_penalty := reputation - penalty
 	rank_tribute.text = ""
-	if penalty > 0:
-		rank_tribute.text = "今夜若仍欠贡，预计扣 %d 声望，扣后余 %d。" % [penalty, after_penalty]
-		if after_penalty <= Global.balance.rank_strip_threshold:
-			rank_tribute.text += "可能因此失地。" if rank == Global.Rank.XIA_SHI else "可能因此削爵。"
-		elif qualified and after_penalty < target:
+	if not penalty.is_empty():
+		rank_tribute.text = penalty.text
+		if qualified and penalty.remaining > Global.balance.rank_strip_threshold and penalty.remaining < target:
 			rank_next.text = "当前条件已达。先补纳贡，以免扣声望后错过晋升。"
 	elif Global.days_without_contribution > 0 and Global.tribute_deadline() > Global.current_day:
 		rank_tribute.text = "已欠贡 %d 夜 · 下次结算在第 %d 天晚" % [Global.days_without_contribution, Global.tribute_deadline()]
@@ -606,9 +603,15 @@ func _refresh_ration_previews() -> void:
 
 func _refresh_roster_meals() -> void:
 	roster_meal.visible = not Global.retainers.is_empty()
-	if not roster_meal.is_visible_in_tree():
+	var show_meals := roster_meal.is_visible_in_tree()
+	var update_rank := is_visible_in_tree() and tabs.get_current_tab_control() == technology_page and Global.tribute_penalty_tonight() > 0
+	if not (show_meals or update_rank):
 		return
 	var meal := Global.night_rations_plan()
+	if update_rank:
+		_refresh_rank_progress(meal)
+	if not show_meals:
+		return
 	var short: bool = meal.served < meal.need
 	roster_meal_summary.text = ("今夜可供 %d/%d 份" % [meal.served, meal.need] if short else "今夜口粮齐 · %d 份" % meal.need)
 	if not meal.departing.is_empty():

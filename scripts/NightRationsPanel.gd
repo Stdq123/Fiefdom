@@ -350,13 +350,13 @@ func _refresh() -> void:
 	tomorrow_calendar.text = "明日 · %s · %s  ›" % [Global.get_current_solar_term(tomorrow),
 		Global.weather_label(tomorrow)]
 	_refresh_raid_plan()
-	_refresh_fields()
+	var plan := Global.night_rations_plan()
+	_refresh_fields(plan)
 	sheep_note.visible = Global.sheepfold.owned()
 	if sheep_note.visible:
 		var feed := Global.sheep_feed(Global.sheepfold.fodder)
 		sheep_note.text = "羊棚 · " + Sheepfold.FEED_LABELS[feed]
 		sheep_note.modulate = SHORT if feed == Sheepfold.Feed.SHORTAGE else GOOD
-	var plan := Global.night_rations_plan()
 	var silk_forecast := Global.silk_night_summary(plan.fed)
 	silk_note.visible = not silk_forecast.is_empty()
 	silk_note.text = "蚕棚 · " + silk_forecast
@@ -586,7 +586,7 @@ func _refresh_raid_plan() -> void:
 	find_watch.visible = not active and Global.can_prepare_watch_snare()
 	raid_instructions.text = instructions
 
-func _refresh_fields() -> void:
+func _refresh_fields(rations: Dictionary = {}) -> void:
 	if settling_field_work:
 		return
 	var current := Global.field_night_forecast()
@@ -596,7 +596,7 @@ func _refresh_fields() -> void:
 	if after_work:
 		field_forecast_deadline = 1.0 - float(preview.seconds) / maxf(1.0, Global.balance.daylight_seconds)
 	set_process(after_work)
-	_refresh_tribute(preview)
+	_refresh_tribute(preview, rations)
 	var estimate := "收工后预计" if after_work else "今夜预计"
 	field_forecast.text = "已有 %d 格可收 · %s %d 格生长" % [
 		current.ready, estimate, report.growing + report.public_ripe + report.private_ripe]
@@ -707,7 +707,7 @@ func _open_field_management() -> void:
 	queue_free()
 	field_management_requested.emit(completed_field_id)
 
-func _refresh_tribute(preview: Dictionary) -> void:
+func _refresh_tribute(preview: Dictionary, rations: Dictionary) -> void:
 	var due := Global.tribute_deadline()
 	tribute_plan.visible = due > 0
 	tribute_section.visible = tribute_plan.visible
@@ -736,14 +736,15 @@ func _refresh_tribute(preview: Dictionary) -> void:
 		_describe_tribute_field(field)
 		if field.status == Global.NightGrowth.DRY and field.cell in preview.get("watered_cells", []):
 			tribute_details.text += "\n这格预计由门客在过夜前浇好。"
-	var penalty := Global.tribute_penalty_tonight()
-	var expected_tribute: int = preview.get("work", {}).get("tribute", 0)
+	var work: Dictionary = preview.get("work", {})
+	var expected_tribute: int = work.get("tribute", 0)
+	var penalty := Global.tribute_penalty_forecast(rations) if expected_tribute == 0 else {}
 	if expected_tribute > 0:
 		tribute_details.text += "\n收工预计纳贡 %d 份。" % expected_tribute
-	elif penalty > 0:
-		tribute_details.text += "\n若今夜仍无纳贡，声望 −%d。" % penalty
-		if Global.reputation - penalty <= Global.balance.rank_strip_threshold:
-			tribute_details.text += "将失去封地。" if Global.current_rank == Global.Rank.XIA_SHI else "将被削爵。"
+	elif not penalty.is_empty():
+		if work.get("stock", 0) > 0 and Global.night_rations.enabled and penalty.teaching_shortage:
+			tribute_details.text += "\n私田收成尚未入仓。以下按现有口粮估算，收工后可再核对分餐。"
+		tribute_details.text += "\n" + penalty.text
 	elif late_crop and Global.balance.no_contribution_penalty > 0:
 		tribute_details.text += "\n这茬赶不上期限。欠贡将扣 %d 点声望。" % Global.balance.no_contribution_penalty
 
