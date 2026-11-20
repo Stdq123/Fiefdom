@@ -4,6 +4,9 @@ const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 const CURSOR_EDGE := Color("#382519")
 const PUBLIC_MARK := Color("#ffdd91")
 
+# Left-to-right frames of cursor-field-tools.png.
+enum MouseTool { NONE = -1, HOE, SEEDS, WATER, SICKLE }
+
 @onready var tile_map: TileMapLayer = get_parent()
 @onready var world = tile_map.get_parent()
 
@@ -16,8 +19,10 @@ var ink := Color("#edce88")
 var preview_plots: Array[Vector2i] = []
 var preview_seeds: Dictionary[Vector2i, String] = {}
 var hud: Control
+var _mouse_tool := MouseTool.NONE
 
 func _ready() -> void:
+	add_to_group(&"field_cursor")
 	z_index = 52
 	material = preload("res://resources/world_hint_material.tres")
 	hide()
@@ -73,7 +78,21 @@ func _input(event: InputEvent) -> void:
 		pointer_seen = true
 		pointer = event.position
 
+func mouse_tool_at(point: Vector2) -> MouseTool:
+	if is_visible_in_tree() and can_process() and is_processing() and pointer.is_equal_approx(point):
+		return _mouse_tool
+	return MouseTool.NONE
+
+func _mouse_tool_for_action(action: int) -> MouseTool:
+	match action:
+		world.FieldAction.TILL: return MouseTool.HOE
+		world.FieldAction.SOW: return MouseTool.SEEDS
+		world.FieldAction.WATER: return MouseTool.WATER
+		world.FieldAction.HARVEST: return MouseTool.SICKLE
+	return MouseTool.NONE
+
 func _process(_delta: float) -> void:
+	_mouse_tool = MouseTool.NONE
 	var viewport := get_viewport()
 	var bounds := viewport.get_visible_rect()
 	if (not pointer_seen or not bounds.has_point(pointer) or viewport.gui_get_hovered_control() != null
@@ -123,6 +142,8 @@ func _process(_delta: float) -> void:
 	var is_public: bool = tile.get_custom_data("is_public_field")
 	var cost: int = world.field_cost(action)
 	var actionable := cost > 0 and Global.current_stamina >= cost
+	if actionable:
+		_mouse_tool = _mouse_tool_for_action(action)
 	var tone := Color("#ecce87") if is_public else Color("#c2d998")
 	if not actionable:
 		tone = Color("#a7c8bd") if action in [world.FieldAction.CHANNEL, world.FieldAction.RAIN, world.FieldAction.WATERED] else Color("#efaa84")
@@ -186,6 +207,8 @@ func _show_field_preview(cell: Vector2i, action: int, plots: Array[Vector2i]) ->
 			details.append("续播 %d 格 · 浇水 %d 格" % [seeds.size(), replanting.water])
 	elif action == world.FieldAction.WATER:
 		symbol = HUDIcons.Symbol.WATER
+	if Global.current_stamina >= cost:
+		_mouse_tool = _mouse_tool_for_action(action)
 	_show_batch_caption(cell, title, details, cost, plots, seeds, symbol)
 
 func _harvest_note(plots: Array[Vector2i]) -> String:
@@ -202,6 +225,8 @@ func _show_preparation_preview(cell: Vector2i, preparation: Dictionary) -> void:
 	var details := PackedStringArray([
 		_seed_varieties(seeds), "翻地 %d · 播种 %d · 浇水 %d" % [preparation.till, plots.size(), preparation.water],
 	])
+	if Global.current_stamina >= preparation.cost:
+		_mouse_tool = MouseTool.HOE if preparation.till > 0 else MouseTool.SEEDS
 	_show_batch_caption(cell, "整备空田", details, preparation.cost, plots, seeds)
 
 func _seed_varieties(seeds: Dictionary[Vector2i, String]) -> String:

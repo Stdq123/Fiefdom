@@ -11,6 +11,7 @@ const MOUSE_CURSORS := {
 	DisplayServer.CURSOR_POINTING_HAND: [preload("res://assets/ui/cursor-hand.png"), Vector2(-11, -3)],
 	DisplayServer.CURSOR_IBEAM: [preload("res://assets/ui/cursor-text.png"), Vector2(-16, -16)],
 }
+const FIELD_TOOLS := preload("res://assets/ui/cursor-field-tools.png")
 const ACTION_BUTTONS := {
 	JOY_BUTTON_Y: KeyBindings.MAP,
 	JOY_BUTTON_BACK: KeyBindings.ALMANAC,
@@ -46,6 +47,7 @@ var _popup_uses_pointer := false
 var _popup_a_pressed := false
 var cursor := AimCursor.new()
 var _mouse_cursor: Sprite2D
+var _field_tool: Sprite2D
 var _mouse_client_position := Vector2.INF
 @onready var window := get_tree().root
 
@@ -59,6 +61,13 @@ func _ready() -> void:
 		_mouse_cursor.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 		_mouse_cursor.hide()
 		add_child(_mouse_cursor)
+		_field_tool = Sprite2D.new()
+		_field_tool.name = "FieldTool"
+		_field_tool.centered = false
+		_field_tool.texture = FIELD_TOOLS
+		_field_tool.hframes = 4
+		_field_tool.hide()
+		_mouse_cursor.add_child(_field_tool)
 		window.mouse_exited.connect(_clear_mouse_position)
 		window.size_changed.connect(_read_mouse_position)
 		_read_mouse_position()
@@ -163,22 +172,45 @@ func _clear_mouse_position() -> void:
 	_mouse_client_position = Vector2.INF
 
 func _update_mouse_cursor() -> void:
-	var art: Variant = MOUSE_CURSORS.get(DisplayServer.cursor_get_shape())
+	if active:
+		return
+	var shape := DisplayServer.cursor_get_shape()
+	var art: Variant = MOUSE_CURSORS.get(shape)
 	var draw_pointer := false
+	var draw_tool := false
 	if art != null and _mouse_client_position.is_finite() and DisplayServer.window_is_focused():
 		# Window input arrives in client pixels, including any letterbox margins.
 		var point := window.get_final_transform().affine_inverse() * _mouse_client_position
-		draw_pointer = window.get_visible_rect().has_point(point)
+		var bounds := window.get_visible_rect()
+		draw_pointer = bounds.has_point(point)
 		if draw_pointer:
 			if _mouse_cursor.texture != art[0]:
 				_mouse_cursor.texture = art[0]
 				_mouse_cursor.offset = art[1]
 			_mouse_cursor.position = point
+			if shape == DisplayServer.CURSOR_ARROW:
+				draw_tool = _update_mouse_field_tool(point, bounds)
 	_mouse_cursor.visible = draw_pointer
+	_field_tool.visible = draw_tool
 	# Leave window chrome and special cursors such as drag indicators to the display server.
 	var mode := Input.MOUSE_MODE_HIDDEN if draw_pointer else Input.MOUSE_MODE_VISIBLE
 	if Input.mouse_mode != mode:
 		Input.mouse_mode = mode
+
+func _update_mouse_field_tool(point: Vector2, bounds: Rect2) -> bool:
+	var field := get_tree().get_first_node_in_group(&"field_cursor")
+	var tool: int = field.mouse_tool_at(point) if field else -1
+	if tool < 0:
+		return false
+	var size := _field_tool.get_rect().size
+	var offset := Vector2(23, 10)
+	if point.x + offset.x + size.x > bounds.end.x:
+		offset.x = -size.x - 4.0
+	if point.y + offset.y + size.y > bounds.end.y:
+		offset.y = -size.y - 4.0
+	_field_tool.position = offset
+	_field_tool.frame = tool
+	return true
 
 func _release_pointer() -> void:
 	_popup_a_pressed = false
@@ -241,7 +273,8 @@ func rhythm_key() -> String:
 func _process(delta: float) -> void:
 	if not active:
 		if _mouse_cursor:
-			_update_mouse_cursor()
+			# Read the field preview after it has updated for the current pointer.
+			_update_mouse_cursor.call_deferred()
 		return
 	if pointer_suspended:
 		return
