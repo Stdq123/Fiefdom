@@ -194,6 +194,11 @@ const WIND_FLEXIBILITY := {
 	Prop.PINE: FOLIAGE_WIND.NEEDLES, Prop.WILLOW: FOLIAGE_WIND.WILLOW,
 	Prop.BAMBOO: FOLIAGE_WIND.STEM, Prop.TALL_BAMBOO: FOLIAGE_WIND.STEM,
 }
+const DRIFT_CROWNS := {
+	Prop.BLOSSOM_TREE: FOLIAGE_WIND.Crown.FLOWERING,
+	Prop.OAK: FOLIAGE_WIND.Crown.DECIDUOUS, Prop.WILLOW: FOLIAGE_WIND.Crown.DECIDUOUS,
+	Prop.GROVE_TREE: FOLIAGE_WIND.Crown.DECIDUOUS, Prop.GROVE_CLUSTER: FOLIAGE_WIND.Crown.DECIDUOUS,
+}
 const LEAFY_PROPS := [Prop.OAK, Prop.BLOSSOM_TREE, Prop.GROVE_TREE, Prop.GROVE_CLUSTER, Prop.SHRUB, Prop.FERN,
 	Prop.FLOWERS, Prop.WILLOW, Prop.BANK_GRASS, Prop.TALL_BAMBOO, Prop.RAVINE_SHOOT, Prop.RAVINE_RUSH,
 	Prop.WHITE_BLOOM, Prop.PINK_BLOOM]
@@ -589,7 +594,7 @@ func _prepare_map() -> void:
 			_prop_bounds(Vector2.ZERO, placement.z).position, _prop_texture(placement.z, foot))
 		scenery[sprite] = placement.z
 		if WIND_FLEXIBILITY.has(placement.z):
-			wind.attach(sprite, WIND_FLEXIBILITY[placement.z])
+			attach_prop_wind(wind, sprite, placement.z)
 		if placement.z == Prop.HALL:
 			rain.add_roof(sprite, Rect2(-58, -40, 109, 43), [
 				Vector3(-53, -39, 46), Vector3(-30, -39, 45),
@@ -1450,6 +1455,9 @@ static func tree_texture(prop: int, season_index: int) -> AtlasTexture:
 		return atlas_texture(WOODLAND, region)
 	var frame: Vector2 = ORCHARD_FRAMES[season_index] if prop == Prop.BLOSSOM_TREE else Vector2(season_index, 0)
 	return atlas_texture(SEASONAL_TREES, Rect2(frame * PROP_SIZE, PROP_SIZE))
+
+static func attach_prop_wind(wind: FOLIAGE_WIND, sprite: Sprite2D, prop: int) -> void:
+	wind.attach(sprite, WIND_FLEXIBILITY[prop], DRIFT_CROWNS.get(prop, FOLIAGE_WIND.Crown.NONE))
 
 static func atlas_texture(source: Texture2D, region: Rect2) -> AtlasTexture:
 	var result := AtlasTexture.new()

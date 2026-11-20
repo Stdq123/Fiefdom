@@ -382,7 +382,7 @@ func place_scenery(layer: Node2D, occlusion: LANDSCAPE.SCENERY_OCCLUSION) -> voi
 	for index in TREE_FEET.size():
 		var variant := index % tree_art.size()
 		var tree := _prop(layer, TREE_FEET[index], tree_art[variant], 45.0, wet_tint)
-		wind.attach(tree, LANDSCAPE.WIND_FLEXIBILITY[TREE_PATTERN[variant]])
+		LANDSCAPE.attach_prop_wind(wind, tree, TREE_PATTERN[variant])
 		occlusion.watch(tree)
 	var fence := LANDSCAPE.atlas_texture(LANDSCAPE.ESTATE_ART, LANDSCAPE.ESTATE_SITE_REGIONS[LANDSCAPE.Prop.FENCE])
 	for foot: Vector2 in FENCE_FEET:

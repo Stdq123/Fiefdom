@@ -2,13 +2,16 @@ extends Node
 
 const SHADER := preload("res://resources/foliage-wind.gdshader")
 const CROP_SHADER := preload("res://resources/field-crop-wind.gdshader")
+const CANOPY_DRIFT := preload("res://scripts/CanopyDrift.gd")
 const CROWN := 0.78
 const NEEDLES := 0.47
 const WILLOW := 0.98
 const STEM := 1.20
+enum Crown { NONE, DECIDUOUS, FLOWERING }
 
 var material := ShaderMaterial.new()
 var crop_material: ShaderMaterial
+var drift: CANOPY_DRIFT
 var phase := 0.0
 
 func _init(crops: TileMapLayer = null) -> void:
@@ -25,9 +28,15 @@ func _ready() -> void:
 	_refresh_weather()
 	_refresh_room()
 
-func attach(plant: Sprite2D, flexibility := CROWN) -> void:
+func attach(plant: Sprite2D, flexibility := CROWN, crown := Crown.NONE) -> void:
 	plant.material = material
 	plant.set_instance_shader_parameter(&"flexibility", flexibility)
+	if crown != Crown.NONE:
+		if drift == null:
+			drift = CANOPY_DRIFT.new()
+			add_child(drift)
+			drift.refresh()
+		drift.track(plant, crown == Crown.FLOWERING)
 
 func _set_wind_parameter(parameter: StringName, value: float) -> void:
 	material.set_shader_parameter(parameter, value)
@@ -39,10 +48,16 @@ func _refresh_weather() -> void:
 	if Global.has_rain():
 		strength *= 1.40
 	_set_wind_parameter(&"wind_strength", strength)
+	if drift:
+		drift.refresh()
 
 func _refresh_room() -> void:
 	set_process(not Global.is_indoors())
+	if drift:
+		drift.refresh()
 
 func _process(delta: float) -> void:
 	phase = fposmod(phase + delta * 0.85, TAU)
 	_set_wind_parameter(&"wind_phase", phase)
+	if drift and drift.visible:
+		drift.advance(delta, phase)
