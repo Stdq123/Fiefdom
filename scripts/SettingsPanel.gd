@@ -363,7 +363,10 @@ func _return_to_title() -> void:
 
 func _on_save_pressed() -> Error:
 	var result := Global.save_game()
-	save_status.text = "游戏已保存" if result == OK else "保存失败（%s）" % error_string(result)
+	match result:
+		OK: save_status.text = "游戏已保存"
+		ERR_FILE_UNRECOGNIZED: save_status.text = TITLE_CONFIRMATION.PROTECTED_MANUAL_SAVE + "可开启自动保存，过夜时尝试其他档位。"
+		_: save_status.text = "保存失败（%s）" % error_string(result)
 	return result
 
 func _on_load_pressed() -> void:

@@ -4,6 +4,7 @@ signal return_requested
 
 const DIALOG_THEME := preload("res://resources/estate_dialog_theme.tres")
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
+const PROTECTED_MANUAL_SAVE := "保存失败。手动档含新版存档，原记录已保留。"
 
 var save_progress: Callable
 var save_button: Button
@@ -65,6 +66,9 @@ func _save_and_leave() -> void:
 		if not exits_game:
 			hide()
 		return_requested.emit()
+	elif result == ERR_FILE_UNRECOGNIZED:
+		dialog_text = _prompt + "\n\n" + PROTECTED_MANUAL_SAVE + "可先留在当前画面。"
+		_focus_action(get_cancel_button())
 	else:
 		dialog_text = _prompt + "\n\n保存失败（%s）。可重试，或先留在当前画面。" % error_string(result)
 		_focus_action(save_button)

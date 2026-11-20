@@ -317,6 +317,7 @@ func _show_ending(saved_ending: bool) -> void:
 				ending.ending_saved = true
 				status.text = "结局已自动保存。"
 			ERR_SKIP: status.text = "可点「保存结局」留存本次记录。"
+			ERR_FILE_UNRECOGNIZED: status.text = "结局自动保存失败。自动档位含新版存档，可点「保存结局」尝试手动档。"
 			_: status.text = "结局自动保存失败。可尝试「保存结局」。"
 	ending.continue_button.pressed.connect(_continue_estate)
 	ending.save_button.pressed.connect(_save_ending)
@@ -428,7 +429,10 @@ func _show_defeat(outcome: Global.Outcome) -> void:
 
 func _save_ending() -> Error:
 	var result := Global.save_game()
-	status.text = "结局已存档。" if result == OK else "保存失败（%s）" % error_string(result)
+	match result:
+		OK: status.text = "结局已存档。"
+		ERR_FILE_UNRECOGNIZED: status.text = TITLE_CONFIRMATION.PROTECTED_MANUAL_SAVE + "可留在结算。"
+		_: status.text = "保存失败（%s）" % error_string(result)
 	if result == OK:
 		summary.ending_saved = true
 		summary.refresh_restore()
@@ -439,7 +443,8 @@ func _restore_game() -> void:
 	var result := Global.load_latest_game(true)
 	if result != OK:
 		get_tree().paused = true
-		status.text = "读取失败（%s）" % error_string(result)
+		status.text = ("请用更新版本的《采邑春秋》读取这份存档。" if result == ERR_FILE_UNRECOGNIZED
+			else "读取失败（%s）" % error_string(result))
 
 func _return_to_title() -> void:
 	get_tree().paused = false

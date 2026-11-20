@@ -46,18 +46,31 @@ func _ready() -> void:
 	print("Fiefdom title ready")
 
 func _refresh_menu() -> void:
-	var latest := Global.latest_saved_game()
+	var catalog := Global.saved_games()
+	var latest: Dictionary = {}
+	var needs_update := false
+	for entry in catalog:
+		if entry.error == OK:
+			latest = entry
+			break
+		if entry.error == ERR_FILE_UNRECOGNIZED:
+			needs_update = true
 	var can_resume := not latest.is_empty()
 	_resume_scene = latest.get("scene", "")
 	continue_button.visible = can_resume
 	continue_button.disabled = not can_resume
-	archive_button.visible = Global.has_saved_game()
+	archive_button.visible = not catalog.is_empty()
 	if can_resume:
 		continue_button.text = Global.saved_game_action(latest)
 		var route := Global.saved_game_route(latest)
 		status.text = latest.campaign_name + "\n" + Global.saved_game_caption(latest)
 		if not route.is_empty():
 			status.text += "\n" + route
+		var version_note := Global.saved_game_version_notice(latest)
+		if not version_note.is_empty():
+			status.text += "\n" + version_note
+	elif needs_update:
+		status.text = "有新版存档，请用更新版本的《采邑春秋》读取。"
 	elif archive_button.visible:
 		status.text = "存档格式有误，可从「选择存档」查看。"
 	else:
@@ -123,7 +136,7 @@ func _continue_game() -> void:
 	if prepared != OK:
 		status.text = ("无法读取存档所需地图。可从「选择存档」试其他记录。"
 			if archive_button.visible else "无法读取存档所需地图。")
-	elif result not in [ERR_FILE_NOT_FOUND, ERR_FILE_CORRUPT]:
+	elif result not in [ERR_FILE_NOT_FOUND, ERR_FILE_CORRUPT, ERR_FILE_UNRECOGNIZED]:
 		status.text = "继续失败（%s）" % error_string(result)
 	GamepadInput.snap_pointer_to_focus.call_deferred()
 

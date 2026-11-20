@@ -33,7 +33,13 @@ func _ready() -> void:
 			campaigns[key] = []
 		campaigns[key].append(entry)
 	for key in campaigns:
-		_add_campaign(key, campaigns[key][0])
+		var summary: Dictionary = campaigns[key][0]
+		if summary.error != OK:
+			for entry: Dictionary in campaigns[key]:
+				if entry.error == ERR_FILE_UNRECOGNIZED:
+					summary = entry
+					break
+		_add_campaign(key, summary)
 	if campaigns.is_empty():
 		_show_unavailable()
 		close_button.focus_next = ^"."
@@ -63,7 +69,9 @@ func _add_campaign(key: String, latest: Dictionary) -> void:
 	button.toggle_mode = true
 	var heading: String = latest["campaign_name"]
 	var detail := "存档无法读取"
-	if latest["error"] == OK:
+	if latest["error"] == ERR_FILE_UNRECOGNIZED:
+		detail = "需更新游戏"
+	elif latest["error"] == OK:
 		var route := Global.saved_game_route(latest, false)
 		detail = "第 %d 天 · %s" % [latest["day"], route if not route.is_empty() else Global.rank_names[latest["rank"]]]
 	button.text = heading + "\n" + detail
@@ -87,19 +95,16 @@ func _show_records(key: String) -> void:
 		row.queue_free()
 	record_scroll.scroll_vertical = 0
 	var entries: Array = campaigns[key]
-	records_heading.text = ("%s的存档" % entries[0]["campaign_name"] if entries[0]["error"] == OK
-		else "受损记录")
+	records_heading.text = "%s的存档" % entries[0]["campaign_name"] if entries[0]["error"] == OK else "存档记录"
 	status.hide()
 	var readable := false
+	var update_note := ""
 	for entry: Dictionary in entries:
 		var button := _add_row(records)
-		button.disabled = entry["error"] != OK
-		if button.disabled:
-			button.focus_mode = Control.FOCUS_NONE
-			button.text = "%s · 无法读取" % entry["source"]
-			if entry.legacy:
-				button.text += " · 旧版"
-			button.tooltip_text = button.text
+		if entry.error != OK:
+			_mark_unavailable(button, entry)
+			if entry.error == ERR_FILE_UNRECOGNIZED:
+				update_note = Global.saved_game_version_notice(entry)
 		else:
 			var route := Global.saved_game_route(entry, false)
 			var rank: String = Global.rank_names[entry.rank]
@@ -108,8 +113,11 @@ func _show_records(key: String) -> void:
 			if not route.is_empty():
 				caption += " · " + rank
 			if entry.legacy:
-				caption = "旧版 · " + caption
+				caption = ("旧目录 · " if entry.required_version > 0 else "旧版 · ") + caption
 			button.text = "%s · %s\n%s" % [Global.saved_game_action(entry), detail, caption]
+			var version_note := Global.saved_game_version_notice(entry)
+			if not version_note.is_empty():
+				button.text += "\n" + version_note
 			button.tooltip_text = button.text
 			if entry.completed_route in [Global.Outcome.TRADITIONAL, Global.Outcome.REFORMED]:
 				button.icon = LEDGER_DESK.volume_texture(entry.completed_route == Global.Outcome.TRADITIONAL)
@@ -123,7 +131,20 @@ func _show_records(key: String) -> void:
 		readable = readable or not button.disabled
 	if not readable:
 		_show_unavailable()
+		if not update_note.is_empty():
+			status.text = update_note
 	_link_focus(campaign_buttons[key])
+
+func _mark_unavailable(button: Button, entry: Dictionary) -> void:
+	var reason := "需更新游戏" if entry.error == ERR_FILE_UNRECOGNIZED else "无法读取"
+	button.disabled = true
+	button.focus_mode = Control.FOCUS_NONE
+	button.text = "%s · %s" % [entry.source, reason]
+	if entry.legacy:
+		button.text += " · 旧目录"
+	var filename := str(entry.path).get_file()
+	button.text += "\n" + filename + (Global.SAVE_BACKUP_SUFFIX if entry.from_backup else "")
+	button.tooltip_text = button.text
 
 func _link_focus(selected: Button) -> void:
 	var estate_rows: Array[Button] = []
@@ -191,10 +212,18 @@ func _load(entry: Dictionary, button: Button, key: String) -> void:
 	if result == OK:
 		return
 	get_tree().paused = true
-	if result in [ERR_FILE_CORRUPT, ERR_FILE_NOT_FOUND]:
-		button.disabled = true
-		button.focus_mode = Control.FOCUS_NONE
+	if result in [ERR_FILE_CORRUPT, ERR_FILE_NOT_FOUND, ERR_FILE_UNRECOGNIZED]:
+		entry.error = result
+		if result == ERR_FILE_UNRECOGNIZED:
+			for current in Global.saved_games():
+				if current.path == entry.path and current.error == result:
+					entry.merge(current, true)
+					break
+		_mark_unavailable(button, entry)
 		_link_focus(campaign_buttons[key])
+	if result == ERR_FILE_UNRECOGNIZED:
+		_show_load_error("请用更新版本的《采邑春秋》读取这份存档。")
+		return
 	_show_load_error("这份存档无法读取。请选择其他存档。")
 
 func _show_load_error(message: String) -> void:

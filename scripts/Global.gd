@@ -3697,6 +3697,8 @@ func _write_snapshot(origin: String) -> Error:
 	var previous: int = 0 if catalog.is_empty() else catalog[0]["sequence"]
 	var sequence := maxi(previous + 1, int(Time.get_unix_time_from_system() * SAVE_TIME_SCALE))
 	var path := manual_save_path() if origin.is_empty() else _next_auto_slot(folder, catalog)
+	if path.is_empty():
+		return ERR_FILE_UNRECOGNIZED
 	var saved_crops := {}
 	for cell in active_crops:
 		var crop = active_crops[cell]
@@ -3931,12 +3933,17 @@ func _write_snapshot(origin: String) -> Error:
 	return replace_error
 
 func _install_save_file(pending_path: String, path: String) -> Error:
+	var backup_path := path + SAVE_BACKUP_SUFFIX
+	if FileAccess.file_exists(backup_path):
+		var backup := _read_save_header(backup_path)
+		if backup.error not in [OK, ERR_FILE_CORRUPT]:
+			return backup.error
 	if FileAccess.file_exists(path):
 		var previous := _read_save_file(path)
 		if previous.error == OK:
 			# Park the usable save before promoting the temp file. An interrupted
 			# promotion leaves this checkpoint available at the same logical slot.
-			var moved := DirAccess.rename_absolute(path, path + SAVE_BACKUP_SUFFIX)
+			var moved := DirAccess.rename_absolute(path, backup_path)
 			if moved != OK:
 				return moved
 		elif previous.error != ERR_FILE_CORRUPT:
@@ -3964,10 +3971,11 @@ func _next_auto_slot(folder: String, catalog: Array[Dictionary]) -> String:
 		if not _save_slot_exists(path):
 			return path
 	for index in range(catalog.size() - 1, -1, -1):
-		var path: String = catalog[index]["path"]
-		if path in slots:
+		var entry := catalog[index]
+		var path: String = entry.path
+		if path in slots and entry.required_version == 0:
 			return path
-	return slots[0]
+	return ""
 
 func _save_paths() -> PackedStringArray:
 	var paths := PackedStringArray([SAVE_PATH] + AUTO_SAVE_PATHS)
@@ -4002,13 +4010,16 @@ func saved_games() -> Array[Dictionary]:
 		var campaign := _snapshot_campaign(data)
 		var legacy := not path.begins_with(CAMPAIGN_SAVE_ROOT + "/")
 		var campaign_key := campaign.md5_text() if readable or legacy else path.get_base_dir().get_file()
+		var name_in_archive := _snapshot_campaign_name(data)
+		if not readable:
+			name_in_archive = snapshot.get("display_name", "受损存档")
 		var source := "手动存档"
 		if path.get_file() != SAVE_PATH.get_file():
 			match data.get("save_origin"):
 				"council": source = "初税亩自动存档"
 				"ending": source = "结局自动存档"
 				"ending_continue": source = "续营自动存档"
-				_: source = "晨间自动存档"
+				_: source = "晨间自动存档" if readable else "自动存档"
 		var saved_health := _read_save_int(data.get("health"), balance.player_max_health)
 		var saved_outcome := _snapshot_outcome(data, saved_health)
 		var saved_record := _saved_ending_record(data)
@@ -4023,9 +4034,10 @@ func saved_games() -> Array[Dictionary]:
 			"rank": clampi(_read_save_int(data.get("current_rank"), Rank.XIA_SHI), Rank.XIA_SHI, Rank.QING),
 			"campaign": campaign,
 			"campaign_key": campaign_key,
-			"campaign_name": _snapshot_campaign_name(data) if readable else "受损存档",
+			"campaign_name": name_in_archive,
 			"legacy": legacy,
 			"from_backup": snapshot["file"] != path,
+			"required_version": snapshot.get("required_version", 0),
 			"tax_choice": _read_save_int(data.get("tax_reform_choice"), TaxReformChoice.NONE),
 			"outcome": saved_outcome,
 			"completed_route": _read_save_int(saved_record.get("outcome"), saved_outcome),
@@ -4034,6 +4046,13 @@ func saved_games() -> Array[Dictionary]:
 		})
 	catalog.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["sequence"] > b["sequence"])
 	return catalog
+
+func saved_game_version_notice(entry: Dictionary) -> String:
+	if entry.get("required_version", 0) <= SAVE_VERSION:
+		return ""
+	if entry.error == OK:
+		return "此档位含新版存档，当前版本无法覆盖。"
+	return "请用更新版本的《采邑春秋》读取这份存档。"
 
 func saved_game_caption(entry: Dictionary) -> String:
 	var source: String = entry["source"]
@@ -4079,9 +4098,18 @@ func latest_campaign_save() -> Dictionary:
 func load_latest_game(current_campaign_only := false) -> Error:
 	var catalog := saved_games()
 	var key := campaign_id.md5_text()
-	var unavailable := catalog.any(func(entry: Dictionary) -> bool:
-		return entry["error"] != OK and (not current_campaign_only or entry["campaign_key"] == key))
-	var failure := ERR_FILE_CORRUPT if unavailable and not current_campaign_only else ERR_FILE_NOT_FOUND
+	var unavailable := false
+	var failure := ERR_FILE_NOT_FOUND
+	for entry in catalog:
+		if current_campaign_only and entry["campaign_key"] != key:
+			continue
+		if entry["error"] != OK:
+			unavailable = true
+			if entry["error"] == ERR_FILE_UNRECOGNIZED:
+				failure = ERR_FILE_UNRECOGNIZED
+			elif not current_campaign_only and failure == ERR_FILE_NOT_FOUND:
+				failure = ERR_FILE_CORRUPT
+	# The newest readable record can sort before the unreadable entries.
 	for entry in catalog:
 		if entry["error"] != OK or not _can_resume(entry, current_campaign_only):
 			continue
@@ -4118,16 +4146,31 @@ func _snapshot_campaign_name(data: Dictionary) -> String:
 
 func _read_snapshot(path: String) -> Dictionary:
 	var snapshot := _read_save_file(path)
-	var backup_path := path + SAVE_BACKUP_SUFFIX
-	if snapshot.error != OK and FileAccess.file_exists(backup_path):
-		var backup := _read_save_file(backup_path)
-		if backup.error == OK:
-			backup["file"] = backup_path
-			return backup
 	snapshot["file"] = path
+	var backup_path := path + SAVE_BACKUP_SUFFIX
+	if not FileAccess.file_exists(backup_path):
+		return snapshot
+	# A usable primary can be offered for reading even if its backup must be protected.
+	if snapshot.error == OK:
+		snapshot["required_version"] = _read_save_header(backup_path).get("required_version", 0)
+		return snapshot
+	var backup := _read_save_file(backup_path)
+	var required := maxi(snapshot.get("required_version", 0), backup.get("required_version", 0))
+	var backup_needs_update: bool = backup.error == ERR_FILE_UNRECOGNIZED and snapshot.error != ERR_FILE_UNRECOGNIZED
+	if snapshot.error == ERR_FILE_NOT_FOUND or backup.error == OK or backup_needs_update:
+		snapshot = backup
+		snapshot["file"] = backup_path
+	snapshot["required_version"] = required
 	return snapshot
 
 func _read_save_file(path: String) -> Dictionary:
+	var header := _read_save_header(path)
+	if header.error != OK:
+		return header
+	var result := _load_snapshot_data(header.data, path, true)
+	return {"error": result, "data": header.data if result == OK else {}}
+
+func _read_save_header(path: String) -> Dictionary:
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		return {"error": FileAccess.get_open_error(), "data": {}}
@@ -4139,11 +4182,14 @@ func _read_save_file(path: String) -> Dictionary:
 
 	var data: Dictionary = json.data
 	var version := _read_save_int(data.get("save_version", 0), -1)
+	if version > SAVE_VERSION:
+		var label_text: Variant = data.get("campaign_name")
+		var display_name: String = label_text.left(16) if label_text is String and not label_text.is_empty() else "新版存档"
+		return {"error": ERR_FILE_UNRECOGNIZED, "required_version": version, "display_name": display_name, "data": {}}
 	var saved_day := _read_save_int(data.get("current_day"), 0)
-	if version < 0 or version > SAVE_VERSION or saved_day < 1:
+	if version < 0 or saved_day < 1:
 		return {"error": ERR_FILE_CORRUPT, "data": {}}
-	var result := _load_snapshot_data(data, path, true)
-	return {"error": result, "data": data if result == OK else {}}
+	return {"error": OK, "data": data}
 
 func load_game(path := "") -> Error:
 	if path.is_empty():
