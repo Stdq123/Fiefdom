@@ -59,7 +59,6 @@ func _ready() -> void:
 		_mouse_cursor.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 		_mouse_cursor.hide()
 		add_child(_mouse_cursor)
-		window.mouse_entered.connect(_read_mouse_position)
 		window.mouse_exited.connect(_clear_mouse_position)
 		window.size_changed.connect(_read_mouse_position)
 		_read_mouse_position()
