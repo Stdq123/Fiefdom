@@ -17,10 +17,10 @@ func check_art() -> void:
 	var actor = load("res://scenes/Player.tscn").instantiate()
 	var footsteps = load("res://scripts/NeighborMotion.gd")
 	root.add_child(actor)
-	actor._update_walk_sprite(Vector2.RIGHT, 1.0)
-	actor._update_walk_sprite(Vector2.RIGHT, 20.0)
+	for _step in 31:
+		actor._update_walk_sprite(Vector2.RIGHT, Vector2.RIGHT)
 	expect(actor.sprite.frame_coords == Vector2i(2, actor.Facing.PROFILE), "The far foot follows the distance walked.")
-	actor._update_walk_sprite(Vector2.LEFT, 0.0)
+	actor._update_walk_sprite(Vector2.LEFT)
 	expect(actor.sprite.flip_h and actor.sprite.frame_coords.x == 0, "A stationary actor must face the wall with both feet planted.")
 	var tool: ToolGesture = actor.tool_gesture
 	expect(tool.texture.get_size() == Vector2(160, 32) and tool.hframes == ToolGesture.Action.size(), "Farm tool atlas dimensions.")
@@ -61,7 +61,7 @@ func check_art() -> void:
 			for figure in panel.figures:
 				var col := 0
 				if motion == figure.WALK:
-					col = footsteps.walk_column(0.36 * actor.SPEED, PlayerAttire.PASS_COLUMN)
+					col = footsteps.walk_column(0.36 * actor.SPEED + actor.WALK_START, PlayerAttire.PASS_COLUMN)
 				elif motion >= 0:
 					col = PlayerAttire.WORK_COLUMN + 1
 				expect(figure.body.frame_coords == Vector2i(col, figure.facing) and figure.tool.visible == (motion >= 0), "Dressing pose " + id)

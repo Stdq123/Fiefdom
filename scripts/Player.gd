@@ -8,7 +8,9 @@ const SPEED = 100.0
 const CART_SPEED := 145.0
 const CART_ACCELERATION := 295.0
 const CART_BRAKING := 390.0
-const STEP_DISTANCE := 20.0
+const WALK_START := NeighborMotion.STEP_LENGTH * 3.0
+const WALK_CYCLE := NeighborMotion.STEP_LENGTH * 4.0
+const MIN_WALK_DISTANCE := 0.05
 const CAMERA_ZOOMS := [1.5, 2.0, 3.0]
 
 # Simple FSM
@@ -28,8 +30,8 @@ var current_state = State.IDLE
 var shake_strength: float = 0.0
 var shake_decay: float = 5.0
 var facing_row := Facing.FRONT
-var walk_distance := 0.0
-var step_distance_left := STEP_DISTANCE * 0.5
+var facing_left := false
+var walk_distance := WALK_START
 var hurt_tween: Tween
 var interaction_target: Node2D
 var conversation_open := false
@@ -99,8 +101,7 @@ func _physics_process(delta: float) -> void:
 		current_state = State.TOOL_USE if tool_gesture.visible else State.IDLE
 
 	move_and_slide()
-	var distance := get_position_delta().length()
-	_update_footsteps(distance)
+	var movement := get_position_delta()
 	
 	# Camera Shake
 	if shake_strength > 0.05:
@@ -111,9 +112,9 @@ func _physics_process(delta: float) -> void:
 		camera.offset = Vector2.ZERO
 	
 	if training_cart.visible:
-		_update_driver(distance)
+		_update_driver(movement.length())
 	else:
-		_update_walk_sprite(direction, distance)
+		_update_walk_sprite(direction, movement)
 	_set_interaction_target(_nearest_interactable())
 
 func _set_interaction_target(next_target: Node2D) -> void:
@@ -129,6 +130,7 @@ func _set_interaction_target(next_target: Node2D) -> void:
 func set_training_cart(mounted: bool) -> void:
 	training_cart.visible = mounted
 	velocity = Vector2.ZERO
+	walk_distance = WALK_START
 	tool_gesture.clear()
 	sprite.position.y = -15.0 if mounted else -6.0
 	if mounted:
@@ -166,14 +168,15 @@ func set_seat_pose(surface: SeatedPose.Surface) -> void:
 	_seat_surface = surface
 	if seated:
 		tool_gesture.clear()
-	_update_walk_sprite(Vector2.ZERO, 0.0)
+	_update_walk_sprite(Vector2.ZERO)
 
-func _update_walk_sprite(direction: Vector2, travelled: float) -> void:
+func _update_walk_sprite(direction: Vector2, movement := Vector2.ZERO) -> void:
 	if not direction.is_zero_approx():
 		_face(direction)
 	if seated:
-		walk_distance = 0.0
+		walk_distance = WALK_START
 		sprite.offset = Vector2.ZERO
+		sprite.flip_h = facing_left
 		sprite.frame_coords = Vector2i(0, facing_row)
 		if not _seated_art:
 			_seated_art = SeatedPose.new(sprite)
@@ -182,8 +185,10 @@ func _update_walk_sprite(direction: Vector2, travelled: float) -> void:
 		return
 	if _seated_art:
 		_seated_art.restore_standing()
-	if direction.is_zero_approx() or travelled < 0.04:
-		walk_distance = 0.0
+	var travelled := movement.length()
+	if direction.is_zero_approx() or travelled < MIN_WALK_DISTANCE:
+		walk_distance = WALK_START
+		sprite.flip_h = facing_left
 		var work := tool_gesture.work_pose()
 		if work >= 0:
 			sprite.offset = Vector2.ZERO
@@ -193,25 +198,31 @@ func _update_walk_sprite(direction: Vector2, travelled: float) -> void:
 			sprite.frame_coords = Vector2i(0, facing_row)
 		return
 	sprite.offset = Vector2.ZERO
-	walk_distance += travelled
-	sprite.frame_coords = Vector2i(NeighborMotion.walk_column(walk_distance, PlayerAttire.PASS_COLUMN), facing_row)
-
-func _update_footsteps(travelled: float) -> void:
-	if training_cart.visible or travelled < 0.05:
-		step_distance_left = STEP_DISTANCE * 0.5
-		return
-	step_distance_left -= travelled
-	if step_distance_left <= 0.0:
-		step_distance_left += STEP_DISTANCE
+	var previous := NeighborMotion.walk_column(walk_distance, PlayerAttire.PASS_COLUMN)
+	walk_distance = fposmod(walk_distance + travelled, WALK_CYCLE)
+	var column := NeighborMotion.walk_column(walk_distance, PlayerAttire.PASS_COLUMN)
+	var row := _facing_for(movement)
+	sprite.flip_h = row == Facing.PROFILE and movement.x < 0.0
+	sprite.frame_coords = Vector2i(column, row)
+	if column != previous and column in [1, 2]:
 		footstep.emit(global_position)
 
+func footstep_contact(at: Vector2) -> Vector2:
+	var frame := sprite.frame_coords
+	if frame.x not in [1, 2]:
+		return at
+	var sole := PlayerAttire.planted_sole(frame, sprite.flip_h)
+	return at + (sprite.to_global(sole) - global_position)
+
 func _face(direction: Vector2) -> void:
+	facing_row = _facing_for(direction)
+	facing_left = facing_row == Facing.PROFILE and direction.x < 0.0
+	sprite.flip_h = facing_left
+
+static func _facing_for(direction: Vector2) -> Facing:
 	if absf(direction.x) > absf(direction.y):
-		facing_row = Facing.PROFILE
-		sprite.flip_h = direction.x < 0.0
-	else:
-		facing_row = Facing.BACK if direction.y < 0.0 else Facing.FRONT
-		sprite.flip_h = false
+		return Facing.PROFILE
+	return Facing.BACK if direction.y < 0.0 else Facing.FRONT
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion or event is InputEventMouseButton:
@@ -338,14 +349,14 @@ func _overlaps_threshold(footprint: Rect2) -> bool:
 func facing_direction() -> Vector2:
 	match facing_row:
 		Facing.BACK: return Vector2.UP
-		Facing.PROFILE: return Vector2.LEFT if sprite.flip_h else Vector2.RIGHT
+		Facing.PROFILE: return Vector2.LEFT if facing_left else Vector2.RIGHT
 		_: return Vector2.DOWN
 
 func arrive_at_position(position_in_world: Vector2, direction: Vector2) -> void:
 	global_position = position_in_world
 	velocity = Vector2.ZERO
 	_face(direction)
-	_update_walk_sprite(Vector2.ZERO, 0.0)
+	_update_walk_sprite(Vector2.ZERO)
 	camera.reset_smoothing()
 	camera.force_update_scroll()
 

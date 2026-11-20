@@ -41,15 +41,14 @@ func play_step(at: Vector2, movement: Vector2, surface: TERRAIN_AUDIO.Surface) -
 	for outline in patches:
 		if Geometry2D.is_point_in_polygon(foot, outline):
 			audio.play_step(cover)
-			var left := audio.step_variant % 2 == 0
 			if cover == TERRAIN_AUDIO.Surface.SHALLOWS:
-				footstep_effects.splash(foot, movement, left, outline)
+				footstep_effects.splash(foot, movement, outline)
 			else:
-				footstep_effects.leave_snow(foot, movement, left)
+				footstep_effects.leave_snow(foot, movement)
 			return
 	audio.play_step(surface)
 	if surface == TERRAIN_AUDIO.Surface.TRACK and cover != TERRAIN_AUDIO.Surface.SHALLOWS:
-		footstep_effects.lift_dust(foot, movement, audio.step_variant % 2 == 0)
+		footstep_effects.lift_dust(foot, movement)
 
 func _draw() -> void:
 	for index in patches.size():

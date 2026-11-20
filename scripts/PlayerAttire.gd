@@ -11,6 +11,12 @@ const FRAME_SIZE := 32
 const WORK_COLUMN := 3
 const PASS_COLUMN := WORK_COLUMN + 2
 const SHEET_WIDTH := FRAME_SIZE * (PASS_COLUMN + 2)
+# Sole centers relative to the sprite origin for columns 1 and 2 of each facing.
+const PLANTED_SOLES := [
+	[Vector2(-4.0, 15.0), Vector2(4.0, 15.0)],
+	[Vector2(3.5, 15.0), Vector2(-4.0, 15.0)],
+	[Vector2(4.5, 12.5), Vector2(3.0, 13.0)],
+]
 
 const CATALOG := {
 	"cloth": {"name": "黛布短衣", "detail": "深色布衣 · 木簪", "sheet": -1, "rank": 0, "sleeve": Color("#82766d")},
@@ -34,6 +40,10 @@ static func texture(id: String) -> Texture2D:
 
 static func preview(id: String, direction: int) -> AtlasTexture:
 	return _region(id, Rect2(0, direction * FRAME_SIZE, FRAME_SIZE, FRAME_SIZE))
+
+static func planted_sole(frame: Vector2i, mirrored: bool) -> Vector2:
+	var sole: Vector2 = PLANTED_SOLES[frame.y][frame.x - 1]
+	return Vector2(-sole.x, sole.y) if mirrored else sole
 
 static func _region(id: String, bounds: Rect2) -> AtlasTexture:
 	var sheet: int = CATALOG[id].sheet

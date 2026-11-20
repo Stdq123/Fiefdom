@@ -57,11 +57,9 @@ func _open(path: String) -> bool:
 func _contact(landscape: Node2D, point: Vector2, direction: Vector2, variant: int, material: int) -> void:
 	var effects = landscape.footstep_effects
 	effects.clear()
-	# Work backward from a painted shoe location to the body anchor for this facing.
-	var spread := direction.orthogonal() * (2.5 if variant == 1 else -2.5) * Vector2(1.0, 0.65)
-	var anchor := point - Vector2(0, 5) + direction * 1.5 - spread
+	var anchor := point - Vector2(0, 7)
 	audio.step_variant = variant
-	landscape._play_step(landscape.to_global(anchor), direction)
+	landscape._play_step(landscape.to_global(anchor), landscape.to_global(point), direction)
 	_expect(audio.footsteps.stream == TERRAIN_AUDIO.STEPS[material][variant] and audio.step_variant == variant + 1,
 		"The contact selects its material and plays one step at %s." % point)
 	var wet := material == TERRAIN_AUDIO.Surface.SHALLOWS

@@ -235,7 +235,8 @@ func finish_meadow_route() -> void:
 	if Global.market_trip_target == Sheepfold.MEADOW:
 		_clear_regional_trip()
 
-func _step(foot: Vector2) -> void:
+func _step(at: Vector2) -> void:
+	var foot := player.footstep_contact(at)
 	var surface := TRACK_AUDIO.Surface.GRASS
 	if LAYOUT.BRIDGE.has_point(foot):
 		surface = TRACK_AUDIO.Surface.PLANK

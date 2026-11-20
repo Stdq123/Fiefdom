@@ -843,12 +843,11 @@ func _draw() -> void:
 		_stamp(bounds, prop.z)
 
 func _on_footstep(at: Vector2) -> void:
-	_play_step(at, player.get_real_velocity())
+	_play_step(at, player.footstep_contact(at), player.get_real_velocity())
 
-func _play_step(at: Vector2, movement: Vector2) -> void:
+func _play_step(at: Vector2, contact: Vector2, movement: Vector2) -> void:
 	var foot := to_local(at)
-	var left := terrain_audio.step_variant % 2 == 1
-	var shoe := FOOTSTEP_EFFECTS.shoe_at(foot, movement.normalized(), left)
+	var shoe := to_local(contact)
 	if Global.is_indoors():
 		var path := ^"SilkInterior" if Global.estate_room == Global.EstateRoom.SILK_SHED else ^"HallInterior"
 		var room := get_parent().get_node_or_null(path)
@@ -859,12 +858,12 @@ func _play_step(at: Vector2, movement: Vector2) -> void:
 	terrain_audio.play_step(surface)
 	match surface:
 		TERRAIN_AUDIO.Surface.SNOW:
-			footstep_effects.leave_snow(foot, movement, left)
+			footstep_effects.leave_snow(shoe, movement)
 		TERRAIN_AUDIO.Surface.SHALLOWS:
-			footstep_effects.splash(foot, movement, left, ford_shoal, ford_stones)
+			footstep_effects.splash(shoe, movement, ford_shoal, ford_stones)
 		TERRAIN_AUDIO.Surface.TRACK:
 			if not raining and (wilderness or _ground_clear(Rect2(foot, Vector2.ONE))):
-				footstep_effects.lift_dust(foot, movement, left)
+				footstep_effects.lift_dust(shoe, movement)
 
 func _surface_at(foot: Vector2) -> TERRAIN_AUDIO.Surface:
 	if wilderness:

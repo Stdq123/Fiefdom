@@ -41,42 +41,29 @@ func _ready() -> void:
 	GameEvents.day_advanced.connect(clear.unbind(1))
 	GameEvents.estate_room_changed.connect(clear.unbind(1))
 
-func leave_snow(foot: Vector2, movement: Vector2, left: bool) -> void:
-	snow_footprints.leave(foot, movement, left)
+func leave_snow(contact: Vector2, movement: Vector2) -> void:
+	snow_footprints.leave(contact, movement)
 
-func lift_dust(foot: Vector2, movement: Vector2, left: bool) -> void:
+func lift_dust(contact: Vector2, movement: Vector2) -> void:
 	var heading := movement.normalized()
 	if not heading.is_zero_approx():
-		_add_mark(StepMark.new(shoe_at(foot, heading, left), heading))
+		_add_mark(StepMark.new(contact, heading))
 
-func splash(foot: Vector2, movement: Vector2, left: bool, water: PackedVector2Array,
+func splash(contact: Vector2, movement: Vector2, water: PackedVector2Array,
 		stones: Array[PackedVector2Array] = []) -> void:
 	var heading := movement.normalized()
-	if heading.is_zero_approx():
+	if heading.is_zero_approx() or not Geometry2D.is_point_in_polygon(contact, water):
 		return
-	var shoe := shoe_at(foot, heading, left)
-	if not Geometry2D.is_point_in_polygon(shoe, water):
-		if not Geometry2D.is_point_in_polygon(foot, water):
-			return
-		# A shallow edge can fall between the body anchor and the painted toe.
-		shoe = foot.lerp(shoe, 0.5)
-		if not Geometry2D.is_point_in_polygon(shoe, water):
-			shoe = foot
 	for stone in stones:
-		if Geometry2D.is_point_in_polygon(shoe, stone):
+		if Geometry2D.is_point_in_polygon(contact, stone):
 			return
-	_add_mark(StepMark.new(shoe, heading, water, stones))
+	_add_mark(StepMark.new(contact, heading, water, stones))
 
 func clear() -> void:
 	_marks.clear()
 	snow_footprints.clear()
 	set_process(false)
 	queue_redraw()
-
-static func shoe_at(foot: Vector2, heading: Vector2, left: bool) -> Vector2:
-	var spread := heading.orthogonal() * (2.5 if left else -2.5) * Vector2(1.0, 0.65)
-	# The image places the soles below the collision anchor.
-	return (foot + Vector2(0, 5.0) - heading * 1.5 + spread).snappedf(0.5)
 
 func _add_mark(mark: StepMark) -> void:
 	if _marks.size() == MAX_STEPS:

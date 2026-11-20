@@ -52,7 +52,7 @@ func _check_view(map: String, prefix: String, origin: Vector2, foot: Vector2, fa
 	var original := prop.modulate
 	actor.global_position = foot
 	actor._face(Vector2.DOWN)
-	actor._update_walk_sprite(Vector2.ZERO, 0.0)
+	actor._update_walk_sprite(Vector2.ZERO)
 	cover._process(1.0 / 60.0)
 	_expect(prop.modulate.a > faded_alpha and prop.modulate.a < original.a, "The fade starts gradually in " + map)
 	cover._process(0.4)

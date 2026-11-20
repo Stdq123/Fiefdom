@@ -19,10 +19,10 @@ func _ready() -> void:
 	z_index = -2
 	set_process(false)
 
-func leave(foot: Vector2, movement: Vector2, left: bool) -> void:
-	var heading := movement.normalized()
-	var offset := heading.orthogonal() * (2.5 if left else -2.5)
-	prints.append(Footprint.new(foot + offset - heading * 2.0, heading))
+func leave(contact: Vector2, movement: Vector2) -> void:
+	if movement.is_zero_approx():
+		return
+	prints.append(Footprint.new(contact, movement.normalized()))
 	if prints.size() > LIMIT:
 		prints.pop_front()
 	set_process(true)

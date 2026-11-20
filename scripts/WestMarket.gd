@@ -249,7 +249,8 @@ func _talk_to_silk_guest(data: VisitorData) -> void:
 		market_map.arrive_at(data.name)
 		$DialogManager.show_visitor_dialog(data, VisitorData.SILK_MARKET_PLACE)
 
-func _step(foot: Vector2) -> void:
+func _step(at: Vector2) -> void:
+	var foot := player.footstep_contact(at)
 	var surface := TRACK_AUDIO.Surface.GRASS
 	if ground.is_on_paving(foot):
 		surface = TRACK_AUDIO.Surface.STONE
