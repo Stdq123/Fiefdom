@@ -370,14 +370,16 @@ func _on_save_pressed(as_copy := false) -> Error:
 			save_button.text = "保存游戏"
 			save_button.tooltip_text = "手动档记录当前地点、站位和面向"
 			save_status.text = "已另存「%s」" % Global.campaign_name if as_copy else "游戏已保存"
-		ERR_ALREADY_IN_USE:
-			_offer_save_copy = true
-			save_button.text = "另存为封地副本"
-			save_button.tooltip_text = "另开一个封地档案，接着经营当前进度"
-			save_status.text = Global.SAVE_CONFLICT_MESSAGE
+		ERR_ALREADY_IN_USE: offer_save_copy()
 		ERR_FILE_UNRECOGNIZED: save_status.text = TITLE_CONFIRMATION.PROTECTED_MANUAL_SAVE + "可开启自动保存，过夜时尝试其他档位。"
 		_: save_status.text = "保存失败（%s）" % error_string(result)
 	return result
+
+func offer_save_copy() -> void:
+	_offer_save_copy = true
+	save_button.text = "另存为封地副本"
+	save_button.tooltip_text = "另开一个封地档案，接着经营当前进度"
+	save_status.text = Global.SAVE_CONFLICT_MESSAGE
 
 func _on_load_pressed() -> void:
 	if Global.has_saved_game():

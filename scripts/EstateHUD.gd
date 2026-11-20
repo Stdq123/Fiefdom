@@ -2,6 +2,9 @@ extends Control
 
 const SEED_BUTTON := preload("res://scripts/SeedButton.gd")
 const VISITOR_NOTES_MAX_HEIGHT := 116.0
+const SAVE_NOTICE_MAX_WIDTH := 352.0
+const SAVE_NOTICE_INFO := Color("#d9e2b6")
+const SAVE_NOTICE_WARNING := Color("#ffc399")
 
 @onready var day_label: Label = %DayLabel
 @onready var watch_label: Label = %WatchLabel
@@ -68,6 +71,7 @@ const VISITOR_NOTES_MAX_HEIGHT := 116.0
 
 var seed_buttons: Dictionary = {}
 var save_notice_tween: Tween
+var _save_notice_covered := false
 var fields_needing_water := 0
 var pavilion_story_available := false
 var pavilion_story_expected := false
@@ -135,6 +139,11 @@ func _ready() -> void:
 			reputation_label, money_label, king_label, inventory_label, well_field_label, help_label,
 		farm_status, sow_from_plan, prepare_empty_plots, replant_after_harvest, canal_preview, morning_button]:
 		InterfaceFont.scale_reading_text(control)
+	save_notice.add_theme_stylebox_override(&"normal", get_theme_stylebox(&"panel", &"HudRail"))
+	InterfaceFont.scale_reading_text(save_notice)
+	Preferences.reading_size_changed.connect(_fit_save_notice_width)
+	resized.connect(_fit_save_notice_width)
+	save_notice.minimum_size_changed.connect(_fit_save_notice_height, CONNECT_DEFERRED)
 	for card: PanelContainer in [$Journal, $Calendar]:
 		card.minimum_size_changed.connect(_fit_top_card.bind(card), CONNECT_DEFERRED)
 		_fit_top_card.call_deferred(card)
@@ -345,13 +354,45 @@ func _dawn_harvest() -> String:
 func show_save_notice(message: String, warning := false) -> void:
 	if save_notice_tween:
 		save_notice_tween.kill()
+		save_notice_tween = null
 	save_notice.text = message
-	save_notice.modulate = Color("#eeb98e") if warning else Color("#c5d7a7")
-	save_notice.show()
-	if not warning:
+	save_notice.add_theme_color_override(&"font_color", SAVE_NOTICE_WARNING if warning else SAVE_NOTICE_INFO)
+	_fit_save_notice_width()
+	if not warning and not message.is_empty():
 		save_notice_tween = create_tween()
 		save_notice_tween.tween_interval(2.8)
-		save_notice_tween.tween_callback(save_notice.hide)
+		save_notice_tween.tween_callback(_dismiss_save_notice)
+	_refresh_save_notice_visibility()
+
+func set_save_notice_covered(covered: bool) -> void:
+	_save_notice_covered = covered
+	_refresh_save_notice_visibility()
+
+func _refresh_save_notice_visibility() -> void:
+	save_notice.visible = not _save_notice_covered and not save_notice.text.is_empty()
+	if save_notice_tween and save_notice_tween.is_valid():
+		if save_notice.visible:
+			save_notice_tween.play()
+		else:
+			save_notice_tween.pause()
+
+func _dismiss_save_notice() -> void:
+	save_notice.hide()
+	save_notice.text = ""
+
+func _fit_save_notice_width() -> void:
+	if save_notice.text.is_empty():
+		return
+	var font := save_notice.get_theme_font(&"font")
+	var font_size := save_notice.get_theme_font_size(&"font_size")
+	var text_width := font.get_multiline_string_size(save_notice.text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+	var padding := save_notice.get_theme_stylebox(&"normal").get_minimum_size().x
+	var available := clampf(size.x - 32.0, padding, SAVE_NOTICE_MAX_WIDTH)
+	save_notice.offset_left = save_notice.offset_right - minf(ceilf(text_width + padding), available)
+	_fit_save_notice_height.call_deferred()
+
+func _fit_save_notice_height() -> void:
+	save_notice.offset_top = save_notice.offset_bottom - save_notice.get_combined_minimum_size().y
 
 func refresh_rations() -> void:
 	var plan := Global.night_rations_plan()

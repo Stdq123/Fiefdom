@@ -50,6 +50,7 @@ func _ready() -> void:
 	dialog_manager.setup($Control, world.player)
 
 	hud.setup_seeds(world.SEED_ORDER, world.select_seed)
+	campaign_hud.notice_coverage_changed.connect(hud.set_save_notice_covered)
 	hud.dawn_notice.visibility_changed.connect(_position_world_notice)
 	hud.dawn_notice.resized.connect(_position_world_notice)
 	hud.sow_from_plan.toggled.connect(world.set_sow_from_plan)
@@ -1381,6 +1382,7 @@ func _on_save_finished(result: Error, automatic: bool) -> void:
 		hud.show_save_notice("%s · 第 %d 天" % [action, Global.current_day])
 	elif automatic and result == ERR_ALREADY_IN_USE:
 		hud.show_save_notice("自动保存暂停 · 封地存档已更新 · 可在设置另存封地副本", true)
+		panel_manager.settings_panel_instance.offer_save_copy()
 	elif automatic:
 		var reason := " · 自动档含新版记录" if result == ERR_FILE_UNRECOGNIZED else ""
 		hud.show_save_notice("自动保存失败%s · 可尝试手动保存" % reason, true)

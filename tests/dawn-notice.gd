@@ -201,6 +201,68 @@ func _review_world_notice(ui: Node) -> void:
 	events.modal_visibility_changed.emit(false)
 	_expect(not notice.visible, "An empty notice leaves no panel behind.")
 
+func _review_save_notice(ui: Node, state: Node, actor: Node) -> void:
+	var before := _estate_snapshot(state, actor)
+	var events := screen.get_node("GameEvents")
+	var notice: Label = ui.hud.save_notice
+	ui.hud.show_dawn_notice()
+	ui.campaign_hud.show_world_notice("井田 · 今早可收公田和私田", 5.0)
+	events.save_finished.emit(ERR_ALREADY_IN_USE, true)
+	await _frames(6)
+	var bounds := notice.get_global_rect()
+	print("SAVE_NOTICE_DRAW window=", screen.size, " viewport=", screen.get_visible_rect(),
+		" bounds=", bounds, " lines=", notice.get_visible_line_count(), "/", notice.get_line_count())
+	_expect(notice.visible and screen.get_visible_rect().grow(-8.0).encloses(bounds)
+		and notice.get_theme_font_size(&"font_size") == 20 and notice.get_line_count() > 1
+		and notice.get_visible_line_count() == notice.get_line_count(),
+		"The full autosave warning wraps inside the safe area at the largest reading size.")
+	for path in ["Calendar", "DawnNotice", "SeedBelt", "RationsButton", "Actions"]:
+		var neighbor: Control = ui.hud.get_node(path)
+		_expect(not bounds.intersects(neighbor.get_global_rect()), "The save warning clears " + path)
+	_expect(ui.hud.dawn_notice.visible and ui.campaign_hud.notice.visible
+		and not bounds.intersects(ui.campaign_hud.notice.get_global_rect())
+		and not ui.hud.map_space_clear(bounds) and notice.mouse_filter == Control.MOUSE_FILTER_IGNORE,
+		"The save warning adds to the HUD reservations and leaves the other messages readable.")
+	var settings: Panel = ui.panel_manager.settings_panel_instance
+	_expect(settings.save_button.text == "另存为封地副本" and "存档已更新" in settings.save_status.text,
+		"The autosave warning makes the proposed copy action immediately available in Settings.")
+	var conflict_text := notice.text
+	await _capture("10-save-conflict")
+	events.settings_visibility_changed.emit(true)
+	events.modal_visibility_changed.emit(true)
+	_expect(not notice.visible, "An open overlay covers the save notice.")
+	events.settings_visibility_changed.emit(false)
+	_expect(not notice.visible, "The save notice waits for both overlays to close.")
+	events.modal_visibility_changed.emit(false)
+	_expect(notice.visible and notice.text == conflict_text, "The same warning remains available on returning.")
+	await _capture("11-save-conflict-return")
+	var preferences := screen.get_node("Preferences")
+	_expect(preferences.set_reading_size(0) == OK, "Change the live reading size.")
+	await _frames(5)
+	_expect(notice.get_theme_font_size(&"font_size") == 14
+		and notice.get_global_rect().end == bounds.end and notice.text == conflict_text,
+		"The existing warning fits the new reading size without moving its lower corner.")
+	_expect(preferences.set_reading_size(2) == OK, "Restore the largest reading size.")
+
+	events.save_finished.emit(ERR_FILE_UNRECOGNIZED, true)
+	await _frames(5)
+	_expect("自动档含新版记录" in notice.text and notice.get_visible_line_count() == notice.get_line_count()
+		and screen.get_visible_rect().grow(-8.0).encloses(notice.get_global_rect()),
+		"A protected newer format keeps the recovery action readable.")
+	await _capture("12-save-protected")
+	events.save_finished.emit(OK, false)
+	await _frames(5)
+	_expect("已手动保存" in notice.text and notice.visible and notice.size.x < bounds.size.x
+		and notice.size.y < bounds.size.y, "A successful save replaces the warning with a compact confirmation.")
+	await _capture("13-save-confirmation")
+	events.settings_visibility_changed.emit(true)
+	await _frames(190)
+	events.settings_visibility_changed.emit(false)
+	_expect(notice.visible and "已手动保存" in notice.text, "A confirmation gets its reading time after closing Settings.")
+	await _frames(190)
+	_expect(not notice.visible and before == _estate_snapshot(state, actor),
+		"Only the confirmation times out and all game state is kept.")
+
 func _review_hall(state: Node, prefs: Node) -> void:
 	state.estate_room = state.EstateRoom.HALL
 	state.last_dawn = {"day": state.current_day - 1}
@@ -259,6 +321,7 @@ func _review(scenario: SceneTree) -> void:
 	await _review_reveal(ui, state, actor)
 	await _review_results(ui, state, actor)
 	await _review_world_notice(ui)
+	await _review_save_notice(ui, state, actor)
 	await _review_hall(state, prefs)
 	_expect(tree.paused and state.saved_games().is_empty() and state.day_progress == 0.0,
 		"Presentation checks keep the world paused and write no game saves.")

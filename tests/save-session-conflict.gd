@@ -109,6 +109,8 @@ func _check_autosave_and_return() -> void:
 
 	var settings: Panel = ui.panel_manager.settings_panel_instance
 	settings.show()
+	_expect(settings.save_button.text == "另存为封地副本",
+		"The automatic conflict prepares the copy action before the player opens Settings.")
 	var dialog := settings.get_node("TitleConfirmation") as ConfirmationDialog
 	dialog.ask("返回标题前保留当前进度。")
 	await process_frame

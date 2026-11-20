@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+signal notice_coverage_changed(covered: bool)
+
 const GAME_THEME := preload("res://resources/game_theme.tres")
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 const ESTATE_ENDING := preload("res://scenes/EstateEnding.tscn")
@@ -188,6 +190,7 @@ func _close_backpack() -> void:
 
 func _refresh_notice_visibility() -> void:
 	var covered := management_open or settings_open or modal_open or is_instance_valid(summary)
+	notice_coverage_changed.emit(covered)
 	notice.visible = not covered and not notice.text.is_empty() and notice.modulate.a > 0.0
 	if notice_tween and notice_tween.is_valid():
 		if notice.visible:
