@@ -331,8 +331,14 @@ func _mouse_handoff() -> void:
 	motion.relative = Vector2(2, 0)
 	_joy(motion)
 	await tree.process_frame
-	_expect(not pad.active and not pad.cursor.visible and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE,
-		"Moving the mouse restores the system cursor.")
+	await tree.process_frame
+	_expect(not pad.active and not pad.cursor.visible, "Moving the mouse hides the controller cursor.")
+	var mouse := pad.get_node_or_null("MouseCursor") as Sprite2D
+	if mouse and DisplayServer.window_is_focused():
+		_expect(mouse.visible and Input.mouse_mode == Input.MOUSE_MODE_HIDDEN,
+			"The focused game window displays its mouse cursor.")
+	else:
+		_expect(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE, "Mouse handoff restores the system pointer outside the focused game.")
 
 func run(host: SceneTree, capture := "") -> void:
 	tree = host

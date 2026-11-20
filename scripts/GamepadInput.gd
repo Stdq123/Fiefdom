@@ -6,6 +6,11 @@ const PANEL_FOCUS := preload("res://scripts/PanelFocus.gd")
 const DEADZONE := 0.22
 const TRIGGER_POINT := 0.45
 const POINTER_SPEED := 740.0
+const MOUSE_CURSORS := {
+	DisplayServer.CURSOR_ARROW: [preload("res://assets/ui/cursor-arrow.png"), Vector2(-2, -2)],
+	DisplayServer.CURSOR_POINTING_HAND: [preload("res://assets/ui/cursor-hand.png"), Vector2(-11, -3)],
+	DisplayServer.CURSOR_IBEAM: [preload("res://assets/ui/cursor-text.png"), Vector2(-16, -16)],
+}
 const ACTION_BUTTONS := {
 	JOY_BUTTON_Y: KeyBindings.MAP,
 	JOY_BUTTON_BACK: KeyBindings.ALMANAC,
@@ -40,19 +45,28 @@ var _popup: PopupMenu
 var _popup_uses_pointer := false
 var _popup_a_pressed := false
 var cursor := AimCursor.new()
+var _mouse_cursor: Sprite2D
+var _mouse_client_position := Vector2.INF
 @onready var window := get_tree().root
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	layer = 1025 # Above embedded confirmation and option windows.
 	if DisplayServer.get_name() != "headless":
-		Input.set_custom_mouse_cursor(preload("res://assets/ui/cursor-arrow.png"), Input.CURSOR_ARROW, Vector2(2, 2))
-		Input.set_custom_mouse_cursor(preload("res://assets/ui/cursor-hand.png"), Input.CURSOR_POINTING_HAND, Vector2(11, 3))
-		Input.set_custom_mouse_cursor(preload("res://assets/ui/cursor-text.png"), Input.CURSOR_IBEAM, Vector2(16, 16))
+		_mouse_cursor = Sprite2D.new()
+		_mouse_cursor.name = "MouseCursor"
+		_mouse_cursor.centered = false
+		_mouse_cursor.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		_mouse_cursor.hide()
+		add_child(_mouse_cursor)
+		window.mouse_entered.connect(_read_mouse_position)
+		window.mouse_exited.connect(_clear_mouse_position)
+		window.size_changed.connect(_read_mouse_position)
+		_read_mouse_position()
 	get_tree().node_added.connect(_watch_button_cursor)
 	add_child(cursor)
 	cursor.hide()
-	set_process(false)
+	set_process(_mouse_cursor != null)
 	# The gamepad drives the pointer. Keep Godot's keyboard UI shortcuts,
 	# and let each gamepad button reach the UI only once.
 	for action in [&"ui_accept", &"ui_select", &"ui_cancel", &"ui_up", &"ui_down", &"ui_left", &"ui_right"]:
@@ -89,12 +103,16 @@ func _refresh_button_cursor(button: BaseButton) -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		_use_mouse()
+	elif what == NOTIFICATION_APPLICATION_FOCUS_IN and _mouse_cursor:
+		_read_mouse_position()
 
 func _joy_connection_changed(id: int, connected: bool) -> void:
 	if id == device_id and not connected:
 		_use_mouse()
 
 func _window_input(event: InputEvent) -> void:
+	if event is InputEventMouse:
+		_mouse_client_position = event.position
 	if event is InputEventMouseButton or (event is InputEventMouseMotion and not event.relative.is_zero_approx()) \
 			or (event is InputEventKey and event.pressed):
 		_use_mouse()
@@ -119,6 +137,8 @@ func _use_gamepad(id: int) -> void:
 		return
 	device_id = id
 	active = true
+	if _mouse_cursor:
+		_mouse_cursor.hide()
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 	cursor.visible = not pointer_suspended
 	set_process(true)
@@ -132,9 +152,34 @@ func _use_mouse() -> void:
 	device_id = -1
 	_release_pointer()
 	cursor.hide()
-	set_process(false)
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	if not _mouse_cursor:
+		set_process(false)
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	changed.emit()
+
+func _read_mouse_position() -> void:
+	_mouse_client_position = window.get_final_transform() * window.get_mouse_position()
+
+func _clear_mouse_position() -> void:
+	_mouse_client_position = Vector2.INF
+
+func _update_mouse_cursor() -> void:
+	var art: Variant = MOUSE_CURSORS.get(DisplayServer.cursor_get_shape())
+	var draw_pointer := false
+	if art != null and _mouse_client_position.is_finite() and DisplayServer.window_is_focused():
+		# Window input arrives in client pixels, including any letterbox margins.
+		var point := window.get_final_transform().affine_inverse() * _mouse_client_position
+		draw_pointer = window.get_visible_rect().has_point(point)
+		if draw_pointer:
+			if _mouse_cursor.texture != art[0]:
+				_mouse_cursor.texture = art[0]
+				_mouse_cursor.offset = art[1]
+			_mouse_cursor.position = point
+	_mouse_cursor.visible = draw_pointer
+	# Leave window chrome and special cursors such as drag indicators to the display server.
+	var mode := Input.MOUSE_MODE_HIDDEN if draw_pointer else Input.MOUSE_MODE_VISIBLE
+	if Input.mouse_mode != mode:
+		Input.mouse_mode = mode
 
 func _release_pointer() -> void:
 	_popup_a_pressed = false
@@ -195,6 +240,10 @@ func rhythm_key() -> String:
 	return "X" if active else Preferences.key_label(KeyBindings.RHYTHM)
 
 func _process(delta: float) -> void:
+	if not active:
+		if _mouse_cursor:
+			_update_mouse_cursor()
+		return
 	if pointer_suspended:
 		return
 	var direction := _stick(JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y)
