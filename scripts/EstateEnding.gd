@@ -41,6 +41,7 @@ const REPORT_MARGIN := 16.0
 @onready var report_header: VBoxContainer = %HeadingStack
 @onready var report_scroll: ScrollContainer = %Read
 @onready var report_body: VBoxContainer = %Body
+@onready var report_columns: BoxContainer = %Columns
 @onready var report_footer: VBoxContainer = %Footer
 @onready var shade: ColorRect = %ReportShade
 @onready var estate_name: Label = %EndingEstate
@@ -94,13 +95,17 @@ var has_route_totals := false
 var archive_open := false
 var ending_saved := false
 var _restore_checkpoint := {}
+var _replay_scroll := -1
 var shot := Shot.RECORD
 
 func _ready() -> void:
 	set_process(false)
 	add_to_group("gamepad_directional_menu")
-	for label: Label in [caption, estate_name, date, epilogue, farewell_line, restore_detail]:
+	for label: Label in [caption, estate_name, date, epilogue, account_title, account_key, %NotesTitle,
+			farewell_speaker, farewell_line, status, restore_detail]:
 		InterfaceFont.scale_reading_text(label)
+	Preferences.reading_size_changed.connect(_arrange_report_columns)
+	_arrange_report_columns()
 	var bar := PANEL_FOCUS.reading_scrollbar(report_scroll)
 	bar.theme = HUD_THEME
 	bar.theme_type_variation = &"HudJournalBar"
@@ -307,6 +312,8 @@ func _play(from_handoff := false) -> void:
 	if motion:
 		motion.kill()
 	_stop_score()
+	if report.visible:
+		_replay_scroll = report_scroll.scroll_vertical
 	report.hide()
 	shade.hide()
 	film.show()
@@ -482,10 +489,17 @@ func _show_record() -> void:
 	film.hide()
 	shade.show()
 	report.show()
-	report_scroll.set_deferred("scroll_vertical", 0)
 	_fit_report_body.call_deferred()
-	_focus_action(title_button if archive_open else continue_button)
+	report_scroll.set_deferred("scroll_vertical", maxi(0, _replay_scroll))
+	var focus := title_button if archive_open else continue_button
+	if _replay_scroll >= 0:
+		focus = replay_button
+	_replay_scroll = -1
+	_focus_action(focus)
 	film_finished.emit()
+
+func _arrange_report_columns() -> void:
+	report_columns.vertical = Preferences.reading_size == Preferences.READING_FONT_STEPS.size() - 1
 
 func _fit_report_body() -> void:
 	if not is_inside_tree():

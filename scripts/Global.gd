@@ -1958,6 +1958,9 @@ func _ending_memories() -> Array[String]:
 	events.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return a.text < b.text if a.day == b.day else a.day > b.day)
 	var moments: Array[String] = []
+	var harvest_note := route_harvest_note()
+	if not harvest_note.is_empty():
+		moments.append(harvest_note)
 	for event: Dictionary in events.slice(0, 3):
 		moments.append(event.text)
 	var fields := well_fields.filter(func(field: Dictionary) -> bool: return field["is_unlocked"])
@@ -1967,11 +1970,7 @@ func _ending_memories() -> Array[String]:
 		moments.append("渠水已送到 %d 块井田。" % irrigated)
 	if silk_workshop.built:
 		moments.append("蚕室已能养蚕、缫丝和织绸。")
-	var account_notes := moments.slice(0, 3)
-	var harvest_note := route_harvest_note()
-	if not harvest_note.is_empty():
-		account_notes.push_front(harvest_note)
-	return account_notes
+	return moments
 
 func continue_after_ending(position: Vector2, direction: Vector2) -> Error:
 	var tree := get_tree()

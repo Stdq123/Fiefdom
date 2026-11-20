@@ -99,6 +99,7 @@ func _endings() -> void:
 	_expect(bar.has_focus(), "D-pad reaches the settlement record.")
 	await _pad(JOY_BUTTON_DPAD_DOWN)
 	_expect(report.report_scroll.scroll_vertical > 0, "D-pad scrolls through longer settlement notes.")
+	var reading_position: int = report.report_scroll.scroll_vertical
 	report.report.hide()
 	report.restore_confirmation.show()
 	report._focus_action(report.stay_button)
@@ -108,6 +109,7 @@ func _endings() -> void:
 	await _pad(JOY_BUTTON_B)
 	_expect(report.report.visible and not report.restore_confirmation.visible and report.restore_button.has_focus(),
 		"B closes the restore overlay at its entry control.")
+	_expect(report.report_scroll.scroll_vertical == reading_position, "Closing the restore overlay keeps the same passage.")
 	report.report.hide()
 	report.film.show()
 	report.shot = report.Shot.FIELD
