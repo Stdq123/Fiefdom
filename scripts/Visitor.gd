@@ -19,7 +19,10 @@ var walking_on_clock := false
 var pavilion_partner: Node2D:
 	set(value):
 		pavilion_partner = value
-		if is_node_ready() and resting_at_pavilion():
+		if not is_node_ready():
+			return
+		hint.visible = data != null and not is_instance_valid(value)
+		if resting_at_pavilion():
 			_face_stop()
 var _rest_cloth := Color.WHITE
 

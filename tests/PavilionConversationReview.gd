@@ -47,6 +47,8 @@ func _review(day: int, id: String, sample: String) -> void:
 	menu.choices[0].pressed.emit()
 	await tree.process_frame
 	await tree.process_frame
+	visitor._idle_at_stop(0.0)
+	retainer._stand_at_stop()
 	if not _check_turn(visitor, retainer, table, walker):
 		return
 	await _capture(sample + "-visitor", table)
@@ -73,6 +75,7 @@ func _review(day: int, id: String, sample: String) -> void:
 		"Esc ends the pose and removes the speaker cue.")
 	_expect(visitor.pavilion_partner == null and retainer.pavilion_partner == null
 		and at_rest == [_heading(visitor.sprite), _heading(retainer.sprite)], "Both neighbors look back toward their usual stop.")
+	_expect(table.hint.visible and visitor.hint.visible and not retainer.hint.visible, "The usual names and table prompt return to their earlier visibility.")
 	_expect(feet == [visitor.global_position, retainer.global_position], "Turning at the table keeps both neighbors on their mats.")
 	_expect(snapshot == [state.current_day, state.day_progress, state.money, state.food_storage,
 		state.current_stamina, hash(state.active_crops), state.pavilion_stories_heard]
@@ -85,6 +88,7 @@ func _check_turn(speaker: Node2D, listener: Node2D, table: PavilionRest, walker:
 	return _expect(dialog != null and dialog.name_label.text == speaker.data.name and dialog.portrait.texture != null
 		and walker.seated and walker.global_position == table.global_position and table.speech_cue.is_visible_in_tree()
 		and table.speech_cue.global_position == speaker.global_position + PavilionRest.SPEECH_OFFSET
+		and not table.hint.visible and not speaker.hint.visible and not listener.hint.visible
 		and _faces(speaker.sprite, toward) and _faces(listener.sprite, -toward),
 		"The visible portrait and cue follow the speaker while all three stay seated.")
 

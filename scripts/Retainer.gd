@@ -39,7 +39,10 @@ var evening_path: Array[Vector2] = []
 var pavilion_partner: Node2D:
 	set(value):
 		pavilion_partner = value
-		if is_node_ready() and resting_at_pavilion():
+		if not is_node_ready():
+			return
+		hint.visible = is_instance_valid(observer) and not is_instance_valid(value)
+		if resting_at_pavilion():
 			_stand_at_stop()
 
 var _stance := Vector2.INF
@@ -60,7 +63,7 @@ func _ready() -> void:
 	home_position = global_position
 
 func set_interaction_focused(focused: bool) -> void:
-	hint.visible = focused
+	hint.visible = focused and not is_instance_valid(pavilion_partner)
 	if focused:
 		hint.text = "%s · %s" % [data.name, GamepadInput.interact_key()]
 	observer = get_tree().get_first_node_in_group("player") as Player if focused else null

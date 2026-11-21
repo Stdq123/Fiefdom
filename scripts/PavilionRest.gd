@@ -17,7 +17,7 @@ const GUEST_SEAT := Vector2(8, 20)
 const RAIN_GUEST_SEAT := Vector2(8, 13)
 const APPROACH := Vector2(0, 15)
 const TABLE_FRONT_EDGE := Vector2(0, 4)
-const SPEECH_OFFSET := Vector2(0, -43)
+const SPEECH_OFFSET := Vector2(0, -28)
 
 @onready var hint: Label = $Hint
 @onready var mats: Node2D = $Mats
@@ -125,15 +125,19 @@ func show_story_turn(speaker_name: String, listener_name: String) -> void:
 		_story_participants.assign([speaker, listener])
 		speaker.pavilion_partner = listener
 		listener.pavilion_partner = speaker
+		_refresh_hint()
 	speech_cue.global_position = speaker.global_position + SPEECH_OFFSET
 	speech_cue.show()
 
 func clear_story_turn() -> void:
+	if _story_participants.is_empty():
+		return
 	for actor: Node2D in _story_participants:
 		if is_instance_valid(actor) and actor.is_inside_tree():
 			actor.pavilion_partner = null
 	_story_participants.clear()
 	speech_cue.hide()
+	_refresh_hint()
 
 func _draw_speech_cue() -> void:
 	var outline := PackedVector2Array([
@@ -159,7 +163,8 @@ func _refresh_hint() -> void:
 	if not appointment_id.is_empty():
 		label = WAIT_LABEL
 	hint.text = GamepadInput.interact_hint(label) if focused else label
-	hint.visible = visible and (focused or not story_id.is_empty() or not appointment_id.is_empty())
+	hint.visible = visible and _story_participants.is_empty() \
+		and (focused or not story_id.is_empty() or not appointment_id.is_empty())
 
 func interact() -> void:
 	GameEvents.pavilion_table_requested.emit()
