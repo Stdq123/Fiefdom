@@ -585,6 +585,8 @@ Windows 候选包内的 `SHA256SUMS.txt` 覆盖程序、资源、兼容入口、
 
 ## 贡簿和新税册的缺额与呈交地点
 
+目标齐备后可在封地手记翻看完成的贡簿或新税册，也可从手记或簿页页尾指路呈交。改革线铜钱低于门槛时会收回呈交指路，簿上恢复显示差额。构建 `979c121` 在 1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面各核对七个最大字号界面和十次原生鼠标点击，实绩与「达成」同处一行。Windows ZIP 的 SHA-256 为 `eeb3043b2fffd581d0642e542f8e3930394860be349ce02bbf8fcf4f67e70509`。两轮测试包均已清理。 [呈交前核对记录](../build/polish-ledger-filing/release-979c121/release-proof.txt)
+
 每项结局目标在实绩和门槛下方写明还差多少，达成后保留实绩。首笔收成放在目标列表前，正文可随字号放大并滚动。簿名、返回与页尾的呈交地点固定。守礼前往堂前呈交贡簿，改税前往南路亭呈交新税册。
 
 从 `85b9f38` 独立构建两次，ZIP 的 SHA-256 均为 `6652fd24a3666360081ab5cfcc70d5194ba5a7ca5773bfd3cccea5fbb6759167`。无窗口检查通过。隔离桌面在 1920×1080 的 Vulkan 和 Direct3D 12、1024×768 的 OpenGL 各核对 9 个界面。覆盖两条路线的缺额与达成、长收成记录翻页、铜钱余额跨过门槛及手记的呈交入口。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-route-ledger-reading/release-85b9f38/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-route-ledger-reading/release-85b9f38/release-proof.txt)
