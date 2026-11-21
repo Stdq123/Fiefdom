@@ -51,6 +51,7 @@ var cursor := AimCursor.new()
 var _mouse_cursor: Sprite2D
 var _field_tool: Sprite2D
 var _mouse_client_position := Vector2.INF
+var _mouse_cursor_needs_refresh := false
 @onready var window := get_tree().root
 
 func _ready() -> void:
@@ -73,7 +74,7 @@ func _ready() -> void:
 		window.mouse_exited.connect(_clear_mouse_position)
 		window.size_changed.connect(_read_mouse_position)
 		_read_mouse_position()
-	get_tree().node_added.connect(_watch_button_cursor)
+	get_tree().node_added.connect(_watch_gui_cursor)
 	add_child(cursor)
 	cursor.hide()
 	set_process(_mouse_cursor != null)
@@ -88,7 +89,12 @@ func _ready() -> void:
 	get_tree().scene_changed.connect(snap_pointer_to_focus)
 	Input.joy_connection_changed.connect(_joy_connection_changed)
 
-func _watch_button_cursor(node: Node) -> void:
+func _watch_gui_cursor(node: Node) -> void:
+	if _mouse_cursor and (node is BaseButton or node is Window or node is LineEdit or node is TextEdit):
+		if not node.is_connected(&"visibility_changed", _queue_mouse_cursor_refresh):
+			node.connect(&"visibility_changed", _queue_mouse_cursor_refresh)
+			node.tree_exited.connect(_queue_mouse_cursor_refresh)
+		_queue_mouse_cursor_refresh()
 	if not node is BaseButton:
 		return
 	var button := node as BaseButton
@@ -97,6 +103,9 @@ func _watch_button_cursor(node: Node) -> void:
 	if not button.draw.is_connected(refresh):
 		button.draw.connect(refresh)
 	_refresh_button_cursor(button)
+
+func _queue_mouse_cursor_refresh() -> void:
+	_mouse_cursor_needs_refresh = true
 
 func _refresh_button_cursor(button: BaseButton) -> void:
 	if button.mouse_default_cursor_shape not in [Control.CURSOR_ARROW, Control.CURSOR_POINTING_HAND]:
@@ -176,25 +185,32 @@ func _clear_mouse_position() -> void:
 func _update_mouse_cursor() -> void:
 	if active:
 		return
+	var bounds := window.get_visible_rect()
+	var point := Vector2.INF
+	if _mouse_client_position.is_finite() and DisplayServer.window_is_focused():
+		# Window input arrives in client pixels, including any letterbox margins.
+		point = window.get_final_transform().affine_inverse() * _mouse_client_position
+	var inside_content := bounds.has_point(point)
+	var dragging := window.gui_is_dragging()
+	if _mouse_cursor_needs_refresh and not dragging and Input.get_mouse_button_mask() == 0:
+		_mouse_cursor_needs_refresh = false
+		if inside_content:
+			# Re-evaluate what is under a stationary pointer when the UI changes.
+			_send_pointer(InputEventMouseMotion.new(), point)
 	var shape := DisplayServer.cursor_get_shape()
-	if window.gui_is_dragging() and shape != DisplayServer.CURSOR_CAN_DROP:
+	if dragging and shape != DisplayServer.CURSOR_CAN_DROP:
 		# Godot can report an arrow over empty canvas during a drag.
 		shape = DisplayServer.CURSOR_FORBIDDEN
 	var art: Variant = MOUSE_CURSORS.get(shape)
-	var draw_pointer := false
+	var draw_pointer := inside_content and art != null
 	var draw_tool := false
-	if art != null and _mouse_client_position.is_finite() and DisplayServer.window_is_focused():
-		# Window input arrives in client pixels, including any letterbox margins.
-		var point := window.get_final_transform().affine_inverse() * _mouse_client_position
-		var bounds := window.get_visible_rect()
-		draw_pointer = bounds.has_point(point)
-		if draw_pointer:
-			if _mouse_cursor.texture != art[0]:
-				_mouse_cursor.texture = art[0]
-				_mouse_cursor.offset = art[1]
-			_mouse_cursor.position = point
-			if shape == DisplayServer.CURSOR_ARROW:
-				draw_tool = _update_mouse_field_tool(point, bounds)
+	if draw_pointer:
+		if _mouse_cursor.texture != art[0]:
+			_mouse_cursor.texture = art[0]
+			_mouse_cursor.offset = art[1]
+		_mouse_cursor.position = point
+		if shape == DisplayServer.CURSOR_ARROW:
+			draw_tool = _update_mouse_field_tool(point, bounds)
 	_mouse_cursor.visible = draw_pointer
 	_field_tool.visible = draw_tool
 	# Leave window chrome and shapes without themed art to the display server.
