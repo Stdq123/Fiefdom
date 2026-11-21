@@ -105,11 +105,13 @@ func _review() -> void:
 			[light, " · 落雪", icons.Symbol.SNOW],
 			[heavy, " · 落雪", icons.Symbol.SNOW],
 			[rain, " · 雨", icons.Symbol.RAIN],
-			[clear, " · 晴" if trail else " · 冬至", icons.Symbol.MOON],
+			[clear, " · 冬至", icons.Symbol.MOON],
 		]:
 			state.current_day = view[0]
 			events.daylight_changed.emit()
-			_expect(date.text.ends_with(view[1]) and heading.get_node("%WeatherIcon").texture == icons.icon(view[2]),
+			var weather := heading.get_node("%WeatherIcon") as TextureRect
+			_expect(date.text.ends_with(view[1]) and weather.texture == icons.icon(view[2])
+				and weather.accessibility_name == state.weather_label(0, true),
 				"The travel header follows the live weather and watch in %s." % path)
 	_expect(paused and state.saved_games().is_empty(), "Fixed presentation cases write no campaign saves.")
 	if not failed:

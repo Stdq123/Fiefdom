@@ -253,8 +253,7 @@ func _build_status() -> void:
 	_refresh_outing()
 
 func _refresh_trail_date() -> void:
-	trail_date.text = "第 %d 天 · %s · %s · %s" % [Global.current_day, Global.get_current_solar_term(),
-		Global.day_watch_label(), Global.weather_label()]
+	trail_date.text = TravelHeading.date_caption()
 
 func _refresh_outing() -> void:
 	outing_label.text = Global.ravine_outing_status()

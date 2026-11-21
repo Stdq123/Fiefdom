@@ -172,7 +172,7 @@ func _refresh_route() -> void:
 		route_direction = Vector2.RIGHT
 	elif tracking_meadow:
 		destination = Sheepfold.MEADOW
-		next_step = "在桥东岔口沿金线转向南。"
+		next_step = "桥东岔口向南。"
 		route_direction = Vector2.ZERO
 		_route_to(LAYOUT.MEADOW, 5.0)
 	elif target == Global.MARKET_RETURN:

@@ -144,7 +144,9 @@ func _review() -> void:
 	_expect(sign.direction_label.text == "→", "The meadow route stays on the eastbound road before the fork.")
 	road.player.position = Vector2(127, 32)
 	road._refresh_route()
-	_expect(sign.direction_label.text == "↓", "At the meadow fork, the arrow follows the southern branch.")
+	await _settle()
+	_expect(sign.direction_label.text == "↓" and sign.step_label.get_line_count() == 1,
+		"At the meadow fork, the arrow follows the southern branch with a single line of text.")
 	road.player.position = Vector2(161, 134)
 	road._refresh_route()
 	_expect(sign.direction_label.text == "◆" and not sign.step_label.visible,
@@ -157,6 +159,8 @@ func _review() -> void:
 	var hud: CanvasLayer = ravine.get_node("CampaignHUD")
 	var trail_plaque: Control = hud.trail_date.get_parent().get_parent()
 	_check_readable_label(hud.trail_date, trail_plaque, 22)
+	_expect(hud.trail_date.get_line_count() == 1 and (" · %s · %s" % [state.day_watch_label(), state.get_current_solar_term()]) in hud.trail_date.text,
+		"The ravine keeps the watch and solar term together on the shared clear-weather date line.")
 	_check_readable_label(hud.outing_label, trail_plaque, 22)
 	chart = ravine.ravine_map
 	sign = chart.route_sign
