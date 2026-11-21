@@ -306,9 +306,15 @@ func focus_seed_picker() -> void:
 	GamepadInput.snap_pointer_to_focus.call_deferred()
 
 func focus_guard_duty(guard: RetainerData) -> void:
+	# The management panel rebuilds its roster when it opens.
+	await get_tree().process_frame
+	if not is_visible_in_tree():
+		return
 	for item: Control in retainer_list_container.get_children():
 		if item.data == guard:
 			item.duty_picker.grab_focus()
+			var roster := retainer_list_container.get_parent() as ScrollContainer
+			roster.ensure_control_visible(item)
 			GamepadInput.snap_pointer_to_focus.call_deferred()
 			return
 

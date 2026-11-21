@@ -75,6 +75,9 @@ func _check_future_without_guards() -> void:
 	_expect(before == _snapshot(), "Reading the forecast preserves the calendar, accounts and guard assignments.")
 
 func _check_guard_picker(guard: Resource, guard_duty: int) -> void:
+	var retainer_data: GDScript = guard.get_script()
+	for resident: String in ["季青", "渠伯", "陶辛", "蒲宁", "石墨"]:
+		state.retainers.append(retainer_data.new(resident, "农人", retainer_data.School.AGRARIAN))
 	state.retainers.append(guard)
 	var before := _snapshot()
 	var row := _defense_row()
@@ -86,9 +89,12 @@ func _check_guard_picker(guard: Resource, guard_duty: int) -> void:
 	var office: Control = ui.panel_manager.management_panel_instance
 	_expect(office != null and office.visible, "The existing management panel handles the assignment.")
 	if office:
-		var item: Control = office.retainer_list_container.get_child(0)
+		var entries: Control = office.retainer_list_container
+		var item: Control = entries.get_child(entries.get_child_count() - 1)
 		var picker: OptionButton = item.duty_picker
+		var roster := entries.get_parent() as ScrollContainer
 		_expect(item.data == guard and picker.has_focus() and picker.is_visible_in_tree()
+			and roster.get_global_rect().grow(0.5).encloses(picker.get_global_rect())
 			and not picker.is_item_disabled(picker.get_item_index(guard_duty)), "Focus the guard's usable duty picker.")
 		ui.panel_manager.hide_management_panel()
 	_expect(before == _snapshot(), "The shortcut leaves the duty unchanged until a player selects it.")
