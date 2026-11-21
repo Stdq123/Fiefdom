@@ -549,6 +549,8 @@ Windows 候选包内的 `SHA256SUMS.txt` 覆盖程序、资源、兼容入口、
 
 从 `c10cf24` 独立构建两次，ZIP 的 SHA-256 均为 `d250285961c2379a5cd4358a30dd630dba43bec110f05fc521dea1650d695288`。无窗口检查通过。隔离桌面在 1920×1080 的 Vulkan 和 Direct3D 12、1024×768 的 OpenGL 各核对 14 个界面。覆盖建造、缺料、首夜与整批、批量按钮、夜间回执和样绸，以及三个棚内提示。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-silk-reading/release-c10cf24/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-silk-reading/release-c10cf24/release-proof.txt)
 
+蚕棚左侧和蚕桑页共用桑叶、蚕茧、生丝和丝绸的原图。棚内分行显示喂养进度、今夜缺叶及昨夜实绩，空匾按整批用量提示续养缺额。大字号下材料卡整项换行，16 位库存仍完整可读。库存栏让出三个工位和南门，门阶下的去向字样重新按当前视角绘制。构建 `0f4b4da` 通过三项无窗口界面检查及 1920×1080 Vulkan、1024×768 OpenGL 的隔离桌面核对。三轮测试包和解包文件均已清理。 [Windows 核对记录](../build/polish-silk-room-hud/release-0f4b4da/release-proof.txt)
+
 ## 封地到竹涧的竹栅与石槛
 
 南路东端和浅滩西岸各有一座用麻绳扎起的竹栅。石槛分别接东行土路与南下林径。未开时可见整扇竹栅，开放后栅叶靠路肩，石槛中间露出通路。竹柱和片石会随雨天变暗，冬霜留在横杆和石沿。
