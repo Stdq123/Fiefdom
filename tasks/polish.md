@@ -545,6 +545,8 @@ Windows 候选包内的 `SHA256SUMS.txt` 覆盖程序、资源、兼容入口、
 
 从 `626d2e5` 独立构建两次，ZIP 的 SHA-256 均为 `f4a986e57de636697d53537071072667502b09c896ea153450f69d9b3c18d3ba`。无窗口检查通过。隔离桌面在 1920×1080 的 Vulkan 和 Direct3D 12、1024×768 的 OpenGL 各核对 12 个界面。覆盖粮、鱼、绸三个柜台、羊毛页和交货簿。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-counter-reading/release-626d2e5/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-counter-reading/release-626d2e5/release-proof.txt)
 
+最近一笔成交固定显示在报价上方。回执列出货品图样、交付数量和实际到账，页首可对照当前余额。开放柜台时收起街道背包按钮。从 `7400409` 构建，在 1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面各核对六个界面，最大字号下报价滚动 249 个逻辑像素，回执位置固定。Windows ZIP SHA-256 为 `f519ef6d03f70525192dff0551539db59951e9dd50a9529fc01ba183770dea72`。测试包已清理。 [核对记录](../build/polish-counter-receipts/release-7400409/release-proof.txt)
+
 ## 蚕桑工序与缺料提示
 
 蚕桑页固定显示桑叶、蚕茧、生丝和丝绸。建造前可对照已有的书等级和铜钱。三个工序各有棚内器具图和配方，缺料时列出当前所差。养蚕写清首夜用叶与整批用叶。正文可放大和滚动，出售、进献与去蚕棚的指路入口留在页脚。棚内工位的操作键下方也显示用料或缺料。
