@@ -13,7 +13,6 @@ const MOUSE_CURSORS := {
 	DisplayServer.CURSOR_CAN_DROP: [preload("res://assets/ui/cursor-drop-allowed.png"), Vector2(-2, -2)],
 	DisplayServer.CURSOR_FORBIDDEN: [preload("res://assets/ui/cursor-drop-blocked.png"), Vector2(-2, -2)],
 }
-const FIELD_TOOLS := preload("res://assets/ui/cursor-field-tools.png")
 const ACTION_BUTTONS := {
 	JOY_BUTTON_Y: KeyBindings.MAP,
 	JOY_BUTTON_BACK: KeyBindings.ALMANAC,
@@ -67,8 +66,8 @@ func _ready() -> void:
 		_field_tool = Sprite2D.new()
 		_field_tool.name = "FieldTool"
 		_field_tool.centered = false
-		_field_tool.texture = FIELD_TOOLS
-		_field_tool.hframes = 4
+		_field_tool.texture = HUDIcons.FIELD_TOOLS
+		_field_tool.hframes = HUDIcons.FIELD_TOOL_COUNT
 		_field_tool.hide()
 		_mouse_cursor.add_child(_field_tool)
 		window.mouse_exited.connect(_clear_mouse_position)

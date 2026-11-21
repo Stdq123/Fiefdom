@@ -8,6 +8,7 @@ const SEED_GARDEN := preload("res://scripts/SeedGarden.gd")
 const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 const GOLD := Color("#f1d38b")
 const SHADOW := Color("#382519")
+const TOOL_GAP := 5.0
 const FIELD_ROUTES := {
 	Global.NightGrowth.READY: "可收", Global.NightGrowth.DRY: "待浇", Global.NightGrowth.BLOCKED: "断水",
 	Global.MulberryRoute.WATER: "待浇", Global.MulberryRoute.HARVEST: "可收", Global.OrderFieldRoute.HARVEST: "备货",
@@ -29,6 +30,7 @@ var plate := HUD_THEME.get_stylebox(&"panel", &"HudRail")
 var mark := Mark.PLOT
 var outline := Rect2()
 var plaque := Rect2()
+var tool_badge := -1
 var edge_direction := Vector2.ZERO
 var road_network: ROAD_NETWORK
 var road_guide: Node2D
@@ -65,6 +67,7 @@ func setup(estate_world: Node2D, estate_hud: Control) -> void:
 
 	caption = Label.new()
 	caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	caption.add_to_group(&"world_feedback_obstacle")
 	caption.add_theme_font_size_override("font_size", 14)
 	caption.add_theme_color_override("font_color", GOLD)
 	add_child(caption)
@@ -424,7 +427,10 @@ func update_marker(blocked: bool) -> void:
 			return
 		clear_tracking()
 	if tracked_plot != null:
-		_mark_plot(tracked_plot, _field_plot_label(tracked_plot))
+		if Global.field_route_status == Global.TributeRoute.TEND:
+			_mark_action_plot(tracked_plot, "公田", true)
+		else:
+			_mark_plot(tracked_plot, _field_plot_label(tracked_plot))
 		return
 	if not tracked_neighbor.is_empty():
 		var actor: Node2D = world.neighbor_actor(tracked_neighbor)
@@ -483,7 +489,7 @@ func update_marker(blocked: bool) -> void:
 	var guide := hud.guide as CAMPAIGN_GUIDE
 	match guide.opening_cue:
 		CAMPAIGN_GUIDE.OpeningCue.PLOT:
-			_mark_plot(guide.opening_cell, guide.opening_plot_name)
+			_mark_action_plot(guide.opening_cell, guide.opening_plot_name)
 		CAMPAIGN_GUIDE.OpeningCue.SLEEP:
 			_mark_button(hud.sleep_button)
 		CAMPAIGN_GUIDE.OpeningCue.SEED:
@@ -522,13 +528,37 @@ func _draw_road_guide() -> void:
 		road_guide.draw_dashed_line(road_path[index - 1], road_path[index], SHADOW, 3.2, 6.0)
 		road_guide.draw_dashed_line(road_path[index - 1], road_path[index], GOLD, 1.6, 6.0)
 
-func _mark_plot(cell: Vector2i, title: String) -> void:
+func _mark_action_plot(cell: Vector2i, land: String, detailed := false) -> void:
+	var action: int = world.field_action(cell)
+	var step: String = world.field_message(cell, action)
+	if not detailed:
+		step = world.FIELD_WORK_LABELS.get(action, step)
+	var tool := -1
+	if world.field_cost(action) <= Global.current_stamina:
+		tool = world.tile_map.get_node("FieldCursor").tool_for_action(action)
+	_mark_plot(cell, land if step.is_empty() else land + " · " + step, tool)
+
+func _mark_plot(cell: Vector2i, title: String, tool := -1) -> void:
 	var tiles: TileMapLayer = world.tile_map
 	var center := tiles.map_to_local(cell)
 	var extent := Vector2(tiles.tile_set.tile_size)
 	var plot := tiles.get_global_transform_with_canvas() * Rect2(center - extent / 2.0, extent)
 	var hover := tiles.get_node("FieldCursor") as Node2D
-	_mark_map(plot, title, Mark.PLOT, hover.visible and hover.position == center)
+	_mark_map(plot, title, Mark.PLOT, hover.position == center and hover.caption.is_visible_in_tree(), tool)
+
+func _plot_plaque_position(plot: Rect2, size: Vector2) -> Vector2:
+	var clearance := plot.grow(plot.size.y + 6.0)
+	var occupied: Array[Rect2] = hud.map_obstacles()
+	occupied.append(clearance)
+	var hover: Control = world.tile_map.get_node("FieldCursor").caption
+	var prompt: Control = world.player.interaction_prompt
+	for label: Control in [hover, prompt]:
+		if label.is_visible_in_tree():
+			occupied.append((label.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, label.size)).grow(4.0))
+	var player_body: Sprite2D = world.player.sprite
+	if player_body.is_visible_in_tree():
+		occupied.append((player_body.get_global_transform_with_canvas() * player_body.get_rect()).grow(2.0))
+	return HintPlacement.around(plot.get_center(), clearance, size, get_viewport_rect().grow(-8.0), occupied, true)
 
 func _mark_worksite(cell: Vector2i) -> void:
 	var tiles: TileMapLayer = world.tile_map
@@ -539,31 +569,35 @@ func _mark_worksite(cell: Vector2i) -> void:
 
 func _mark_button(button: Button) -> void:
 	mark = Mark.BUTTON
+	tool_badge = -1
 	outline = button.get_global_rect().grow(2.0)
 	show()
 	queue_redraw()
 
-func _mark_map(bounds: Rect2, label_text: String, style: Mark, near: bool) -> void:
+func _mark_map(bounds: Rect2, label_text: String, style: Mark, near: bool, tool := -1) -> void:
 	caption.text = label_text
 	var text_size := caption.get_combined_minimum_size()
 	caption.size = text_size
+	tool_badge = tool
+	var tool_space := text_size.y + TOOL_GAP if tool >= 0 else 0.0
+	var content := text_size + Vector2(tool_space, 0)
 	if hud.map_space_clear(bounds):
 		mark = style
 		outline = bounds.grow(1.0) if style in [Mark.PLOT, Mark.WORKSITE] else bounds
 		if not near:
-			var badge_size := text_size + Vector2(18, 10)
-			var clearance := bounds.size.y + 6.0 if style == Mark.PLOT else 7.0
-			plaque = Rect2(Vector2(bounds.get_center().x - badge_size.x / 2.0, bounds.end.y + clearance), badge_size)
-			var has_space: bool = hud.map_space_clear(plaque)
-			if style in [Mark.PLOT, Mark.PLACE] and not has_space:
-				plaque.position.y = bounds.position.y - badge_size.y - clearance
-				has_space = hud.map_space_clear(plaque)
-			if has_space:
-				caption.position = plaque.position + Vector2(9, 5)
+			var badge_size := content + Vector2(18, 10)
+			var at := Vector2(bounds.get_center().x - badge_size.x / 2.0, bounds.end.y + 7.0)
+			if style == Mark.PLOT:
+				at = _plot_plaque_position(bounds, badge_size)
+			elif style == Mark.PLACE and not hud.map_space_clear(Rect2(at, badge_size)):
+				at.y = bounds.position.y - badge_size.y - 7.0
+			if at != Vector2.INF and hud.map_space_clear(Rect2(at, badge_size)):
+				plaque = Rect2(at, badge_size)
+				caption.position = at + Vector2(9 + tool_space, 5)
 				caption.show()
 	else:
 		mark = Mark.EDGE
-		var badge_size := text_size + Vector2(35, 10)
+		var badge_size := content + Vector2(35, 10)
 		var safe := get_viewport_rect().grow(-17.0)
 		edge_direction = safe.get_center().direction_to(bounds.get_center())
 		var half := ((safe.size - badge_size) * 0.5).max(Vector2.ONE)
@@ -577,7 +611,7 @@ func _mark_map(bounds: Rect2, label_text: String, style: Mark, near: bool) -> vo
 				hide()
 				return
 			distance = maxf(0.0, distance - 8.0)
-		caption.position = plaque.position + Vector2(25, 5)
+		caption.position = plaque.position + Vector2(25 + tool_space, 5)
 		caption.show()
 	show()
 	queue_redraw()
@@ -585,6 +619,10 @@ func _mark_map(bounds: Rect2, label_text: String, style: Mark, near: bool) -> vo
 func _draw() -> void:
 	if caption and caption.visible:
 		draw_style_box(plate, plaque)
+		if tool_badge >= 0:
+			var side := caption.size.y
+			var at := caption.position - Vector2(side + TOOL_GAP, 0)
+			draw_texture_rect_region(HUDIcons.FIELD_TOOLS, Rect2(at, Vector2.ONE * side), HUDIcons.field_tool_region(tool_badge))
 	match mark:
 		Mark.PLOT, Mark.BUTTON, Mark.WORKSITE:
 			for corner in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]:

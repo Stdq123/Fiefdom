@@ -193,7 +193,7 @@ func _greet_first_visitor(dialog: Control, gamepad: RefCounted) -> bool:
 func _private_crop_and_grain(spawn: Vector2) -> void:
 	await Campaign.walk_to(tree, world.player, spawn)
 	var cell: Vector2i = ui.hud.guide.opening_cell
-	_expect(directions.mark == directions.Mark.PLOT and directions.caption.text == "私田"
+	_expect(directions.mark == directions.Mark.PLOT and directions.caption.text.begins_with("私田")
 		and not state.is_public_plot(cell), "The first private field has a visible marker outside the public center.")
 	await _capture("08-first-private-plot")
 	await _click(_point_on_field(cell))
@@ -443,9 +443,9 @@ func run(game_tree: SceneTree) -> void:
 	await _use_estate()
 	_check_road_posts()
 	var spawn: Vector2 = world.player.global_position
-	_expect(directions.visible and directions.mark == directions.Mark.PLOT and directions.caption.text == "公田"
-		and "WASD" in ui.hud.guide.text and not ui.hud.tribute_button.visible,
-		"A new estate labels the public plot and explains movement before showing the larger tribute goal.")
+	_expect(directions.visible and directions.mark == directions.Mark.PLOT and directions.caption.text == "公田 · 翻地"
+		and "WASD" in ui.hud.guide.text and ui.hud.tribute_button.visible,
+		"A new estate labels the first field action and shows the movement keys and tribute deadline.")
 	_expect(directions.plaque.position.y > directions.outline.end.y + directions.outline.size.y - 2.0,
 		"The first caption leaves the adjacent private plot visible.")
 	await _capture("01-first-public-plot")
@@ -510,7 +510,7 @@ func run(game_tree: SceneTree) -> void:
 
 	await _click(_point_on_field())
 	_expect(state.king_storage == 1 and directions.tracked_neighbor.is_empty() and ui.hud.tribute_button.visible
-		and ui.hud.guide.heading.text == "第一茬私田" and directions.mark == directions.Mark.PLOT and directions.caption.text == "私田"
+		and ui.hud.guide.heading.text == "第一茬私田" and directions.mark == directions.Mark.PLOT and directions.caption.text.begins_with("私田")
 		and not ui.hud.handover_button.visible and ui.hud.opening_action.text == "找渠伯谈轮作",
 		"The treasury receives the public harvest while the next cue stays on the private plot.")
 	await _capture("05-first-tribute-and-keeper")
@@ -518,7 +518,7 @@ func run(game_tree: SceneTree) -> void:
 	_expect(directions.tracked_neighbor == KEEPER and directions.mark == directions.Mark.NEIGHBOR,
 		"Choosing the rotation invitation directs the player to the keeper.")
 	await _click(ui.hud.cancel_directions.get_global_rect().get_center())
-	_expect(directions.tracked_neighbor.is_empty() and directions.mark == directions.Mark.PLOT and directions.caption.text == "私田",
+	_expect(directions.tracked_neighbor.is_empty() and directions.mark == directions.Mark.PLOT and directions.caption.text.begins_with("私田"),
 		"Cancelling the optional visit returns the map to the private plot cue.")
 	journal = await _journal()
 	await _click(journal.roster.get_node(KEEPER).get_global_rect().get_center())

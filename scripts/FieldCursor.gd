@@ -83,7 +83,7 @@ func mouse_tool_at(point: Vector2) -> MouseTool:
 		return _mouse_tool
 	return MouseTool.NONE
 
-func _mouse_tool_for_action(action: int) -> MouseTool:
+func tool_for_action(action: int) -> MouseTool:
 	match action:
 		world.FieldAction.TILL: return MouseTool.HOE
 		world.FieldAction.SOW: return MouseTool.SEEDS
@@ -143,7 +143,7 @@ func _process(_delta: float) -> void:
 	var cost: int = world.field_cost(action)
 	var actionable := cost > 0 and Global.current_stamina >= cost
 	if actionable:
-		_mouse_tool = _mouse_tool_for_action(action)
+		_mouse_tool = tool_for_action(action)
 	var tone := Color("#ecce87") if is_public else Color("#c2d998")
 	if not actionable:
 		tone = Color("#a7c8bd") if action in [world.FieldAction.CHANNEL, world.FieldAction.RAIN, world.FieldAction.WATERED] else Color("#efaa84")
@@ -208,7 +208,7 @@ func _show_field_preview(cell: Vector2i, action: int, plots: Array[Vector2i]) ->
 	elif action == world.FieldAction.WATER:
 		symbol = HUDIcons.Symbol.WATER
 	if Global.current_stamina >= cost:
-		_mouse_tool = _mouse_tool_for_action(action)
+		_mouse_tool = tool_for_action(action)
 	_show_batch_caption(cell, title, details, cost, plots, seeds, symbol)
 
 func _harvest_note(plots: Array[Vector2i]) -> String:

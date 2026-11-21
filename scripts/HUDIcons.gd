@@ -8,6 +8,8 @@ enum Symbol {
 
 const SHEET_PATH := "res://assets/ui/hud-symbols.png"
 const SNOW_PATH := "res://assets/ui/hud-snow.png"
+const FIELD_TOOLS := preload("res://assets/ui/cursor-field-tools.png")
+const FIELD_TOOL_COUNT := 4
 const SKY: Array[Symbol] = [Symbol.SUN, Symbol.RAIN, Symbol.MOON, Symbol.SNOW]
 const CROPS := {
 	"millet": Symbol.MILLET,
@@ -37,6 +39,10 @@ static func icon(symbol: Symbol) -> AtlasTexture:
 	texture.filter_clip = true
 	_icons[symbol] = texture
 	return texture
+
+static func field_tool_region(tool: int) -> Rect2:
+	var size := FIELD_TOOLS.get_size() / Vector2(FIELD_TOOL_COUNT, 1)
+	return Rect2(Vector2(tool * size.x, 0), size)
 
 static func sky_index(day := 0) -> int:
 	match Global.weather_on(day):

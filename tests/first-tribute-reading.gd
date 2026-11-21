@@ -109,6 +109,20 @@ func _check_opening_hud(ui: Node, state: Node, preferences: Node) -> void:
 	var journal: Rect2 = hud.get_node("Journal").get_global_rect()
 	_expect(journal.encloses(hud.opening_action.get_global_rect()) and journal.encloses(hud.tribute_button.get_global_rect()),
 		"Large shortcuts stay inside the opening journal.")
+	var directions: Control = ui.directions
+	var cursor := fields.get_node("FieldCursor") as Node2D
+	var hoe: int = cursor.tool_for_action(world.FieldAction.TILL)
+	_expect(directions.caption.is_visible_in_tree() and directions.caption.text == "公田 · 翻地"
+		and directions.tool_badge == hoe, "The public plot names its first action and tool before the player points at it.")
+	cursor.position = fields.map_to_local(tile)
+	cursor.show()
+	cursor.caption.hide()
+	directions.update_marker(false)
+	_expect(directions.caption.is_visible_in_tree(), "An outline without a readable hover note leaves the plot cue visible.")
+	cursor.caption.show()
+	directions.update_marker(false)
+	_expect(not directions.caption.is_visible_in_tree(), "A readable hover note takes the place of the short plot cue.")
+	cursor.hide()
 	hud.opening_action.pressed.emit()
 	_expect(ui.directions.tracked_plot == tile and hud.cancel_directions.is_visible_in_tree()
 		and world.current_seed_id == original_seed and _snapshot(state) == before,
