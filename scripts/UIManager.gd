@@ -1304,21 +1304,30 @@ func _request_sleep() -> void:
 	if Global.wait_for_fields_before_sleep and Global.first_tribute_delivered():
 		field_work_settled = not world.wait_for_retainers().is_empty()
 	var plan := Global.night_rations_plan()
-	var ration_warning := ""
+	var research_short: bool = plan.research_gap > 0
+	var warnings := PackedStringArray()
+	if research_short:
+		warnings.append("明早研究费 %d 铜钱，备粮后还差 %d。\n若现在过夜，召简明早会要求定案。" % [
+			plan.research_fee, plan.research_gap])
 	if not plan.departing.is_empty():
-		ration_warning = "今晚预计分出 %d/%d 份口粮。\n%s缺餐后将离任。" % [plan.served, plan.need, "、".join(plan.departing)]
-	if not Global.first_tribute_delivered() and _warn_before_first_tribute(ration_warning, plan):
+		warnings.append("今晚预计分出 %d/%d 份口粮。\n%s缺餐后将离任。" % [plan.served, plan.need, "、".join(plan.departing)])
+	var message := "\n\n".join(warnings)
+	if not Global.first_tribute_delivered() and _warn_before_first_tribute(message, plan):
 		return
-	if not ration_warning.is_empty():
+	if not message.is_empty():
 		if field_work_settled:
-			ration_warning = "门客已收工。\n" + ration_warning
+			message = "门客已收工。\n" + message
+		var context := "研究经费" if research_short else "门客口粮"
+		var symbol := HUDIcons.Symbol.COIN if research_short else HUDIcons.Symbol.RATIONS
+		var alternatives: Dictionary[String, Callable] = {"查看今夜安排": _show_night_rations.bind(false, not research_short)}
+		if research_short:
+			alternatives["打开市场备款"] = _show_market
 		world.set_channel_mode(false)
-		dialog_manager.show_bedtime_warning("门客口粮", ration_warning,
-			{"查看今夜安排": _show_night_rations.bind(false, true)}, _on_sleep_pressed)
+		dialog_manager.show_bedtime_warning(context, message, alternatives, _on_sleep_pressed, {}, symbol)
 		return
 	_on_sleep_pressed()
 
-func _warn_before_first_tribute(ration_warning: String, rations: Dictionary = {}) -> bool:
+func _warn_before_first_tribute(other_warning: String, rations: Dictionary = {}) -> bool:
 	var plan := Global.tribute_field_plan()
 	if plan.is_empty():
 		return false
@@ -1354,9 +1363,9 @@ func _warn_before_first_tribute(ration_warning: String, rations: Dictionary = {}
 	if Global.is_indoors():
 		message += "\n从南门出去，回井田照料公田。"
 	var alternatives: Dictionary[String, Callable] = {field_button: _follow_tribute_plot.bind(route)}
-	if not ration_warning.is_empty():
-		message += "\n\n" + ration_warning
-	if not ration_warning.is_empty() or penalty.get("teaching_shortage", false):
+	if not other_warning.is_empty():
+		message += "\n\n" + other_warning
+	if not other_warning.is_empty() or penalty.get("teaching_shortage", false):
 		alternatives["查看今夜安排"] = _show_night_rations.bind(false, true)
 	world.set_channel_mode(false)
 	dialog_manager.show_bedtime_warning("第一次纳贡", message, alternatives, _on_sleep_pressed, plan)

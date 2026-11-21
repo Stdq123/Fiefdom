@@ -3273,6 +3273,7 @@ func _night_rations_supply_plan(evening: int, policy: NightRations, extra_copper
 	plan.supper = supper
 	plan.research_fee = fee
 	plan.research_reserve = reserved
+	plan.research_gap = maxi(0, fee - (purse - int(plan.copper))) if fee > 0 else 0
 	var current_open := season_order_delivered_at(schedule) == 0
 	plan.order_name = schedule.order.title
 	plan.upcoming_order_name = upcoming.order.title if not upcoming.is_empty() else ""

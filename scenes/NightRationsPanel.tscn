@@ -127,12 +127,16 @@ mouse_default_cursor_shape = 2
 text = "关闭"
 tooltip_text = "Esc"
 
-[node name="PlanIndex" type="HBoxContainer" parent="Center/Window/Content"]
+[node name="PlanIndex" type="VBoxContainer" parent="Center/Window/Content"]
 unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Sections" type="HBoxContainer" parent="Center/Window/Content/PlanIndex"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="TributeSection" type="Button" parent="Center/Window/Content/PlanIndex"]
+[node name="TributeSection" type="Button" parent="Center/Window/Content/PlanIndex/Sections"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
@@ -142,7 +146,7 @@ mouse_default_cursor_shape = 2
 autowrap_mode = 3
 tooltip_text = "查看纳贡期限和公田出产。"
 
-[node name="FieldSection" type="Button" parent="Center/Window/Content/PlanIndex"]
+[node name="FieldSection" type="Button" parent="Center/Window/Content/PlanIndex/Sections"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
@@ -152,7 +156,7 @@ mouse_default_cursor_shape = 2
 autowrap_mode = 3
 tooltip_text = "查看今夜生长和还能做的田务。"
 
-[node name="RationsSection" type="Button" parent="Center/Window/Content/PlanIndex"]
+[node name="RationsSection" type="Button" parent="Center/Window/Content/PlanIndex/Sections"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
@@ -161,6 +165,14 @@ theme_type_variation = &"HudButton"
 mouse_default_cursor_shape = 2
 autowrap_mode = 3
 tooltip_text = "查看门客分餐和备粮。"
+
+[node name="ResearchFee" type="Label" parent="Center/Window/Content/PlanIndex"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3
 
 [node name="RecordSummary" type="PanelContainer" parent="Center/Window/Content"]
 unique_name_in_owner = true
@@ -602,14 +614,6 @@ tooltip_text = "按分餐顺序补粮，凑够一人所需的整份口粮才支�
 [node name="Preview" type="VBoxContainer" parent="Center/Window/Content/Scroll/Body/Plan"]
 layout_mode = 2
 theme_override_constants/separation = 5
-
-[node name="ResearchFee" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/Preview"]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-theme_override_font_sizes/font_size = 16
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-autowrap_mode = 3
 
 [node name="Forecast" type="Label" parent="Center/Window/Content/Scroll/Body/Plan/Preview"]
 unique_name_in_owner = true

@@ -402,7 +402,10 @@ func _fit_save_notice_height() -> void:
 func refresh_rations() -> void:
 	var plan := Global.night_rations_plan()
 	var tone := Color("#e7ddbd")
-	if plan.uncovered > 0:
+	if plan.research_gap > 0:
+		rations_button.text = "今夜安排 · 缺经费"
+		tone = Color("#efbf8a")
+	elif plan.uncovered > 0:
 		rations_button.text = "今夜安排 · 缺粮 %d" % plan.uncovered
 		tone = Color("#efbf8a")
 	elif Global.tribute_penalty_tonight() > 0:
@@ -424,6 +427,10 @@ func refresh_rations() -> void:
 		rations_button.text = "今夜安排"
 	rations_button.add_theme_color_override("font_color", tone)
 	rations_button.tooltip_text = "查看田务和用粮\n粮仓 %d 份 · 今夜所需 %d 份" % [Global.food_storage, plan.need]
+	if plan.research_gap > 0:
+		rations_button.tooltip_text += "\n明早研究费 %d 铜钱，备粮后还差 %d。" % [plan.research_fee, plan.research_gap]
+		if plan.uncovered > 0:
+			rations_button.tooltip_text += "\n预计口粮还缺 %d 份。" % plan.uncovered
 	if pavilion_story_available:
 		rations_button.tooltip_text += "\n邻居已入席，可指路去听灯下小谈。"
 	elif pavilion_story_expected:

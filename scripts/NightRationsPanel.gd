@@ -21,7 +21,7 @@ const PANEL_FOCUS := preload("res://scripts/PanelFocus.gd")
 @onready var window: PanelContainer = $Center/Window
 @onready var content: VBoxContainer = $Center/Window/Content
 @onready var header: HBoxContainer = $Center/Window/Content/Header
-@onready var plan_index: HBoxContainer = %PlanIndex
+@onready var plan_index: VBoxContainer = %PlanIndex
 @onready var tribute_section: Button = %TributeSection
 @onready var field_section: Button = %FieldSection
 @onready var rations_section: Button = %RationsSection
@@ -97,6 +97,7 @@ const PANEL_FOCUS := preload("res://scripts/PanelFocus.gd")
 @onready var page_button: Button = %PageButton
 @onready var plan_body: VBoxContainer = %Plan
 @onready var footer: HBoxContainer = %Footer
+@onready var market_button: Button = %Market
 @onready var council_notice: Label = %CouncilNotice
 @onready var sleep_button: Button = %Sleep
 @onready var close_button: Button = %Close
@@ -175,7 +176,7 @@ func _ready() -> void:
 		_show_page(not show_previous)
 		AudioManager.play_menu_cue(AudioManager.MenuCue.PAGE)
 	)
-	%Market.pressed.connect(func():
+	market_button.pressed.connect(func():
 		queue_free()
 		market_requested.emit()
 	)
@@ -301,7 +302,7 @@ func _finish_opening_focus() -> void:
 func _show_meals() -> void:
 	var action: BaseButton = delegate
 	if meal_forecast.visible:
-		action = _available_action([accept_offer, find_fruit, sell_silk, priority_picker, %Market])
+		action = _available_action([accept_offer, find_fruit, sell_silk, priority_picker, market_button])
 	_show_section(stock, action)
 
 func _open_record_rations() -> void:
@@ -423,12 +424,14 @@ func _refresh() -> void:
 	budget.editable = policy.enabled
 	partial_meals.visible = policy.enabled
 	partial_meals.set_pressed_no_signal(policy.partial_meals)
+	var research_gap: int = plan.research_gap
+	market_button.text = "打开市场备款" if research_gap > 0 else "打开市场备粮"
 	research_fee.visible = plan.research_fee > 0
 	if research_fee.visible:
 		var due: int = plan.research_fee
-		research_fee.modulate = GOOD if plan.research_reserve > 0 else SHORT
-		research_fee.text = ("明早预留 %d 铜钱缴研究费。" % due if plan.research_reserve > 0
-			else "明早研究费 %d 铜钱 · 备粮后还差 %d" % [due, due - Global.money + int(plan.copper)])
+		research_fee.add_theme_color_override("font_color", SHORT if research_gap > 0 else GOOD)
+		research_fee.text = ("明早研究费 %d 铜钱 · 备粮后还差 %d" % [due, research_gap] if research_gap > 0
+			else "明早预留 %d 铜钱缴研究费。" % due)
 	forecast.add_theme_color_override("font_color", SHORT if plan.uncovered > 0 else GOOD)
 	var supplement: int = plan.converted + plan.bought
 	if plan.need == 0:
