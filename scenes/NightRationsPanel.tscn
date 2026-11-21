@@ -870,23 +870,24 @@ layout_mode = 2
 mouse_default_cursor_shape = 2
 text = "调整门客分工"
 
-[node name="CouncilNotice" type="Label" parent="Center/Window/Content/Footer"]
+[node name="BedtimeAction" type="HBoxContainer" parent="Center/Window/Content/Footer"]
+layout_mode = 2
+size_flags_horizontal = 10
+theme_override_constants/separation = 12
+
+[node name="CouncilNotice" type="Label" parent="Center/Window/Content/Footer/BedtimeAction"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-size_flags_horizontal = 3
 size_flags_vertical = 4
 theme_type_variation = &"HudBronzeInk"
 theme_override_font_sizes/font_size = 16
 text = "议税后可过夜"
-horizontal_alignment = 2
-autowrap_mode = 3
 
-[node name="Sleep" type="Button" parent="Center/Window/Content/Footer"]
+[node name="Sleep" type="Button" parent="Center/Window/Content/Footer/BedtimeAction"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(118, 35)
 layout_mode = 2
-size_flags_horizontal = 10
 theme_type_variation = &"HudNight"
 mouse_default_cursor_shape = 2
 text = "过夜"
