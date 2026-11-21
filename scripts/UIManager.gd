@@ -242,6 +242,8 @@ func _on_route_goal_action(kind: Global.RouteGoal) -> void:
 			_guide_ripe_harvest(false)
 		Global.RouteGoal.OFFER_SILK, Global.RouteGoal.SELL_SILK:
 			_show_silk()
+			var trade := SilkWorkshop.Action.OFFER if kind == Global.RouteGoal.OFFER_SILK else SilkWorkshop.Action.SELL
+			panel_manager.management_panel_instance.silk_panel.focus_trade_step(trade)
 		Global.RouteGoal.COPPER:
 			_show_market()
 			panel_manager.management_panel_instance.market_panel.focus_reform_sale()

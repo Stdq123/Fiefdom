@@ -20,6 +20,10 @@ var last_reel_thread := 0
 func batch_leaf_cost(balance: BalanceData) -> int:
 	return balance.silk_leaves_per_night * balance.silk_batch_nights
 
+func batch_leaf_shortfall(balance: BalanceData) -> int:
+	var nights := nights_left if nights_left > 0 else balance.silk_batch_nights
+	return maxi(0, nights * balance.silk_leaves_per_night - leaves)
+
 func capacity(action: Action, balance: BalanceData) -> int:
 	match action:
 		Action.REEL: return cocoons
@@ -27,6 +31,17 @@ func capacity(action: Action, balance: BalanceData) -> int:
 			@warning_ignore("integer_division")
 			return raw_silk / balance.silk_thread_per_bolt
 	return 1
+
+func next_action_for_trade(trade: Action, balance: BalanceData) -> Action:
+	if not built:
+		return Action.BUILD
+	if bolts > 0:
+		return trade
+	if capacity(Action.WEAVE, balance) > 0:
+		return Action.WEAVE
+	if capacity(Action.REEL, balance) > 0:
+		return Action.REEL
+	return Action.START_BATCH
 
 func can_act(action: Action, balance: BalanceData, literacy: int, money: int) -> bool:
 	if action == Action.BUILD:

@@ -218,6 +218,26 @@ func _act(action: SilkWorkshop.Action, amount := 1) -> void:
 	else:
 		AudioManager.play_workshop_cue(action)
 
+func focus_trade_step(trade_step: SilkWorkshop.Action) -> void:
+	# The management tab lays out the production cards before scrolling to a step.
+	await get_tree().process_frame
+	if not is_visible_in_tree():
+		return
+	var action := Global.silk_workshop.next_action_for_trade(trade_step, Global.balance)
+	var target: Control = buttons[action]
+	if action == SilkWorkshop.Action.BUILD and study_button.is_visible_in_tree():
+		target = study_button
+	elif action == SilkWorkshop.Action.START_BATCH:
+		if mulberry_row.is_visible_in_tree():
+			target = mulberry_button if mulberry_button.visible else mulberry_row
+		elif buttons[action].disabled:
+			target = status_label
+	if target is BaseButton and not target.disabled:
+		target.grab_focus()
+		GamepadInput.snap_pointer_to_focus.call_deferred()
+	if production.is_ancestor_of(target):
+		production.ensure_control_visible(target)
+
 func _refresh() -> void:
 	var workshop := Global.silk_workshop
 	var balance := Global.balance
@@ -280,8 +300,7 @@ func _refresh_mulberry() -> void:
 	var world := estate.get_node_or_null("World") if estate else null
 	var workshop := Global.silk_workshop
 	var balance := Global.balance
-	var leaf_nights := workshop.nights_left if workshop.nights_left > 0 else balance.silk_batch_nights
-	var missing := leaf_nights * balance.silk_leaves_per_night - workshop.leaves
+	var missing := workshop.batch_leaf_shortfall(balance)
 	mulberry_row.visible = world != null and missing > 0 and workshop.cocoons == 0 and workshop.capacity(SilkWorkshop.Action.WEAVE, balance) == 0
 	if not mulberry_row.visible:
 		return

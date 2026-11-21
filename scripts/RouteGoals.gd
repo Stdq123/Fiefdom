@@ -14,10 +14,10 @@ const GUIDANCE := {
 		"unit": "份", "action": "查看井田", "detail": "各格收成按新法计税。定案后收入私仓的作物会记在这里。",
 	},
 	Global.RouteGoal.OFFER_SILK: {
-		"unit": "匹", "action": "打开蚕桑", "detail": "到蚕桑页查看织绸工序。库里已有丝绸时，可直接点「进献」。",
+		"unit": "匹",
 	},
 	Global.RouteGoal.SELL_SILK: {
-		"unit": "匹", "action": "打开蚕桑", "detail": "到蚕桑页查看织绸工序。库里已有丝绸时，可直接点「出售」。",
+		"unit": "匹",
 	},
 	Global.RouteGoal.COPPER: {
 		"unit": "铜钱", "action": "打开市场", "detail": "结局以手头余额为准。收获或卖作物可攒钱，支出会减少进度。",
@@ -115,12 +115,9 @@ func _add_goal(goal: Dictionary) -> void:
 			detail = "可售 %d 份余粮 · +%d 铜钱。预留今夜口粮与备好的货。" % [quote.amount, quote.gain]
 			action_text = "查看售粮报价"
 	elif not complete and kind in [Global.RouteGoal.OFFER_SILK, Global.RouteGoal.SELL_SILK]:
-		var bolts := Global.silk_workshop.bolts
-		var trade := "进献" if kind == Global.RouteGoal.OFFER_SILK else "出售"
-		if bolts > 0:
-			detail = "手中已有 %d 匹。到蚕桑页点「%s」，记入本案。" % [bolts, trade]
-		else:
-			detail = "蚕桑页可查看现有蚕茧和生丝，缺叶时可标出桑田。织成后%s。" % trade
+		var silk := _silk_guide(kind)
+		detail = silk.detail
+		action_text = silk.action
 	elif not complete and kind == Global.RouteGoal.RAIDS:
 		var defense := _defense_guide()
 		detail = defense.detail
@@ -146,6 +143,34 @@ func _add_goal(goal: Dictionary) -> void:
 	action.visible = not complete
 	action.text = action_text
 	action.pressed.connect(_take_action.bind(kind))
+
+func _silk_guide(kind: Global.RouteGoal) -> Dictionary:
+	var workshop := Global.silk_workshop
+	var balance := Global.balance
+	var trade := SilkWorkshop.Action.OFFER if kind == Global.RouteGoal.OFFER_SILK else SilkWorkshop.Action.SELL
+	match workshop.next_action_for_trade(trade, balance):
+		SilkWorkshop.Action.BUILD:
+			var literacy := Global.player_stats.get_level(PlayerStats.Art.LITERACY)
+			if literacy < SilkWorkshop.LITERACY_LEVEL:
+				return {"action": "查看研读", "detail": "建蚕室需书 %d 级，当前 %d 级。" % [SilkWorkshop.LITERACY_LEVEL, literacy]}
+			if Global.money < balance.silk_workshop_cost:
+				return {"action": "查看建造", "detail": "建蚕室还缺 %d 铜钱。" % (balance.silk_workshop_cost - Global.money)}
+			return {"action": "准备建造", "detail": "可用 %d 铜钱建蚕室，备好桑叶后开养。" % balance.silk_workshop_cost}
+		SilkWorkshop.Action.WEAVE:
+			return {"action": "准备织绸", "detail": "已有 %d 份生丝，可织 %d 匹。" % [
+				workshop.raw_silk, workshop.capacity(SilkWorkshop.Action.WEAVE, balance)]}
+		SilkWorkshop.Action.REEL:
+			return {"action": "准备缫丝", "detail": "已有 %d 只蚕茧，每只可缫 %d 份生丝。" % [workshop.cocoons, Global.silk_thread_yield()]}
+		SilkWorkshop.Action.START_BATCH:
+			var missing := workshop.batch_leaf_shortfall(balance)
+			if missing > 0:
+				var batch := "养完本批" if workshop.nights_left > 0 else "备齐整批"
+				return {"action": "准备桑叶", "detail": "%s还缺 %d 片桑叶。" % [batch, missing]}
+			if workshop.nights_left > 0:
+				return {"action": "查看蚕批", "detail": "这批蚕的桑叶已备齐，照料 %d 夜后结茧。" % workshop.nights_left}
+			return {"action": "准备养蚕", "detail": "整批所需桑叶已备齐，开养后需 %d 夜。" % balance.silk_batch_nights}
+	var verb := "进献" if trade == SilkWorkshop.Action.OFFER else "出售"
+	return {"action": "去" + verb, "detail": "库里已有 %d 匹。%s 1 匹会记入本案。" % [workshop.bolts, verb]}
 
 func _defense_guide() -> Dictionary:
 	if Global.raid_day > 0:
