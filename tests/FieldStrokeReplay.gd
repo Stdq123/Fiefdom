@@ -94,24 +94,24 @@ func _diagonal(baseline: bool) -> void:
 		_expect(state.king_storage == tribute + 1 and state.player_inventory == stock + 4,
 			"A separate click still sends the public harvest to the treasury.")
 		var receipt := ui.hud.get_node("HarvestReceipt") as Control
-		var caption := receipt.get_node("Caption") as Label
-		_expect(receipt.visible and "收获 5 格" in caption.text and "国库 +1" in caption.text
-			and "作物 +4" in caption.text and "铜钱 +%d" % (price * 4) in caption.text,
+		_expect(receipt.visible and "收获 5 格" in receipt.caption.text and "国库 +1" in receipt.treasury.label.text
+			and "私仓 +4" in receipt.warehouse.label.text and "铜钱 +%d" % (price * 4) in receipt.gains.label.text,
 			"The separate click and the preceding drag share one public and private receipt.")
-		_expect(ui.hud.map_space_clear(receipt.get_global_rect()), "The receipt stays above the seed belt and within the viewport.")
+		var bounds := receipt.get_global_rect()
+		_expect(tree.root.get_visible_rect().encloses(bounds) and bounds.end.y <= receipt.seed_belt.get_global_rect().position.y,
+			"The receipt stays above the seed belt and within the viewport.")
 		await _capture("01b-combined-harvest-receipt")
 		print("FIELD_STROKE_RECEIPT plots=5 public=1 private=4 copper=", price * 4)
 
 func _rapid_separate_harvest() -> void:
 	await tree.create_timer(1.65).timeout
 	var receipt := ui.hud.get_node("HarvestReceipt") as Control
-	var caption := receipt.get_node("Caption") as Label
 	_expect(not receipt.visible, "The previous harvest receipt has expired.")
 	var stock: int = state.player_inventory
 	await _click(_point(Vector2i(4, 5)))
 	await _click(_point(Vector2i(5, 6)))
-	_expect(state.player_inventory == stock + 2 and receipt.visible and "收获 2 格" in caption.text
-		and "作物 +2" in caption.text and "国库" not in caption.text,
+	_expect(state.player_inventory == stock + 2 and receipt.visible and "收获 2 格" in receipt.caption.text
+		and "私仓 +2" in receipt.warehouse.label.text and not receipt.treasury.visible,
 		"Two ordinary presses make a fresh receipt without retaining earlier tribute.")
 	await _capture("01c-two-separate-harvest-clicks")
 	await tree.create_timer(1.65).timeout

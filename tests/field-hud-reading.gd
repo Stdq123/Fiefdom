@@ -66,6 +66,48 @@ func _read_feedback(center: Vector2i, events: Node) -> void:
 	overlay._process(2.0)
 	_expect(overlay.messages.is_empty() and before == _snapshot(), "Feedback expires without changing the staged state.")
 
+func _read_receipt(events: Node, prefs: Node, items: Node) -> void:
+	var receipt: Control = hud.get_node("HarvestReceipt")
+	var before := _snapshot()
+	var public_crop := {"crop_id": "millet", "tribute": 1, "stock": 0, "copper": 0, "leaves": 0,
+		"levy": 0, "rotated": false, "fertile": false}
+	events.harvest_receipt.emit(public_crop, "")
+	receipt.expiry.pause()
+	await _settle()
+	_expect(receipt.treasury.label.text == "国库 +1 · 黍" and not receipt.warehouse.visible
+		and receipt.treasury.art.texture == items.crop_picture(items.get_crop("millet")).texture,
+		"The public receipt uses its own crop art and names the treasury.")
+	var private_crop := public_crop.duplicate()
+	private_crop.merge({"crop_id": "beans", "tribute": 0, "stock": 2, "copper": 10, "fertile": true}, true)
+	events.harvest_receipt.emit(private_crop, "渠伯")
+	private_crop.merge({"crop_id": "sorghum", "stock": 3, "copper": 12345678901234567, "levy": 4321987654321,
+		"leaves": 81234, "rotated": true, "fertile": false}, true)
+	events.harvest_receipt.emit(private_crop, "")
+	receipt.expiry.pause()
+	await _settle()
+	var larger_height := receipt.size.y
+	var bounds := receipt.get_global_rect()
+	_expect(receipt.visible and receipt.caption.text.begins_with("收获 3 格")
+		and receipt.warehouse.label.text == "私仓 +5 · 稷 3、菽 2"
+		and receipt.gains.label.text.contains("已扣税 4321987654321"),
+		"A mixed receipt keeps the names, quantities, destination, and actual tax.")
+	for line: Control in [receipt.treasury, receipt.warehouse, receipt.gains]:
+		var label: Label = line.label
+		_expect(label.get_theme_font_size(&"font_size") == 22 and bounds.encloses(label.get_global_rect())
+			and label.get_visible_line_count() == label.get_line_count(), "All rows fit at the largest reading size.")
+	_expect(root.get_visible_rect().encloses(bounds) and bounds.end.y < receipt.seed_belt.get_global_rect().position.y,
+		"The mixed receipt stays above the seeds and inside the viewport.")
+	_expect(prefs.set_reading_size(0) == OK, "Return to the standard reading size while the receipt is still open.")
+	await _settle()
+	_expect(receipt.gains.label.get_theme_font_size(&"font_size") == 16 and receipt.size.y < larger_height,
+		"A visible receipt refits from large to standard text.")
+	receipt._clear_receipt()
+	events.harvest_receipt.emit(private_crop, "渠伯")
+	_expect(receipt.plots == 1 and receipt.treasury_crops.is_empty() and not receipt.treasury.visible
+		and receipt.warehouse.label.text == "私仓 +3 · 稷", "A new receipt clears the old totals and item groups.")
+	receipt._clear_receipt()
+	_expect(prefs.set_reading_size(2) == OK and _snapshot() == before, "Reading receipts changes neither the staged economy nor the fields.")
+
 func _review() -> void:
 	if not ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"):
 		push_error("Run the field HUD check with an isolated smoke profile.")
@@ -145,6 +187,7 @@ func _review() -> void:
 	pad.active = false
 	cursor._clear_pointer()
 	_expect(gauge.planned_cost == 0, "Moving the pointer away clears the forecast.")
+	await _read_receipt(events, prefs, items)
 
 	state.money = 1234567
 	state.food_storage = 876543

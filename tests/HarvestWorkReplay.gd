@@ -153,9 +153,8 @@ func _compare_harvests() -> bool:
 		await _click_field(cell)
 	var manual := _settlement()
 	var receipt := ui.hud.get_node("HarvestReceipt") as Control
-	var caption := receipt.get_node("Caption") as Label
-	_expect(receipt.visible and "国库 +2" in caption.text and "作物 +7" in caption.text
-		and "桑叶 +4" in caption.text and "轮作增收" in caption.text and "留肥" in caption.text,
+	_expect(receipt.visible and "国库 +2" in receipt.treasury.label.text and "私仓 +7" in receipt.warehouse.label.text
+		and "桑叶 +4" in receipt.gains.label.text and "轮作增收" in receipt.caption.text and "留肥" in receipt.caption.text,
 		"The receipt shows mixed crops, silk leaves and the effects of rotation.")
 	var spent: int = stamina - state.current_stamina
 	if not _expect(spent == READY.size() * 3 and manual.tribute == initial.tribute + 2
@@ -181,8 +180,7 @@ func _compare_harvests() -> bool:
 	if not await _wait_for_harvest():
 		return false
 	receipt = ui.hud.get_node("HarvestReceipt") as Control
-	caption = receipt.get_node("Caption") as Label
-	_expect(receipt.visible and ("渠伯代收" in caption.text or "门客代收" in caption.text),
+	_expect(receipt.visible and ("渠伯代收" in receipt.caption.text or "门客代收" in receipt.caption.text),
 		"The receipt credits the worker, including when several assisted plots are grouped.")
 	_expect(_settlement() == manual and state.current_stamina == stamina,
 		"Delegation produces the same tribute, cash, bins, leaves and rotation without player stamina.")
@@ -283,9 +281,8 @@ func _check_reform() -> void:
 	ui.sleep_button.pressed.emit()
 	await tree.create_timer(0.34).timeout
 	var receipt := ui.hud.get_node("HarvestReceipt") as Control
-	var caption := receipt.get_node("Caption") as Label
-	_expect(receipt.visible and "渠伯代收" in caption.text and "桑叶 +4" in caption.text and "国库" not in caption.text
-		and "铜钱 +%d" % tax_payment in caption.text and "已扣税 %d" % (mulberry.sell_price - tax_payment) in caption.text,
+	_expect(receipt.visible and "渠伯代收" in receipt.caption.text and "桑叶 +4" in receipt.gains.label.text and not receipt.treasury.visible
+		and "铜钱 +%d" % tax_payment in receipt.gains.label.text and "已扣税 %d" % (mulberry.sell_price - tax_payment) in receipt.gains.label.text,
 		"A reformed harvest previews the actual net copper, tax, leaves and worker before dawn.")
 	await tree.create_timer(0.41).timeout
 	_expect(not receipt.visible, "The dawn clears the previous night's harvest receipt.")

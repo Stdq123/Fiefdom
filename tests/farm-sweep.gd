@@ -118,8 +118,8 @@ func _run() -> void:
 	_expect(state.king_storage == 1 and state.player_inventory == 2 and state.money == 10,
 		"One harvest sweep still sends the center crop to tribute and the others to the household.")
 	var receipt: Control = ui.hud.get_node("HarvestReceipt")
-	var receipt_text: String = receipt.get_node("Caption").text
-	_expect(receipt.visible and "收获 3 格" in receipt_text and "国库 +1" in receipt_text and "作物 +2" in receipt_text,
+	_expect(receipt.visible and "收获 3 格" in receipt.caption.text and "国库 +1" in receipt.treasury.label.text
+		and "私仓 +2" in receipt.warehouse.label.text,
 		"The harvest sweep reports the combined results in one receipt.")
 	await _motion(LEFT)
 	await _button(LEFT, false)

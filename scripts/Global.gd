@@ -1271,7 +1271,7 @@ func harvest_field_crop(cell: Vector2i, worker: RetainerData = null, preview: Fi
 	if not public_plot and (rotation > 0 or data.restores_fertility):
 		note_rotation_harvest(cell, data, crop_id, rotation > 0)
 	GameEvents.crop_harvested.emit(public_plot)
-	proceeds.merge({"crop": data.crop_name, "public": public_plot, "first_tribute": first_tribute,
+	proceeds.merge({"crop": data.crop_name, "crop_id": crop_id, "public": public_plot, "first_tribute": first_tribute,
 		"leaves": leaves, "rotated": rotation > 0, "fertile": data.restores_fertility})
 	return proceeds
 
