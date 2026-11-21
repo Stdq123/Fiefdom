@@ -507,6 +507,8 @@ Windows 候选包内的 `SHA256SUMS.txt` 覆盖程序、资源、兼容入口、
 
 ## 交货簿的本季留货和下季备货
 
+田边跟踪条分行显示下一步、货量和日期，随阅读字号放大。下季单备齐后点开对应预告，到开收日后可直接指路交货。封地与西市交货簿的正文、货签和截止日都改用浅色。构建 `fa27b38` 在 1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面各核对七张固定画面和三次实机点击。Windows ZIP 的 SHA-256 为 `4c81a6ded4acec4a156d92cad1522e9c66dae1136cd7ffeff842effb5dede4fe`。存档写入为零，测试包已清理。 [时令单核对记录](../build/polish-order-tracking-card/release-fa27b38/release-proof.txt)
+
 两季都用货签显示所需货物。已有库存要先留给本季时，下季货签列出仓内量、本季留量和下季缺额。截止日和翻页留在页首。备齐后可从封地标出西市收货牌。西市整本交货簿用一处滚动，排不下的备货入口换到下一行。换季当天新单还未交货时，可在簿上直接看上一季货车的到货时辰。
 
 从 `9332387` 独立构建两次，ZIP 的 SHA-256 均为 `e8005add56728aa4c9114779627f4dad42f5a48999e0f78f66453df030f15aa9`。无窗口检查通过。隔离桌面使用默认 1920×1080 的 Vulkan 和 Direct3D 12、1024×768 的 OpenGL，各核对 11 个界面。最大字号下可用键盘翻到下季，也可由历书打开并聚焦下季备货。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-season-ledger/release-9332387/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-season-ledger/release-9332387/release-proof.txt)
