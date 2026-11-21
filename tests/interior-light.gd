@@ -31,14 +31,23 @@ func _check_doors(hall: Node2D, silk: Node2D, actor: Node2D) -> void:
 	var silk_door: Node2D = silk.facade
 	_expect(hall._leave_room() and hall_door._opening == 1.0 and hall_door._sill_light.enabled,
 		"The hall door is open on the first exterior frame after leaving.")
+	var full_reach: float = hall_door._sill_light.texture_scale
+	var full_origin: Vector2 = hall_door._sill_light.position
 	actor.global_position = hall_door.to_global(Vector2(0, 30))
 	hall_door._process(0.18)
-	_expect(hall_door._opening == 0.0 and not hall_door._sill_light.enabled,
-		"Walking away closes the leaves and confines late light to the room.")
+	_expect(hall_door._opening == 0.0 and not hall_door._sill_light.enabled
+		and hall_door._door_art.get_shader_parameter(&"window_glow") > 0.9,
+		"Closing the leaves switches off the doorstep spill while the lattice stays lit.")
 	actor.global_position = hall_door.to_global(Vector2(0, -4))
 	hall_door._process(0.08)
 	_expect(is_equal_approx(hall_door._opening, 0.5) and hall_door._sill_light.energy > 0.20,
 		"The leaves swing over time as the player approaches the sill.")
+	var shorter: float = hall_door._sill_light.texture_scale
+	var closer: Vector2 = hall_door._sill_light.position
+	var half_height: float = hall_door._sill_light.texture.get_height() * 0.5
+	_expect(shorter < full_reach and closer.y < full_origin.y
+		and is_equal_approx(closer.y - shorter * half_height, full_origin.y - full_reach * half_height),
+		"The partially open doorway lights a shorter path starting at the same threshold.")
 	actor.global_position = hall_door.to_global(Vector2(0, 11))
 	hall_door._process(0.18)
 	_expect(hall_door._opening == 1.0, "A small move at the entrance keeps the door open.")
@@ -50,10 +59,14 @@ func _check_doors(hall: Node2D, silk: Node2D, actor: Node2D) -> void:
 	_expect(landscape._shed_step_visible() and landscape._surface_at(tread) == TERRAIN_AUDIO.Surface.STONE,
 		"The step reaches the track with stone underfoot.")
 	silk_door.set_available(false)
-	_expect(not silk_door._sill_light.enabled and not silk_door.is_processing() and not landscape._shed_step_visible(),
+	_expect(not silk_door._sill_light.enabled and not silk_door.is_processing() and not landscape._shed_step_visible()
+		and silk_door._door_art.get_shader_parameter(&"window_glow") == 0.0,
 		"A removed shed leaves no light, step or entrance animation.")
 	silk_door.set_available(true)
 	_expect(hall._enter_room(), "Restore the staged hall pose.")
+	_expect(hall_door._door_art.get_shader_parameter(&"window_glow") == 0.0
+		and silk_door._door_art.get_shader_parameter(&"window_glow") == 0.0,
+		"The room change immediately clears the exterior window light.")
 
 func _review() -> void:
 	if not ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"):

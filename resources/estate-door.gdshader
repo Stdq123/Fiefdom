@@ -5,6 +5,10 @@ uniform vec2 aperture_size;
 uniform bool has_leaves = false;
 uniform float opening : hint_range(0.0, 1.0) = 0.0;
 uniform float lamp_glow : hint_range(0.0, 1.0) = 0.0;
+uniform vec4 window_left;
+uniform vec4 window_right;
+uniform float window_rail_y = -128.0;
+uniform float window_glow : hint_range(0.0, 1.0) = 0.0;
 
 varying vec2 facade_position;
 varying vec4 facade_tint;
@@ -12,6 +16,18 @@ varying vec4 facade_tint;
 void vertex() {
 	facade_position = VERTEX;
 	facade_tint = COLOR;
+}
+
+float window_paper(vec2 pixel, vec4 bounds) {
+	vec2 pane = pixel - bounds.xy;
+	if (any(lessThan(pane, vec2(0.0))) || any(greaterThanEqual(pane, bounds.zw))) {
+		return 0.0;
+	}
+	// The wood posts lie on every third pixel in the facade atlas.
+	float mullions = 1.0 - step(2.0, mod(floor(pane.x), 3.0));
+	float rail = step(1.0, abs(floor(pixel.y) - window_rail_y));
+	float falloff = 0.72 + 0.28 * sin((pane.y / bounds.w) * PI);
+	return mullions * rail * falloff;
 }
 
 void fragment() {
@@ -44,5 +60,9 @@ void fragment() {
 		}
 		float amber = lamp_glow * floor_depth * (1.0 - smoothstep(0.12, 0.50, across));
 		COLOR.rgb += vec3(0.25, 0.15, 0.055) * amber;
+	}
+	if (window_glow > 0.0) {
+		float paper = window_paper(pixel, window_left) + window_paper(pixel, window_right);
+		COLOR.rgb += vec3(0.61, 0.34, 0.12) * facade_tint.rgb * paper * window_glow;
 	}
 }

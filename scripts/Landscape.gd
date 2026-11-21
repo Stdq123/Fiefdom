@@ -165,6 +165,9 @@ const HALL_LANDING := EstateLayout.HALL_LANDING
 # Openings measured from each facade sprite's foot.
 const HALL_DOOR := Rect2(-12, -38, 24, 27)
 const SHED_DOOR := Rect2(4, -27, 20, 21)
+const HALL_WINDOWS := [Rect2(-39, -31, 17, 9), Rect2(21, -31, 11, 9)]
+const HALL_WINDOW_RAIL := -28.0
+const SHED_WINDOW := Rect2(-20, -22, 14, 7)
 const SOUTH_PAVILION := EstateLayout.SOUTH_PAVILION
 const PAVILION_TURN := EstateLayout.PAVILION_TURN
 const SILK_SHED_FOOT := EstateLayout.SILK_SHED_FOOT
@@ -615,7 +618,7 @@ func _prepare_map() -> void:
 			attach_prop_wind(wind, sprite, placement.z)
 			_tree_shadows.track(sprite)
 		if placement.z == Prop.HALL:
-			hall_rest.paint_door(sprite, HALL_DOOR, true)
+			hall_rest.paint_door(sprite, HALL_DOOR, true, HALL_WINDOWS[0], HALL_WINDOWS[1], HALL_WINDOW_RAIL)
 			rain.add_roof(sprite, Rect2(-58, -40, 109, 43), [
 				Vector3(-53, -39, 46), Vector3(-30, -39, 45),
 				Vector3(24, -39, 46), Vector3(43, -39, 44),
@@ -643,7 +646,7 @@ func _prepare_map() -> void:
 		var workshop := _place_sprite(props_layer, SILK_SHED_FOOT,
 			_prop_bounds(Vector2.ZERO, Prop.SILK_SHED).position, _prop_texture(Prop.SILK_SHED, SILK_SHED_FOOT))
 		scenery[workshop] = Prop.SILK_SHED
-		silk_shed.paint_door(workshop, SHED_DOOR, false)
+		silk_shed.paint_door(workshop, SHED_DOOR, false, SHED_WINDOW)
 		occlusion.watch(get_parent().get_node("RainShelterFrontPosts") as Sprite2D)
 		rain.add_roof(workshop, Rect2(-35, -29, 65, 29), [
 			Vector3(-32, -28, 34), Vector3(-18, -28, 33), Vector3(26, -28, 33),
