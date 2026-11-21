@@ -9,6 +9,7 @@ signal tribute_field_requested
 signal field_management_requested(field_id: int)
 signal sleep_requested
 signal east_watch_requested
+signal active_raid_requested
 signal pavilion_story_requested
 signal tomorrow_calendar_requested
 
@@ -76,6 +77,10 @@ const PANEL_FOCUS := preload("res://scripts/PanelFocus.gd")
 @onready var last_card: PanelContainer = %LastCard
 @onready var record_summary: PanelContainer = %RecordSummary
 @onready var record_summary_text: Label = %RecordSummaryText
+@onready var record_actions: HFlowContainer = %RecordActions
+@onready var mark_raider: Button = %MarkRaider
+@onready var record_tribute: Button = %RecordTribute
+@onready var record_rations: Button = %RecordRations
 @onready var receipt: Label = %Receipt
 @onready var field_receipt: Label = %FieldReceipt
 @onready var away_field_receipt: Label = %AwayFieldReceipt
@@ -102,6 +107,7 @@ var completed_field_id := -1
 var wait_for_retainers: Callable
 var settling_field_work := false
 var field_forecast_deadline := 1.0
+var _uncovered_rations := 0
 
 func _ready() -> void:
 	add_to_group("gamepad_directional_menu")
@@ -115,6 +121,11 @@ func _ready() -> void:
 	tribute_section.icon = HUDIcons.icon(HUDIcons.Symbol.TREASURY)
 	field_section.icon = HUDIcons.icon(HUDIcons.Symbol.HOE)
 	rations_section.icon = HUDIcons.icon(HUDIcons.Symbol.RATIONS)
+	mark_raider.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
+	record_tribute.icon = tribute_section.icon
+	record_rations.icon = rations_section.icon
+	find_harvest.icon = HUDIcons.icon(HUDIcons.Symbol.GRAIN)
+	plan_field.icon = HUDIcons.icon(HUDIcons.Symbol.LEDGER)
 	tribute_section.pressed.connect(func(): _show_section(tribute_plan, _available_action([find_tribute])))
 	field_section.pressed.connect(func():
 		_show_section(field_plan, _available_action([find_plot, find_ready_plot, wait_button, wait_before_sleep]))
@@ -150,6 +161,9 @@ func _ready() -> void:
 	release_private_harvest.pressed.connect(Global.set_private_harvest_hold.bind(false))
 	find_harvest.pressed.connect(harvest_requested.emit)
 	find_tribute.pressed.connect(tribute_field_requested.emit)
+	record_tribute.pressed.connect(tribute_field_requested.emit)
+	record_rations.pressed.connect(_open_record_rations)
+	mark_raider.pressed.connect(active_raid_requested.emit)
 	find_pavilion.pressed.connect(pavilion_story_requested.emit)
 	plan_field.pressed.connect(_open_field_management)
 	find_watch.pressed.connect(func():
@@ -239,9 +253,27 @@ func _link_navigation() -> void:
 		button.focus_neighbor_right = button.get_path_to(buttons[mini(index + 1, buttons.size() - 1)])
 	var bar := scroll.get_v_scroll_bar()
 	rations_section.focus_neighbor_right = rations_section.get_path_to(bar) if bar.visible else ^"."
-	close_button.focus_neighbor_bottom = close_button.get_path_to(bar) if show_previous and bar.visible else ^""
+	var actions := _record_buttons()
+	var down: Control = null
+	if show_previous:
+		down = actions.front() if not actions.is_empty() else (bar if bar.visible else null)
+	for button: Button in [page_button, close_button]:
+		button.focus_neighbor_bottom = button.get_path_to(down) if down else ^""
+	for index in actions.size():
+		var action := actions[index]
+		action.focus_neighbor_left = action.get_path_to(actions[maxi(0, index - 1)])
+		action.focus_neighbor_right = action.get_path_to(actions[mini(index + 1, actions.size() - 1)])
+		action.focus_neighbor_top = action.get_path_to(close_button)
+		action.focus_neighbor_bottom = action.get_path_to(bar) if bar.visible else ^"."
 	var back := close_button if show_previous else rations_section
 	bar.focus_neighbor_left = bar.get_path_to(back)
+
+func _record_buttons() -> Array[Button]:
+	var buttons: Array[Button] = []
+	for button: Button in record_actions.get_children():
+		if button.visible and not button.disabled:
+			buttons.append(button)
+	return buttons
 
 func show_pavilion_story(story_id: String, appointment_id: String, place: String) -> void:
 	var ready_to_hear := not story_id.is_empty()
@@ -268,6 +300,14 @@ func _show_meals() -> void:
 	if meal_forecast.visible:
 		action = _available_action([accept_offer, find_fruit, sell_silk, priority_picker, %Market])
 	_show_section(stock, action)
+
+func _open_record_rations() -> void:
+	_show_page(false)
+	AudioManager.play_menu_cue(AudioManager.MenuCue.PAGE)
+	rations_section.grab_focus()
+	await get_tree().process_frame
+	if is_inside_tree() and not is_queued_for_deletion() and not show_previous:
+		_show_meals()
 
 func _available_action(buttons: Array[BaseButton]) -> BaseButton:
 	for button in buttons:
@@ -298,14 +338,13 @@ func _show_page(previous: bool) -> void:
 	page_art.region.position.x = page_art.region.size.x if show_previous else 0.0
 	tomorrow_calendar.visible = not show_previous
 	plan_index.visible = not show_previous
-	_refresh_record_summary()
 	plan_body.visible = not show_previous
 	footer.visible = not show_previous
-	_link_navigation()
 	record_heading.visible = not show_previous
 	_refresh_date()
 	_refresh_fields()
-	_refresh_field_management()
+	if not show_previous:
+		_refresh_record_summary()
 	scroll.set_deferred("scroll_vertical", 0)
 	_fit_body.call_deferred()
 
@@ -354,6 +393,7 @@ func _refresh() -> void:
 		Global.weather_label(tomorrow)]
 	_refresh_raid_plan()
 	var plan := Global.night_rations_plan()
+	_uncovered_rations = plan.uncovered
 	_refresh_fields(plan)
 	sheep_note.visible = Global.sheepfold.owned()
 	if sheep_note.visible:
@@ -438,7 +478,6 @@ func _refresh() -> void:
 		if not departed.is_empty():
 			receipt.text += "\n已离任 · " + "、".join(departed)
 	_refresh_field_receipt()
-	_refresh_field_management()
 	var last_silk := Global.silk_workshop.last_work_summary()
 	silk_receipt.visible = not last_silk.is_empty()
 	silk_receipt.text = "昨夜蚕棚 · " + last_silk
@@ -454,10 +493,20 @@ func _refresh() -> void:
 	%EmptyRecord.visible = not has_entries
 	page_button.visible = last_card.visible
 	_refresh_date()
-	_refresh_record_summary()
 
 func _refresh_record_summary() -> void:
+	var focus := get_viewport().gui_get_focus_owner()
+	mark_raider.visible = show_previous and Global.raid_day > 0
+	record_tribute.visible = show_previous and Global.last_dawn.get("tribute_penalty", 0) > 0 \
+		and tribute_plan.visible and find_tribute.visible
+	record_rations.visible = show_previous and _uncovered_rations > 0 \
+		and Global.night_rations.last.get("day", 0) == Global.current_day - 1 and Global.last_night_ration_shortage() > 0
+	find_harvest.visible = show_previous and find_ready_plot.visible
+	_refresh_field_management()
+	var actions := _record_buttons()
 	var lines := PackedStringArray()
+	if mark_raider.visible:
+		lines.append("今日来敌 · " + Global.raid_name(Global.raid_kind))
 	var warnings := Global.dawn_warnings()
 	if not warnings.is_empty():
 		lines.append("　".join(warnings))
@@ -467,7 +516,13 @@ func _refresh_record_summary() -> void:
 		if not ripe.is_empty():
 			lines.append("新熟 · " + ripe)
 	record_summary_text.text = "\n".join(lines)
-	record_summary.visible = show_previous and not lines.is_empty()
+	record_summary_text.visible = not lines.is_empty()
+	record_actions.visible = not actions.is_empty()
+	record_summary.visible = show_previous and (record_summary_text.visible or record_actions.visible)
+	_link_navigation()
+	if show_previous and focus and record_actions.is_ancestor_of(focus) and not focus.is_visible_in_tree():
+		close_button.grab_focus()
+		GamepadInput.snap_pointer_to_focus.call_deferred()
 
 func _refresh_night_offer(plan: Dictionary) -> void:
 	night_offer.hide()
@@ -649,8 +704,9 @@ func _refresh_fields(rations: Dictionary = {}) -> void:
 	find_plot.visible = current.dry > 0
 	find_plot.text = "找当前待浇田" if after_work else "找待浇田"
 	find_ready_plot.visible = current.ready > 0
-	find_harvest.visible = show_previous and current.ready > 0
 	_refresh_field_wait(preview)
+	if show_previous:
+		_refresh_record_summary()
 
 func _process(_delta: float) -> void:
 	if Global.day_progress > field_forecast_deadline:

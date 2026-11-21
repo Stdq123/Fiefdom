@@ -853,9 +853,14 @@ func _on_manage_pressed() -> void:
 
 func _on_raid_alert_pressed() -> void:
 	if Global.raid_day > 0:
-		directions.follow_raid()
+		_mark_active_raid()
 	else:
 		_show_night_rations()
+
+func _mark_active_raid() -> void:
+	directions.follow_raid()
+	if Global.is_indoors():
+		hud.practice_label.text = "已标出来敌 · 从南门回封地"
 
 func _on_defense_report_pressed() -> void:
 	if _estate_controls_blocked() or not Global.defense_review_ready():
@@ -896,6 +901,11 @@ func _show_night_rations(show_previous := false, focus_shortage := false) -> voi
 	panel.dry_plot_requested.connect(_on_night_plot_requested.bind(panel, Global.NightGrowth.DRY))
 	panel.harvest_requested.connect(_on_night_plot_requested.bind(panel, Global.NightGrowth.READY))
 	panel.tribute_field_requested.connect(_on_tribute_field_requested.bind(panel))
+	panel.active_raid_requested.connect(func():
+		if Global.raid_day > 0 and not panel.is_queued_for_deletion():
+			panel.queue_free()
+			_mark_active_raid()
+	)
 	panel.pavilion_story_requested.connect(_guide_pavilion_story.bind(panel))
 	panel.east_watch_requested.connect(_guide_east_watch)
 	panel.tomorrow_calendar_requested.connect(func():

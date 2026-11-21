@@ -169,13 +169,71 @@ layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"HudRail"
 
-[node name="RecordSummaryText" type="Label" parent="Center/Window/Content/RecordSummary"]
+[node name="Overview" type="VBoxContainer" parent="Center/Window/Content/RecordSummary"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 7
+
+[node name="RecordSummaryText" type="Label" parent="Center/Window/Content/RecordSummary/Overview"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 theme_type_variation = &"HudBronzeInk"
 theme_override_font_sizes/font_size = 16
 autowrap_mode = 3
+
+[node name="RecordActions" type="HFlowContainer" parent="Center/Window/Content/RecordSummary/Overview"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 7
+theme_override_constants/v_separation = 5
+
+[node name="MarkRaider" type="Button" parent="Center/Window/Content/RecordSummary/Overview/RecordActions"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_type_variation = &"HudNight"
+mouse_default_cursor_shape = 2
+text = "标出来敌"
+
+[node name="RecordTribute" type="Button" parent="Center/Window/Content/RecordSummary/Overview/RecordActions"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_type_variation = &"HudButton"
+mouse_default_cursor_shape = 2
+text = "标出公田"
+
+[node name="RecordRations" type="Button" parent="Center/Window/Content/RecordSummary/Overview/RecordActions"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_type_variation = &"HudButton"
+mouse_default_cursor_shape = 2
+text = "查今晚分餐"
+
+[node name="FindHarvest" type="Button" parent="Center/Window/Content/RecordSummary/Overview/RecordActions"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_type_variation = &"HudButton"
+mouse_default_cursor_shape = 2
+text = "找可收田"
+
+[node name="PlanField" type="Button" parent="Center/Window/Content/RecordSummary/Overview/RecordActions"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_type_variation = &"HudButton"
+mouse_default_cursor_shape = 2
+tooltip_text = "查看完工井田的管事、续播和全员用粮。"
 
 [node name="Scroll" type="ScrollContainer" parent="Center/Window/Content"]
 unique_name_in_owner = true
@@ -791,28 +849,6 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(0.23, 0.26, 0.18, 1)
 autowrap_mode = 3
-
-[node name="RecordActions" type="HFlowContainer" parent="Center/Window/Content/Scroll/Body/LastCard/Results"]
-layout_mode = 2
-theme_override_constants/h_separation = 8
-
-[node name="FindHarvest" type="Button" parent="Center/Window/Content/Scroll/Body/LastCard/Results/RecordActions"]
-unique_name_in_owner = true
-visible = false
-custom_minimum_size = Vector2(138, 38)
-layout_mode = 2
-size_flags_horizontal = 0
-mouse_default_cursor_shape = 2
-text = "找可收田"
-
-[node name="PlanField" type="Button" parent="Center/Window/Content/Scroll/Body/LastCard/Results/RecordActions"]
-unique_name_in_owner = true
-visible = false
-custom_minimum_size = Vector2(138, 38)
-layout_mode = 2
-size_flags_horizontal = 0
-mouse_default_cursor_shape = 2
-tooltip_text = "查看完工井田的管事、续播和全员用粮。"
 
 [node name="Footer" type="HBoxContainer" parent="Center/Window/Content"]
 unique_name_in_owner = true

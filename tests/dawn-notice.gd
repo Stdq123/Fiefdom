@@ -401,6 +401,8 @@ func _review(scenario: SceneTree) -> void:
 	await _review_save_notice(ui, state, actor)
 	await _review_combined_record(ui, state, actor)
 	await _review_hall(state, prefs)
+	var record_review = load("res://tests/MorningRecordReview.gd").new()
+	_expect(await record_review.run(tree, capture_directory), "The morning actions follow current conditions from the record page.")
 	_expect(tree.paused and state.saved_games().is_empty() and state.day_progress == 0.0,
 		"Presentation checks keep the world paused and write no game saves.")
 	if not failed:
