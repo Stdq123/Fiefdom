@@ -17,6 +17,10 @@
 
 用竹涧木桥到望溪台的画面核对固定斜俯视。封地和市集沿用同一光向，让路肩、台阶和摆放的器物都能看出高低与落脚位置。井田继续以九格边界指示下手处，舆图以路线清楚为准，背包里的物品以小尺寸能辨认为准。 [竹涧实机样板](../build/polish-ravine-waterfall/release/verified/native-full/frames/01d-bridge-to-lookout.png)
 
+## 标题实景的泉水与门灯
+
+泉眼水纹在清晨与薄暮之间连续流动，薄暮的两盏门灯各自轻微明暗起伏。构建 `d923bad` 在 1920×1080 Vulkan 与 1024×768 OpenGL 的隔离桌面核对了两处动效和菜单焦点。两种窗口在同曝光下的变化集中于泉眼和门灯附近，42 秒循环首尾画面逐像素一致。Windows ZIP 的 SHA-256 为 `dfec559221b1442e03055384760cfc77a87377218e8c8e70e8706fa6895fd682`。测试包已清理。 [标题场景核对记录](../build/polish-title-scenery/release-d923bad/release-proof.txt)
+
 ## 游戏内鼠标指针
 
 普通指针改为铜镶玉箭头，可用按钮显示带青玉色袖口的手形，文字框使用铜边工字形。门客拖放用青玉勾和朱色叉标出能否落位。构建 `2164483` 在 1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面核对了五种图形、箭尖落点、田务图标和窗口边界。Windows ZIP 的 SHA-256 为 `71d156f4dd7f4209110b13a5e282285598b3b8df1c4a6eb9532bdb58bb433e5b`。测试包已清理。 [指针核对记录](../build/polish-jade-cursor/release-2164483/release-proof.txt)
