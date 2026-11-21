@@ -233,6 +233,8 @@ func _review(scenario: SceneTree) -> void:
 	await _review_estate_cards(ui, state)
 	_expect(tree.paused and snapshot == _estate_snapshot(state, actor) and state.saved_games().is_empty(),
 		"The frozen reading samples keep the estate state and leave no save.")
+	var pavilion_review = load("res://tests/PavilionConversationReview.gd").new()
+	_expect(await pavilion_review.run(tree, capture_directory), "The pavilion reading samples follow the speakers.")
 	if not failed:
 		print("DIALOGUE_READER_VIEWS_OK paused=true saves=0 window=", screen.size)
 		print("SCENARIO_OK")

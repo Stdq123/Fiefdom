@@ -1399,10 +1399,7 @@ func _path_to_pavilion(visitor: Visitor) -> PackedVector2Array:
 	return path
 
 func _pavilion_has_neighbor(speaker: String) -> bool:
-	var person := neighbor_actor(speaker)
-	if person is Retainer:
-		return person.resting_at_pavilion()
-	return person is Visitor and person.resting_at_pavilion()
+	return pavilion_rest.seated_neighbor(speaker) != null
 
 func _pavilion_expects_neighbor(speaker: String) -> bool:
 	var person := neighbor_actor(speaker)

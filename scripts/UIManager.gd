@@ -433,7 +433,7 @@ func _on_pavilion_table_requested() -> void:
 	if directions.tracked_place in [table.gathering_name(), PavilionRest.STORY_LABEL, PavilionRest.WAIT_LABEL]:
 		directions.clear_tracking()
 	if not table.story_id.is_empty():
-		dialog_manager.show_pavilion_story(table.story_id, table.gathering_name(), _show_night_rations)
+		dialog_manager.show_pavilion_story(table, _show_night_rations)
 	elif not table.appointment_id.is_empty():
 		dialog_manager.show_pavilion_appointment(table.appointment_id, table.gathering_name(),
 			_wait_at_pavilion.bind(table.appointment_id), _show_night_rations)

@@ -36,6 +36,11 @@ var last_heading := Vector2.LEFT
 var observer: Player
 var evening_seat := Vector2.INF
 var evening_path: Array[Vector2] = []
+var pavilion_partner: Node2D:
+	set(value):
+		pavilion_partner = value
+		if is_node_ready() and resting_at_pavilion():
+			_stand_at_stop()
 
 var _stance := Vector2.INF
 var _stance_start := Vector2.ZERO
@@ -91,12 +96,15 @@ func _physics_process(delta: float) -> void:
 		_stand_at_stop()
 
 func _stand_at_stop() -> void:
-	if current_state != State.WORK and not tool_gesture.visible and is_instance_valid(observer):
+	var on_mat := resting_at_pavilion()
+	if on_mat and is_instance_valid(pavilion_partner):
+		sprite.face(pavilion_partner.global_position - global_position)
+	elif current_state != State.WORK and not tool_gesture.visible and is_instance_valid(observer):
 		sprite.face(observer.global_position - global_position)
-	elif resting_at_pavilion():
+	elif on_mat:
 		var pavilion: PavilionRest = get_parent().pavilion_rest
 		sprite.face(pavilion.gathering_center() - position)
-	if resting_at_pavilion():
+	if on_mat:
 		art.position = Vector2.ZERO
 		sprite.sit(tool_gesture.sleeve)
 	else:

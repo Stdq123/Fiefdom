@@ -17,19 +17,23 @@ const GUEST_SEAT := Vector2(8, 20)
 const RAIN_GUEST_SEAT := Vector2(8, 13)
 const APPROACH := Vector2(0, 15)
 const TABLE_FRONT_EDGE := Vector2(0, 4)
+const SPEECH_OFFSET := Vector2(0, -43)
 
 @onready var hint: Label = $Hint
 @onready var mats: Node2D = $Mats
 @onready var tabletop: Node2D = $Tabletop
 @onready var dry_lamps: Node2D = $DryLamps
 @onready var rain_lamps: Node2D = $RainLamps
+@onready var speech_cue: Node2D = $SpeechCue
 var focused := false
 var story_id := ""
 var appointment_id := ""
+var _story_participants: Array[Node2D] = []
 
 func _ready() -> void:
 	mats.draw.connect(_draw_mats)
 	tabletop.draw.connect(_draw_tabletop)
+	speech_cue.draw.connect(_draw_speech_cue)
 	var lighting = $"../Landscape".day_lighting
 	lighting.place_lamp(dry_lamps, Vector2(29, -11), 0.68, 0.09)
 	lighting.place_lamp(rain_lamps, Vector2(-39, 11), 0.66, 0.07)
@@ -53,6 +57,8 @@ func _refresh() -> void:
 	refresh_table()
 	dry_lamps.visible = not shelter
 	rain_lamps.visible = shelter
+	if not is_evening_open():
+		clear_story_turn()
 
 func refresh_table() -> void:
 	var next_story: String = get_parent().pavilion_story_id()
@@ -101,6 +107,45 @@ func seat_for(data: RetainerData) -> Vector2:
 
 func guest_seat() -> Vector2:
 	return gathering_center() + (RAIN_GUEST_SEAT if is_rain_shelter() else GUEST_SEAT)
+
+func seated_neighbor(speaker: String) -> Node2D:
+	var actor: Node2D = get_parent().neighbor_actor(speaker)
+	if (actor is Retainer or actor is Visitor) and not actor.is_queued_for_deletion() and actor.resting_at_pavilion():
+		return actor
+	return null
+
+func show_story_turn(speaker_name: String, listener_name: String) -> void:
+	var speaker := seated_neighbor(speaker_name)
+	var listener := seated_neighbor(listener_name)
+	if not speaker or not listener:
+		clear_story_turn()
+		return
+	if speaker not in _story_participants or listener not in _story_participants:
+		clear_story_turn()
+		_story_participants.assign([speaker, listener])
+		speaker.pavilion_partner = listener
+		listener.pavilion_partner = speaker
+	speech_cue.global_position = speaker.global_position + SPEECH_OFFSET
+	speech_cue.show()
+
+func clear_story_turn() -> void:
+	for actor: Node2D in _story_participants:
+		if is_instance_valid(actor) and actor.is_inside_tree():
+			actor.pavilion_partner = null
+	_story_participants.clear()
+	speech_cue.hide()
+
+func _draw_speech_cue() -> void:
+	var outline := PackedVector2Array([
+		Vector2(-8, -3), Vector2(-6, -5), Vector2(6, -5), Vector2(8, -3),
+		Vector2(8, 3), Vector2(6, 5), Vector2(2, 5), Vector2(-2, 8),
+		Vector2(-2, 5), Vector2(-6, 5), Vector2(-8, 3),
+	])
+	speech_cue.draw_colored_polygon(outline, Color("#f3dfab"))
+	outline.append(outline[0])
+	speech_cue.draw_polyline(outline, Color("#332a20"), 1.0, true)
+	for x in [-4.0, 0.0, 4.0]:
+		speech_cue.draw_circle(Vector2(x, 0), 0.9, Color("#3c5948"), true, -1.0, true)
 
 func can_interact_from(foot: Vector2) -> bool:
 	return is_visible_in_tree() and global_position.distance_to(foot) < 13.0

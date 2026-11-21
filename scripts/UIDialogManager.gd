@@ -46,6 +46,7 @@ var parent_node: Control
 var player: Player
 var _active_dialog: Control
 var _focus_before_dialog: Control
+var _pavilion_line: Control
 
 func setup(host: Control, estate_player: Player) -> void:
 	parent_node = host
@@ -68,16 +69,17 @@ func show_bedtime_warning(context: String, message: String, alternatives: Dictio
 			dialog.tree_exited.connect(alternatives[options[index]], CONNECT_DEFERRED | CONNECT_ONE_SHOT)
 	)
 
-func show_pavilion_story(id: String, place: String, open_rations: Callable) -> void:
+func show_pavilion_story(table: PavilionRest, open_rations: Callable) -> void:
 	if parent_node.has_node("DialoguePanel"):
 		return
+	var id := table.story_id
 	var story: Dictionary = PavilionStories.STORIES[id]
-	var dialog := _open("南路亭", place, "席上正说起「%s」。" % story.title,
+	var dialog := _open("南路亭", table.gathering_name(), "席上正说起「%s」。" % story.title,
 		["坐下听一会", "今夜安排", "离开"], [], null)
 	dialog.choices[0].grab_focus()
 	dialog.option_selected.connect(func(index: int):
 		if index == 0:
-			dialog.tree_exited.connect(_pavilion_story_line.bind(id, place, Global.current_day, 0), CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+			_pavilion_story_line(table, id, Global.current_day, 0)
 		elif index == 1:
 			dialog.tree_exited.connect(open_rations, CONNECT_DEFERRED | CONNECT_ONE_SHOT)
 	)
@@ -95,18 +97,35 @@ func show_pavilion_appointment(id: String, place: String, wait: Callable, open_r
 			dialog.tree_exited.connect(wait if index == 0 else open_rations, CONNECT_DEFERRED | CONNECT_ONE_SHOT)
 	)
 
-func _pavilion_story_line(id: String, place: String, day: int, index: int) -> void:
-	if day != Global.current_day or parent_node.has_node("DialoguePanel"):
+func _pavilion_story_line(table: PavilionRest, id: String, day: int, index: int) -> void:
+	if day != Global.current_day or not is_instance_valid(table) or not table.is_evening_open():
 		return
 	var story: Dictionary = PavilionStories.STORIES[id]
 	var last: bool = index == story.lines.size() - 1
-	var speaker: String = story.speakers[index % story.speakers.size()]
-	var dialog := _open(speaker, place, story.lines[index], ["听完起身" if last else "接着听"], [], null)
+	var turn := index % 2
+	var speaker: String = story.speakers[turn]
+	var listener: String = story.speakers[1 - turn]
+	var dialog := _open(speaker, table.gathering_name(), story.lines[index], ["听完起身" if last else "接着听"], [], null)
+	_pavilion_line = dialog
+	if index == 0:
+		player.arrive_at_position(table.global_position, table.mats.global_position - table.global_position)
+		player.set_seat_pose(SeatedPose.Surface.MAT)
+	table.show_story_turn(speaker, listener)
+	dialog.tree_exiting.connect(func():
+		# An earlier line can exit after its replacement has taken over the same seats.
+		if _pavilion_line != dialog:
+			return
+		_pavilion_line = null
+		if is_instance_valid(table) and table.is_inside_tree():
+			table.clear_story_turn()
+		if is_instance_valid(player) and player.is_inside_tree():
+			player.set_seat_pose(SeatedPose.Surface.STANDING)
+	)
 	dialog.option_selected.connect(func(_choice: int):
 		if last:
 			Global.hear_pavilion_story(id, day)
 		else:
-			dialog.tree_exited.connect(_pavilion_story_line.bind(id, place, day, index + 1), CONNECT_DEFERRED | CONNECT_ONE_SHOT)
+			_pavilion_story_line(table, id, day, index + 1)
 	)
 
 func show_first_tribute_ledger(follow_field: Callable) -> void:

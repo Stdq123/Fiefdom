@@ -16,6 +16,11 @@ var next_stop := 0
 var activity_focus := Vector2.ZERO
 var task_time := 0.0
 var walking_on_clock := false
+var pavilion_partner: Node2D:
+	set(value):
+		pavilion_partner = value
+		if is_node_ready() and resting_at_pavilion():
+			_face_stop()
 var _rest_cloth := Color.WHITE
 
 var walking_to_stop: bool:
@@ -172,7 +177,10 @@ func _walk_to_stop(delta: float) -> void:
 	sprite.walk(get_position_delta())
 
 func _face_stop() -> void:
-	if is_instance_valid(observer):
+	var on_mat := resting_at_pavilion() and Global.raid_day == 0
+	if on_mat and is_instance_valid(pavilion_partner):
+		sprite.face(pavilion_partner.global_position - global_position)
+	elif is_instance_valid(observer):
 		var toward := observer.global_position - global_position
 		if toward.length_squared() > 4.0:
 			sprite.face(toward)
@@ -180,7 +188,7 @@ func _face_stop() -> void:
 		sprite.face(activity_focus - position)
 	else:
 		sprite.face(Vector2.DOWN)
-	if resting_at_pavilion() and Global.raid_day == 0:
+	if on_mat:
 		sprite.sit(_rest_cloth)
 
 func interact() -> void:

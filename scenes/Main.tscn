@@ -576,6 +576,10 @@ z_index = -1
 
 [node name="RainLamps" type="Node2D" parent="World/PavilionRest"]
 
+[node name="SpeechCue" type="Node2D" parent="World/PavilionRest"]
+visible = false
+z_index = 7
+
 [node name="Hint" type="Label" parent="World/PavilionRest" groups=["interaction_prompt"]]
 visible = false
 z_index = 6
