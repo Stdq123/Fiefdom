@@ -64,6 +64,8 @@ func _review() -> void:
 	await _settle()
 	_expect(ledger.is_visible_in_tree() and ledger.scroll.scroll_vertical == 0,
 		"A current order without field work opens its own ledger.")
+	_expect(ledger.deadline.get_theme_color(&"font_color").get_luminance() > 0.7,
+		"The deadline remains readable with more than two days left.")
 	ui.panel_manager.hide_management_panel()
 	paused = true
 	_expect(missing == _state(state) and state.saved_games().is_empty(), "The stationary review creates no save and changes no goods.")
