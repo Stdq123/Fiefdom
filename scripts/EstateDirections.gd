@@ -415,7 +415,6 @@ func update_marker(blocked: bool) -> void:
 		road_guide.hide()
 		hide()
 		return
-	caption.hide()
 	if tracked_place == Global.FREIGHT_YARD and int(freight_receipt.get("dispatch_day", 0)) < Global.current_day:
 		clear_tracking()
 		hide()
@@ -565,9 +564,9 @@ func _mark_plot(cell: Vector2i, title: String, tool := -1) -> void:
 	var hover := tiles.get_node("FieldCursor") as Node2D
 	_mark_map(plot, title, Mark.PLOT, hover.position == center and hover.caption.is_visible_in_tree(), tool)
 
-func _plot_plaque_position(plot: Rect2, size: Vector2) -> Vector2:
+func _plot_plaque_position(plot: Rect2, size: Vector2, area: Rect2, hud_obstacles: Array[Rect2]) -> Vector2:
 	var clearance := plot.grow(plot.size.y + 6.0)
-	var occupied: Array[Rect2] = hud.map_obstacles()
+	var occupied := hud_obstacles.duplicate()
 	occupied.append(clearance)
 	var hover: Control = world.tile_map.get_node("FieldCursor").caption
 	var prompt: Control = world.player.interaction_prompt
@@ -587,10 +586,10 @@ func _plot_plaque_position(plot: Rect2, size: Vector2) -> Vector2:
 	var nearby := clearance.grow(size.x)
 	for sprite in scenery:
 		if sprite.is_visible_in_tree():
-			var area := (sprite.get_global_transform_with_canvas() * sprite.get_rect()).grow(2.0)
-			if nearby.intersects(area):
-				occupied.append(area)
-	return HintPlacement.around(plot.get_center(), clearance, size, get_viewport_rect().grow(-8.0), occupied, true)
+			var sprite_bounds := (sprite.get_global_transform_with_canvas() * sprite.get_rect()).grow(2.0)
+			if nearby.intersects(sprite_bounds):
+				occupied.append(sprite_bounds)
+	return HintPlacement.around(plot.get_center(), clearance, size, area, occupied, true)
 
 func _mark_worksite(cell: Vector2i) -> void:
 	var tiles: TileMapLayer = world.tile_map
@@ -600,53 +599,74 @@ func _mark_worksite(cell: Vector2i) -> void:
 	_mark_map(footprint, "井田 %d 工地" % (tracked_site + 1), Mark.WORKSITE, false)
 
 func _mark_button(button: Button) -> void:
+	var box := button.get_global_rect().grow(2.0)
+	if not visible or mark != Mark.BUTTON or outline != box or caption.visible:
+		queue_redraw()
+	caption.hide()
 	mark = Mark.BUTTON
 	tool_badge = -1
-	outline = button.get_global_rect().grow(2.0)
+	outline = box
 	show()
-	queue_redraw()
+
+static func _marker_space_clear(box: Rect2, area: Rect2, occupied: Array[Rect2]) -> bool:
+	return area.encloses(box) and HintPlacement.is_clear(box, occupied)
 
 func _mark_map(bounds: Rect2, label_text: String, style: Mark, near: bool, tool := -1) -> void:
+	var was_visible := visible
+	var had_caption := caption.visible
+	var previous_mark := mark
+	var previous_outline := outline
+	var previous_plaque := plaque
+	var previous_direction := edge_direction
+	var previous_tool := tool_badge
+	var show_caption := false
+	var view := get_viewport_rect()
+	var area := view.grow(-8.0)
+	var occupied: Array[Rect2] = hud.map_obstacles()
 	caption.text = label_text
 	var text_size := caption.get_combined_minimum_size()
 	caption.size = text_size
 	tool_badge = tool
 	var tool_space := text_size.y + TOOL_GAP if tool >= 0 else 0.0
 	var content := text_size + Vector2(tool_space, 0)
-	if hud.map_space_clear(bounds):
+	if _marker_space_clear(bounds, area, occupied):
 		mark = style
 		outline = bounds.grow(1.0) if style in [Mark.PLOT, Mark.WORKSITE] else bounds
 		if not near:
 			var badge_size := content + Vector2(18, 10)
-			var at := Vector2(bounds.get_center().x - badge_size.x / 2.0, bounds.end.y + 7.0)
+			var badge := Rect2(Vector2(bounds.get_center().x - badge_size.x / 2.0, bounds.end.y + 7.0), badge_size)
 			if style == Mark.PLOT:
-				at = _plot_plaque_position(bounds, badge_size)
-			elif style == Mark.EXIT or (style == Mark.PLACE and not hud.map_space_clear(Rect2(at, badge_size))):
-				at.y = bounds.position.y - badge_size.y - 7.0
-			if at != Vector2.INF and hud.map_space_clear(Rect2(at, badge_size)):
-				plaque = Rect2(at, badge_size)
-				caption.position = at + Vector2(9 + tool_space, 5)
-				caption.show()
+				badge.position = _plot_plaque_position(bounds, badge_size, area, occupied)
+			elif style == Mark.EXIT or (style == Mark.PLACE and not _marker_space_clear(badge, area, occupied)):
+				badge.position.y = bounds.position.y - badge_size.y - 7.0
+			if badge.position != Vector2.INF and _marker_space_clear(badge, area, occupied):
+				plaque = badge
+				caption.position = badge.position + Vector2(9 + tool_space, 5)
+				show_caption = true
 	else:
 		mark = Mark.EDGE
 		var badge_size := content + Vector2(35, 10)
-		var safe := get_viewport_rect().grow(-17.0)
+		var safe := view.grow(-17.0)
 		edge_direction = safe.get_center().direction_to(bounds.get_center())
 		var half := ((safe.size - badge_size) * 0.5).max(Vector2.ONE)
 		var distance := minf(half.x / maxf(0.001, absf(edge_direction.x)),
 			half.y / maxf(0.001, absf(edge_direction.y)))
 		while true:
 			plaque = Rect2((safe.get_center() + edge_direction * distance - badge_size / 2.0).round(), badge_size)
-			if hud.map_space_clear(plaque):
+			if _marker_space_clear(plaque, area, occupied):
 				break
 			if distance <= 0.0:
+				caption.hide()
 				hide()
 				return
 			distance = maxf(0.0, distance - 8.0)
 		caption.position = plaque.position + Vector2(25 + tool_space, 5)
-		caption.show()
+		show_caption = true
+	caption.visible = show_caption
 	show()
-	queue_redraw()
+	if (not was_visible or show_caption != had_caption or mark != previous_mark or outline != previous_outline
+			or plaque != previous_plaque or edge_direction != previous_direction or tool_badge != previous_tool):
+		queue_redraw()
 
 func _draw() -> void:
 	if caption and caption.visible:

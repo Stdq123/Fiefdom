@@ -114,6 +114,14 @@ func _check_opening_hud(ui: Node, state: Node, preferences: Node) -> void:
 	var hoe: int = cursor.tool_for_action(world.FieldAction.TILL)
 	_expect(directions.caption.is_visible_in_tree() and directions.caption.text == "公田 · 翻地"
 		and directions.tool_badge == hoe, "The public plot names its first action and tool before the player points at it.")
+	var visibility_changes: Array[bool] = []
+	var record_visibility := func(): visibility_changes.append(directions.caption.visible)
+	directions.caption.visibility_changed.connect(record_visibility)
+	for frame in 4:
+		directions.update_marker(false)
+	directions.caption.visibility_changed.disconnect(record_visibility)
+	_expect(visibility_changes.is_empty() and directions.caption.is_visible_in_tree(),
+		"An unchanged public plot note stays visible through repeated marker updates.")
 	cursor.position = fields.map_to_local(tile)
 	cursor.show()
 	cursor.caption.hide()
