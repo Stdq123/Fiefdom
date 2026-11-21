@@ -495,6 +495,10 @@ Windows 候选包内的 `SHA256SUMS.txt` 覆盖程序、资源、兼容入口、
 
 从 `09fe378` 独立构建两次，ZIP 的 SHA-256 均为 `ed313bc98671ede172a70cf109c68bb711e9a2fca46edd4f64dcf5b1d62d3e72`。无窗口检查通过。默认 1920×1080 的 Vulkan 和 Direct3D 12、1024×768 的 OpenGL 各在隔离桌面核对 12 个界面，包含最大字号、键盘进出、费用变化、泉眼指路、各阶晋升和欠贡预警。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-technology-reading/release-09fe378/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-technology-reading/release-09fe378/release-proof.txt)
 
+## 手记和溪鱼簿的深底正文
+
+邻里手记的去处、邀约、往事和空页指引改用浅色正文。溪行手记的指路栏、按钮和滚动条接入同一套封地样式，溪鱼簿的天气与开钓条件也用浅色正文。构建 `6c9ea16` 两次导出的 Windows ZIP 均为 `93da28d043ef72ca33745073ce54e0c9f3ab22f43293554115b646f44d6f70af`。四项无窗口检查和原样解包启动通过。1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面各复核九个固定界面，涵盖标准及最大字号。两轮测试包已清理。 [簿册核对记录](../build/polish-journal-reading/release-6c9ea16/release-proof.txt)
+
 ## 溪鱼簿的今日钓点和留鱼提示
 
 柳湾、砾滩和南池钓台各有鱼情。竹涧按是否学过垂钓显示，南池按夏单是否到货开放。体力不足或当日起过鱼时，仍可看鱼情和竹笼的收取预报。在普通留粮和出售旁，鱼签提示哪些单据会缺鱼。西市柜台的正文铺满可读宽度，鱼签、报价和留鱼单随阅读字号放大。
