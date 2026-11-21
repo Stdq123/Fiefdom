@@ -107,6 +107,9 @@ func _check_ready_route(state: Node, traditional: bool) -> void:
 		await _tab()
 		reached = reached or follow.has_focus()
 	_expect(reached, "The footer action is reachable with Tab at the largest reading size.")
+	for row in book.rows.get_children():
+		_expect(row.get_node("%GoalCount").get_line_count() == 1,
+			"Each achieved amount and its status fit on one line at the largest reading size.")
 	follow.pressed.emit()
 	_expect(not paused and not book.modal.visible and ui.directions.tracked_place == record.record_name
 		and ui.directions.tracked_place_point == world.to_local(record.global_position),
