@@ -121,6 +121,10 @@
 
 从 `3f65cfa` 独立构建两次，ZIP 的 SHA-256 均为 `eb7df754cb455e42e09ca80bfa7917c730647d93ae057afa7151091980dba56b`。十一项无窗口检查与原样解包启动通过。1920×1080 Vulkan、1920×1080 Direct3D 12 和 1024×768 OpenGL 在隔离桌面各做了 31 组同机位对照和两组夜间门光取样。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-doorlight/release-3f65cfa/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-doorlight/release-3f65cfa/release-proof.txt)
 
+## 堂屋和蚕棚的夜窗与门阶
+
+入暮时窗纸逐渐透出暖光，亮面沿原有木格分开。堂屋关门后仍可借窗光辨认屋身，打开后暖光从门槛沿踏面铺开。构建 `b372eaa` 在 1920×1080 Vulkan 与 1024×768 OpenGL 的隔离桌面核对了两处窗格和台阶。两种窗口测得堂屋半开光及门槛外 23 个场景像素，全开达 31 个，蚕棚敞口达 30 个。四项无窗口检查通过，测试包已清理。Windows ZIP 的 SHA-256 为 `79084fcbcd92c07c1823d88b51b9a5f74df399c3b405bd225fbea75dac5fb69e`。 [夜窗和门阶核对记录](../build/polish-doorway-glow/release-b372eaa/release-proof.txt)
+
 ## 西坡羊棚的步态与吃草
 
 羊走过草场时交替迈步，落下的蹄子贴住地面。到草丛或食槽旁，羊低下头颈，后蹄留在原处。长毛和短毛都使用这套步态，剪下的羊毛从肩背落地。
