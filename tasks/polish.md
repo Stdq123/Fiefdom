@@ -67,6 +67,12 @@
 
 构建提交 `1f860ef`，ZIP 的 SHA-256 为 `8e0a90d88fe4a1deb6ac024816141392079c7c978d9d35af941ae54825e9dd4f`。隔离桌面在 1920×1080 Vulkan 和 1024×768 OpenGL 下各核对九张最大字号弹窗、公田默认焦点和两个无需提醒的状态。三个无窗口界面检查通过，存档写入为零，测试包已清理。 [核对记录](../build/polish-tribute-risk/release-1f860ef/release-proof.txt)
 
+## 研究费到期时的过夜提醒
+
+延期研究进入缴费夜时，「今夜安排」将预留额或备粮后的缺额固定在页首。缺款时点「睡觉」或「过夜」会先说明还差多少，以及明早召简将要求定案。可回看当晚预报或打开市场备款。若同时有人预计缺餐离任，同一张提醒列出两件事。
+
+构建 `a719d55` 在 1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面各核对六个最大字号画面。应缴 100 铜钱、手头 93、备粮支出 5 的固定场景始终显示缺 12。经费正好够时显示预留。五项无窗口界面检查通过，日期与存档未动，测试包已清理。Windows ZIP 的 SHA-256 为 `ab1714378384d04ebadf18acc601f34e8586c5f4e7864e16e472dd2642d90992`。 [核对记录](../build/polish-research-bedtime/release-a719d55/release-proof.txt)
+
 ## Windows 首次启动与兼容入口
 
 从 `7776144` 的 Git 归档和干净工作区各自导出，两个 ZIP 的 SHA-256 同为 `72ad7d05edccb00aabe524a389f1b88a87b1202ffec05e8f4feb4c1538111091`。导出副本统一了场景、资源、脚本和随包文本的换行，四个资源沿用之前归档版的 UID。两种标题入口再次通过核对，测试包已清理。 [重复构建记录](../build/polish-windows-first-launch/release-7776144/release-proof.txt)
