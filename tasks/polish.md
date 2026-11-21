@@ -353,6 +353,8 @@ Windows 发行包在加载牌显示期间逐个后台读取封地的两份较重
 
 ## 选档页的阅读字号与手柄导航
 
+选档页的普通记录按保存位置显示封地、堂屋、蚕棚、溪桥道、西市和竹涧的实景小图。结局记录用各自的贡簿或税册，旧版堂屋记录也能对上房间。构建 `1472301` 在 1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面核对了六处地点、两种结局和最大阅读字号。Windows ZIP 的 SHA-256 为 `8806c860f7014991e6b3c30f5008d0914a377dc01676e821571daf448f08298a`。测试包已清理。 [选档地点核对记录](../build/polish-save-location/release-1472301/release-proof.txt)
+
 标题的最近存档摘要和选档页跟随阅读字号。长封地名、备份来源、结局路线和地点换行显示，记录滚动时返回按钮和反馈留在页脚。手柄十字键可在两栏移动，关闭后回到原入口。读档失败时会禁用受损记录，并把焦点移到返回按钮。
 
 从 `8fefb8c` 独立构建两次，ZIP 的 SHA-256 均为 `46b151fc3c25d23b745141c009350a81c4ffcf8ee2ef47087d08ed5e6ed31cc4`。六项无窗口检查通过。隔离桌面在 1920×1080 Vulkan、1920×1080 Direct3D 12、1024×768 OpenGL 各核对 16 与 22 号字、长备份记录、模拟手柄导航和读档失败后的返回。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-archive-reading/release-8fefb8c/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-archive-reading/release-8fefb8c/release-proof.txt)
