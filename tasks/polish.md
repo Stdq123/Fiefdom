@@ -593,6 +593,8 @@ Windows 候选包内的 `SHA256SUMS.txt` 覆盖程序、资源、兼容入口、
 
 ## 议税筹备账与三案对照的阅读布局
 
+召简候议时，封地手记可从当前指路切到堂前。夜间入口显示「去见召简」，今夜安排把「议税后可过夜」写在按钮旁。研究费未缴和研究期满各有手记提示。构建 `53609b8` 的 Windows ZIP SHA-256 为 `681d680156b2824ee4a51fe3e157901216bab1fa6f32f0e9e382ba9956022ad2`。四项无窗口检查和原样解包启动通过。1920×1080 Vulkan 与 1024×768 OpenGL 的隔离桌面各核对八个最大字号画面，包含床榻入口和堂屋南门的出门说明。两轮测试包已清理。 [召简指路核对记录](../build/polish-envoy-guidance/release-53609b8/release-proof.txt)
+
 筹备账和定案面板的正文随阅读字号调整。定案面板优先列出两条路线的结局门槛和暂缓的经费，三案正文一起滚动，方案名、离席和定案按钮留在画面内。正反向 Tab 在当前面板内循环。
 
 从 `aadbc8b` 独立构建两次，ZIP 的 SHA-256 均为 `4c5d3ec9b4c24b7d0412575abadaedfe947cc597d61b1bac742dd4f934f881b6`。无窗口检查通过。隔离桌面在 1920×1080 的 Vulkan 和 Direct3D 12、1024×768 的 OpenGL 各核对 10 个界面。最大字号下可翻读完整的研究费用和结局门槛，切换预选时保持阅读位置。另核对研究到期与经费不足的两案提示。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-council-reading/release-aadbc8b/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-council-reading/release-aadbc8b/release-proof.txt)
