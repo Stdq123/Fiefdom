@@ -23,6 +23,8 @@
 
 ## 游戏内鼠标指针
 
+卷动长页时，游戏内指针会跟着鼠标下方的内容切换。旧构建 `a8bee2d` 在按钮滚走后仍显示手形。构建 `7a35dba` 在 1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面各核对 21 个指针状态，滚轮往返、按钮落点和封地农具提示通过。Windows ZIP 的 SHA-256 为 `803dd477ddd76d16d00269de7d634f150e1915a5f05f7487f2f093538d7a74cc`。两轮测试包已清理。 [指针核对记录](../build/polish-cursor-scroll/release-7a35dba/release-proof.txt)
+
 可选的下拉条目和可调滑块使用青玉袖口手形。禁用项和分隔线用铜镶玉箭头，键盘高亮与悬停分开。构建 `e7dd12c` 在 1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面各核对 15 个指针状态，并点选字号、调整音量。Windows ZIP 的 SHA-256 为 `41e73e7583c6fd7de8e0776a347f9728792d915a6145818de1c70bc14c588c41`。存档写入为零，测试包已清理。 [指针核对记录](../build/polish-cursor-controls/release-e7dd12c/release-proof.txt)
 
 普通指针改为铜镶玉箭头，可用按钮显示带青玉色袖口的手形，文字框使用铜边工字形。门客拖放用青玉勾和朱色叉标出能否落位。构建 `2164483` 在 1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面核对了五种图形、箭尖落点、田务图标和窗口边界。Windows ZIP 的 SHA-256 为 `71d156f4dd7f4209110b13a5e282285598b3b8df1c4a6eb9532bdb58bb433e5b`。测试包已清理。 [指针核对记录](../build/polish-jade-cursor/release-2164483/release-proof.txt)
