@@ -439,6 +439,8 @@ Windows 候选包内的 `SHA256SUMS.txt` 覆盖程序、资源、兼容入口、
 
 从 `3e1d9cc` 独立构建两次，ZIP 的 SHA-256 均为 `372a5481faf9e5c105873feb4b6af5d8800fa873b2386b088a07de4a85d2b894`。六项无窗口界面检查通过。默认 1920×1080 的 Vulkan 和 Direct3D 12、1024×768 的 OpenGL 各在隔离桌面核对九个预置画面。最大字号的提示避开顶部工具和两侧账目，堂屋也有标准字号样例。取景期间封地暂停，未推进日期或写入存档。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-dawn-notice/release-3e1d9cc/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-dawn-notice/release-3e1d9cc/release-proof.txt)
 
+「昨夜结算」页首按当前情况提供来敌、公田、今晚分餐、熟田和完工井田的入口。翻到底仍能选用，行动条件变化时入口随之更新，历史实绩留在账里。构建 `cb7f5db` 扩宽两张账页，并在 1920×1080 Vulkan、1024×768 OpenGL 核对最大字号下五个入口同行、方向键焦点和各自去向。两个无窗口界面场景通过，每轮测试包和解包文件均已清理。 [Windows 核对记录](../build/polish-morning-actions/release-cb7f5db/release-proof.txt)
+
 ## 长对白的阅读与返回
 
 长对白增加页码和翻页按钮，最大字号下肖像、回应和键位提示各有位置。滚轮在卡片内都能卷读，PgUp、PgDn 和手柄 LB、RB 翻页时保留当前回应。把 PgDn 改成互动键后，Tab 仍能到达翻页按钮。连开两张卡时角色保持在对话状态，关闭最后一张后焦点回到原来的控件。
