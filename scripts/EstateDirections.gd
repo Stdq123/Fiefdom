@@ -555,9 +555,22 @@ func _plot_plaque_position(plot: Rect2, size: Vector2) -> Vector2:
 	for label: Control in [hover, prompt]:
 		if label.is_visible_in_tree():
 			occupied.append((label.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, label.size)).grow(4.0))
-	var player_body: Sprite2D = world.player.sprite
-	if player_body.is_visible_in_tree():
-		occupied.append((player_body.get_global_transform_with_canvas() * player_body.get_rect()).grow(2.0))
+	var scenery: Array[Sprite2D] = [world.player.sprite]
+	for resident: Retainer in world.retainer_instances.values():
+		scenery.append(resident.sprite)
+	for visitor: Visitor in world.active_visitors:
+		scenery.append(visitor.sprite)
+	var fields := world.tile_map.get_node("WellFieldMarker") as WellFieldMarker
+	for marker: Node2D in fields.marker_nodes.values():
+		for child in marker.get_children():
+			if child is VillageInscription:
+				scenery.append(child)
+	var nearby := clearance.grow(size.x)
+	for sprite in scenery:
+		if sprite.is_visible_in_tree():
+			var area := (sprite.get_global_transform_with_canvas() * sprite.get_rect()).grow(2.0)
+			if nearby.intersects(area):
+				occupied.append(area)
 	return HintPlacement.around(plot.get_center(), clearance, size, get_viewport_rect().grow(-8.0), occupied, true)
 
 func _mark_worksite(cell: Vector2i) -> void:

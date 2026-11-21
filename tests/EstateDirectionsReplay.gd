@@ -446,8 +446,8 @@ func run(game_tree: SceneTree) -> void:
 	_expect(directions.visible and directions.mark == directions.Mark.PLOT and directions.caption.text == "公田 · 翻地"
 		and "WASD" in ui.hud.guide.text and ui.hud.tribute_button.visible,
 		"A new estate labels the first field action and shows the movement keys and tribute deadline.")
-	_expect(directions.plaque.position.y > directions.outline.end.y + directions.outline.size.y - 2.0,
-		"The first caption leaves the adjacent private plot visible.")
+	_expect(not directions.plaque.intersects(directions.outline.grow(directions.outline.size.y - 2.0)),
+		"The first caption leaves the adjacent private plots visible.")
 	await _capture("01-first-public-plot")
 	await _check_handover()
 	var initial_outline: Vector2 = directions.outline.size
