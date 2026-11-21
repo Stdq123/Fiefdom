@@ -7,6 +7,16 @@
 [ext_resource type="Texture2D" path="res://assets/branding/title-logo.svg" id="5_logo"]
 [ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="6_hud"]
 [ext_resource type="Theme" path="res://resources/estate_dialog_theme.tres" id="7_dialog"]
+[ext_resource type="Shader" path="res://resources/title-estate-motion.gdshader" id="8_motion"]
+
+[sub_resource type="ShaderMaterial" id="Material_morning"]
+resource_local_to_scene = true
+shader = ExtResource("8_motion")
+
+[sub_resource type="ShaderMaterial" id="Material_dusk"]
+resource_local_to_scene = true
+shader = ExtResource("8_motion")
+shader_parameter/lanterns_lit = true
 
 [sub_resource type="Gradient" id="Gradient_ink"]
 offsets = PackedFloat32Array(0, 0.28, 0.37, 0.47, 0.58, 1)
@@ -35,6 +45,24 @@ tracks/0/keys = {
 "update": 0,
 "values": [0.0, 0.0, 1.0, 1.0, 0.0, 0.0]
 }
+tracks/1/type = "value"
+tracks/1/path = NodePath("Morning:material:shader_parameter/motion_phase")
+tracks/1/interp = 1
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 42),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 1.0]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("Twilight:material:shader_parameter/motion_phase")
+tracks/2/interp = 1
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 42),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 1.0]
+}
 
 [sub_resource type="AnimationLibrary" id="Library_light"]
 _data = {
@@ -52,6 +80,7 @@ theme = ExtResource("2_theme")
 script = ExtResource("1_title")
 
 [node name="Morning" type="TextureRect" parent="."]
+material = SubResource("Material_morning")
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
@@ -65,6 +94,7 @@ expand_mode = 1
 stretch_mode = 6
 
 [node name="Twilight" type="TextureRect" parent="."]
+material = SubResource("Material_dusk")
 modulate = Color(1, 1, 1, 0)
 texture_filter = 1
 layout_mode = 1
