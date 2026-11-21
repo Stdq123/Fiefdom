@@ -33,6 +33,7 @@ func _update_marker(field_id: int) -> void:
 	var entrance: Vector2 = landscape.field_entrance(field_id)
 	var title := "井田 %d" % (field_id + 1)
 	if field["is_unlocked"]:
+		marker.draw.connect(FieldPlotArt.draw_field_bunds.bind(marker, cell_size))
 		var line := Line2D.new()
 		line.name = "Boundary"
 		line.points = EstateLayout.field_boundary(Rect2(-half_span, half_span * 2.0), entrance, ENTRANCE_WIDTH)

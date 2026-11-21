@@ -1,6 +1,10 @@
 extends RefCounted
 class_name FieldPlotArt
 
+const SOIL := preload("res://assets/world/estate-field-soil.png")
+const PRIVATE_SOIL_COLUMNS := [0, 2, 3]
+const BUND_GROOVE := Color("#553a26b8")
+const BUND_LIP := Color("#e2ad765c")
 const PADDY_WATER := Color("#4e796e")
 const PADDY_RIM := Color("#584d37")
 const PADDY_REFLECTION := Color("#92b8a2")
@@ -14,6 +18,23 @@ const DRY_SEEDLING := 1
 const DRY_CLAY := Color("#cfa37120")
 const CRACK_EDGE := Color("#e1b17ca0")
 const CRACK_CUT := Color("#6a432ecf")
+
+static func soil_atlas(cell: Vector2i, is_public: bool, tilled: bool) -> Vector2i:
+	var variant := posmod(cell.x * 5 + cell.y * 7, PRIVATE_SOIL_COLUMNS.size())
+	var column: int = 1 if is_public else PRIVATE_SOIL_COLUMNS[variant]
+	return Vector2i(column, int(tilled))
+
+static func draw_field_bunds(ink: CanvasItem, cell_size: Vector2) -> void:
+	var half_span := cell_size * 1.5
+	var span := half_span * 2.0 - Vector2(2, 2)
+	var lip := cell_size * 0.5
+	for cross: Vector2 in [-lip, lip]:
+		ink.draw_rect(Rect2(-half_span.x + 1, cross.y - 0.5, span.x, 1.0), BUND_GROOVE)
+		ink.draw_rect(Rect2(cross.x - 0.5, -half_span.y + 1, 1.0, span.y), BUND_GROOVE)
+	# The near side of each shallow groove catches the same light as the field bank.
+	for cross: Vector2 in [-lip, lip]:
+		ink.draw_rect(Rect2(-half_span.x + 1, cross.y + 0.5, span.x, 0.8), BUND_LIP)
+		ink.draw_rect(Rect2(cross.x + 0.5, -half_span.y + 1, 0.8, span.y), BUND_LIP)
 
 static func needs_water(status: int) -> bool:
 	return status in [Global.NightGrowth.DRY, Global.NightGrowth.BLOCKED]

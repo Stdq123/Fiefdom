@@ -1,11 +1,8 @@
 extends Control
 class_name TributePlotPicture
 
-const SOIL := preload("res://assets/tileset.svg")
-const FIELD_SOIL := preload("res://assets/world/estate-field-soil.png")
 const TILE := Rect2(0, 0, 16, 16)
 
-var soil_art: Texture2D = SOIL
 var soil_region := Rect2()
 var crop_region := Rect2i()
 var crop_ink := Color.WHITE
@@ -21,16 +18,16 @@ func _init() -> void:
 func show_plot(plan: Dictionary) -> void:
 	visible = not plan.is_empty()
 	if visible:
-		_show_cell(plan.cell, plan.status, true, SOIL)
+		_show_cell(plan.cell, plan.status)
 
 func show_field_cell(cell: Vector2i) -> void:
-	_show_cell(cell, Global.crop_night_status(cell), Global.is_public_plot(cell), FIELD_SOIL)
+	_show_cell(cell, Global.crop_night_status(cell))
 
-func _show_cell(cell: Vector2i, task: int, public_plot: bool, ground: Texture2D) -> void:
+func _show_cell(cell: Vector2i, task: int) -> void:
 	var crop: Dictionary = Global.active_crops.get(cell, {})
 	var tilled := not crop.is_empty() or Global.tilled_cells.has(cell)
-	soil_art = ground
-	soil_region = Rect2(16 if public_plot else 0, 16 if tilled else 0, 16, 16)
+	var atlas := FieldPlotArt.soil_atlas(cell, Global.is_public_plot(cell), tilled)
+	soil_region = Rect2(Vector2(atlas) * TILE.size, TILE.size)
 	status = task
 	rain = Global.has_rain()
 	rice = false
@@ -58,7 +55,7 @@ func _draw() -> void:
 	var origin := (size * 0.5 - Vector2(8, 8.5) * scale_factor).floor()
 	draw_set_transform(origin, 0.0, zoom)
 	draw_rect(Rect2(0, 15, 16, 2), Color("#59432f"))
-	draw_texture_rect_region(soil_art, TILE, soil_region)
+	draw_texture_rect_region(FieldPlotArt.SOIL, TILE, soil_region)
 	if rice and water == Global.CropWater.CANAL:
 		FieldPlotArt.draw_paddy(self, TILE, rain)
 	elif water in [Global.CropWater.RAIN, Global.CropWater.HAND, Global.CropWater.CANAL]:
