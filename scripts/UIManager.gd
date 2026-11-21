@@ -1038,12 +1038,15 @@ func _on_pinned_order_pressed() -> void:
 	if _estate_controls_busy() or world.player.training_cart.visible:
 		return
 	var order := Global.pinned_season_order()
-	if not order.is_empty() and Global.can_deliver_season_order(order):
+	if order.is_empty():
+		return
+	var upcoming: bool = order.start > Global.current_day
+	if Global.can_deliver_season_order(order):
 		_on_west_market_directions_requested(Global.MARKET_ORDERS)
 		return
 	var plan := Global.season_order_work(order)
 	if not plan.is_empty() and (plan.action != Global.OrderWork.WAIT
-		or Global.field_route_status == Global.OrderFieldRoute.PREPARE or order.start > Global.current_day):
+		or Global.field_route_status == Global.OrderFieldRoute.PREPARE or upcoming):
 		_follow_order_work(plan)
 		return
 	if directions.follow_field_route(Global.OrderFieldRoute.HARVEST):
@@ -1051,7 +1054,7 @@ func _on_pinned_order_pressed() -> void:
 		if Global.is_indoors():
 			hud.practice_label.text = "已标出备货私田 · 从南门回田边"
 		return
-	_on_season_board_interacted()
+	_on_season_board_interacted(upcoming)
 
 func _on_season_order_work_requested(upcoming: bool) -> void:
 	var order := Global.season_order()

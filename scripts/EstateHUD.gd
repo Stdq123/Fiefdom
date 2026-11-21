@@ -145,7 +145,7 @@ func _ready() -> void:
 		InterfaceFont.scale_reading_text(control)
 	for control: Control in [day_label, calendar_label, rank_label,
 			reputation_label, money_label, king_label, inventory_label, well_field_label, help_label,
-		farm_status, sow_from_plan, prepare_empty_plots, replant_after_harvest, canal_preview, morning_button,
+		farm_status, sow_from_plan, prepare_empty_plots, replant_after_harvest, canal_preview, morning_button, pinned_order,
 		$RoomLocation, workshop_batch, workshop_last_work]:
 		InterfaceFont.scale_reading_text(control)
 	save_notice.add_theme_stylebox_override(&"normal", get_theme_stylebox(&"panel", &"HudRail"))
@@ -171,6 +171,7 @@ func _ready() -> void:
 	map_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
 	settings_button.icon = HUDIcons.icon(HUDIcons.Symbol.SETTINGS)
 	manage_button.icon = HUDIcons.icon(HUDIcons.Symbol.LEDGER)
+	pinned_order.icon = HUDIcons.icon(HUDIcons.Symbol.LEDGER)
 	rations_button.icon = HUDIcons.icon(HUDIcons.Symbol.RATIONS)
 	sleep_button.icon = HUDIcons.icon(HUDIcons.Symbol.MOON)
 	GameEvents.estate_arrived.connect(_show_arrival)
@@ -257,7 +258,8 @@ func _refresh_pinned_order() -> void:
 		return
 	var amounts := ItemManager.describe_season_order_progress(schedule)
 	var upcoming: bool = schedule.start > Global.current_day
-	var action := "第 %d 天开收" % schedule.start if upcoming else "第 %d 天截止" % schedule.end
+	var timing := "第 %d 天开收" % schedule.start if upcoming else "第 %d 天截止" % schedule.end
+	var action := timing
 	if Global.can_deliver_season_order(schedule):
 		action = "去西市交货"
 	else:
@@ -267,12 +269,12 @@ func _refresh_pinned_order() -> void:
 			match int(plan.action):
 				Global.OrderWork.HARVEST: action = "收备货私田"
 				Global.OrderWork.WATER: action = "给%s浇水" % label
-				Global.OrderWork.SOW:
-					action = "种%s · 第 %d 天开收" % [label, schedule.start] if upcoming else "种%s · 第 %d 天截止" % [label, schedule.end]
+				Global.OrderWork.SOW: action = "种%s" % label
 				Global.OrderWork.WAIT: action = "%s最早第 %d 天收" % [label, plan.day]
 	var heading := "下季备货" if upcoming else "时令单"
-	pinned_order.text = "%s   %s   ·   %s" % [heading, amounts, action]
-	pinned_order.tooltip_text = pinned_order.text
+	var progress := amounts if action == timing else "%s · %s" % [amounts, timing]
+	pinned_order.text = "%s · %s\n%s" % [heading, action, progress]
+	pinned_order.tooltip_text = "「%s」\n%s" % [schedule.order.title, pinned_order.text]
 
 func _refresh_silk_stock() -> void:
 	if not workshop_status.visible:
