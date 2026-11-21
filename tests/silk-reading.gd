@@ -58,6 +58,8 @@ func _check() -> void:
 		"The full ledger remains readable by keyboard when the body overflows.")
 	_expect(before == [workshop.cocoons, workshop.raw_silk, workshop.bolts, workshop.leaves, state.money, state.current_day]
 		and state.saved_games().is_empty(), "Reading preserves workshop inputs and the save catalog.")
+	var room_review = load("res://tests/SilkRoomReadingReview.gd").new()
+	_expect(await room_review.run(self), "The silk shed shows the same materials and keeps its stock visible at either reading size.")
 	if not failed:
 		print("SCENARIO_OK")
 	quit(1 if failed else 0)

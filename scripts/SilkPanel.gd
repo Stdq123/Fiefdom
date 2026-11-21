@@ -2,15 +2,12 @@ extends VBoxContainer
 
 signal study_requested()
 
-const MATERIAL_ART := preload("res://assets/inventory/estate-goods.png")
 const STATION_ART := preload("res://assets/world/silk-interior.png")
-const MATERIAL_NAMES := ["桑叶", "蚕茧", "生丝", "丝绸"]
-const MATERIAL_UNITS := ["片", "只", "份", "匹"]
 const GOLD := Color("#f1d39a")
 const INK := Color("#d7e0cb")
 
 var card_style := StyleBoxFlat.new()
-var stock_counts: Array[Label] = []
+var stock: SilkStock
 var production: ScrollContainer
 var status_label: Label
 var build_status: Label
@@ -39,7 +36,10 @@ func _ready() -> void:
 	card_style.set_corner_radius_all(5)
 	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
 		card_style.set_content_margin(side, 8.0)
-	_add_stock()
+	stock = SilkStock.new()
+	stock.name = "Stock"
+	stock.card_style = card_style
+	add_child(stock)
 
 	production = ScrollContainer.new()
 	production.name = "Production"
@@ -176,19 +176,6 @@ func _picture(row: HBoxContainer, texture: Texture2D, region: Rect2, size: Vecto
 	picture.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	row.add_child(picture)
 
-func _add_stock() -> void:
-	var stock := HBoxContainer.new()
-	stock.name = "Stock"
-	add_child(stock)
-	for index in MATERIAL_NAMES.size():
-		var cell := _card(stock)
-		_picture(cell, MATERIAL_ART, Rect2(32 * (index + 1), 0, 32, 32), Vector2(32, 32))
-		var text := VBoxContainer.new()
-		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		cell.add_child(text)
-		_label(text, MATERIAL_NAMES[index], 14, INK)
-		stock_counts.append(_label(text, "", 17, GOLD))
-
 func _add_stage(action: SilkWorkshop.Action, title: String, region: Rect2) -> void:
 	var row := _card(stages)
 	_picture(row, STATION_ART, region, Vector2(48, 40))
@@ -235,9 +222,7 @@ func _refresh() -> void:
 	var workshop := Global.silk_workshop
 	var balance := Global.balance
 	var literacy := Global.player_stats.get_level(PlayerStats.Art.LITERACY)
-	var amounts := [workshop.leaves, workshop.cocoons, workshop.raw_silk, workshop.bolts]
-	for index in stock_counts.size():
-		stock_counts[index].text = "%d %s" % [amounts[index], MATERIAL_UNITS[index]]
+	stock.refresh(workshop)
 	var estate := get_tree().current_scene
 	var shed := estate.get_node_or_null("World/SilkShed") as Node2D if estate else null
 	visit_button.visible = shed != null and shed.visible and Global.estate_room != Global.EstateRoom.SILK_SHED

@@ -287,7 +287,7 @@ func _craft_sample() -> bool:
 	if not await _station("Loom"):
 		return false
 	_expect(state.silk_workshop.cocoons == 0 and state.silk_workshop.raw_silk == 0 and state.silk_workshop.bolts == 1
-		and ui.hud.get_node("%WorkshopStock").text.contains("丝绸 1"), "The loom uses the right thread and the room shows the bolt.")
+		and ui.hud.workshop_stock.counts[3].text == "1 匹", "The loom uses the right thread and the room shows the bolt.")
 	await _snapshot("04-first-bolt")
 	print("SILK_WOVEN day=", state.current_day, " thread_per_cocoon=", thread, " cloth=", state.silk_workshop.bolts)
 	return await _leave(room)

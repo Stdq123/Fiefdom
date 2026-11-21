@@ -5,6 +5,8 @@ const VISITOR_NOTES_MAX_HEIGHT := 116.0
 const SAVE_NOTICE_MAX_WIDTH := 352.0
 const SAVE_NOTICE_INFO := Color("#d9e2b6")
 const SAVE_NOTICE_WARNING := Color("#ffc399")
+const WORKSHOP_TEXT := Color("#ebd6ad")
+const WORKSHOP_SHORTAGE := Color("#ffc399")
 
 @onready var day_label: Label = %DayLabel
 @onready var watch_label: Label = %WatchLabel
@@ -66,8 +68,12 @@ const SAVE_NOTICE_WARNING := Color("#ffc399")
 @onready var save_notice: Label = %SaveNotice
 @onready var morning_button: Button = %MorningButton
 @onready var dawn_notice: PanelContainer = $DawnNotice
+@onready var workshop_status: PanelContainer = $WorkshopStatus
+@onready var workshop_stock: SilkStock = %WorkshopStock
+@onready var workshop_batch: Label = %WorkshopBatch
+@onready var workshop_last_work: Label = %WorkshopLastWork
 @onready var map_overlays: Array[Control] = [$Journal, $Calendar, $SeedBelt, $Vitals, $Tools, $Actions,
-	$RationsButton, $SaveNotice, $HarvestReceipt, dawn_notice]
+	$RationsButton, $SaveNotice, $HarvestReceipt, dawn_notice, $RoomLocation, workshop_status]
 
 var seed_buttons: Dictionary = {}
 var save_notice_tween: Tween
@@ -106,7 +112,7 @@ func set_field_effort(cost: int) -> void:
 func set_estate_room(room: Global.EstateRoom) -> void:
 	indoors = room != Global.EstateRoom.OUTDOORS
 	$RoomLocation.text = "蚕棚" if room == Global.EstateRoom.SILK_SHED else "堂屋"
-	$WorkshopStatus.visible = room == Global.EstateRoom.SILK_SHED
+	workshop_status.visible = room == Global.EstateRoom.SILK_SHED
 	practice_label.text = ""
 	_refresh_sections()
 	_refresh_silk_stock()
@@ -139,7 +145,8 @@ func _ready() -> void:
 		InterfaceFont.scale_reading_text(control)
 	for control: Control in [day_label, calendar_label, rank_label,
 			reputation_label, money_label, king_label, inventory_label, well_field_label, help_label,
-		farm_status, sow_from_plan, prepare_empty_plots, replant_after_harvest, canal_preview, morning_button]:
+		farm_status, sow_from_plan, prepare_empty_plots, replant_after_harvest, canal_preview, morning_button,
+		$RoomLocation, workshop_batch, workshop_last_work]:
 		InterfaceFont.scale_reading_text(control)
 	save_notice.add_theme_stylebox_override(&"normal", get_theme_stylebox(&"panel", &"HudRail"))
 	InterfaceFont.scale_reading_text(save_notice)
@@ -268,23 +275,26 @@ func _refresh_pinned_order() -> void:
 	pinned_order.tooltip_text = pinned_order.text
 
 func _refresh_silk_stock() -> void:
-	if not $WorkshopStatus.visible:
+	if not workshop_status.visible:
 		return
 	var silk := Global.silk_workshop
-	%WorkshopStock.text = "桑叶 %d　　蚕茧 %d　　生丝 %d　　丝绸 %d" % [silk.leaves, silk.cocoons, silk.raw_silk, silk.bolts]
-	var summary := "空匾 · 每夜用 %d 片桑叶" % Global.balance.silk_leaves_per_night
+	workshop_stock.refresh(silk)
+	var feed := Global.balance.silk_leaves_per_night
+	var missing := feed - silk.leaves
+	var summary := "蚕匾空着 · 首夜用 %d 片桑叶" % feed
 	if silk.nights_left > 0:
-		summary = "还需 %d 夜 · 每夜用 %d 片桑叶" % [silk.nights_left, Global.balance.silk_leaves_per_night]
-		if silk.leaves < Global.balance.silk_leaves_per_night:
-			summary += " · 缺桑叶"
+		summary = "还需养 %d 夜 · %s" % [silk.nights_left,
+			"今夜缺 %d 片桑叶" % missing if missing > 0 else "每夜用 %d 片桑叶" % feed]
 	elif silk.repeat_batches:
-		summary = "空匾 · 已安排续养"
-		var missing := silk.batch_leaf_cost(Global.balance) - silk.leaves
-		if missing > 0:
-			summary += " · 还差 %d 片桑叶" % missing
-	if silk.last_reeled > 0:
-		summary += "　　上夜缫 %d 茧 · 生丝 +%d" % [silk.last_reeled, silk.last_reel_thread]
-	%WorkshopBatch.text = summary
+		missing = silk.batch_leaf_cost(Global.balance) - silk.leaves
+		summary = "续养还差 %d 片桑叶" % missing if missing > 0 else "今晚可续养 · 首夜用 %d 片桑叶" % feed
+	elif missing > 0:
+		summary = "蚕匾空着 · 开养还差 %d 片桑叶" % missing
+	workshop_batch.text = summary
+	workshop_batch.add_theme_color_override(&"font_color", WORKSHOP_SHORTAGE if missing > 0 else WORKSHOP_TEXT)
+	var last_work := silk.last_work_summary()
+	workshop_last_work.text = "昨夜 · " + last_work
+	workshop_last_work.visible = not last_work.is_empty()
 
 func _refresh_shortcuts() -> void:
 	var pad := GamepadInput.active
