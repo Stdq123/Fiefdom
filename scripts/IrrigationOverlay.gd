@@ -16,6 +16,7 @@ const RIPPLE_SPEED := 11.0
 const FERTILITY_HIGHLIGHT_SECONDS := 12.0
 const RICE_MARK := Color("#abdcc8")
 const MARK_LIGHT := preload("res://resources/world_hint_material.tres")
+const TERRAIN := preload("res://scripts/EstateTerrain.gd")
 const WATERWORKS := "res://assets/world/field-waterworks.png"
 # Tight atlas regions preserve the fixed light direction on both canal axes.
 const GATE_NS := Rect2(1, 4, 30, 24)
@@ -696,17 +697,21 @@ func _draw_canals() -> void:
 	_draw_canal_bed(centers, arms, 11.0, bank)
 	_draw_canal_bed(centers, arms, 8.5, bank.darkened(0.28), Vector2(0.0, 0.5))
 	_draw_canal_bed(centers, arms, 6.5, BED)
+	# Keep each tile's painted details in order within the shared triangle list.
+	var surface := TERRAIN.SurfaceBatch.new()
 	for cell in network.channels:
 		var center := tile_map.map_to_local(cell)
 		if culverts.has(cell):
-			_channel_shape(cell, 9.0, CULVERT_STONE)
-			canal_ink.draw_rect(Rect2(center + Vector2(-3, -1), Vector2(6, 1)), CULVERT_STONE.lightened(0.2))
+			_add_channel_shape(surface, cell, 9.0, CULVERT_STONE)
+			surface.add_polygon(EstateLayout.corners(Rect2(center + Vector2(-3, -1), Vector2(6, 1))),
+				PackedColorArray([CULVERT_STONE.lightened(0.2)]))
 			continue
 		var wet := network.is_channel_wet(cell)
-		_channel_shape(cell, 5.0, WATER if wet else DRY)
-		_draw_channel_edges(cell, network, bank, wet)
+		_add_channel_shape(surface, cell, 5.0, WATER if wet else DRY)
+		_add_channel_edges(surface, cell, network, bank, wet)
 		if not wet:
-			canal_ink.draw_rect(Rect2(center + Vector2(-2, -1), Vector2(3, 1)), BED)
+			surface.add_polygon(EstateLayout.corners(Rect2(center + Vector2(-2, -1), Vector2(3, 1))), PackedColorArray([BED]))
+	surface.draw(canal_ink)
 
 func _draw_canal_bed(centers: PackedVector2Array, arms: PackedVector2Array, width: float, ink: Color,
 		offset := Vector2.ZERO) -> void:
@@ -780,14 +785,14 @@ func _draw_field_gate(center: Vector2i, inlet: Vector2i, network: Irrigation) ->
 	var gate := Rect2(mouth - Vector2(8, 9), Vector2(16, 12)) if across_y else Rect2(mouth - Vector2(5, 10), Vector2(10, 16))
 	draw_texture_rect_region(waterworks, gate, GATE_NS if across_y else GATE_EW, _timber_light())
 
-func _channel_shape(cell: Vector2i, width: float, ink: Color) -> void:
+func _add_channel_shape(surface: TERRAIN.SurfaceBatch, cell: Vector2i, width: float, ink: Color) -> void:
 	var network := Global.irrigation
 	var center := tile_map.map_to_local(cell)
-	canal_ink.draw_colored_polygon(_channel_cap(center, width), ink)
+	surface.add_polygon(_channel_cap(center, width), PackedColorArray([ink]))
 	for direction: Vector2i in Irrigation.NEIGHBORS:
 		var next_cell := cell + direction
 		if next_cell == network.source_cell or network.channels.has(next_cell):
-			canal_ink.draw_line(center, center + Vector2(direction) * tile_size / 2.0, ink, width)
+			_add_canal_stroke(surface, center, center + Vector2(direction) * tile_size / 2.0, ink, width)
 
 func _channel_cap(center: Vector2, width: float) -> PackedVector2Array:
 	var radius := width * 0.5
@@ -798,8 +803,15 @@ func _channel_cap(center: Vector2, width: float) -> PackedVector2Array:
 		center + Vector2(bevel, radius), center + Vector2(-bevel, radius),
 		center + Vector2(-radius, bevel), center + Vector2(-radius, -bevel)])
 
-func _draw_channel_edges(cell: Vector2i, network: Irrigation, bank: Color, wet: bool) -> void:
+func _add_canal_stroke(surface: TERRAIN.SurfaceBatch, start: Vector2, finish: Vector2, ink: Color, width: float) -> void:
+	var side := (start - finish).orthogonal().normalized() * (width * 0.5)
+	surface.add_quad(start + side, start - side, finish - side, finish + side, ink)
+
+func _add_channel_edges(surface: TERRAIN.SurfaceBatch, cell: Vector2i, network: Irrigation, bank: Color, wet: bool) -> void:
 	var center := tile_map.map_to_local(cell)
+	var rim_ink := PackedColorArray([bank.lightened(0.19)])
+	var side_ink := bank.darkened(0.22)
+	var toe_ink := Color("#7da79a") if wet else Color("#b3956f")
 	for direction: Vector2i in Irrigation.NEIGHBORS:
 		var next_cell := cell + direction
 		if next_cell != network.source_cell and not network.channels.has(next_cell):
@@ -809,15 +821,15 @@ func _draw_channel_edges(cell: Vector2i, network: Irrigation, bank: Color, wet: 
 		var worn := posmod(cell.x * 7 + cell.y * 13 + direction.x + direction.y, 4)
 		var at := center + axis * (4.0 + worn * 0.6)
 		var rim := at + side * 4.4
-		canal_ink.draw_colored_polygon(PackedVector2Array([rim - axis, rim + side * (0.8 + worn * 0.25),
-			rim + axis * 2.8, rim + axis * 1.2 - side * 0.8]), bank.lightened(0.19))
-		canal_ink.draw_line(at - side * 4.8, at - side * 4.8 + axis * 2.1, bank.darkened(0.22), 1.1)
+		surface.add_polygon(PackedVector2Array([rim - axis, rim + side * (0.8 + worn * 0.25),
+			rim + axis * 2.8, rim + axis * 1.2 - side * 0.8]), rim_ink)
+		_add_canal_stroke(surface, at - side * 4.8, at - side * 4.8 + axis * 2.1, side_ink, 1.1)
 		var toe := at - side * 2.6
-		canal_ink.draw_line(toe - axis, toe + axis * 2.5, Color("#7da79a") if wet else Color("#b3956f"), 0.6)
+		_add_canal_stroke(surface, toe - axis, toe + axis * 2.5, toe_ink, 0.6)
 		if worn == 0:
 			var tufts := at - side * 5.6
-			canal_ink.draw_line(tufts, tufts + Vector2(-0.7, -2.0), Color("#768052"), 0.7)
-			canal_ink.draw_line(tufts, tufts + Vector2(1.0, -1.3), Color("#a5a16c"), 0.65)
+			_add_canal_stroke(surface, tufts, tufts + Vector2(-0.7, -2.0), Color("#768052"), 0.7)
+			_add_canal_stroke(surface, tufts, tufts + Vector2(1.0, -1.3), Color("#a5a16c"), 0.65)
 
 func _draw_inlets(cell: Vector2i) -> void:
 	var network := Global.irrigation

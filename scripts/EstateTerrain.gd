@@ -178,6 +178,12 @@ class SurfaceBatch:
 		else:
 			_colors.append_array(tints)
 
+	func add_quad(a: Vector2, b: Vector2, c: Vector2, d: Vector2, tint: Color) -> void:
+		var first := _points.size()
+		_points.append_array(PackedVector2Array([a, b, c, d]))
+		_colors.append_array(PackedColorArray([tint, tint, tint, tint]))
+		_triangles.append_array(PackedInt32Array([first, first + 1, first + 2, first, first + 2, first + 3]))
+
 	func draw(canvas: CanvasItem, texture: Texture2D = null) -> void:
 		if _triangles.is_empty():
 			return
