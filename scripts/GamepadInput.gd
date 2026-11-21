@@ -93,10 +93,13 @@ func _ready() -> void:
 
 func _watch_gui_cursor(node: Node) -> void:
 	if _mouse_cursor and (node is BaseButton or node is Window or node is LineEdit
-			or node is TextEdit or node is ScrollBar):
+			or node is TextEdit or node is ScrollBar or node is Slider or node is Container):
 		if not node.is_connected(&"visibility_changed", _queue_mouse_cursor_refresh):
 			node.connect(&"visibility_changed", _queue_mouse_cursor_refresh)
 			node.tree_exited.connect(_queue_mouse_cursor_refresh)
+			if node is Control:
+				# A layout change can move a control under a stationary pointer.
+				node.item_rect_changed.connect(_queue_mouse_cursor_refresh)
 			if node is PopupMenu:
 				node.visibility_changed.connect(_clear_mouse_popup_hover)
 				node.id_focused.connect(_clear_mouse_popup_hover.unbind(1))
