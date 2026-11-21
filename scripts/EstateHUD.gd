@@ -274,7 +274,7 @@ func _refresh_pinned_order() -> void:
 	var heading := "下季备货" if upcoming else "时令单"
 	var progress := amounts if action == timing else "%s · %s" % [amounts, timing]
 	pinned_order.text = "%s · %s\n%s" % [heading, action, progress]
-	pinned_order.tooltip_text = "「%s」\n%s" % [schedule.order.title, pinned_order.text]
+	pinned_order.tooltip_text = "「%s」" % schedule.order.title
 
 func _refresh_silk_stock() -> void:
 	if not workshop_status.visible:

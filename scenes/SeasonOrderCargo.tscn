@@ -43,6 +43,7 @@ theme_override_constants/separation = 0
 
 [node name="ItemName" type="Label" parent="Goods/Counts"]
 layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
 theme_override_font_sizes/font_size = 18
 
 [node name="Quantity" type="Label" parent="Goods/Counts"]

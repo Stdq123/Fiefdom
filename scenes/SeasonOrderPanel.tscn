@@ -99,6 +99,7 @@ theme_override_constants/separation = 9
 
 [node name="Request" type="Label" parent="Scroll/Pages/Current/Content"]
 layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
 theme_override_font_sizes/font_size = 17
 autowrap_mode = 3
 
@@ -210,6 +211,7 @@ autowrap_mode = 3
 
 [node name="Details" type="Label" parent="Scroll/Pages/Next/Content"]
 layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
 theme_override_font_sizes/font_size = 17
 autowrap_mode = 3
 

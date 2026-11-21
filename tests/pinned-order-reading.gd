@@ -40,6 +40,11 @@ func _review() -> void:
 	var ledger: Control = panel.season_order_panel
 	_expect(ledger.is_visible_in_tree() and ledger.scroll.scroll_vertical > 0 and ledger.next_plan_button.has_focus(),
 		"A ready early order opens and focuses the forecast for the tracked season.")
+	var first_good := ledger.next_cargo.get_child(0).get_node("Goods/Counts/ItemName") as Label
+	_expect(ledger.next_details.get_theme_color(&"font_color").get_luminance() > 0.7
+		and ledger.request.get_theme_color(&"font_color").get_luminance() > 0.7
+		and first_good.get_theme_color(&"font_color").get_luminance() > 0.7,
+		"The request and cargo names use light ink over the dark order sheets.")
 	ui.panel_manager.hide_management_panel()
 	paused = true
 	_expect(ready == _state(state), "Visiting the next ledger preserves the staged inventory, calendar and pin.")
