@@ -1,6 +1,7 @@
 extends "res://scripts/SurveyMap.gd"
 
 signal action_requested(kind: Global.RouteGoal)
+signal filing_requested()
 
 const GOAL_ROW := preload("res://scenes/RouteGoalRow.tscn")
 const LEDGER_DESK := preload("res://scripts/RouteLedgerDesk.gd")
@@ -37,18 +38,21 @@ const GUIDANCE := {
 @onready var harvest_record: VBoxContainer = %HarvestRecord
 @onready var harvest_entry: Label = %HarvestEntry
 @onready var rows: VBoxContainer = %GoalRows
+@onready var filing_bar: HBoxContainer = %FilingBar
 @onready var filing: Label = %Filing
+@onready var follow_filing: Button = %FollowFiling
 
 var world: Node2D
 
 func _ready() -> void:
 	super._ready()
-	for note: Label in [summary, harvest_entry, filing]:
-		InterfaceFont.scale_reading_text(note)
+	for control: Control in [summary, harvest_entry, filing, follow_filing]:
+		InterfaceFont.scale_reading_text(control)
+	follow_filing.pressed.connect(_request_filing)
 	var bar := PANEL_FOCUS.reading_scrollbar(scroll)
 	bar.theme = preload("res://resources/estate_hud_theme.tres")
 	bar.theme_type_variation = &"HudJournalBar"
-	for part: Control in [body, header, filing]:
+	for part: Control in [body, header, filing_bar]:
 		part.minimum_size_changed.connect(_fit_body, CONNECT_DEFERRED)
 	get_viewport().size_changed.connect(_fit_body)
 
@@ -69,7 +73,9 @@ func _refresh_on_open() -> void:
 	harvest_record.visible = not entry.is_empty()
 	harvest_entry.visible = harvest_record.visible
 	var stand := world.get_node("Scenery/EndingRecord")
-	var prompt := "目标齐备 · 到" if Global.route_ready_to_present() else "达标后到"
+	var ready := Global.route_ready_to_present()
+	follow_filing.visible = ready
+	var prompt := "目标齐备 · 到" if ready else "达标后到"
 	filing.text = prompt + stand.place_name + "呈交" + stand.record_name
 	for row in rows.get_children():
 		rows.remove_child(row)
@@ -81,7 +87,7 @@ func _refresh_on_open() -> void:
 
 func _fit_body() -> void:
 	var chrome := ledger.get_theme_stylebox("panel").get_minimum_size().y \
-		+ header.get_combined_minimum_size().y + filing.get_combined_minimum_size().y \
+		+ header.get_combined_minimum_size().y + filing_bar.get_combined_minimum_size().y \
 		+ stack.get_theme_constant("separation") * 2
 	var available := maxf(0.0, get_viewport_rect().size.y - LEDGER_MARGIN * 2.0 - chrome)
 	scroll.custom_minimum_size.y = minf(body.get_combined_minimum_size().y, available)
@@ -117,6 +123,7 @@ func _add_goal(goal: Dictionary) -> void:
 			detail = "蚕桑页可查看现有蚕茧和生丝，缺叶时可标出桑田。织成后%s。" % trade
 	var note: Label = row.get_node("%GoalDetail")
 	note.text = detail
+	note.visible = not complete
 	var count: Label = row.get_node("%GoalCount")
 	count.text = "%d / %d %s" % [goal.value, goal.target, guide.unit]
 	if complete:
@@ -146,3 +153,10 @@ func _raid_action() -> String:
 func _take_action(kind: Global.RouteGoal) -> void:
 	close_map()
 	action_requested.emit(kind)
+
+func _request_filing() -> void:
+	if not Global.route_ready_to_present():
+		_refresh_on_open()
+		return
+	close_map()
+	filing_requested.emit()

@@ -97,9 +97,11 @@ func _ready() -> void:
 	handover.public_plot_requested.connect(_follow_tribute_plot.bind(Global.TributeRoute.TEND, false))
 	route_goals.world = world
 	hud.route_progress.pressed.connect(_open_route_goals)
+	hud.guide.read_route_ledger.pressed.connect(_read_route_ledger)
 	route_goals.action_requested.connect(_on_route_goal_action)
+	route_goals.filing_requested.connect(_follow_route_ledger)
 	world.get_node("Scenery/EndingRecord").readiness_changed.connect(_refresh_ledger_route)
-	GameEvents.route_ledger_read_requested.connect(_open_route_goals)
+	GameEvents.route_ledger_read_requested.connect(_read_route_ledger)
 	GameEvents.first_tribute_ledger_requested.connect(_on_first_tribute_ledger_requested)
 	GameEvents.rank_book_requested.connect(_on_rank_book_requested)
 	council_preparation.world = world
@@ -155,6 +157,7 @@ func _process(_delta: float) -> void:
 	hud.calendar_button.disabled = hud.map_button.disabled
 	hud.season_event_button.disabled = hud.map_button.disabled
 	hud.route_progress.disabled = hud.map_button.disabled
+	hud.guide.read_route_ledger.disabled = hud.map_button.disabled
 	hud.council_prep_button.disabled = hud.map_button.disabled
 	hud.guide.six_arts.disabled = hud.map_button.disabled
 	hud.handover_button.disabled = hud.map_button.disabled
@@ -188,15 +191,22 @@ func _map_controls_blocked() -> bool:
 	return _estate_controls_blocked() or world.player.training_cart.visible
 
 func _open_route_goals() -> void:
-	if _map_controls_blocked():
-		return
 	if Global.route_ready_to_present():
-		var stand := world.get_node("Scenery/EndingRecord") as Sprite2D
-		directions.follow_place(stand.record_name, world.to_local(stand.global_position))
-		if Global.is_indoors():
-			hud.practice_label.text = "从南门出去，再去%s。" % stand.place_name
+		_follow_route_ledger()
 	else:
+		_read_route_ledger()
+
+func _read_route_ledger() -> void:
+	if not _map_controls_blocked():
 		route_goals.open_map()
+
+func _follow_route_ledger() -> void:
+	if _map_controls_blocked() or not Global.route_ready_to_present():
+		return
+	var stand := world.get_node("Scenery/EndingRecord") as Sprite2D
+	directions.follow_place(stand.record_name, world.to_local(stand.global_position))
+	if Global.is_indoors():
+		hud.practice_label.text = "从南门出去，再去%s。" % stand.place_name
 
 func _refresh_ledger_route(ready: bool) -> void:
 	var stand := world.get_node("Scenery/EndingRecord") as Sprite2D
