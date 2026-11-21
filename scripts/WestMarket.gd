@@ -167,6 +167,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 func _update_modal() -> void:
 	settings_shade.visible = settings.visible
 	player.conversation_open = settings.visible or counter.visible
+	GameEvents.modal_visibility_changed.emit(player.conversation_open)
 
 func _refresh_date() -> void:
 	date.text = TravelHeading.date_caption()

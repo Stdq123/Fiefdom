@@ -2,8 +2,8 @@ extends Node
 
 const FIELD_CROPS := "res://resources/field_crops.tres"
 const SILK_SAMPLE := preload("res://assets/world/west-court-sample.svg")
-const GOODS_ART := preload("res://assets/inventory/estate-goods.png")
-const HARVEST_ART := preload("res://assets/inventory/crop-harvests.png")
+const GOODS_ART := "res://assets/inventory/estate-goods.png"
+const HARVEST_ART := "res://assets/inventory/crop-harvests.png"
 
 enum Goods { MIXED_GRAIN, LEAVES, COCOONS, RAW_SILK, SILK_BOLT, WOOL, HERBS }
 
@@ -98,9 +98,10 @@ func harvest_icon(id: String) -> AtlasTexture:
 func goods_icon(kind: Goods) -> AtlasTexture:
 	return _stock_icon(GOODS_ART, kind)
 
-func _stock_icon(atlas: Texture2D, column: int) -> AtlasTexture:
+func _stock_icon(atlas_path: String, column: int) -> AtlasTexture:
+	# Load after the editor has registered the importer that preserves logical atlas coordinates.
 	var icon := AtlasTexture.new()
-	icon.atlas = atlas
+	icon.atlas = load(atlas_path) as Texture2D
 	icon.region = Rect2(column * 32, 0, 32, 32)
 	icon.filter_clip = true
 	return icon

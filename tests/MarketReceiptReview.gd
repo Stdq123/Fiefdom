@@ -16,10 +16,13 @@ func run(scenario: SceneTree, directory := "") -> bool:
 	state.king_storage = 7
 	state.money = 125
 	state.food_storage = 4
+	state.current_rank = Global.Rank.DA_FU
+	state.max_well_fields = 3
+	state.tax_reform_choice = Global.TaxReformChoice.REFORMED
+	state.retainers.assign([RetainerData.new("渠伯"), RetainerData.new("季青"), RetainerData.new("石墨"), RetainerData.new("陶辛")])
 	state.crop_stock.lots.clear()
-	state.crop_stock.lots["millet"] = 7
-	state.crop_stock.lots["beans"] = 4
-	state.crop_stock.lots["hemp"] = 2
+	for crop: String in CropData.IDS:
+		state.crop_stock.lots[crop] = 8
 	state.fish_collection["perch"] = {"first_day": 13, "first_site": 1, "stock": 2}
 	state.silk_workshop.built = true
 	state.silk_workshop.bolts = 3
@@ -31,16 +34,21 @@ func run(scenario: SceneTree, directory := "") -> bool:
 	await tree.scene_changed
 	await _settle()
 	var counter := tree.current_scene.get_node("UI/Control/Counter") as Control
+	var field_hud := tree.current_scene.get_node("CampaignHUD")
 	var receipt: MarketReceipt = counter.trade_receipt
 	var baseline := _snapshot(state)
 	_expect(counter.grain.receipt == receipt and counter.fish.receipt == receipt
 		and counter.fish.market_offer.trade_receipt == receipt and counter.sheep.receipt == receipt,
 		"All the market views use the one fixed receipt above the scroll area.")
+	_expect(field_hud.backpack_button.visible, "The backpack button is available in the street.")
 	var items := tree.root.get_node("ItemManager")
 	counter.open_for(MarketStall.Kind.GRAIN)
+	counter.grain.reserve_kind.select(counter.grain.reserve_kind.get_item_index(counter.grain.ReserveKind.RECLAMATION))
+	counter.grain._change_reserve_kind()
 	await _settle()
 	_expect(counter.counter_balance.is_visible_in_tree() and "125" in counter.counter_balance.text
-		and not receipt.visible, "The grain counter shows the actual balances and starts with an empty receipt.")
+		and not receipt.visible and not field_hud.backpack_button.visible,
+		"The grain counter starts with an empty receipt and an unobstructed balance.")
 	var sale := "售出 黍 3 · 铜钱 +%d" % (3 * state.balance.market_crop_price)
 	counter.grain.receipt.present_crops(sale, {"millet": 3})
 	await _settle()
@@ -50,6 +58,8 @@ func run(scenario: SceneTree, directory := "") -> bool:
 	var bar: VScrollBar = counter.scroll.get_v_scroll_bar()
 	bar.value = bar.max_value
 	await _settle()
+	print("MARKET_RECEIPT_SCROLL offset=", counter.scroll.scroll_vertical, " body=", counter.scroll.size.y,
+		" record_before=", top, " record_after=", receipt.get_global_rect())
 	_expect(counter.scroll.scroll_vertical > 0 and receipt.get_global_rect() == top,
 		"Scrolling to the reserve quote keeps the transaction receipt at the top.")
 	await _capture("02-grain-sale-scrolled")
@@ -73,11 +83,14 @@ func run(scenario: SceneTree, directory := "") -> bool:
 	counter.open_for(MarketStall.Kind.FISH)
 	await _settle()
 	_expect(not receipt.visible, "Switching counters clears the last transaction.")
-	var fish: Dictionary = CreekFish.SPECIES["perch"]
-	var fish_record := "留鱼单 · %s −1 尾 · 粮仓 +%d 份" % [fish.name, fish.food]
-	counter.fish.market_offer.trade_receipt.present(fish_record, CreekFish.portrait("perch"))
+	var offer: Dictionary = state.fish_market_offer()
+	var fish_id: String = offer.fish
+	var fish_record := "留鱼单 · %s −1 尾 · 粮仓 +%d 份" % [CreekFish.SPECIES[fish_id].name, offer.food]
+	counter.fish.market_offer.trade_receipt.present(fish_record, CreekFish.portrait(fish_id))
 	await _settle()
-	_check_receipt(counter, fish_record, CreekFish.portrait("perch"))
+	_check_receipt(counter, fish_record, CreekFish.portrait(fish_id))
+	var note_ink: Color = counter.fish.market_offer.note.get_theme_color(&"font_color")
+	_expect(note_ink.get_luminance() > 0.65, "The order note reads clearly on its dark card.")
 	await _capture("04-fish-exchange")
 	counter.open_for(MarketStall.Kind.SILK)
 	await _settle()
@@ -100,7 +113,8 @@ func run(scenario: SceneTree, directory := "") -> bool:
 	await _capture("06-wool-sale")
 	counter.close_counter()
 	await _settle()
-	_expect(not receipt.visible and receipt.text.is_empty() and _snapshot(state) == baseline and state.saved_games().is_empty(),
+	_expect(not receipt.visible and receipt.text.is_empty() and field_hud.backpack_button.visible
+		and _snapshot(state) == baseline and state.saved_games().is_empty(),
 		"The receipt closes with the counter and the staged balances, goods and saves are untouched.")
 	print("MARKET_RECEIPT_VIEWS grain=true fish=true silk=true wool=true text_size=", receipt.label.get_theme_font_size(&"font_size"), " saves=", state.saved_games().size())
 	return not failed

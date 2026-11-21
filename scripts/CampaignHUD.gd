@@ -190,6 +190,8 @@ func _close_backpack() -> void:
 
 func _refresh_notice_visibility() -> void:
 	var covered := management_open or settings_open or modal_open or is_instance_valid(summary)
+	if backpack_trigger.is_empty():
+		backpack_button.visible = not covered
 	notice_coverage_changed.emit(covered)
 	notice.visible = not covered and not notice.text.is_empty() and notice.modulate.a > 0.0
 	if notice_tween and notice_tween.is_valid():
