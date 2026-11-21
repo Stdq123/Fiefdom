@@ -172,7 +172,7 @@ func _process(_delta: float) -> void:
 			and directions.tracked_plot != null
 			and Global.crop_night_status(directions.tracked_plot) == Global.NightGrowth.BLOCKED))
 	directions.update_marker(busy or world.player.training_cart.visible
-		or (world.channel_mode and not following_canal) or Global.is_indoors())
+		or (world.channel_mode and not following_canal))
 
 func _estate_controls_blocked() -> bool:
 	return world.channel_mode or _estate_controls_busy()

@@ -1,6 +1,6 @@
 extends Control
 
-enum Mark { PLOT, BUTTON, NEIGHBOR, EDGE, WORKSITE, PLACE }
+enum Mark { PLOT, BUTTON, NEIGHBOR, EDGE, WORKSITE, PLACE, EXIT }
 
 const CAMPAIGN_GUIDE := preload("res://scripts/CampaignGuide.gd")
 const ROAD_NETWORK := preload("res://scripts/RoadNetwork.gd")
@@ -9,6 +9,10 @@ const HUD_THEME := preload("res://resources/estate_hud_theme.tres")
 const GOLD := Color("#f1d38b")
 const SHADOW := Color("#382519")
 const TOOL_GAP := 5.0
+const ROOM_EXITS := {
+	Global.EstateRoom.HALL: ^"HallInterior/Exit/CollisionShape2D",
+	Global.EstateRoom.SILK_SHED: ^"SilkInterior/Exit/CollisionShape2D",
+}
 const FIELD_ROUTES := {
 	Global.NightGrowth.READY: "可收", Global.NightGrowth.DRY: "待浇", Global.NightGrowth.BLOCKED: "断水",
 	Global.MulberryRoute.WATER: "待浇", Global.MulberryRoute.HARVEST: "可收", Global.OrderFieldRoute.HARVEST: "备货",
@@ -412,6 +416,13 @@ func update_marker(blocked: bool) -> void:
 		hide()
 		return
 	caption.hide()
+	if tracked_place == Global.FREIGHT_YARD and int(freight_receipt.get("dispatch_day", 0)) < Global.current_day:
+		clear_tracking()
+		hide()
+		return
+	if Global.is_indoors():
+		_mark_room_exit()
+		return
 	if following_raid:
 		var raider := _tracked_raider()
 		if raider:
@@ -449,10 +460,6 @@ func update_marker(blocked: bool) -> void:
 			return
 		clear_tracking()
 	if not tracked_place.is_empty():
-		if tracked_place == Global.FREIGHT_YARD and int(freight_receipt.get("dispatch_day", 0)) < Global.current_day:
-			clear_tracking()
-			hide()
-			return
 		if tracked_place == Global.WATER_SOURCE and world.player.interaction_target == world.irrigation_overlay.water_source:
 			road_guide.hide()
 			hide()
@@ -496,6 +503,18 @@ func update_marker(blocked: bool) -> void:
 			_mark_button(hud.seed_buttons[guide.opening_seed_id])
 		_:
 			hide()
+
+func _mark_room_exit() -> void:
+	road_guide.hide()
+	var target := destination()
+	var exit_path: NodePath = ROOM_EXITS.get(Global.estate_room, NodePath())
+	var threshold := world.get_node_or_null(exit_path) as CollisionShape2D
+	if target.is_empty() or not threshold or not threshold.is_visible_in_tree():
+		hide()
+		return
+	var extent := (threshold.shape as RectangleShape2D).size
+	var bounds := threshold.get_global_transform_with_canvas() * Rect2(-extent * 0.5, extent)
+	_mark_map(bounds, "出门后 · " + target.title, Mark.EXIT, false)
 
 func _mark_place(title: String, point: Vector2, hint: Label = null) -> void:
 	_show_road_route(point)
@@ -602,7 +621,7 @@ func _mark_map(bounds: Rect2, label_text: String, style: Mark, near: bool, tool 
 			var at := Vector2(bounds.get_center().x - badge_size.x / 2.0, bounds.end.y + 7.0)
 			if style == Mark.PLOT:
 				at = _plot_plaque_position(bounds, badge_size)
-			elif style == Mark.PLACE and not hud.map_space_clear(Rect2(at, badge_size)):
+			elif style == Mark.EXIT or (style == Mark.PLACE and not hud.map_space_clear(Rect2(at, badge_size))):
 				at.y = bounds.position.y - badge_size.y - 7.0
 			if at != Vector2.INF and hud.map_space_clear(Rect2(at, badge_size)):
 				plaque = Rect2(at, badge_size)
@@ -652,6 +671,11 @@ func _draw() -> void:
 			if mark == Mark.PLACE:
 				draw_circle(at, 8.0, SHADOW)
 			draw_colored_polygon(stone, GOLD)
+		Mark.EXIT:
+			var at := outline.get_center()
+			var arrow := PackedVector2Array([at + Vector2(-9, -4), at + Vector2(0, 6), at + Vector2(9, -4)])
+			draw_polyline(arrow, SHADOW, 5.0)
+			draw_polyline(arrow, GOLD, 2.3)
 		Mark.EDGE:
 			var at := plaque.position + Vector2(12, plaque.size.y / 2.0)
 			var axis := edge_direction * 6.0

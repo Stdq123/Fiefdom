@@ -189,8 +189,9 @@ func _dry_plot_and_sleep() -> bool:
 		return false
 	_expect(plan.find_plot.visible, "The night plan sees the dry private plot outside.")
 	await _press(plan.find_plot)
-	_expect(ui.directions.tracked_plot == PRIVATE and not ui.directions.visible
-		and ui.hud.practice_label.text.contains("南门"), "Field guidance waits until the player leaves the room.")
+	_expect(ui.directions.tracked_plot == PRIVATE and ui.directions.visible
+		and ui.directions.caption.text.begins_with("出门后") and ui.hud.practice_label.text.contains("南门"),
+		"Field guidance marks the south threshold before the player leaves the room.")
 	if not await _leave():
 		return false
 	_expect(ui.directions.visible and ui.hud.practice_label.text.is_empty(),
@@ -258,7 +259,7 @@ func _mark_public_plot_from_bed() -> bool:
 	await _snapshot("05a-bedtime-warning")
 	await _press(warning.choices.front())
 	return _expect(not player.conversation_open and state.current_day == 2 and state.food_storage == grain
-		and ui.directions.tracked_plot == PUBLIC and not ui.directions.visible
+		and ui.directions.tracked_plot == PUBLIC and ui.directions.visible and ui.directions.caption.text.begins_with("出门后")
 		and "从南门回田边" in ui.hud.practice_label.text, "Marking the public plot stays in the room and points out the exit.")
 
 func _harvest() -> void:
