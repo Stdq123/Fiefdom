@@ -641,6 +641,8 @@ Windows 候选包内的 `SHA256SUMS.txt` 覆盖程序、资源、兼容入口、
 
 ## 田况与渠网标记
 
+九格交界补上细畦沟和受光的土沿。最远镜头仍能辨认格子，秧苗、入水线和田况符号留在上层。首贡提醒与封地管理的小图共用地图的土壤图集及田格取样。构建 `d8c72e1` 在 1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面各核对 16 张固定画面和 135 个田格落点，覆盖晴雨、夜间、通水和议税后的私田。Windows ZIP 的 SHA-256 为 `6c4dfb9fc4bf8f0cde867118528c974e033a796fbf6c29a067ff2acae630e072`。存档写入为零，测试包已清理。 [井田画面核对记录](../build/polish-readable-field-bunds/release-d8c72e1/release-proof.txt)
+
 封地的缺水苗泛出枯黄，畦面露出细干纹。手浇后苗叶回青，土色变深。稻田断水时在干畦上显示叉号，接通渠水后恢复水面。封地管理的九格田图同步显示苗色、畦面和角标。构建 `8b156cf` 在 1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面核对了这几种状态。Windows ZIP 的 SHA-256 为 `a4df9608ef243557806b6ea7b362ddd7cdd03e2f88c20f1a04f3e0a62f943ec4`。存档写入为零，Windows 测试包已清理。 [井田缺水画面核对记录](../build/polish-field-moisture/release-8b156cf/release-proof.txt)
 
 把封地渠岸的水面、岸沿、草茬和暗渠盖石按绘制顺序合批。九井田、192 格渠的镜头平移中，每帧调用从 2610 降至 1451。1024×768 OpenGL 的 p95 帧耗时从 6.81 降至 4.29 毫秒，1920×1080 Vulkan 从 2.29 降至 1.62 毫秒。60 对定格核对覆盖晴雨雪、夜色、断水和旧式暗渠，色值差异最多一个色阶。构建提交 `1b79609`，Windows ZIP 的 SHA-256 为 `ea7ff9fe85f85102deea37453bf7ac14c83747a6105f8f597cb5fc6f03b54fe5`。测试包已清理。 [核对记录](../build/polish-estate-pacing/release-1b79609/release-proof.txt)
