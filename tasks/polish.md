@@ -611,6 +611,12 @@ Windows 候选包内的 `SHA256SUMS.txt` 覆盖程序、资源、兼容入口、
 
 从 `85b9f38` 独立构建两次，ZIP 的 SHA-256 均为 `6652fd24a3666360081ab5cfcc70d5194ba5a7ca5773bfd3cccea5fbb6759167`。无窗口检查通过。隔离桌面在 1920×1080 的 Vulkan 和 Direct3D 12、1024×768 的 OpenGL 各核对 9 个界面。覆盖两条路线的缺额与达成、长收成记录翻页、铜钱余额跨过门槛及手记的呈交入口。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-route-ledger-reading/release-85b9f38/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-route-ledger-reading/release-85b9f38/release-proof.txt)
 
+## 结局目标的来敌日期与守备入口
+
+贡簿和新税册的「击退敌袭」显示下一次预计来敌的日期。门下有兵家时，入口直接打开对应职务栏，长名单会自动卷动。没有兵家时可提前读守备准备。敌袭前一天可打开明日预报并标东路岗，来敌已经出现时可追踪目标。
+
+构建 `36e4279` 通过六项无窗口界面检查和原样解包启动。1920×1080 Vulkan 与 1024×768 OpenGL 隔离桌面各核对八个最大字号画面及十一次鼠标点击。六人名单中，弋戎的职务栏滚进可见区域，预告和实际来敌的指路均可用。Windows ZIP 的 SHA-256 为 `e17306aba756c5cb61b4c0d0fbc9b114d69c5ac204b78aab89fca11dc4f821e1`。存档写入为零，两轮测试包已清理。 [核对记录](../build/polish-route-defense/release-36e4279/release-proof.txt)
+
 ## 议税筹备账与三案对照的阅读布局
 
 召简候议时，封地手记可从当前指路切到堂前。夜间入口显示「去见召简」，今夜安排把「议税后可过夜」写在按钮旁。研究费未缴和研究期满各有手记提示。构建 `53609b8` 的 Windows ZIP SHA-256 为 `681d680156b2824ee4a51fe3e157901216bab1fa6f32f0e9e382ba9956022ad2`。四项无窗口检查和原样解包启动通过。1920×1080 Vulkan 与 1024×768 OpenGL 的隔离桌面各核对八个最大字号画面，包含床榻入口和堂屋南门的出门说明。两轮测试包已清理。 [召简指路核对记录](../build/polish-envoy-guidance/release-53609b8/release-proof.txt)
