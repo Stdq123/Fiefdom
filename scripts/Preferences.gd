@@ -243,6 +243,9 @@ func _apply_fullscreen_mode(window: Window) -> void:
 		if window_size == _preset_before_fullscreen:
 			# The display server restores the windowed rectangle on leaving fullscreen.
 			window.mode = _window_mode_before_fullscreen
+			await get_tree().process_frame
+			if not fullscreen and window.mode == Window.MODE_WINDOWED:
+				_fit_window(window, window.size, false)
 		else:
 			_apply_window_preset(window)
 
