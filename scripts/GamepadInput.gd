@@ -51,6 +51,7 @@ var _mouse_cursor: Sprite2D
 var _field_tool: Sprite2D
 var _mouse_client_position := Vector2.INF
 var _mouse_cursor_needs_refresh := false
+var _mouse_popup_hover := false
 @onready var window := get_tree().root
 
 func _ready() -> void:
@@ -95,6 +96,9 @@ func _watch_gui_cursor(node: Node) -> void:
 		if not node.is_connected(&"visibility_changed", _queue_mouse_cursor_refresh):
 			node.connect(&"visibility_changed", _queue_mouse_cursor_refresh)
 			node.tree_exited.connect(_queue_mouse_cursor_refresh)
+			if node is PopupMenu:
+				node.visibility_changed.connect(_clear_mouse_popup_hover)
+				node.id_focused.connect(_clear_mouse_popup_hover.unbind(1))
 		_queue_mouse_cursor_refresh()
 	if not node is BaseButton:
 		return
@@ -133,8 +137,10 @@ func _joy_connection_changed(id: int, connected: bool) -> void:
 func _window_input(event: InputEvent) -> void:
 	if event is InputEventMouse:
 		_mouse_client_position = event.position
-	if event is InputEventMouseButton or (event is InputEventMouseMotion and not event.relative.is_zero_approx()) \
-			or (event is InputEventKey and event.pressed):
+	var moved: bool = event is InputEventMouseMotion and not event.relative.is_zero_approx()
+	if moved:
+		_mouse_popup_hover = true
+	if event is InputEventMouseButton or moved or (event is InputEventKey and event.pressed):
 		_use_mouse()
 	elif event is InputEventJoypadButton:
 		if event.pressed:
@@ -157,6 +163,7 @@ func _use_gamepad(id: int) -> void:
 		return
 	device_id = id
 	active = true
+	_clear_mouse_popup_hover()
 	if _mouse_cursor:
 		_mouse_cursor.hide()
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
@@ -182,6 +189,10 @@ func _read_mouse_position() -> void:
 
 func _clear_mouse_position() -> void:
 	_mouse_client_position = Vector2.INF
+	_clear_mouse_popup_hover()
+
+func _clear_mouse_popup_hover() -> void:
+	_mouse_popup_hover = false
 
 func _update_mouse_cursor() -> void:
 	if active:
@@ -202,6 +213,8 @@ func _update_mouse_cursor() -> void:
 	if dragging and shape != DisplayServer.CURSOR_CAN_DROP:
 		# Godot can report an arrow over empty canvas during a drag.
 		shape = DisplayServer.CURSOR_FORBIDDEN
+	elif inside_content and shape == DisplayServer.CURSOR_ARROW:
+		shape = _interactive_mouse_shape(point)
 	var art: Variant = MOUSE_CURSORS.get(shape)
 	var draw_pointer := inside_content and art != null
 	var draw_tool := false
@@ -218,6 +231,21 @@ func _update_mouse_cursor() -> void:
 	var mode := Input.MOUSE_MODE_HIDDEN if draw_pointer else Input.MOUSE_MODE_VISIBLE
 	if Input.mouse_mode != mode:
 		Input.mouse_mode = mode
+
+func _interactive_mouse_shape(point: Vector2) -> DisplayServer.CursorShape:
+	var focused_window := _focused_window()
+	var popup := focused_window as PopupMenu
+	if popup:
+		var bounds := Rect2(Vector2(popup.position), Vector2(popup.size))
+		# Keyboard focus can move independently of the mouse over a popup.
+		if _mouse_popup_hover and bounds.has_point(point):
+			var item := popup.get_focused_item()
+			if (item >= 0 and item < popup.item_count
+					and not popup.is_item_disabled(item) and not popup.is_item_separator(item)):
+				return DisplayServer.CURSOR_POINTING_HAND
+		return DisplayServer.CURSOR_ARROW
+	var slider := focused_window.gui_get_hovered_control() as Slider
+	return DisplayServer.CURSOR_POINTING_HAND if slider and slider.editable else DisplayServer.CURSOR_ARROW
 
 func _update_mouse_field_tool(point: Vector2, bounds: Rect2) -> bool:
 	var field := get_tree().get_first_node_in_group(&"field_cursor")
