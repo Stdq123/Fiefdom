@@ -4057,67 +4057,73 @@ func next_campaign_name() -> String:
 func saved_games() -> Array[Dictionary]:
 	return _save_catalog().entries
 
-func _save_catalog() -> Dictionary:
+func _save_catalog(include_recovery_backups := false) -> Dictionary:
 	var catalog: Array[Dictionary] = []
 	var fingerprints: Dictionary[String, PackedStringArray] = {}
 	for path in _save_paths():
 		if not _save_slot_exists(path):
 			continue
-		var snapshot := _read_snapshot(path)
-		var data: Dictionary = snapshot["data"]
-		var readable: bool = snapshot["error"] == OK
-		var campaign := _snapshot_campaign(data)
-		var legacy := not path.begins_with(CAMPAIGN_SAVE_ROOT + "/")
-		var campaign_key := campaign.md5_text() if readable or legacy else path.get_base_dir().get_file()
-		var storage_key := campaign_key if legacy else path.get_base_dir().get_file()
+		var snapshot := _read_snapshot(path, include_recovery_backups)
+		var entry := _save_catalog_entry(path, snapshot)
+		var storage_key: String = entry.campaign_key if entry.legacy else path.get_base_dir().get_file()
 		var versions: PackedStringArray = fingerprints.get(storage_key, PackedStringArray())
 		versions.append_array(snapshot.slot_fingerprints)
 		fingerprints[storage_key] = versions
-		var name_in_archive := _snapshot_campaign_name(data)
-		if not readable:
-			name_in_archive = snapshot.get("display_name", "受损存档")
-		var source := "手动存档"
-		if path.get_file() != SAVE_PATH.get_file():
-			match data.get("save_origin"):
-				"council": source = "初税亩自动存档"
-				"ending": source = "结局自动存档"
-				"ending_continue": source = "续营自动存档"
-				_: source = "晨间自动存档" if readable else "自动存档"
-		var saved_health := _read_save_int(data.get("health"), balance.player_max_health)
-		var saved_outcome := _snapshot_outcome(data, saved_health)
-		var saved_record := _saved_ending_record(data)
-		var resume_scene := _snapshot_scene(data, saved_outcome)
-		var room := _snapshot_room(data, resume_scene, saved_outcome)
-		var location: String = SAVE_LOCATION_NAMES.get(data.get("location"), "")
-		if saved_outcome == Outcome.RUNNING and resume_scene == ESTATE_SCENE:
-			location = ESTATE_ROOM_NAMES[room]
-		catalog.append({
-			"path": path,
-			"source": source,
-			"sequence": snapshot.get("sequence", -1),
-			"fingerprint": snapshot.get("fingerprint", ""),
-			"day": _read_save_int(data.get("current_day"), 0),
-			"watch": DAY_WATCHES[_day_watch_index(_saved_day_progress(data))] + "时",
-			"location": location,
-			"scene": resume_scene,
-			"estate_room": room,
-			"rank": clampi(_read_save_int(data.get("current_rank"), Rank.XIA_SHI), Rank.XIA_SHI, Rank.QING),
-			"campaign": campaign,
-			"campaign_key": campaign_key,
-			"campaign_name": name_in_archive,
-			"legacy": legacy,
-			"from_backup": snapshot["file"] != path,
-			"required_version": snapshot.get("required_version", 0),
-			"tax_choice": _read_save_int(data.get("tax_reform_choice"), TaxReformChoice.NONE),
-			"outcome": saved_outcome,
-			"completed_route": _read_save_int(saved_record.get("outcome"), saved_outcome),
-			"running": saved_outcome == Outcome.RUNNING,
-			"error": snapshot["error"],
-		})
+		catalog.append(entry)
+		if snapshot.has("recovery_backup"):
+			var backup := _save_catalog_entry(path, snapshot.recovery_backup)
+			if _can_resume(backup, true) and (not _can_resume(entry, true) or backup.sequence > entry.sequence):
+				catalog.append(backup)
 	catalog.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["sequence"] > b["sequence"])
 	for entry in catalog:
 		entry["observed_fingerprints"] = fingerprints.get(entry.campaign.md5_text(), PackedStringArray())
 	return {"entries": catalog, "fingerprints": fingerprints}
+
+func _save_catalog_entry(path: String, snapshot: Dictionary) -> Dictionary:
+	var data: Dictionary = snapshot["data"]
+	var readable: bool = snapshot["error"] == OK
+	var campaign := _snapshot_campaign(data)
+	var legacy := not path.begins_with(CAMPAIGN_SAVE_ROOT + "/")
+	var campaign_key := campaign.md5_text() if readable or legacy else path.get_base_dir().get_file()
+	var name_in_archive := _snapshot_campaign_name(data) if readable else str(snapshot.get("display_name", "受损存档"))
+	var source := "手动存档"
+	if path.get_file() != SAVE_PATH.get_file():
+		match data.get("save_origin"):
+			"council": source = "初税亩自动存档"
+			"ending": source = "结局自动存档"
+			"ending_continue": source = "续营自动存档"
+			_: source = "晨间自动存档" if readable else "自动存档"
+	var saved_health := _read_save_int(data.get("health"), balance.player_max_health)
+	var saved_outcome := _snapshot_outcome(data, saved_health)
+	var saved_record := _saved_ending_record(data)
+	var resume_scene := _snapshot_scene(data, saved_outcome)
+	var room := _snapshot_room(data, resume_scene, saved_outcome)
+	var location: String = SAVE_LOCATION_NAMES.get(data.get("location"), "")
+	if saved_outcome == Outcome.RUNNING and resume_scene == ESTATE_SCENE:
+		location = ESTATE_ROOM_NAMES[room]
+	return {
+		"path": path,
+		"source": source,
+		"sequence": snapshot.get("sequence", -1),
+		"fingerprint": snapshot.get("fingerprint", ""),
+		"day": _read_save_int(data.get("current_day"), 0),
+		"watch": DAY_WATCHES[_day_watch_index(_saved_day_progress(data))] + "时",
+		"location": location,
+		"scene": resume_scene,
+		"estate_room": room,
+		"rank": clampi(_read_save_int(data.get("current_rank"), Rank.XIA_SHI), Rank.XIA_SHI, Rank.QING),
+		"campaign": campaign,
+		"campaign_key": campaign_key,
+		"campaign_name": name_in_archive,
+		"legacy": legacy,
+		"from_backup": snapshot["file"] != path,
+		"required_version": snapshot.get("required_version", 0),
+		"tax_choice": _read_save_int(data.get("tax_reform_choice"), TaxReformChoice.NONE),
+		"outcome": saved_outcome,
+		"completed_route": _read_save_int(saved_record.get("outcome"), saved_outcome),
+		"running": saved_outcome == Outcome.RUNNING,
+		"error": snapshot["error"],
+	}
 
 func saved_game_version_notice(entry: Dictionary) -> String:
 	if entry.get("required_version", 0) <= SAVE_VERSION:
@@ -4156,7 +4162,7 @@ func _saved_day_progress(data: Dictionary) -> float:
 	return clampf(_read_save_number(data.get("day_progress"), 0.0), 0.0, 1.0)
 
 func latest_saved_game(current_campaign_only := false) -> Dictionary:
-	var catalog := saved_games()
+	var catalog: Array[Dictionary] = _save_catalog(current_campaign_only).entries
 	for entry in catalog:
 		if entry["error"] == OK and _can_resume(entry, current_campaign_only):
 			var key: String = entry.campaign_key
@@ -4172,7 +4178,7 @@ func latest_campaign_save() -> Dictionary:
 	return {}
 
 func load_latest_game(current_campaign_only := false) -> Error:
-	var catalog := saved_games()
+	var catalog: Array[Dictionary] = _save_catalog(current_campaign_only).entries
 	var key := campaign_id.md5_text()
 	var unavailable := false
 	var failure := ERR_FILE_NOT_FOUND
@@ -4226,7 +4232,7 @@ func _snapshot_campaign_name(data: Dictionary) -> String:
 	var estate_name = data.get("campaign_name")
 	return estate_name.left(16) if estate_name is String and not estate_name.is_empty() else "旧封地"
 
-func _read_snapshot(path: String) -> Dictionary:
+func _read_snapshot(path: String, include_recovery_backup := false) -> Dictionary:
 	var snapshot := _read_save_file(path)
 	snapshot["file"] = path
 	var versions := PackedStringArray()
@@ -4244,6 +4250,11 @@ func _read_snapshot(path: String) -> Dictionary:
 			if snapshot.error == ERR_FILE_NOT_FOUND or backup.error == OK or backup_needs_update:
 				snapshot = backup
 				snapshot["file"] = backup_path
+		elif (include_recovery_backup and backup.error == OK and backup.fingerprint != snapshot.fingerprint
+				and _snapshot_campaign(backup.data) == campaign_id and _load_snapshot_data(backup.data, 0, true) == OK):
+			backup["file"] = backup_path
+			backup["required_version"] = required
+			snapshot["recovery_backup"] = backup
 		snapshot["required_version"] = required
 	snapshot["slot_fingerprints"] = versions
 	return snapshot

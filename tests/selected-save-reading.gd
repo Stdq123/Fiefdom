@@ -151,28 +151,51 @@ func _legacy_without_sequence() -> void:
 
 func _campaign_recovery() -> void:
 	var manual := _slot("recover")
-	_put(manual, _record("recover", "南津", 22, 198, 111))
-	_put(_slot("recover", "autosave-1.json"), _record("recover", "南津", 26, 199, 112))
+	var backup: String = manual + state.SAVE_BACKUP_SUFFIX
+	_put(backup, _record("recover", "南津", 22, 198, 111))
+	var completed := _record("recover", "南津", 24, 200, 115)
+	completed.outcome = state.Outcome.TRADITIONAL
+	_put(manual, completed)
+	var primary_hash := FileAccess.get_sha256(manual)
+	var backup_hash := FileAccess.get_sha256(backup)
+	var later := _slot("recover", "autosave-1.json")
+	_put(later, _record("recover", "南津", 26, 199, 112))
+	_put(later + state.SAVE_BACKUP_SUFFIX, _record("other", "柳津", 23, 199, 117))
 	_put(_slot("recover", "autosave-2.json"), _record("recover", "南津", 20, 201, 113))
-	var ending := _record("recover", "南津", 20, 200, 114)
-	ending.outcome = state.Outcome.DEFEAT_ESTATE
-	_put(_slot("recover", "autosave-3.json"), ending)
+	var loss := _record("recover", "南津", 20, 200, 114)
+	loss.outcome = state.Outcome.DEFEAT_ESTATE
+	var auto := _slot("recover", "autosave-3.json")
+	_put(auto, loss)
+	var damaged := _record("recover", "南津", 23, 199, 116)
+	damaged.active_crops = []
+	_put(auto + state.SAVE_BACKUP_SUFFIX, damaged)
 	state.campaign_id = "recover"
 	state.current_day = 24
 	state.checkpoint_sequence = 200
+	var rows: Array = state.saved_games().filter(func(row: Dictionary) -> bool: return row.path == manual)
+	_expect(rows.size() == 1 and rows[0].outcome == state.Outcome.TRADITIONAL and not rows[0].from_backup,
+		"The title and save book still list the conclusion once, with its primary record.")
 	var entry: Dictionary = state.latest_saved_game(true)
-	_expect(entry.get("path", "") == manual, "Recovery excludes other estates, endings, later days and later sequences.")
-	if _expect(state.load_latest_game(true) == OK, "The current estate has an eligible recovery record."):
+	_expect(entry.get("path", "") == manual and entry.get("from_backup", false) and entry.get("day", 0) == 22,
+		"Recovery sees the eligible backup behind the conclusion and skips other estates, damage and out-of-range records.")
+	if _expect(state.load_latest_game(true) == OK, "The current estate has an eligible backup for recovery."):
 		await scene_changed
-		_expect(state.campaign_id == "recover" and state.current_day == 22 and state.money == 111,
-			"Recovery restores the eligible campaign checkpoint.")
+		_expect(state.campaign_id == "recover" and state.current_day == 22 and state.money == 111
+			and FileAccess.get_sha256(manual) == primary_hash and FileAccess.get_sha256(backup) == backup_hash
+			and primary_hash in state._observed_save_fingerprints and backup_hash in state._observed_save_fingerprints,
+			"Restoring the backup leaves both files intact and observes both versions for later save conflict checks.")
 
 func _outcome_selection(won: bool) -> void:
 	var estate := current_scene
 	var hud := estate.get_node("CampaignHUD")
 	var id := "finished" if won else "defeated"
 	var path := _slot(id)
-	_put(path, _record(id, "南津", 32, 320, 64))
+	var backup: String = path + state.SAVE_BACKUP_SUFFIX
+	_put(backup, _record(id, "南津", 32, 320, 64))
+	var primary := _record(id, "南津", 35 if won else 36, 350 if won else 360, 78)
+	if won:
+		primary.outcome = state.Outcome.TRADITIONAL
+	_put(path, primary)
 	state.campaign_id = id
 	state.current_day = 35
 	state.checkpoint_sequence = 350
@@ -188,11 +211,12 @@ func _outcome_selection(won: bool) -> void:
 	if won:
 		restore.pressed.emit()
 		_expect(panel.restore_confirmation.visible and panel.stay_button.has_focus()
-			and "第 32 天" in panel.restore_detail.text, "The ending confirmation names the selected checkpoint.")
+			and "备份" in panel.restore_detail.text and "第 32 天" in panel.restore_detail.text,
+			"The ending confirmation names the backup beneath the saved ending.")
 	else:
-		_expect("第 32 天" in panel.checkpoint.text and restore.has_focus(),
-			"The defeat page names and focuses the selected recovery point.")
-	_put(path, _record(id, "南津", 33, 330, 65))
+		_expect("备份" in panel.checkpoint.text and "第 32 天" in panel.checkpoint.text and restore.has_focus(),
+			"The defeat page offers the backup instead of the newer primary.")
+	_put(backup, _record(id, "南津", 33, 330, 65))
 	var confirm: Button = panel.load_before_ending if won else restore
 	confirm.pressed.emit()
 	if not _expect(current_scene == estate and paused and panel.visible and "变动" in hud.status.text
