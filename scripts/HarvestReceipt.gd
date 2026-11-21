@@ -105,15 +105,7 @@ func _record_harvest(harvest: Dictionary, worker: String) -> void:
 	caption.text = " · ".join(heading)
 	_update_store(treasury, "国库", tribute, treasury_crops, HUDIcons.Symbol.TREASURY)
 	_update_store(warehouse, "私仓", stock, warehouse_crops, HUDIcons.Symbol.GRAIN)
-	var totals := PackedStringArray()
-	if copper > 0:
-		totals.append("铜钱 +%d" % copper)
-	if leaves > 0:
-		totals.append("桑叶 +%d" % leaves)
-	if levy > 0:
-		totals.append("已扣税 %d" % levy)
-	gains.label.text = " · ".join(totals)
-	gains.visible = not totals.is_empty()
+	gains.visible = copper > 0 or leaves > 0 or levy > 0
 	if gains.visible:
 		gains.art.texture = HUDIcons.icon(HUDIcons.Symbol.COIN if copper > 0 or levy > 0 else HUDIcons.Symbol.MULBERRY)
 	modulate.a = 1.0
@@ -143,11 +135,36 @@ func _fit_receipt() -> void:
 		return
 	var width := minf(MAX_WIDTH, get_viewport_rect().size.x - 32.0) - get_theme_stylebox(&"panel").get_minimum_size().x
 	_fit_line(caption, width)
+	var row_width := width - ICON_SIZE - ICON_GAP
+	if gains.visible:
+		gains.label.text = _gains_caption(row_width)
 	for line: ReceiptLine in [treasury, warehouse, gains]:
 		if line.visible:
-			_fit_line(line.label, width - ICON_SIZE - ICON_GAP)
+			_fit_line(line.label, row_width)
 	reset_size()
 	_position_receipt()
+
+func _gains_caption(width: float) -> String:
+	var amounts := PackedStringArray()
+	if copper > 0:
+		amounts.append("铜钱 +%d" % copper)
+	if leaves > 0:
+		amounts.append("桑叶 +%d" % leaves)
+	if levy > 0:
+		amounts.append("已扣税 %d" % levy)
+	var font := gains.label.get_theme_font(&"font")
+	var size_in_ink := gains.label.get_theme_font_size(&"font_size")
+	var lines := PackedStringArray()
+	var line := ""
+	for amount in amounts:
+		var joined := amount if line.is_empty() else line + " · " + amount
+		if not line.is_empty() and font.get_string_size(joined, HORIZONTAL_ALIGNMENT_LEFT, -1.0, size_in_ink).x > width:
+			lines.append(line)
+			line = amount
+		else:
+			line = joined
+	lines.append(line)
+	return "\n".join(lines)
 
 func _fit_line(label: Label, width: float) -> void:
 	var font := label.get_theme_font(&"font")

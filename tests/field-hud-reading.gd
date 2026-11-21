@@ -89,7 +89,7 @@ func _read_receipt(events: Node, prefs: Node, items: Node) -> void:
 	var bounds := receipt.get_global_rect()
 	_expect(receipt.visible and receipt.caption.text.begins_with("收获 3 格")
 		and receipt.warehouse.label.text == "私仓 +5 · 稷 3、菽 2"
-		and receipt.gains.label.text.contains("已扣税 4321987654321"),
+		and receipt.gains.label.text.ends_with("\n已扣税 4321987654321"),
 		"A mixed receipt keeps the names, quantities, destination, and actual tax.")
 	for line: Control in [receipt.treasury, receipt.warehouse, receipt.gains]:
 		var label: Label = line.label
