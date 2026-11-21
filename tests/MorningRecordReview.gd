@@ -58,6 +58,8 @@ func run(scenario: SceneTree, directory := "") -> bool:
 	var bounds: Rect2 = book.record_summary.get_global_rect()
 	_expect(tree.root.get_visible_rect().encloses(book.window.get_global_rect())
 		and bounds.end.y <= book.scroll.get_global_rect().position.y, "All action buttons fit above the scrolling receipt.")
+	_expect(absf(book.mark_raider.get_global_rect().position.y - book.plan_field.get_global_rect().position.y) < 1.0,
+		"The five actions share a row at the largest reading size.")
 	for action in actions:
 		_expect(bounds.encloses(action.get_global_rect()) and action.icon != null, "The entire action and icon stay in the fixed block.")
 	_key(KEY_DOWN)
