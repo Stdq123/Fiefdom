@@ -23,7 +23,7 @@ const GUIDANCE := {
 		"unit": "铜钱", "action": "打开市场", "detail": "结局以手头余额为准。收获或卖作物可攒钱，支出会减少进度。",
 	},
 	Global.RouteGoal.RAIDS: {
-		"unit": "次", "detail": "累计击退次数。可分派军务门客守卫，或亲自射箭迎敌。",
+		"unit": "次",
 	},
 }
 
@@ -99,8 +99,8 @@ func _add_goal(goal: Dictionary) -> void:
 	var guide: Dictionary = GUIDANCE[kind]
 	var complete: bool = goal.value >= goal.target
 	row.get_node("%GoalTitle").text = goal.label
-	var detail: String = guide.detail
-	var action_text: String = _raid_action() if kind == Global.RouteGoal.RAIDS else guide.action
+	var detail: String = guide.get("detail", "")
+	var action_text: String = guide.get("action", "")
 	if not complete and kind in [Global.RouteGoal.TRIBUTE, Global.RouteGoal.TAXED_HARVEST]:
 		var harvest: Dictionary = world.council_harvest_forecast(Global.tax_reform_choice)
 		if kind == Global.RouteGoal.TRIBUTE and harvest.tribute > 0:
@@ -121,6 +121,10 @@ func _add_goal(goal: Dictionary) -> void:
 			detail = "手中已有 %d 匹。到蚕桑页点「%s」，记入本案。" % [bolts, trade]
 		else:
 			detail = "蚕桑页可查看现有蚕茧和生丝，缺叶时可标出桑田。织成后%s。" % trade
+	elif not complete and kind == Global.RouteGoal.RAIDS:
+		var defense := _defense_guide()
+		detail = defense.detail
+		action_text = defense.action
 	var note: Label = row.get_node("%GoalDetail")
 	note.text = detail
 	note.visible = not complete
@@ -143,12 +147,27 @@ func _add_goal(goal: Dictionary) -> void:
 	action.text = action_text
 	action.pressed.connect(_take_action.bind(kind))
 
-func _raid_action() -> String:
+func _defense_guide() -> Dictionary:
 	if Global.raid_day > 0:
-		return "标出来敌"
-	if Global.is_raid_day(Global.current_day + 1):
-		return "查看明日守备"
-	return "分派守卫"
+		return {"action": "标出来敌", "detail": "东路已有%s，可沿标记找到来敌。" % Global.raid_name(Global.raid_kind)}
+	var tomorrow := Global.current_day + 1
+	var raid := Global.next_raid_day(tomorrow)
+	var detail := "预计第 %d 天卯时来敌。" % raid
+	if raid == tomorrow:
+		detail = "明日卯时来敌（第 %d 天）。" % raid
+	var action := "查看守备准备"
+	var guard := Global.guard_for_defense()
+	if guard and guard.duty == RetainerData.Duty.GUARD:
+		detail += "%s已任守卫。" % guard.name
+		action = "查看守卫"
+	elif guard:
+		detail += "可安排%s守卫。" % guard.name
+		action = "分派守卫"
+	else:
+		detail += "可亲自射箭守卫。"
+	if raid == tomorrow:
+		action = "查看明日守备"
+	return {"action": action, "detail": detail}
 
 func _take_action(kind: Global.RouteGoal) -> void:
 	close_map()

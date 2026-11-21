@@ -305,6 +305,13 @@ func focus_seed_picker() -> void:
 	seed_plan_picker.grab_focus()
 	GamepadInput.snap_pointer_to_focus.call_deferred()
 
+func focus_guard_duty(guard: RetainerData) -> void:
+	for item: Control in retainer_list_container.get_children():
+		if item.data == guard:
+			item.duty_picker.grab_focus()
+			GamepadInput.snap_pointer_to_focus.call_deferred()
+			return
+
 func show_neighbors() -> void:
 	tabs.current_tab = tabs.get_tab_idx_from_control(neighbor_journal)
 

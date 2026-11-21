@@ -106,6 +106,7 @@ const PANEL_FOCUS := preload("res://scripts/PanelFocus.gd")
 
 var show_previous := false
 var focus_shortage := false
+var focus_defense := false
 var completed_field_id := -1
 var wait_for_retainers: Callable
 var settling_field_work := false
@@ -294,7 +295,9 @@ func _finish_opening_focus() -> void:
 	await get_tree().process_frame
 	if is_queued_for_deletion() or not close_button.has_focus():
 		return
-	if focus_shortage and not show_previous:
+	if focus_defense and raid_plan.is_visible_in_tree():
+		_show_section(raid_plan, _available_action([find_watch]))
+	elif focus_shortage and not show_previous:
 		_show_meals()
 	if close_button.has_focus():
 		GamepadInput.snap_pointer_to_focus()
@@ -649,18 +652,31 @@ func _retainer_names(roster: Array) -> String:
 
 func _refresh_raid_plan() -> void:
 	var tomorrow := Global.current_day + 1
+	var raid := Global.next_raid_day(tomorrow)
+	var due_tomorrow := raid == tomorrow
 	var active := Global.raid_day > 0
-	raid_plan.visible = active or Global.is_raid_day(tomorrow)
+	raid_plan.visible = active or due_tomorrow or focus_defense
 	if not raid_plan.visible:
 		return
-	raid_heading.text = "东路来敌 · " + Global.raid_name(Global.raid_kind) if active else "明日有敌袭"
-	if not active and Global.east_watch_day > 0:
-		raid_heading.text += " · " + Global.raid_name(Global.raid_kind_on(tomorrow))
+	if active:
+		raid_heading.text = "东路来敌 · " + Global.raid_name(Global.raid_kind)
+	elif due_tomorrow:
+		raid_heading.text = "明日有敌袭"
+		if Global.east_watch_day > 0:
+			raid_heading.text += " · " + Global.raid_name(Global.raid_kind_on(raid))
+	else:
+		raid_heading.text = "预计第 %d 天卯时来敌" % raid
 	var instructions := GamepadInput.bow_instruction() + "。见地面红边就往侧边走。"
 	if not active:
-		instructions = "过夜前可先收成熟作物。合上账册后，可在屋外朝空地试射。\n" + instructions
-	if Global.retainers.any(func(worker: RetainerData) -> bool: return worker.can_take_duty(RetainerData.Duty.GUARD)):
-		instructions += "\n可在「管理」中安排兵家门客守卫。"
+		instructions = "合上账册后，可在屋外朝空地试射。\n" + instructions
+		if due_tomorrow:
+			instructions = "过夜前可先收成熟作物。" + instructions
+	var guard := Global.guard_for_defense()
+	if guard:
+		if guard.duty == RetainerData.Duty.GUARD:
+			instructions += "\n%s已任守卫。" % guard.name
+		else:
+			instructions += "\n可在「管理」中安排%s守卫。" % guard.name
 	if Global.watch_snare_armed or Global.raid_snare_left >= 0.0 or (not active and Global.can_prepare_watch_snare()):
 		instructions += "\n" + Global.watch_snare_status()
 	find_watch.visible = not active and Global.can_prepare_watch_snare()

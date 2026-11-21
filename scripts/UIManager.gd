@@ -246,10 +246,15 @@ func _on_route_goal_action(kind: Global.RouteGoal) -> void:
 			_show_market()
 			panel_manager.management_panel_instance.market_panel.focus_reform_sale()
 		Global.RouteGoal.RAIDS:
-			if Global.raid_day > 0 or Global.is_raid_day(Global.current_day + 1):
-				_on_raid_alert_pressed()
+			if Global.raid_day > 0:
+				_mark_active_raid()
 			else:
-				_show_estate_management()
+				var guard := Global.guard_for_defense()
+				if guard and not Global.is_raid_day(Global.current_day + 1):
+					_show_estate_management()
+					panel_manager.management_panel_instance.focus_guard_duty(guard)
+				else:
+					_show_night_rations(false, false, true)
 
 func _show_estate_management(field_id := -1) -> void:
 	panel_manager.show_management_panel()
@@ -887,7 +892,7 @@ func _on_defense_report_pressed() -> void:
 	var next_day := Global.next_visitor_day(VisitorData.EAST_WATCHER) if visit.is_empty() else 0
 	dialog_manager.show_defense_report(visit, next_day, directions.follow_neighbor.bind(VisitorData.EAST_WATCHER))
 
-func _show_night_rations(show_previous := false, focus_shortage := false) -> void:
+func _show_night_rations(show_previous := false, focus_shortage := false, focus_defense := false) -> void:
 	if Global.outcome != Global.Outcome.RUNNING or world.player.conversation_open or (sleep_tween and sleep_tween.is_running()):
 		return
 	world.set_channel_mode(false)
@@ -895,6 +900,7 @@ func _show_night_rations(show_previous := false, focus_shortage := false) -> voi
 	var panel := NIGHT_RATIONS_PANEL.instantiate()
 	panel.show_previous = show_previous
 	panel.focus_shortage = focus_shortage
+	panel.focus_defense = focus_defense
 	panel.wait_for_retainers = world.wait_for_retainers
 	var previous_focus := get_viewport().gui_get_focus_owner()
 	var player: Player = world.player

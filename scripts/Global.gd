@@ -1988,14 +1988,29 @@ func _arrive_after_ending(position: Vector2, direction: Vector2) -> void:
 	get_tree().get_first_node_in_group("player").arrive_at_position(position, direction)
 	save_automatically("ending_continue")
 
+func next_raid_day(from_day: int) -> int:
+	var earliest := maxi(from_day, balance.raid_first_day)
+	return earliest + posmod(balance.raid_first_day - earliest, maxi(1, balance.raid_interval_days))
+
 func is_raid_day(day: int) -> bool:
-	return day >= balance.raid_first_day and (day - balance.raid_first_day) % maxi(1, balance.raid_interval_days) == 0
+	return next_raid_day(day) == day
 
 func raid_kind_on(day: int) -> int:
 	return floori(float(day - balance.raid_first_day) / maxi(1, balance.raid_interval_days)) % 2
 
 func raid_name(kind: int) -> String:
 	return "野狗" if kind == 0 else "斥候"
+
+func guard_for_defense() -> RetainerData:
+	var candidate: RetainerData
+	for retainer: RetainerData in retainers:
+		if not can_assign_duty(retainer, RetainerData.Duty.GUARD):
+			continue
+		if retainer.duty == RetainerData.Duty.GUARD:
+			return retainer
+		if candidate == null:
+			candidate = retainer
+	return candidate
 
 func begin_raid(day: int) -> bool:
 	if raid_day > 0 or not is_raid_day(day):

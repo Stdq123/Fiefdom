@@ -261,13 +261,13 @@ func _traditional() -> void:
 		return
 	_expect(state.reform_sale_quote().is_empty(), "Traditional estates keep their usual market.")
 	_expect("守礼安邦" in ui.route_goals.heading.text and "0/3" in ui.route_goals.summary.text
-		and _count(Global.RouteGoal.TRIBUTE).begins_with("0 /") and _action(Global.RouteGoal.RAIDS).text == "分派守卫",
+		and _count(Global.RouteGoal.TRIBUTE).begins_with("0 /") and _action(Global.RouteGoal.RAIDS).text == "查看守备准备",
 		"Traditional goals track new tribute and direct the player to defense.")
 	await _capture("04-traditional-goals")
 	await _button(_action(Global.RouteGoal.RAIDS))
-	var management: Control = ui.panel_manager.management_panel_instance
-	if not _expect(management.visible and management.tabs.get_current_tab_control() == management.map_grid_container.get_parent(),
-		"Before the raid forecast, the shortcut opens the estate overview and retainer list."):
+	var early_plan := ui.get_node_or_null("Control/NightRationsPanel") as Control
+	if not _expect(early_plan != null and early_plan.raid_plan.visible and "第 55 天卯时" in early_plan.raid_heading.text,
+		"With no military retainer, the shortcut shows the next raid and personal preparations."):
 		return
 	await _key(KEY_ESCAPE)
 	if not await _open_goals():
@@ -284,6 +284,7 @@ func _traditional() -> void:
 		return
 	_expect(_count(Global.RouteGoal.TRIBUTE).begins_with("2 /"), "The two public plots fill only the tribute goal.")
 	await _button(_action(Global.RouteGoal.OFFER_SILK))
+	var management: Control = ui.panel_manager.management_panel_instance
 	await _button(management.silk_panel.buttons[SilkWorkshop.Action.OFFER])
 	await _key(KEY_ESCAPE)
 	await _sleep()
