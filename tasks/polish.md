@@ -99,6 +99,8 @@
 
 ## 门客田务的站位与落点
 
+门客去田里时随田务扶锄、拎种袋、提桶或握镰。走到田格边，农具从行走时的握点抬起。途中这格已无需做工时会收手，接到新活后换成对应农具。构建 `a51649d` 在 1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面用常规和近景镜头各核对了四类田务的四个朝向。四项无窗口检查通过，存档写入为零。Windows ZIP 的 SHA-256 为 `d9f4038189c208eb98d63f66621776d09144ce64857d20ccde05234606fce685`。测试包已清理。 [核对记录](../build/polish-retainer-carry/release-a51649d/release-proof.txt)
+
 门客先在目标田格旁站稳，再翻地、撒种、浇水或收割。种粒和水流落入目标格，锄尖碰到土面，镰刃从谷茎下横过。背向镜头时侧站，留出可以看见水流和苗的空隙。弯腰与农具接触共用田务的完成时点。
 
 从 `caded86` 独立构建两次，ZIP 的 SHA-256 均为 `5bf7f5976efa3008d73e1616b91b79c8f2c94229ec494caadc714470bde40a28`。十一项无窗口检查与原样解包启动通过。隔离桌面分别用 1920×1080 Vulkan、1920×1080 Direct3D 12 和 1024×768 OpenGL 各核对六种动作的起手和接触画面。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-retainer-contact/release-caded86/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-retainer-contact/release-caded86/release-proof.txt)
