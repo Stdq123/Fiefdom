@@ -2183,6 +2183,8 @@ Windows 候选包来自 `d9b649d`。两次独立构建的 ZIP 校验值均为 `5
 - 席案和舆图会提示可听的小谈。第 7 天的新档回放正常耕作、过夜并送出一份私田路粮，随后加快白天时钟，沿路走到季青和渠伯中间。可从桌边打开今夜安排，也可中途离席再听。听完后从标题重读，日期仍记在两人的手记里，也可出现在结局记事中。另用已完成前情的存档回放了勘渠、样绸和守备三段小谈，守备小谈在谷雨棚下验证。渠伯的手记按日期保留两段谈话。 [1920×1080 席案](../build/polish-pavilion-stories/delivery/capture/1920x1080/07-table-ready.png) · [1024×768 渠伯对白](../build/polish-pavilion-stories/delivery/capture/1024x768/08-qu-bo-replies.png) · [邻里手记](../build/polish-pavilion-stories/delivery/capture/1024x768/09-neighbor-journal.png) · [四段小谈回放](../build/polish-pavilion-stories/delivery/headless/pavilion-stories.log)
 - 102 项源码场景、36 项无窗口发行检查及 7 次隔离桌面运行通过。解压版从新档分别在第 56 天达成「守礼安邦」、第 59 天达成「税亩富民」，两个结局均可退出后重读。上一版存档可继续，连续运行 90.677 秒，两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-pavilion-stories/delivery/Fiefdom-1.0.0-Windows-x64.zip) · [源码回归](../build/polish-pavilion-stories/source-delivery.log) · [无窗口发行](../build/polish-pavilion-stories/delivery/headless.log) · [隔离桌面](../build/polish-pavilion-stories/delivery/capture.log) · [重复构建](../build/polish-pavilion-stories/delivery/hashes.log)
 
+- 听小谈时，主角坐到案前苇席，两位邻居转向彼此。气泡随肖像切换到当前说话者，席案提示和两位邻居的头顶文字暂时收起。用 Esc 离席后恢复原来的坐席朝向和提示。构建 `96be733` 通过无窗口对白阅读和肖像检查，以及 1920×1080 Vulkan、1024×768 OpenGL 的隔离桌面核对。两轮测试包和解包的程序、资源包均已清理，继续暂缓新档到双结局的玩法验收。 [Windows 核对记录](../build/polish-pavilion-conversation/release-96be733/release-proof.txt)
+
 ## 在南路卸货场坐等货车
 
 - 收据指向停车处的候货座。到早了按 E 可查时辰并坐等同日货车。白天时钟加快，申禾赶车进入视野后恢复原速。货到即起身，可以接着问去处。途中可用按钮、Esc 或手柄 B 起身，保留已走的时辰。出现敌袭会起身。 [1920×1080 候货](../build/polish-freight-wait/delivery/capture/1920x1080/07-waiting-for-wagon.png) · [1024×768 次日到货](../build/polish-freight-wait/delivery/capture/1024x768/09-tomorrow-delivery.png)
