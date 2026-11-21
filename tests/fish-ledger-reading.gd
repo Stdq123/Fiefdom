@@ -70,6 +70,8 @@ func _review() -> void:
 	events.stamina_changed.emit(state.current_stamina)
 	_expect("体力不足" in book.readiness.text and pool.route.disabled and pond.route.disabled and pool.note.text == "白鲦",
 		"The reason disables departures while leaving the forecast readable.")
+	_expect(book.readiness.get_theme_color(&"font_color").srgb_to_linear().get_luminance() > 0.55,
+		"The fishing requirements use light text on the dark forecast frame.")
 	var record: Dictionary = book.rows["minnow"]
 	_expect("渔生留鱼" in record.commitment.text and "柳湾夏鲜" in record.commitment.text and not record.sell.disabled,
 		"The last fish names both uses beside the exchange buttons.")

@@ -47,6 +47,9 @@ func _review() -> void:
 	panel.show_neighbors()
 	var book: Control = panel.neighbor_journal
 	await process_frame
+	for label: Label in [book.where, book.appointment_note, book.memory, book.get_node("%Empty")]:
+		_expect(label.get_theme_color(&"font_color").srgb_to_linear().get_luminance() > 0.55,
+			"%s uses light text on its dark card." % label.name)
 	_expect(_status(book, KEEPER).text == "留任门客" and _status(book, ROAD_KEEPER).text == "今日来访",
 		"The roster distinguishes a resident and a visitor.")
 	_expect(_status(book, WATER_GUIDE).text == "第 %d 天轮访" % state.next_visitor_day(WATER_GUIDE)

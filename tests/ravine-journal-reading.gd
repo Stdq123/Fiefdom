@@ -33,6 +33,13 @@ func _review() -> void:
 	var book: Control = panel.tabs.get_node("溪行手记")
 	panel.tabs.current_tab = 5
 	await process_frame
+	var rail: PanelContainer = book.get_node("RouteRail")
+	var journal_theme := preload("res://resources/estate_hud_theme.tres")
+	_expect(rail.get_theme_stylebox(&"panel") == journal_theme.get_stylebox(&"panel", &"HudLacquerTray"),
+		"The route uses the same lacquer frame as the other estate journals.")
+	for label: Label in [book.next_step, book.visitor_where, book.get_node("%FruitName"), book.get_node("%HerbName")]:
+		_expect(label.get_theme_color(&"font_color").srgb_to_linear().get_luminance() > 0.55,
+			"%s uses light text on its dark card." % label.name)
 
 	_expect(book.is_visible_in_tree() and not panel.retainer_panel.visible and not book.pages.visible,
 		"The unopened journal has its own page and keeps unrecorded notes out of view.")

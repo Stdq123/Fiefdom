@@ -5,6 +5,7 @@
 [ext_resource type="Texture2D" path="res://assets/world/ravine-forage.svg" id="3_forage"]
 [ext_resource type="Texture2D" path="res://assets/world/ravine-art.png" id="4_ravine"]
 [ext_resource type="Texture2D" path="res://assets/world/bamboo-herb-bed.svg" id="5_herbs"]
+[ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="6_theme"]
 
 [sub_resource type="AtlasTexture" id="Bridge"]
 atlas = ExtResource("2_bridge")
@@ -48,6 +49,7 @@ corner_radius_bottom_left = 5
 corner_radius_bottom_right = 5
 
 [node name="溪行手记" type="VBoxContainer"]
+theme = ExtResource("6_theme")
 theme_override_constants/separation = 12
 script = ExtResource("1_script")
 trace_frame = SubResource("Page")
@@ -102,6 +104,7 @@ autowrap_mode = 3
 [node name="NextStep" type="Label" parent="RouteRail/Inset/Row/CurrentStep"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"HudJournalBody"
 theme_override_font_sizes/font_size = 17
 autowrap_mode = 3
 
@@ -165,6 +168,7 @@ text = "蒲宁 · 竹涧行者"
 [node name="VisitorWhere" type="Label" parent="Reading/Columns/Journal/Introduction/Neighbor/GuideInfo"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"HudJournalBody"
 theme_override_font_sizes/font_size = 17
 autowrap_mode = 3
 
@@ -206,6 +210,7 @@ theme_override_constants/separation = 3
 [node name="FruitName" type="Label" parent="Reading/Columns/Outing/Forage/List/Fruit/Info"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
 theme_override_font_sizes/font_size = 19
 text = "野果坳"
 
@@ -243,6 +248,7 @@ theme_override_constants/separation = 3
 [node name="HerbName" type="Label" parent="Reading/Columns/Outing/Forage/List/Herbs/Info"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"HudBronzeInk"
 theme_override_font_sizes/font_size = 19
 text = "望溪台"
 

@@ -120,6 +120,7 @@ autowrap_mode = 3
 [node name="Where" type="Label" parent="Pages/PageCard/Profile/Inset/Person/Identity"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"HudJournalBody"
 theme_override_font_sizes/font_size = 18
 autowrap_mode = 3
 
@@ -171,6 +172,7 @@ autowrap_mode = 3
 [node name="AppointmentNote" type="Label" parent="Pages/PageCard/Scroll/Page/PavilionCard/PavilionRow/Appointment"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"HudJournalBody"
 theme_override_font_sizes/font_size = 16
 autowrap_mode = 3
 
@@ -202,7 +204,7 @@ text = "接下来的约定"
 [node name="Next" type="Label" parent="Pages/PageCard/Scroll/Page/NextCard/Promise"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.84, 0.89, 0.79, 1)
+theme_type_variation = &"HudJournalBody"
 theme_override_font_sizes/font_size = 17
 autowrap_mode = 3
 
@@ -224,6 +226,7 @@ text = "一起做过的事"
 [node name="Memory" type="Label" parent="Pages/PageCard/Scroll/Page/MemoryCard/Recollection"]
 unique_name_in_owner = true
 layout_mode = 2
+theme_type_variation = &"HudJournalBody"
 theme_override_font_sizes/font_size = 17
 autowrap_mode = 3
 
@@ -238,6 +241,7 @@ theme_override_styles/panel = SubResource("NoteCard")
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 4
+theme_type_variation = &"HudJournalBody"
 theme_override_font_sizes/font_size = 19
 horizontal_alignment = 1
 autowrap_mode = 3
