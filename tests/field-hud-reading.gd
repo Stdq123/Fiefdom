@@ -168,6 +168,18 @@ func _review() -> void:
 	_expect(root.get_visible_rect().encloses(card.get_global_rect()) and notes.get_theme_font_size(&"font_size") == 21
 		and card.get_global_rect().encloses(notes.get_global_rect())
 		and notes.get_visible_line_count() == notes.get_line_count(), "Seed notes wrap and use the current reading size.")
+	var tooltip := PopupPanel.new()
+	tooltip.theme_type_variation = &"TooltipPanel"
+	var plain_tip := Label.new()
+	plain_tip.theme_type_variation = &"TooltipLabel"
+	plain_tip.text = "先查看今晚的田务和用粮安排。".repeat(5)
+	tooltip.add_child(plain_tip)
+	hud.sleep_button.add_child(tooltip)
+	await _settle()
+	_expect(plain_tip.get_theme_font_size(&"font_size") == 22 and plain_tip.get_line_count() > 1
+		and plain_tip.size.x <= 360.0 and tooltip.get_theme_stylebox(&"panel") is StyleBoxTexture,
+		"A native text tooltip inherits the game style and wraps at the larger reading size.")
+	tooltip.free()
 	_expect(paused and state.current_day == 27 and state.saved_games().is_empty(), "The review remains on the same saved example.")
 	if not failed:
 		print("SCENARIO_OK")
