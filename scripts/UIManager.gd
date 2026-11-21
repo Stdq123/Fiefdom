@@ -1300,26 +1300,48 @@ func _request_sleep() -> void:
 	if Global.tax_council_waiting():
 		_on_sleep_pressed()
 		return
+	var first_tribute_paid := Global.first_tribute_delivered()
 	var field_work_settled := false
-	if Global.wait_for_fields_before_sleep and Global.first_tribute_delivered():
+	if Global.wait_for_fields_before_sleep and first_tribute_paid:
 		field_work_settled = not world.wait_for_retainers().is_empty()
 	var plan := Global.night_rations_plan()
 	var research_short: bool = plan.research_gap > 0
 	var warnings := PackedStringArray()
+	var tribute := Global.tribute_penalty_forecast(plan) if first_tribute_paid else {}
+	var rank_at_risk: bool = tribute.get("rank_at_risk", false)
+	var alternatives: Dictionary[String, Callable] = {}
+	var context := "研究经费" if research_short else "门客口粮"
+	var symbol := HUDIcons.Symbol.COIN if research_short else HUDIcons.Symbol.RATIONS
+	if rank_at_risk:
+		context = "本期纳贡"
+		symbol = HUDIcons.Symbol.TREASURY
+		var note: String = tribute.text
+		var cost: int = world.field_cost(world.FieldAction.HARVEST)
+		if world.find_field_task(Global.NightGrowth.READY, Global.FieldScope.PUBLIC) == null:
+			note += "\n今天还没有成熟的公田。"
+		elif cost > Global.current_stamina:
+			note += "\n公田已熟，收割需 %d 点体力，当前 %d。" % [cost, Global.current_stamina]
+		else:
+			note += "\n公田已熟，收割后即可纳贡。"
+			if Global.is_indoors():
+				note += "\n从南门出去，回井田收割。"
+			alternatives["找熟公田"] = _follow_tribute_plot.bind(Global.NightGrowth.READY)
+		warnings.append(note)
 	if research_short:
 		warnings.append("明早研究费 %d 铜钱，备粮后还差 %d。\n若现在过夜，召简明早会要求定案。" % [
 			plan.research_fee, plan.research_gap])
 	if not plan.departing.is_empty():
 		warnings.append("今晚预计分出 %d/%d 份口粮。\n%s缺餐后将离任。" % [plan.served, plan.need, "、".join(plan.departing)])
 	var message := "\n\n".join(warnings)
-	if not Global.first_tribute_delivered() and _warn_before_first_tribute(message, plan):
+	if not first_tribute_paid and _warn_before_first_tribute(message, plan):
 		return
 	if not message.is_empty():
 		if field_work_settled:
 			message = "门客已收工。\n" + message
-		var context := "研究经费" if research_short else "门客口粮"
-		var symbol := HUDIcons.Symbol.COIN if research_short else HUDIcons.Symbol.RATIONS
-		var alternatives: Dictionary[String, Callable] = {"查看今夜安排": _show_night_rations.bind(false, not research_short)}
+		var focus_shortage := not research_short
+		if rank_at_risk:
+			focus_shortage = tribute.teaching_shortage or not plan.departing.is_empty()
+		alternatives["查看今夜安排"] = _show_night_rations.bind(false, focus_shortage)
 		if research_short:
 			alternatives["打开市场备款"] = _show_market
 		world.set_channel_mode(false)
