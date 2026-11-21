@@ -82,7 +82,10 @@ func refresh() -> void:
 		_refresh_first_private_button()
 		return
 	if Global.tax_council_waiting():
-		_describe("初税亩 · 召简来访", "使者在堂前候议。请在过夜前定案。")
+		var title := "初税亩 · 候议"
+		if Global.tax_reform_choice == Global.TaxReformChoice.DELAYED:
+			title = "研究费未缴" if Global.research_choice_pending else "研究期满"
+		_describe(title, "召简在堂前候议。议税后可过夜。")
 	elif route_progress.visible:
 		var route := "守礼安邦" if Global.tax_reform_choice == Global.TaxReformChoice.TRADITIONAL else "税亩富民"
 		var pending := goals.filter(func(goal: Dictionary) -> bool: return goal.value < goal.target)

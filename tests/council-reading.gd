@@ -65,7 +65,61 @@ func _run() -> void:
 	await _key(KEY_ESCAPE)
 	_expect(council.confirm_button.disabled and council.selected_choice == state.TaxReformChoice.NONE,
 		"Escape clears the preview without confirming it.")
+	council.free()
+	underneath.free()
+	await _check_invitation(state)
 	_expect(state.saved_games().is_empty(), "The isolated save catalog stays empty.")
 	if not failed:
 		print("SCENARIO_OK")
 	quit(1 if failed else 0)
+
+func _check_invitation(state: Node) -> void:
+	paused = true
+	state.current_day = state.tax_council_start_day()
+	state.day_progress = 0.45
+	if change_scene_to_file(state.ESTATE_SCENE) != OK:
+		_expect(false, "Mount the estate for the council invitation.")
+		return
+	await scene_changed
+	var ui := current_scene.get_node("UI")
+	var world := current_scene.get_node("World")
+	var before: Vector2 = world.player.position
+	var events := root.get_node("GameEvents")
+	var icons := load("res://scripts/HUDIcons.gd") as GDScript
+	ui.directions.follow_place("西市", world.to_local(world.get_node("WestMarketGate").global_position))
+	state.tax_council_invited = true
+	events.tax_reform_triggered.emit()
+	_expect(ui.directions.tracked_place == "西市" and ui.hud.opening_action.visible
+		and "去见召简" in ui.hud.opening_action.text, "An existing destination must leave the envoy action available.")
+	_expect(ui.hud.sleep_button.text == "去见召简" and ui.hud.sleep_button.icon == icons.icon(icons.Symbol.MAP),
+		"When the council is waiting, the night action identifies the envoy and shows a map icon.")
+	ui.hud.opening_action.pressed.emit()
+	_expect(ui.directions.tracked_neighbor == state.TAX_ENVOY and not ui.hud.opening_action.visible,
+		"Selecting the envoy changes the route and hides the now redundant invitation button.")
+	ui.directions.clear_tracking()
+	ui.hud.rations_button.pressed.emit()
+	var book := ui.get_node("Control/NightRationsPanel")
+	var night_action: Button = book.get_node("%Sleep")
+	var notice := book.get_node_or_null("%CouncilNotice") as Label
+	_expect(night_action.text == "去见召简" and notice != null and notice.is_visible_in_tree(),
+		"The night plan states the actual action and why the day has to wait.")
+	night_action.pressed.emit()
+	for frame in 5:
+		await process_frame
+	_expect(not is_instance_valid(book) and ui.directions.tracked_neighbor == state.TAX_ENVOY,
+		"The night plan closes and guides the player to the envoy.")
+	_expect(state.current_day == state.tax_council_start_day() and is_equal_approx(state.day_progress, 0.45)
+		and world.player.position == before and not world.player.resting, "The guidance leaves the fixed day and player in place.")
+	state.tax_reform_choice = state.TaxReformChoice.DELAYED
+	state.tax_reform_day = state.current_day
+	state.research_choice_pending = true
+	ui.hud.guide.refresh()
+	_expect("研究费未缴" in ui.hud.guide.heading.text, "The journal explains a return visit for unpaid research.")
+	state.research_choice_pending = false
+	state.current_day += state.balance.days_per_year
+	ui.hud.guide.refresh()
+	_expect("研究期满" in ui.hud.guide.heading.text, "The journal distinguishes the end of the research term.")
+	state.tax_reform_choice = state.TaxReformChoice.TRADITIONAL
+	events.tax_reform_choice_made.emit(state.tax_reform_choice)
+	_expect(ui.hud.sleep_button.text == "睡觉" and ui.hud.sleep_button.icon == icons.icon(icons.Symbol.MOON),
+		"After a decision the normal bedtime action returns.")

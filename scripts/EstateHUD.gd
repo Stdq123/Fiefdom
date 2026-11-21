@@ -173,7 +173,7 @@ func _ready() -> void:
 	manage_button.icon = HUDIcons.icon(HUDIcons.Symbol.LEDGER)
 	pinned_order.icon = HUDIcons.icon(HUDIcons.Symbol.LEDGER)
 	rations_button.icon = HUDIcons.icon(HUDIcons.Symbol.RATIONS)
-	sleep_button.icon = HUDIcons.icon(HUDIcons.Symbol.MOON)
+	_refresh_sleep_action()
 	GameEvents.estate_arrived.connect(_show_arrival)
 	GameEvents.day_advanced.connect(arrival.hide.unbind(1))
 	GameEvents.driving_practice_progress.connect(show_driving_progress)
@@ -182,7 +182,7 @@ func _ready() -> void:
 	_refresh_shortcuts()
 	GameEvents.silk_changed.connect(_refresh_silk_stock)
 	GameEvents.daylight_changed.connect(_refresh_watch)
-	GameEvents.field_wait_policy_changed.connect(_refresh_sleep_tooltip)
+	GameEvents.field_wait_policy_changed.connect(_refresh_sleep_action)
 	_refresh_watch()
 	GameEvents.season_order_pin_changed.connect(_refresh_pinned_order)
 	GameEvents.day_advanced.connect(_refresh_pinned_order.unbind(1))
@@ -441,9 +441,15 @@ func refresh_tribute() -> void:
 		tribute_button.text = "%s · %s" % [name, deadline]
 		tribute_button.tooltip_text = "查看今夜安排。收割任一公田后，纳贡期限重新计算。"
 		tribute_button.add_theme_color_override("font_color", Color("#efbf8a") if tonight else Color("#e7ddbd"))
-	_refresh_sleep_tooltip()
+	_refresh_sleep_action()
 
-func _refresh_sleep_tooltip() -> void:
+func _refresh_sleep_action() -> void:
+	var council_waiting := Global.tax_council_waiting()
+	sleep_button.text = "去见召简" if council_waiting else "睡觉"
+	sleep_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP if council_waiting else HUDIcons.Symbol.MOON)
+	if council_waiting:
+		sleep_button.tooltip_text = "召简在堂前候议。议税后可过夜。"
+		return
 	sleep_button.tooltip_text = "结束今天，恢复体力"
 	if Global.wait_for_fields_before_sleep:
 		sleep_button.tooltip_text += "\n已安排门客在剩余时辰先收工。"
@@ -571,7 +577,7 @@ func refresh_farm_status() -> void:
 	var needs_water: int = report.dry + report.blocked
 	if needs_water != fields_needing_water:
 		fields_needing_water = needs_water
-		_refresh_sleep_tooltip()
+		_refresh_sleep_action()
 		refresh_rations()
 
 func show_channel_help(message: String) -> void:

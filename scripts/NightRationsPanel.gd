@@ -97,6 +97,8 @@ const PANEL_FOCUS := preload("res://scripts/PanelFocus.gd")
 @onready var page_button: Button = %PageButton
 @onready var plan_body: VBoxContainer = %Plan
 @onready var footer: HBoxContainer = %Footer
+@onready var council_notice: Label = %CouncilNotice
+@onready var sleep_button: Button = %Sleep
 @onready var close_button: Button = %Close
 @onready var scroll: ScrollContainer = %Scroll
 @onready var body: VBoxContainer = %Body
@@ -117,7 +119,6 @@ func _ready() -> void:
 	%MoneyIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
 	%FieldMark.texture = HUDIcons.icon(HUDIcons.Symbol.HOE)
 	%MealMark.texture = HUDIcons.icon(HUDIcons.Symbol.RATIONS)
-	%Sleep.icon = HUDIcons.icon(HUDIcons.Symbol.MOON)
 	tribute_section.icon = HUDIcons.icon(HUDIcons.Symbol.TREASURY)
 	field_section.icon = HUDIcons.icon(HUDIcons.Symbol.HOE)
 	rations_section.icon = HUDIcons.icon(HUDIcons.Symbol.RATIONS)
@@ -182,7 +183,7 @@ func _ready() -> void:
 		queue_free()
 		duties_requested.emit()
 	)
-	%Sleep.pressed.connect(func():
+	sleep_button.pressed.connect(func():
 		queue_free()
 		sleep_requested.emit()
 	)
@@ -204,6 +205,8 @@ func _ready() -> void:
 	GameEvents.channels_changed.connect(_refresh_fields)
 	GameEvents.daylight_changed.connect(_refresh_fields)
 	GameEvents.day_advanced.connect(_refresh.unbind(1))
+	GameEvents.tax_reform_triggered.connect(_refresh_sleep_action)
+	GameEvents.tax_reform_choice_made.connect(_refresh_sleep_action.unbind(1))
 	GameEvents.raid_started.connect(_refresh_raid_plan)
 	GameEvents.raid_defeated.connect(_refresh_raid_plan)
 	GamepadInput.changed.connect(_refresh_raid_plan)
@@ -388,6 +391,7 @@ func _release_festival_reserve() -> void:
 func _refresh() -> void:
 	if settling_field_work:
 		return
+	_refresh_sleep_action()
 	var tomorrow := Global.current_day + 1
 	tomorrow_calendar.text = "明日 · %s · %s  ›" % [Global.get_current_solar_term(tomorrow),
 		Global.weather_label(tomorrow)]
@@ -743,9 +747,15 @@ func _refresh_field_wait(preview: Dictionary) -> void:
 	field_wait_note.text = "\n".join(notes)
 	field_wait_note.visible = not notes.is_empty()
 	if focus_lost:
-		var next_button: Button = wait_button if offer.available else %Sleep
+		var next_button: Button = wait_button if offer.available else sleep_button
 		next_button.grab_focus()
 		GamepadInput.snap_pointer_to_focus.call_deferred()
+
+func _refresh_sleep_action() -> void:
+	var council_waiting := Global.tax_council_waiting()
+	council_notice.visible = council_waiting
+	sleep_button.text = "去见召简" if council_waiting else "过夜"
+	sleep_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP if council_waiting else HUDIcons.Symbol.MOON)
 
 func _work_duration(minutes: int) -> String:
 	return "%d 刻钟" % roundi(minutes / 15.0) if minutes >= 15 else "一刻钟内"

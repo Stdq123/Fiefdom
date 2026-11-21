@@ -528,6 +528,7 @@ func _on_council_invitation() -> void:
 	if (Global.field_route_scope == Global.FieldScope.PUBLIC or Global.field_route_status == Global.TributeRoute.TEND
 		or Global.field_route_status in Global.ROTATION_ROUTES):
 		directions.clear_tracking()
+	hud.refresh_tribute()
 	_refresh_opening_action()
 
 func _first_tribute_neighbor() -> String:
@@ -541,6 +542,7 @@ func _first_tribute_neighbor() -> String:
 func _refresh_opening_action() -> void:
 	var running := Global.outcome == Global.Outcome.RUNNING
 	var first_tribute := Global.first_tribute_delivered()
+	var council_waiting := Global.tax_council_waiting()
 	hud.handover_button.visible = running and not first_tribute
 	var rotation := Global.field_rotation
 	var has_second_field: bool = Global.well_fields.size() > 1 and Global.well_fields[1].is_unlocked
@@ -550,7 +552,7 @@ func _refresh_opening_action() -> void:
 	var can_hand_off: bool = (rotation.signed_day > 0 and not signed_field.is_empty() and signed_field.is_unlocked
 		and not Global.retainers.any(func(worker: RetainerData) -> bool:
 			return worker.duty == RetainerData.Duty.STEWARD and Global.stewarded_field(worker).field_id == signed_field.field_id))
-	hud.rotation_guide_button.visible = running and first_tribute and not Global.tax_council_waiting() and (pending or can_hand_off)
+	hud.rotation_guide_button.visible = running and first_tribute and not council_waiting and (pending or can_hand_off)
 	if hud.rotation_guide_button.visible:
 		hud.rotation_guide_button.text = "轮作试种"
 		if can_hand_off:
@@ -559,11 +561,11 @@ func _refresh_opening_action() -> void:
 			hud.rotation_guide_button.text = "轮作试种 · 待记簿"
 		hud.rotation_guide_button.tooltip_text = ("标出田南的轮作簿，可安排续播与井田管事。" if can_hand_off
 			else "查看渠伯的约定、试种田格和下一步。")
+	if council_waiting and directions.tracked_neighbor != Global.TAX_ENVOY:
+		_show_opening_neighbor(Global.TAX_ENVOY)
+		return
 	if not running or hud.cancel_directions.visible:
 		hud.opening_action.hide()
-		return
-	if Global.tax_council_waiting():
-		_show_opening_neighbor(Global.TAX_ENVOY)
 		return
 	if not first_tribute:
 		if _show_first_public_action():
