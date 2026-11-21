@@ -7,10 +7,10 @@ signal silk_requested
 @onready var buy_fodder: Button = %BuyFodder
 @onready var sell_wool: Button = %SellWool
 @onready var weave_coat: Button = %WeaveCoat
-@onready var receipt: Label = %SheepReceipt
+var receipt: MarketReceipt
 
 func _ready() -> void:
-	for control: Control in [account, buy_sheep, buy_fodder, sell_wool, weave_coat, receipt, %BackToSilk]:
+	for control: Control in [account, buy_sheep, buy_fodder, sell_wool, weave_coat, %BackToSilk]:
 		InterfaceFont.scale_reading_text(control)
 	buy_sheep.pressed.connect(_trade.bind(Sheepfold.Action.BUY_SHEEP))
 	buy_fodder.pressed.connect(_trade.bind(Sheepfold.Action.BUY_FODDER))
@@ -21,7 +21,6 @@ func _ready() -> void:
 	GameEvents.money_changed.connect(_refresh.unbind(1))
 
 func show_offer() -> void:
-	receipt.text = ""
 	_refresh()
 
 func _refresh() -> void:
@@ -53,15 +52,19 @@ func _refresh() -> void:
 func _trade(action: Sheepfold.Action) -> void:
 	if not Global.use_sheepfold(action):
 		return
+	var prices := Global.balance
 	match action:
 		Sheepfold.Action.BUY_SHEEP:
-			receipt.text = "蔡娘已安置好羊。回封地后可在舆图上找到西坡羊棚。"
+			receipt.present("西坡羊棚 +1 只羊 · 铜钱 −%d\n回封地可从舆图查看西坡羊棚。" % prices.sheep_price,
+				$SheepHeader/Animal.texture)
 		Sheepfold.Action.BUY_FODDER:
-			receipt.text = "草料已送进羊棚。雨天和冬天会取用。"
+			receipt.present("羊棚草料 +%d 份 · 铜钱 −%d" % [prices.sheep_fodder_bundle, prices.sheep_fodder_price],
+				HUDIcons.icon(HUDIcons.Symbol.GRAIN))
 		Sheepfold.Action.SELL_WOOL:
-			receipt.text = "蔡娘收下了一份羊毛。"
+			receipt.present("羊毛 −1 份 · 铜钱 +%d" % prices.sheep_wool_price, ItemManager.goods_icon(ItemManager.Goods.WOOL))
 		Sheepfold.Action.WEAVE_COAT:
-			receipt.text = "到堂屋衣架旁试穿。"
+			receipt.present("羊毛 −%d 份 · 到堂屋衣架旁试穿羊毛衣" % prices.sheep_coat_wool,
+				ItemManager.goods_icon(ItemManager.Goods.WOOL))
 			AudioManager.play_ui_sfx(1.10)
 			return
 	AudioManager.play_trade_cue(AudioManager.TradeCue.SALE if action == Sheepfold.Action.SELL_WOOL else AudioManager.TradeCue.PURCHASE)

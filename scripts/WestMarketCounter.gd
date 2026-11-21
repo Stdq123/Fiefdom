@@ -6,6 +6,7 @@ const JOURNAL_THEME := preload("res://resources/estate_hud_theme.tres")
 @onready var title: Label = %CounterTitle
 @onready var counter_balance: Label = %CounterBalance
 @onready var close_button: Button = %CloseCounter
+@onready var trade_receipt: MarketReceipt = %TradeReceipt
 @onready var scroll: ScrollContainer = %CounterScroll
 @onready var counter_layout: HBoxContainer = %CounterLayout
 @onready var keeper_card: PanelContainer = %KeeperCard
@@ -22,7 +23,6 @@ const JOURNAL_THEME := preload("res://resources/estate_hud_theme.tres")
 @onready var silk_sample: Label = %Sample
 @onready var silk_quote: Label = %SilkQuote
 @onready var sell_silk: Button = %SellSilk
-@onready var silk_receipt: Label = %SilkReceipt
 @onready var card: PanelContainer = $Center/Card
 @onready var inset: MarginContainer = $Center/Card/Inset
 @onready var body: VBoxContainer = $Center/Card/Inset/Body
@@ -36,8 +36,15 @@ func _ready() -> void:
 	scroll_bar.theme_type_variation = &"HudJournalBar"
 	scroll_bar.focus_mode = FOCUS_ALL
 	for control: Control in [title, counter_balance, close_button, keeper_note, market_produce, order_route,
-		silk_stock, silk_sample, silk_quote, sell_silk, silk_receipt, %SheepTrade]:
+		silk_stock, silk_sample, silk_quote, sell_silk, %SheepTrade]:
 		InterfaceFont.scale_reading_text(control)
+	grain.receipt = trade_receipt
+	fish.receipt = trade_receipt
+	fish.market_offer.trade_receipt = trade_receipt
+	sheep.receipt = trade_receipt
+	trade_receipt.minimum_size_changed.connect(_fit_body, CONNECT_DEFERRED)
+	trade_receipt.visibility_changed.connect(_fit_body, CONNECT_DEFERRED)
+	trade_receipt.presented.connect(_keep_trade_focus)
 	counter_layout.minimum_size_changed.connect(_fit_body, CONNECT_DEFERRED)
 	heading_row.minimum_size_changed.connect(_fit_body, CONNECT_DEFERRED)
 	get_viewport().size_changed.connect(_fit_body)
@@ -69,11 +76,24 @@ func _fit_body() -> void:
 	var chrome := card.get_theme_stylebox(&"panel").get_minimum_size().y + heading_row.get_combined_minimum_size().y \
 		+ rule.get_combined_minimum_size().y + inset.get_theme_constant(&"margin_top") \
 		+ inset.get_theme_constant(&"margin_bottom") + 2.0 * body.get_theme_constant(&"separation")
+	if trade_receipt.visible:
+		chrome += trade_receipt.get_combined_minimum_size().y + body.get_theme_constant(&"separation")
 	var available := maxf(0.0, get_viewport_rect().size.y - 2.0 * COUNTER_MARGIN - chrome)
 	if orders.visible:
 		orders.fit_market_book(available)
 	else:
 		scroll.custom_minimum_size.y = minf(available, counter_layout.get_combined_minimum_size().y)
+
+func _keep_trade_focus() -> void:
+	await get_tree().process_frame
+	if not is_visible_in_tree() or not trade_receipt.visible:
+		return
+	var focus := get_viewport().gui_get_focus_owner()
+	if not focus or (focus is BaseButton and focus.disabled):
+		close_button.grab_focus()
+	elif scroll.is_ancestor_of(focus):
+		scroll.ensure_control_visible(focus)
+	GamepadInput.snap_pointer_to_focus()
 
 func _input(event: InputEvent) -> void:
 	if not is_visible_in_tree() or not event is InputEventKey:
@@ -99,9 +119,6 @@ func _input(event: InputEvent) -> void:
 			return
 
 func open_for(kind: MarketStall.Kind) -> void:
-	grain.receipt.text = ""
-	fish.clear_receipt()
-	silk_receipt.text = ""
 	if kind == MarketStall.Kind.SILK:
 		_refresh_silk()
 	var speaker: String = MarketStall.KEEPERS[kind]
@@ -119,8 +136,9 @@ func _open_sheep() -> void:
 func _open_view(heading: String, active_view: Control, speaker := "") -> void:
 	var opening := not is_visible_in_tree()
 	var changing_page := not active_view.visible
+	trade_receipt.clear()
 	title.text = heading
-	counter_balance.visible = active_view in [fish, silk, sheep]
+	counter_balance.visible = active_view != orders
 	_refresh_balance()
 	card.custom_minimum_size.x = 744.0 if active_view in [fish, orders] else usual_width
 	keeper_card.visible = not speaker.is_empty()
@@ -142,6 +160,7 @@ func _open_view(heading: String, active_view: Control, speaker := "") -> void:
 
 func close_counter() -> void:
 	hide()
+	trade_receipt.clear()
 	AudioManager.play_menu_cue(AudioManager.MenuCue.CLOSE)
 
 func _keeper_line(active_view: Control) -> String:
@@ -181,8 +200,9 @@ func _refresh_balance() -> void:
 
 func _buy_market_produce() -> void:
 	if Global.buy_market_produce():
-		grain.receipt.text = "%s已入私仓 · 铜钱 −%d" % [
-			ItemManager.crop_label(Global.market_produce_crop()), Global.market_produce_price()]
+		var id := Global.market_produce_crop()
+		trade_receipt.present("私仓 %s +1 份 · 铜钱 −%d" % [ItemManager.crop_label(id), Global.market_produce_price()],
+			ItemManager.harvest_icon(id))
 		close_button.grab_focus()
 		AudioManager.play_trade_cue(AudioManager.TradeCue.PURCHASE)
 
@@ -226,5 +246,6 @@ func _refresh_silk() -> void:
 
 func _sell_silk() -> void:
 	if Global.use_workshop(SilkWorkshop.Action.SELL):
-		silk_receipt.text = "已售一匹丝绸 · 铜钱 +%d" % Global.balance.silk_sell_price
+		trade_receipt.present("丝绸 −1 匹 · 铜钱 +%d" % Global.balance.silk_sell_price,
+			ItemManager.goods_icon(ItemManager.Goods.SILK_BOLT))
 		AudioManager.play_trade_cue(AudioManager.TradeCue.SALE)

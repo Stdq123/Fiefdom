@@ -2,6 +2,10 @@ extends Node
 
 const FIELD_CROPS := "res://resources/field_crops.tres"
 const SILK_SAMPLE := preload("res://assets/world/west-court-sample.svg")
+const GOODS_ART := preload("res://assets/inventory/estate-goods.png")
+const HARVEST_ART := preload("res://assets/inventory/crop-harvests.png")
+
+enum Goods { MIXED_GRAIN, LEAVES, COCOONS, RAW_SILK, SILK_BOLT, WOOL, HERBS }
 
 var crops: Dictionary = {}
 var crop_icons: Dictionary[Vector2i, Texture2D] = {}
@@ -86,6 +90,20 @@ func get_crop(id: String) -> CropData:
 func crop_picture(crop: CropData) -> Dictionary:
 	var mature: Vector2i = crop.stages_atlas_coords.back()
 	return {"texture": crop_icons[mature], "tint": Color.WHITE}
+
+func harvest_icon(id: String) -> AtlasTexture:
+	var column := CropData.IDS.find(id)
+	return _stock_icon(HARVEST_ART, column) if column >= 0 else goods_icon(Goods.MIXED_GRAIN)
+
+func goods_icon(kind: Goods) -> AtlasTexture:
+	return _stock_icon(GOODS_ART, kind)
+
+func _stock_icon(atlas: Texture2D, column: int) -> AtlasTexture:
+	var icon := AtlasTexture.new()
+	icon.atlas = atlas
+	icon.region = Rect2(column * 32, 0, 32, 32)
+	icon.filter_clip = true
+	return icon
 
 func crop_label(id: String) -> String:
 	if id == CropStock.MIXED:

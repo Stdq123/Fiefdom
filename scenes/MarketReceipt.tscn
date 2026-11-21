@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/MarketReceipt.gd" id="1_receipt"]
+[ext_resource type="Theme" path="res://resources/estate_hud_theme.tres" id="2_hud"]
+
+[node name="Receipt" type="PanelContainer"]
+visible = false
+mouse_filter = 2
+theme = ExtResource("2_hud")
+theme_type_variation = &"HudRail"
+script = ExtResource("1_receipt")
+
+[node name="Row" type="HBoxContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 9
+
+[node name="Art" type="TextureRect" parent="Row"]
+texture_filter = 1
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Text" type="Label" parent="Row"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 3

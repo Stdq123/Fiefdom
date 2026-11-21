@@ -12,6 +12,7 @@ extends PanelContainer
 var at_stall := false
 var start_day := 0
 var shore := ""
+var trade_receipt: MarketReceipt
 
 func _ready() -> void:
 	for control: Control in [title, note, status, tradeoff, copper_button, food_button, directions]:
@@ -75,4 +76,8 @@ func _follow_offer() -> void:
 
 func _deliver(for_food: bool) -> void:
 	if Global.deliver_fish_order(start_day, for_food):
+		if trade_receipt:
+			var settled := Global.fish_order_receipt
+			trade_receipt.present("留鱼单 · %s −1 尾 · %s" % [CreekFish.SPECIES[settled.fish].name,
+				"粮仓 +%d 份" % settled.amount if settled.for_food else "铜钱 +%d" % settled.amount], CreekFish.portrait(settled.fish))
 		AudioManager.play_trade_cue(AudioManager.TradeCue.STORE_FOOD if for_food else AudioManager.TradeCue.SALE)

@@ -47,7 +47,7 @@ func review() -> void:
 		expect(slot.region == Rect2(16 * symbol, 0, 16, 16), "Seed belt frame " + crop)
 		expect(harvest.atlas.resource_path == "res://assets/inventory/crop-harvests.png"
 			and harvest.region == Rect2(index * 32, 0, 32, 32) and harvest.filter_clip, "Harvest sprite " + crop)
-	expect(bag._stored_crop_icon(CropData.IDS.size()).atlas == bag.goods_art, "Older mixed grain still has a sack")
+	expect(bag._stored_crop_icon(CropData.IDS.size()).atlas == load("res://assets/inventory/estate-goods.png"), "Older mixed grain still has a sack")
 	var fish = load("res://scripts/CreekFish.gd")
 	for i in fish.IDS.size():
 		expect(fish.portrait(fish.IDS[i]).region == Rect2(16 * i, 0, 16, 16), "Fish frame " + fish.IDS[i])

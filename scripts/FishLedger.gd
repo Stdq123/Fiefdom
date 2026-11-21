@@ -9,7 +9,7 @@ const SITE_CARD := preload("res://scenes/FishingSiteCard.tscn")
 @onready var summary: Label = %Summary
 @onready var readiness: Label = %Readiness
 @onready var teacher_route: Button = %FindTeacher
-@onready var receipt: Label = %Receipt
+@onready var receipt: MarketReceipt = %Receipt
 @onready var reading: ScrollContainer = %Reading
 
 var world: Node2D
@@ -21,7 +21,7 @@ var trap_card: Dictionary = {}
 func _ready() -> void:
 	%Title.visible = not at_stall
 	$Forecast.visible = not at_stall
-	for control: Control in [%Title, summary, %Waters, readiness, teacher_route, receipt]:
+	for control: Control in [%Title, summary, %Waters, readiness, teacher_route]:
 		InterfaceFont.scale_reading_text(control)
 	var body := VBoxContainer.new()
 	body.name = "Contents"
@@ -70,10 +70,6 @@ func _ready() -> void:
 	GameEvents.campaign_ended.connect(_refresh.unbind(1))
 	visibility_changed.connect(_refresh)
 	_refresh()
-
-func clear_receipt() -> void:
-	receipt.text = ""
-	receipt.hide()
 
 func _add_fish_entry(collection: GridContainer, id: String) -> void:
 	var fish: Dictionary = CreekFish.SPECIES[id]
@@ -223,7 +219,6 @@ func _exchange(id: String, for_food: bool) -> void:
 	if not Global.exchange_creek_fish(id, for_food):
 		return
 	var fish: Dictionary = CreekFish.SPECIES[id]
-	receipt.text = ("%s留作口粮 · 粮食 +%d" % [fish.name, fish.food] if for_food
-		else "已售一尾%s · 铜钱 +%d" % [fish.name, fish.copper])
-	receipt.show()
+	receipt.present("%s −1 尾 · %s" % [fish.name,
+		"粮仓 +%d 份" % fish.food if for_food else "铜钱 +%d" % fish.copper], CreekFish.portrait(id))
 	AudioManager.play_trade_cue(AudioManager.TradeCue.STORE_FOOD if for_food else AudioManager.TradeCue.SALE)

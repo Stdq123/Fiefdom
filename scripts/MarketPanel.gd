@@ -28,7 +28,7 @@ const SHORTAGE_COLOR := Color("#e5b981")
 @onready var reserve_label: Label = $ReservePlan
 @onready var reserve_button: Button = $ReserveActions/ReserveButton
 @onready var survey_button: Button = $ReserveActions/ReturnToSurvey
-@onready var receipt: Label = $Receipt
+@onready var receipt: MarketReceipt = $Receipt
 
 var return_to_survey: Callable
 var reform_quote: Dictionary = {}
@@ -71,7 +71,7 @@ func _ready() -> void:
 	GameEvents.rank_changed.connect(_refresh.unbind(1))
 	GameEvents.tax_reform_choice_made.connect(_refresh.unbind(1))
 	GameEvents.day_advanced.connect(func(_day: int):
-		receipt.text = ""
+		receipt.clear()
 		use_reserved.set_pressed_no_signal(false)
 		_refresh()
 	)
@@ -81,7 +81,7 @@ func _enable_stall_reading() -> void:
 	for control: Control in [grain_stock, crop_stock, copper_stock, food_label, stock_detail, debit_plan,
 		$QuantityRow/Label, quantity.get_line_edit(), $QuantityRow/Five, all_crops, crop_choice,
 		sell_button, convert_button, buy_button, reform_sale_note, reform_sale_button,
-		reserve_kind, use_reserved, reserve_label, reserve_button, receipt]:
+		reserve_kind, use_reserved, reserve_label, reserve_button]:
 		InterfaceFont.scale_reading_text(control)
 	for picker: OptionButton in [crop_choice, reserve_kind]:
 		var menu := picker.get_popup()
@@ -121,7 +121,7 @@ func _on_visibility_changed() -> void:
 
 func _change_reserve_kind() -> void:
 	use_reserved.set_pressed_no_signal(false)
-	receipt.text = ""
+	receipt.clear()
 	_refresh_reserve()
 
 func _refresh() -> void:
@@ -295,32 +295,36 @@ func _reserve_text(plan: Dictionary, construction: bool) -> String:
 func _sell() -> void:
 	var amount := int(quantity.value)
 	var id := _selected_crop()
-	var lots := ItemManager.describe_crops(Global.market_crop_plan(amount, id))
+	var lots := Global.market_crop_plan(amount, id)
 	if Global.sell_crops(amount, id):
-		receipt.text = "售出 %s · 铜钱 +%d" % [lots, amount * Global.balance.market_crop_price]
+		receipt.present_crops("售出 %s · 铜钱 +%d" % [ItemManager.describe_crops(lots), amount * Global.balance.market_crop_price], lots)
 		AudioManager.play_trade_cue(AudioManager.TradeCue.SALE)
 
 func _sell_reform_surplus() -> void:
 	var sale := Global.sell_crops_for_reform(reform_quote)
 	if sale.is_empty():
 		_refresh()
-		receipt.text = "库存或用粮已有变化，请核对新报价。"
+		receipt.present("库存或用粮已有变化，请核对新报价。", HUDIcons.icon(HUDIcons.Symbol.LEDGER), true)
 		return
-	receipt.text = "售出 %s · 现有 %d 铜钱" % [ItemManager.describe_crops(sale.used), sale.balance]
+	var message := "售出 %s · 铜钱 +%d · 现有 %d 枚" % [ItemManager.describe_crops(sale.used), sale.gain, sale.balance]
 	if sale.balance >= sale.target:
-		receipt.text += " · 铜钱已达标"
+		message += " · 铜钱已达标"
+	receipt.present_crops(message, sale.used)
 	AudioManager.play_trade_cue(AudioManager.TradeCue.SALE)
 
 func _convert() -> void:
 	var amount := int(quantity.value)
-	if Global.convert_inventory_to_food(amount, _selected_crop()):
-		receipt.text = "转粮完成 · 粮食 +%d" % amount
+	var id := _selected_crop()
+	var lots := Global.market_crop_plan(amount, id)
+	if Global.convert_inventory_to_food(amount, id):
+		receipt.present_crops("转用 %s · 粮仓 +%d 份" % [ItemManager.describe_crops(lots), amount], lots)
 		AudioManager.play_trade_cue(AudioManager.TradeCue.STORE_FOOD)
 
 func _buy() -> void:
 	var amount := int(quantity.value)
 	if Global.buy_market_food(amount):
-		receipt.text = "购粮完成 · 粮食 +%d · 铜钱 −%d" % [amount, amount * Global.balance.market_food_price]
+		receipt.present("购粮入仓 +%d 份 · 铜钱 −%d" % [amount, amount * Global.balance.market_food_price],
+			HUDIcons.icon(HUDIcons.Symbol.GRAIN))
 		AudioManager.play_trade_cue(AudioManager.TradeCue.PURCHASE)
 
 func _reserve() -> void:
@@ -332,8 +336,11 @@ func _reserve() -> void:
 		else Global.prepare_food_reserve(RESERVE_NIGHTS, use_reserved.button_pressed, quote))
 	if not committed:
 		_refresh()
-		receipt.text = "库存或用粮已有变化，请核对新计划。"
+		receipt.present("库存或用粮已有变化，请核对新计划。", HUDIcons.icon(HUDIcons.Symbol.LEDGER), true)
 		return
 	var title := "开垦粮已备齐" if construction else "三夜粮已备好"
-	receipt.text = "%s · 入仓 %d 份 · 实付 %d 铜钱" % [title, quote.food, quote.copper]
+	var message := "%s · 入仓 %d 份 · 实付 %d 铜钱" % [title, quote.food, quote.copper]
+	if not quote.used.is_empty():
+		message += "\n转用 " + ItemManager.describe_crops(quote.used)
+	receipt.present_crops(message, quote.used)
 	AudioManager.play_trade_cue(AudioManager.TradeCue.PURCHASE if quote.copper > 0 else AudioManager.TradeCue.STORE_FOOD)

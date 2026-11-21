@@ -4,10 +4,6 @@ signal close_requested
 
 enum Page { CROPS, FISH, CRAFT }
 
-enum Goods { MIXED_GRAIN, LEAVES, COCOONS, RAW_SILK, SILK_BOLT, WOOL, HERBS }
-
-const GOODS_PATH := "res://assets/inventory/estate-goods.png"
-const HARVEST_ART := preload("res://assets/inventory/crop-harvests.png")
 const CROP_POCKETS := CropData.IDS + [CropStock.MIXED]
 const PANEL_FOCUS := preload("res://scripts/PanelFocus.gd")
 const POCKET_MINIMUM := Vector2(216, 82)
@@ -44,7 +40,6 @@ class Pocket:
 @export var empty_pocket_style: StyleBox
 @export var selected_pocket_style: StyleBox
 
-@onready var goods_art: Texture2D = load(GOODS_PATH)
 @onready var close_button: Button = %Close
 @onready var crop_tab: Button = %CropTab
 @onready var fish_tab: Button = %FishTab
@@ -74,7 +69,7 @@ func _ready() -> void:
 	add_to_group(&"backpack_panel")
 	%BagIcon.texture = HUDIcons.icon(HUDIcons.Symbol.BACKPACK)
 	%CoinIcon.texture = HUDIcons.icon(HUDIcons.Symbol.COIN)
-	%HerbIcon.texture = _item_icon(goods_art, Goods.HERBS)
+	%HerbIcon.texture = ItemManager.goods_icon(ItemManager.Goods.HERBS)
 	for index in CROP_POCKETS.size():
 		pockets.append(_new_pocket(index))
 	for label: Label in find_children("*", "Label", true, false):
@@ -171,20 +166,18 @@ func _refresh_items() -> void:
 
 func _show_craft_items() -> void:
 	var workshop := Global.silk_workshop
-	_show_material(Goods.LEAVES, "mulberry_leaves", "桑叶", workshop.leaves, "片")
-	_show_material(Goods.COCOONS, "cocoons", "蚕茧", workshop.cocoons, "只")
-	_show_material(Goods.RAW_SILK, "raw_silk", "生丝", workshop.raw_silk, "份")
-	_show_material(Goods.SILK_BOLT, "silk", "丝绸", workshop.bolts, "匹")
-	_show_material(Goods.WOOL, "wool", "羊毛", Global.sheepfold.wool, "份")
+	_show_material(ItemManager.Goods.LEAVES, "mulberry_leaves", "桑叶", workshop.leaves, "片")
+	_show_material(ItemManager.Goods.COCOONS, "cocoons", "蚕茧", workshop.cocoons, "只")
+	_show_material(ItemManager.Goods.RAW_SILK, "raw_silk", "生丝", workshop.raw_silk, "份")
+	_show_material(ItemManager.Goods.SILK_BOLT, "silk", "丝绸", workshop.bolts, "匹")
+	_show_material(ItemManager.Goods.WOOL, "wool", "羊毛", Global.sheepfold.wool, "份")
 
-func _show_material(kind: Goods, id: String, display_name: String, count: int, unit: String) -> void:
+func _show_material(kind: ItemManager.Goods, id: String, display_name: String, count: int, unit: String) -> void:
 	if count > 0:
-		_show_item(kind - Goods.LEAVES, id, display_name, count, unit, _item_icon(goods_art, kind))
+		_show_item(kind - ItemManager.Goods.LEAVES, id, display_name, count, unit, ItemManager.goods_icon(kind))
 
 func _stored_crop_icon(index: int) -> AtlasTexture:
-	if CROP_POCKETS[index] == CropStock.MIXED:
-		return _item_icon(goods_art, Goods.MIXED_GRAIN)
-	return _item_icon(HARVEST_ART, index)
+	return ItemManager.harvest_icon(CROP_POCKETS[index])
 
 func _new_pocket(index: int) -> Pocket:
 	var pocket := Pocket.new()
@@ -288,13 +281,6 @@ func _order_caption(id: String, unit: String) -> String:
 	var gap := need - Global.season_order_stock(cargo_id)
 	var status := "还差 %d" % gap if gap > 0 else "本项已备足"
 	return "本季「%s」需 %d %s · %s" % [schedule.order.title, need, unit, status]
-
-func _item_icon(atlas: Texture2D, column: int) -> AtlasTexture:
-	var icon := AtlasTexture.new()
-	icon.atlas = atlas
-	icon.region = Rect2(column * 32, 0, 32, 32)
-	icon.filter_clip = true
-	return icon
 
 func _refresh_wallet(amount: int) -> void:
 	wallet.text = "%d 枚" % amount

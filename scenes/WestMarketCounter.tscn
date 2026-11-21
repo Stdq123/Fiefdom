@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://scenes/SeasonOrderPanel.tscn" id="5_orders"]
 [ext_resource type="Script" path="res://scripts/SheepTrade.gd" id="6_sheep"]
 [ext_resource type="Texture2D" path="res://assets/characters/sheep-portrait.png" id="7_animal"]
+[ext_resource type="PackedScene" path="res://scenes/MarketReceipt.tscn" id="8_receipt"]
 
 [sub_resource type="StyleBoxFlat" id="KeeperCardStyle"]
 content_margin_left = 12.0
@@ -93,6 +94,10 @@ mouse_default_cursor_shape = 2
 text = "离开  Esc"
 
 [node name="Rule" type="HSeparator" parent="Center/Card/Inset/Body"]
+layout_mode = 2
+
+[node name="TradeReceipt" parent="Center/Card/Inset/Body" instance=ExtResource("8_receipt")]
+unique_name_in_owner = true
 layout_mode = 2
 
 [node name="CounterScroll" type="ScrollContainer" parent="Center/Card/Inset/Body"]
@@ -217,11 +222,6 @@ custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 
-[node name="SilkReceipt" type="Label" parent="Center/Card/Inset/Body/CounterScroll/CounterLayout/Views/Silk"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.74, 0.83, 0.61, 1)
-
 [node name="SheepTrade" type="Button" parent="Center/Card/Inset/Body/CounterScroll/CounterLayout/Views/Silk"]
 unique_name_in_owner = true
 visible = false
@@ -285,12 +285,6 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 mouse_default_cursor_shape = 2
-
-[node name="SheepReceipt" type="Label" parent="Center/Card/Inset/Body/CounterScroll/CounterLayout/Views/Sheep"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.74, 0.83, 0.61, 1)
-autowrap_mode = 3
 
 [node name="BackToSilk" type="Button" parent="Center/Card/Inset/Body/CounterScroll/CounterLayout/Views/Sheep"]
 unique_name_in_owner = true

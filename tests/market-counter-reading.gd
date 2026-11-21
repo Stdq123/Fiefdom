@@ -53,6 +53,8 @@ func _check() -> void:
 		and not counter.sell_silk.disabled, "The silk counter shows the projected balance and stock.")
 	_expect(state.silk_workshop.bolts == 4 and state.money == 3 and state.fish_count("perch") == 1
 		and state.crop_stock.count("beans") == 1 and state.saved_games().is_empty(), "Reading preserves the goods and purse.")
+	var receipt_review = load("res://tests/MarketReceiptReview.gd").new()
+	_expect(await receipt_review.run(self), "Market transaction receipts stay visible through the counter's reading and navigation controls.")
 	if not failed:
 		print("SCENARIO_OK")
 	quit(1 if failed else 0)

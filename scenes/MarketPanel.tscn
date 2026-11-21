@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/MarketPanel.gd" id="2_market"]
+[ext_resource type="PackedScene" path="res://scenes/MarketReceipt.tscn" id="3_receipt"]
 
 [node name="MarketPanel" type="VBoxContainer"]
 layout_mode = 2
@@ -195,7 +196,5 @@ layout_mode = 2
 mouse_default_cursor_shape = 2
 text = "返回勘地"
 
-[node name="Receipt" type="Label" parent="."]
+[node name="Receipt" parent="." instance=ExtResource("3_receipt")]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.73, 0.82, 0.57, 1)
-autowrap_mode = 3
