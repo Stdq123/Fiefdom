@@ -2122,6 +2122,8 @@ Windows 候选包来自 `d9b649d`。两次独立构建的 ZIP 校验值均为 `5
 
 ## 连续收割的收获回执
 
+回执按国库和私仓分行列出收成。单种作物沿用背包里的原图，混收逐一列出品种和份数。铜钱、桑叶和已扣税按整项换行，字号可随阅读设置调整。构建 `529e38a` 在 1920×1080 Vulkan 与 1024×768 OpenGL 的隔离桌面各核对六个固定回执。Windows ZIP 的 SHA-256 为 `524212976ee92b984e7fa406f5b0470873322e008d9dba8182c528f734a0f863`。存档写入为零，两轮测试包均已清理。 [收获回执核对记录](../build/polish-harvest-ledger/release-529e38a/release-proof.txt)
+
 - 逐格点收、拖收和门客代收共用种子栏上方的回执。连续收割合计入库、作物、铜钱、桑叶和税金，并标出轮作增收及留肥。田格仍逐格呈现镰刀动作、断穗和音效。回执淡出后下一次收割重新计数，过夜清除当日回执。
 - 专项拖收四格私田并单点一格公田，回执合计入库 1、作物 4、铜钱 20。另核对两次独立点收、门客代收、改革后的净收入与税金，以及上一版存档接续。101 项源码场景、35 项无窗口发行检查和 13 次隔离桌面运行通过。两种备粮方式均在第 56 天达成传统结局、第 59 天达成改革结局。90 秒连续运行正常结束，两次干净构建的 ZIP 校验值一致。 [Windows 1.0 x64](../build/polish-harvest-receipt/Fiefdom-1.0.0-Windows-x64.zip) · [1920×1080 混合收割](../build/polish-harvest-receipt/final-capture/1920x1080/01b-combined-harvest-receipt.png) · [1024×768 连续点收](../build/polish-harvest-receipt/final-capture/1024x768/01c-two-separate-harvest-clicks.png) · [源码回归](../build/polish-harvest-receipt/final-source/source-matrix.txt) · [发行校验](../build/polish-harvest-receipt/final-headless/manifest.txt)
 
