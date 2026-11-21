@@ -679,15 +679,23 @@ func _crop_mark_row(y: int) -> CropMarkRow:
 func _draw_canals() -> void:
 	# The canal paint stays in place while crop marks and soil moisture are refreshed.
 	var network := Global.irrigation
+	if network.channels.is_empty():
+		return
 	var bank := BANK.darkened(0.14) if _canal_rain else BANK
+	var centers := PackedVector2Array()
+	var arms := PackedVector2Array()
 	for cell in network.channels:
-		_channel_shape(cell, 11.5, BANK_SHADOW, Vector2(0.5, 1.5))
-	for cell in network.channels:
-		_channel_shape(cell, 11.0, bank)
-	for cell in network.channels:
-		_channel_shape(cell, 8.5, bank.darkened(0.28), Vector2(0.0, 0.5))
-	for cell in network.channels:
-		_channel_shape(cell, 6.5, BED)
+		var center := tile_map.map_to_local(cell)
+		centers.append(center)
+		for direction: Vector2i in Irrigation.NEIGHBORS:
+			var next_cell := cell + direction
+			if next_cell == network.source_cell or network.channels.has(next_cell):
+				arms.append(center)
+				arms.append(center + Vector2(direction) * tile_size * 0.5)
+	_draw_canal_bed(centers, arms, 11.5, BANK_SHADOW, Vector2(0.5, 1.5))
+	_draw_canal_bed(centers, arms, 11.0, bank)
+	_draw_canal_bed(centers, arms, 8.5, bank.darkened(0.28), Vector2(0.0, 0.5))
+	_draw_canal_bed(centers, arms, 6.5, BED)
 	for cell in network.channels:
 		var center := tile_map.map_to_local(cell)
 		if culverts.has(cell):
@@ -699,6 +707,32 @@ func _draw_canals() -> void:
 		_draw_channel_edges(cell, network, bank, wet)
 		if not wet:
 			canal_ink.draw_rect(Rect2(center + Vector2(-2, -1), Vector2(3, 1)), BED)
+
+func _draw_canal_bed(centers: PackedVector2Array, arms: PackedVector2Array, width: float, ink: Color,
+		offset := Vector2.ZERO) -> void:
+	# Collect the solid caps and joins in one draw for this bank color.
+	var cap := _channel_cap(Vector2.ZERO, width)
+	var cap_indices := Geometry2D.triangulate_polygon(cap)
+	var points := PackedVector2Array()
+	var indices := PackedInt32Array()
+	for center in centers:
+		var base := points.size()
+		var at := center + offset
+		for corner in cap:
+			points.append(at + corner)
+		for index in cap_indices:
+			indices.append(base + index)
+	for arm in range(0, arms.size(), 2):
+		var start := arms[arm] + offset
+		var finish := arms[arm + 1] + offset
+		var side := (start - finish).orthogonal().normalized() * (width * 0.5)
+		var base := points.size()
+		points.append(start + side)
+		points.append(start - side)
+		points.append(finish - side)
+		points.append(finish + side)
+		indices.append_array(PackedInt32Array([base, base + 1, base + 2, base, base + 2, base + 3]))
+	RenderingServer.canvas_item_add_triangle_array(canal_ink.get_canvas_item(), indices, points, PackedColorArray([ink]))
 
 func _draw() -> void:
 	var network := Global.irrigation
@@ -746,20 +780,23 @@ func _draw_field_gate(center: Vector2i, inlet: Vector2i, network: Irrigation) ->
 	var gate := Rect2(mouth - Vector2(8, 9), Vector2(16, 12)) if across_y else Rect2(mouth - Vector2(5, 10), Vector2(10, 16))
 	draw_texture_rect_region(waterworks, gate, GATE_NS if across_y else GATE_EW, _timber_light())
 
-func _channel_shape(cell: Vector2i, width: float, ink: Color, offset := Vector2.ZERO) -> void:
+func _channel_shape(cell: Vector2i, width: float, ink: Color) -> void:
 	var network := Global.irrigation
-	var center := tile_map.map_to_local(cell) + offset
-	var radius := width * 0.5
-	var bevel := radius * 0.64
-	canal_ink.draw_colored_polygon(PackedVector2Array([
-		center + Vector2(-bevel, -radius), center + Vector2(bevel, -radius),
-		center + Vector2(radius, -bevel), center + Vector2(radius, bevel),
-		center + Vector2(bevel, radius), center + Vector2(-bevel, radius),
-		center + Vector2(-radius, bevel), center + Vector2(-radius, -bevel)]), ink)
+	var center := tile_map.map_to_local(cell)
+	canal_ink.draw_colored_polygon(_channel_cap(center, width), ink)
 	for direction: Vector2i in Irrigation.NEIGHBORS:
 		var next_cell := cell + direction
 		if next_cell == network.source_cell or network.channels.has(next_cell):
 			canal_ink.draw_line(center, center + Vector2(direction) * tile_size / 2.0, ink, width)
+
+func _channel_cap(center: Vector2, width: float) -> PackedVector2Array:
+	var radius := width * 0.5
+	var bevel := radius * 0.64
+	return PackedVector2Array([
+		center + Vector2(-bevel, -radius), center + Vector2(bevel, -radius),
+		center + Vector2(radius, -bevel), center + Vector2(radius, bevel),
+		center + Vector2(bevel, radius), center + Vector2(-bevel, radius),
+		center + Vector2(-radius, bevel), center + Vector2(-radius, -bevel)])
 
 func _draw_channel_edges(cell: Vector2i, network: Irrigation, bank: Color, wet: bool) -> void:
 	var center := tile_map.map_to_local(cell)
