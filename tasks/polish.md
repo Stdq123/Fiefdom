@@ -19,6 +19,8 @@
 
 ## 游戏内鼠标指针
 
+鼠标停在原处时，打开设置、返回标题或打开与关闭命名框，指针会按当前界面切换箭头、手形和工字形。构建 `ed144a6` 在 1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面通过了鼠标落点、田务图标和门客拖放核对。Windows ZIP 的 SHA-256 为 `cdc7efb8991760b71c2c79de870efb3f67359c3e745c984fac5d83da0de26314`。存档写入为零，测试包已清理。 [指针切换核对记录](../build/polish-stationary-cursor/release-ed144a6/release-proof.txt)
+
 从封地管理拖动门客时，游戏画面绘制青铜箭头，带玉色勾表示可落位，带朱色叉表示不可落位。姓名随指针显示在右侧。1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面均核对了帧内徽记、箭尖落点、取消拖放和窗口边框。构建提交 `14ca1a0`，Windows ZIP 的 SHA-256 为 `b2a934223087101e8cf6b69d3f8d40d24d1a128a973ae3575607b639d173632c`。测试包已清理。 [光标核对记录](../build/polish-themed-drag-cursor/release-14ca1a0/release-proof.txt)
 
 封地的青铜箭头指向可操作田格时，旁边显示锄、种粒、水滴或镰刀。图标随田况和剩余体力更新，即使鼠标停在原处也会切换。贴近画面边缘时，图标移到内侧。构建提交 `7e04ab7`，Windows ZIP 的 SHA-256 为 `d54a87bd491efae5a8306f15638bf2eaddd923d671bf0590bccbab7db57616c6`。1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面各核对十四个田务界面状态。测试包已清理。 [田务光标核对记录](../build/polish-field-cursor/release-7e04ab7/release-proof.txt)
