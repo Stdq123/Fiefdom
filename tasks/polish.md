@@ -477,6 +477,8 @@ Windows 候选包内的 `SHA256SUMS.txt` 覆盖程序、资源、兼容入口、
 
 ## 出门后的目的地与关口指引
 
+溪桥道、西市和竹涧的指路牌按脚边路段显示方向。到桥东草甸的岔口转向南，到西市鱼摊巷转向北，往望溪台沿石阶转向东北。经过缓存路线的起点后箭头继续跟随所在路段。竹涧采用三处外出地图共用的日期排法，晴天样例的时辰与节气在最大字号下同排可读。构建 `b6f943a` 在 1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面各核对七个固定画面。Windows ZIP 的 SHA-256 为 `065bcf2249cd5bd5b98052c0301dd648a9c6987155f6ab47af82071a5d3bbe70`。存档写入为零，两轮测试包均已清理。 [外出指路核对记录](../build/polish-travel-bearings/release-b6f943a/release-proof.txt)
+
 溪桥道、西市和竹涧共用右上路签。目的地、下一段走法和取消按钮各自排开，走到一张地图就能看出该过哪个关口或岔口。溪桥道可以就地取消指路。打开舆图和设置时收起路签，关合后恢复所选路线。
 
 从 `219b314` 独立构建两次，ZIP 的 SHA-256 均为 `cc69805d845925ab520d11b743e1d0bb2617dedc8e7c0e61b41d869e75b679b6`。无窗口检查通过。默认 1920×1080 的 Vulkan 和 Direct3D 12、1024×768 的 OpenGL 各在隔离桌面核对 14 个界面，覆盖最大字号、三个地图的关口提示、舆图与设置遮挡以及键盘取消。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-travel-route/release-219b314/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-travel-route/release-219b314/release-proof.txt)
