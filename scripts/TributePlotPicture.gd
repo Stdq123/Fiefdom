@@ -8,6 +8,7 @@ const TILE := Rect2(0, 0, 16, 16)
 var soil_art: Texture2D = SOIL
 var soil_region := Rect2()
 var crop_region := Rect2i()
+var crop_ink := Color.WHITE
 var status := -1
 var water := Global.CropWater.DRY
 var rain := false
@@ -43,7 +44,10 @@ func _show_cell(cell: Vector2i, task: int, public_plot: bool, ground: Texture2D)
 		rice = data.is_water_crop
 		water = Global.crop_water(cell, crop)
 		var stage := 2 if status == Global.NightGrowth.READY else int(crop.age > 0)
-		crop_region = ItemManager.crop_atlas.get_tile_texture_region(data.stages_atlas_coords[stage])
+		var coords := data.stages_atlas_coords[stage]
+		var alternative := FieldPlotArt.crop_alternative(stage, status)
+		crop_region = ItemManager.crop_atlas.get_tile_texture_region(coords)
+		crop_ink = ItemManager.crop_atlas.get_tile_data(coords, alternative).modulate
 	queue_redraw()
 
 func _draw() -> void:
@@ -59,7 +63,9 @@ func _draw() -> void:
 		FieldPlotArt.draw_paddy(self, TILE, rain)
 	elif water in [Global.CropWater.RAIN, Global.CropWater.HAND, Global.CropWater.CANAL]:
 		FieldPlotArt.draw_soil_moisture(self, TILE, rain and not rice)
+	elif FieldPlotArt.needs_water(status):
+		FieldPlotArt.draw_dry_soil(self, TILE)
 	if not crop_region.has_area():
 		return
-	draw_texture_rect_region(ItemManager.crop_atlas.texture, TILE, crop_region)
+	draw_texture_rect_region(ItemManager.crop_atlas.texture, TILE, crop_region, crop_ink)
 	FieldPlotArt.draw_task_mark(self, Vector2(12, 12), status, FieldPlotArt.FARM_MARK_WIDTH)

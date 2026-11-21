@@ -106,7 +106,8 @@ func _ready() -> void:
 	GameEvents.money_changed.connect(_refresh_plan.unbind(1))
 	GameEvents.crop_harvested.connect(_refresh_tiles.unbind(1))
 	GameEvents.farm_state_changed.connect(_refresh_tiles)
-	GameEvents.day_advanced.connect(_refresh_tiles.unbind(1))
+	# Repaint after the world applies growth and clears yesterday's watering.
+	GameEvents.day_advanced.connect(_refresh_tiles.unbind(1), CONNECT_DEFERRED)
 	GameEvents.day_advanced.connect(_clear_fertility_highlight.unbind(1))
 	GameEvents.day_advanced.connect(_clear_rice_plot_highlight.unbind(1))
 
@@ -751,6 +752,8 @@ func _draw() -> void:
 		var rained_on: bool = rain and (crop.is_empty() or not crop["data"].is_water_crop)
 		if supplied or hand_watered or rained_on:
 			FieldPlotArt.draw_soil_moisture(self, _cell_rect(cell), rained_on)
+		elif FieldPlotArt.needs_water(Global.crop_night_status(cell)):
+			FieldPlotArt.draw_dry_soil(self, _cell_rect(cell))
 		if supplied:
 			_draw_inlets(cell)
 

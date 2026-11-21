@@ -10,6 +10,16 @@ const HARVEST_MARK := Color("#f4d182")
 const DRY_MARK := Color("#bce3ee")
 const BLOCKED_MARK := Color("#ffc1a2")
 const SOW_MARK := Color("#c5dfa6")
+const DRY_SEEDLING := 1
+const DRY_CLAY := Color("#cfa37120")
+const CRACK_EDGE := Color("#e1b17ca0")
+const CRACK_CUT := Color("#6a432ecf")
+
+static func needs_water(status: int) -> bool:
+	return status in [Global.NightGrowth.DRY, Global.NightGrowth.BLOCKED]
+
+static func crop_alternative(stage: int, status: int) -> int:
+	return DRY_SEEDLING if stage == 1 and needs_water(status) else 0
 
 static func draw_task_mark(ink: CanvasItem, at: Vector2, task: int, width: float) -> void:
 	var radius := width * 0.5
@@ -38,6 +48,18 @@ static func draw_task_mark(ink: CanvasItem, at: Vector2, task: int, width: float
 static func _diamond(at: Vector2, radius: float) -> PackedVector2Array:
 	return PackedVector2Array([at + Vector2.UP * radius, at + Vector2.RIGHT * radius,
 		at + Vector2.DOWN * radius, at + Vector2.LEFT * radius])
+
+static func draw_dry_soil(ink: CanvasItem, soil: Rect2) -> void:
+	ink.draw_rect(soil.grow(-1.0), DRY_CLAY)
+	var origin := soil.position
+	var left := PackedVector2Array([origin + Vector2(2.0, 6.5), origin + Vector2(4.5, 8.0),
+		origin + Vector2(3.5, 10.0), origin + Vector2(5.5, 11.5)])
+	var right := PackedVector2Array([origin + Vector2(10.0, 3.0), origin + Vector2(12.0, 4.0),
+		origin + Vector2(11.5, 5.5), origin + Vector2(14.0, 6.0)])
+	for crack: PackedVector2Array in [left, right]:
+		ink.draw_polyline(crack, CRACK_EDGE, 1.45, true)
+		ink.draw_polyline(crack, CRACK_CUT, 0.68, true)
+	ink.draw_line(left[2], origin + Vector2(2.0, 11.0), CRACK_CUT, 0.68, true)
 
 static func draw_paddy(ink: CanvasItem, soil: Rect2, rain: bool) -> void:
 	var inset := soil.grow(-1.0)

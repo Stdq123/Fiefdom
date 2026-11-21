@@ -34,6 +34,24 @@ func _review() -> void:
 	_expect(marks.get_parent() == crops and marks.y_sort_enabled and row != null
 		and row.marks.size() == 2 and row.position.y > crops.map_to_local(cell).y + crops.y_sort_origin,
 		"A row of crop status glyphs sits directly after its crops in the actor sort.")
+	var events := root.get_node("GameEvents")
+	var picture: Control = load("res://scripts/TributePlotPicture.gd").new()
+	state.active_crops[cell].age = 1
+	state.active_crops[cell].watered = false
+	events.farm_state_changed.emit()
+	picture.show_field_cell(cell)
+	var dry_tile := crops.get_cell_tile_data(cell)
+	_expect(dry_tile != null and dry_tile.modulate != Color.WHITE and picture.crop_ink == dry_tile.modulate,
+		"A dry seedling shares its dry leaf color with the map preview.")
+	_expect(crops.get_cell_alternative_tile(cell + Vector2i.RIGHT) == 0,
+		"Harvest plants keep their normal palette.")
+	state.active_crops[cell].watered = true
+	events.farm_state_changed.emit()
+	picture.show_field_cell(cell)
+	_expect(crops.get_cell_atlas_coords(cell) == seed.stages_atlas_coords[1]
+		and crops.get_cell_alternative_tile(cell) == 0 and picture.crop_ink == Color.WHITE,
+		"The watered picture recovers without changing its growth stage.")
+	picture.free()
 	state.active_crops.clear()
 	overlay._refresh_crop_marks()
 	_expect(overlay.crop_mark_rows.is_empty(), "Empty rows release their status glyphs.")

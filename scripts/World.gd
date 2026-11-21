@@ -67,6 +67,8 @@ func _ready() -> void:
 	crops_layer.position = tile_map.position
 
 	GameEvents.day_advanced.connect(_on_day_advanced)
+	GameEvents.farm_state_changed.connect(restore_crops_visuals)
+	GameEvents.channels_changed.connect(restore_crops_visuals)
 	GameEvents.seed_cycle_requested.connect(_cycle_seed)
 	GameEvents.retainer_assigned.connect(_on_retainer_assigned)
 	GameEvents.retainer_duty_changed.connect(_on_retainer_duty_changed)
@@ -190,12 +192,10 @@ func wait_for_retainers() -> Dictionary:
 func _draw_crop(grid_pos: Vector2i) -> void:
 	var crop: Dictionary = active_crops[grid_pos]
 	var data: CropData = crop["data"]
-	var stage := 0
-	if crop["age"] >= crop["growth_nights"]:
-		stage = 2
-	elif crop["age"] > 0:
-		stage = 1
-	crops_layer.set_cell(grid_pos, data.atlas_source_id, data.stages_atlas_coords[stage])
+	var status := Global.night_growth(crop, Global.crop_water(grid_pos, crop))
+	var stage := 2 if status == Global.NightGrowth.READY else int(crop.age > 0)
+	var alternative := FieldPlotArt.crop_alternative(stage, status)
+	crops_layer.set_cell(grid_pos, data.atlas_source_id, data.stages_atlas_coords[stage], alternative)
 
 func setup_navigation() -> void:
 	var nav_region = NavigationRegion2D.new()
@@ -1094,7 +1094,6 @@ func _plant_crop(grid_pos: Vector2i) -> void:
 func sow_crop(grid_pos: Vector2i, seed_id: String, show_impact := true) -> bool:
 	if not Global.sow_field_crop(grid_pos, seed_id):
 		return false
-	_draw_crop(grid_pos)
 	if show_impact:
 		_show_field_impact(grid_pos, Player.Action.SOW)
 	print("Planted ", ItemManager.crop_label(seed_id), " at ", grid_pos)
@@ -1158,8 +1157,8 @@ func _on_day_advanced(new_day: int) -> void:
 			crop["age"] += 1
 			if water == Global.CropWater.CANAL and Global.first_channel_growth_day == 0:
 				Global.first_channel_growth_day = new_day
-			_draw_crop(pos)
 		crop["watered"] = false
+		_draw_crop(pos)
 	Global.last_field_night = overnight
 	for retainer: Retainer in retainer_instances.values():
 		retainer.resume_duty_at_dawn()
