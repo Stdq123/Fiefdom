@@ -151,6 +151,10 @@
 
 从 `1928af0` 独立构建两次，ZIP 的 SHA-256 均为 `85dafd6d02daeb314bbbfec558cc2cbe26b007ebc2b219efe331aa176666beca`。十项无窗口检查与原样解包启动通过。1920×1080 Vulkan、1920×1080 Direct3D 12 和 1024×768 OpenGL 在隔离桌面各核对五个接触样例和一次连续两格的动作。新档到双结局的玩法验收继续暂缓。 [Windows x64 候选包](../build/polish-field-stroke-contact/release-1928af0/Fiefdom-1.0.0-Windows-x64.zip) · [核对记录](../build/polish-field-stroke-contact/release-1928af0/release-proof.txt)
 
+## 主角与门客停步后的站姿
+
+人物停步先站稳，衣肩再轻微起落，两脚贴住地面。主角八套衣装、常见门客及衣架的三向预览都用这套动效。起步、提桶、挥锄和坐下时立即转入对应姿势。构建 `4d23e14` 在 1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面各核对 37 对画面，鞋底区域逐像素对齐。四项无窗口检查通过，存档写入为零。Windows ZIP 的 SHA-256 为 `e6964392846fd24e1234376a17692ffd5ca15f6b13e4fc6c1516de18dc66ad65`。测试包已清理。 [站姿核对记录](../build/polish-standing-pose/release-4d23e14/release-proof.txt)
+
 ## 门客和行人的落脚痕迹
 
 封地的门客和来客、溪桥道的行人、西市的染工和提篓工踩进积雪会留下鞋印，踩进水洼会泛起水纹，走过干土会略微扬尘。痕迹跟随左右脚落下，并在身后淡去。构建 `8d111cf` 在 1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面各核对八组，覆盖木桥、进屋和脚印消散，五项无窗口检查通过。Windows ZIP 的 SHA-256 为 `5083f77d97736ca973102b18141ea6b66332ab6adc053595cde309d385d49941`。测试包已清理。 [核对记录](../build/polish-resident-footfalls/release-8d111cf/release-proof.txt)
