@@ -73,6 +73,8 @@ func _ready() -> void:
 		_mouse_cursor.add_child(_field_tool)
 		window.mouse_exited.connect(_clear_mouse_position)
 		window.size_changed.connect(_read_mouse_position)
+		window.focus_entered.connect(_queue_mouse_cursor_refresh)
+		window.focus_exited.connect(_queue_mouse_cursor_refresh)
 		_read_mouse_position()
 	get_tree().node_added.connect(_watch_gui_cursor)
 	add_child(cursor)
