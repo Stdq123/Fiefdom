@@ -23,6 +23,8 @@
 
 ## 游戏内鼠标指针
 
+切换阅读字号后，界面移动会同步刷新游戏内鼠标指针。构建 `73d3ba1` 复现了设置的「关闭」按钮移开后仍显示手形。构建 `30e5e52` 在 1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面各核对 24 个指针状态和 8 次原生点击。放大字号后，旧落点切回箭头，恢复字号后同一落点能点中「关闭」。Windows ZIP 的 SHA-256 为 `d036f43bfd5ecb04e14492e17edd422dd25d224c0ac3813139412c63aacb9dde`。存档写入为零，两轮测试包已清理。 [指针核对记录](../build/polish-cursor-layout/release-30e5e52/release-proof.txt)
+
 卷动长页时，游戏内指针会跟着鼠标下方的内容切换。旧构建 `a8bee2d` 在按钮滚走后仍显示手形。构建 `7a35dba` 在 1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面各核对 21 个指针状态，滚轮往返、按钮落点和封地农具提示通过。Windows ZIP 的 SHA-256 为 `803dd477ddd76d16d00269de7d634f150e1915a5f05f7487f2f093538d7a74cc`。两轮测试包已清理。 [指针核对记录](../build/polish-cursor-scroll/release-7a35dba/release-proof.txt)
 
 可选的下拉条目和可调滑块使用青玉袖口手形。禁用项和分隔线用铜镶玉箭头，键盘高亮与悬停分开。构建 `e7dd12c` 在 1920×1080 Vulkan 和 1024×768 OpenGL 的隔离桌面各核对 15 个指针状态，并点选字号、调整音量。Windows ZIP 的 SHA-256 为 `41e73e7583c6fd7de8e0776a347f9728792d915a6145818de1c70bc14c588c41`。存档写入为零，测试包已清理。 [指针核对记录](../build/polish-cursor-controls/release-e7dd12c/release-proof.txt)
