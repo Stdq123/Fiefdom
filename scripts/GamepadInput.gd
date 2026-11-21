@@ -10,6 +10,7 @@ const MOUSE_CURSORS := {
 	DisplayServer.CURSOR_ARROW: [preload("res://assets/ui/cursor-arrow.png"), Vector2(-2, -2)],
 	DisplayServer.CURSOR_POINTING_HAND: [preload("res://assets/ui/cursor-hand.png"), Vector2(-11, -3)],
 	DisplayServer.CURSOR_IBEAM: [preload("res://assets/ui/cursor-text.png"), Vector2(-16, -16)],
+	DisplayServer.CURSOR_DRAG: [preload("res://assets/ui/cursor-grip.png"), Vector2(-16, -16)],
 	DisplayServer.CURSOR_CAN_DROP: [preload("res://assets/ui/cursor-drop-allowed.png"), Vector2(-2, -2)],
 	DisplayServer.CURSOR_FORBIDDEN: [preload("res://assets/ui/cursor-drop-blocked.png"), Vector2(-2, -2)],
 }
@@ -251,8 +252,10 @@ func _interactive_mouse_shape(point: Vector2) -> DisplayServer.CursorShape:
 					and not popup.is_item_disabled(item) and not popup.is_item_separator(item)):
 				return DisplayServer.CURSOR_POINTING_HAND
 		return DisplayServer.CURSOR_ARROW
-	var slider := focused_window.gui_get_hovered_control() as Slider
-	return DisplayServer.CURSOR_POINTING_HAND if slider and slider.editable else DisplayServer.CURSOR_ARROW
+	var hovered := focused_window.gui_get_hovered_control()
+	if hovered is ScrollBar and hovered.max_value - hovered.page > hovered.min_value:
+		return DisplayServer.CURSOR_DRAG
+	return DisplayServer.CURSOR_POINTING_HAND if hovered is Slider and hovered.editable else DisplayServer.CURSOR_ARROW
 
 func _update_mouse_field_tool(point: Vector2, bounds: Rect2) -> bool:
 	var field := get_tree().get_first_node_in_group(&"field_cursor")
