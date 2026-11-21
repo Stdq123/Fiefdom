@@ -50,6 +50,7 @@ func _ready() -> void:
 		data = RetainerData.new()
 	sprite.set_motion_sheet(CharacterArt.retainer_motion(data.name, data.school, data.visitor_appearance),
 		CharacterArt.WORKER_COLUMNS, data.name)
+	tool_gesture.visibility_changed.connect(func(): sprite.hands_busy = tool_gesture.visible)
 	tool_gesture.sleeve = CharacterArt.retainer_sleeve(data.name, data.school, data.visitor_appearance)
 	home_position = global_position
 

@@ -28,8 +28,14 @@ var walk_distance := 0.0
 var walking := false
 var idle_time := 0.0
 var step_length := STEP_LENGTH
+var hands_busy := false:
+	set(value):
+		hands_busy = value
+		if value and _standing_pose:
+			_standing_pose.clear()
 var _work_column := -1
 var _seated_art: SeatedPose
+var _standing_pose: StandingPose
 
 static func walk_column(distance: float, passing_column := 0, stride := STEP_LENGTH) -> int:
 	match floori(distance / stride) % 4:
@@ -48,6 +54,15 @@ func set_festival_guest(index: int) -> void:
 func set_motion_sheet(sheet: Texture2D, columns := CharacterArt.MOTION_COLUMNS, speaker := "") -> void:
 	if _seated_art:
 		_seated_art.restore_standing()
+	if _standing_pose:
+		_standing_pose.clear()
+	if columns == CharacterArt.WORKER_COLUMNS and sheet:
+		if not _standing_pose:
+			var wait := float(get_instance_id() % 7) * 0.13
+			_standing_pose = StandingPose.new(self, wait)
+	elif _standing_pose:
+		material = null
+		_standing_pose = null
 	step_length = NEIGHBOR_STEP_LENGTH.get(speaker, STEP_LENGTH)
 	idle_time = maxi(0, VisitorData.NEIGHBORS.find(speaker)) * 0.37
 	walk_distance = 0.0
@@ -79,6 +94,8 @@ func walk(movement: Vector2) -> float:
 		return 0.0
 	if _seated_art:
 		_seated_art.restore_standing()
+	if _standing_pose:
+		_standing_pose.clear()
 	var previous := frame_coords.x if walking else 0
 	face(movement)
 	walking = true
@@ -116,6 +133,8 @@ func stand(lean := Vector2.ZERO, work_pose := -1, errand := false) -> void:
 	if hframes == CharacterArt.WORKER_COLUMNS and work_pose >= 0:
 		_work_column = (CharacterArt.ERRAND_COLUMN if errand else CharacterArt.WORK_COLUMN) + work_pose
 	offset = Vector2.ZERO if _work_column >= 0 else lean
+	if _standing_pose and (_work_column >= 0 or not offset.is_zero_approx()):
+		_standing_pose.clear()
 	if directional:
 		_show_idle()
 
@@ -124,6 +143,8 @@ func sit(fabric: Color) -> void:
 		stand(Vector2(0, 2))
 		return
 	_stop_walking()
+	if _standing_pose:
+		_standing_pose.clear()
 	offset = Vector2.ZERO
 	_show_idle()
 	if not _seated_art:
@@ -140,6 +161,9 @@ func _process(delta: float) -> void:
 	if not walking:
 		idle_time = fposmod(idle_time + delta, BLINK_PERIOD)
 		_show_idle()
+		if (_standing_pose and not hands_busy and _work_column < 0 and offset.is_zero_approx()
+				and (not _seated_art or _seated_art.surface == SeatedPose.Surface.STANDING)):
+			_standing_pose.advance(delta)
 
 func _show_idle() -> void:
 	var blink := facing != Facing.BACK and idle_time >= BLINK_PERIOD - BLINK_TIME

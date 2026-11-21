@@ -27,6 +27,7 @@ var current_state = State.IDLE
 @onready var camera: Camera2D = $Camera2D
 @onready var meal_button: Button = $MealUI/MealButton
 @onready var interaction_prompt: Control = $InteractionLayer/InteractionPrompt
+@onready var _standing_pose := StandingPose.new(sprite)
 
 var shake_strength: float = 0.0
 var shake_decay: float = 5.0
@@ -44,6 +45,7 @@ var meal_controls_blocked := false
 var bow_pointer := Vector2.INF
 var _seat_surface := SeatedPose.Surface.STANDING
 var _seated_art: SeatedPose
+var _standing_free := false
 
 var arrow_scene = preload("res://scenes/Arrow.tscn")
 
@@ -153,6 +155,7 @@ func set_training_cart(mounted: bool) -> void:
 		training_cart.halt()
 
 func _update_driver(distance: float) -> void:
+	_set_standing_motion(false)
 	if velocity.length_squared() > 144.0:
 		_face(velocity)
 	training_cart.face(facing_direction())
@@ -172,6 +175,7 @@ func take_damage(amount: int) -> void:
 		Global.hurt_player(amount)
 
 func show_action(action: ToolGesture.Action, target: Vector2, impact := Callable()) -> void:
+	_set_standing_motion(false)
 	silk_hands.clear()
 	var toward := target - global_position
 	if velocity.is_zero_approx() and toward.length_squared() > 1.0:
@@ -211,6 +215,7 @@ func _update_walk_sprite(direction: Vector2, movement := Vector2.ZERO) -> void:
 	if not direction.is_zero_approx():
 		_face(direction)
 	if seated:
+		_set_standing_motion(false)
 		walk_distance = WALK_START
 		sprite.offset = Vector2.ZERO
 		sprite.flip_h = facing_left
@@ -235,7 +240,9 @@ func _update_walk_sprite(direction: Vector2, movement := Vector2.ZERO) -> void:
 		else:
 			sprite.offset = tool_gesture.body_lean
 			sprite.frame_coords = Vector2i(0, facing_row)
+		_set_standing_motion(work < 0 and not tool_gesture.visible and not silk_hands.visible and not resting)
 		return
+	_set_standing_motion(false)
 	silk_hands.clear()
 	sprite.offset = Vector2.ZERO
 	var previous := NeighborMotion.walk_column(walk_distance, PlayerAttire.PASS_COLUMN)
@@ -246,6 +253,13 @@ func _update_walk_sprite(direction: Vector2, movement := Vector2.ZERO) -> void:
 	sprite.frame_coords = Vector2i(column, row)
 	if column != previous and column in [1, 2]:
 		footstep.emit(global_position)
+
+func _set_standing_motion(enabled: bool) -> void:
+	if _standing_free == enabled:
+		return
+	_standing_free = enabled
+	if not enabled:
+		_standing_pose.clear()
 
 func footstep_contact(at: Vector2) -> Vector2:
 	var frame := sprite.frame_coords
@@ -268,7 +282,9 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion or event is InputEventMouseButton:
 		bow_pointer = event.position
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	if _standing_free:
+		_standing_pose.advance(delta)
 	var target: Node2D
 	var viewport := get_viewport()
 	if (not world_controls_blocked() and not training_cart.visible and not Global.is_indoors()

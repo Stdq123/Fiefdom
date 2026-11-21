@@ -10,6 +10,7 @@ const DIRECTIONS := [Vector2.DOWN, Vector2.UP, Vector2.RIGHT]
 @onready var actor: Node2D = $Actor
 @onready var body: Sprite2D = $Actor/Body
 @onready var tool: ToolGesture = $Actor/Tool
+@onready var _standing_pose := StandingPose.new(body)
 
 func _ready() -> void:
 	resized.connect(_fit_figure)
@@ -27,6 +28,10 @@ func dress(id: String) -> void:
 
 func show_pose(motion: int, time: float) -> void:
 	var column := 0
+	if motion == STAND:
+		_standing_pose.show_at(time)
+	else:
+		_standing_pose.clear()
 	if motion == WALK or motion == STAND:
 		tool.clear()
 		if motion == WALK:

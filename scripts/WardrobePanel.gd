@@ -124,10 +124,11 @@ func _select_pose(id: int) -> void:
 	_refresh_animation()
 
 func _refresh_animation() -> void:
-	set_process(modal.is_visible_in_tree() and motion != WardrobeFigure.STAND)
+	set_process(modal.is_visible_in_tree())
 
 func _process(delta: float) -> void:
-	motion_time = fmod(motion_time + delta, 1.2)
+	var period := StandingPose.PERIOD if motion == WardrobeFigure.STAND else 1.2
+	motion_time = fmod(motion_time + delta, period)
 	for figure in figures:
 		figure.show_pose(motion, motion_time)
 

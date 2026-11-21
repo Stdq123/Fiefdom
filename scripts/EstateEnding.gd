@@ -252,6 +252,7 @@ func _build_stage() -> void:
 	desk.arrange(traditional)
 	var player_sprite: Sprite2D = estate.player.get_node("Sprite2D")
 	presenter = player_sprite.duplicate(0) as Sprite2D
+	presenter.set_instance_shader_parameter(StandingPose.LIFT, 0.0)
 	presenter.offset = player_sprite.position
 	presenter.position = Vector2(-9, 18) if traditional else Vector2(5, 18)
 	presenter.frame_coords = Vector2i(0, Player.Facing.BACK)

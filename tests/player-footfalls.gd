@@ -52,6 +52,8 @@ func _review() -> void:
 	actor._update_walk_sprite(Vector2.RIGHT, Vector2(20, 0))
 	_expect(events.size() == 1 and actor.sprite.frame_coords.x == 0, "A seated pose does not emit walking feedback.")
 	actor.set_seat_pose(seated.Surface.STANDING)
+	_check_standing(actor, seated)
+	_check_neighbor_standing()
 
 	_check_atlases(WALK_ART.ORIGINAL_PATH, 1)
 	_check_atlases(WALK_ART.VARIANTS_PATH, 7)
@@ -61,6 +63,45 @@ func _review() -> void:
 	if not failed:
 		print("SCENARIO_OK")
 	quit(1 if failed else 0)
+
+func _check_standing(actor: Node, seated: GDScript) -> void:
+	var gesture = load("res://scripts/ToolGesture.gd")
+	actor._update_walk_sprite(Vector2.ZERO)
+	var origin: Vector2 = actor.sprite.position
+	actor._process(1.74)
+	_expect(actor._standing_pose._lift > 0.7 and actor.sprite.position == origin and actor.sprite.frame_coords.x == 0,
+		"The idle pose lifts the shoulders over the standing frame and preserves its origin.")
+	actor._update_walk_sprite(Vector2.LEFT, Vector2.LEFT)
+	_expect(actor._standing_pose._lift == 0.0, "The first step releases the idle pose immediately.")
+	actor._update_walk_sprite(Vector2.ZERO)
+	actor._process(1.74)
+	actor.tool_gesture.show_sample(gesture.Action.TILL, Vector2.LEFT, 0.21, 0.22)
+	actor._update_walk_sprite(Vector2.ZERO)
+	_expect(actor._standing_pose._lift == 0.0 and actor.sprite.frame_coords.x >= WALK_ART.WORK_COLUMN,
+		"The field gesture takes over the standing pose.")
+	actor.tool_gesture.clear()
+	actor._update_walk_sprite(Vector2.ZERO)
+	actor._process(1.74)
+	actor.set_seat_pose(seated.Surface.MAT)
+	_expect(actor._standing_pose._lift == 0.0, "Sitting releases the standing pose.")
+	actor.set_seat_pose(seated.Surface.STANDING)
+
+func _check_neighbor_standing() -> void:
+	var speaker: String = load("res://scripts/VisitorData.gd").FIELD_KEEPER
+	var villager = load("res://scripts/NeighborMotion.gd").new()
+	root.add_child(villager)
+	villager.set_art(speaker, null)
+	villager.stand()
+	villager._process(2.6)
+	_expect(villager._standing_pose._lift > 0.3, "A standing neighbor uses idle shoulder motion.")
+	villager.hands_busy = true
+	villager._process(1.75)
+	_expect(villager._standing_pose._lift == 0.0, "Holding a tool releases the standing pose.")
+	villager.hands_busy = false
+	villager.stand(Vector2.ZERO, 1)
+	villager._process(1.75)
+	_expect(villager._standing_pose._lift == 0.0, "A work frame stays aligned with the tool grip.")
+	villager.queue_free()
 
 func _check_atlases(path: String, sheets: int) -> void:
 	var image := Image.load_from_file(ProjectSettings.globalize_path(path))
