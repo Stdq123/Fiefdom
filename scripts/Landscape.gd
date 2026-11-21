@@ -473,12 +473,18 @@ var field_approaches: Dictionary[int, PackedVector2Array] = {}
 var worksite_mouths: Dictionary[int, Vector2] = {}
 var _scenery_ready := false
 var _tree_shadows: TREE_SHADOWS
+var _estate_ground: Node2D
 
 func _ready() -> void:
 	ground_cover = SEASONAL_GROUND.new(wilderness)
 	texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 	if not wilderness:
 		estate_terrain = ESTATE_TERRAIN.new(ESTATE_BOUNDS.position.y)
+		_estate_ground = Node2D.new()
+		_estate_ground.name = "EstateGround"
+		_estate_ground.show_behind_parent = true
+		_estate_ground.draw.connect(_draw_estate_ground)
+		add_child(_estate_ground)
 	else:
 		ravine_relief = RAVINE_RELIEF.new()
 		var line := PackedVector2Array(CREEK)
@@ -580,6 +586,7 @@ func _refresh_estate_tracks() -> void:
 		estate_tracks.append(ROTATION_BOOK_TRACK)
 		estate_track_widths.append(11.0)
 	_build_track_shapes(estate_tracks, estate_track_widths, field_track_count)
+	_estate_ground.queue_redraw()
 	queue_redraw()
 
 func _prepare_map() -> void:
@@ -649,6 +656,8 @@ func _prepare_map() -> void:
 	add_child(rain)
 	_install_boundaries()
 	_scenery_ready = true
+	if _estate_ground != null:
+		_estate_ground.queue_redraw()
 	_refresh_scenery()
 	for sprite in scenery:
 		var prop := scenery[sprite]
@@ -804,16 +813,27 @@ func _refresh_ambience(delta := 0.0) -> void:
 	AudioManager.set_world_ambience(creek_distance, birds_distance, cricket_distance, under_roof,
 		0.78 if wilderness else 1.0, lerpf(1.0, 0.55, fall_proximity))
 
-func _draw() -> void:
-	# Foot shadows and land surfaces share a canvas item. Wait for the deferred props before drawing it.
+func _draw_estate_ground() -> void:
+	# Road and grass commands stay on this layer when a canal only changes scenery above it.
 	if not _scenery_ready:
 		return
-	_draw_ground()
+	_draw_ground(_estate_ground)
+	_draw_field_verges(_estate_ground)
+	_draw_tracks(_estate_ground)
+	var winter := season == Global.Season.WINTER
+	estate_terrain.draw_festival_paving(_estate_ground, SEASON_PALETTES[season][0], winter, raining)
+	RAVINE_RELIEF.draw_gate(_estate_ground, EstateLayout.EAST_GATE, false, season, raining)
+	estate_terrain.draw_gate_paving(_estate_ground, EstateLayout.EAST_GATE + RAVINE_RELIEF.GATE_PAVING.position, winter, raining)
+
+func _draw() -> void:
+	if not _scenery_ready:
+		return
 	if wilderness:
+		_draw_ground(self)
 		creek_profile.draw_shoulder(self, SEASON_PALETTES[season][0], season, raining)
 		RAVINE_BANKS.draw_fishing_shelves(self, season, raining)
 		ravine_relief.draw_trail_verges(self, season, raining)
-		_draw_tracks()
+		_draw_tracks(self)
 		RAVINE_RELIEF.draw_gate(self, RavineLayout.WEST_GATE, true, season, raining)
 		ravine_relief.draw_lookout(self, season, raining)
 		creek_profile.draw_water(self, WATER_TINTS[season], season, raining)
@@ -821,13 +841,8 @@ func _draw() -> void:
 		ravine_relief.draw_bridge_aprons(self, season, raining)
 		_draw_crossings()
 	else:
-		_draw_field_verges()
-		_draw_tracks()
 		var winter := season == Global.Season.WINTER
 		var dirt := _track_dust()
-		estate_terrain.draw_festival_paving(self, SEASON_PALETTES[season][0], winter, raining)
-		RAVINE_RELIEF.draw_gate(self, EstateLayout.EAST_GATE, false, season, raining)
-		estate_terrain.draw_gate_paving(self, EstateLayout.EAST_GATE + RAVINE_RELIEF.GATE_PAVING.position, winter, raining)
 		_draw_building_shadows()
 		if _hall_landing_visible():
 			estate_terrain.draw_hall_court(self, dirt, winter, raining)
@@ -927,7 +942,7 @@ func _surface_at(foot: Vector2) -> TERRAIN_AUDIO.Surface:
 			return TERRAIN_AUDIO.Surface.SNOW
 	return TERRAIN_AUDIO.Surface.GRASS
 
-func _draw_ground() -> void:
+func _draw_ground(canvas: CanvasItem) -> void:
 	var colors: Array = SEASON_PALETTES[season]
 	var meadow: Color = colors[0]
 	var shade: Color = colors[1]
@@ -939,14 +954,14 @@ func _draw_ground() -> void:
 		meadow = meadow.lerp(Color("#344c4c"), 0.34)
 		shade = shade.lerp(Color("#314344"), 0.25)
 		sun = sun.lerp(Color("#3f5750"), 0.28)
-	ESTATE_TERRAIN.draw_grass(self, MAP_BACKDROP, season, raining, wilderness)
+	ESTATE_TERRAIN.draw_grass(canvas, MAP_BACKDROP, season, raining, wilderness)
 	var winter := season == Global.Season.WINTER
 	var ground_shade := shade if wilderness else shade.lerp(meadow, 0.26)
-	ground_cover.draw_cover(self, ground_shade, sun, winter)
-	ground_cover.draw_marks(self, season, raining)
+	ground_cover.draw_cover(canvas, ground_shade, sun, winter)
+	ground_cover.draw_marks(canvas, season, raining)
 	if estate_terrain:
-		estate_terrain.draw_meadow(self, season, raining)
-		estate_terrain.draw_farm_yard(self, meadow, season, raining)
+		estate_terrain.draw_meadow(canvas, season, raining)
+		estate_terrain.draw_farm_yard(canvas, meadow, season, raining)
 	var ground_tint: Color = LEAF_TINTS[season]
 	if wilderness:
 		ground_tint *= Color(0.87, 0.96, 0.95)
@@ -954,12 +969,12 @@ func _draw_ground() -> void:
 		ground_tint *= Color(0.88, 0.94, 0.99)
 	if winter:
 		ground_tint.a = 0.31
-	_draw_prop_litter(ground_tint)
+	_draw_prop_litter(canvas, ground_tint)
 	if estate_terrain:
-		draw_texture_rect_region(ESTATE_TERRAIN.HALL_YARD_ART, Rect2(HALL_YARD_GROUND_AT, HALL_YARD_GROUND.size),
+		canvas.draw_texture_rect_region(ESTATE_TERRAIN.HALL_YARD_ART, Rect2(HALL_YARD_GROUND_AT, HALL_YARD_GROUND.size),
 			HALL_YARD_GROUND, ground_tint)
-		estate_terrain.draw_north_bank(self, MAP_BACKDROP.position.y, shade, sun, winter)
-		south_pond.draw_bed(self)
+		estate_terrain.draw_north_bank(canvas, MAP_BACKDROP.position.y, shade, sun, winter)
+		south_pond.draw_bed(canvas)
 	var grass := shade.lightened(0.09)
 	for prop in props:
 		if SCENERY_SHADOW_SIZES.has(prop.z):
@@ -968,17 +983,17 @@ func _draw_ground() -> void:
 			var patch := Vector2(prop.x, prop.y)
 			if winter and ground_cover.has_snow(patch):
 				continue
-			draw_rect(Rect2(patch + Vector2(-14, 0), Vector2(28, 4)), Color(grass, 0.62))
-			draw_rect(Rect2(patch + Vector2(-10, 4), Vector2(19, 2)), Color(grass, 0.57))
+			canvas.draw_rect(Rect2(patch + Vector2(-14, 0), Vector2(28, 4)), Color(grass, 0.62))
+			canvas.draw_rect(Rect2(patch + Vector2(-10, 4), Vector2(19, 2)), Color(grass, 0.57))
 
-func _draw_prop_litter(tint: Color) -> void:
+func _draw_prop_litter(canvas: CanvasItem, tint: Color) -> void:
 	for placement in props:
 		if not CANOPY_SHADOW_SCALE.has(placement.z) and placement.z not in ROCK_PROPS:
 			continue
 		var foot := Vector2(placement.x, placement.y)
 		if not wilderness and HALL_YARD_AREA.has_point(foot):
 			continue
-		draw_texture_rect_region(ESTATE_ART, Rect2(foot - Vector2(30, 20), ESTATE_LEAF_LITTER.size),
+		canvas.draw_texture_rect_region(ESTATE_ART, Rect2(foot - Vector2(30, 20), ESTATE_LEAF_LITTER.size),
 			ESTATE_LEAF_LITTER, tint)
 
 func _track_dust() -> Color:
@@ -1074,22 +1089,22 @@ func _append_track_cap(outline: PackedVector2Array, tip: Vector2, first: Vector2
 		var side := (first - tip).lerp(tip - last, part)
 		outline.append(tip + side * cos(part * PI) + outward * depth * sin(part * PI))
 
-func _draw_tracks() -> void:
+func _draw_tracks(canvas: CanvasItem) -> void:
 	var dust := _track_dust()
 	var verge: Color = SEASON_PALETTES[season][0]
 	if raining:
 		verge = verge.darkened(0.15)
 	var grain := ESTATE_TERRAIN.trail_texture() if wilderness else ESTATE_TERRAIN.TRACK_GRAIN
 	for track in track_shapes:
-		ESTATE_TERRAIN.draw_loam(self, track.shoulder, dust.lerp(verge, 0.69), grain)
+		ESTATE_TERRAIN.draw_loam(canvas, track.shoulder, dust.lerp(verge, 0.69), grain)
 	for track in track_shapes:
-		ESTATE_TERRAIN.draw_verge(self, track.gravel_path, track.width, season, raining)
+		ESTATE_TERRAIN.draw_verge(canvas, track.gravel_path, track.width, season, raining)
 	for track in track_shapes:
-		ESTATE_TERRAIN.draw_loam(self, track.edge, dust.lerp(verge, 0.41), grain)
+		ESTATE_TERRAIN.draw_loam(canvas, track.edge, dust.lerp(verge, 0.41), grain)
 	for track in track_shapes:
-		ESTATE_TERRAIN.draw_loam(self, track.surface, dust, grain)
+		ESTATE_TERRAIN.draw_loam(canvas, track.surface, dust, grain)
 	for track in track_shapes:
-		_track_gravel(track.gravel_path, track.width, dust)
+		_track_gravel(canvas, track.gravel_path, track.width, dust)
 
 static func scenery_shade(rain: bool) -> Color:
 	var shade := Color("#27392f")
@@ -1136,7 +1151,7 @@ func _hall_landing_visible() -> bool:
 func _shed_step_visible() -> bool:
 	return silk_shed != null and silk_shed.visible and _ground_clear(ESTATE_TERRAIN.SHED_STEP_BOUNDS)
 
-func _track_gravel(points: PackedVector2Array, width: float, dust: Color) -> void:
+func _track_gravel(canvas: CanvasItem, points: PackedVector2Array, width: float, dust: Color) -> void:
 	for index in range(points.size() - 1):
 		var step := points[index + 1] - points[index]
 		var normal := step.normalized().orthogonal()
@@ -1148,10 +1163,10 @@ func _track_gravel(points: PackedVector2Array, width: float, dust: Color) -> voi
 			var width_px := 1 + scatter % 4
 			if not wilderness and scatter % 5 == 1:
 				continue
-			draw_rect(Rect2(point.round(), Vector2(width_px, 1)),
+			canvas.draw_rect(Rect2(point.round(), Vector2(width_px, 1)),
 				dust.lightened(0.20) if scatter % 3 == 0 else dust.darkened(0.13))
 
-func _draw_field_verges() -> void:
+func _draw_field_verges(canvas: CanvasItem) -> void:
 	var verge: Color = SEASON_PALETTES[season][0]
 	var dust := _track_dust()
 	if raining:
@@ -1159,7 +1174,7 @@ func _draw_field_verges() -> void:
 	for field in Global.well_fields:
 		var area := _field_bounds(field["center_pos"])
 		var entrance := field_entrance(field["field_id"])
-		ESTATE_TERRAIN.draw_loam(self, _field_verge_outline(area.grow(6.0), entrance),
+		ESTATE_TERRAIN.draw_loam(canvas, _field_verge_outline(area.grow(6.0), entrance),
 			verge.lerp(dust, 0.36), ESTATE_TERRAIN.TRACK_GRAIN)
 
 func _draw_field_banks() -> void:

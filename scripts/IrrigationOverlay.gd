@@ -65,6 +65,7 @@ var starter_canal: Array[Vector2i] = []
 var rice_plot_highlight: Array[Vector2i] = []
 var gate_candidates: Dictionary[Vector2i, bool] = {}
 var gate_row: Array[Vector2i] = []
+@onready var canal_ink := Node2D.new()
 @onready var flow_ink := Node2D.new()
 @onready var plot_highlights := Node2D.new()
 @onready var plan_ink := Node2D.new()
@@ -75,10 +76,15 @@ var culverts: Dictionary[Vector2i, bool] = {}
 var flooded_rice: Dictionary[Vector2i, bool] = {}
 var water_time := 0.0
 var water_frame := 0
+var _canal_rain := false
 var _open_water: Dictionary[Vector2i, bool] = {}
 var _paddy_inflows: Dictionary[Vector2i, PaddyInflow] = {}
 
 func _ready() -> void:
+	canal_ink.name = "CanalBanks"
+	canal_ink.show_behind_parent = true
+	canal_ink.draw.connect(_draw_canals)
+	add_child(canal_ink)
 	flow_ink.draw.connect(_draw_flow)
 	add_child(flow_ink)
 	plot_highlights.z_index = 2
@@ -472,6 +478,7 @@ func _refresh_network() -> void:
 			for cell in Irrigation.gate_row(center, inlet):
 				_open_water[cell] = true
 	_refresh_footbridges()
+	canal_ink.queue_redraw()
 	_refresh_tiles()
 	_refresh_plan()
 
@@ -505,6 +512,10 @@ func footbridge_at(world_point: Vector2) -> bool:
 	return footbridges.any(func(deck: Rect2) -> bool: return deck.has_point(local))
 
 func _refresh_tiles() -> void:
+	var rain := Global.has_rain()
+	if _canal_rain != rain:
+		_canal_rain = rain
+		canal_ink.queue_redraw()
 	flooded_rice.clear()
 	for cell: Vector2i in Global.active_crops:
 		var crop: CropData = Global.active_crops[cell].data
@@ -665,10 +676,10 @@ func _crop_mark_row(y: int) -> CropMarkRow:
 		crop_mark_rows[y] = row
 	return row
 
-func _draw() -> void:
+func _draw_canals() -> void:
+	# The canal paint stays in place while crop marks and soil moisture are refreshed.
 	var network := Global.irrigation
-	var rain := Global.has_rain()
-	var bank := BANK.darkened(0.14) if rain else BANK
+	var bank := BANK.darkened(0.14) if _canal_rain else BANK
 	for cell in network.channels:
 		_channel_shape(cell, 11.5, BANK_SHADOW, Vector2(0.5, 1.5))
 	for cell in network.channels:
@@ -681,14 +692,17 @@ func _draw() -> void:
 		var center := tile_map.map_to_local(cell)
 		if culverts.has(cell):
 			_channel_shape(cell, 9.0, CULVERT_STONE)
-			draw_rect(Rect2(center + Vector2(-3, -1), Vector2(6, 1)), CULVERT_STONE.lightened(0.2))
+			canal_ink.draw_rect(Rect2(center + Vector2(-3, -1), Vector2(6, 1)), CULVERT_STONE.lightened(0.2))
 			continue
 		var wet := network.is_channel_wet(cell)
 		_channel_shape(cell, 5.0, WATER if wet else DRY)
 		_draw_channel_edges(cell, network, bank, wet)
 		if not wet:
-			draw_rect(Rect2(center + Vector2(-2, -1), Vector2(3, 1)), BED)
+			canal_ink.draw_rect(Rect2(center + Vector2(-2, -1), Vector2(3, 1)), BED)
 
+func _draw() -> void:
+	var network := Global.irrigation
+	var rain := Global.has_rain()
 	for cell in tile_map.get_used_cells():
 		if flooded_rice.has(cell):
 			continue
@@ -737,7 +751,7 @@ func _channel_shape(cell: Vector2i, width: float, ink: Color, offset := Vector2.
 	var center := tile_map.map_to_local(cell) + offset
 	var radius := width * 0.5
 	var bevel := radius * 0.64
-	draw_colored_polygon(PackedVector2Array([
+	canal_ink.draw_colored_polygon(PackedVector2Array([
 		center + Vector2(-bevel, -radius), center + Vector2(bevel, -radius),
 		center + Vector2(radius, -bevel), center + Vector2(radius, bevel),
 		center + Vector2(bevel, radius), center + Vector2(-bevel, radius),
@@ -745,7 +759,7 @@ func _channel_shape(cell: Vector2i, width: float, ink: Color, offset := Vector2.
 	for direction: Vector2i in Irrigation.NEIGHBORS:
 		var next_cell := cell + direction
 		if next_cell == network.source_cell or network.channels.has(next_cell):
-			draw_line(center, center + Vector2(direction) * tile_size / 2.0, ink, width)
+			canal_ink.draw_line(center, center + Vector2(direction) * tile_size / 2.0, ink, width)
 
 func _draw_channel_edges(cell: Vector2i, network: Irrigation, bank: Color, wet: bool) -> void:
 	var center := tile_map.map_to_local(cell)
@@ -758,15 +772,15 @@ func _draw_channel_edges(cell: Vector2i, network: Irrigation, bank: Color, wet: 
 		var worn := posmod(cell.x * 7 + cell.y * 13 + direction.x + direction.y, 4)
 		var at := center + axis * (4.0 + worn * 0.6)
 		var rim := at + side * 4.4
-		draw_colored_polygon(PackedVector2Array([rim - axis, rim + side * (0.8 + worn * 0.25),
+		canal_ink.draw_colored_polygon(PackedVector2Array([rim - axis, rim + side * (0.8 + worn * 0.25),
 			rim + axis * 2.8, rim + axis * 1.2 - side * 0.8]), bank.lightened(0.19))
-		draw_line(at - side * 4.8, at - side * 4.8 + axis * 2.1, bank.darkened(0.22), 1.1)
+		canal_ink.draw_line(at - side * 4.8, at - side * 4.8 + axis * 2.1, bank.darkened(0.22), 1.1)
 		var toe := at - side * 2.6
-		draw_line(toe - axis, toe + axis * 2.5, Color("#7da79a") if wet else Color("#b3956f"), 0.6)
+		canal_ink.draw_line(toe - axis, toe + axis * 2.5, Color("#7da79a") if wet else Color("#b3956f"), 0.6)
 		if worn == 0:
 			var tufts := at - side * 5.6
-			draw_line(tufts, tufts + Vector2(-0.7, -2.0), Color("#768052"), 0.7)
-			draw_line(tufts, tufts + Vector2(1.0, -1.3), Color("#a5a16c"), 0.65)
+			canal_ink.draw_line(tufts, tufts + Vector2(-0.7, -2.0), Color("#768052"), 0.7)
+			canal_ink.draw_line(tufts, tufts + Vector2(1.0, -1.3), Color("#a5a16c"), 0.65)
 
 func _draw_inlets(cell: Vector2i) -> void:
 	var network := Global.irrigation
