@@ -1,6 +1,13 @@
 extends ColorRect
 
 const LEDGER_DESK := preload("res://scripts/RouteLedgerDesk.gd")
+const LOCATION_ART := preload("res://assets/ui/save-locations.png")
+const LOCATION_TILE := Vector2i(192, 112)
+const TRAVEL_LOCATION_TILES := {
+	Global.WEST_ROAD_SCENE: Vector2i(0, 1),
+	Global.WEST_MARKET_SCENE: Vector2i(1, 1),
+	Global.WILDERNESS_SCENE: Vector2i(2, 1),
+}
 
 @onready var records: VBoxContainer = %Records
 @onready var estates: VBoxContainer = %Estates
@@ -147,12 +154,7 @@ func _show_records(key: String) -> void:
 			if not version_note.is_empty():
 				button.text += "\n" + version_note
 			button.tooltip_text = button.text
-			if entry.completed_route in [Global.Outcome.TRADITIONAL, Global.Outcome.REFORMED]:
-				button.icon = LEDGER_DESK.volume_texture(entry.completed_route == Global.Outcome.TRADITIONAL)
-				button.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-				button.expand_icon = true
-				button.add_theme_constant_override("icon_max_width", 66)
-				button.add_theme_constant_override("h_separation", 12)
+			_set_record_picture(button, entry)
 		if not button.disabled and not Global.saved_game_route(entry, false).is_empty():
 			button.tooltip_text += "\n爵位 · " + Global.rank_names[entry.rank]
 		button.pressed.connect(_load.bind(entry, key))
@@ -162,6 +164,26 @@ func _show_records(key: String) -> void:
 		if not update_note.is_empty():
 			status.text = update_note
 	_link_focus(campaign_buttons[key])
+
+func _set_record_picture(button: Button, entry: Dictionary) -> void:
+	var width := 66
+	if entry.running:
+		var tile: Vector2i = TRAVEL_LOCATION_TILES.get(entry.scene, Vector2i(entry.estate_room, 0))
+		var place := AtlasTexture.new()
+		place.atlas = LOCATION_ART
+		place.region = Rect2(Vector2(tile * LOCATION_TILE), Vector2(LOCATION_TILE))
+		place.filter_clip = true
+		button.icon = place
+		button.custom_minimum_size.y = 90
+		width = 128
+	elif entry.completed_route in [Global.Outcome.TRADITIONAL, Global.Outcome.REFORMED]:
+		button.icon = LEDGER_DESK.volume_texture(entry.completed_route == Global.Outcome.TRADITIONAL)
+	else:
+		return
+	button.icon_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	button.expand_icon = true
+	button.add_theme_constant_override("icon_max_width", width)
+	button.add_theme_constant_override("h_separation", 12)
 
 func _mark_unavailable(button: Button, entry: Dictionary) -> void:
 	var reason := "需更新游戏" if entry.error == ERR_FILE_UNRECOGNIZED else "无法读取"

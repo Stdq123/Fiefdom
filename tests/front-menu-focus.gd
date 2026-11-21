@@ -40,7 +40,7 @@ func _run() -> void:
 		{"campaign_id": "front-menu", "campaign_name": "柳湾", "file": "autosave-2.json",
 			"save_origin": "ending", "current_day": 65, "outcome": state.Outcome.REFORMED, "save_sequence": 3},
 		{"campaign_id": "front-menu-next", "campaign_name": "南路亭", "file": "savegame.json",
-			"current_day": 21, "outcome": state.Outcome.RUNNING, "save_sequence": 1},
+			"current_day": 21, "outcome": state.Outcome.RUNNING, "save_sequence": 1, "inside_hall": true},
 	]
 	for entry: Dictionary in entries:
 		var folder: String = state.CAMPAIGN_SAVE_ROOT.path_join(entry.campaign_id.md5_text())
@@ -93,6 +93,9 @@ func _run() -> void:
 		"Right enters the focused estate's records.")
 	_expect(next_record.get_theme_font_size(&"font_size") == standard + 6,
 		"Records rebuilt after changing estates keep the selected reading size.")
+	var hall := next_record.icon as AtlasTexture
+	_expect("堂屋" in next_record.text and hall != null and hall.region.position == Vector2(192, 0),
+		"An old inside_hall checkpoint gets the hall caption and location picture.")
 	await _key(KEY_LEFT)
 	_expect(next_estate.has_focus(), "Left returns to the same estate.")
 	await _key(KEY_TAB)

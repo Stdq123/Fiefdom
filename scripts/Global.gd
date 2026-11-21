@@ -58,6 +58,7 @@ const DAY_WATCHES := ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "�
 var balance: BalanceData = preload("res://resources/BalanceData.tres")
 
 enum EstateRoom { OUTDOORS, HALL, SILK_SHED }
+const ESTATE_ROOM_NAMES := {EstateRoom.OUTDOORS: "封地", EstateRoom.HALL: "堂屋", EstateRoom.SILK_SHED: "蚕棚"}
 
 # Global state manager
 var current_day: int
@@ -4084,6 +4085,11 @@ func _save_catalog() -> Dictionary:
 		var saved_health := _read_save_int(data.get("health"), balance.player_max_health)
 		var saved_outcome := _snapshot_outcome(data, saved_health)
 		var saved_record := _saved_ending_record(data)
+		var resume_scene := _snapshot_scene(data, saved_outcome)
+		var room := _snapshot_room(data, resume_scene, saved_outcome)
+		var location: String = SAVE_LOCATION_NAMES.get(data.get("location"), "")
+		if saved_outcome == Outcome.RUNNING and resume_scene == ESTATE_SCENE:
+			location = ESTATE_ROOM_NAMES[room]
 		catalog.append({
 			"path": path,
 			"source": source,
@@ -4091,8 +4097,9 @@ func _save_catalog() -> Dictionary:
 			"fingerprint": snapshot.get("fingerprint", ""),
 			"day": _read_save_int(data.get("current_day"), 0),
 			"watch": DAY_WATCHES[_day_watch_index(_saved_day_progress(data))] + "时",
-			"location": SAVE_LOCATION_NAMES.get(data.get("location"), ""),
-			"scene": _snapshot_scene(data, saved_outcome),
+			"location": location,
+			"scene": resume_scene,
+			"estate_room": room,
 			"rank": clampi(_read_save_int(data.get("current_rank"), Rank.XIA_SHI), Rank.XIA_SHI, Rank.QING),
 			"campaign": campaign,
 			"campaign_key": campaign_key,
@@ -4202,6 +4209,13 @@ func _snapshot_outcome(data: Dictionary, saved_health: int) -> Outcome:
 
 func _snapshot_scene(data: Dictionary, saved_outcome: Outcome) -> String:
 	return SAVE_SCENES.get(data.get("location"), ESTATE_SCENE) if saved_outcome == Outcome.RUNNING else ESTATE_SCENE
+
+func _snapshot_room(data: Dictionary, scene: String, saved_outcome: Outcome) -> EstateRoom:
+	if scene != ESTATE_SCENE or saved_outcome != Outcome.RUNNING:
+		return EstateRoom.OUTDOORS
+	var legacy_room := EstateRoom.HALL if data.get("inside_hall", false) == true else EstateRoom.OUTDOORS
+	var room := _read_save_int(data.get("estate_room"), legacy_room)
+	return room as EstateRoom if room in EstateRoom.values() else EstateRoom.OUTDOORS
 
 func _snapshot_campaign(data: Dictionary) -> String:
 	var key = data.get("campaign_id")
@@ -4485,10 +4499,7 @@ func _load_snapshot_data(data: Dictionary, sequence: int, check_only := false) -
 	current_stamina = clampi(_read_save_int(data.get("current_stamina"), max_stamina), 0, max_stamina)
 	health = saved_health
 	outcome = saved_outcome
-	var legacy_room := EstateRoom.HALL if data.get("inside_hall", false) == true else EstateRoom.OUTDOORS
-	var saved_room := _read_save_int(data.get("estate_room"), legacy_room)
-	estate_room = (saved_room as EstateRoom if outcome == Outcome.RUNNING and resume_scene == ESTATE_SCENE
-		and saved_room in EstateRoom.values() else EstateRoom.OUTDOORS)
+	estate_room = _snapshot_room(data, resume_scene, saved_outcome)
 	restored_walking_checkpoint = {}
 	if outcome == Outcome.RUNNING and data.get("save_origin", "") == "" and SAVE_SCENES.has(data.get("location")):
 		restored_walking_checkpoint = _read_walking_checkpoint(data.get("walking_checkpoint"))
