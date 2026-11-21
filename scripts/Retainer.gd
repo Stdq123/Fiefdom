@@ -41,6 +41,9 @@ var _stance := Vector2.INF
 var _stance_start := Vector2.ZERO
 var _work_point := Vector2.INF
 var _work_duration := 0.0
+var _raise_carried_tool := false
+var _carried_tool_pose := Transform2D.IDENTITY
+var _carried_tool_flipped := false
 
 func _ready() -> void:
 	if data == null:
@@ -160,6 +163,10 @@ func set_state(next: State) -> void:
 		find_work()
 	elif next == State.WORK:
 		velocity = Vector2.ZERO
+		_raise_carried_tool = tool_gesture.carrying and tool_gesture.frame == WORK_GESTURES[field_job]
+		if _raise_carried_tool:
+			_carried_tool_pose = tool_gesture.transform
+			_carried_tool_flipped = tool_gesture.flip_h
 		_work_duration = 1.0 / maxf(data.get_work_efficiency(), 0.1)
 		work_left = _work_duration
 		var world := get_parent()
@@ -197,6 +204,11 @@ func _advance_field_pose(delta: float) -> bool:
 	else:
 		sprite.face(facing)
 		_stand_at_stop()
+	if _raise_carried_tool and settled < 1.0:
+		var carried := _carried_tool_pose
+		if _carried_tool_flipped != tool_gesture.flip_h:
+			carried = Transform2D(-carried.get_rotation(), carried.origin * Vector2(-1.0, 1.0))
+		tool_gesture.transform = carried.interpolate_with(tool_gesture.transform, settled)
 	return work_left <= 0.0
 
 func _finish_field_work() -> void:
@@ -288,11 +300,18 @@ func _walk(delta: float) -> void:
 		_stance = _stance_for_plot(plot)
 	var next_foot := _stance if _stance.is_finite() else global_position
 	art.global_position = previous_foot.move_toward(next_foot, move_speed * 1.2 * delta)
-	var visible_step := art.global_position - previous_foot
+	_show_approach(art.global_position - previous_foot, plot)
+
+func _show_approach(visible_step: Vector2, plot: Vector2) -> void:
 	var step_height := sprite.walk(visible_step)
-	if target_grid_pos != NO_CELL and Global.field_job(data, target_grid_pos) == Global.FieldJob.WATER:
-		var facing := visible_step if sprite.walking else last_heading
-		if not sprite.walking and _stance.is_finite():
-			facing = _stance.direction_to(plot)
-			sprite.face(facing)
-		tool_gesture.carry_pail(facing, step_height)
+	var job := Global.field_job(data, target_grid_pos) if target_grid_pos != NO_CELL else Global.FieldJob.NONE
+	if job == Global.FieldJob.NONE:
+		if tool_gesture.carrying:
+			tool_gesture.clear()
+		return
+	var facing := visible_step if sprite.walking else last_heading
+	if not sprite.walking and _stance.is_finite():
+		facing = _stance.direction_to(plot)
+		sprite.face(facing)
+	var swing := sin(sprite.walk_distance * TAU / (4.0 * sprite.step_length))
+	tool_gesture.carry_field_tool(WORK_GESTURES[job], facing, step_height, swing)

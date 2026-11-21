@@ -71,14 +71,32 @@ func show_sample(action: Action, toward: Vector2, windup: float, time: float, fi
 	_apply_pose()
 
 func carry_pail(toward: Vector2, step_height: float) -> void:
-	if visible and not carrying:
+	carry_field_tool(Action.WATER, toward, step_height)
+
+func carry_field_tool(action: Action, toward: Vector2, step_height: float, swing := 0.0) -> void:
+	if action == Action.BOW or (visible and not carrying):
 		return
 	_face(toward)
 	carrying = true
-	frame = Action.WATER
+	frame = action
 	reach = 0.0
-	position = Vector2(-9 if flip_h else 9, 2 + step_height)
+	body_lean = Vector2.ZERO
+	var side := -1.0 if flip_h else 1.0
+	var hand := Vector2(9.0 * side, -7.0)
 	rotation = 0.0
+	match action:
+		Action.TILL:
+			hand = Vector2((7.5 + swing * 0.65) * side, -8.5)
+			rotation = (-1.62 + swing * 0.08) * side
+		Action.SOW:
+			hand = Vector2(-(13.0 if show_behind_parent else 11.0) * side, -1.5)
+			rotation = (-0.09 + swing * 0.10) * side
+		Action.HARVEST:
+			hand = Vector2((7.0 + swing * 0.65) * side, -5.5)
+			rotation = (0.93 + swing * 0.08) * side
+	hand.y += step_height
+	var grip: Vector2 = GRIPS[frame] * Vector2(side, 1.0)
+	position = hand - grip.rotated(rotation)
 	show()
 	queue_redraw()
 
@@ -206,18 +224,24 @@ func _draw() -> void:
 	var grip: Vector2 = transform * (GRIPS[frame] * mirror)
 	# Hands, grains and water are drawn in actor space so gravity stays vertical as the tool turns.
 	draw_set_transform_matrix(transform.affine_inverse())
+	if carrying:
+		if frame == Action.SOW:
+			_draw_arm(far_shoulder, grip, -side, true)
+		else:
+			_draw_arm(near_shoulder, grip, side, false)
+		draw_set_transform_matrix(Transform2D.IDENTITY)
+		return
 	match frame:
 		Action.TILL:
 			_draw_arm(far_shoulder, transform * (HOE_REAR_GRIP * mirror), -side, true)
 		Action.WATER:
-			if not carrying:
-				_draw_arm(far_shoulder, transform * (PAIL_BASE * mirror), -side, true)
-				if reach > 0.67:
-					var lip := transform * (PAIL_LIP * mirror)
-					var stream := (reach - 0.67) / 0.33
-					var water := _water_stream(lip, side, stream)
-					draw_polyline(water, Color("#86b8aa"), 1.3)
-					draw_rect(Rect2(water[-1].round() + Vector2(0, 2), Vector2(1, 2)), Color("#c4d9ba"))
+			_draw_arm(far_shoulder, transform * (PAIL_BASE * mirror), -side, true)
+			if reach > 0.67:
+				var lip := transform * (PAIL_LIP * mirror)
+				var stream := (reach - 0.67) / 0.33
+				var water := _water_stream(lip, side, stream)
+				draw_polyline(water, Color("#86b8aa"), 1.3)
+				draw_rect(Rect2(water[-1].round() + Vector2(0, 2), Vector2(1, 2)), Color("#c4d9ba"))
 		Action.SOW:
 			_draw_arm(far_shoulder, grip, -side, true)
 			grip = (Vector2(side * (1.0 + 7.0 * reach), -3.5) + aim * (4.0 * reach)).round()

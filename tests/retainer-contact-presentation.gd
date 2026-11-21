@@ -26,6 +26,11 @@ func _review() -> void:
 		for job: int in [state.FieldJob.TILL, state.FieldJob.SOW, state.FieldJob.WATER, state.FieldJob.HARVEST]:
 			_check_stroke(worker, field, plot, facing, job)
 	_check_exact_center(worker, field, plot, state.FieldJob.WATER)
+	worker.tool_gesture.clear()
+	worker.tool_gesture.carry_field_tool(ToolGesture.Action.TILL, Vector2.RIGHT, 0.0)
+	worker.target_grid_pos = worker.NO_CELL
+	worker._show_approach(Vector2.RIGHT, plot)
+	_expect(not worker.tool_gesture.visible, "Leaving a field route clears the carried tool.")
 	_expect(paused and before == [state.current_day, state.day_progress, state.money, state.food_storage,
 		state.current_stamina, hash(state.tilled_cells), hash(state.active_crops)] and state.saved_games().is_empty(),
 		"Fixed presentation samples leave the current campaign record intact.")
@@ -43,9 +48,17 @@ func _check_stroke(worker: Node2D, field: Vector2i, plot: Vector2, facing: Vecto
 	worker._stance = Vector2.INF
 	worker.last_heading = Vector2(-facing.y, facing.x)
 	var body := worker.global_position
+	var tool: ToolGesture = worker.tool_gesture
+	tool.clear()
+	tool.carry_field_tool(worker.WORK_GESTURES[job], facing, -1.0, 0.65)
+	var carried := tool.transform
+	var flipped := tool.flip_h
 	worker.set_state(worker.State.WORK)
-	var tool: Node2D = worker.tool_gesture
 	var duration: float = worker.work_left
+	if flipped != tool.flip_h:
+		carried = Transform2D(-carried.get_rotation(), carried.origin * Vector2(-1.0, 1.0))
+	_expect(tool.visible and not tool.carrying and tool.transform.is_equal_approx(carried),
+		"Windup starts from the carried grip, including when the stance changes side.")
 	_expect(is_equal_approx(duration, 1.0 / maxf(worker.data.get_work_efficiency(), 0.1)), "Keep the assigned work duration.")
 	_expect(not worker._advance_field_pose(duration * 0.50), "Windup ends before the contact tick.")
 	var foot: Vector2 = worker.art.global_position
