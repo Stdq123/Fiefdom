@@ -265,15 +265,10 @@ text = "堂屋"
 [node name="WorkshopStatus" type="PanelContainer" parent="."]
 visible = false
 layout_mode = 1
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -316.0
-offset_top = -16.0
-offset_right = 316.0
-offset_bottom = -16.0
-grow_vertical = 0
+offset_left = 16.0
+offset_top = 64.0
+offset_right = 296.0
+offset_bottom = 64.0
 mouse_filter = 2
 theme_type_variation = &"HudRail"
 
@@ -296,7 +291,6 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_font_sizes/font_size = 16
 theme_override_colors/font_color = Color(0.91, 0.84, 0.68, 1)
-horizontal_alignment = 1
 autowrap_mode = 3
 
 [node name="WorkshopLastWork" type="Label" parent="WorkshopStatus/Stack"]
@@ -306,7 +300,6 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.73, 0.82, 0.71, 1)
-horizontal_alignment = 1
 autowrap_mode = 3
 
 [node name="Calendar" type="PanelContainer" parent="."]

@@ -6,6 +6,8 @@ var failed := false
 var hud: Control
 var state: Node
 var prompt: Control
+var floor_art: Sprite2D
+var exit_hint: Label
 
 func run(scenario: SceneTree, directory := "") -> bool:
 	tree = scenario
@@ -42,8 +44,9 @@ func run(scenario: SceneTree, directory := "") -> bool:
 		return false
 	var player: Player = world.player
 	var tray := room.get_node("SilkwormTray") as Node2D
-	player.arrive_at_position(tray.global_position + Vector2(0, 19), Vector2.UP)
-	player._set_interaction_target(tray)
+	floor_art = room.get_node("Floor")
+	exit_hint = room.get_node("ExitHint")
+	_focus_station(player, tray)
 	prompt = player.interaction_prompt
 	var ordinary: Array[String] = ["12 片", "5 只", "7 份", "2 匹"]
 	_expect(hud.workshop_batch.text == "还需养 2 夜 · 每夜用 %d 片桑叶" % feed
@@ -63,9 +66,13 @@ func run(scenario: SceneTree, directory := "") -> bool:
 		and hud.workshop_batch.text == "还需养 1 夜 · 今夜缺 1 片桑叶"
 		and "今夜缺 1 片桑叶" in tray.hint.text, "The large room panel and tray prompt agree about tonight's shortage.")
 	await _check_stock("02-large-and-short", large)
-	var count_rect: Rect2 = hud.workshop_stock.counts[3].get_global_rect()
-	_expect(count_rect.position.y > hud.workshop_stock.counts[0].get_global_rect().position.y,
+	var first_rect: Rect2 = hud.workshop_stock.counts[0].get_global_rect()
+	_expect(hud.workshop_stock.counts[1].get_global_rect().position.y > first_rect.position.y,
 		"Extra-wide counts move to another row as whole cards.")
+	for station_name in ["Reel", "Loom"]:
+		_focus_station(player, room.get_node(station_name))
+		_expect(prompt.visible and not hud.workshop_status.get_global_rect().intersects(prompt.get_global_rect()),
+			"The %s prompt also stays clear of the stock panel." % station_name)
 
 	workshop.nights_left = 0
 	workshop.repeat_batches = true
@@ -98,15 +105,22 @@ func run(scenario: SceneTree, directory := "") -> bool:
 		state.money, state.current_stamina, hash(state.active_crops)], "Reading leaves the clock, economy and saves untouched.")
 	return not failed
 
+func _focus_station(player: Player, station: Node2D) -> void:
+	player.arrive_at_position(station.global_position + Vector2(0, 19), Vector2.UP)
+	player._set_interaction_target(station)
+
 func _check_stock(sample: String, amounts: Array[String]) -> void:
 	await _settle()
 	prompt._refresh()
 	var panel: Rect2 = hud.workshop_status.get_global_rect()
 	var stock: SilkStock = hud.workshop_stock
+	var room_bounds := floor_art.get_global_transform_with_canvas() * floor_art.get_rect()
+	var doorway := exit_hint.get_global_transform_with_canvas() * Rect2(Vector2.ZERO, exit_hint.size)
 	_expect(tree.root.get_visible_rect().encloses(panel) and panel.encloses(hud.workshop_batch.get_global_rect())
 		and hud.workshop_batch.get_global_rect().position.y >= stock.get_global_rect().end.y
 		and (not hud.workshop_last_work.visible or panel.encloses(hud.workshop_last_work.get_global_rect())),
 		"The stock, tonight's status and the last shift stay in the screen's safe area.")
+	_expect(not panel.intersects(room_bounds) and not panel.intersects(doorway), "The stock panel clears the workroom and its south door.")
 	for index in amounts.size():
 		var count: Label = stock.counts[index]
 		var icon := stock.get_child(index).get_child(0).get_child(0) as TextureRect
@@ -116,7 +130,7 @@ func _check_stock(sample: String, amounts: Array[String]) -> void:
 			"Each count has its own original material drawing and stays inside the panel.")
 	var reserved: Array[Rect2] = hud.map_obstacles()
 	_expect(reserved.has(panel.grow(4.0)) and prompt.visible and not panel.intersects(prompt.get_global_rect()),
-		"The tray prompt remains readable outside the stock panel.")
+		"The station prompt remains readable outside the stock panel.")
 	await _capture(sample, stock)
 	print("SILK_ROOM ", sample, " counts=", amounts, " panel=", panel, " saves=", state.saved_games().size())
 
