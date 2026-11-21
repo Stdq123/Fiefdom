@@ -41,12 +41,26 @@ func _check_readable_label(label: Label, plaque: Control, size: int) -> void:
 		and plaque.get_global_rect().encloses(label.get_global_rect())
 		and label.get_visible_line_count() == label.get_line_count(), "The enlarged travel text fits inside its plaque.")
 
+func _check_cached_bearing() -> void:
+	var roads := load("res://scripts/RoadNetwork.gd") as GDScript
+	var path := PackedVector2Array([Vector2.ZERO, Vector2(20, 0), Vector2(20, 20), Vector2(40, 20)])
+	_expect(roads.next_direction(path, Vector2(14, 0)).is_equal_approx(Vector2.RIGHT)
+		and roads.next_direction(path, Vector2(20, 5)).is_equal_approx(Vector2.DOWN),
+		"A cached trail points forward on both sides of a bend.")
+	_expect(roads.next_direction(path, Vector2(8, -8)).is_equal_approx(Vector2.DOWN)
+		and roads.next_direction(path, Vector2(37, 20)).is_zero_approx(),
+		"An off-road walker rejoins the trail, and the final approach settles on the destination.")
+	var switchback := PackedVector2Array([Vector2.ZERO, Vector2(30, 0), Vector2(30, 8), Vector2(0, 8)])
+	_expect(roads.next_direction(switchback, Vector2.ZERO).is_equal_approx(Vector2.RIGHT),
+		"A close destination across a bend does not replace the direction of the road.")
+
 func _review() -> void:
 	if not ProjectSettings.globalize_path("user://").contains("fiefdom-smoke-"):
 		push_error("Run the travel route check with an isolated smoke profile.")
 		quit(1)
 		return
 	paused = true
+	_check_cached_bearing()
 	var state := root.get_node("Global")
 	var events := root.get_node("GameEvents")
 	var preferences := root.get_node("Preferences")
@@ -94,6 +108,17 @@ func _review() -> void:
 		and state.regional_destination().is_empty() and _snapshot(state, market.player) == before,
 		"Cancel clears only directions and restores focus to the map button.")
 	_expect(is_equal_approx(wallet.size.y, compact), "The date plaque returns to its compact height after cancelling.")
+	var market_origin: Vector2 = market.player.position
+	market.player.position = Vector2(48, 74)
+	chart.follow_region_destination("鱼摊")
+	chart._process(0.0)
+	_expect(sign.direction_label.text == "←", "Approach the fish lane along the westbound stone street.")
+	market.player.position = Vector2(-38, 61)
+	chart._process(0.0)
+	_expect(sign.direction_label.text == "↑" and sign.direction_label.accessibility_name == "向北",
+		"At the fish lane, the visible arrow and spoken direction turn north.")
+	chart._clear()
+	market.player.position = market_origin
 
 	var road := await _load_map(state.WEST_ROAD_SCENE)
 	sign = road.route_sign
@@ -113,6 +138,19 @@ func _review() -> void:
 	sign.cancel_button.pressed.emit()
 	_expect(not sign.visible and state.regional_destination().is_empty() and road.route_direction == Vector2.ZERO
 		and _snapshot(state, road.player) == before, "The bridge can cancel without opening a map or walking.")
+	var road_origin: Vector2 = road.player.position
+	road.player.position = Vector2(59, 36)
+	road._follow_region_destination("桥东草甸")
+	_expect(sign.direction_label.text == "→", "The meadow route stays on the eastbound road before the fork.")
+	road.player.position = Vector2(127, 32)
+	road._refresh_route()
+	_expect(sign.direction_label.text == "↓", "At the meadow fork, the arrow follows the southern branch.")
+	road.player.position = Vector2(161, 134)
+	road._refresh_route()
+	_expect(sign.direction_label.text == "◆" and not sign.step_label.visible,
+		"The meadow route settles at the destination and releases the fork instructions.")
+	road._clear_regional_trip()
+	road.player.position = road_origin
 
 	state.ravine_journal.garden_day = 1
 	var ravine := await _load_map(state.WILDERNESS_SCENE)
@@ -132,6 +170,19 @@ func _review() -> void:
 	_expect(not sign.visible and chart.guide.route.is_empty() and state.regional_destination().is_empty()
 		and paused and _snapshot(state, ravine.get_node("Player")) == before and state.saved_games().is_empty(),
 		"Reading or clearing route signs leaves the paused journey and saves in place.")
+	var walker := ravine.get_node("Player") as Node2D
+	var ravine_origin := walker.position
+	walker.position = Vector2(223, 27)
+	_expect(chart.follow_region_destination("望溪台") and sign.direction_label.text == "→",
+		"The lookout sign points along the trail beyond the bridge.")
+	var cached: PackedVector2Array = chart.guide.route.duplicate()
+	walker.position = RavineLayout.RIDGE_FORK
+	chart._process(0.0)
+	_expect(sign.direction_label.text == "↗" and chart.guide.route == cached,
+		"The lookout arrow follows a bend in the cached trail before the next route calculation.")
+	chart.guide.clear()
+	walker.position = ravine_origin
+	_expect(_snapshot(state, walker) == before, "Fixed route positions do not advance the journey or write a save.")
 	if not failed:
 		print("SCENARIO_OK")
 	quit(1 if failed else 0)

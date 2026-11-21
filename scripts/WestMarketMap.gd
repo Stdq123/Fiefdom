@@ -4,9 +4,7 @@ const LAYOUT := preload("res://scripts/WestMarketLayout.gd")
 const ROAD_NETWORK := preload("res://scripts/RoadNetwork.gd")
 const INK := Color("#483e2c")
 const GOLD := Color("#f0cc7b")
-const TURN_DISTANCE := 12.0
 const MERCHANT := VisitorData.SILK_MERCHANT
-const WAYPOINT_ARROWS := ["→", "↘", "↓", "↙", "←", "↖", "↑", "↗"]
 const STALL_COLORS := [Color("#b98b53"), Color("#678287"), Color("#a46048")]
 const STALL_SERVICES := ["作物换粮、买口粮与时令作物", "交留鱼单、卖鱼", "卖绸、交易羊毛"]
 const LABELS_ABOVE := [MarketStall.TITLES[MarketStall.Kind.GRAIN], MarketStall.TITLES[MarketStall.Kind.FISH]]
@@ -107,21 +105,11 @@ func _process(_delta: float) -> void:
 		route_origin = foot
 		route_target = point
 		paper.queue_redraw()
-	route_sign.set_route(label, step, _next_bearing(foot, point))
+	route_sign.set_route(label, step, ROAD_NETWORK.next_direction(route, foot))
 	pin.visible = route_sign.visible
 	if pin.visible:
 		pin.global_position = ground.to_global(point)
 		pin.queue_redraw()
-
-func _next_bearing(foot: Vector2, target: Vector2) -> String:
-	if foot.distance_to(target) < TURN_DISTANCE:
-		return "◆"
-	var next := target
-	for point in route:
-		if foot.distance_to(point) >= TURN_DISTANCE:
-			next = point
-			break
-	return WAYPOINT_ARROWS[posmod(roundi((next - foot).angle() / (PI / 4.0)), WAYPOINT_ARROWS.size())]
 
 func _merchant_waiting_stop() -> String:
 	return MarketStall.TITLES[MarketStall.Kind.SILK] if market.silk_trip == VisitorData.SilkTrip.WEST_ROAD else Global.MARKET_RETURN

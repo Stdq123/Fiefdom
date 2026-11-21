@@ -189,6 +189,13 @@ func _refresh_journal() -> void:
 		guide.clear()
 	paper.queue_redraw()
 
+func _process(_delta: float) -> void:
+	if route_sign and route_sign.visible:
+		route_sign.set_bearing(_route_bearing())
+
+func _route_bearing() -> Vector2:
+	return ROAD_NETWORK.next_direction(guide.route, guide.to_local(player.global_position))
+
 func _refresh_route() -> void:
 	var name: String = guide.destination_name
 	var regional_target := Global.market_trip_target
@@ -208,7 +215,7 @@ func _refresh_route() -> void:
 		step = "沿金线走木桥。"
 	elif guide.route.has(LANDSCAPE.FORD):
 		step = "沿金线走浅滩。"
-	route_sign.set_route(destination, step)
+	route_sign.set_route(destination, step, _route_bearing())
 	clear_button.disabled = name.is_empty()
 	for place in markers:
 		markers[place].set_pressed_no_signal(place == name)

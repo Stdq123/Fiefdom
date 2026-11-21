@@ -208,9 +208,9 @@ func _refresh_route() -> void:
 		route_direction = Vector2.LEFT
 	else:
 		route_direction = Vector2.ZERO
-	var direction := "◆"
-	if route_direction.x != 0.0:
-		direction = "←" if route_direction.x < 0.0 else "→"
+	var direction := route_direction if route.is_empty() else TRACK_DIRECTION.next_direction(route, player.position)
+	if tracking_meadow and not route.is_empty() and direction.is_zero_approx():
+		next_step = ""
 	route_sign.set_route(destination, next_step, direction)
 	$Waypoint.queue_redraw()
 

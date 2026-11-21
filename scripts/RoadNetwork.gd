@@ -1,5 +1,9 @@
 extends RefCounted
 
+const TURN_DISTANCE := 4.0
+const REJOIN_DISTANCE := 6.0
+const DESTINATION_DISTANCE := 10.0
+
 var frame: Node2D
 var graph := AStar2D.new()
 var roads: Array[Vector2i] = []
@@ -77,3 +81,29 @@ static func route_length(path: PackedVector2Array) -> float:
 	for index in range(1, path.size()):
 		length += path[index - 1].distance_to(path[index])
 	return length
+
+static func next_direction(path: PackedVector2Array, foot: Vector2) -> Vector2:
+	if path.size() < 2:
+		return Vector2.ZERO
+	var next := 1
+	var nearest := path[0]
+	var distance_squared := INF
+	# The cached route can start behind the walker between updates. Join its closest segment.
+	for index in range(1, path.size()):
+		var point := Geometry2D.get_closest_point_to_segment(foot, path[index - 1], path[index])
+		var gap := foot.distance_squared_to(point)
+		if gap < distance_squared:
+			distance_squared = gap
+			nearest = point
+			next = index
+	var remaining := sqrt(distance_squared) + nearest.distance_to(path[next])
+	for index in range(next + 1, path.size()):
+		remaining += path[index - 1].distance_to(path[index])
+	if remaining <= DESTINATION_DISTANCE:
+		return Vector2.ZERO
+	if distance_squared > REJOIN_DISTANCE * REJOIN_DISTANCE:
+		return foot.direction_to(nearest)
+	for index in range(next, path.size()):
+		if foot.distance_squared_to(path[index]) > TURN_DISTANCE * TURN_DISTANCE:
+			return foot.direction_to(path[index])
+	return Vector2.ZERO
