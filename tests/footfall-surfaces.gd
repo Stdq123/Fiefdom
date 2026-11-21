@@ -56,10 +56,11 @@ func _open(path: String) -> bool:
 	return true
 
 func _resident_cadence() -> void:
-	var walker := NeighborMotion.new()
+	var art = load("res://scripts/CharacterArt.gd")
+	var speaker: String = load("res://scripts/VisitorData.gd").FIELD_KEEPER
+	var walker = load("res://scripts/NeighborMotion.gd").new()
 	root.add_child(walker)
-	walker.set_motion_sheet(CharacterArt.neighbor_motion(VisitorData.FIELD_KEEPER), CharacterArt.WORKER_COLUMNS,
-		VisitorData.FIELD_KEEPER)
+	walker.set_motion_sheet(art.neighbor_motion(speaker), art.WORKER_COLUMNS, speaker)
 	var contacts: Array[Vector2] = []
 	walker.foot_planted.connect(func(at: Vector2, _movement: Vector2): contacts.append(at))
 	for step in 16:
