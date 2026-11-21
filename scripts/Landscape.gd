@@ -998,17 +998,26 @@ func _build_track_shapes(tracks: Array, widths: Array[float], field_count := 0) 
 		var entrance := Vector2.ZERO
 		if index >= ESTATE_TRACKS.size() and index < ESTATE_TRACKS.size() + field_count:
 			entrance = points[-2].direction_to(points[-1])
+		var gravel_path := points if wilderness else samples
+		var crossing_bounds := Rect2(gravel_path[0], Vector2.ZERO)
+		for point in gravel_path:
+			crossing_bounds = crossing_bounds.expand(point)
 		track_shapes.append({
 			"shoulder": _track_outline(samples, radius + EstateLayout.ROAD_SHOULDER, index, entrance),
 			"edge": _track_outline(samples, radius + 1.0, index, entrance),
 			"surface": _track_outline(samples, radius, index, entrance),
-			"gravel_path": points if wilderness else samples,
+			"gravel_path": gravel_path,
+			"crossing_bounds": crossing_bounds,
 			"width": widths[index],
 		})
 
 func track_crossing(start: Vector2, finish: Vector2) -> Variant:
+	var channel_bounds := Rect2(start, finish - start).abs()
 	var channel_direction := start.direction_to(finish)
 	for track in track_shapes:
+		var bounds: Rect2 = track.crossing_bounds
+		if not bounds.intersects(channel_bounds, true):
+			continue
 		var line: PackedVector2Array = track.gravel_path
 		for index in range(1, line.size()):
 			var from := line[index - 1]
@@ -1534,11 +1543,29 @@ func _fields_clear(artwork: Rect2) -> bool:
 func _ground_clear(artwork: Rect2) -> bool:
 	if not _fields_clear(artwork):
 		return false
-	var half_tile := Vector2(tile_map.tile_set.tile_size) / 2.0
-	for cell in Global.irrigation.channels:
-		if artwork.grow(half_tile.x).has_point(_tile_point(cell)):
+	var area := artwork.grow(tile_map.tile_set.tile_size.x * 0.5)
+	var network := Global.irrigation
+	if area.has_point(_tile_point(network.source_cell)):
+		return false
+	var channels := network.channels
+	if channels.size() > 4 and tile_map.tile_set.tile_shape == TileSet.TILE_SHAPE_SQUARE:
+		var to_tiles := tile_map.global_transform.affine_inverse() * global_transform
+		var tile_area := to_tiles * area
+		var first := tile_map.local_to_map(tile_area.position)
+		var last := tile_map.local_to_map(tile_area.end)
+		var span := last - first + Vector2i.ONE
+		if span.x * span.y < channels.size():
+			# The box finds candidates. Test each center in the original scenery coordinates.
+			for y in range(first.y, last.y + 1):
+				for x in range(first.x, last.x + 1):
+					var cell := Vector2i(x, y)
+					if channels.has(cell) and area.has_point(_tile_point(cell)):
+						return false
+			return true
+	for cell in channels:
+		if area.has_point(_tile_point(cell)):
 			return false
-	return not artwork.grow(half_tile.x).has_point(_tile_point(Global.irrigation.source_cell))
+	return true
 
 func _field_bounds(center: Vector2i) -> Rect2:
 	return EstateLayout.field_bounds(center)
