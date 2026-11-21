@@ -20,6 +20,8 @@ const FIELD_HOLD := 3.2
 const PAN_SECONDS := 1.35
 const WALK_SECONDS := 1.65
 const ARRIVAL_HOLD := 0.9
+const ARRIVAL_SETTLE := 0.18
+const OFFER_SECONDS := 0.48
 const RECEIPT_SECONDS := 0.56
 const ENVOY_SLEEVE := Rect2(0, 0, 7, 5)
 const ENVOY_PALM := Rect2(8, 0, 5, 5)
@@ -85,6 +87,10 @@ var ceremony_focus: Vector2
 var walk_start: Vector2
 var walk_end: Vector2
 var presenter: Sprite2D
+var presenter_start: Vector2
+var presenter_at_desk: Vector2
+var presenter_hands: SilkWorkHands
+var presenter_cloth: Color
 var guest: Node2D
 var guest_sprite: NeighborMotion
 var guest_start: Vector2
@@ -254,10 +260,16 @@ func _build_stage() -> void:
 	presenter = player_sprite.duplicate(0) as Sprite2D
 	presenter.set_instance_shader_parameter(StandingPose.LIFT, 0.0)
 	presenter.offset = player_sprite.position
-	presenter.position = Vector2(-9, 18) if traditional else Vector2(5, 18)
+	presenter_start = Vector2(-9, 18) if traditional else Vector2(5, 18)
+	presenter_at_desk = Vector2(desk.volume_home().x, 9)
+	presenter.position = presenter_start
 	presenter.frame_coords = Vector2i(0, Player.Facing.BACK)
 	presenter.flip_h = false
 	stage.add_child(presenter)
+	presenter_cloth = estate.player.tool_gesture.sleeve
+	presenter_hands = SilkWorkHands.new()
+	presenter_hands.hide()
+	presenter.add_child(presenter_hands)
 	estate.player.hide()
 	envoy = Node2D.new()
 	envoy.name = "ZhaoJian"
@@ -326,8 +338,7 @@ func _play(from_handoff := false) -> void:
 	envoy.position = walk_start
 	walk_sprite.stand()
 	walk_sprite.face(walk_end - walk_start)
-	presenter.frame_coords = Vector2i(0, Player.Facing.BACK)
-	presenter.flip_h = false
+	_presenter_pose(0.0, 0.0)
 	if guest:
 		guest.hide()
 		guest.position = guest_start
@@ -352,7 +363,9 @@ func _play(from_handoff := false) -> void:
 		motion.tween_callback(_play_score)
 	motion.tween_method(_walk_to_table, 0.0, 1.0, WALK_SECONDS)
 	motion.tween_callback(walk_sprite.stand)
-	motion.tween_interval(ARRIVAL_HOLD)
+	motion.tween_interval(ARRIVAL_SETTLE)
+	motion.tween_method(_offer_volume, 0.0, 1.0, OFFER_SECONDS)
+	motion.tween_interval(ARRIVAL_HOLD - ARRIVAL_SETTLE - OFFER_SECONDS)
 	motion.tween_method(_receive_volume, 0.0, 1.0, RECEIPT_SECONDS).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	motion.tween_callback(_finish_handoff)
 	if guest:
@@ -424,21 +437,45 @@ func _walk_to_table(progress: float) -> void:
 	walk_sprite.walk(next - envoy.position)
 	envoy.position = next
 
+func _offered_volume_position() -> Vector2:
+	return desk.volume_home() + Vector2(0.0, -3.0)
+
+func _presenter_pose(approach: float, reach: float) -> void:
+	presenter.position = presenter_start.lerp(presenter_at_desk, approach)
+	presenter.flip_h = false
+	if reach > 0.0:
+		var volume_at := presenter.to_local(desk.volume.global_position)
+		var binding := Vector2(4.5 if traditional else 5.0, 2.5)
+		presenter_hands.present(desk, Vector2.UP, volume_at + binding, volume_at + Vector2(-binding.x, binding.y),
+			reach, presenter_cloth)
+		presenter.frame_coords = Vector2i(PlayerAttire.WORK_COLUMN + presenter_hands.body_pose, Player.Facing.BACK)
+	else:
+		presenter_hands.clear()
+		var step := PlayerAttire.PASS_COLUMN if approach > 0.04 and approach < 0.9 else 0
+		presenter.frame_coords = Vector2i(step, Player.Facing.BACK)
+
+func _offer_volume(progress: float) -> void:
+	var approach := smoothstep(0.0, 0.65, progress)
+	var reach := smoothstep(0.22, 0.63, progress)
+	var raise_amount := smoothstep(0.65, 1.0, progress)
+	desk.volume.position = desk.volume_home().lerp(_offered_volume_position(), raise_amount)
+	_presenter_pose(approach, reach)
+
 func _receive_volume(progress: float) -> void:
 	if desk.volume.get_parent() != envoy:
 		desk.volume.reparent(envoy, false)
 		palm.move_to_front()
 	var side := -1.0 if traditional else 1.0
 	var grasp := smoothstep(0.0, 0.28, progress)
-	var lift := smoothstep(0.2, 1.0, progress)
+	var lift := smoothstep(0.28, 1.0, progress)
 	var lean := Vector2(side * 3, -1) * (grasp - lift)
 	walk_sprite.stand(lean)
 	var hand := Vector2(side * 4, -7)
-	var from_desk := desk.volume_home() - envoy.position
-	desk.volume.position = Vector2(lerpf(from_desk.x, hand.x, lift * lift),
-		lerpf(from_desk.y, hand.y, lift) - 2.5 * sin(PI * lift))
-	# The hand reaches the near binding before the volume starts to rise.
-	palm.position = Vector2(-side, -6).lerp(desk.volume.position + Vector2(-side * 3.5, 1.5), grasp)
+	var offered := _offered_volume_position() - envoy.position
+	desk.volume.position = Vector2(lerpf(offered.x, hand.x, lift * lift),
+		lerpf(offered.y, hand.y, lift) - 2.5 * sin(PI * lift))
+	# The envoy grips the far edge while the presenter supports the other side.
+	palm.position = Vector2(-side, -6).lerp(desk.volume.position + Vector2(-side * 3.5, -1.25), grasp)
 	sleeve.position = Vector2(side * 3, -14) + lean
 	var forearm := palm.position - sleeve.position
 	sleeve.rotation = forearm.angle()
@@ -446,6 +483,8 @@ func _receive_volume(progress: float) -> void:
 	sleeve.flip_v = forearm.x < 0
 	sleeve.visible = progress > 0
 	palm.visible = sleeve.visible
+	var support := 1.0 - smoothstep(0.32, 0.62, progress)
+	_presenter_pose(1.0 - smoothstep(0.51, 1.0, progress), support)
 
 func _finish_handoff() -> void:
 	walk_sprite.stand()

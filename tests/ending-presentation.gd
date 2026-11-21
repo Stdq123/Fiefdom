@@ -30,6 +30,7 @@ func _run() -> void:
 		record.memories = _settlement_notes(state) + ["旧档里的长记事也能从头读到末尾。".repeat(26)]
 		var ending: Control = current_scene.get_node("CampaignHUD")._add_ending_panel()
 		ending.present(current_scene.get_node("World"), false)
+		_check_handoff(ending)
 		_check_timeline(ending, true, traditional)
 		await _check_reading(ending, traditional)
 		ending.queue_free()
@@ -38,6 +39,27 @@ func _run() -> void:
 	if not failed:
 		print("SCENARIO_OK")
 	quit(1 if failed else 0)
+
+func _check_handoff(ending: Control) -> void:
+	ending.motion.pause()
+	ending._walk_to_table(1.0)
+	var volume: Sprite2D = ending.desk.volume
+	ending._offer_volume(0.62)
+	_expect(ending.presenter_hands.visible and volume.position == ending.desk.volume_home(),
+		"The presenter reaches the binding before the ledger lifts from the desk.")
+	ending._offer_volume(1.0)
+	var held_at := volume.global_position
+	_expect(ending.presenter.position == ending.presenter_at_desk and volume.get_parent() == ending.desk
+		and volume.position.y < ending.desk.volume_home().y, "The presenter supports the raised ledger.")
+	ending._receive_volume(0.28)
+	_expect(volume.global_position.is_equal_approx(held_at) and volume.get_parent() == ending.envoy
+		and ending.presenter_hands.visible and ending.palm.visible, "The envoy grips the ledger while it is supported.")
+	ending._receive_volume(1.0)
+	_expect(not ending.presenter_hands.visible and ending.presenter.position == ending.presenter_start,
+		"The presenter releases the ledger and steps back after the transfer.")
+	ending._play(true)
+	_expect(volume.get_parent() == ending.desk and volume.position == ending.desk.volume_home()
+		and not ending.presenter_hands.visible, "Restarting restores the ledger and the neutral pose.")
 
 func _settlement_notes(state: Node) -> Array[String]:
 	var stories = load("res://scripts/PavilionStories.gd")
