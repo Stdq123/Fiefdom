@@ -92,13 +92,17 @@ func _ready() -> void:
 	Input.joy_connection_changed.connect(_joy_connection_changed)
 
 func _watch_gui_cursor(node: Node) -> void:
-	if _mouse_cursor and (node is BaseButton or node is Window or node is LineEdit or node is TextEdit):
+	if _mouse_cursor and (node is BaseButton or node is Window or node is LineEdit
+			or node is TextEdit or node is ScrollBar):
 		if not node.is_connected(&"visibility_changed", _queue_mouse_cursor_refresh):
 			node.connect(&"visibility_changed", _queue_mouse_cursor_refresh)
 			node.tree_exited.connect(_queue_mouse_cursor_refresh)
 			if node is PopupMenu:
 				node.visibility_changed.connect(_clear_mouse_popup_hover)
 				node.id_focused.connect(_clear_mouse_popup_hover.unbind(1))
+			elif node is ScrollBar:
+				# Scrolling can move controls under a stationary cursor.
+				node.value_changed.connect(_queue_mouse_cursor_refresh.unbind(1))
 		_queue_mouse_cursor_refresh()
 	if not node is BaseButton:
 		return
