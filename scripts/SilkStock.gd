@@ -7,6 +7,7 @@ const UNITS := ["片", "只", "份", "匹"]
 const ICON_SIZE := 32
 
 @export var card_style: StyleBox
+@export var quantity_width_limit := 0.0
 
 var counts: Array[Label] = []
 
@@ -44,7 +45,12 @@ func _ready() -> void:
 		text.add_theme_constant_override(&"separation", 0)
 		row.add_child(text)
 		_add_label(text, NAMES[index], 14, Color("#d7e0cb"))
-		counts.append(_add_label(text, "", 17, Color("#f1d39a")))
+		var count := _add_label(text, "", 17, Color("#f1d39a"))
+		counts.append(count)
+		if quantity_width_limit > 0.0:
+			count.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	if quantity_width_limit > 0.0:
+		Preferences.reading_size_changed.connect(_fit_quantity_widths)
 
 func _add_label(parent: Control, copy: String, point_size: int, ink: Color) -> Label:
 	var label := Label.new()
@@ -60,3 +66,12 @@ func refresh(workshop: SilkWorkshop) -> void:
 	var amounts := [workshop.leaves, workshop.cocoons, workshop.raw_silk, workshop.bolts]
 	for index in counts.size():
 		counts[index].text = "%d %s" % [amounts[index], UNITS[index]]
+	if quantity_width_limit > 0.0:
+		_fit_quantity_widths()
+
+func _fit_quantity_widths() -> void:
+	for count in counts:
+		var font := count.get_theme_font(&"font")
+		var point_size := count.get_theme_font_size(&"font_size")
+		var width := font.get_string_size(count.text, HORIZONTAL_ALIGNMENT_LEFT, -1, point_size).x
+		count.custom_minimum_size.x = minf(ceilf(width), quantity_width_limit)

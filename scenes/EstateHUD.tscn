@@ -267,7 +267,7 @@ visible = false
 layout_mode = 1
 offset_left = 16.0
 offset_top = 64.0
-offset_right = 296.0
+offset_right = 300.0
 offset_bottom = 64.0
 mouse_filter = 2
 theme_type_variation = &"HudRail"
@@ -284,6 +284,7 @@ layout_mode = 2
 mouse_filter = 2
 script = ExtResource("8_silk_stock")
 card_style = SubResource("WorkshopStockCard")
+quantity_width_limit = 206.0
 
 [node name="WorkshopBatch" type="Label" parent="WorkshopStatus/Stack"]
 unique_name_in_owner = true

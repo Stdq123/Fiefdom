@@ -49,8 +49,9 @@ func run(scenario: SceneTree, directory := "") -> bool:
 	_focus_station(player, tray)
 	prompt = player.interaction_prompt
 	var ordinary: Array[String] = ["12 片", "5 只", "7 份", "2 匹"]
-	_expect(hud.workshop_batch.text == "还需养 2 夜 · 每夜用 %d 片桑叶" % feed
-		and hud.workshop_last_work.text == "昨夜 · " + workshop.last_work_summary(), "Show the batch forecast and work already done on separate lines.")
+	_expect(hud.workshop_batch.text == "还需养 2 夜\n每夜用 %d 片桑叶" % feed
+		and hud.workshop_last_work.text == "昨夜 · " + workshop.last_work_summary().replace(" · ", "\n"),
+		"Show the batch forecast and work already done on separate lines.")
 	var small_font: int = hud.workshop_stock.counts[0].get_theme_font_size(&"font_size")
 	await _check_stock("01-batch-and-last-night", ordinary)
 
@@ -58,12 +59,12 @@ func run(scenario: SceneTree, directory := "") -> bool:
 	workshop.leaves = feed - 1
 	workshop.cocoons = 123456789
 	workshop.raw_silk = 234567890
-	workshop.bolts = 345678901
-	var large: Array[String] = ["%d 片" % workshop.leaves, "123456789 只", "234567890 份", "345678901 匹"]
+	workshop.bolts = 9007199254740991
+	var large: Array[String] = ["%d 片" % workshop.leaves, "123456789 只", "234567890 份", "9007199254740991 匹"]
 	_expect(prefs.set_reading_size(2) == OK, "Increase the reading size without leaving the room.")
 	events.silk_changed.emit()
 	_expect(hud.workshop_stock.counts[0].get_theme_font_size(&"font_size") == small_font + 6
-		and hud.workshop_batch.text == "还需养 1 夜 · 今夜缺 1 片桑叶"
+		and hud.workshop_batch.text == "还需养 1 夜\n今夜缺 1 片桑叶"
 		and "今夜缺 1 片桑叶" in tray.hint.text, "The large room panel and tray prompt agree about tonight's shortage.")
 	await _check_stock("02-large-and-short", large)
 	var first_rect: Rect2 = hud.workshop_stock.counts[0].get_global_rect()
@@ -89,7 +90,7 @@ func run(scenario: SceneTree, directory := "") -> bool:
 	workshop.leaves += 1
 	events.silk_changed.emit()
 	var renewed: Array[String] = ["%d 片" % workshop.leaves, "0 只", "0 份", "0 匹"]
-	_expect(hud.workshop_batch.text == "今晚可续养 · 首夜用 %d 片桑叶" % feed, "The prepared tray reports tonight's renewal.")
+	_expect(hud.workshop_batch.text == "今晚可续养\n首夜用 %d 片桑叶" % feed, "The prepared tray reports tonight's renewal.")
 	await _check_stock("03-prepared-tray", renewed)
 	var snapshot := [workshop.leaves, workshop.cocoons, workshop.raw_silk, workshop.bolts, workshop.nights_left,
 		state.current_day, state.day_progress, state.money, state.current_stamina, hash(state.active_crops)]
@@ -120,7 +121,8 @@ func _check_stock(sample: String, amounts: Array[String]) -> void:
 		and hud.workshop_batch.get_global_rect().position.y >= stock.get_global_rect().end.y
 		and (not hud.workshop_last_work.visible or panel.encloses(hud.workshop_last_work.get_global_rect())),
 		"The stock, tonight's status and the last shift stay in the screen's safe area.")
-	_expect(not panel.intersects(room_bounds) and not panel.intersects(doorway), "The stock panel clears the workroom and its south door.")
+	_expect(tree.root.get_visible_rect().encloses(doorway) and not panel.intersects(room_bounds) and not panel.intersects(doorway),
+		"The stock panel clears the workroom and its south door.")
 	for index in amounts.size():
 		var count: Label = stock.counts[index]
 		var icon := stock.get_child(index).get_child(0).get_child(0) as TextureRect

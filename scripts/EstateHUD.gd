@@ -281,19 +281,19 @@ func _refresh_silk_stock() -> void:
 	workshop_stock.refresh(silk)
 	var feed := Global.balance.silk_leaves_per_night
 	var missing := feed - silk.leaves
-	var summary := "蚕匾空着 · 首夜用 %d 片桑叶" % feed
+	var summary := "蚕匾空着\n首夜用 %d 片桑叶" % feed
 	if silk.nights_left > 0:
-		summary = "还需养 %d 夜 · %s" % [silk.nights_left,
+		summary = "还需养 %d 夜\n%s" % [silk.nights_left,
 			"今夜缺 %d 片桑叶" % missing if missing > 0 else "每夜用 %d 片桑叶" % feed]
 	elif silk.repeat_batches:
 		missing = silk.batch_leaf_cost(Global.balance) - silk.leaves
-		summary = "续养还差 %d 片桑叶" % missing if missing > 0 else "今晚可续养 · 首夜用 %d 片桑叶" % feed
+		summary = "续养还差 %d 片桑叶" % missing if missing > 0 else "今晚可续养\n首夜用 %d 片桑叶" % feed
 	elif missing > 0:
-		summary = "蚕匾空着 · 开养还差 %d 片桑叶" % missing
+		summary = "蚕匾空着\n开养还差 %d 片桑叶" % missing
 	workshop_batch.text = summary
 	workshop_batch.add_theme_color_override(&"font_color", WORKSHOP_SHORTAGE if missing > 0 else WORKSHOP_TEXT)
 	var last_work := silk.last_work_summary()
-	workshop_last_work.text = "昨夜 · " + last_work
+	workshop_last_work.text = "昨夜 · " + last_work.replace(" · ", "\n")
 	workshop_last_work.visible = not last_work.is_empty()
 
 func _refresh_shortcuts() -> void:
