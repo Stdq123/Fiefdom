@@ -35,6 +35,14 @@ func _button(button: Button) -> void:
 			"Use the visible %s button." % button.text):
 		await _click(rect.get_center())
 
+func _wait_for_session() -> void:
+	var travel := tree.root.get_node("MapTravel")
+	if travel.active:
+		await travel.finished
+		await tree.process_frame
+	if tree.current_scene == null:
+		await tree.scene_changed
+
 func _key(code: Key) -> void:
 	for pressed in [true, false]:
 		var event := InputEventKey.new()
@@ -222,8 +230,7 @@ func _save_menu() -> void:
 	await _frame("07-save-picker")
 	await _button(archive.close_button)
 	await _button(title.continue_button)
-	if tree.current_scene == null:
-		await tree.scene_changed
+	await _wait_for_session()
 	_expect(tree.current_scene.scene_file_path == state.ESTATE_SCENE and state.campaign_name == ESTATE_NAME
 		and state.current_day == 1 and state.active_crops.is_empty(), "The Continue action loads the same estate its caption names.")
 	print("TITLE_RESUME name=", state.campaign_name, " day=", state.current_day)
@@ -259,8 +266,7 @@ func run(host: SceneTree, directory := "") -> void:
 	var title := tree.current_scene
 	await _opening_menu(title)
 	await _button(title.new_button)
-	if tree.current_scene == null:
-		await tree.scene_changed
+	await _wait_for_session()
 	if _expect(tree.current_scene.scene_file_path == state.ESTATE_SCENE, "New Game opens the estate directly."):
 		await _first_harvest()
 		if failures == 0:
