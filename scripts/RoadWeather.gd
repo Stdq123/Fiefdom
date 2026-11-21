@@ -16,6 +16,7 @@ var bounds: Array[Rect2] = []
 var patches: Array[PackedVector2Array] = []
 @onready var audio: TERRAIN_AUDIO = AudioManager.terrain_audio
 @onready var footstep_effects := FOOTSTEP_EFFECTS.new()
+@onready var resident_footsteps := FOOTSTEP_EFFECTS.new()
 
 func _init(puddles: Array[Rect2], drifts: Array[Rect2]) -> void:
 	if Global.has_rain():
@@ -35,20 +36,29 @@ func _init(puddles: Array[Rect2], drifts: Array[Rect2]) -> void:
 
 func _ready() -> void:
 	add_child(footstep_effects)
+	resident_footsteps.name = "ResidentFootsteps"
+	add_child(resident_footsteps)
 
 func play_step(at: Vector2, movement: Vector2, surface: TERRAIN_AUDIO.Surface) -> void:
+	audio.play_step(_show_contact(footstep_effects, at, movement, surface))
+
+func show_resident_step(at: Vector2, movement: Vector2, surface: TERRAIN_AUDIO.Surface) -> void:
+	if resident_footsteps.is_contact_near_view(at):
+		_show_contact(resident_footsteps, at, movement, surface)
+
+func _show_contact(effects: FOOTSTEP_EFFECTS, at: Vector2, movement: Vector2,
+		surface: TERRAIN_AUDIO.Surface) -> TERRAIN_AUDIO.Surface:
 	var foot := to_local(at)
 	for outline in patches:
 		if Geometry2D.is_point_in_polygon(foot, outline):
-			audio.play_step(cover)
 			if cover == TERRAIN_AUDIO.Surface.SHALLOWS:
-				footstep_effects.splash(foot, movement, outline)
+				effects.splash(foot, movement, outline)
 			else:
-				footstep_effects.leave_snow(foot, movement)
-			return
-	audio.play_step(surface)
+				effects.leave_snow(foot, movement)
+			return cover
 	if surface == TERRAIN_AUDIO.Surface.TRACK and cover != TERRAIN_AUDIO.Surface.SHALLOWS:
-		footstep_effects.lift_dust(foot, movement)
+		effects.lift_dust(foot, movement)
+	return surface
 
 func _draw() -> void:
 	for index in patches.size():

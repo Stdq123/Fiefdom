@@ -44,6 +44,9 @@ func _ready() -> void:
 func leave_snow(contact: Vector2, movement: Vector2) -> void:
 	snow_footprints.leave(contact, movement)
 
+func is_contact_near_view(contact: Vector2) -> bool:
+	return get_viewport_rect().grow(32.0).has_point(get_canvas_transform() * contact)
+
 func lift_dust(contact: Vector2, movement: Vector2) -> void:
 	var heading := movement.normalized()
 	if not heading.is_zero_approx():

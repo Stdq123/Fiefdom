@@ -146,6 +146,7 @@ func _sync_silk_guest() -> void:
 		silk_guest.data = scheduled_guest
 		silk_guest.position = SILK_JOURNEY.position_on(SILK_JOURNEY.Section.BRIDGE, offset)
 		add_child(silk_guest)
+		silk_guest.sprite.foot_planted.connect(_show_resident_step)
 	SILK_JOURNEY.walk(silk_guest, VisitorData.VisitActivity.SILK_BRIDGE, SILK_JOURNEY.Section.BRIDGE, offset)
 
 func _talk_to_silk_guest(data: VisitorData) -> void:
@@ -237,11 +238,16 @@ func finish_meadow_route() -> void:
 
 func _step(at: Vector2) -> void:
 	var foot := player.footstep_contact(at)
-	var surface := TRACK_AUDIO.Surface.GRASS
+	ground.weather.play_step(foot, player.get_real_velocity(), _surface_at(foot))
+
+func _show_resident_step(foot: Vector2, movement: Vector2) -> void:
+	ground.weather.show_resident_step(foot, movement, _surface_at(foot))
+
+func _surface_at(foot: Vector2) -> TRACK_AUDIO.Surface:
 	if LAYOUT.BRIDGE.has_point(foot):
-		surface = TRACK_AUDIO.Surface.PLANK
-	elif ground.bridge_apron_at(foot) or Geometry2D.is_point_in_polygon(foot, ground.pavement):
-		surface = TRACK_AUDIO.Surface.STONE
-	elif Geometry2D.is_point_in_polygon(foot, ground.track) or Geometry2D.is_point_in_polygon(foot, ground.meadow_track):
-		surface = TRACK_AUDIO.Surface.TRACK
-	ground.weather.play_step(foot, player.get_real_velocity(), surface)
+		return TRACK_AUDIO.Surface.PLANK
+	if ground.bridge_apron_at(foot) or Geometry2D.is_point_in_polygon(foot, ground.pavement):
+		return TRACK_AUDIO.Surface.STONE
+	if Geometry2D.is_point_in_polygon(foot, ground.track) or Geometry2D.is_point_in_polygon(foot, ground.meadow_track):
+		return TRACK_AUDIO.Surface.TRACK
+	return TRACK_AUDIO.Surface.GRASS

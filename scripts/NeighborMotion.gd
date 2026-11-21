@@ -1,6 +1,8 @@
 extends Sprite2D
 class_name NeighborMotion
 
+signal foot_planted(at: Vector2, movement: Vector2)
+
 enum Facing { FRONT, BACK, PROFILE }
 
 const STEP_LENGTH := 10.0
@@ -13,6 +15,12 @@ const NEIGHBOR_STEP_LENGTH := {
 }
 const BLINK_PERIOD := 4.4
 const BLINK_TIME := 0.14
+# Centers under the planted soles of the shared worker and street poses.
+const PLANTED_SOLES := [
+	[Vector2(-4.0, 14.5), Vector2(4.0, 14.5)],
+	[Vector2(3.5, 14.5), Vector2(-3.5, 14.5)],
+	[Vector2(3.75, 12.5), Vector2(3.0, 13.0)],
+]
 
 var directional := false
 var facing := Facing.FRONT
@@ -71,6 +79,7 @@ func walk(movement: Vector2) -> float:
 		return 0.0
 	if _seated_art:
 		_seated_art.restore_standing()
+	var previous := frame_coords.x if walking else 0
 	face(movement)
 	walking = true
 	_work_column = -1
@@ -83,6 +92,12 @@ func walk(movement: Vector2) -> float:
 	if directional:
 		frame_coords = Vector2i(phase, facing)
 		offset = Vector2.ZERO
+		# A distant clock or route update can put the actor at a new stop in one tick.
+		if phase != previous and phase in [1, 2] and travelled <= step_length:
+			var sole: Vector2 = PLANTED_SOLES[facing][phase - 1]
+			if flip_h:
+				sole.x = -sole.x
+			foot_planted.emit(to_global(sole), movement)
 	else:
 		offset = Vector2(0.0, step_height)
 	return step_height

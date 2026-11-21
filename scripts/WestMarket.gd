@@ -83,6 +83,8 @@ func _ready() -> void:
 	player.arrive_at($EstateRoadArrival)
 	player.restore_walking_checkpoint(LAYOUT.BOUNDS, ground.walking_fixture_footprints())
 	player.footstep.connect(_step)
+	dyer.body.foot_planted.connect(_show_resident_step)
+	($Porter/Body as NeighborMotion).foot_planted.connect(_show_resident_step)
 	market_map.setup(self, destinations, $MarketWaypoint, %RouteSign)
 	market_map.open_button.icon = HUDIcons.icon(HUDIcons.Symbol.MAP)
 	$CampaignHUD.add_field_return(player, market_map.follow_region_destination)
@@ -235,6 +237,7 @@ func _add_silk_guest(data: VisitorData, foot: Vector2) -> void:
 	silk_guest.data = data
 	silk_guest.position = foot
 	add_child(silk_guest)
+	silk_guest.sprite.foot_planted.connect(_show_resident_step)
 
 func _sync_silk_return() -> void:
 	var offset := SILK_JOURNEY.road_offset(SILK_JOURNEY.Section.MARKET, silk_trip)
@@ -255,9 +258,14 @@ func _talk_to_silk_guest(data: VisitorData) -> void:
 
 func _step(at: Vector2) -> void:
 	var foot := player.footstep_contact(at)
-	var surface := TRACK_AUDIO.Surface.GRASS
+	ground.weather.play_step(foot, player.get_real_velocity(), _surface_at(foot))
+
+func _show_resident_step(foot: Vector2, movement: Vector2) -> void:
+	ground.weather.show_resident_step(foot, movement, _surface_at(foot))
+
+func _surface_at(foot: Vector2) -> TRACK_AUDIO.Surface:
 	if ground.is_on_paving(foot):
-		surface = TRACK_AUDIO.Surface.STONE
-	elif ground.is_on_street(foot):
-		surface = TRACK_AUDIO.Surface.TRACK
-	ground.weather.play_step(foot, player.get_real_velocity(), surface)
+		return TRACK_AUDIO.Surface.STONE
+	if ground.is_on_street(foot):
+		return TRACK_AUDIO.Surface.TRACK
+	return TRACK_AUDIO.Surface.GRASS

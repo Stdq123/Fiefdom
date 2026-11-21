@@ -13,6 +13,7 @@ func _review() -> void:
 		quit(1)
 		return
 	paused = true
+	_resident_cadence()
 	audio = root.get_node("AudioManager").terrain_audio
 	var estate := root.get_node("Global")
 	var before := [estate.current_day, estate.day_progress, estate.money, estate.food_storage]
@@ -53,6 +54,24 @@ func _open(path: String) -> bool:
 	await process_frame
 	await process_frame
 	return true
+
+func _resident_cadence() -> void:
+	var walker := NeighborMotion.new()
+	root.add_child(walker)
+	walker.set_motion_sheet(CharacterArt.neighbor_motion(VisitorData.FIELD_KEEPER), CharacterArt.WORKER_COLUMNS,
+		VisitorData.FIELD_KEEPER)
+	var contacts: Array[Vector2] = []
+	walker.foot_planted.connect(func(at: Vector2, _movement: Vector2): contacts.append(at))
+	for step in 16:
+		walker.position.y += 1.0
+		walker.walk(Vector2.DOWN)
+	_expect(contacts.size() == 2 and contacts[0].x < 0 and contacts[1].x > 0,
+		"A resident leaves one contact per planted foot, on alternating sides.")
+	walker.stand()
+	walker.walk(Vector2.ZERO)
+	walker.walk(Vector2.LEFT * 18.0)
+	_expect(contacts.size() == 2, "Idle and schedule jumps leave the ground undisturbed.")
+	walker.free()
 
 func _contact(landscape: Node2D, point: Vector2, direction: Vector2, variant: int, material: int) -> void:
 	var effects = landscape.footstep_effects

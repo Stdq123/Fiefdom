@@ -29,6 +29,7 @@ const FIELD_WORK_LABELS := {
 @onready var tile_map: TileMapLayer = $TileMapLayer
 @onready var crops_layer: TileMapLayer = $CropsLayer
 @onready var player: Player = $Player
+@onready var landscape: LANDSCAPE = $Landscape
 @onready var tax_envoy: Node2D = $TaxEnvoy
 @onready var irrigation_overlay = $TileMapLayer/IrrigationOverlay
 @onready var pavilion_rest: PavilionRest = $PavilionRest
@@ -210,6 +211,7 @@ func spawn_retainer(data: RetainerData, restoring := false) -> void:
 	retainer.data = data
 	retainer.position = _duty_station(data)
 	add_child(retainer)
+	retainer.sprite.foot_planted.connect(landscape.show_resident_step)
 	retainer_instances[data] = retainer
 	if restoring:
 		retainer.restore_evening()
@@ -1286,6 +1288,7 @@ func _add_visitor(data: VisitorData, foot: Vector2) -> Visitor:
 	visitor.data = data
 	visitor.position = foot
 	add_child(visitor)
+	visitor.sprite.foot_planted.connect(landscape.show_resident_step)
 	active_visitors.append(visitor)
 	visitor.activity_reached.connect(_visitor_arrived.bind(visitor))
 	return visitor

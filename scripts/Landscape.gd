@@ -443,6 +443,7 @@ const WILD_PROPS := [
 @onready var silk_shed := get_parent().get_node_or_null("SilkShed")
 @onready var pond_landing := get_parent().get_node_or_null("Scenery/PondLanding") as Node2D
 @onready var footstep_effects := FOOTSTEP_EFFECTS.new()
+@onready var resident_footsteps := FOOTSTEP_EFFECTS.new()
 
 var props: Array[Vector3i] = []
 var scenery: Dictionary[Sprite2D, int] = {}
@@ -493,6 +494,8 @@ func _ready() -> void:
 		ford_shoal = _ford_outline()
 		ford_stones = RAVINE_BANKS.ford_stone_faces()
 	add_child(footstep_effects)
+	resident_footsteps.name = "ResidentFootsteps"
+	add_child(resident_footsteps)
 	terrain_audio = AudioManager.terrain_audio
 	day_lighting = DAY_LIGHTING.new()
 	day_lighting.name = "DayLighting"
@@ -885,14 +888,24 @@ func _play_step(at: Vector2, contact: Vector2, movement: Vector2) -> void:
 		return
 	var surface := _surface_at(shoe if wilderness else foot)
 	terrain_audio.play_step(surface)
+	_show_ground_contact(footstep_effects, surface, foot, shoe, movement)
+
+func show_resident_step(contact: Vector2, movement: Vector2) -> void:
+	if Global.is_indoors() or not resident_footsteps.is_contact_near_view(contact):
+		return
+	var shoe := to_local(contact)
+	_show_ground_contact(resident_footsteps, _surface_at(shoe), shoe, shoe, movement)
+
+func _show_ground_contact(effects: FOOTSTEP_EFFECTS, surface: TERRAIN_AUDIO.Surface,
+		foot: Vector2, shoe: Vector2, movement: Vector2) -> void:
 	match surface:
 		TERRAIN_AUDIO.Surface.SNOW:
-			footstep_effects.leave_snow(shoe, movement)
+			effects.leave_snow(shoe, movement)
 		TERRAIN_AUDIO.Surface.SHALLOWS:
-			footstep_effects.splash(shoe, movement, ford_shoal, ford_stones)
+			effects.splash(shoe, movement, ford_shoal, ford_stones)
 		TERRAIN_AUDIO.Surface.TRACK:
 			if not raining and (wilderness or _ground_clear(Rect2(foot, Vector2.ONE))):
-				footstep_effects.lift_dust(shoe, movement)
+				effects.lift_dust(shoe, movement)
 
 func _surface_at(foot: Vector2) -> TERRAIN_AUDIO.Surface:
 	if wilderness:
